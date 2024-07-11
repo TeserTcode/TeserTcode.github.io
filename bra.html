@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expand String</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #output {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Expand String</h1>
+    <label for="input">Input:</label>
+    <input type="text" id="input" value="{[}{,}{]<}{,}{[>}{]}">
+    <br>
+    <label for="w">Repeat count:</label>
+    <input type="number" id="w" value="2">
+    <br>
+    <button onclick="processInput()">Expand</button>
+    <button onclick="expandResult()">Expand Result</button>
+    <div id="output"></div>
+
+    <script>
+        let lastResult = '';
+
+        function stringfy(inp) {
+            let chararray = [];
+            let numbuffer = '';
+            let commacount = 0;
+
+            for (let c of inp) {
+                if (c === ',') {
+                    commacount++;
+                } else {
+                    if (commacount > 0) {
+                        chararray.push(`-N${commacount}`);
+                    }
+                    commacount = 0;
+
+                    if (/\d/.test(c)) {
+                        numbuffer += c;
+                    } else {
+                        if (numbuffer) {
+                            chararray.push(`-N${numbuffer}`);
+                        }
+                        numbuffer = '';
+                        switch (c) {
+                            case '(': chararray.push('01'); break;
+                            case ')': chararray.push('-01'); break;
+                            case '[': chararray.push('02'); break;
+                            case ']': chararray.push('-02'); break;
+                            case '{': chararray.push('03'); break;
+                            case '}': chararray.push('-03'); break;
+                            default: if (!/\s/.test(c)) chararray.push(c); break;
+                        }
+                    }
+                }
+            }
+            if (commacount > 0) {
+                chararray.push(`-N${commacount}`);
+            }
+            if (numbuffer) {
+                chararray.push(`-N${numbuffer}`);
+            }
+
+            return chararray;
+        }
+
+        function expanda(chararray, w) {
+            let expandedarray = [...chararray];
+            let a = [];
+            let i = 0;
+
+            while (i < expandedarray.length) {
+                if (expandedarray[i].length > 1 && expandedarray[i][0] !== '-') {
+                    let startstr = expandedarray[i];
+                    a.push(i);
+                    let counter = 1;
+                    let found = false;
+                    for (let j = i + 1; j < expandedarray.length; ++j) {
+                        if (expandedarray[j] === startstr) counter++;
+                        else if (expandedarray[j] === `-${startstr}`) {
+                            --counter;
+                            if (counter === 0) {
+                                a.push(j);
+                                found = true;
+                                i = j;
+                                break;
+                            }
+                        }
+                    }
+                    if (!found) {
+                        a.pop();
+                        if (a.length) {
+                            i = a.pop();
+                        }
+                    }
+                }
+                ++i;
+            }
+
+            if (a.length < 2) {
+                let foundspecial = false;
+                for (let j = 0; j < expandedarray.length; ++j) {
+                    if (expandedarray[j] === "<") {
+                        for (let k = j + 1; k < expandedarray.length; ++k) {
+                            if (expandedarray[k] === ">") {
+                                foundspecial = true;
+                                expandedarray.splice(j, k - j + 1);
+                                break;
+                            }
+                        }
+                        if (foundspecial) break;
+                    }
+                }
+                if (!foundspecial) {
+                    let foundunpairedstart = false;
+                    for (let j = 0; j < expandedarray.length; ++j) {
+                        if (expandedarray[j].length > 1 && expandedarray[j][0] !== '-') {
+                            expandedarray.splice(j, 1);
+                            foundunpairedstart = true;
+                            break;
+                        }
+                    }
+                    if (!foundunpairedstart) {
+                        for (let j = 0; j < expandedarray.length; ++j) {
+                            if (expandedarray[j].length > 1 && expandedarray[j][0] === '-' && expandedarray[j][1] !== 'N') {
+                                expandedarray.splice(j, 1);
+                                break;
+                            }
+                        }
+                    }
+                }
+            } else {
+                while (a.length >= 2) {
+                    let start = a[a.length - 2];
+                    let end = a[a.length - 1];
+                    let tocopy = expandedarray.slice(start + 1, end);
+
+                    if (end + 2 < expandedarray.length && expandedarray[end + 1] === "<" && expandedarray[end + 3] === ">") {
+                        let repeatcount = 1;
+                        if (end + 3 < expandedarray.length && expandedarray[end + 2].startsWith("-N")) {
+                            let numstr = expandedarray[end + 2].substring(2);
+                            repeatcount = parseInt(numstr, 10);
+                            expandedarray.splice(end + 1, 3);
+                        } else {
+                            expandedarray.splice(end + 1, 2);
+                        }
+                        for (let k = 0; k < repeatcount; ++k) {
+                            expandedarray.splice(end + 1 + k * tocopy.length, 0, ...tocopy);
+                        }
+                    } else if (end + 1 < expandedarray.length && expandedarray[end + 1] === "<") {
+                        a.pop();
+                        a.pop();
+                        continue;
+                    } else {
+                        for (let k = 0; k < w; ++k) {
+                            expandedarray.splice(end + 1 + k * tocopy.length, 0, ...tocopy);
+                        }
+                    }
+
+                    expandedarray.splice(start, end - start + 1);
+
+                    if (a.length >= 2) {
+                        a.pop();
+                        a.pop();
+                    }
+                }
+            }
+
+            for (let i = 0; i < expandedarray.length; ++i) {
+                if (expandedarray[i] === "<") {
+                    let matched = false;
+                    for (let j = i + 1; j < expandedarray.length; ++j) {
+                        if (expandedarray[j] === ">") {
+                            matched = true;
+                            break;
+                        }
+                    }
+                    if (!matched) {
+                        expandedarray.splice(i, 1);
+                        --i;
+                    }
+                } else if (expandedarray[i] === ">") {
+                    let matched = false;
+                    for (let j = i - 1; j >= 0; --j) {
+                        if (expandedarray[j] === "<") {
+                            matched = true;
+                            break;
+                        }
+                    }
+                    if (!matched) {
+                        expandedarray.splice(i, 1);
+                        --i;
+                    }
+                }
+            }
+
+            return expandedarray;
+        }
+
+        function resintingfy(chararray) {
+            return chararray.map(str => {
+                if (str.length > 2 && str.startsWith('-N')) {
+                    let count = parseInt(str.substring(2), 10);
+                    return ','.repeat(count);
+                } else if (str === '01') return '(';
+                else if (str === '-01') return ')';
+                else if (str === '02') return '[';
+                else if (str === '-02') return ']';
+                else if (str === '03') return '{';
+                else if (str === '-03') return '}';
+                else return str;
+            }).join('');
+        }
+
+        function expand(input, w) {
+            let chararray = stringfy(input);
+            if (chararray.length === 1 && chararray[0].length > 2 && chararray[0].startsWith('-N')) {
+                return chararray[0].substring(2);
+            }
+            let expandedarray = expanda(chararray, w);
+            return resintingfy(expandedarray);
+        }
+
+        function processInput() {
+            let inp = document.getElementById('input').value;
+            let w = parseInt(document.getElementById('w').value, 10);
+            lastResult = expand(inp, w);
+            document.getElementById('output').innerText = lastResult;
+        }
+
+        function expandResult() {
+            let w = parseInt(document.getElementById('w').value, 10);
+            lastResult = expand(lastResult, w);
+            document.getElementById('output').innerText = lastResult;
+        }
+    </script>
+</body>
+</html>
