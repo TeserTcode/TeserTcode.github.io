@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>String Expansion</title>
+    <style>
+        textarea {
+            width: 100%;
+            height: 100px;
+        }
+    </style>
+</head>
+<body>
+  <textarea id="input" rows="4" cols="50">[[(,)]<,],[>]<o></textarea><br>
+    <input type="number" id="w" value="5"><br>
+    <button id="expandButton" onclick="expandString()">Expand</button>
+    <button id="expandResultButton" onclick="expandResult()">Expand Result</button>
+    <button id="sghButton" onclick="expandStringSGH()">SGH</button>
+    <pre id="output"></pre>
+
+    <div id="buttons">
+        <button onclick="pasteText('[,]')">w</button>
+        <button onclick="pasteText('[[,]]')">w^2</button>
+        <button onclick="pasteText('{[},{]}')">w^w</button>
+        <button onclick="pasteText('[[[[,]]<]<,],[>]<o>')">e_0</button>
+        <button onclick="pasteText('([)[[,]](<]),[>]<o>')">phi(w,0)</button>
+ 	<button onclick="pasteText('([)<O>((,))(<]),(>)<o>')">G0</button>
+    </div>
+
+    <script>
+        function stringfy(inp, maxima = -1) {
+            const chararray = [];
+            let numbuffer = '';
+            let commacount = 0;
+
+            for (const c of inp) {
+                if (c === ',') {
+                    commacount++;
+                } else {
+                    if (maxima !== -1) commacount = Math.min(commacount, maxima);
+                    if (commacount > 0) chararray.push(`-N${commacount}`);
+                    commacount = 0;
+
+                    if (/\d/.test(c)) {
+                        numbuffer += c;
+                    } else {
+                        if (numbuffer) chararray.push(`-N${numbuffer}`);
+                        numbuffer = '';
+                        switch (c) {
+                            case '(': chararray.push('01'); break;
+                            case ')': chararray.push('-01'); break;
+                            case '[': chararray.push('02'); break;
+                            case ']': chararray.push('-02'); break;
+                            case '{': chararray.push('03'); break;
+                            case '}': chararray.push('-03'); break;
+                            case 'U': chararray.push('-N50'); break;
+                            case '<': if (chararray[chararray.length - 1][1] !== 'N') chararray.push('<'); break;
+                            default: if (!/\s/.test(c)) chararray.push(c); break;
+                        }
+                    }
+                }
+            }
+            if (commacount > 0) chararray.push(`-N${commacount}`);
+            if (numbuffer) chararray.push(`-N${numbuffer}`);
+
+            return chararray;
+        }
+
+        function del(chararray) {
+            let first03Index = chararray.length;
+            let first02Index = chararray.length;
+            let first01Index = chararray.length;
+            let firstLessThanIndex = chararray.length;
+
+            chararray.forEach((str, i) => {
+                if (str === '03' && first03Index === chararray.length) first03Index = i;
+                else if (str === '02' && first02Index === chararray.length) first02Index = i;
+                else if (str === '01' && first01Index === chararray.length) first01Index = i;
+                else if (str === '<' && firstLessThanIndex === chararray.length) firstLessThanIndex = i;
+            });
+
+            if (first03Index < chararray.length) {
+                chararray = chararray.filter((str, i) => !(i < first03Index && str === '-03'));
+            } else {
+                chararray = chararray.filter(str => str !== '-03');
+            }
+
+            if (first02Index < chararray.length) {
+                chararray = chararray.filter((str, i) => !(i < first02Index && str === '-02'));
+            } else {
+                chararray = chararray.filter(str => str !== '-02');
+            }
+
+            if (first01Index < chararray.length) {
+                chararray = chararray.filter((str, i) => !(i < first01Index && str === '-01'));
+            } else {
+                chararray = chararray.filter(str => str !== '-01');
+            }
+
+            if (firstLessThanIndex < chararray.length) {
+                chararray = chararray.filter((str, i) => !(i < firstLessThanIndex && str === '>'));
+            } else {
+                chararray = chararray.filter(str => str !== '>');
+            }
+
+            return chararray;
+        }
+
+        function delInverse(chararray) {
+            let lastNegative01Index = chararray.length;
+            let lastNegative02Index = chararray.length;
+            let lastNegative03Index = chararray.length;
+            let lastNegative0vIndex = chararray.length;
+
+            chararray.forEach((str, i) => {
+                if (str === '-01') lastNegative01Index = i;
+                else if (str === '-02') lastNegative02Index = i;
+                else if (str === '-03') lastNegative03Index = i;
+                else if (str === '>') lastNegative0vIndex = i;
+            });
+
+            if (lastNegative03Index < chararray.length) {
+                chararray = chararray.filter((str, i) => !(i > lastNegative03Index && str === '03'));
+            } else {
+                chararray = chararray.filter(str => str !== '03');
+            }
+
+            if (lastNegative0vIndex < chararray.length) {
+                chararray = chararray.filter((str, i) => !(i > lastNegative0vIndex && str === '<'));
+            } else {
+                chararray = chararray.filter(str => str !== '<');
+            }
+
+            if (lastNegative02Index < chararray.length) {
+                chararray = chararray.filter((str, i) => !(i > lastNegative02Index && str === '02'));
+            } else {
+                chararray = chararray.filter(str => str !== '02');
+            }
+
+            if (lastNegative01Index < chararray.length) {
+                chararray = chararray.filter((str, i) => !(i > lastNegative01Index && str === '01'));
+            } else {
+                chararray = chararray.filter(str => str !== '01');
+            }
+
+            return chararray;
+        }
+
+        function expanda(chararray, w) {
+            const expandedarray = [...chararray];
+            const a = [];
+            let i = 0;
+            let ifv = 0;
+
+            while (i < expandedarray.length) {
+                if (expandedarray[i].length > 1 && expandedarray[i][0] !== '-') {
+                    const startstr = expandedarray[i];
+                    a.push(i);
+                    let counter = 1;
+                    let found = false;
+                    for (let j = i + 1; j < expandedarray.length; j++) {
+                        if (expandedarray[j] === startstr) counter++;
+                        else if (expandedarray[j] === `-${startstr}`) {
+                            counter--;
+                            if (counter === 0) {
+                                a.push(j);
+                                found = true;
+                                i = j;
+                                break;
+                            }
+                        }
+                    }
+                    if (!found) {
+                        a.pop();
+                        if (a.length) {
+                            i = a[a.length - 1];
+                            a.pop();
+                        }
+                    }
+                }
+                i++;
+            }
+
+            if (a.length < 2) {
+                let foundspecial = false;
+                for (let j = 0; j < expandedarray.length; j++) {
+                    if (expandedarray[j] === '<') {
+                        for (let k = j + 1; k < expandedarray.length; k++) {
+                            if (expandedarray[k] === '>') {
+                                foundspecial = true;
+                                expandedarray.splice(j, 1);
+                                expandedarray.splice(k - 1, 1);
+                                break;
+                            }
+                        }
+                        if (foundspecial) break;
+                    }
+                }
+                if (!foundspecial) {
+                    let foundunpairedstart = false;
+                    for (let j = 0; j < expandedarray.length; j++) {
+                        if (expandedarray[j].length > 1 && expandedarray[j][0] !== '-') {
+                            expandedarray.splice(j, 1);
+                            foundunpairedstart = true;
+                            break;
+                        }
+                    }
+
+                    if (!foundunpairedstart) {
+                        for (let j = 0; j < expandedarray.length; j++) {
+                            if (expandedarray[j].length > 1 && expandedarray[j][0] === '-' && expandedarray[j][1] !== 'N') {
+                                expandedarray.splice(j, 1);
+                                break;
+                            }
+                        }
+                    }
+                }
+            } else {
+                ifv = 1;
+                while (a.length >= 2) {
+                    const start = a[a.length - 2];
+                    const end = a[a.length - 1];
+                    let bigo = 0;
+                    const tocopy = expandedarray.slice(start + 1, end);
+
+                    if (end + 2 < expandedarray.length && expandedarray[end + 1] === '<' && expandedarray[end + 2] === '>') {
+                        expandedarray.splice(end + 1, 0, ...tocopy);
+                    } else if (end + 2 < expandedarray.length && expandedarray[end + 1] === '<' && expandedarray[end + 3] === '>') {
+                        if (expandedarray[end + 2] === 'O' || expandedarray[end + 2] === 'o') {
+                            bigo = 1;
+                        } else if (expandedarray[end + 1] !== '01' && expandedarray[end + 1] !== '02' && expandedarray[end + 1] !== '03') {
+                            let repeatcount = 1;
+                            if (end + 3 < expandedarray.length && expandedarray[end + 2].startsWith('-N')) {
+                                ifv = 0;
+                                const numstr = expandedarray[end + 2].substring(2);
+                                repeatcount = parseInt(numstr);
+                                expandedarray.splice(end + 1, 3);
+                            } else if (expandedarray[end + 2][0] !== '0') {
+                                expandedarray.splice(end + 1, 2);
+                            }
+                            for (let k = 0; k < repeatcount; k++) {
+                                expandedarray.splice(end + 1 + k * tocopy.length, 0, ...tocopy);
+                            }
+                        } else {
+                            bigo = 1;
+                        }
+                    } else if (end + 1 < expandedarray.length && expandedarray[end + 1] === '<') {
+                        a.pop();
+                        a.pop();
+                        continue;
+                    } else {
+                        if (!bigo) ifv = 0;
+                        for (let k = 0; k < w; k++) {
+                            expandedarray.splice(end + 1 + k * tocopy.length, 0, ...tocopy);
+                        }
+                    }
+
+                    if (!bigo) expandedarray.splice(start, end - start + 1);
+
+                    if (a.length >= 2) {
+                        a.pop();
+                        a.pop();
+                    }
+                }
+            }
+
+            if (ifv) {
+                for (let i = 2; i < expandedarray.length - 2; i++) {
+                    if (expandedarray[i] === '<' && expandedarray[i + 2] === '>') {
+                        const targetString = expandedarray[i - 1];
+                        const targetSubstring = targetString.substring(1);
+                        let counter = 1;
+
+                        for (let j = i - 2; j >= 0; j--) {
+                            if (expandedarray[j] === targetString) {
+                                counter++;
+                            } else if (expandedarray[j] === targetSubstring) {
+                                counter--;
+                            }
+
+                            if (counter === 0) {
+                                const tocopy3 = expandedarray.slice(j + 1, i - 1);
+                                if (expandedarray[i + 1] === 'o') {
+                                    if (i - j === 2) {
+                                        expandedarray.splice(j, 4);
+                                    } else {
+                                        expandedarray.splice(j, 0, ...tocopy3);
+                                    }
+                                    i += 2;
+                                } else if (expandedarray[i + 1] === 'O') {
+                                    if (i - j === 2) {
+                                        expandedarray.splice(j, 4);
+                                    } else {
+                                        expandedarray.splice(i + 3, 0, ...tocopy3);
+                                    }
+                                    i += 2;
+                                } else if (expandedarray[i + 1].startsWith('-N')) {
+                                    const numstr = expandedarray[i + 1].substring(2);
+                                    const repeatcount = parseInt(numstr);
+                                    expandedarray.splice(j, i - j + 1);
+                                    for (let k = 0; k < repeatcount; k++) {
+                                        expandedarray.splice(i + 1 + k * tocopy3.length, 0, ...tocopy3);
+                                    }
+                                    expandedarray.splice(j, 1);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return expandedarray;
+        }
+
+        function resintingfy(chararray) {
+            let result = '';
+            for (const str of chararray) {
+                if (str.length > 2 && str.startsWith('-N')) {
+                    const count = parseInt(str.substring(2));
+                    result += ','.repeat(count);
+                } else if (str === '01') result += '(';
+                else if (str === '-01') result += ')';
+                else if (str === '02') result += '[';
+                else if (str === '-02') result += ']';
+                else if (str === '03') result += '{';
+                else if (str === '-03') result += '}';
+                else result += str;
+            }
+            return result;
+        }
+
+        function expand(input, w, W = -1) {
+            let chararray = stringfy(input, W);
+
+            if (chararray.length === 1 && chararray[0].startsWith('-N')) {
+                return chararray[0].substring(2);
+            }
+
+            let expandedarray = expanda(chararray, w);
+            expandedarray = del(expandedarray);
+            expandedarray = delInverse(expandedarray);
+            return resintingfy(expandedarray);
+        }
+
+     function expandString() {
+            const inputElement = document.getElementById('input');
+            const outputElement = document.getElementById('output');
+            const w = parseInt(document.getElementById('w').value);
+
+            // Expand the input once and write to output
+            let result = expand(inputElement.value, w);
+            outputElement.textContent = result;
+            lastOutput = result;
+        }
+
+        function expandResult() {
+            const outputElement = document.getElementById('output');
+            const w = parseInt(document.getElementById('w').value);
+
+            // Expand the current output once and write to output
+            let result = expand(outputElement.textContent, w);
+            outputElement.textContent = result;
+            lastOutput = result;
+        }
+
+        function expandStringSGH() {
+            const inputElement = document.getElementById('input');
+            const w = parseInt(document.getElementById('w').value);
+            let result = inputElement.value;
+
+            while (result !== expand(result, w)) {
+                result = expand(result, w);
+            }
+
+            document.getElementById('output').textContent = result;
+            lastOutput = result;
+        }
+
+        function pasteText(text) {
+            document.getElementById('input').value = text;
+        }
+    </script>
+</body>
+</html>
