@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMP Renderer with Superfunction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 5px;
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #ddd;
+        }
+        input, button {
+            margin: 3px;
+            padding: 3px;
+        }
+        .form-group {
+            margin-bottom: 5px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+</head>
+<body>
+    <h1>Complex Superfunction Calculator and Renderer</h1>
+<h3>f^b(a) = </h3>
+<h5>f^N(L+c^(log_c((f^-N(a)-L)c^N)+(f(log_c((f^-N(a)-L)c^N))-log_c((f^-N(a)-L)c^N))*b-N)) </h5>
+
+    <div class="form-group">
+        <label for="function">Function (e.g., '2^x'):</label>
+        <input type="text" id="function" name="function" value="2^x" required>
+    </div>
+    <div class="form-group">
+        <label for="a-real">Parameter a (Real part):</label>
+        <input type="number" id="a-real" name="a-real" step="any" value="1" required>
+        <label for="a-imag">Parameter a (Imaginary part):</label>
+        <input type="number" id="a-imag" name="a-imag" step="any" value="0.1" required>
+    </div>
+    <div class="form-group">
+        <label for="b-real">Parameter b (Real part):</label>
+        <input type="number" id="b-real" name="b-real" step="any" value="1" required>
+        <label for="b-imag">Parameter b (Imaginary part):</label>
+        <input type="number" id="b-imag" name="b-imag" step="any" value="0.1" required>
+    </div>
+    <div class="form-group">
+        <label for="globalc-real">Global Constant (globalc)(Real part):</label>
+        <input type="number" id="globalc-real" name="globalc-real" step="any" value="2" required>
+        <label for="globalc-imag">Global Constant (globalc)(Imaginary part):</label>
+        <input type="number" id="globalc-imag" name="globalc-imag" step="any" value="1" required>
+    </div>
+    <div class="form-group">
+        <label for="bign">Big Number (bign):</label>
+        <input type="number" id="bign" name="bign" step="any" value="10" required>
+    </div>
+<div class="form-group">
+        <label for="initial-guess-real">Initial Guess (Real part):</label>
+        <input type="number" id="initial-guess-real" name="initial-guess-real" step="any" value="1" required>
+        <label for="initial-guess-imag">Initial Guess (Imaginary part):</label>
+        <input type="number" id="initial-guess-imag" name="initial-guess-imag" step="any" value="1" required>
+    </div>
+     <div class="form-group">
+        <label for="min-real">Min Real:</label>
+        <input type="number" id="min-real" name="min-real" step="any" value="-7" required>
+        <label for="max-real">Max Real:</label>
+        <input type="number" id="max-real" name="max-real" step="any" value="7" required>
+</div>
+
+<div class="form-group">
+
+        <label for="min-imag">Min Imaginary:</label>
+        <input type="number" id="min-imag" name="min-imag" step="any" value="-7" required>
+        <label for="max-imag">Max Imaginary:</label>
+        <input type="number" id="max-imag" name="max-imag" step="any" value="7" required>
+    </div>
+   <div class="form-group">
+        <label for="bmp-width">BMP Width:</label>
+        <input type="number" id="bmp-width" name="bmp-width" step="1" value="100" required>
+        <label for="bmp-height">BMP Height:</label>
+        <input type="number" id="bmp-height" name="bmp-height" step="1" value="100" required>
+    </div>
+  <div class="form-group">
+        <input type="checkbox" id="apply-conjugate" name="apply-conjugate">
+        <label for="apply-conjugate">Ensure F(z*)=F(z)*</label>
+    </div>
+    
+  <div class="button-group">
+<button onclick="renderBMP()">Generate</button>
+           </div>
+    
+    <div class="output-group">
+        <p id="outputText">Result: </p>
+    </div>
+    <canvas id="bmpCanvas" width="100" height="100"></canvas>
+    
+    <script>
+        function renderBMP() {
+     const width = parseInt(document.getElementById('bmp-width').value);
+            const height = parseInt(document.getElementById('bmp-height').value);
+           const minReal = parseFloat(document.getElementById('min-real').value);
+            const maxReal = parseFloat(document.getElementById('max-real').value);
+            const minImag = parseFloat(document.getElementById('min-imag').value);
+            const maxImag = parseFloat(document.getElementById('max-imag').value);
+            const initialGuessReal = parseFloat(document.getElementById('initial-guess-real').value);
+            const initialGuessImag = parseFloat(document.getElementById('initial-guess-imag').value);
+  const initialGuess = math.complex(initialGuessReal, initialGuessImag);
+            
+            // Get parameters from inputs
+            const funcStr = document.getElementById('function').value.trim();
+            const aReal = parseFloat(document.getElementById('a-real').value);
+            const aImag = parseFloat(document.getElementById('a-imag').value);
+ const bReal = parseFloat(document.getElementById('a-real').value);
+            const bImag = parseFloat(document.getElementById('b-imag').value);
+    const globalcReal = parseFloat(document.getElementById('globalc-real').value);
+            const globalcImag = parseFloat(document.getElementById('globalc-imag').value);
+            const bign = parseFloat(document.getElementById('bign').value);
+ const a = math.complex(aReal, aImag);
+ const b = math.complex(bReal, bImag);
+ const bs = math.complex(bReal, bImag);
+ const globalc = math.complex(globalcReal, globalcImag);
+               const canvas = document.getElementById('bmpCanvas');
+             canvas.width = width;
+            canvas.height = height;
+
+
+            const ctx = canvas.getContext('2d');
+
+            const imageData = ctx.createImageData(width, height);
+
+            const data = imageData.data;
+
+
+
+            function parseComplex(value) {
+                try {
+                    return math.complex(value);
+                } catch (e) {
+                    throw new Error('Invalid complex number format');
+                }
+            }
+
+            function mathsc(funcStr, x) {
+                try {
+                    const expr = math.compile(funcStr);
+                    return expr.evaluate({ x: x });
+                } catch (e) {
+                    throw new Error('Error evaluating function');
+                }
+            }
+
+            function numericalDerivative(funcStr, x, epsilon) {
+                const fx1 = mathsc(funcStr, math.add(x, epsilon));
+                const fx2 = mathsc(funcStr, x);
+                return math.divide(math.subtract(fx1, fx2), epsilon);
+            }
+
+              function findFixedPoint(funcStr, initialGuess, tolerance = 1e-10, maxIterations = 100) {
+                let x = parseComplex(initialGuess);
+                const epsilon = 1e-10;
+                for (let i = 0; i < maxIterations; i++) {
+                    const fx = math.subtract(mathsc(funcStr, x), x);
+                    const dfx = math.subtract(numericalDerivative(funcStr, x, epsilon), math.complex(1,0));
+                    const newX = math.subtract(x, math.divide(fx, dfx));
+                    if (math.abs(math.subtract(newX, x)) < tolerance) {
+                        return newX;
+                    }
+                    x = newX;
+                }
+                return initialGuess
+            }
+
+            function findInverse(funcStr, value, initialGuessa, bign) {
+                const epsilon = 1 / bign;
+                let x = parseComplex(initialGuess);
+                const target = parseComplex(value);
+                for (let i = 0; i < bign; i++) {
+                    const fx = mathsc(funcStr, x);
+                    const dfx = numericalDerivative(funcStr, x, epsilon);
+                    const newX = math.subtract(x, math.divide(math.subtract(fx, target), dfx));
+                    if (math.abs(math.subtract(newX, x)) < epsilon) {
+                        return newX;
+                    }
+                    x = newX;
+                }
+                throw new Error('Inverse not found');
+            }
+
+            function superfunc(funcStr, a, b, globalc, bign) {
+   const applyConjugate = document.getElementById('apply-conjugate').checked;
+		let bs = b
+		if (applyConjugate && b.im < 0) {
+			bs = math.conj(bs);
+		}
+  	
+                try {
+                    let fi = parseComplex(a);
+                    let lam = mathsc(funcStr, fi);
+                    let fix = findFixedPoint(funcStr, initialGuess);
+
+                    for (let i = 0; i < bign; i++) {
+                        fi = findInverse(funcStr, fi, initialGuess, bign);
+                        lam = findInverse(funcStr, lam, initialGuess, bign);
+                    }
+
+                    fi = math.divide(math.log(math.multiply(math.subtract(fi, fix), math.pow(globalc, bign))), math.log(globalc));
+                    lam = math.divide(math.log(math.multiply(math.subtract(lam, fix), math.pow(globalc, bign))), math.log(globalc));
+
+                    fi = math.add(fi, math.multiply(bs, math.subtract(lam, fi)));
+                    fi = math.add(fix, math.pow(globalc, math.subtract(fi, bign)));
+
+                    for (let i = 0; i < bign; i++) {
+                        fi = mathsc(funcStr, fi);
+                    }
+
+                       
+                
+			if (applyConjugate && b.im < 0) {
+			fi = math.conj(fi);
+		}
+                    return fi;
+                } catch (error) {
+                    throw new Error('Calculation error: ' + error.message);
+                }
+            }
+
+            function getColorFromComplex(result) {
+                const real = result.re;
+                const imag = result.im;
+                const mag = Math.sqrt(real * real + imag * imag);
+                const arg = Math.atan2(imag, real) * (180 / Math.PI); // Convert to degrees
+                const hue = (arg + 360) % 360;
+                const lightness = Math.min(mag * 10, 100);
+
+                return hslToRgb(hue, 100, lightness);
+            }
+
+            function hslToRgb(h, s, l) {
+                s /= 100;
+                l /= 100;
+                const c = (1 - Math.abs(2 * l - 1)) * s;
+                const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+                const m = l - c / 2;
+                let r, g, b;
+
+                if (0 <= h && h < 60) { r = c; g = x; b = 0; }
+                else if (60 <= h && h < 120) { r = x; g = c; b = 0; }
+                else if (120 <= h && h < 180) { r = 0; g = c; b = x; }
+                else if (180 <= h && h < 240) { r = 0; g = x; b = c; }
+                else if (240 <= h && h < 300) { r = x; g = 0; b = c; }
+                else if (300 <= h && h < 360) { r = c; g = 0; b = x; }
+
+                return {
+                    r: Math.round((r + m) * 255),
+                    g: Math.round((g + m) * 255),
+                    b: Math.round((b + m) * 255)
+                };
+            }
+const resultw = superfunc(funcStr, a, bs , globalc, bign);
+
+	document.getElementById('outputText').innerText = "[" + funcStr + "]^{" + bs.toString() + "} ("+ a.toString() + ") = " +resultw.toString();
+
+            for (let i = 0; i < width; i++) {
+                for (let j = 0; j < height; j++) {
+                    const x = minReal + (maxReal - minReal) * i / width;
+                    const y = minImag + (maxImag - minImag) * j / height;
+                    const result = superfunc(funcStr,a, math.complex(x, y), globalc, bign);
+                    const color = getColorFromComplex(result);
+
+                    const index = (i + j * width) * 4;
+                    data[index] = color.r;      // Red
+                    data[index + 1] = color.g;  // Green
+                    data[index + 2] = color.b;  // Blue
+                    data[index + 3] = 255;      // Alpha
+                }
+            }
+ 
+            ctx.putImageData(imageData, 0, 0);
+
+
+        }
+
+    </script>
+</body>
+</html>
+
