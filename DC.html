@@ -90,6 +90,14 @@
         <label for="saturation-chroma">Saturation/Chroma:</label>
         <input type="range" id="saturation-chroma" name="saturation-chroma" min="0" max="100" value="100">
     </div>
+    <div class="form-group">
+        <label for="lightness">Lightness:</label>
+        <input type="range" id="lightness" name="lightness" min="0" max="100" value="50">
+    </div>
+    <div class="form-group">
+        <label for="hue">Hue:</label>
+        <input type="range" id="hue" name="hue" min="0" max="360" value="0">
+    </div>
     <button onclick="renderBMP()">Generate</button>
     <canvas id="bmpCanvas" width="100" height="100"></canvas>
 
@@ -234,7 +242,8 @@ function generatePalette() {
             const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
             const colorMode = document.getElementById('color-mode').value;
             const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
-          
+            const lightness = parseInt(document.getElementById('lightness').value);
+            const hue = parseInt(document.getElementById('hue').value);
 
             const funcStr = document.getElementById('function').value.trim();
             const canvas = document.getElementById('bmpCanvas');
