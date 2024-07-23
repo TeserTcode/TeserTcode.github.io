@@ -3,81 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Complex Domain Coloring</title>
+    <title>Generalized Filog Solver</title>
     <style>
-          body {
-background-color: #bbd;
-            font-family: Cambria math, serif;
+        body {
+            font-family: Arial, sans-serif;
             margin: 5px;
             text-align: center;
-
         }
-      
+        canvas {
+            border: 1px solid #ddd;
+        }
         input, button {
-            margin: 5px;
-            padding: 5px;
+            margin: 3px;
+            padding: 3px;
         }
-
         .form-group {
-            margin-bottom: 1px;
- font-size: 16px;
+            margin-bottom: 5px;
         }
-        h2 {
-             box-shadow:  gray 0px 0px 60px -6px; 
-        }
- h1 {
-             box-shadow:  #222 0px 0px 60px -6px; 
-        }
-        #canvasContainer {
- padding: 10px;
-            width: 300px;
-            height: 300px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-left: auto;
-  margin-right: auto;
-
-        }
-        #bmpCanvas {
-            transform-origin: center;
-
-  max-width: fit-content;
-        }
-.split {
-  height: 100%;
-  width: 50%;
-  position: fixed;
-  z-index: 1;
-  overflow-x: hidden;
-  padding-top: 20px;
-
-}
-
-.gold{
-   border-left: 5px gold;
-}
-
-.left {
-  left: 0;
- border: 5px solid #000;
-background-color: #eee;
- border-top: 10px solid black;
-box-shadow: inset gray 0px 0px 60px -6px; 
-
-
-}
-
-.right {
-  right: 0;
- border: 5px solid #000;
-background-color: #eeeeee;
- border-top: 10px solid  black;
- box-shadow: inset gray 0px 0px 60px -6px; 
-
-
-
-}
         .color-input {
             display: inline-block;
             width: 30px;
@@ -89,16 +31,127 @@ background-color: #eeeeee;
             display: grid;
             gap: 3px;
         }
+ 	#showBoxButton {
+            padding: 2px 2px;
+            font-size: 8px;
+            cursor: pointer;
+        }
 
+        #box {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+         
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: 20px;
+            text-align: center;
+overflow:scroll;
+        }
+
+        .hidden {
+            display: none;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
 </head>
 <body>
-    <h1>Complex Domain Coloring</h1>
-<div class="split left">
-    <div class="form-group">
-        <label for="function">Function (e.g., '2^x'):</label>
-        <input type="text" id="function" name="function" value="2^x" required>
+
+    <h1>Generalized Filog Solver</h1>
+    <button id="showBoxButton">Further Information</button>
+    <div id="box" class="hidden">
+       <br>anyways filog is y=x o y where o is a operator
+<br>for the case of normal filog it is ^
+<br>to form filog of an arbutary operator
+<br>computationally you can calculate ( x o y ) - y = 0 using newtons method
+<br>mathematicly youll need inverses
+<br>with the log-like inverse you can get
+<br>log_x(y)=y which is generally a stump
+<br>
+<br>if a o b can be decomposed into f(a) ö g(b) we can go further (example x * cos (y) )
+<br>let inverse of ö to be õ (log like) and õ' is the other one 
+<br>then we can get 1 õ f(x) = g(y) õ' y
+<br>from here you need a special inverse function (in case of x cos y it is inverse of cos(y)/y )
+<br>
+<br>else if a o b can be decomposed into f(f*(x) ö y)  we cen do other stuff 
+<br>f* is log like inverse
+<br>y =  f(f*(x) ö y) 
+<br>f* (y) = f* (x) ö y
+<br>õ is iverse of ö of idk which side 
+<br>f* (y) õ y = f*(x)
+<br>f(f*(y) õ y) = x
+<br>x = f(f*(y) õ y)
+<br>which we can use newton method / inverse from here but there is a better way if we have a inverse of õ such that a õ (t(b)) = a ö b (reciprical when ö is * and õ is /)
+<br>x = f(f*(y) ö t(y))
+<br>f* (x) = f*(y) ö t (y)
+<br>f* (x) = f*(y) õ y
+<br>now fun stuff let r(y) be t(f(a)) = f(r(y))  (r is - in normal filog) 
+<br>f* (x) = f* (f(f* (y)) õ (f(f*(y))
+<br>f* (x) = f* (f(f* (y)) ö (f(r(f*(y)))
+<br>r(f* (x)) = r(f* (f(f* (y)) ö (f(r(f*(y))))
+<br>now we have a product where we can product log 
+<br>let w be inverse of b ö f(b)
+<br>w(r(f* (x)) = r(f* (y))
+<br> r(w(r(f* (x))) = f* (y)
+<br>f(r(w(r(f*(x)))) = y
+<br>let F be f(r(w(r(f*(x)))) for ease
+<br>refundemantaling this will be hard but lets go
+<br>f(r(x)) = t(f(a)) by definition
+<br>F = t(f(w(r(f* (x))))
+<br>r(x)= f* (t(f(a))
+<br>F = t(f(w(f* (t(f((f* (x))))))
+<br>
+<br>F = t(f(w(f* (t(x)))))
+<br>or alternatively
+<br>F = f(r(w(f* (t(x)))))
+<br>
+<br>lets not know j
+<br>f* (t (x)) = j 
+<br>t(x) = f(j)
+<br> t(t(x)) = x for further simplification (you can proof using the inverse of inverse = identity)
+<br>x = t(f(j))
+<br>x = f(r(j))
+<br>f* (x) = r(j)
+<br>r(r(x)) = x too bc if t(t(x))=x
+<br>r(f*(x) = j
+<br>f* (t (x)) = r(f*(x))
+<br>
+<br>
+<br>
+<br>conclusively
+<br>F is filog
+<br>o is ^
+<br>f is exp
+<br>ö is *
+<br>õ is /
+<br>w is lambertw
+<br>t is 1/x
+<br>r is -x
+<br>f* is ln
+<br>
+<br>or
+<br>
+<br>F is filog
+<br>o : input operator
+<br>f,ö : x o y = f(f*(x) ö y)
+<br>õ : x ö y = z -> z õ x = y
+<br>w : x ö f(x) = y  -> x = w (y)
+<br>t : x õ (t(y)) = x ö y
+<br>r : r(x) = f* (t(f(a))
+<br>f* : f(x) = y -> x = f* (y)
+<br>
+<br>
+<br>F = t(f(w(f* (t(x)))))
+<br>or alternatively
+<br>F = f(r(w(r(f* (x)))))
+    </div>
+    <div class="form-group" >
+     <label for="function">Function (e.g., 'y^x'):</label>
+        <input type="text" id="function" name="function" value="x^y" required>
     </div>
     <div class="form-group">
         <label for="min-real">Min Real:</label>
@@ -113,10 +166,20 @@ background-color: #eeeeee;
         <input type="number" id="max-imag" name="max-imag" step="any" value="7" required>
     </div>
     <div class="form-group">
+        <label for="igr">Initial Guess Real:</label>
+        <input type="number" id="igr" name="igr" step="any" value="1" required>
+        <label for="igi">Initial Guess Imaginary:</label>
+        <input type="number" id="igi" name="igi" step="any" value="1" required>
+    </div>
+    <div class="form-group">
         <label for="bmp-width">BMP Width:</label>
         <input type="number" id="bmp-width" name="bmp-width" step="1" value="100" required>
         <label for="bmp-height">BMP Height:</label>
         <input type="number" id="bmp-height" name="bmp-height" step="1" value="100" required>
+    </div>
+    <div class="form-group">
+        <label for="fds">Initial guess function:</label>
+        <input type="text" id="fds" name="fds" value="x / 100" required>
     </div>
     <div class="form-group">
         <label for="magnitude-to-lightness">Magnitude to Lightness Conversion:</label>
@@ -158,10 +221,21 @@ background-color: #eeeeee;
         <label for="hue">Hue:</label>
         <input type="range" id="hue" name="hue" min="0" max="360" value="0">
     </div>
-    <button onclick="renderBMP()">Generate</button></div>
-   <div class="split right"><div id="canvasContainer"> <canvas id="bmpCanvas" width="100" height="100"></canvas></div></div>
-<script src="clrspc.js"></script>
+ <div class="form-group">
+        <input type="checkbox" id="ffx" name="ffx">
+        <label for="ffx">function for inverse</label>
+    </div>
+    <button onclick="renderBMP()">Generate</button>
+    <canvas id="bmpCanvas" width="100" height="100"></canvas>
+
     <script>
+  document.getElementById('showBoxButton').addEventListener('click', function() {
+            document.getElementById('box').classList.remove('hidden');
+        });
+
+        document.getElementById('box').addEventListener('click', function() {
+            document.getElementById('box').classList.add('hidden');
+        });
         let paletteImageData = null;
 
         document.getElementById('color-mode').addEventListener('change', function() {
@@ -291,7 +365,38 @@ function generatePalette() {
     document.body.appendChild(canvas);
 }
 
+function parseComplex(value) {
+                try {
+                    return math.complex(value);
+                } catch (e) {
+                    throw new Error('Invalid complex number format');
+                }
+            }
 
+function filog(expr, x, initial, tolerance = 1e-7, maxIterations = 100) {
+    let y = parseComplex(initial);
+    let exprFunction = math.compile(expr);
+
+    for (let i = 0; i < maxIterations; i++) {
+        // Calculate f(y) = (x o y) - y
+        let f_y = math.subtract(exprFunction.evaluate({ x: x, y: y }),y);
+        // Calculate derivative f'(y)
+        let h = math.complex(1e-7, 0);
+        let f_y_plus_h = exprFunction.evaluate({ x: x, y: y.add(h) }).sub(y.add(h));
+        let df_y = f_y_plus_h.sub(f_y).div(h);
+
+        // Update y using Newton's method: y = y - f(y) / f'(y)
+        let new_y = y.sub(f_y.div(df_y));
+
+        if (math.abs(new_y.sub(y)) < tolerance) {
+            return new_y;
+        }
+
+        y = new_y;
+    }
+
+    throw new Error("Maximum iterations exceeded");
+}
         function renderBMP() {
             const width = parseInt(document.getElementById('bmp-width').value);
             const height = parseInt(document.getElementById('bmp-height').value);
@@ -299,13 +404,19 @@ function generatePalette() {
             const maxReal = parseFloat(document.getElementById('max-real').value);
             const minImag = parseFloat(document.getElementById('min-imag').value);
             const maxImag = parseFloat(document.getElementById('max-imag').value);
+	    const ingi = parseFloat(document.getElementById('igi').value);
+            const ingr = parseFloat(document.getElementById('igr').value);
             const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+const fdse = document.getElementById('fds').value.trim();
+const  funcStr = document.getElementById('function').value.trim();
             const colorMode = document.getElementById('color-mode').value;
             const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
             const lightness = parseInt(document.getElementById('lightness').value);
             const hue = parseInt(document.getElementById('hue').value);
+	    const ffix = parseInt(document.getElementById('hue').value);
+	let ing = math.complex(ingr, ingi);
 
-            const funcStr = document.getElementById('function').value.trim();
+           const fffx = document.getElementById('ffx').checked;
             const canvas = document.getElementById('bmpCanvas');
             canvas.width = width;
             canvas.height = height;
@@ -323,9 +434,10 @@ function generatePalette() {
                     let color = [0, 0, 0];
                     try {
                         const complexValue = math.complex(re, im);
-                        const funcValue = math.evaluate(funcStr, { x: complexValue });
+if(fffx){ing = math.evaluate(fdse, { x: complexValue }); }
+                        const funcValue = filog(funcStr, complexValue , ing);
                         const magnitude = math.abs(funcValue);
-                        const phase = (hue+math.arg(funcValue)+2*Math.PI) % (2*Math.PI);
+                        const phase = (math.arg(funcValue)+2*Math.PI) % (2*Math.PI);
                         const lightnessValue = math.evaluate(magnitudeToLightnessExpr, { x: magnitude });
 
                         if (colorMode === 'hsv' || colorMode === 'hsl') {
@@ -364,22 +476,112 @@ function generatePalette() {
                 }
             }
             ctx.putImageData(imageData, 0, 0);
-scaleCanvas();
         }
 
-       
-
- const canvas = document.getElementById('bmpCanvas');
-        const container = document.getElementById('canvasContainer');
-
-        function scaleCanvas() {
-            const widthScale = container.clientWidth / (canvas.width);
-            const heightScale = container.clientHeight / (canvas.height);
-            const scale = Math.min(widthScale, heightScale);
-            canvas.style.transform = `scale(${scale})`;
+        function HSVtoRGB(h, s, v) {
+            let r, g, b;
+            let i = Math.floor(h / 60);
+            let f = h / 60 - i;
+            let p = v * (1 - s);
+            let q = v * (1 - s * f);
+            let t = v * (1 - s * (1 - f));
+            switch (i % 6) {
+                case 0:
+                    r = v, g = t, b = p;
+                    break;
+                case 1:
+                    r = q, g = v, b = p;
+                    break;
+                case 2:
+                    r = p, g = v, b = t;
+                    break;
+                case 3:
+                    r = p, g = q, b = v;
+                    break;
+                case 4:
+                    r = t, g = p, b = v;
+                    break;
+                case 5:
+                    r = v, g = p, b = q;
+                    break;
+            }
+            return [Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)];
         }
 
+        function HSLtoRGB(h, s, l) {
+            let r, g, b;
+            let c = (1 - Math.abs(2 * l - 1)) * s;
+            let x = c * (1 - Math.abs((h / 60) % 2 - 1));
+            let m = l - c / 2;
+            if (h < 60) {
+                r = c, g = x, b = 0;
+            } else if (h < 120) {
+                r = x, g = c, b = 0;
+            } else if (h < 180) {
+                r = 0, g = c, b = x;
+            } else if (h < 240) {
+                r = 0, g = x, b = c;
+            } else if (h < 300) {
+                r = x, g = 0, b = c;
+            } else {
+                r = c, g = 0, b = x;
+            }
+            return [Math.floor((r + m) * 255), Math.floor((g + m) * 255), Math.floor((b + m) * 255)];
+        }
 
+function HCLtoRGB(h, c, l) {
+    // Convert HCL to XYZ
+    const L = ((l * 100) + 16) / 116;
+    const C = c  ;
+    const hRad = (h * Math.PI) / 180;
+
+    // Calculate XYZ components
+    const Y = L;
+    const X = (C * Math.cos(hRad)) + L;
+    const Z = L - (C * Math.sin(hRad));
+
+    // Convert XYZ to RGB
+    const r = 3.2406 * X - 1.5372 * Y - 0.4986 * Z;
+    const g = -0.9689 * X + 1.8758 * Y + 0.0415 * Z;
+    const b = 0.0557 * X - 0.2040 * Y + 1.0570 * Z;
+
+    // Convert RGB from linear space to 0-255 range
+    return [
+        Math.max(0, Math.min(255, Math.round(r * 255))),
+        Math.max(0, Math.min(255, Math.round(g * 255))),
+        Math.max(0, Math.min(255, Math.round(b * 255)))
+    ];
+}
+function fInv(t) {
+    const T0 = 6.0 / 29.0;
+    if (t > T0) {
+        return t * t * t;
+    }
+    return 3.0 * T0 * T0 * (t - 4.0 / 29.0);
+}
+
+function CIELCHtoRGB(h, c, l) {
+    // Reference white point (ad hoc)
+    const Xn = 100;
+    const Yn = 100;
+    const Zn = 100;
+ const L = l * 20
+    // Convert L, C, h to XYZ
+    const X = Xn * fInv((L + 16) / 116 + c / 20 * Math.cos(h * Math.PI / 180));
+    const Y = Yn * fInv((L + 16) / 116);
+    const Z = Zn * fInv((L + 16) / 116 - c / 8 * Math.sin(h * Math.PI / 180));
+
+    const R = 2.9515373 * X - 1.2894116 * Y - 0.4738445 * Z;
+    const G = -1.0851093 * X + 1.9908566 * Y + 0.0372026 * Z;
+    const B = 0.0854934 * X - 0.2694964 * Y + 1.0912975 * Z;
+
+    // Convert RGB from linear space to 0-255 range
+    return [
+        Math.max(0, Math.min(255, Math.round(R * 255))),
+        Math.max(0, Math.min(255, Math.round(G * 255))),
+        Math.max(0, Math.min(255, Math.round(B * 255)))
+    ];
+}
     </script>
 </body>
 </html>

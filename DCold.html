@@ -5,79 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Complex Domain Coloring</title>
     <style>
-          body {
-background-color: #bbd;
-            font-family: Cambria math, serif;
+        body {
+            font-family: Arial, sans-serif;
             margin: 5px;
             text-align: center;
-
         }
-      
+        canvas {
+            border: 1px solid #ddd;
+        }
         input, button {
-            margin: 5px;
-            padding: 5px;
+            margin: 3px;
+            padding: 3px;
         }
-
         .form-group {
-            margin-bottom: 1px;
- font-size: 16px;
+            margin-bottom: 5px;
         }
-        h2 {
-             box-shadow:  gray 0px 0px 60px -6px; 
-        }
- h1 {
-             box-shadow:  #222 0px 0px 60px -6px; 
-        }
-        #canvasContainer {
- padding: 10px;
-            width: 300px;
-            height: 300px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-left: auto;
-  margin-right: auto;
-
-        }
-        #bmpCanvas {
-            transform-origin: center;
-
-  max-width: fit-content;
-        }
-.split {
-  height: 100%;
-  width: 50%;
-  position: fixed;
-  z-index: 1;
-  overflow-x: hidden;
-  padding-top: 20px;
-
-}
-
-.gold{
-   border-left: 5px gold;
-}
-
-.left {
-  left: 0;
- border: 5px solid #000;
-background-color: #eee;
- border-top: 10px solid black;
-box-shadow: inset gray 0px 0px 60px -6px; 
-
-
-}
-
-.right {
-  right: 0;
- border: 5px solid #000;
-background-color: #eeeeee;
- border-top: 10px solid  black;
- box-shadow: inset gray 0px 0px 60px -6px; 
-
-
-
-}
         .color-input {
             display: inline-block;
             width: 30px;
@@ -89,13 +31,11 @@ background-color: #eeeeee;
             display: grid;
             gap: 3px;
         }
-
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
 </head>
 <body>
     <h1>Complex Domain Coloring</h1>
-<div class="split left">
     <div class="form-group">
         <label for="function">Function (e.g., '2^x'):</label>
         <input type="text" id="function" name="function" value="2^x" required>
@@ -158,9 +98,9 @@ background-color: #eeeeee;
         <label for="hue">Hue:</label>
         <input type="range" id="hue" name="hue" min="0" max="360" value="0">
     </div>
-    <button onclick="renderBMP()">Generate</button></div>
-   <div class="split right"><div id="canvasContainer"> <canvas id="bmpCanvas" width="100" height="100"></canvas></div></div>
-<script src="clrspc.js"></script>
+    <button onclick="renderBMP()">Generate</button>
+    <canvas id="bmpCanvas" width="100" height="100"></canvas>
+
     <script>
         let paletteImageData = null;
 
@@ -325,7 +265,7 @@ function generatePalette() {
                         const complexValue = math.complex(re, im);
                         const funcValue = math.evaluate(funcStr, { x: complexValue });
                         const magnitude = math.abs(funcValue);
-                        const phase = (hue+math.arg(funcValue)+2*Math.PI) % (2*Math.PI);
+                        const phase = (math.arg(funcValue)+2*Math.PI) % (2*Math.PI);
                         const lightnessValue = math.evaluate(magnitudeToLightnessExpr, { x: magnitude });
 
                         if (colorMode === 'hsv' || colorMode === 'hsl') {
@@ -364,22 +304,112 @@ function generatePalette() {
                 }
             }
             ctx.putImageData(imageData, 0, 0);
-scaleCanvas();
         }
 
-       
-
- const canvas = document.getElementById('bmpCanvas');
-        const container = document.getElementById('canvasContainer');
-
-        function scaleCanvas() {
-            const widthScale = container.clientWidth / (canvas.width);
-            const heightScale = container.clientHeight / (canvas.height);
-            const scale = Math.min(widthScale, heightScale);
-            canvas.style.transform = `scale(${scale})`;
+        function HSVtoRGB(h, s, v) {
+            let r, g, b;
+            let i = Math.floor(h / 60);
+            let f = h / 60 - i;
+            let p = v * (1 - s);
+            let q = v * (1 - s * f);
+            let t = v * (1 - s * (1 - f));
+            switch (i % 6) {
+                case 0:
+                    r = v, g = t, b = p;
+                    break;
+                case 1:
+                    r = q, g = v, b = p;
+                    break;
+                case 2:
+                    r = p, g = v, b = t;
+                    break;
+                case 3:
+                    r = p, g = q, b = v;
+                    break;
+                case 4:
+                    r = t, g = p, b = v;
+                    break;
+                case 5:
+                    r = v, g = p, b = q;
+                    break;
+            }
+            return [Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)];
         }
 
+        function HSLtoRGB(h, s, l) {
+            let r, g, b;
+            let c = (1 - Math.abs(2 * l - 1)) * s;
+            let x = c * (1 - Math.abs((h / 60) % 2 - 1));
+            let m = l - c / 2;
+            if (h < 60) {
+                r = c, g = x, b = 0;
+            } else if (h < 120) {
+                r = x, g = c, b = 0;
+            } else if (h < 180) {
+                r = 0, g = c, b = x;
+            } else if (h < 240) {
+                r = 0, g = x, b = c;
+            } else if (h < 300) {
+                r = x, g = 0, b = c;
+            } else {
+                r = c, g = 0, b = x;
+            }
+            return [Math.floor((r + m) * 255), Math.floor((g + m) * 255), Math.floor((b + m) * 255)];
+        }
 
+function HCLtoRGB(h, c, l) {
+    // Convert HCL to XYZ
+    const L = ((l * 100) + 16) / 116;
+    const C = c  ;
+    const hRad = (h * Math.PI) / 180;
+
+    // Calculate XYZ components
+    const Y = L;
+    const X = (C * Math.cos(hRad)) + L;
+    const Z = L - (C * Math.sin(hRad));
+
+    // Convert XYZ to RGB
+    const r = 3.2406 * X - 1.5372 * Y - 0.4986 * Z;
+    const g = -0.9689 * X + 1.8758 * Y + 0.0415 * Z;
+    const b = 0.0557 * X - 0.2040 * Y + 1.0570 * Z;
+
+    // Convert RGB from linear space to 0-255 range
+    return [
+        Math.max(0, Math.min(255, Math.round(r * 255))),
+        Math.max(0, Math.min(255, Math.round(g * 255))),
+        Math.max(0, Math.min(255, Math.round(b * 255)))
+    ];
+}
+function fInv(t) {
+    const T0 = 6.0 / 29.0;
+    if (t > T0) {
+        return t * t * t;
+    }
+    return 3.0 * T0 * T0 * (t - 4.0 / 29.0);
+}
+
+function CIELCHtoRGB(h, c, l) {
+    // Reference white point (ad hoc)
+    const Xn = 100;
+    const Yn = 100;
+    const Zn = 100;
+ const L = l * 20
+    // Convert L, C, h to XYZ
+    const X = Xn * fInv((L + 16) / 116 + c / 20 * Math.cos(h * Math.PI / 180));
+    const Y = Yn * fInv((L + 16) / 116);
+    const Z = Zn * fInv((L + 16) / 116 - c / 8 * Math.sin(h * Math.PI / 180));
+
+    const R = 2.9515373 * X - 1.2894116 * Y - 0.4738445 * Z;
+    const G = -1.0851093 * X + 1.9908566 * Y + 0.0372026 * Z;
+    const B = 0.0854934 * X - 0.2694964 * Y + 1.0912975 * Z;
+
+    // Convert RGB from linear space to 0-255 range
+    return [
+        Math.max(0, Math.min(255, Math.round(R * 255))),
+        Math.max(0, Math.min(255, Math.round(G * 255))),
+        Math.max(0, Math.min(255, Math.round(B * 255)))
+    ];
+}
     </script>
 </body>
 </html>
