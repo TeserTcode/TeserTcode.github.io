@@ -5,21 +5,79 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Newton Fractal Renderer</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 5px;
+             body {
+background-color: #bbd;
+            font-family: Cambria math, serif;
+            margin: 1px;
             text-align: center;
+
         }
-        canvas {
-            border: 1px solid #ddd;
-        }
+      
         input, button {
-            margin: 3px;
-            padding: 3px;
+            margin: 1px;
+            padding: 1px;
         }
+
         .form-group {
-            margin-bottom: 5px;
+            margin-bottom: 1px;
+ font-size: 12px;
         }
+        h2 {
+             box-shadow:  gray 0px 0px 60px -6px; 
+        }
+ h1 {
+             box-shadow:  #222 0px 0px 60px -6px; 
+        }
+        #canvasContainer {
+ padding: 10px;
+            width: 300px;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+  margin-right: auto;
+
+        }
+        #bmpCanvas {
+            transform-origin: center;
+
+  max-width: fit-content;
+        }
+.split {
+  height: 100%;
+  width: 50%;
+  position: fixed;
+  z-index: 1;
+  overflow-x: hidden;
+  padding-top: 20px;
+
+}
+
+.gold{
+   border-left: 5px gold;
+}
+
+.left {
+  left: 0;
+ border: 5px solid #000;
+background-color: #eee;
+ border-top: 10px solid black;
+box-shadow: inset gray 0px 0px 60px -6px; 
+
+
+}
+
+.right {
+  right: 0;
+ border: 5px solid #000;
+background-color: #eeeeee;
+ border-top: 10px solid  black;
+ box-shadow: inset gray 0px 0px 60px -6px; 
+
+
+
+}
         .color-input {
             display: inline-block;
             width: 30px;
@@ -36,6 +94,7 @@
 </head>
 <body>
     <h1>Newton Fractal Renderer</h1>
+<div class="split left">
   <div class="form-group" >
      <label for="function">Function (e.g., 'x^3-1'):</label>
         <input type="text" id="function" name="function" value="x^3-1" required>
@@ -64,6 +123,10 @@
         <label for="bmp-height">BMP Height:</label>
         <input type="number" id="bmp-height" name="bmp-height" step="1" value="100" required>
     </div>
+ <div class="form-group">
+ <label for="maxis">Max iteration:</label>
+        <input type="number" id="maxis" name="maxis" step="1" value="50" required>
+    </div>
     <div class="form-group">
         <label for="fds">Initial guess function:</label>
         <input type="text" id="fds" name="fds" value="x" required>
@@ -81,6 +144,23 @@
             <option value="cielch">CIELCH</option>
 	    <option value="2d">2d</option>
             <option value="palette">Palette</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="dmode">Root Finding Method:</label>
+        <select id="dmode" name="dmode">
+  	<option value="newton">Newton</option>
+        <option value="halley">Halley</option>
+        	<option value="unitnewton">Unit Newton</option>
+        <option value="secant">Secant</option>
+        <option value="steffensen">Steffensen</option>
+	<option value="zel">Laguerre</option>
+	<option value="schroder">Schröder</option>
+
+<option value="zrr">zrr</option>
+
+        <option value="muller">Muller's Method </option>
+        <option value="ridders">Ridders' Method</option>
         </select>
     </div>
     <div id="palette-group" class="form-group" style="display: none;">
@@ -102,7 +182,7 @@
     </div>
     <div class="form-group">
         <label for="lightness">Lightness:</label>
-        <input type="range" id="lightness" name="lightness" min="0" max="100" value="50">
+        <input type="range" id="lightness" name="lightness" min="0" max="100" value="100">
     </div>
     <div class="form-group">
         <label for="hue">Hue:</label>
@@ -113,16 +193,21 @@
         <label for="ffx">DONT function for inverse (use y for the coordinate)</label>
     </div>
     <button onclick="renderBMP()">Generate</button>
-    <canvas id="bmpCanvas" width="100" height="100"></canvas>
+</div>
+<div class="split right">  
+    <div class="output-group">
+        <p id="outputText">Result: </p>
+    </div>
 
+          <div id="canvasContainer">
+        <canvas id="bmpCanvas" width="100" height="100"></canvas>
+    </div>
+</div>
+<script src="mthfnc.js"></script>
     <script>
-  document.getElementById('showBoxButton').addEventListener('click', function() {
-            document.getElementById('box').classList.remove('hidden');
-        });
 
-        document.getElementById('box').addEventListener('click', function() {
-            document.getElementById('box').classList.add('hidden');
-        });
+
+
         let paletteImageData = null;
 
         document.getElementById('color-mode').addEventListener('change', function() {
@@ -260,31 +345,348 @@ function parseComplex(value) {
                 }
             }
 
-function filog(expr, x, initial, tolerance = 1e-7, maxIterations = 100) {
-    let y = parseComplex(initial);
+
+
+
+
+
+
+function filog(expr, x, initial, method = 'newton', tolerance = 1e-7, maxIterations = 100) {
+    let y = math.complex(initial);
     let exprFunction = math.compile(expr);
 
-    for (let i = 0; i < maxIterations; i++) {
-        // Calculate f(y) = (x o y) - y
-        let f_y = exprFunction.evaluate({ y: x, x: y });
-        // Calculate derivative f'(y)
+    function f(y) {
+        return exprFunction.evaluate({ x: y });
+    }
+
+    function rf(y) {
+        return math.divide(math.complex(1, 0), exprFunction.evaluate({ x: y }));
+    }
+
+    function df(y) {
         let h = math.complex(1e-7, 0);
-        let f_y_plus_h = exprFunction.evaluate({ y: x.add(h), x: y.add(h) });
+        return math.divide(math.subtract(f(math.add(y, h)), f(y)), h);
+    }
 
-        let df_y = f_y_plus_h.sub(f_y).div(h);
+    function ddf(y) {
+        let h = math.complex(1e-7, 0);
+        return math.divide(math.subtract(df(math.add(y, h)), df(y)), h);
+    }
 
-        // Update y using Newton's method: y = y - f(y) / f'(y)
-        let new_y = y.sub(f_y.div(df_y));
+    function nthDerivative(fad, n, y) {
+    let h = math.complex(1e-7, 0);
+    if (n == 0) {
+        return fad(y);  // Call the function fad with y
+    }
+    return math.divide(
+        math.subtract(
+            nthDerivative(fad, n - 1, math.add(y, h)),
+            nthDerivative(fad, n - 1, math.subtract(y, h))
+        ),
+        math.multiply(2, h)
+    );
+}
+    function divDiff(f, xs) {
+        if (xs.length === 2) {
+            let [a, b] = xs;
+            return math.divide(math.subtract(f(a), f(b)), math.subtract(a, b));
+        } else {
+            return math.divide(
+                math.subtract(divDiff(f, xs.slice(1)), divDiff(f, xs.slice(0, xs.length - 1))),
+                math.subtract(xs[xs.length - 1], xs[0])
+            );
+        }
+    }
+function esm(initial, m = 1, tolerance = 1e-6) {
+    let xn = math.complex(initial);
 
-        if (math.abs(new_y.sub(y)) < tolerance) {
+    for (let i = 0; i < maxIterations; i++) {
+        let fn = f(xn);
+        let fd = df(xn);
+        let fdd = ddf(xn);
+
+        if (math.abs(fn) < tolerance) {
+            return xn; // Root found
+        }
+
+        let g = math.divide(fd, fn); // G = f'(x_n) / f(x_n)
+        let h = math.subtract(math.pow(g, 2), math.divide(fdd, fn)); // H = G^2 - f''(x_n) / f(x_n)
+        
+        let correction = math.add(1, math.multiply(math.divide(2 * (m - 1), m), math.divide(math.pow(g, 2), h)));
+        correction = math.add(correction, math.multiply(math.divide(6 * (m - 1) * (m - 2), math.pow(m, 2)), math.pow(math.divide(math.pow(g, 2), h), 2)));
+        
+        let delta = math.divide(fn, fd);
+        let new_xn = math.subtract(xn, math.multiply(m, delta, correction));
+
+        if (math.abs(math.subtract(new_xn, xn)) < tolerance) {
+            return new_xn; // Convergence check
+        }
+
+        xn = new_xn; // Update for next iteration
+    }
+
+    throw new Error("Maximum iterations exceeded for Extended Schroder's method");
+}
+function mullersMethod(func, x0, x1, x2, tolerance = 1e-6) {
+    // Ensure x0, x1, x2 are complex numbers
+    x0 = math.complex(x0);
+    x1 = math.complex(x1);
+    x2 = math.complex(x2);
+
+    for (let i = 0; i < maxIterations; i++) {
+        // Evaluate the function at the current points
+        const f0 = func(x0);
+        const f1 = func(x1);
+        const f2 = func(x2);
+
+        // Calculate the differences
+        const h1 = math.subtract(x1, x0);
+        const h2 = math.subtract(x2, x1);
+        const delta1 = math.divide(math.subtract(f1, f0), h1);
+        const delta2 = math.divide(math.subtract(f2, f1), h2);
+
+        // Quadratic coefficients
+        const d = math.divide(math.subtract(delta2, delta1), math.add(h1, h2));
+        const b = math.add(delta2, math.multiply(h2, d));
+        const D = math.sqrt(math.subtract(math.multiply(b, b), math.multiply(math.multiply(4, f2), d)));
+
+        // Choose the correct denominator
+        const denom1 = math.add(b, D);
+        const denom2 = math.subtract(b, D);
+        const denom = (math.abs(denom1) > math.abs(denom2)) ? denom1 : denom2;
+
+        // Calculate the next approximation
+        const h = math.divide(math.multiply(-2, f2), denom);
+        const x3 = math.add(x2, h);
+
+        // Check for convergence
+        if (math.abs(h) < tolerance) {
+            return x3; // Root found
+        }
+
+        // Update points for next iteration
+        x0 = x1;
+        x1 = x2;
+        x2 = x3;
+    }
+
+    throw new Error('Max iterations reached without convergence');
+}
+
+function riddersMethod(f, initial, tolerance = 1e-6) {
+    let y0 = math.complex(initial);
+    let y1 = math.add(y0, math.complex(0.1, 0)); // Small step from y0
+
+    for (let j = 0; j < maxIterations; j++) {
+        let f_y0 = f(y0);
+        let f_y1 = f(y1);
+
+        if (math.abs(f_y1) < tolerance) {
+            return y1;
+        }
+
+        let mid = math.divide(math.add(y0, y1), 2);
+        let f_mid = f(mid);
+
+        let d = math.sqrt(math.subtract(math.pow(f_mid, 2), math.multiply(f_y0, f_y1)));
+        if (math.re(d) === 0 && math.im(d) === 0) {
+            return mid;
+        }
+
+        let sign = math.sign(math.subtract(f_y1, f_y0));
+        if (sign === 0) sign = 1; // Ensure no division by zero
+
+        let new_y = math.subtract(mid, math.divide(math.multiply(math.subtract(mid, y0), f_mid), d));
+
+        if (math.abs(math.subtract(new_y, y1)) < tolerance) {
             return new_y;
         }
 
-        y = new_y;
+        if (math.re(f_mid) * math.re(f_y0) < 0) {
+            y1 = new_y;
+        } else {
+            y0 = new_y;
+            f_y0 = f(new_y); // Update f_y0 for the new y0
+        }
+
+        y0 = y1;
+        y1 = new_y;
     }
 
+    throw new Error('Max iterations reached without convergence');
+}
+
+function laguerresMethod(initial, tolerance = 1e-6) {
+    let xm = math.complex(initial);
+
+    for (let i = 0; i < maxIterations; i++) {
+        let f_val = f(xm);
+        let fd = df(xm);
+        let fdd = ddf(xm);
+
+        if (math.abs(f_val) < tolerance) {
+            return xm; // Root found
+        }
+
+        let G = math.divide(fd, f_val);
+        let H = math.subtract(math.pow(G, 2), math.divide(fdd, f_val));
+        let sqrtTerm = math.sqrt(math.multiply(math.complex(maxIterations - 1), math.subtract(math.multiply(maxIterations, H), math.pow(G, 2))));
+        
+        // Choose the denominator with larger magnitude
+        let denom1 = math.add(G, sqrtTerm);
+        let denom2 = math.subtract(G, sqrtTerm);
+        let a = math.abs(denom1) > math.abs(denom2) ? denom1 : denom2;
+        xm = math.subtract(xm, math.divide(math.complex(maxIterations), a));
+
+        if (math.abs(f_val) < tolerance) {
+            return xm; // Root found
+        }
+    }
+
+    throw new Error("Maximum iterations exceeded for Laguerre's method");
+}
+
+function householderMethod(initial,d, tolerance = 1e-6) {
+    let xm = math.complex(initial);
+
+    for (let i = 0; i < maxIterations; i++) {
+        let f_val = f(xm);
+        if (math.abs(f_val) < tolerance) {
+            return xm; // Convergence check
+        }
+
+        let dthDerivative = nthDerivative(rf, d, xm);
+        let dPlus1thDerivative = nthDerivative(rf, d+1, xm); // (2 + 1) = 3
+        let numerator = math.multiply(dthDerivative, d+1);
+        let denominator = dPlus1thDerivative;
+        let correction = math.divide(numerator, denominator);
+
+        xm = math.subtract(xm, correction);
+
+        if (math.abs(f_val) < tolerance) {
+            return xm;
+        }
+    }
+
+    throw new Error("Maximum iterations exceeded for Householder method");
+}
+
+
+
+
+    if (method === 'secant') {
+        let xm = y;
+        let xn = y;
+        let xnn = math.add(y, math.complex(0.1, 0)); // Initial guess perturbation
+        for (let i = 0; i < maxIterations; i++) {
+            let fn = f(xn);
+            let fnn = f(xnn);
+            xm = math.subtract(xn, math.divide(math.multiply(fn, math.subtract(xn, xnn)), math.subtract(fn, fnn)));
+            if (math.abs(math.subtract(xm, xn)) < tolerance) {
+                return xm;
+            }
+            xnn = xn;
+            xn = xm;
+        }
+        throw new Error("Maximum iterations exceeded for Secant method");
+    }
+
+    if (method === 'householder') {
+        return householderMethod(y,2);
+    }
+
+    if (method === 'zel') {
+    return laguerresMethod(y);
+    }
+
+    for (let i = 0; i < maxIterations; i++) {
+        let f_y = f(y);
+        let df_y = df(y);
+
+        if (method === 'newton') {
+            let new_y = math.subtract(y, math.divide(f_y, df_y));
+            if (math.abs(math.subtract(new_y, y)) < tolerance) {
+                return new_y;
+            }
+            y = new_y;
+        }
+
+        if (method === 'unitnewton') {
+            let new_y = math.subtract(y, math.divide(f_y, math.subtract(f_y, f(math.add(y, math.complex(-1, 0))))));
+            if (math.abs(math.subtract(new_y, y)) < tolerance) {
+                return new_y;
+            }
+            y = new_y;
+        }
+
+        if (method === 'halley') {
+            let ddf_y = ddf(y);
+            let numerator = math.multiply(f_y, 2).mul(df_y);
+            let denominator = math.subtract(math.multiply(df_y, 2).pow(2), math.multiply(f_y, ddf_y));
+            let new_y = math.subtract(y, math.divide(numerator, denominator));
+            if (math.abs(math.subtract(new_y, y)) < tolerance) {
+                return new_y;
+            }
+            y = new_y;
+        }
+
+        if (method === 'steffensen') {
+            let xm = y;
+            let xn = y;
+            for (let j = 0; j < maxIterations; j++) {
+                let fn = f(xn);
+                let fn1 = math.subtract(math.divide(f(math.add(xn, fn)), fn), math.complex(1, 0));
+                xm = math.subtract(xn, math.divide(fn, fn1));
+                if (math.abs(math.subtract(xm, xn)) < tolerance) {
+                    return xm;
+                }
+                xn = xm;
+            }
+            throw new Error("Maximum iterations exceeded for Steffensen method");
+        }
+
+        if (method === 'muller') {
+            return mullersMethod(f, x, math.add(x,math.complex(1,0)), math.add(x,math.complex(2,0)));
+        }
+
+        if (method === 'ridders') {
+         return riddersMethod(f,x);
+        }
+if (method === 'schroder') {
+         return esm(x);
+        }
+    }
+if (method === 'zrr') {
+        let xm = math.complex(0);
+        let fn = math.complex(0);
+        let fnn = math.complex(0);
+        let xn = math.complex(x);
+        let xnn = math.complex(0);
+
+        for (let i = 0; i < maxIterations; i++) {
+            fn = f(xn);
+            fnn = f(xnn);
+            xm = math.subtract(xn, math.divide(math.multiply(fn, math.subtract(xn, xnn)), math.subtract(fn, fnn)));
+            if (math.abs(math.subtract(xm, xn)) < tolerance) {
+                return xm;
+            }
+            xnn = xn;
+            xn = xm;
+        }
+        throw new Error("Maximum iterations exceeded for ZRR method");
+    }
     throw new Error("Maximum iterations exceeded");
 }
+
+
+
+
+
+
+
+
+
+
         function renderBMP() {
             const width = parseInt(document.getElementById('bmp-width').value);
             const height = parseInt(document.getElementById('bmp-height').value);
@@ -294,10 +696,12 @@ function filog(expr, x, initial, tolerance = 1e-7, maxIterations = 100) {
             const maxImag = parseFloat(document.getElementById('max-imag').value);
 	    const ingi = parseFloat(document.getElementById('igi').value);
             const ingr = parseFloat(document.getElementById('igr').value);
+const maxit = parseFloat(document.getElementById('maxis').value);
             const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
 const fdse = document.getElementById('fds').value.trim();
 const  funcStr = document.getElementById('function').value.trim();
             const colorMode = document.getElementById('color-mode').value;
+const dMode = document.getElementById('dmode').value;
             const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
             const lightness = parseInt(document.getElementById('lightness').value);
             const hue = parseInt(document.getElementById('hue').value);
@@ -309,7 +713,7 @@ const  funcStr = document.getElementById('function').value.trim();
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
-            const imageData = ctx.createImageData(width, height);
+            const imageData = ctx.createImageData(width, height, );
 
             const reStep = (maxReal - minReal) / width;
             const imStep = (maxImag - minImag) / height;
@@ -323,7 +727,7 @@ const  funcStr = document.getElementById('function').value.trim();
                     try {
                         const complexValue = math.complex(re, im);
 if(!fffx){ing = math.evaluate(fdse, { x: complexValue }); }
-                        const funcValue = filog(funcStr, complexValue , ing);
+                        const funcValue = filog(funcStr, complexValue , ing , dMode, 1e-5 , maxit);
                         const magnitude = math.abs(funcValue);
                         const phase = (math.arg(funcValue)+2*Math.PI) % (2*Math.PI);
                         const lightnessValue = math.evaluate(magnitudeToLightnessExpr, { x: magnitude });
@@ -364,6 +768,8 @@ if(!fffx){ing = math.evaluate(fdse, { x: complexValue }); }
                 }
             }
             ctx.putImageData(imageData, 0, 0);
+scaleCanvas();
+
         }
 
         function HSVtoRGB(h, s, v) {
@@ -470,6 +876,20 @@ function CIELCHtoRGB(h, c, l) {
         Math.max(0, Math.min(255, Math.round(B * 255)))
     ];
 }
+
+
+
+ const canvas = document.getElementById('bmpCanvas');
+        const container = document.getElementById('canvasContainer');
+
+        function scaleCanvas() {
+            const widthScale = container.clientWidth / (canvas.width);
+            const heightScale = container.clientHeight / (canvas.height);
+            const scale = Math.min(widthScale, heightScale);
+            canvas.style.transform = `scale(${scale})`;
+        }
+
+
     </script>
 </body>
 </html>

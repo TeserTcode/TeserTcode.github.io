@@ -6,20 +6,78 @@
     <title>Complex Domain Coloring</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 5px;
+background-color: #bbd;
+            font-family: Cambria math, serif;
+            margin: 1px;
             text-align: center;
+
         }
-        canvas {
-            border: 1px solid #ddd;
-        }
+      
         input, button {
-            margin: 3px;
-            padding: 3px;
+            margin: 1px;
+            padding: 1px;
         }
+
         .form-group {
-            margin-bottom: 5px;
+            margin-bottom: 1px;
+ font-size: 12px;
         }
+        h2 {
+             box-shadow:  gray 0px 0px 60px -6px; 
+        }
+ h1 {
+             box-shadow:  #222 0px 0px 60px -6px; 
+        }
+        #canvasContainer {
+ padding: 10px;
+            width: 300px;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+  margin-right: auto;
+
+        }
+        #bmpCanvas {
+            transform-origin: center;
+
+  max-width: fit-content;
+        }
+.split {
+  height: 100%;
+  width: 50%;
+  position: fixed;
+  z-index: 1;
+  overflow-x: hidden;
+  padding-top: 20px;
+
+}
+
+.gold{
+   border-left: 5px gold;
+}
+
+.left {
+  left: 0;
+ border: 5px solid #000;
+background-color: #eee;
+ border-top: 10px solid black;
+box-shadow: inset gray 0px 0px 60px -6px; 
+
+
+}
+
+.right {
+  right: 0;
+ border: 5px solid #000;
+background-color: #eeeeee;
+ border-top: 10px solid  black;
+ box-shadow: inset gray 0px 0px 60px -6px; 
+
+
+
+}
         .color-input {
             display: inline-block;
             width: 30px;
@@ -36,6 +94,7 @@
 </head>
 <body>
     <h1>Escapetime Fractal Renderer</h1>
+<div class="split left">
     <div class="form-group">
         <label for="function">Function (e.g., 'z^2+c'):</label>
         <input type="text" id="function" name="function" value="z^2+c" required>
@@ -108,8 +167,17 @@
         <input type="range" id="hue" name="hue" min="0" max="360" value="0">
     </div>
     <button onclick="renderBMP()">Generate</button>
-    <canvas id="bmpCanvas" width="100" height="100"></canvas>
+  </div>
+<div class="split right">  
+    <div class="output-group">
+        <p id="outputText">Result: </p>
+    </div>
 
+          <div id="canvasContainer">
+        <canvas id="bmpCanvas" width="100" height="100"></canvas>
+    </div>
+</div>
+<script src="mthfnc.js"></script>
     <script>
         let paletteImageData = null;
 
@@ -325,6 +393,7 @@ let phase = 0;
                 }
             }
             ctx.putImageData(imageData, 0, 0);
+ scaleCanvas()
         }
 
         function HSVtoRGB(h, s, v) {
@@ -431,6 +500,19 @@ function CIELCHtoRGB(h, c, l) {
         Math.max(0, Math.min(255, Math.round(B * 255)))
     ];
 }
+
+ const canvas = document.getElementById('bmpCanvas');
+        const container = document.getElementById('canvasContainer');
+
+        function scaleCanvas() {
+            const widthScale = container.clientWidth / (canvas.width);
+            const heightScale = container.clientHeight / (canvas.height);
+            const scale = Math.min(widthScale, heightScale);
+            canvas.style.transform = `scale(${scale})`;
+        }
+
+
+       
     </script>
 </body>
 </html>

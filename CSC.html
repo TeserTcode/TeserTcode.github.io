@@ -133,7 +133,7 @@ background-color: #eeeeee;
     </div>
     <div class="form-group">
         <label for="magnitude-to-lightness">Magnitude to Lightness Conversion:</label>
-        <input type="text" id="magnitude-to-lightness" name="magnitude-to-lightness" value="x * 10" required>
+        <input type="text" id="magnitude-to-lightness" name="magnitude-to-lightness" value="tanh(x)*90" required>
     </div>
      <div class="form-group">
         <label for="min-real">Min Real:</label>
@@ -219,6 +219,7 @@ background-color: #eeeeee;
         <canvas id="bmpCanvas" width="100" height="100"></canvas>
     </div>
 </div>
+<script src="mthfnc.js"></script>
     <script>
  let paletteImageData = null;
 
