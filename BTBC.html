@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extended Base coverter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 50px;
+			  color: yellow;
+			    background-image: url("basee.png");
+				 background-size: cover;
+        }
+        input, select, button {
+            margin: 10px;
+            padding: 5px;
+            font-size: 16px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Coverter of the bases</h1>
+    <input type="text" id="inputNumber" placeholder="entre numbre">
+    <div>
+        <label for="fromBase">From Base: </label>
+        <select id="fromBaseSelect">
+      
+            <option value="2">Binary</option>
+            <option value="3">Ternary</option>
+			<option value="7" >e/2 (Base 7)</option>
+            <option value="8">Octal</option>
+            <option value="10"selected>Decimal</option>
+            <option value="12">Duodecimal</option>
+            <option value="14" >e (Base 14)</option>
+            <option value="16">Hexadecimal</option>
+            <option value="20">Vigesimal</option>
+            <option value="36">Hexatrigesimal</option>
+            <option value="60">Sexagesimal</option>
+            <option value="64">Tetrasexagesimal</option>
+            <option value="100">Centesimal</option>
+			<option value="112">centoduodecimal</option>
+            <option value="128">Centoctovigisimal</option>
+			<option value="140">e* (Base 140)</option>
+			<option value="154">ğ (Base 154)</option>
+			<option value="200">Decavigesimal</option>
+			<option value="456">Quadringentohexaquinquagesimal</option>
+			<option value="500">Pentacentesimal</option>
+			<option value="1000">Decacentesimal</option>
+			<option value="1296">Fetaniftimal</option>
+			<option value="1.41421356237">√2</option>
+            <option value="1.73205080757">√3</option>
+            <option value="3.16227766017">√10</option>
+            <option value="1.61803398875">Φ</option>
+            <option value="3.14159265359">π</option>
+            <option value="6.28318530718">𝜏</option>
+            <option value="2.71828182846">e (fake 2.71)</option>
+        </select>
+        <input type="text" id="fromBaseInput" placeholder="Manual From Base">
+    </div>
+    <div>
+        <label for="toBase">To Base: </label>
+        <select id="toBaseSelect">
+            
+            <option value="2">Binary</option>
+            <option value="3">Ternary</option>
+			<option value="7" >e/2 (Base 7)</option>
+            <option value="8">Octal</option>
+            <option value="10">Decimal</option>
+            <option value="12">Duodecimal</option>
+            <option value="14" selected>e (Base 14)</option>
+            <option value="16">Hexadecimal</option>
+            <option value="20">Vigesimal</option>
+            <option value="36">Hexatrigesimal</option>
+            <option value="60">Sexagesimal</option>
+            <option value="64">Tetrasexagesimal</option>
+            <option value="100">Centesimal</option>
+			<option value="112">centoduodecimal</option>
+            <option value="128">Centoctovigisimal</option>
+			<option value="140">e* (Base 140)</option>
+			<option value="154">ğ (Base 154)</option>
+			<option value="200">Decavigesimal</option>
+			<option value="456">Quadringentohexaquinquagesimal</option>
+			<option value="500">Pentacentesimal</option>
+			<option value="1000">Decacentesimal</option>
+			<option value="1296">Fetaniftimal</option>
+            <option value="1.41421356237">√2</option>
+            <option value="1.73205080757">√3</option>
+            <option value="3.16227766017">√10</option>
+            <option value="1.61803398875">Φ</option>
+            <option value="3.14159265359">π</option>
+            <option value="6.28318530718">𝜏</option>
+            <option value="2.71828182846">e (fake 2.71)</option>
+        </select>
+        <input type="text" id="toBaseInput" placeholder="Manual To Base">
+    </div>
+    <button onclick="covertBase()">covert</button>
+    <input type="text" id="outputNumber" readonly placeholder="coverted number">
+    <button onclick="covertBack()">covert Back</button>
+</div>
+
+<script>const characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZαΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩאבגדהוזחטיכלמנסעפצקרשתⴰⴱⴳⴳⵯⴷⴹⴻⴼⴽⴽⵯⵀⵃⵄⵅⵇⵉⵊⵍⵎⵏⵓⵔⵕⵖⵙⵚⵛⵜⵟⵡⵢⵣⵥⴲⴴⴺⴿⵒⵝⵠⴵⵁⵞĞÜİıᎠᎡᎢᎣᎤᎥᎦᎧᎨᎩᎪᎫᎬᎭᎮᎯᎰᎱᎲᎳᎴᎵᎶᎷᎸᎹᎺᎻᎼᎽᎾᎿᏀᏁᏂᏃᏄᏅᏆᏇᏈᏉᏊᏋᏌᏍᏎᏏᏐᏑᏒᏓᏔᏕᏖᏗᏘᏙᏚᏛᏜᏝᏞᏟᏠᏡᏢᏣᏤᏥᏦᏧᏨᏩᏪᏫᏬᏭᏮᏯᏰᏱᏲᏳᏴᏵაბგდევზთიკლმნოპჟრსტუფქღყშჩცძწჭხჯჰ᐀ᐁᐂᐃᐄᐅᐆᐇᐈᐉᐊᐋᐌᐍᐎᐏᐐᐑᐒᐓᐔᐕᐖᐗᐘᐙᐚᐛᐜᐝᐞᐟᐠᐡᐢᐣᐤᐥᐦᐧᐨᐩᐪᐫᐬᐭᐮᐯᐰᐱᐲᐳᐴᐵᐶᐷᐸᐹᐺᐻᐼᐽᐾᐿᑀᑁᑂᑃᑄᑅᑆᑇᑈᑉᑊᑋᑌᑍᑎᑏᑐᑑᑒᑓᑔᑕᑖᑗᑘᑙᑚᑛᑜᑝᑞᑟᑠᑡᑢᑣᑤᑥᑦᑧᑨᑩᑪᑫᑬᑭᑮᑯᑰᑱᑲᑳᑴᑵᑶᑷᑸᑹᑺᑻᑼᑽᑾᑿᒀᒁᒂᒃᒄᒅᒆᒇᒈᒉᒊᒋᒌᒍᒎᒏᒐᒑᒒᒓᒔᒕᒖᒗᒘᒙᒚᒛᒜᒝᒞᒟᒠᒡᒢᒣᒤᒥᒦᒧᒨᒩᒪᒫᒬᒭᒮᒯᒰᒱᒲᒳᒴᒵᒶᒷᒸᒹᒺᒻᒼᒽᒾᒿᓀᓁᓂᓃᓄᓅᓆᓇᓈᓉᓊᓋᓌᓍᓎᓏᓐᓑᓒᓓᓔᓕᓖᓗᓘᓙᓚᓛᓜᓝᓞᓟᓠᓡᓢᓣᓤᓥᓦᓧᓨᓩᓪᓫᓬᓭᓮᓯᓰᓱᓲᓳᓴᓵᓶᓷᓸᓹᓺᓻᓼᓽᓾᓿᔀᔁᔂᔃᔄᔅᔆᔇᔈᔉᔊᔋᔌᔍᔎᔏᔐᔑᔒᔓᔔᔕᔖᔗᔘᔙᔚᔛᔜᔝᔞᔟᔠᔡᔢᔣᔤᔥᔦᔧᔨᔩᔪᔫᔬᔭᔮᔯᔰᔱᔲᔳᔴᔵᔶᔷᔸᔹᔺᔻᔼᔽᔾᔿᕀᕁᕂᕃᕄᕅᕆᕇᕈᕉᕊᕋᕌᕍᕎᕏᕐᕑᕒᕓᕔᕕᕖᕗᕘᕙᕚᕛᕜᕝᕞᕟᕠᕡᕢᕣᕤᕥᕦᕧᕨᕩᕪᕫᕬᕭᕮᕯᕰᕱᕲᕳᕴᕵᕶᕷᕸᕹᕺᕻᕼᕽᕾᕿᖀᖁᖂᖃᖄᖅᖆᖇᖈᖉᖊᖋᖌᖍᖎᖏᖐᖑᖒᖓᖔᖕᖖᖗᖘᖙᖚᖛᖜᖝᖞᖟᖠᖡᖢᖣᖤᖥᖦᖧᖨᖩᖪᖫᖬᖭᖮᖯᖰᖱᖲᖳᖴᖵᖶᖷᖸᖹᖺᖻᖼᖽᖾᖿᗀᗁᗂᗃᗄᗅᗆᗇᗈᗉᗊᗋᗌᗍᗎᗏᗐᗑᗒᗓᗔᗕᗖᗗᗘᗙᗚᗛᗜᗝᗞᗟᗠᗡᗢᗣᗤᗥᗦᗧᗨᗩᗪᗫᗬᗭᗮᗯᗰᗱᗲᗳᗴᗵᗶᗷᗸᗹᗺᗻᗼᗽᗾᗿᘀᘁᘂᘃᘄᘅᘆᘇᘈᘉᘊᘋᘌᘍᘎᘏᘐᘑᘒᘓᘔᘕᘖᘗᘘᘙᘚᘛᘜᘝᘞᘟᘠᘡᘢᘣᘤᘥᘦᘧᘨᘩᘪᘫᘬᘭᘮᘯᘰᘱᘲᘳᘴᘵᘶᘷᘹᘺᘻᘼᘽᘾᘿᙀᙁᙂᙃᙄᙅᙆᙇᙈᙉᙊᙋᙌᙍᙎᙏᙐᙑᙒᙓᙔᙕᙖᙗᙘᙙᙚᙛᙜᙝᙞᙟᙠᙡᙢᙣᙤᙥᙦᙧᙨᙩᙪᙫᙬ᙭᙮ᙯᙰᙱᙲᙳᙴᙵᙶᙷᙸᙹᙺᙻᙼᙽᙾᙿЀЁЂЃЄЅІЇЈЉЊЋЌЍЎЏАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяѐёђѓєѕіїјљњћќѝўџѠѡѢѣѤѥѦѧѨѩѪѫѬѭѮѯѰѱѲѳѴѵѶѷѸѹѺѻѼѽѾѿҀҁ҂҃҄҅҆҇҈҉ҊҋҌҍҎҏҐґҒғҔҕҖҗҘҙҚқҜҝҞҟҠҡҢңҤҥҦҧҨҩҪҫҬҭҮүҰұҲҳҴҵҶҷҸҹҺһҼҽҾҿӀӁӂӃӄӅӆӇӈӉӊӋӌӍӎӏӐӑӒӓӔӕӖӗӘәӚӛӜӝӞӟӠӡӢӣӤӥӦӧӨөӪӫӬӭӮӯӰӱӲӳӴӵӶӷӸӹӺӻӼӽӾӿԀԁԂԃԄԅԆԇԈԉԊԋԌԍԎԏԐԑԒԓԔԕԖԗԘԙԚԛԜԝԞԟԠԡԢԣԤԥԦԧԨԩԪԫԬԭԮԯԱԲԳԴԵԶԷԸԹԺԻԼԽԾԿՀՁՂՃՄՅՆՇՈՉՊՋՌՍՎՏՐՑՒՓՔՕՖաբգդեզէըթժիլխծկհձղճմյնշոչպջռսվտրցւփքօֆև';
+   function getBaseValue(elementId) {
+        const value = document.getElementById(elementId).value.trim();
+        const numberValue = parseFloat(value);
+        return isNaN(numberValue) ? parseFloat(document.getElementById(elementId.replace('Input', 'Select')).value) : numberValue;
+    }
+
+    function covertBase() {
+        const inputNumber = document.getElementById('inputNumber').value.trim();
+        const fromBase = getBaseValue('fromBaseInput');
+        const toBase = getBaseValue('toBaseInput');
+
+        if (!isValidNumber(inputNumber, fromBase)) {
+            alert(`Invalid number for base ${fromBase}.`);
+            return;
+        }
+
+        const decimalValue = covertToDecimal(inputNumber, fromBase);
+        const finalResult = covertFromDecimal(decimalValue, toBase);
+        document.getElementById('outputNumber').value = finalResult;
+    }
+
+    function covertBack() {
+        const outputNumber = document.getElementById('outputNumber').value.trim();
+        const fromBase = getBaseValue('toBaseInput');
+        const toBase = getBaseValue('fromBaseInput');
+
+        if (!isValidNumber(outputNumber, fromBase)) {
+            alert(`Invalid number for base ${fromBase}.`);
+            return;
+        }
+
+        const decimalValue = covertToDecimal(outputNumber, fromBase);
+        const finalResult = covertFromDecimal(decimalValue, toBase);
+        document.getElementById('inputNumber').value = finalResult;
+    }
+
+    function covertToDecimal(number, base) {
+        const [integerPart, fractionalPart] = number.split('.');
+        const baseCharacters = getCharactersForBase(base);
+        let decimalValue = 0;
+
+        // covert integer part to decimal
+        for (let i = 0; i < integerPart.length; i++) {
+            const digitValue = baseCharacters.indexOf(integerPart[i]);
+            decimalValue = decimalValue * base + digitValue;
+        }
+
+        // covert fractional part to decimal
+        if (fractionalPart) {
+            for (let i = 0; i < fractionalPart.length; i++) {
+                const digitValue = baseCharacters.indexOf(fractionalPart[i]);
+                decimalValue += digitValue / Math.pow(base, i + 1);
+            }
+        }
+
+        return decimalValue;
+    }
+function covertFromDecimal(decimalValue, base) {
+    const baseCharacters = getCharactersForBase(base);
+    let result = '';
+
+    // Determine the maximum power of the base needed
+    let maxPower = Math.floor(Math.log(decimalValue) / Math.log(base));
+
+    while (decimalValue > 1e-7 || maxPower>-1) {
+        let n;
+        for (n = 0; n < base; n++) {
+            if (n * Math.pow(base, maxPower) > decimalValue) {
+                break;
+            }
+        }
+        n--; 
+		if(maxPower==-1) result += '.';
+        result += baseCharacters[n];
+        decimalValue -= n * Math.pow(base, maxPower);
+        maxPower--;
+    }
+
+    return result || '0'; // Return '0' if the result is empty
+}
+
+    function getCharactersForBase(base) {
+  
+            return characters;
+        
+    }
+
+    function isValidNumber(number, base) {
+	return 1;
+        const baseCharacters = getCharactersForBase(base);
+        return number.split('').every(char => baseCharacters.includes(char));
+    }
+</script>
+
+</body>
+</html>
