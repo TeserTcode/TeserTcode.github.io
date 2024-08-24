@@ -70,22 +70,32 @@
     border: solid #000000 2px;
     text-decoration: none;
 }
-
-div {
-    text-align: center; /* Center-align the container if needed */
-}
+        #error-message {
+            display: none;
+            color: red;
+            font-weight: bold;
+			font-size: 20px;
+        }
+        #error-message2 {
+		font-size: 50px;
+            display: none;
+            color: red;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-    <h1>2048</h1>
+    <h1>2048</h1> <div id="error-message2">Ultraskill issue</div>
     <div>
+	
 <div id="score">Score: 0</div> <!-- Score display -->
 <div id="highscore">High-Score: 0</div> <!-- Highscore display -->
 </div>
     <table id="imageTable"></table>
 	<h1></h1>
+	
     <button id="retryButton">Retry</button> <!-- Add the retry button -->
-
+ <div id="error-message">Skill issue</div>
     <script>
 	
         let a = Array.from({ length: 4 }, (_, row) =>
@@ -98,8 +108,12 @@ div {
         const table = document.getElementById('imageTable');
         const scoreDisplay = document.getElementById('score');
 		const highscoreDisplay = document.getElementById('highscore');
+		 const errorMessage = document.getElementById('error-message');
+		 const errorMessage2 = document.getElementById('error-message2');
 retry();
+
         function draw() {
+	;
             table.innerHTML = '';
             for (let row = 0; row < 4; row++) {
                 const tr = document.createElement('tr');
@@ -120,10 +134,24 @@ retry();
         }
 
         function fail() {
-            alert("skill issue");
+         
+            errorMessage.style.display = 'block';
+			for (let i = 0; i < 4; i++)
+                for (let j = 0; j < 4; j++)
+				 if(a[i][j]==0)return;
+
+			for (let i = 0; i < 4; i++)	 
+				 for (let j = 0; j < 3; j++){
+				 if(a[i][j]==a[i][j+1])return;
+				 if(a[j][i]==a[j+1][i])return;}
+
+				 
+				 errorMessage2.style.display = 'block';
+				 errorMessage.style.display = 'none'
         }
 
         function rain() {
+			errorMessage.style.display = 'none'
             const emp = [];
             for (let i = 0; i < 4; i++)
                 for (let j = 0; j < 4; j++)
