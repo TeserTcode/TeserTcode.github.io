@@ -8,6 +8,7 @@
 	body {
 	text-align: center;
 	background: url('2048bg.png') no-repeat center center fixed;
+	background-size: 100vw 100vh;
 	}
         table {
             border-collapse: collapse;
@@ -21,11 +22,11 @@
   background-image: -ms-linear-gradient(top, #34d9d6, #2bb85a);
   background-image: -o-linear-gradient(top, #34d9d6, #2bb85a);
   background-image: linear-gradient(to bottom, #34d9d6, #2bb85a);
-  -webkit-border-radius: 56;
-  -moz-border-radius: 56;
-  border-radius: 56px;
+  -webkit-border-radius: 26;
+  -moz-border-radius: 26;
+  border-radius: 26px;
   font-family: Georgia;
-  color: #ffffff;
+  color: #000000;
   font-size: 40px;
   padding: 20px 40px 20px 40px;
   text-decoration: none;
@@ -38,6 +39,7 @@
 		h1 {
 		font-size: 50px;
 		font-family: "Comic Sans MS";
+		color:white;
 		}
         img {
             border: 5px solid black;
@@ -45,33 +47,41 @@
             height: 128px;
 			
         }
-        #score {
-            margin: 10px 0;
-            font-size: 36px;
-			  background: #ebb467;
-  background-image: -webkit-linear-gradient(top, #ebb467, #de7456);
-  background-image: -moz-linear-gradient(top, #ebb467, #de7456);
-  background-image: -ms-linear-gradient(top, #ebb467, #de7456);
-  background-image: -o-linear-gradient(top, #ebb467, #de7456);
-  background-image: linear-gradient(to bottom, #ebb467, #de7456);
-  -webkit-border-radius: 0;
-  -moz-border-radius: 0;
-  border-radius: 0px;
-  -webkit-box-shadow: 0px 1px 3px #666666;
-  -moz-box-shadow: 0px 1px 3px #666666;
-  box-shadow: 0px 1px 3px #666666;
-  font-family: Arial;
-  color: #ffffff;
+       #score, #highscore {
+    display: inline-block; /* Make sure elements stay on the same line */
+    width: 256px; /* Set the width of each element */
+    margin: 10px 0;
+    font-size: 24px;
+    background: #ebb467;
+    background-image: -webkit-linear-gradient(top, #00ffdd, #00ddff);
+    background-image: -moz-linear-gradient(top, #00ffdd, #00ddff);
+    background-image: -ms-linear-gradient(top, #00ffdd, #00ddff);
+    background-image: -o-linear-gradient(top, #00ffdd, #00ddff);
+    background-image: linear-gradient(to bottom, #00ffdd, #00ddff);
+    -webkit-border-radius: 0;
+    -moz-border-radius: 0;
+    border-radius: 0px;
+    -webkit-box-shadow: 0px 1px 3px #666666;
+    -moz-box-shadow: 0px 1px 3px #666666;
+    box-shadow: 0px 1px 3px #666666;
+    font-family: Arial;
+    color: #000000; /* Fix color code to #000000 */
+    padding: 10px 5px;
+    border: solid #000000 2px;
+    text-decoration: none;
+}
 
-  padding: 10px 20px 10px 20px;
-  border: solid #000000 2px;
-  text-decoration: none;
-        }
+div {
+    text-align: center; /* Center-align the container if needed */
+}
     </style>
 </head>
 <body>
     <h1>2048</h1>
-    <div id="score">Score: 0</div> <!-- Score display -->
+    <div>
+<div id="score">Score: 0</div> <!-- Score display -->
+<div id="highscore">High-Score: 0</div> <!-- Highscore display -->
+</div>
     <table id="imageTable"></table>
 	<h1></h1>
     <button id="retryButton">Retry</button> <!-- Add the retry button -->
@@ -83,9 +93,11 @@
         );
 
         let score = 0; // Initialize score
+		let highscore = 0;
 
         const table = document.getElementById('imageTable');
         const scoreDisplay = document.getElementById('score');
+		const highscoreDisplay = document.getElementById('highscore');
 retry();
         function draw() {
             table.innerHTML = '';
@@ -121,9 +133,13 @@ retry();
             const { i, j } = emp[ran];
             a[i][j] = 1 + Math.floor(Math.random() * Math.random() * 2);
         }
-
+		function updatehighScore() {
+		highscore=Math.max(score,highscore);
+            highscoreDisplay.textContent = `High-Score: ${highscore}`;
+        }
         function updateScore() {
             scoreDisplay.textContent = `Score: ${score}`;
+			updatehighScore();
         }
 
         function falla() {
