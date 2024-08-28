@@ -1,5 +1,69 @@
-const bign = 20
-function integral(func, initial, end, input, epsilon = 1e-2, N = 10) {
+let bign = 10
+
+      const knthetaa = [
+	   math.complex(-0.4884150884437966033074145688009828070846452019933144110659203258, -0.9223068629260569360028235559934401714062536024757296551070286184),
+    math.complex(0.003851578735411204420399364109394585843185019100299557939634370175, -0.09056477795411682044547667460610562297963243478659090786228987894),
+    math.complex(0.002100916786902814872986655281733514148876424144705316994169658256, -0.03795624815247508554188893672201581077914536270451353672164745447),
+    math.complex(0.001447547758421785120322056360837028884870406466145500301406390468, -0.02281729713002375502899972915432846601334842283056874647777022957),
+    math.complex(0.001104386099212763734898482787823058366235237703064933600632173951, -0.01591997616942238837419345412868698280031768159954380825245251099),
+    math.complex(0.0008925930993370412716687367311439146963311622539771580704880427279, -0.01205322305695692864975008563287107152522094862729950820040836599),
+    math.complex(0.0007487739201806153049758044951052940118091071090206985765702546929, -0.009609109527693034937264641056222933237980714330290006089609899773),
+    math.complex(0.0006447070675903776978488026882850743197145272531230651691592722707, -0.007937942295658218859174134769344880450697924795216699914435502927),
+    math.complex(0.0005659061641790590181344669276728723138509004662004086543603548146, -0.006730015292187770054262275187965891901244389685431177911075154922),
+    math.complex(0.0005041654941405862274307539927433877665937227700581003768123204892, -0.005820035931204927306224523286334754287263921141287385230243220755),
+    math.complex(0.0004544872825132033722559396488552986529475881447380032450147114988, -0.005112199447745594893171793161203690360335197392328055217986417005),
+    math.complex(0.0004136529004774918671618626459954724559749319620789536867370273260, -0.004547362107568092600925048536415649559078469627107748501527043503),
+    math.complex(0.0003794955571786000088697356404197888286796467312410992883137925607, -0.004087146236240283999694668038068334966781507680882805358569200643),
+    math.complex(0.0003505029366052633988576783626803309254052170161838436418100442001, -0.003705621564669216991707725572651167414285527654904302070911460098),
+    math.complex(0.0003255873758339126954484586852188685668345673062105611875200235400, -0.003384671692770100003071703722399997866001801122288069938940601106),
+    math.complex(0.0003039465587699662952802460548063685816196386198597183883266975190, -0.003111277707411010485372421696440090595171691803402175898505985212),
+    math.complex(0.0002849756856682896456991292457736657318943935536589590646036775813, -0.002875856086155444352982526500791233294464529670378412454760636725),
+    math.complex(0.0002682102094762768524805960805757221753676588577228413774263957149, -0.002671204038303480638933156368937704231533347407163452091644625313),
+    math.complex(0.0002532874059782158978731245483184201725381761077080558628593401737, -0.002491809016411183393083725275197258343434499414580878869781449599),
+    math.complex(0.0002399199252033383381531648506198264545555778190328086825557233190, -0.002333384176731953257491678245854568569465650215226605876827570224),
+    math.complex(0.0002278771806878995978116431742754728195509773817572503488622253656, -0.002192548290134272888908485993937443480978253225566868373312073872),
+    math.complex(0.0002169719939369601159275249206237052143958229041896684818458523502, -0.002066600468099710439973629868452944527075000424954282497730263613),
+    math.complex(0.0002070508404320027768701131909127951364611663208110243110116426246, -0.001953358597288465093450281342794127932917952818195569992658696534),
+    math.complex(0.0001979866127165430317589263437778081315770391674791140687674143941, -0.001851041486065535573407440218709946038702829744926764617624524757),
+    math.complex(0.0001896731739394399866788397399722925496477110933666346439184319091, -0.001758181572182321112069035868202704103950291218436861667237033803),
+    math.complex(0.0001820212054891074112044000129667354213978538196316436387851418153, -0.001673559363676357346123914971694493232221993735550917268738858015),
+    math.complex(0.0001749550036403234273399494570255873164165031785568179628977463350, -0.001596153575767860240554422661364695866209785232138170351272344324),
+    math.complex(0.0001684099814472925376319239927522230783547847964370519880770944165, -0.001525102764611534750326461986800943694890299622654514619465599691),
+    math.complex(0.0001623307011478848943909394080050075970092093527506422409448875742, -0.001459675491716838194338653559325080973844923375620283682405507015),
+    math.complex(0.0001566693101331199909220087635208187462749090936893864569163060912, -0.001399246893842371680401845259694777305087674295472373168470742488),
+    math.complex(0.0001513842871063078569145807647799539359116309132963533158941501613, -0.001343280115689140884621279080849079857285062807417072217432552249),
+    math.complex(0.0001464394289583394447247721734079990890418841145303703492639726523, -0.001291311471960750653908059196955788990876691029817777927299295301),
+    math.complex(0.0001418030261175519151211374693074145618328214714132123674328852046, -0.001242938496662146649073428500230412148743921407926676370817938625),
+    math.complex(0.0001374471867005090255770591229055772697473198870561426235043644986, -0.001197810247398746352496354555014575959958941477123993056349877833),
+    math.complex(0.0001333472790556910966327361100265556812492078690586265155692217148, -0.001155619385389272268060593618510539536991738480079500511828080918),
+    math.complex(0.0001294814691922701317867561720255548440064688994206315412051196830, -0.001116095664547526248761287482063258310060801470527987525823350702),
+    math.complex(0.0001258303347733657589577696402821961482772193213496719530033342190, -0.001079000546767080135716869093687333252602486146227271121757786628),
+    math.complex(0.0001223765412872603325844486349523649156478358427628515269312269217, -0.001044122723433417190447027562677345959300221153348646809655905036),
+    math.complex(0.0001191045690185864086090848447251650999256128429514119094164733358, -0.001011274370810359250781122540766279539538009204729341031155331676),
+    math.complex(0.0001160004817602718618354116842527507791605150799581783350152968306, -0.0009802880033044178563593392930984679209828927175383392734733906396),
+    math.complex(0.0001130517300073879111072767284551504870621327179773008393992382167, -0.0009510138165816972450739097696802100090600073882148206829811154926),
+    math.complex(0.0001102469827816539431837410946157009444326178175090307918324902937, -0.0009233174341885346365203266236251432785676054628360253910615663766),
+    math.complex(0.0001075759833431574905260456706989882600017816184441893789020826951, -0.0008970779882416688038811024000686339628261525062030174427210974300),
+    math.complex(0.0001050294249231578405642745349518431116052669169413568861682665806, -0.0008721864780388293730799063194368000970158752795298437540522459254),
+    math.complex(0.0001025988433107396714750408090263878426401045584210167310049468416, -0.0008485443609397825491565516344777714454522808512310834878335860130),
+    math.complex(0.0001002765236859915805823982965486242105602111831573035932129209353, -0.0008260623382141759381895854390136442828610870208222580896984706258),
+    math.complex(9.805541954335107556324438591529765967978181036847202876136258659e-5, -0.0008046593052246129637638310317170863565167375978846896286659291607),
+    math.complex(9.592908191383587247204947195050685442544549439245568950225529990e-5, -0.0007842614406755552606690419022963891465180397687979920940843385186),
+    math.complex(9.389159739186952256957537926879213215977706219995989054216302302e-5, -0.0007648014139899961858380046660772991544361372347914815520642298214),
+    math.complex(9.193753371513106628768806391406014126734138226459751564223391282e-5, -0.0007462176933915225570310056169433131276648201124332129077993072937),
+    math.complex(9.006189184511152140135588682959610869089924558110295376009770450e-5, -0.0007284539401362281596641263543272122555174319700177155323135572269),
+    math.complex(8.826006366032518850846828920720607759342574182666599716365528031e-5, -0.0007114584766870765590820275163454576039804465378854442997108964844),
+    math.complex(8.652779451009647244146107135028422719721639560788412348040297121e-5, -0.0006951838185547548458429913496862294190872705135690895971283074639),
+    math.complex(8.486114998983572209736604208301551440602875634950903180956943719e-5, -0.0006795862611242247247425102779266978505071797128401770548166079157),
+    math.complex(8.325648639296596995426728981234729804875179263959087830500981804e-5, -0.0006646255141087549026170734385955154722958533657139322473022881236),
+    math.complex(8.171042437355873275702681738258431113430986989946275120293151168e-5, -0.0006502643773738992321254237374188328257557423025199083328327748489),
+    math.complex(8.021982542001023415497760346840762752972488288470446407612314855e-5, -0.0006364684527931956964094497175999908017813283732862787317225164460),
+    math.complex(7.878177079594425393460935845311850634874468352218878086163471706e-5, -0.0006232058875678463155090833893033917095631649053988665236741414772),
+    math.complex(7.739354265175272528970095315565445449395583976404287782752869924e-5, -0.0006104471450905416745750599567035079243225218491958892623830844473),
+    math.complex(7.605260705023662591683674215491958711194575443441659148758242520e-5, -0.0005981647999801659300901133780805430707771024544719758191290647784)
+];
+
+function integral(func, initial, end, input, N = bign) {
     // Function to handle complex integration
     function simpsonsRule(a, b, n) {
         const h = math.divide(math.subtract(b, a), n);
@@ -20,7 +84,7 @@ function integral(func, initial, end, input, epsilon = 1e-2, N = 10) {
           return simpsonsRule(initial,end, N);
        }
 
-
+let randc = math.complex(2.1723687,1.8278742);
 function eulerc () { return math.complex(2.71828,0);        
 }
 function log(x){return math.log(x);}
@@ -97,13 +161,13 @@ function expPlus(a, b) {
 }
 
 // Function for 'exp2'
-function exp2(a, b) {
-    return math.multiply(a, math.pow(2, b));
+function exp2( b) {
+    return  math.pow(2, b);
 }
 
 // Function for 'exp10'
-function exp10(a, b) {
-    return math.multiply(a, math.pow(10, b));
+function exp10( b) {
+    return  math.pow(10, b);
 }
 
 
@@ -113,13 +177,13 @@ function expc(a, b) {
 }
 
 // Function for 'expi'
-function expi(a, b) {
-    return math.divide(a, math.exp(b));
+function expi( b) {
+    return math.divide(1, math.exp(b));
 }
 
 // Function for 'expic'
-function expic(a, b) {
-    return math.divide(a, math.multiply(math.exp(b), math.add(b, 0.0001)));
+function expic( b) {
+    return  math.multiply(math.exp(b), math.add(b, 0.0001));
 }
 
 // Function for 'expein'
@@ -128,13 +192,13 @@ function expein(b) {
 }
 
 // Function for 'expsqr'
-function expsqr(a, b) {
-    return math.multiply(a, math.exp(math.multiply(b, b)));
+function expsqr( b) {
+    return  math.exp(math.multiply(b, b));
 }
 
 // Function for 'expmsqr'
-function expmsqr(a, b) {
-    return math.add(math.multiply(a, math.exp(math.unaryMinus(math.multiply(b, b)))), 0.0001);
+function expmsqr( b) {
+    return math.add(math.exp(math.unaryMinus(math.multiply(b, b))), 0.0001);
 }
 
 // Function for 'log-1'
@@ -145,8 +209,8 @@ function logMinus1(b) {
 
 
 // Function for 'log10'
-function log10(a, b) {
-    return math.multiply(a, math.log(b, 10.0));
+function log10( b) {
+    return  math.log(b, 10.0);
 }
 
 // Function for '_log'
@@ -2593,42 +2657,1004 @@ function chi(b) {
 function ei(b) {
     return integral(expc, -bign, b);
 }
-function fresnelc(b, epsilon) {
+function fresnelc(b) {
     return integral(cossqr, 0, b);
 }
 
-function fresnels(b, epsilon) {
+function fresnels(b) {
     return integral(sinsqr, 0, b);
 }
 
-function fresnelt(b, epsilon) {
+function fresnelt(b) {
     const sinsqrIntegral = integral(sinsqr, 0, b);
     const cossqrIntegral = integral(cossqr, 0, b);
     return math.divide(sinsqrIntegral, cossqrIntegral);
 }
 
-function fresnelct(b, epsilon) {
+function fresnelct(b) {
     const cossqrIntegral = integral(cossqr, 0, b);
     const sinsqrIntegral = integral(sinsqr, 0, b);
     return math.divide(cossqrIntegral, sinsqrIntegral);
 }
 
-function fresnelsc(b, epsilon) {
+function fresnelsc(b) {
     return math.divide(1.0, integral(cossqr, 0, b));
 }
 
-function fresnelcs(b, epsilon) {
+function fresnelcs(b) {
     return math.divide(1.0, integral(sinsqr, 0, b));
 }
 
-function gudermannian(b, epsilon) {
+function gudermannian(b) {
     return integral(sech, 0, b);
 }
 
-function gudermanniani(b, epsilon) {
+function gudermanniani(b) {
     return integral(cosh_inv, 0, b);
 }
+let gcei1d = 0;
+function compellint1d(a) {
+return math.divide(1.0,math.sqrt(math.multiply(math.subtract(1.0,math.multiply(a,a)),math.subtract(1.0,math.multiply(math.multiply(a,a),math.multiply(gcei1d,gcei1d)))))) ;
+}
+function compellint1(a) {
+gcei1d=a;
+ return integral(compellint1d, 0, 1);
+
+}
+function nevthetc(a, b) {
+    const K = compellint1(b);
+    const Kp = compellint1(math.sqrt(math.subtract(1, math.pow(b, 2))));
+        const Q = math.exp(math.multiply(math.complex(-math.pi), math.divide(Kp, K)));
+
+    let fi = math.complex(0);
+
+    for (let i = 0; i < bign; i++) {
+        const term = math.multiply(math.pow(Q, math.multiply(i, math.add(i, 1)))
+            ,math.cos(math.divide(math.multiply(math.pi, a ,toComplex(2*i+1)), math.multiply(2, K))));
+        fi = math.add(fi, term);
+    }
+
+    return math.multiply(
+        math.divide(math.sqrt(math.multiply(2, math.pi)), math.multiply(math.sqrt(K), math.pow(b, math.complex(0.25)))),
+        fi
+    );
+}
+
+// nevthetd function
+function nevthetd(a, b) {
+    const K = compellint1(b);
+    const Kp = compellint1(math.sqrt(math.subtract(1, math.pow(b, 2))));
+        const Q = math.exp(math.multiply(math.complex(-math.pi), math.divide(Kp, K)));
+
+    let fi = math.complex(0);
+
+    for (let i = 1; i < bign; i++) {
+        const term = math.multiply(math.pow(Q, math.multiply(i, i))
+            ,(math.cos(math.divide(math.multiply(math.pi, a, toComplex(i)), K))));
+        fi = math.add(fi, term);
+    }
+
+    return math.multiply(
+        math.divide(math.sqrt(math.multiply(2, math.pi)), math.multiply(2, math.sqrt(K))),
+        math.add(math.complex(1), math.multiply(math.complex(2), fi))
+    );
+}
+
+// nevthetn function
+function nevthetn(a, b) {
+    const K = compellint1(b);
+    const Kp = compellint1(math.sqrt(math.subtract(1, math.pow(b, 2))));
+      const Q = math.exp(math.multiply(math.complex(-math.pi), math.divide(Kp, K)));
+
+    let fi = math.complex(0);
+
+    for (let i = 1; i < bign; i++) {
+        const term = math.multiply(math.pow(math.complex(-1), i)
+            ,(math.pow(Q, math.multiply(i, i)))
+            ,(math.cos(math.divide(math.multiply(math.pi, a , toComplex(i)), K))));
+        fi = math.add(fi, term);
+    }
+
+    return math.multiply(
+        math.divide(math.sqrt(math.multiply(2, math.pi)), math.multiply(math.sqrt(K), math.pow(math.subtract(1, b), math.complex(0.25)))),
+        math.add(math.complex(1), math.multiply(math.complex(2), fi))
+    );
+}
+
+// nevthets function
+function nevthets(a, b) {
+    const K = compellint1(b);
+    const Kp = compellint1(math.sqrt(math.subtract(1, math.pow(b, 2))));
+    const Q = math.exp(math.multiply(math.complex(-1), math.divide(math.pi, Kp)));
+    let fi = math.complex(0);
+
+    for (let i = 0; i < bign; i++) {
+        const term = math.multiply(math.pow(math.complex(-1), i)
+            ,(math.pow(Q, math.multiply(i, math.add(i, 1))))
+            ,(math.sin(math.divide(math.multiply(math.pi, a,toComplex(2*i+1)), math.multiply(2, K)))));
+        fi = math.add(fi, term);
+    }
+
+    return math.multiply(
+        math.divide(
+            math.multiply(math.sqrt(math.multiply(2, math.pi)), math.pow(Q, math.complex(0.25))),
+            math.divide(
+                math.sqrt(K),
+                math.multiply(math.pow(math.subtract(1, b), math.complex(0.25)), math.pow(b, math.complex(0.25)))
+            )
+        ),
+        fi
+    );
+}
+function cc(a, b) {
+    return nevthetc(a, b);
+}
+
+// cs
+function cs(a, b) {
+    return math.divide(nevthetc(a, b), nevthetd(a, b));
+}
+
+// cn
+function cn(a, b) {
+    return math.divide(nevthetc(a, b), nevthetn(a, b));
+}
+
+// cd
+function cd(a, b) {
+    return math.divide(nevthetc(a, b), nevthetd(a, b));
+}
+
+// sc
+function sc(a, b) {
+    return math.divide(nevthetd(a, b), nevthetc(a, b));
+}
+
+// ss
+function ss(a, b) {
+    return math.divide(nevthetd(a, b), nevthetd(a, b));
+}
+
+// sn
+function sn(a, b) {
+    return math.divide(nevthetd(a, b), nevthetn(a, b));
+}
+
+// sd
+function sd(a, b) {
+    return math.divide(nevthetd(a, b), nevthetd(a, b));
+}
+
+// nc
+function nc(a, b) {
+    return math.divide(nevthetn(a, b), nevthetc(a, b));
+}
+
+// ns
+function ns(a, b) {
+    return math.divide(nevthetn(a, b), nevthetd(a, b));
+}
+
+// nn
+function nn(a, b) {
+    return math.divide(nevthetn(a, b), nevthetn(a, b));
+}
+
+// nd
+function nd(a, b) {
+    return math.divide(nevthetn(a, b), nevthetd(a, b));
+}
+
+// dc
+function dc(a, b) {
+    return math.divide(nevthets(a, b), nevthetc(a, b));
+}
+
+// ds
+function ds(a, b) {
+    return math.divide(nevthets(a, b), nevthetd(a, b));
+}
+
+// dn
+function dn(a, b) {
+    return math.divide(nevthets(a, b), nevthetn(a, b));
+}
+
+// dd
+function dd(a, b) {
+    return math.divide(nevthets(a, b), nevthetd(a, b));
+}
+
+
+function lacunary(a,b) {
+    let fi = toComplex(0.0);
+    for (let i = 0; i < bign; i++) {
+        fi = math.add(fi, math.pow(b, math.pow(toComplex(a), i)));
+    }
+    return fi;
+}
+
+// Updated functions
+function weberf(b) {
+    return math.divide(
+        math.pow(dedekindeta(b), 2),
+        math.multiply(dedekindeta(math.divide(b, toComplex(2.0))), dedekindeta(math.multiply(toComplex(2.0), b)))
+    );
+}
+
+function weberf1(b) {
+    return math.divide(
+        dedekindeta(math.divide(b, toComplex(2.0))),
+        dedekindeta(b)
+    );
+}
+
+function weberf2(b) {
+    return math.divide(
+        math.multiply(math.sqrt(toComplex(2.0)), dedekindeta(math.multiply(toComplex(2.0), b))),
+        dedekindeta(b)
+    );
+}
+
+function weberr(a,b) {
+    return math.divide(
+        math.multiply(math.pow(toComplex(2.0), math.divide(math.subtract(a,toComplex(1.0)), toComplex(4.0))), qpocinf(math.pow(b, toComplex(a)), math.pow(b, math.multiply(toComplex(a), toComplex(2.0))), bign)),
+        math.pow(qpocinf(b, math.pow(b, 2), bign), toComplex(a))
+    );
+}
+
+function weberr5(a,b) {
+    return math.divide(
+        math.multiply(math.pow(toComplex(2.0), math.divide(math.subtract(toComplex(5.0),toComplex(1.0)), toComplex(4.0))), qpocinf(math.pow(b, toComplex(a)), math.pow(b, toComplex(10.0)), bign)),
+        math.pow(qpocinf(b, math.pow(b, 2), bign), toComplex(5))
+    );
+}
+function todoub(x) {
+    return math.number(x);
+}
+
+function qnum(a, b) {
+    if (math.equal(b, math.complex(1.0, 0))) return a;
+    return math.divide(
+        math.subtract(math.complex(1.0, 0), pow(b, a)),
+        math.subtract(math.complex(1.0, 0), b)
+    );
+}
+
+function qfac(n, q) {
+    let fi = math.complex(1.0, 0);
+    for (let i = 1; i <= todoub(n); i++) {
+        fi = math.multiply(fi, qnum(math.complex(i, 0), q));
+    }
+    return fi;
+}
+
+function qpocinf(a, q) {
+    let fi = math.complex(1.0, 0);
+    for (let i = 0; i < bign; i++) {
+        fi = math.multiply(fi, math.subtract(math.complex(1.0, 0), math.multiply(a, pow(q, i))));
+    }
+    return fi;
+}
+
+function qexp(q, n) {
+    let fi = math.complex(0, 0);
+    for (let i = 0; i < bign; i++) {
+        fi = math.add(fi, math.divide(pow(n, i), qfac(math.complex(i, 0), q)));
+    }
+    return fi;
+}
+
+function dqexp(q, n) {
+    let fi = math.complex(0, 0);
+    for (let i = 0; i < bign; i++) {
+        fi = math.add(fi, math.divide(pow(n, i), qfac(math.complex(i, 0), q)));
+    }
+    return fi;
+}
+
+function qpoch(a, q, k) {
+    let fi = math.complex(1.0, 0);
+    if (todoub(k) > 0) {
+        for (let i = 0; i <= todoub(k) - 1.0; i++) {
+            fi = math.multiply(fi, math.subtract(math.complex(1.0, 0), math.multiply(a, pow(q, i))));
+        }
+        return fi;
+    }
+    if (todoub(k) === 0) return math.complex(0, 0);
+    if (todoub(k) < 0) {
+        for (let i = 1; i <= math.abs(todoub(k)); i++) {
+            fi = math.multiply(fi, math.divide(math.complex(1.0, 0), math.subtract(math.complex(1.0, 0), math.multiply(a, pow(q, -i)))));
+        }
+        return fi;
+    }
+    return fi;
+}
+
+function accuracy (x){
+bign = x;
+return 0;
+}
+function clausencos(a,b) {
+    let fi = toComplex(0);
+    for (let i = 1; i < bign; i++) {
+        fi = math.add(fi, math.divide(math.cos(math.multiply(b,i)), math.pow(i, toComplex(a))));
+    }
+    return fi;
+}
+
+function clausensin(a,b) {
+    let fi = toComplex(0);
+    for (let i = 1; i < bign; i++) {
+        fi = math.add(fi, math.divide(math.sin(math.multiply(b,i)), math.pow(i, toComplex(a))));
+    }
+    return fi;
+}
+
+function legendrechi(a,b) {
+    let fi = toComplex(0);
+    for (let i = 0; i < bign; i++) {
+        fi = math.add(fi, math.divide(math.pow(b, toComplex(2 * i + 1)), math.pow(2 * i + 1, toComplex(a))));
+    }
+    return fi;
+}
+function besselj(a, b) {
+    let fi = math.complex(0, 0);
+    for (let n = 0; n < bign/2; n++) {
+        const sign = math.pow(math.complex(-1.0, 0), n);
+        const numerator = math.multiply(sign, pow(math.divide(b, math.complex(2.0, 0)), math.add(a, math.multiply(2.0, n))));
+        const denominator = math.multiply(gamma(math.add(n, math.complex(1.0, 0))), gamma(math.add(a, n, math.complex(1.0, 0))));
+        fi = math.add(fi, math.divide(numerator, denominator));
+    }
+    return fi;
+}
+
+function besselk(a, b) {
+    const term1 = besseli(math.multiply(math.complex(-1.0, 0), a), b);
+    const term2 = besseli(a, b);
+    const numerator = math.subtract(term1, term2);
+    const denominator = math.sin(math.multiply(pi(), a));
+    return math.multiply(math.divide(numerator, denominator), math.divide(pi(), math.complex(2.0, 0)));
+}
+
+function besseli(a, b) {
+    let fi = math.complex(0, 0);
+    for (let n = 0; n < bign/2; n++) {
+        const numerator = pow(math.divide(b, math.complex(2.0, 0)), math.add(a, math.multiply(2.0, n)));
+        const denominator = math.multiply(gamma(math.add(n, math.complex(1.0, 0))), gamma(math.add(a, n, math.complex(1.0, 0))));
+        fi = math.add(fi, math.divide(numerator, denominator));
+    }
+    return fi;
+}
+
+
+// Converted functions
+function neuman(a, b) {
+    const term1 = math.multiply(besselj(a, b), math.cos(math.multiply(pi(), a)));
+    const term2 = besselj(math.multiply(math.complex(-1.0, 0), a), b);
+    const numerator = math.subtract(term1, term2);
+    const denominator = math.sin(math.multiply(pi(), a));
+    return math.divide(numerator, denominator);
+}
+
+function struve(a, b) {
+    let fi = math.complex(0, 0);
+    for (let n = 0; n < math.log(bign); n++) {
+        const sign = math.pow(math.complex(-1.0, 0), n);
+        const numerator = math.multiply(sign, pow(math.divide(b, math.complex(2.0, 0)), math.multiply(2.0, n)));
+        const denominator = math.multiply(gamma(math.add(n, math.complex(1.5, 0))), gamma(math.add(a, n, math.complex(1.5, 0))));
+        fi = math.add(fi, math.divide(numerator, denominator));
+    }
+    return math.multiply(pow(math.divide(b, math.complex(2.0, 0)), math.add(a, math.complex(1.0, 0))), fi);
+}
+function modc(a, b) {
+	let ac = toComplex(a);
+	let bc = toComplex(b);
+	if (b.re == 0 || b.im == 0){
+	return a;}
+    return math.complex(math.mod(ac.re, bc.re), math.mod(ac.im, bc.im));
+}
+
+function weierstrasselliptic(bn, w, ww) {
+	
+    let fi =  math.divide(1.0, math.pow(bn, 2));
+    let bgn = math.floor(math.sqrt(bign * 3) / 2);  // Adjust bign if needed
+    for (let i = -bgn; i <= bgn; i++) {
+        for (let j = -bgn; j <= bgn; j++) {
+            if (! (i == 0 && j == 0)) {
+                let l = math.add(math.multiply(w, i), math.multiply(ww, j)); // Ensure l is treated as a complex number
+                let term1 = math.divide(1.0, math.pow(math.subtract(bn, l), 2));
+                let term2 = math.divide(1.0, math.pow(l, 2));
+                fi = math.add(fi, math.subtract(term1, term2));
+            }
+        }
+    }
+    return fi;
+}
+function weierstrassellipticd(bn, w, ww) {
+	
+    let fi = 0;
+    let bgn = math.floor(math.sqrt(bign * 3) / 2);  // Adjust bign if needed
+    for (let i = -bgn; i <= bgn; i++) {
+        for (let j = -bgn; j <= bgn; j++) {
+     
+                let l = math.add(math.multiply(w, i), math.multiply(ww, j)); // Ensure l is treated as a complex number
+                let term1 = math.divide(1.0, math.pow(math.subtract(bn, l), 3));
+                fi = math.add(fi,term1);
+            
+        }
+    }
+    return math.multiply(fi,-2);
+}
+function weierstrassellipticsigma(bn, w, ww) {
+	
+    let fi = bn;
+    let bgn = math.floor(math.sqrt(bign * 3) / 2);  // Adjust bign if needed
+    for (let i = -bgn; i <= bgn; i++) {
+        for (let j = -bgn; j <= bgn; j++) {
+      if (! (i == 0 && j == 0)) {
+                let l = math.add(math.multiply(w, i), math.multiply(ww, j)); // Ensure l is treated as a complex number
+                let term1 = math.multiply(math.subtract(1,math.divide(bn,l)),math.exp(math.add(math.divide(bn,l),math.divide(math.multiply(bn,bn),math.multiply(l,l,2)))));
+                
+                fi = math.multiply(fi, term1);
+            }
+        }
+    }
+    return fi;
+}
+function weierstrassellipticzeta(bn, w, ww) {
+
+    let fi =  math.divide(1.0, math.pow(bn, 1));
+    let bgn = math.floor(math.sqrt(bign * 3) / 2);  // Adjust bign if needed
+    for (let i = -bgn; i <= bgn; i++) {
+        for (let j = -bgn; j <= bgn; j++) {
+            if (! (i == 0 && j == 0)) {
+                let l = math.add(math.multiply(w, i), math.multiply(ww, j)); // Ensure l is treated as a complex number
+                let term1 = math.divide(1.0,math.subtract(bn, l));
+                let term2 = math.divide(1.0, l);
+				 let term3 = math.divide(bn, math.pow(l, 2));
+                fi = math.add(fi,term3,term1, term2);
+            }
+        }
+    }
+    return fi;
+}
+function weierstrassellipticeta(bn, w, ww) {
+	
+   return math.subtract( weierstrassellipticzeta(math.add(randc,bn),w,ww),weierstrassellipticzeta(randc,w,ww));
+}
+let globw = 1;
+let	globww = 1;
+function weierzeta(b){
+return weierstrassellipticzeta(b,globw,globww);
+}
+function weierstrassellipticdelta(bn, w, ww) {
+	globw = w;
+	globww = ww;
+   return math.exp(integral(weierzeta,0,bn));
+}
+function arcweierstrassellipticd(a, b) {
+    // Convert a to a complex number and extract real and imaginary parts
+    let aComplex = math.complex(a);
+    let realA = aComplex.re;
+    let imagA = aComplex.im;
+
+    // Calculate the term under the square root
+    let term = math.subtract(math.multiply(4.0, math.pow(b, 3)), realA * b, imagA);
+
+    // Calculate the result
+    let result = math.divide(1.0, math.sqrt(term));
+
+    return result;
+}
+function arcweierstrasselliptic(a, b) {
+	return integral(arcweierstrassellipticd,toComplex(bign),b,a);
+}
+function bickleynaylor(a, b) {
+	bngc = a;
+	return integral(bickleynaylord,toComplex(0),toComplex(bign),b);
+}
+let bngc = 0;
+function bickleynaylord(a, b) {
+    // Ensure a and b are complex if needed
+    let aComplex = math.complex(a);
+    let bComplex = math.complex(b);
+
+    // Calculate exp(-a*cosh(b)) / (cosh(b)^globalc)
+    let expTerm = math.exp(math.multiply(-aComplex, math.cosh(bComplex)));
+    let coshTerm = math.pow(math.cosh(bComplex), bngc);
+
+    // Calculate the result
+    let result = math.divide(expTerm, coshTerm);
+
+    return result;
+}
+
+function weierstrassauxf1(a, b) {
+    // Convert a to complex number if needed
+    let aComplex = math.complex(a);
+    
+    // Calculate the terms
+    let term1 = math.pow(math.cosh(math.divide(math.multiply(aComplex, b) , 2.0)), 2);
+    let term2 = math.subtract(1.0, math.multiply(2.0, math.exp(-aComplex)));
+    let term3 = math.cosh(math.multiply(aComplex, b));
+    let term4 = math.exp(math.multiply(-2.0 , aComplex));
+
+    // Calculate the result
+    let result = math.divide(term1, term2);
+    result = math.add(math.multiply(result, term3), term4);
+
+    return result;
+}
+
+function weierstrassauxf2(a, b) {
+    // Convert a and b to complex numbers if needed
+    let aComplex = math.complex(a);
+    let bComplex = math.complex(b);
+
+    // Calculate the terms
+    let term1 = math.pow(math.cos(math.divide(aComplex , 2.0)), 2);
+    let term2 = math.subtract(1.0, math.multiply(2.0, math.exp(math.multiply(aComplex, bComplex))));
+    let term3 = math.cos(aComplex);
+    let term4 = math.exp(math.multiply(2.0, aComplex, bComplex));
+
+    // Calculate the result
+    let result = math.divide(term1, term2);
+    result = math.add(math.multiply(result, term3), term4);
+
+    return result;
+}
+
+function arcsld(b) {
+    // Calculate the result for arcsld
+    let term = math.sqrt(math.add(1.0, math.pow(b, 4)));
+    return math.divide(1.0, math.add(term, 0.0001));
+}
+
+function arcslhd(b) {
+    // Calculate the result for arcslhd
+    let term = math.sqrt(math.add(1.0, math.pow(b, 4)));
+    return math.divide(1.0, math.add(term, 0.0001));
+}
+
+function arcsl(b){return integral(arcsld,b,toComplex(1));}
+function arccl(b){return integral(arcsld,toComplex(0),b);}
+function arcslh(b){return integral(arcslhd,b,toComplex(1));}
+function arcclh(b){return integral(arcslhd,toComplex(0),b);}
+
+
+function slh(b) {
+    let w = math.complex(1, 0);
+    let divisor = math.sqrt(2.0);
+    w = math.divide(w, divisor);
+
+    let term1 = nevthets(b, w);
+    let term2 = nevthetd(b, w);
+    let term3 = nevthetc(b, w);
+    let term4 = nevthetn(b, w);
+
+    return math.divide(math.multiply(term1, term2), math.multiply(term3, term4));
+}
+
+function clh(b) {
+    let w = math.complex(1, 0);
+    let divisor = math.sqrt(2.0);
+    w = math.divide(w, divisor);
+
+    let term1 = nevthetc(b, w);
+    let term2 = nevthetn(b, w);
+    let term3 = nevthets(b, w);
+    let term4 = nevthetd(b, w);
+
+    return math.divide(math.multiply(term1, term2), math.multiply(term3, term4));
+}
+
+
+
+function arcsnd(a, b) {
+    let term1 = math.subtract(1.0, math.multiply(b, b));
+    let term2 = math.subtract(1.0, math.multiply(a, math.multiply(b, b)));
+    let denominator = math.multiply(term1, term2);
+    return math.divide(1.0, math.sqrt(denominator));
+}
+
+function arccnd(a, b) {
+    let term1 = math.subtract(1.0, math.multiply(b, b));
+    let term2 = math.subtract(math.add(a, math.multiply(a, math.multiply(b, b))), 1.0);
+    let denominator = math.multiply(term1, term2);
+    return math.divide(1.0, math.sqrt(denominator));
+}
+
+function arcdnd(a, b) {
+    let term1 = math.subtract(1.0, math.multiply(b, b));
+    let term2 = math.add(math.multiply(b, b), math.subtract(a, 1.0));
+    let denominator = math.multiply(term1, term2);
+    return math.divide(1.0, math.sqrt(denominator));
+}
+
+function arccdd(a, b) {
+    let term1 = math.subtract(1.0, math.multiply(b, b));
+    let term2 = math.subtract(1.0, math.multiply(a, math.multiply(b, b)));
+    let denominator = math.multiply(term1, term2);
+    return math.divide(1.0, math.sqrt(denominator));
+}
+
+function arccsd(a, b) {
+    let term1 = math.add(1.0, math.multiply(b, b));
+    let term2 = math.add(math.subtract(b, a), 1.0);
+    let denominator = math.multiply(term1, term2);
+    return math.divide(1.0, math.sqrt(denominator));
+}
+
+function arcdsd(a, b) {
+    let term1 = math.add(a, math.multiply(b, b));
+    let term2 = math.add(math.multiply(b, b), math.subtract(a, 1.0));
+    let denominator = math.multiply(term1, term2);
+    return math.divide(1.0, math.sqrt(denominator));
+}
+
+
+function arcsn(a, b) {return integral(arcsnd,toComplex(0),a,b);}
+function arccn(a, b) {return integral(arccnd,a,toComplex(1),b);}
+function arcdn(a, b) {return integral(arcdnd,a,toComplex(1),b);}
+function arcns(a, b) {return integral(arcsnd,toComplex(0),math.divide(1,a),b);}
+function arcnc(a, b) {return integral(arccnd,math.divide(1,a),toComplex(1),b);}
+function arcnd(a, b) {return integral(arcdnd,math.divide(1,a),toComplex(1),b);}
+function arccd(a, b) {return integral(arccdd,a,toComplex(1),b);}
+function arccs(a, b) {return integral(arccsd,a,toComplex(bign),b);}
+function arcds(a, b) {return integral(arcdsd,a,toComplex(bign),b);}
+function arcdc(a, b) {return integral(arccdd,math.divide(1,a),toComplex(1),b);}
+function arcsc(a, b) {return integral(arccsd,math.divide(1,a),toComplex(bign),b);}
+function arcsd(a, b) {return integral(arcdsd,math.divide(1,a),toComplex(bign),b);}
+
+
+function erf(b){return math.multiply(2*math.sqrt(pi()),integral(expmsqr,toComplex(0),b));}
+function erfc(b){return math.subtract(1,math.multiply(2*math.sqrt(pi()),integral(expmsqr,toComplex(0),b)));}
+function erfcx(b){return math.multiply(math.exp(math.multiply(b,b)),math.subtract(1,math.multiply(2*math.sqrt(pi()),integral(expmsqr,toComplex(0),b))));}
+function erfi(b){return math.multiply(math.complex(0,-1),math.multiply(2*math.sqrt(pi()),integral(expmsqr,toComplex(0),math.multiply(b,math.complex(0,1)))));}
+function dawsondplus(b){return math.multiply(math.sqrt(pi())/2,math.exp(math.multiply(b,b,-1)),erfi(b));}
+function dawsondminus(b){return math.multiply(math.sqrt(pi())/2,math.exp(math.multiply(b,b)),erf(b));}
+function faddeeva(b){return erfcx(math.multiply(b,math.complex(0,-1)));}
+function hilberttransform(b){return math.multiply(2/math.sqrt(pi()),dawsondplus(b));}//hilberttransormofthe gaussian
+function hilberttransformsub(b){return math.multiply(2/math.sqrt(pi()),dawsondplus(math.sqrt(b)));}//hilberttransormofthe x^2n e^-x^2
+
+function lambertwd(a,b){return math.log(math.add(1,math.multiply(b,sinc(a),math.exp(math.divide(a,math.tan(a))))));}
+function lambertw(b){return math.divide(integral(lambertwd,toComplex(0),toComplex(3.1415925),b,50),pi());}
+
+function peritet(b) {
+    let lambertW = lambertw(math.subtract(0,math.log(b)));
+    let result = math.divide(math.multiply( pi() , math.complex(0.0, -2.0)) , math.log(math.subtract(0,lambertW)));
+    return result;
+}
+
+function weakexpofactorial(b) {
+    return math.pow(b, gamma(b));
+}
+
+function qfunc(b) {
+    let arg = math.divide(b, math.sqrt(2.0));
+    let integralq = integral(expmsqr,0, arg);
+    return math.subtract(0.5, math.multiply(0.5, math.multiply(2.0 / pi(), integralq)));
+}
+
+function ramanujantautheta(b) {
+    let logGammaTerm1 = math.log(gamma(math.add(6.0, math.multiply(math.complex(0.0, 1.0), b))));
+    let logGammaTerm2 = math.log(gamma(math.subtract(6.0, math.multiply(math.complex(0.0, 1.0), b))));
+    let result = math.subtract(math.multiply(-math.log(2.0 * pi()), b), math.divide(math.subtract(logGammaTerm1, logGammaTerm2), 2.0));
+    return result;
+}
+function schlaflian(b) {
+    return math.multiply(4.0, pow(math.sin(math.divide(pi(), b)), 2.0));
+}
+
+function wexzal(b) {
+    let lambertW_pow = lambertw(math.pow(b, 10.0));
+    let log_b = math.log(b);
+    let term1 = math.divide(log_b, math.log(lambertW_pow));
+    let exponent = math.add(term1, 1.0);
+    let result = lambertw(math.multiply(term1, math.exp(exponent)));
+    return result;
+}
+
+function dexp(b) {
+    return math.multiply(0.5, math.exp(math.divide(math.multiply(b, b), 2.0))
+        ,  math.add(math.multiply(math.sqrt(2.0 * pi()),erf(math.divide(b,math.sqrt(2)))) , 2.0));
+}
+
+function serpentine(b) {
+    return math.divide(b, math.add(math.multiply(b, b), 1.0));
+}
+
+function witchofagnesi(b) {
+    return math.divide(1.0, math.add(math.multiply(b, b), 1.0));
+}
+function ssrt(b) {
+    return math.divide(math.log(b), lambertw(math.log(b)));
+}
+
+function scbrt(b) {
+    // Iteratively applying lambertw and exp as described
+    let result = math.multiply(b, math.log(b));
+    for (let i = 0; i < 8; i++) {
+        result = math.exp(lambertw(lambertw(math.multiply(result,math.log(b)))));
+    }
+    return result;
+}
+   function tetr(b) {
+            const N = bign; // bign is set to 10000 for this example
+
+            let fi = math.complex(b.re, Math.abs(b.im));
+            const bi = math.complex(math.mod(math.re(b), 1.0), math.im(fi));
+
+            for (let i = 0; i < 58; i++) {
+                const term = math.multiply(math.complex(0, 1), bi, pi() * 2.0 * i);
+                fi = math.add(fi, math.multiply(knthetaa[i], math.exp(term)));
+            }
+
+            const constant = math.complex(0.318132, 1.33724);
+            fi = math.add(constant, math.pow(math.log(constant), math.subtract(fi, N)));
+
+            for (let i = 0; i < N; i++) {
+                fi = math.exp(fi);
+            }
+
+            if (b.im < 0.0) {
+                fi = math.conj(fi);
+            }
+
+            return fi;
+        }
+		
+	   function tetrbcc(a,b) {
+            const N = bign; // bign is set to 10000 for this example
+
+            let fi = math.complex(b.re, Math.abs(b.im));
+ 
+
+            let constant = conj(filog(a));
+			
+fi = math.add(constant, math.pow(math.log(constant), math.subtract(fi, N)));
+
+            for (let i = 0; i < N; i++) {
+                fi = pow(a,fi);
+            }
+
+            if (b.im < 0.0) {
+                fi = math.conj(fi);
+            }
+
+            return fi;
+        }
+
+function filog(b) {
+    // Convert b to a complex number if necessary
+    let logB = math.log(b);
+    let lambertW = lambertw(math.subtract(0,logB));
+    return math.divide(math.subtract(0,lambertW), logB);
+}
+
+function bouncingfactorial(b) {
+    return math.divide(math.pow(tetr(math.gamma(math.add(b,1)), math.gamma(math.add(b,1))), 2.0)
+        , math.gamma(math.add(b,1)));
+}
+
+function dilbertlambda(b) {
+    return math.divide(math.sqrt(lambertw(math.multiply(2.0, math.multiply(b, b))))
+        , math.sqrt(2.0));
+}
+
+function olga(b) {
+    return math.divide(b, math.add(math.multiply(b, b), 1.0));
+}
+
+function glog(b) {
+    return lambertw(math.multiply(-1.0, math.divide(1.0, b)));
+}
+
+function arcshoka(b) {
+    return math.divide(math.log(math.subtract(math.exp(b), 1.0)), math.log(math.subtract(math.e, 1.0)));
+}
+
+function arctania(b) {
+    return math.add(b, math.log(b), -1.0);
+}
+
+function anka(b) {
+    return math.multiply(b, math.exp(math.subtract(b, 1.0)));
+}
+
+function nemtsov(b, a) {
+    return math.add(b, math.add(math.multiply(b, math.multiply(b, b)), math.multiply(a, math.multiply(b, math.multiply(b, b)))));
+}
+
+function logit(b) {
+    return math.multiply(-1, math.log(math.subtract(math.divide(1.0, b), 1.0)));
+}
+
+function wrightw(b) {
+    return lambertw(math.exp(b));
+}
+
+function tania(b) {
+    return lambertw(math.exp(math.add(b, 1.0)));
+}
+
+function arctrappmann(b) {
+    return math.subtract(b, lambertw(math.exp(b)));
+}
+
+function doya(b) {
+    return lambertw(math.multiply(b, math.exp(math.add(b, 1.0))));
+}
+
+// Import the functions into math.js if needed
 math.import({
+	tetr:tetr,
+		tetrc:tetrbcc,
+    arcshoka: arcshoka,
+    arctania: arctania,
+    anka: anka,
+    nemtsov: nemtsov,
+    logit: logit,
+    wrightw: wrightw,
+    tania: tania,
+    arctrappmann: arctrappmann,
+    doya: doya
+});
+math.import({
+    wexzal: wexzal,
+    dexp: dexp,
+    serpentine: serpentine,
+    witchofagnesi: witchofagnesi,
+    bouncingfactorial: bouncingfactorial,
+    dilbertlambda: dilbertlambda,
+    olga: olga,
+    glog: glog,
+	ssrt:ssrt,
+	scbrt:scbrt
+});
+math.import({
+    filog: filog,
+    peritet: peritet,
+    weakexpofactorial: weakexpofactorial,
+    qfunc: qfunc,
+    ramanujantautheta: ramanujantautheta,
+    schlaflian: schlaflian
+});
+math.import({
+	lambertwd:lambertwd,
+	lambertw:lambertw,
+erf:erf,
+erfc:erfc,
+	erfcx:erfcx,
+	erfi:erfi,
+	dawsondplus:dawsondplus,
+	dawsondminus:dawsondminus,
+	faddeeva:faddeeva,
+	hilberttransform:hilberttransform,
+	hilberttransformsub:hilberttransform
+},{override:true});
+
+math.import({
+    arcsn:arcsn,
+    arccn:arccn,
+    arcdn:arcdn,
+    arcns: arcns,
+    arcnc:arcnc,
+    arcnd:arcnd,
+    arccd:arccd,
+    arccs:arccs,
+    arcds:arcds,
+    arcdc:arcdc,
+    arcsc:arcsc,
+    arcsd:arcsd
+});
+math.import({
+    arcsnd: arcsnd,
+    arccnd: arccnd,
+    arcdnd: arcdnd,
+    arccdd: arccdd,
+    arccsd: arccsd,
+    arcdsd: arcdsd
+});
+
+math.import({
+    arcsld: arcsld,
+    arcslhd: arcslhd,
+	arcsl:arcsl,
+	arccl:arccl,
+		arcslh:arcslh,
+	arcclh:arcclh,
+	    slh: slh,
+    clh: clh
+
+});
+math.import({
+    weierstrassauxf1: weierstrassauxf1,
+    weierstrassauxf2: weierstrassauxf2
+});
+math.import({
+    arcweierstrassellipticd: arcweierstrassellipticd,
+    bickleynaylord: bickleynaylord,
+	   arcweierstrasselliptic: arcweierstrasselliptic,
+    bickleynaylor: bickleynaylor,
+		   arcwp: arcweierstrasselliptic
+});
+math.import({
+    weierstrasselliptic: weierstrasselliptic,
+	weierstrassellipticd: weierstrassellipticd,
+	weierstrassellipticsigma: weierstrassellipticsigma,
+	weierstrassellipticzeta: weierstrassellipticzeta,
+	weierstrassellipticeta: weierstrassellipticeta,
+	weierstrassellipticdelta: weierstrassellipticdelta,
+	  wp: weierstrasselliptic,
+	wpd: weierstrassellipticd,
+	wps: weierstrassellipticsigma,
+	wpz: weierstrassellipticzeta,
+	wpn: weierstrassellipticeta,
+	wpdl: weierstrassellipticdelta
+});
+math.import({
+    besselj: besselj,
+    besselk: besselk,
+    besseli: besseli,
+    neuman: neuman,
+
+    struve: struve
+});
+
+math.import({
+    clausencos: clausencos,
+    clausensin: clausensin,
+    legendrechi: legendrechi
+});
+
+// Import functions into math namespace
+math.import({
+integral:integral,
+accuracy:accuracy ,
+    qnuma: qnum,
+    qfac: qfac,
+    qpocinf: qpocinf,
+    qexp: qexp,
+    dqexp: dqexp,
+    qpoch: qpoch
+});
+
+// Import functions into math.js
+math.import({
+    weberf: weberf,
+    weberf1: weberf1,
+    weberf2: weberf2,
+    lacunary: lacunary,
+    weberr: weberr,
+    weberr5: weberr5
+});
+
+
+math.import({
+    cc:cc,
+    cs:cs,
+    cn:cn,
+    cd:cd,
+    sc:sc,
+    ss:ss,
+    sn:sn,
+    sd:sd,
+    nc:nc,
+    ns:ns,
+    nn:nn,
+    nd:nd,
+    dc:dc,
+    ds:ds,
+    dn:dn,
+    dd:dd
+  });
+math.import({
+nevthetn:nevthetn,
+nevthetd:nevthetd,
+nevthets:nevthets,
+nevthetc:nevthetc,
 fresnelc:fresnelc,
 fresnels:fresnels,
 fresnelt:fresnelt,
