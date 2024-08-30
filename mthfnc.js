@@ -3511,9 +3511,12 @@ function arctrappmann(b) {
 function doya(b) {
     return lambertw(math.multiply(b, math.exp(math.add(b, 1.0))));
 }
-
+function factorial(b) {
+    return gamma(math.add(b,1));
+}
 // Import the functions into math.js if needed
 math.import({
+	factorial:factorial,
 	tetr:tetr,
 	tetrq:tetrq,
 		tetrc:tetrbcc,
