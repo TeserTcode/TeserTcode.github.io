@@ -3529,7 +3529,7 @@ math.import({
     tania: tania,
     arctrappmann: arctrappmann,
     doya: doya
-});
+},{override:true});
 math.import({
     wexzal: wexzal,
     dexp: dexp,
