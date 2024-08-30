@@ -3404,6 +3404,31 @@ function scbrt(b) {
 
             return fi;
         }
+		   function tetrq(b,N) {
+          
+
+            let fi = math.complex(b.re, Math.abs(b.im));
+            const bi = math.complex(math.mod(math.re(b), 1.0), math.im(fi));
+
+            for (let i = 0; i < 58; i++) {
+                const term = math.multiply(math.complex(0, 1), bi, pi() * 2.0 * i);
+                fi = math.add(fi, math.multiply(knthetaa[i], math.exp(term)));
+            }
+
+            const constant = math.complex(0.318132, 1.33724);
+            fi = math.add(constant, math.pow(math.log(constant), math.subtract(fi, N)));
+
+            for (let i = 0; i < N; i++) {
+                fi = math.exp(fi);
+            }
+
+            if (b.im < 0.0) {
+                fi = math.conj(fi);
+            }
+
+            return fi;
+        }
+		
 		
 	   function tetrbcc(a,b) {
             const N = bign; // bign is set to 10000 for this example
@@ -3490,6 +3515,7 @@ function doya(b) {
 // Import the functions into math.js if needed
 math.import({
 	tetr:tetr,
+	tetrq:tetrq,
 		tetrc:tetrbcc,
     arcshoka: arcshoka,
     arctania: arctania,
@@ -3785,8 +3811,8 @@ math.import({
     dirichleteta: dirichleteta,
     dirichletbeta: dirichletbeta,
 gammad:gammad,
-gammac:gamma
-});
+gamma:gamma
+},{override:true});
 math.import({
     einsteinseries: einsteinseries,
     fouriereinstein: fouriereinstein,
