@@ -133,7 +133,7 @@ background-color: #eeeeee;
     </div>
     <div class="form-group">
         <label for="magnitude-to-lightness">Magnitude to Lightness Conversion:</label>
-        <input type="text" id="magnitude-to-lightness" name="magnitude-to-lightness" value="tanh(x)*90" required>
+        <input type="text" id="magnitude-to-lightness" name="magnitude-to-lightness" value="tanh(x)" required>
     </div>
      <div class="form-group">
         <label for="min-real">Min Real:</label>
@@ -155,7 +155,14 @@ background-color: #eeeeee;
         <select id="color-mode" name="color-mode">
             <option value="hsv">HSV</option>
             <option value="hsl">HSL</option>
+            <option value="hcl">HCL</option>
+			 <option value="ycbcr">YCbCr</option>
+			  <option value="ydbdr">YDbDr</option>
+			   <option value="ycocg">YCoCg</option>
+			    <option value="ypbpr">YPbPr</option>
+            <option value="cielch">CIELCH</option>
 	    <option value="2d">2d</option>
+		  <option value="contour">Contour</option>
             <option value="palette">Palette</option>
         </select>
     </div>
@@ -178,9 +185,9 @@ background-color: #eeeeee;
     </div>
    <div class="form-group">
         <label for="bmp-width">BMP Width:</label>
-        <input type="number" id="bmp-width" name="bmp-width" step="1" value="10" required>
+        <input type="number" id="bmp-width" name="bmp-width" step="1" value="30" required>
         <label for="bmp-height">BMP Height:</label>
-        <input type="number" id="bmp-height" name="bmp-height" step="1" value="10" required>
+        <input type="number" id="bmp-height" name="bmp-height" step="1" value="30" required>
     </div>
   <div class="form-group">
         <input type="checkbox" id="apply-conjugate" name="apply-conjugate">
@@ -198,13 +205,43 @@ background-color: #eeeeee;
         <input type="checkbox" id="ffx" name="ffx">
         <label for="ffx">function for inverse</label>
     </div>
- <div class="form-group">
-        <input type="checkbox" id="ffa" name="ffa">
-        <label for="ffa">fast calculation3</label>
+    <div class="form-group">
+        <label for="calcmode">Calculation Mode:</label>
+        <select id="calcmode" name="calcmode">
+	    <option value="kns">Kneser Like</option>
+	    <option value="knsu">Kneser Like Uncentered</option>
+	    <option value="knsp">Kneser Like Generalized</option>
+		  <option value="ria">Regular Iteration</option>
+	     <option value="eca">Ecalle</option>
+	     <option value="new">Newton</option>
+	     <option value="lvy">Levy (its like slog)</option>
+	    <option value="xsp">XSP</option>
+	    <option value="wsp">WSP</option>
+		<option value="osp">OSP</option>
+	    <option value="qsp">QSP</option>
+        <option value="rsp">RSP</option>  
+
+			<option value="abl">Abel</option>
+			<option value="abi">Inverse Abel</option>
+			<option value="sch">Scröder</option>
+			<option value="sci">Inverse Schröder</option>
+			<option value="bch">Böttcher</option>
+			<option value="bci">Inverse Böttcher</option>
+			<option value="tch">4th order generalized Abel</option>
+			<option value="tci">Inverse 4th Order Generalized Abel</option>
+			<option value="zch">0th order generalized Abel</option>
+			<option value="zci">Inverse 0th Order Generalized Abel</option>
+        </select>
     </div>
         <div class="form-group">
-        <label for="ifunction">Inverse Function):</label>
+        <label for="ifunction">Inverse Function:</label>
         <input type="text" id="ifunction" name="ifunction" value="log(x)/log(2)" required>
+	 </div>	
+		<div class="form-group">
+		<label for="prefunc">Pre Function:</label>
+        <input type="text" id="prefunc" name="prefunc" value="x" required>
+		<label for="postfunc">Post function:</label>
+        <input type="text" id="postfunc" name="postfunc" value="x" required>
     </div>
          <div class="button-group">
 <button onclick="renderBMP()">Generate</button>
@@ -220,6 +257,7 @@ background-color: #eeeeee;
     </div>
 </div>
 <script src="mthfnc.js"></script>
+<script src="clrspc.js"></script>
     <script>
  let paletteImageData = null;
 
@@ -352,6 +390,7 @@ function generatePalette() {
 
         function renderBMP() {
 const colorMode = document.getElementById('color-mode').value;
+const calcm = document.getElementById('calcmode').value;
 const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
 
      const width = parseInt(document.getElementById('bmp-width').value);
@@ -368,6 +407,10 @@ const saturationChroma = parseInt(document.getElementById('saturation-chroma').v
             // Get parameters from inputs
             const funcStr = document.getElementById('function').value.trim();
 const ifuncStr = document.getElementById('ifunction').value.trim();
+
+const pref = document.getElementById('prefunc').value.trim();
+const posf = document.getElementById('postfunc').value.trim();
+
             const aReal = parseFloat(document.getElementById('a-real').value);
             const aImag = parseFloat(document.getElementById('a-imag').value);
  const bReal = parseFloat(document.getElementById('a-real').value);
@@ -383,8 +426,9 @@ const ifuncStr = document.getElementById('ifunction').value.trim();
 const ffgh = document.getElementById('fgh').checked;
 const ffri = document.getElementById('fri').checked;
 const fffx = document.getElementById('ffx').checked;
-const fffa = document.getElementById('ffa').checked;
+const fffa = 1;
 
+let xgl=math.complex(0, 0);
              const canvas = document.getElementById('bmpCanvas');
              canvas.width = width;
             canvas.height = height;
@@ -409,7 +453,7 @@ const fffa = document.getElementById('ffa').checked;
             function mathsc(funcStr, x) {
                 try {
                     const expr = math.compile(funcStr);
-                    return expr.evaluate({ x: x });
+                    return expr.evaluate({ x: x , c: xgl});
                 } catch (e) {
                     throw new Error('Error evaluating function');
                 }
@@ -419,6 +463,19 @@ const fffa = document.getElementById('ffa').checked;
                 const fx1 = mathsc(funcStr, math.add(x, epsilon));
                 const fx2 = mathsc(funcStr, x);
                 return math.divide(math.subtract(fx1, fx2), epsilon);
+            }
+			function numericalndDerivative(funcStr, x, epsilon) {
+                const fx2 = mathsc(funcStr, math.add(x, epsilon));
+                const fx1 = mathsc(funcStr, x);
+				const fx3 = mathsc(funcStr, math.add(x, epsilon*2));
+                return math.divide(math.subtract(math.add(fx1,fx3), math.add(fx2,fx2)), math.multiply(epsilon,epsilon));
+            }
+			function numericalrdDerivative(funcStr, x, epsilon) {
+                const fx1 = mathsc(funcStr, math.add(x, epsilon));
+                const fx2 = mathsc(funcStr, x);
+				const fx3 = mathsc(funcStr, math.add(x, epsilon+epsilon));
+				const fx4 = mathsc(funcStr, math.add(x, epsilon+epsilon+epsilon));
+                return math.divide(math.add(math.multiply(math.subtract(fx2,fx3),3),math.subtract(fx4,fx1)), math.multiply(epsilon,epsilon));
             }
 
               function findFixedPoint(funcStr, initialGuess, tolerance = 1e-10, maxIterations = 100) {
@@ -437,11 +494,11 @@ const fffa = document.getElementById('ffa').checked;
             }
 
             function findInverse(funcStr, value, initialGuessa, bign) {
-const expri = math.compile(ifuncStr);
+				const expri = math.compile(ifuncStr);
                 const epsilon = 1 / bign;
-let x = 1;
+				let x = 1;
                if(fffx){ x =  expri.evaluate({ x: value });
-}else{  x = parseComplex(initialGuess);}
+					}else{  x = parseComplex(initialGuess);}
                 const target = parseComplex(value);
                 for (let i = 0; i < bign; i++) {
                     const fx = mathsc(funcStr, x);
@@ -452,67 +509,83 @@ let x = 1;
                     }
                     x = newX;
                 }
-                throw new Error('Inverse not found');
+                return x;
             }
-const fix = findFixedPoint(funcStr, initialGuess);
+			
+			
+	const fix = findFixedPoint(funcStr, initialGuess);		
+			
+
+
+// FUN STARTS HERE
+// FUN STARTS HERE
+// FUN STARTS HERE
+// FUN STARTS HERE
+// FUN STARTS HERE
+// FUN STARTS HERE
+// FUN STARTS HERE
+// FUN STARTS HERE
+// FUN STARTS HERE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             function superfunc(funcStr, a, bf, globalc, bign) {
-
-
-		let bs = bf
-		if (applyConjugate && bf.im < 0) {
-			bs = math.conj(bs);
-		}
-		
-  	
-                try {
-let fi = parseComplex(bs);
-		if (ffgh) {
-fi = parseComplex(bs);
-		}else{
-
-fi = parseComplex(a);
-}
-                    let lam = mathsc(funcStr, fi);
-                    
-
-                    for (let i = 0; i < bign; i++) {
-                        fi = findInverse(funcStr, fi, initialGuess, bign);
-                        lam = findInverse(funcStr, lam, initialGuess, bign);
-                    }
-
-                    fi = math.divide(math.log(math.multiply(math.subtract(fi, fix), math.pow(globalc, bign))), math.log(globalc));
-                    lam = math.divide(math.log(math.multiply(math.subtract(lam, fix), math.pow(globalc, bign))), math.log(globalc));
-
-                    fi = math.add(fi, math.multiply(bs, math.subtract(lam, fi)));
-                    fi = math.add(fix, math.pow(globalc, math.subtract(fi, bign)));
-
-                    for (let i = 0; i < bign; i++) {
-                        fi = mathsc(funcStr, fi);
-                    }
-
-                       
-                
-			if (applyConjugate && bf.im < 0) {
-			fi = math.conj(fi);
-		} scaleCanvas();
-                    return fi;
-                } catch (error) {
-                    throw new Error('Calculation error: ' + error.message);
+			//funcStr^bf(a)
+			//bign = N -> lim infinity
+			//globalc = c 
+              let bs = bf
+       
+              try {
+                let fi = parseComplex(bs);
+                if (ffgh) {
+                  fi = parseComplex(bs);//fast growing hierarchy type superfunction
+                } else {
+                  fi = parseComplex(a);//classical superfunction calculation
                 }
+                let lam = mathsc(funcStr, fi);//mathsc = f(x)
+                for (let i = 0; i < bign; i++) {//infinite composition
+                  fi = findInverse(funcStr, fi, initialGuess, bign);
+                  lam = findInverse(funcStr, lam, initialGuess, bign);//calculating lambda
+                }
+                fi = math.divide(math.log(math.multiply(math.subtract(fi, fix), math.pow(globalc, bign))), math.log(globalc));
+                lam = math.divide(math.log(math.multiply(math.subtract(lam, fix), math.pow(globalc, bign))), math.log(globalc));
+                fi = math.add(fi, math.multiply(bs, math.subtract(lam, fi)));
+                fi = math.add(fix, math.pow(globalc, math.subtract(fi, bign)));
+                for (let i = 0; i < bign; i++) {
+                  fi = mathsc(funcStr, fi);//infinite composition
+                }
+      
+                scaleCanvas();
+                return fi;
+              } catch (error) {
+                throw new Error('Calculation error: ' + error.message);
+              }
             }
+
+
+
+
+
 
 
 
 
   function fastsuperfunc(funcStr, a, bf, globalc, bign) {
+	let bs = bf
 
-
-		let bs = bf
-		if (applyConjugate && bf.im < 0) {
-			bs = math.conj(bs);
-		}
-		
   	
                 try {
 let fi = parseComplex(bs);
@@ -521,10 +594,7 @@ fi = parseComplex(bs);
 		}else{
 
 fi = parseComplex(a);
-}
-                                       
-
-                   
+}   
 const globalcd = numericalDerivative(funcStr, fix, 0.00001);
  
                     fi = math.add(fix, math.pow(globalcd, math.subtract(math.add(bs,fi), bign)));
@@ -532,12 +602,226 @@ const globalcd = numericalDerivative(funcStr, fix, 0.00001);
                     for (let i = 0; i < bign; i++) {
                         fi = mathsc(funcStr, fi);
                     }
+      
+		scaleCanvas();
+                    return fi;
+                } catch (error) {
+                    throw new Error('Calculation error: ' + error.message);
+                }
+            }
 
+
+  function fastsuperfunckn(funcStr, a, bf, globalc, bign) {
+	let bs = bf
+		 try {
+let fi = parseComplex(bs);
+		if (ffgh) {
+fi = parseComplex(bs);
+		}else{
+
+fi = parseComplex(a);
+}   
+const globalcd = numericalDerivative(funcStr, fix, 0.00001);
+                     for (let i = 0; i < bign; i++) {
+                        fi = findInverse(funcStr, fi, initialGuess, bign);
                        
-                
-			if (applyConjugate && bf.im < 0) {
-			fi = math.conj(fi);
-		} scaleCanvas();
+                    }
+ fi = math.divide(math.log(math.multiply(math.subtract(fi, fix), math.pow(globalcd, bign))), math.log(globalcd));
+                    fi = math.add(fix, math.pow(globalcd, math.subtract(math.add(bs,fi), bign)));
+
+                    for (let i = 0; i < bign; i++) {
+                        fi = mathsc(funcStr, fi);
+                    }
+      
+			scaleCanvas();
+                    return fi;
+                } catch (error) {
+                    throw new Error('Calculation error: ' + error.message);
+                }
+            }
+
+
+
+
+  function superfunclvy(funcStr, a, bf, globalc, bign) {
+  let alph = a;
+  let beth = bf;
+
+  for(let i=0;i<bign;i++){
+   alph=mathsc(funcStr, alph);
+   beth=mathsc(funcStr, beth);
+  }
+
+	return math.divide(math.subtract(alph,beth),math.subtract(mathsc(funcStr,beth),beth))
+  
+  }
+
+  function superfuncnew(funcStr, a, bf, globalc, bign) {
+ 
+ let fi = 0;
+ 
+ for(let n=0;n<bign;n++){
+ let fid=0;
+ for(let m=0;m<n;m++){
+ let hm=a;
+ for(let i=0;i<m;i++){
+ hm=mathsc(funcStr,hm);
+ }
+ fid = math.add(fid,math.multiply(ncr(n,m),pow(toComplex(-1),math.subtract(n,m)),hm));
+ }
+ fi=math.add(fi,math.multiply(ncr(bf,a),fid));
+ }
+ return fi;
+ 
+  }
+function superfuncosp(funcStr, af, bf, globalc, bign) {
+    let bp = math.complex(af);
+    let ap = math.complex(bf);
+	ap = math.subtract(ap,bign);
+    const d = numericalDerivative(funcStr, fix, 0.0000001);
+
+
+    o=math.add(fix,math.multiply(math.subtract(bp,fix),pow(d,ap)));
+
+    for (let i = 0; i < bign; i++) {
+        o = mathsc(funcStr,o);
+    }
+  return o;
+  }
+function superfuncqsp(funcStr, af, bf, globalc, bign) {
+    let bp = math.complex(af);
+    let ap = math.complex(bf);
+	ap = math.subtract(ap,bign);
+    const d = numericalDerivative(funcStr, fix, 0.0000001);
+    const dd = numericalndDerivative(funcStr, fix, 0.0000001);
+let o=math.complex(af);
+
+
+    o=math.add(fix,math.multiply(math.subtract(bp,fix),pow(d,ap)),
+	math.divide(math.multiply(
+	pow(math.subtract(bp,fix),2),
+	pow(d,math.subtract(ap,1)),
+	math.subtract(pow(d,ap),1),
+	dd),
+	
+	math.multiply(2,math.subtract(d,1))));
+  
+    for (let i = 0; i < bign; i++) {
+        o = mathsc(funcStr,o);
+    }
+  return o;
+  }
+  
+function superfuncrsp(funcStr, af, bf, globalc, bign) {
+    let bp = math.complex(af);
+    let ap = math.complex(bf);
+	  const d = numericalDerivative(funcStr, fix, 0.0000001);
+	ap = math.divide(ap,math.log(d));;
+	ap = math.subtract(ap,bign);
+  
+
+
+    o=math.add(fix,math.multiply(math.subtract(bp,fix),pow(d,ap)));
+
+    for (let i = 0; i < bign; i++) {
+        o = mathsc(funcStr,o);
+    }
+  return o;
+  }
+
+  function superfuncwsp(funcStr, a, bf, globalc, bign) {
+  
+const fid = numericalDerivative(funcStr, fix, 0.00001);
+let fi = math.add(fix,pow(fid,math.subtract(bf,bign)));
+for(let i=0;i<bign;i++){
+fi = mathsc(funcStr,fi);
+}
+return fi;
+
+}
+
+
+
+  function abel(funcStr, a, bf, globalc, bign) {
+  const globalcd = numericalDerivative(funcStr, fix, 0.00001);
+  return math.divide(math.log(schroder(funcStr, a, bf, globalc, bign)),math.log(globalcd));
+  }
+  function invabel(funcStr, a, bf, globalc, bign) {
+  const globalcd = numericalDerivative(funcStr, fix, 0.00001);
+  return invschroder(funcStr, a, pow(globalcd,bf), globalc, bign);
+  }
+  function bottcher(funcStr, a, bf, globalc, bign) {
+  const globalcd = numericalDerivative(funcStr, fix, 0.00001);
+  return pow(globalcd,math.log(schroder(funcStr, a, bf, globalc, bign)));
+  }
+  function invbottcher(funcStr, a, bf, globalc, bign) {
+  const globalcd = numericalDerivative(funcStr, fix, 0.00001);
+  return invschroder(funcStr, a, math.divide(math.log(bf),math.log(globalcd)), globalc, bign);
+  }
+  function tch(funcStr, a, bf, globalc, bign) {
+  const globalcd = numericalDerivative(funcStr, fix, 0.00001);
+  return pow(globalcd,pow(globalcd,math.log(schroder(funcStr, a, bf, globalc, bign))));
+  }
+  function tci(funcStr, a, bf, globalc, bign) {
+  const globalcd = numericalDerivative(funcStr, fix, 0.00001);
+  return invschroder(funcStr, a, math.divide(math.log(math.divide(math.log(bf),math.log(globalcd))),math.log(globalcd)), globalc, bign);
+  }
+function zch(funcStr, a, bf, globalc, bign) {
+  const globalcd = numericalDerivative(funcStr, fix, 0.00001);
+  return math.divide(math.log(math.divide(math.log(schroder(funcStr, a, bf, globalc, bign)),math.log(globalcd))),math.log(globalcd));
+  }
+  function zci(funcStr, a, bf, globalc, bign) {
+  const globalcd = numericalDerivative(funcStr, fix, 0.00001);
+  return invschroder(funcStr, a, pow(globalcd,pow(globalcd,bf)), globalc, bign);
+  }
+
+  function schroder(funcStr, a, bf, globalc, bign) {
+	let bs = bf
+		  try {
+let fi = parseComplex(bs);
+		if (ffgh) {
+fi = parseComplex(bs);
+		}else{
+
+fi = bs;
+}   
+fi = bs;
+const globalcd = numericalDerivative(funcStr, fix, 0.00001);
+                     for (let i = 0; i < bign; i++) {
+                        fi = findInverse(funcStr, fi, initialGuess, bign);
+                       
+                    }
+ fi = math.multiply(math.subtract(fi, fix), math.pow(globalcd, bign));
+  
+      
+			  scaleCanvas();
+                    return fi;
+                } catch (error) {
+                    throw new Error('Calculation error: ' + error.message);
+                }
+            }
+
+
+
+
+  function invschroder(funcStr, a, bf, globalc, bign) {
+	let bs = bf
+		  try {
+let fi = parseComplex(bs);
+		if (ffgh) {
+fi = parseComplex(bs);
+		}else{
+
+fi = bs;
+}   
+const globalcd = numericalDerivative(funcStr, fix, 0.00001);
+                   fi = math.add(fix, math.multiply(fi,pow(globalcd,-bign)));
+
+                    for (let i = 0; i < bign; i++) {
+                        fi = mathsc(funcStr, fi);
+                    }
+      
+			  scaleCanvas();
                     return fi;
                 } catch (error) {
                     throw new Error('Calculation error: ' + error.message);
@@ -557,185 +841,78 @@ const globalcd = numericalDerivative(funcStr, fix, 0.00001);
 
 
 
+  function superfuncria(funcStr, a, bf, globalc, bign) {
+	let bs = bf
+		  try {
+let fi = parseComplex(bs);
+		if (ffgh) {
+fi = parseComplex(bs);
+		}else{
 
+fi = parseComplex(a);
+}   
+const globalcd = numericalDerivative(funcStr, fix, 0.00001);
 
-
-
-
-
-
-
-
-
-            function getColorFromComplex(result) {
-                const real = result.re;
-                const imag = result.im;
-                const mag = Math.sqrt(real * real + imag * imag);
-                const arg = Math.atan2(imag, real) * (180 / Math.PI); // Convert to degrees
-                const hue = (arg + 360) % 360;
-		 const phase = (math.arg(result)+2*Math.PI) % (2*Math.PI);
-                const lightnessValue = Math.min( math.evaluate(magnitudeToLightnessExpr,{x : mag}), 100);
-	const magnitude = math.abs(result);
-
-
-
-                let color = [0, 0, 0];
-                    try {
-
-
-                        if (colorMode === 'hsv' || colorMode === 'hsl') {
-                            const chroma = saturationChroma / 100;
-                            const lightnessAdjusted = lightnessValue ;
-                            color = colorMode === 'hsv'
-                                ? HSVtoRGB(phase * 180 / Math.PI, chroma, lightnessAdjusted)
-                                : HSLtoRGB(phase * 180 / Math.PI, chroma, lightnessAdjusted);
-                        } else if (colorMode === 'hcl' || colorMode === 'cielch') {
-                            const chroma = saturationChroma / 100;
-                            const lightnessAdjusted = lightnessValue ;
-                            color = colorMode === 'hcl'
-                                ? HCLtoRGB(phase * 180 / Math.PI, chroma, lightnessAdjusted)
-                                : CIELCHtoRGB(phase * 180 / Math.PI, chroma, lightnessAdjusted);
-                        } else if (colorMode === '2d') {
-                              
- color =       {
-                    r: math.sign(result.re)*50 + math.sign(result.im)*100,
-                    g: math.abs(result.re)*255,
-                    b: math.abs(result.im)*255
-                };
-
-                        } else if (colorMode === 'palette' && paletteImageData) {
-                            const hueIndex = Math.floor(((phase * 180 / Math.PI) % 360 + 360) % 360);
-                            const lightnessIndex = 99 - Math.floor(Math.min(Math.max(lightnessValue,0),1) * 98);
-                            const index = (lightnessIndex * 360 + hueIndex) * 4;
-                            color =       {
-                    r: paletteImageData[index],
-                    g: paletteImageData[index + 1],
-                    b: paletteImageData[index + 2]
-                };
-                               
-                        }
-                    } catch (e) {
-                        console.error('Error evaluating function or applying color transformation:', e);
+					  for (let i = 0; i < bign; i++) {
+                        fi = mathsc(funcStr, fi);
                     }
-return color;
+					
+				fi=math.divide(math.log(math.subtract(fix,fi)),math.log(globalcd));
+fi = math.subtract(fix,pow(globalcd,math.add(1,bf,fi)));
+                                       for (let i = 0; i < bign; i++) {
+                        fi = findInverse(funcStr, fi, initialGuess, bign);
+                       
+                    }
+      
+			  scaleCanvas();
+                    return fi;
+                } catch (error) {
+                    throw new Error('Calculation error: ' + error.message);
+                }
             }
+
+
+
+
+
+
+
+
+
+
+            function getColorFromComplex(result,input=0) {
+     try { // Assume this is the output from your function
+
+        // Call the complexToColor function
+        const color = complexToColor(
+            input,  // The complex input
+            result, // The complex output (result)
+            magnitudeToLightnessExpr, // Expression to calculate lightness from magnitude
+            colorMode, // Mode of coloring (e.g., 'hsv', 'hsl', etc.)
+            saturationChroma, // Saturation or chroma value
+            100, // Base lightness value
+            paletteImageData, // Palette data if using 'palette' mode
+            0.1 // Threshold for contour mode (optional)
+        );
+
+        // Return the color as an object with r, g, b properties
+        return {
+            r: color[0],
+            g: color[1],
+            b: color[2]
+        };
+    } catch (e) {
+        console.error('Error evaluating function or applying color transformation:', e);
+        return { r: 0, g: 0, b: 0 };  // Return black color in case of an error
+    }
+}
+
+
 
           
 
 
 
-
-
-
-    function HSVtoRGB(h, s, v) {
-            let r, g, b;
-            let i = Math.floor(h / 60);
-            let f = h / 60 - i;
-            let p = v * (1 - s);
-            let q = v * (1 - s * f);
-            let t = v * (1 - s * (1 - f));
-            switch (i % 6) {
-                case 0:
-                    r = v, g = t, b = p;
-                    break;
-                case 1:
-                    r = q, g = v, b = p;
-                    break;
-                case 2:
-                    r = p, g = v, b = t;
-                    break;
-                case 3:
-                    r = p, g = q, b = v;
-                    break;
-                case 4:
-                    r = t, g = p, b = v;
-                    break;
-                case 5:
-                    r = v, g = p, b = q;
-                    break;
-            }
-                           return {
-                    r: Math.round((r ) * 5),
-                    g: Math.round((g ) * 5),
-                    b: Math.round((b ) * 5)
-                };
-        }
-
-        function HSLtoRGB(h, s, l) {
-               
-                l /= 100;
-                const c = (1 - Math.abs(2 * l - 1)) * s;
-                const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-                const m = l - c / 2;
-                let r, g, b;
-
-                if (0 <= h && h < 60) { r = c; g = x; b = 0; }
-                else if (60 <= h && h < 120) { r = x; g = c; b = 0; }
-                else if (120 <= h && h < 180) { r = 0; g = c; b = x; }
-                else if (180 <= h && h < 240) { r = 0; g = x; b = c; }
-                else if (240 <= h && h < 300) { r = x; g = 0; b = c; }
-                else if (300 <= h && h < 360) { r = c; g = 0; b = x; }
-
-                return {
-                    r: Math.round((r + m) * 255),
-                    g: Math.round((g + m) * 255),
-                    b: Math.round((b + m) * 255)
-                };
-        }
-
-function HCLtoRGB(h, c, l) {
-    // Convert HCL to XYZ
-    const L = ((l * 100) + 16) / 116;
-    const C = c  ;
-    const hRad = (h * Math.PI) / 180;
-
-    // Calculate XYZ components
-    const Y = L;
-    const X = (C * Math.cos(hRad)) + L;
-    const Z = L - (C * Math.sin(hRad));
-
-    // Convert XYZ to RGB
-    const r = 3.2406 * X - 1.5372 * Y - 0.4986 * Z;
-    const g = -0.9689 * X + 1.8758 * Y + 0.0415 * Z;
-    const b = 0.0557 * X - 0.2040 * Y + 1.0570 * Z;
-
-    // Convert RGB from linear space to 0-255 range
-                return {
-                    r: Math.round((r ) * 255),
-                    g: Math.round((g ) * 255),
-                    b: Math.round((b ) * 255)
-                };
-}
-function fInv(t) {
-    const T0 = 6.0 / 29.0;
-    if (t > T0) {
-        return t * t * t;
-    }
-    return 3.0 * T0 * T0 * (t - 4.0 / 29.0);
-}
-
-function CIELCHtoRGB(h, c, l) {
-    // Reference white point (ad hoc)
-    const Xn = 100;
-    const Yn = 100;
-    const Zn = 100;
- const L = l * 20
-    // Convert L, C, h to XYZ
-    const X = Xn * fInv((L + 16) / 116 + c / 20 * Math.cos(h * Math.PI / 180));
-    const Y = Yn * fInv((L + 16) / 116);
-    const Z = Zn * fInv((L + 16) / 116 - c / 8 * Math.sin(h * Math.PI / 180));
-
-    const R = 2.9515373 * X - 1.2894116 * Y - 0.4738445 * Z;
-    const G = -1.0851093 * X + 1.9908566 * Y + 0.0372026 * Z;
-    const B = 0.0854934 * X - 0.2694964 * Y + 1.0912975 * Z;
-
-    // Convert RGB from linear space to 0-255 range
-    return [
-        Math.max(0, Math.min(255, Math.round(R * 255))),
-        Math.max(0, Math.min(255, Math.round(G * 255))),
-        Math.max(0, Math.min(255, Math.round(B * 255)))
-    ];
-}
 
 
 
@@ -748,25 +925,167 @@ document.getElementById('outputText').innerText = `[${funcStr}]^{${bs.toString()
 for (let i = 0; i < width; i++) {
     for (let j = 0; j < height; j++) {
         const x = minReal + (maxReal - minReal) * i / width;
-        const y = minImag + (maxImag - minImag) * j / height;
+        let y = minImag + (maxImag - minImag) * j / height;
+		const yp = y;
         let result = 0;
-        
-if(fffa){
+  		if (applyConjugate && yp < 0) {
+			y = - y;
+		}
+		xgl = math.complex(x, y);                                 
+		const exppre = math.compile(pref);
+        xgl= exppre.evaluate({ x: xgl , c: xgl});
+if(calcm == 'kns'){
 try {
-           if(!ffri){ result = fastsuperfunc(funcStr, a, math.complex(x, y), globalc, bign);
-}else{result = fastsuperfunc(funcStr, math.complex(x, y),b, globalc, bign);}
-        } catch (e) {
-            console.error(e); // Log the error for debugging purposes
-        }
-}else{
-        try {
-           if(!ffri){ result = superfunc(funcStr, a, math.complex(x, y), globalc, bign);
-}else{result = superfunc(funcStr, math.complex(x, y),b, globalc, bign);}
-        } catch (e) {
-            console.error(e); // Log the error for debugging purposes
-        }}
+if(!ffri){ result = fastsuperfunckn(funcStr, a, xgl, globalc, bign);
+}else{result = fastsuperfunckn(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e);}}
+  
+if(calcm == 'knsu'){
+try {
+if(!ffri){ result = fastsuperfunc(funcStr, a, xgl, globalc, bign);
+}else{result = fastsuperfunc(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e);}}
+
+if(calcm == 'knsp'){
+try {
+if(!ffri){ result = superfunc(funcStr, a, xgl, globalc, bign);
+}else{result = superfunc(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'eca'){
+try {
+if(!ffri){ result = superfunceca(funcStr, a, xgl, globalc, bign);
+}else{result = superfunceca(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'new'){
+try {
+if(!ffri){ result = superfuncnew(funcStr, a, xgl, globalc, bign);
+}else{result = superfuncnew(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'lvy'){
+try {
+if(!ffri){ result = superfunclvy(funcStr, a, xgl, globalc, bign);
+}else{result = superfunclvy(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'lvys'){
+try {
+if(!ffri){ result = superfunclvy(funcStr, a, xgl, globalc, bign);
+}else{result = superfunclvys(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'xsp'){
+try {
+if(!ffri){ result = superfuncxsp(funcStr, a, xgl, globalc, bign);
+}else{result = superfuncxsp(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'wsp'){
+try {
+if(!ffri){ result = superfuncwsp(funcStr, a, xgl, globalc, bign);
+}else{result = superfuncwsp(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+if(calcm == 'osp'){
+try {
+if(!ffri){ result = superfuncosp(funcStr, a, xgl, globalc, bign);
+}else{result = superfuncosp(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'qsp'){
+try {
+if(!ffri){ result = superfuncqsp(funcStr, a, xgl, globalc, bign);
+}else{result = superfuncqsp(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+if(calcm == 'rsp'){
+try {
+if(!ffri){ result = superfuncrsp(funcStr, a, xgl, globalc, bign);
+}else{result = superfuncrsp(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'ria'){
+try {
+if(!ffri){ result = superfuncria(funcStr, a, xgl, globalc, bign);
+}else{result = superfuncria(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'rir'){
+try {
+if(!ffri){ result = superfuncrir(funcStr, a, xgl, globalc, bign);
+}else{result = superfuncrir(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'abl'){
+try {
+if(!ffri){ result = abel(funcStr, a, xgl, globalc, bign);
+}else{result = abel(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'abi'){
+try {
+if(!ffri){ result = invabel(funcStr, a, xgl, globalc, bign);
+}else{result = superfuncrir(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'sch'){
+try {
+if(!ffri){ result = schroder(funcStr, a, xgl, globalc, bign);
+}else{result = schroder(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'sci'){
+try {
+if(!ffri){ result = invschroder(funcStr, a, xgl, globalc, bign);
+}else{result = invschroder(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'bch'){
+try {
+if(!ffri){ result = bottcher(funcStr, a, xgl, globalc, bign);
+}else{result = bottcher(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'bci'){
+try {
+if(!ffri){ result = invbottcher(funcStr, a, xgl, globalc, bign);
+}else{result = invbottcher(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'tch'){
+try {
+if(!ffri){ result = tch(funcStr, a, xgl, globalc, bign);
+}else{result = tch(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'tci'){
+try {
+if(!ffri){ result = tci(funcStr, a, xgl, globalc, bign);
+}else{result = tci(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+  if(calcm == 'zch'){
+try {
+if(!ffri){ result = zch(funcStr, a, xgl, globalc, bign);
+}else{result = zch(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'zci'){
+try {
+if(!ffri){ result = zci(funcStr, a, xgl, globalc, bign);
+}else{result = zci(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+
+
         
-        const color = getColorFromComplex(result);
+		 if (applyConjugate && yp < 0) {
+			result = math.conj(result);
+		}
+		
+				const exppos = math.compile(posf);
+        result= exppos.evaluate({ x: result , c: xgl});
+		
+        const color = getColorFromComplex(result, math.complex(x, y));
         const index = (i + j * width) * 4;
         
         data[index] = color.r;       // Red

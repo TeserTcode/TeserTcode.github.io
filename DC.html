@@ -128,8 +128,13 @@ background-color: #eeeeee;
             <option value="hsv">HSV</option>
             <option value="hsl">HSL</option>
             <option value="hcl">HCL</option>
+			 <option value="ycbcr">YCbCr</option>
+			  <option value="ydbdr">YDbDr</option>
+			   <option value="ycocg">YCoCg</option>
+			    <option value="ypbpr">YPbPr</option>
             <option value="cielch">CIELCH</option>
 	    <option value="2d">2d</option>
+		  <option value="contour">Contour</option>
             <option value="palette">Palette</option>
         </select>
     </div>
@@ -316,47 +321,29 @@ function generatePalette() {
             const reStep = (maxReal - minReal) / width;
             const imStep = (maxImag - minImag) / height;
 
+
+
+
+
+
             for (let x = 0; x < width; x++) {
+			let memo = 0;
                 for (let y = 0; y < height; y++) {
+				 
                     const re = minReal + x * reStep;
                     const im = maxImag - y * imStep;
 
                     let color = [0, 0, 0];
                     try {
-                        const complexValue = math.complex(re, im);
+					const complexValue = math.complex(re, im);
                         const funcValue = math.evaluate(funcStr, { x: complexValue });
-                        const magnitude = math.abs(funcValue);
-                        const phase = (hue+math.arg(funcValue)+2*Math.PI) % (2*Math.PI);
-                        const lightnessValue = math.evaluate(magnitudeToLightnessExpr, { x: magnitude });
-
-                        if (colorMode === 'hsv' || colorMode === 'hsl') {
-                            const chroma = saturationChroma / 100;
-                            const lightnessAdjusted = lightnessValue * (lightness / 100);
-                            color = colorMode === 'hsv'
-                                ? HSVtoRGB(phase * 180 / Math.PI, chroma, lightnessAdjusted)
-                                : HSLtoRGB(phase * 180 / Math.PI, chroma, lightnessAdjusted);
-                        } else if (colorMode === 'hcl' || colorMode === 'cielch') {
-                            const chroma = saturationChroma / 100;
-                            const lightnessAdjusted = lightnessValue * (lightness / 100);
-                            color = colorMode === 'hcl'
-                                ? HCLtoRGB(phase * 180 / Math.PI, chroma, lightnessAdjusted)
-                                : CIELCHtoRGB(phase * 180 / Math.PI, chroma, lightnessAdjusted);
-                        } else if (colorMode === '2d') {
-                               color = [math.sign(funcValue.re)*50 + math.sign(funcValue.im)*100, math.abs(funcValue.re)*255,math.abs(funcValue.im)*255]
-                        } else if (colorMode === 'palette' && paletteImageData) {
-                            const hueIndex = Math.floor(((phase * 180 / Math.PI) % 360 + 360) % 360);
-                            const lightnessIndex = 99 - Math.floor(Math.min(Math.max(lightnessValue,0),1) * 98);
-                            const index = (lightnessIndex * 360 + hueIndex) * 4;
-                            color = [
-                                paletteImageData[index],
-                                paletteImageData[index + 1],
-                                paletteImageData[index + 2]
-                            ];
-                        }
-                    } catch (e) {
+				
+						color = complexToColor(complexValue, funcValue, magnitudeToLightnessExpr, colorMode, saturationChroma, lightness, paletteImageData,0.1, math.divide(math.subtract(funcValue,memo),imStep));
+                memo = funcValue;
+				} catch (e) {
                         console.error('Error evaluating function or applying color transformation:', e);
                     }
-
+					
                     const index = (y * width + x) * 4;
                     imageData.data[index] = color[0];
                     imageData.data[index + 1] = color[1];

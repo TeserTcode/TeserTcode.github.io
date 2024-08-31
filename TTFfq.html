@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTFfq Expander</title>
+</head>
+<body>
+    <h1>TTFfq Expander</h1>
+    <label for="inputText">Input:</label>
+    <textarea id="inputText" rows="4" cols="50">FFqf</textarea><br><br>
+  <label for="indexValue">w = </label>
+    <input type="number" id="indexValue" value="3"><br><br>
+    <label for="outputText">Output:</label>
+    <textarea id="outputText" rows="4" cols="50" readonly></textarea><br><br>
+
+    <button onclick="expand()">Expand</button>
+    <button onclick="expandResult()">Expand Result</button>
+ <button onclick="sgh()">sgh</button>
+    <script src="expander.js"></script>
+</body>
+<script>
+function findClosingParenthesis(str, openingIndex) {
+    let count = 1;
+    let i;
+    for (i = openingIndex + 1; i < str.length; ++i) {
+        if (str[i] === '(') {
+            count++;
+        } else if (str[i] === ')') {
+            count--;
+            if (count === 0) {
+                break;
+            }
+        }
+    }
+    return i;
+}
+
+function generateSequenceAtIndex(input, index) {
+    let input_copy = input;
+
+    // Check if the input only consists of 'f'
+    if (/^f+$/.test(input_copy)) {
+        return input_copy.length.toString(); // Return the number of 'f' characters
+    }
+
+    // Extract initial 'f's
+    let initial_f = '';
+    let first_non_f = input_copy.search(/[^f]/);
+    if (first_non_f !== -1) {
+        initial_f = input_copy.substring(0, first_non_f);
+        input_copy = input_copy.substring(first_non_f);
+    }
+
+    let posF = input_copy.indexOf('F');
+
+    if (posF === -1) {
+        return input_copy; // No 'F' found, return the input as is
+    }
+
+    // Check if 'F' is immediately followed by '('
+    if (posF + 1 < input_copy.length && input_copy[posF + 1] === '(') {
+        let posCloseParen = findClosingParenthesis(input_copy, posF + 1);
+        let content_inside_parentheses = input_copy.substring(posF + 2, posCloseParen);
+        
+        let sequence_inside_parentheses = '';
+        for (let j = 0; j < index; ++j) {
+            sequence_inside_parentheses += content_inside_parentheses;
+        }
+
+        let result_sequence = initial_f + sequence_inside_parentheses + input_copy.substring(posCloseParen + 1);
+        return result_sequence;
+    }
+
+    let posQ = input_copy.indexOf('q');
+    let posf = input_copy.indexOf('f');
+
+    let part_to_repeat;
+    let part_after_stop = '';
+
+    if (posQ !== -1 && posQ > posF && (posf === -1 || posQ < posf)) {
+        part_to_repeat = input_copy.substring(posF + 1, posQ);
+        part_after_stop = input_copy.substring(posQ + 1);
+    } else if (posf !== -1 && posf > posF) {
+        part_to_repeat = input_copy.substring(posF + 1, posf + 1);
+        part_after_stop = input_copy.substring(posf + 1);
+    } else {
+        part_to_repeat = input_copy.substring(posF + 1);
+    }
+
+    let current_sequence = '';
+    for (let j = 0; j < index; ++j) {
+        current_sequence += part_to_repeat;
+    }
+    if (part_after_stop) {
+        current_sequence += part_after_stop;
+    }
+
+    return initial_f + current_sequence;
+}
+
+function expand() {
+    let input = document.getElementById('inputText').value;
+    let index = parseInt(document.getElementById('indexValue').value, 10);
+    let result = generateSequenceAtIndex(input, index);
+    document.getElementById('outputText').value = result;
+}
+
+function expandResult() {
+    let output = document.getElementById('outputText').value;
+    let index = parseInt(document.getElementById('indexValue').value, 10);
+    let result = generateSequenceAtIndex(output, index);
+    document.getElementById('outputText').value = result;
+}
+
+function sgh() {
+    let intervalId = setInterval(() => {
+        expandResult();
+
+        // Stop the interval when the result stabilizes (no 'F' left in the output)
+        let output = document.getElementById('outputText').value;
+        if (output.indexOf('F') === -1) {
+            clearInterval(intervalId);
+        }
+    }, 200); // Execute every 0.2 seconds
+}
+</script>
+</html>
