@@ -1,4 +1,17 @@
 
+
+function cielabf(t) {
+    const threshold = Math.pow(6.0 / 29.0, 3);
+    return t > threshold ? Math.pow(t, 1.0 / 3.0) : (t * Math.pow(6.0 / 29.0, -2) / 3.0) + (4.0 / 29.0);
+}
+
+function cielabfm(t) {
+    const threshold = 6.0 / 29.0;
+    return t > threshold ? Math.pow(t, 3) : 3 * Math.pow(6.0 / 29.0, 2) * (t - 4.0 / 29.0);
+}
+
+
+
 function rgbToCmyk(r, g, b) {
     r /= 255;
     g /= 255;
@@ -274,7 +287,26 @@ function srgbToRgb(r, g, b) {
 }
 
 function rgbToLch(r, g, b) {
-    return [r, g, b]; // Just returns the input values as an array
+    const mtx = [
+       [ 0.490, 0.310, 0.200],
+       [ 0.176, 0.812, 0.010],
+       [ 0.000, 0.010, 0.990]
+    ];
+
+    [r, g, b] = matrixMult(r, g, b, mtx);
+
+    const r1 = r;
+    const g1 = g;
+    const b1 = b;
+
+    r = 116 * cielabf(g1 / 100) - 16;
+    g = 500 * (cielabf(r1 / 95.048) - cielabf(g1 / 100));
+    b = 200 * (cielabf(g1 / 100) - cielabf(b1 / 108.884));
+
+    const chroma = Math.sqrt(g * g + b * b);
+    const hue = Math.atan2(b, g)/3.14159265*180; // atan2(y, x) is used for correct quadrant determination
+
+    return [r, chroma, hue];
 }
 
 function rgbToYcbcr(r, g, b) {
@@ -332,7 +364,23 @@ function rgbToYjk(r, g, b) {
 
 
 function rgbToLab(r, g, b) {
-    return [r, g, b]; // Just returns the input values as an array
+    const mtx = [
+        [0.490, 0.310, 0.200],
+        [0.176, 0.812, 0.010],
+        [0.000, 0.010, 0.990]
+    ];
+
+    [r, g, b] = matrixMult(r, g, b, mtx);
+
+    const r1 = r;
+    const g1 = g;
+    const b1 = b;
+
+    r = 116 * cielabf(g1 / 100) - 16;
+    g = 500 * (cielabf(r1 / 95.048) - cielabf(g1 / 100));
+    b = 200 * (cielabf(g1 / 100) - cielabf(b1 / 108.884));
+
+    return [r, g, b];
 }
 
 function rgbToUvw(r, g, b) {
@@ -549,10 +597,25 @@ function rgbToLuv(r, g, b) {
 
 
 
-function lchToRgb(l, c, h) {
-    return [l, c, h]; // Just returns the input values as an array
-}
+function lchToRgb(L, C, H) {
+    let r1 = L;
+    let g1 = C * Math.cos(H/180*3.14159265);
+    let b1 = C * Math.sin(H/180*3.14159265);
 
+    let r = 95.048 * cielabfm((r1 + 16) / 116 + g1 / 500);
+    let g = 100 * cielabfm((r1 + 16) / 116);
+    let b = 108.884 * cielabfm((r1 + 16) / 116 - b1 / 500);
+
+    const mtx = [
+[2.364, -0.896, -0.468],
+        [-0.515, 1.426, 0.088],
+        [0.005, -0.014, 1.009]
+    ];
+
+    [r1, g1, b1] = matrixMult(r, g, b, mtx);
+
+    return [r1, g1, b1];
+}
 function ycbcrToRgb(y, cb, cr) {
     // Define the conversion matrix for YCbCr to RGB
     const mtx = [
@@ -600,9 +663,22 @@ function yjkToRgb(r, g, b) {
 
     return [r, g, b];
 }
+function labToRgb(L, a, bb) {
+    let r1 = L, g1 = a, b1 = bb;
 
-function labToRgb(l, a, b) {
-    return [l, a, b]; // Just returns the input values as an array
+    let r = 95.048 * cielabfm((r1 + 16) / 116 + g1 / 500);
+    let g = 100 * cielabfm((r1 + 16) / 116);
+    let b = 108.884 * cielabfm((r1 + 16) / 116 - b1 / 500);
+
+    const mtx = [
+       [ 2.364, -0.896, -0.468],
+      [  -0.515, 1.426, 0.088],
+      [  0.005, -0.014, 1.009]
+    ];
+
+    [r1, g1, b1] = matrixMult(r, g, b, mtx);
+
+    return [r1, g1, b1];
 }
 
 function uvwToRgb(u, v, w) {
