@@ -3514,8 +3514,15 @@ function doya(b) {
 function factorial(b) {
     return gamma(math.add(b,1));
 }
-// Import the functions into math.js if needed
+function nest(f, x, n) {
+    for (let i = 0; i < n; i++) {
+        x = f(x);
+    }
+    return x;
+}
+
 math.import({
+	nest:nest,
 	factorial:factorial,
 	tetr:tetr,
 	tetrq:tetrq,
