@@ -736,14 +736,14 @@ if(!fffx){ing = math.evaluate(fdse, { x: complexValue }); }
                             const chroma = saturationChroma / 100;
                             const lightnessAdjusted = lightnessValue * (lightness / 100);
                             color = colorMode === 'hsv'
-                                ? HSVtoRGB(phase * 180 / Math.PI, chroma, lightnessAdjusted)
-                                : HSLtoRGB(phase * 180 / Math.PI, chroma, lightnessAdjusted);
+                                ? hsvToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted)
+                                : hslToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted);
                         } else if (colorMode === 'hcl' || colorMode === 'cielch') {
                             const chroma = saturationChroma / 100;
                             const lightnessAdjusted = lightnessValue * (lightness / 100);
                             color = colorMode === 'hcl'
-                                ? HCLtoRGB(phase * 180 / Math.PI, chroma, lightnessAdjusted)
-                                : CIELCHtoRGB(phase * 180 / Math.PI, chroma, lightnessAdjusted);
+                                ? hclToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted)
+                                : lchToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted);
                         } else if (colorMode === '2d') {
                                color = [math.sign(funcValue.re)*50 + math.sign(funcValue.im)*100, math.abs(funcValue.re)*255,math.abs(funcValue.im)*255]
                         } else if (colorMode === 'palette' && paletteImageData) {
@@ -772,7 +772,7 @@ scaleCanvas();
 
         }
 
-        function HSVtoRGB(h, s, v) {
+        function hsvToRgb(h, s, v) {
             let r, g, b;
             let i = Math.floor(h / 60);
             let f = h / 60 - i;
@@ -802,7 +802,7 @@ scaleCanvas();
             return [Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)];
         }
 
-        function HSLtoRGB(h, s, l) {
+        function hslToRgb(h, s, l) {
             let r, g, b;
             let c = (1 - Math.abs(2 * l - 1)) * s;
             let x = c * (1 - Math.abs((h / 60) % 2 - 1));
@@ -823,7 +823,7 @@ scaleCanvas();
             return [Math.floor((r + m) * 255), Math.floor((g + m) * 255), Math.floor((b + m) * 255)];
         }
 
-function HCLtoRGB(h, c, l) {
+function hclToRgb(h, c, l) {
     // Convert HCL to XYZ
     const L = ((l * 100) + 16) / 116;
     const C = c  ;
@@ -854,7 +854,7 @@ function fInv(t) {
     return 3.0 * T0 * T0 * (t - 4.0 / 29.0);
 }
 
-function CIELCHtoRGB(h, c, l) {
+function lchToRgb(h, c, l) {
     // Reference white point (ad hoc)
     const Xn = 100;
     const Yn = 100;

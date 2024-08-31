@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Picker</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .color-box {
+            width: 150px;
+            height: 150px;
+            margin: 20px;
+            border: 1px solid #000;
+        }
+        .container {
+            border: 1px solid #000;
+            margin: 10px;
+            padding: 10px;
+            width: 220px;
+            display: none; /* Start hidden */
+            position: relative;
+            background: #f0f0f0;
+        }
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            margin-top: 10px;
+        }
+        .slider-container label {
+            margin-bottom: 5px;
+        }
+        .slider-container input {
+            width: 200px;
+        }
+        .containers {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+.lower-bar {
+    position: absolute;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 10px;
+    background: #f1f1f1;
+    border-top: 1px solid #ccc;
+    overflow-x: auto; /* Allows horizontal scrolling */
+    overflow-y: hidden; /* Prevent vertical overflow */
+}
+
+
+        .lower-bar button {
+            margin: 0 10px;
+        }
+        .container .close-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+            background: #f17171;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            padding: 3px 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="color-box" id="colorBox"></div>
+    <p id="hexValue">#FFFFFF</p>
+
+    <div id="containers" class="containers"></div>
+
+<div class="lower-bar">
+    <div class="row">
+        <button onclick="showContainer('rgb')">RGB</button>
+        <button onclick="showContainer('hsv')">HSV</button>
+        <button onclick="showContainer('hsl')">HSL</button>
+        <button onclick="showContainer('hwb')">HWB</button>
+        <button onclick="showContainer('hcl')">HCL</button>
+        <button onclick="showContainer('lch')">LCh</button>
+        <button onclick="showContainer('ycbcr')">YCbCr</button>
+        <button onclick="showContainer('xyz')">XYZ</button>
+        <button onclick="showContainer('yjk')">YJK</button>
+        <button onclick="showContainer('lab')">LAB</button>
+        <button onclick="showContainer('cmy')">CMY</button>
+        <button onclick="showContainer('uvw')">UVW</button>
+        <button onclick="showContainer('lms')">LMS</button>
+        <button onclick="showContainer('ydbdr')">YDbDr</button>
+        <button onclick="showContainer('yiq')">YIQ</button>
+        <button onclick="showContainer('ycocg')">YCoCg</button>
+        <button onclick="showContainer('ycocgr')">YCoCgR</button>
+        <button onclick="showContainer('yuv')">YUV</button>
+        <button onclick="showContainer('ypbpr')">YPbPr</button>
+        <button onclick="showContainer('bt')">BT</button>
+        <button onclick="showContainer('tsl')">TSL</button>
+        <button onclick="showContainer('luv')">LUV</button>
+		<button onclick="showContainer('srgb')">sRGB</button>
+		<button onclick="showContainer('scrgb')">scRGB</button>
+		<button onclick="showContainer('ecirgb')">eciRGB</button>
+    </div>
+</div>
+<script src="clrspc.js"></script>
+    <script>
+        const colorBox = document.getElementById('colorBox');
+        const hexValue = document.getElementById('hexValue');
+        const containersDiv = document.getElementById('containers');
+
+const sliders = {
+    rgb: ['rSlider', 'gSlider', 'bSlider'],
+    hsv: ['hSlider', 'sSlider', 'vSlider'],
+    hsl: ['hSlider', 'sSlider', 'lSlider'],
+    hwb: ['hSlider', 'wSlider', 'bSlider'],
+    hcl: ['hSlider', 'cSlider', 'lSlider'],
+    lch: ['lSlider', 'cSlider', 'hSlider'],
+    ycbcr: ['ySlider', 'cbSlider', 'crSlider'],
+    xyz: ['xSlider', 'ySlider', 'zSlider'],
+    yjk: ['ySlider', 'jSlider', 'kSlider'],
+    lab: ['lSlider', 'aSlider', 'bSlider'],
+    cmyk: ['cSlider', 'mSlider', 'ySlider', 'kSlider'],
+    cmy: ['cSlider', 'mSlider', 'ySlider'],
+    uvw: ['uSlider', 'vSlider', 'wSlider'],
+    lms: ['lSlider', 'mSlider', 'sSlider'],
+    ydbdr: ['ySlider', 'dbSlider', 'drSlider'],
+    yiq: ['ySlider', 'iSlider', 'qSlider'],
+
+    ycocg: ['ySlider', 'coSlider', 'cgSlider'],
+    ycocgr: ['ySlider', 'coSlider', 'cgSlider'],
+    yuv: ['ySlider', 'uSlider', 'vSlider'],
+    ypbpr: ['ySlider', 'pbSlider', 'prSlider'],
+    bt: ['xSlider', 'ySlider', 'ySlider'],
+    tsl: ['tSlider', 'sSlider', 'lSlider'],
+    luv: ['lSlider', 'uSlider', 'vSlider'],
+	 srgb: ['rSlider', 'gSlider', 'bSlider'],
+	  scrgb: ['rSlider', 'gSlider', 'bSlider'],
+	   ecirgb: ['rSlider', 'gSlider', 'bSlider']
+};
+
+// Initialize sliders to null
+Object.keys(sliders).forEach(space => {
+    sliders[space] = sliders[space].reduce((acc, key) => {
+        acc[key] = null;
+        return acc;
+    }, {});
+});
+        function rgbToHex(r, g, b) {
+            return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`;
+        }
+
+
+
+function updateSliders(r, g, b, name) {
+    // Convert RGB to other color spaces
+    const conversionss = {
+        hsv: rgbToHsv(r, g, b),
+        hsl: rgbToHsl(r, g, b),
+        hwb: rgbToHwb(r, g, b),
+        cmy: rgbToCmy(r, g, b),
+        hcl: rgbToHcl(r, g, b),
+        lch: rgbToLch(r, g, b),
+        ycbcr: rgbToYcbcr(r, g, b),
+        xyz: rgbToXyz(r, g, b),
+        yjk: rgbToYjk(r, g, b),
+        lab: rgbToLab(r, g, b),
+        uvw: rgbToUvw(r, g, b),
+        lms: rgbToLms(r, g, b),
+        ydbdr: rgbToYdbdr(r, g, b),
+        yiq: rgbToYiq(r, g, b),
+        ycocg: rgbToYcocg(r, g, b),
+        ycocgr: rgbToYcocgR(r, g, b),
+        yuv: rgbToYuv(r, g, b),
+        ypbpr: rgbToYpbpr(r, g, b),
+        bt: rgbToBt(r, g, b),
+        tsl: rgbToTsl(r, g, b),
+		srgb: rgbToSrgb(r, g, b),
+		scrgb: rgbToScrgb(r, g, b),
+		ecirgb: rgbToEcirgb(r, g, b),
+        luv: rgbToLuv(r, g, b)
+    };
+
+    // Update RGB sliders
+    if (name !== 'rgb') {
+        sliders.rgb.rSlider.value = r;
+        sliders.rgb.gSlider.value = g;
+        sliders.rgb.bSlider.value = b;
+    }
+
+    // Update other sliders based on color space
+    Object.keys(conversionss).forEach(space => {
+        if (name !== space) {
+            const [a, b, c] = conversionss[space];
+            if (sliders[space]) {
+                const [slider1, slider2, slider3] = Object.values(sliders[space]);
+                if (slider1) slider1.value = a;
+                if (slider2) slider2.value = b;
+                if (slider3) slider3.value = c;
+            }
+        }
+    });
+}
+const conversionFunctions = {
+    hsvToRgb: hsvToRgb,
+    hslToRgb: hslToRgb,
+    hwbToRgb: hwbToRgb,
+//	    cmykToRgb: cmykToRgb,
+    cmyToRgb: cmyToRgb,
+	hclToRgb: hclToRgb,
+/*	rgbToSrgb:rgbToSrgb,
+	rgbToScrgb:rgbToScrgb,
+	rgbToEcirgb:rgbToEcirgb,
+  */
+srgbToRgb:srgbToRgb,  
+scrgbToRgb:scrgbToRgb, 
+ecirgbToRgb:ecirgbToRgb, 
+
+    lchToRgb: lchToRgb,
+    ycbcrToRgb: ycbcrToRgb,
+    xyzToRgb: xyzToRgb,
+    yjkToRgb: yjkToRgb,
+    labToRgb: labToRgb,
+
+    uvwToRgb: uvwToRgb,
+    lmsToRgb: lmsToRgb,
+    ydbdrToRgb: ydbdrToRgb,
+    yiqToRgb: yiqToRgb,
+    ycocgToRgb: ycocgToRgb,
+    ycocgrToRgb: ycocgrToRgb,
+    yuvToRgb: yuvToRgb,
+    ypbprToRgb: ypbprToRgb,
+    btToRgb: btToRgb,
+    tslToRgb: tslToRgb,
+    luvToRgb: luvToRgb,
+
+	rgbToRgb:null
+};
+// Function to create colorConversions object
+function createColorConversions(colorSpaces) {
+    const conversions = {};
+
+    colorSpaces.forEach(space => {
+        conversions[space] = {
+            convertToRgb: space === 'rgb' ? null : conversionFunctions[`${space}ToRgb`]
+        };
+    });
+
+    return conversions;
+}
+
+// Initialize the colorSpaces and colorConversions
+const colorSpaces = [
+    'rgb', 'hsv', 'hsl', 'hwb', 'hcl', 'lch', 'ycbcr', 'xyz', 
+    'yjk', 'lab', 'cmyk', 'cmy', 'uvw', 'lms', 'ydbdr', 'yiq', 
+     'ycocg', 'ycocgr', 'yuv', 'ypbpr', 'tsl', 'luv', 'srgb','scrgb','ecirgb'
+];
+const colorConversions = createColorConversions(colorSpaces);
+
+// Generalized update function
+function updateColorFromSliders(name, conversions) {
+    const values = {};
+    const slidersGroup = sliders[name];
+    Object.keys(slidersGroup).forEach(param => {
+        if (param.endsWith('Slider')) {
+            const key = param.replace('Slider', '');
+            values[key] = parseInt(slidersGroup[param].value);
+        }
+    });
+
+    const [r, g, b] = conversions.convertToRgb ? conversions.convertToRgb(...Object.values(values)) : [values.r, values.g, values.b];
+    const boundedR = Math.min(255, Math.max(0, Math.floor(r)));
+const boundedG = Math.min(255, Math.max(0, Math.floor(g)));
+const boundedB = Math.min(255, Math.max(0, Math.floor(b)));
+
+const hex = rgbToHex(boundedR, boundedG, boundedB, name);
+
+    colorBox.style.backgroundColor = hex;
+    hexValue.textContent = hex;
+    updateSliders(r, g, b,name);
+}
+
+// Generalized createSliders function
+function createSliders(name, slidersParams, conversions) {
+    try {
+        slidersParams.forEach(param => {
+            if (sliders[name] && sliders[name][param + 'Slider']) {
+                sliders[name][param + 'Slider'].addEventListener('input', () => updateColorFromSliders(name, conversions));
+            } else {
+                console.warn(`Slider for ${param} does not exist in sliders[${name}]`);
+            }
+        });
+    } catch (error) {
+        console.error("Error occurred in createSliders function:", error);
+    }
+}
+// Initialize sliders
+function initializeSliders() {
+    createSliders('rgb', ['r', 'g', 'b'], colorConversions.rgb);
+    createSliders('hsv', ['h', 's', 'v'], colorConversions.hsv);
+    createSliders('hsl', ['h', 's', 'l'], colorConversions.hsl);
+    createSliders('hwb', ['h', 'w', 'b'], colorConversions.hwb);
+    createSliders('hcl', ['h', 'c', 'l'], colorConversions.hcl);
+    createSliders('lch', ['l', 'c', 'h'], colorConversions.lch);
+    createSliders('ycbcr', ['y', 'cb', 'cr'], colorConversions.ycbcr);
+    createSliders('xyz', ['x', 'y', 'z'], colorConversions.xyz);
+    createSliders('yjk', ['y', 'j', 'k'], colorConversions.yjk);
+    createSliders('lab', ['l', 'a', 'b'], colorConversions.lab);
+    createSliders('cmyk', ['c', 'm', 'y', 'k'], colorConversions.cmyk);
+    createSliders('cmy', ['c', 'm', 'y'], colorConversions.cmy);
+    createSliders('uvw', ['u', 'v', 'w'], colorConversions.uvw);
+    createSliders('lms', ['l', 'm', 's'], colorConversions.lms);
+    createSliders('ydbdr', ['y', 'db', 'dr'], colorConversions.ydbdr);
+    createSliders('yiq', ['y', 'i', 'q'], colorConversions.yiq);
+    createSliders('ycocg', ['y', 'co', 'cg'], colorConversions.ycocg);
+    createSliders('ycocgr', ['y', 'co', 'cg'], colorConversions.ycocgr);
+    createSliders('yuv', ['y', 'u', 'v'], colorConversions.yuv);
+    createSliders('ypbpr', ['y', 'pb', 'pr'], colorConversions.ypbpr);
+    createSliders('bt', ['x', 'y', 'z'], colorConversions.bt);
+    createSliders('tsl', ['t', 's', 'l'], colorConversions.tsl);
+    createSliders('luv', ['l', 'u', 'v'], colorConversions.luv);
+	 createSliders('srgb', ['r', 'g', 'b'], colorConversions.srgb);
+	  createSliders('scrgb', ['r', 'g', 'b'], colorConversions.scrgb);
+	   createSliders('ecirgb', ['r', 'g', 'b'], colorConversions.ecirgb);
+}
+        function toggleContainer(id) {
+            const container = document.getElementById(id);
+            container.style.display = container.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function createContainer(id, title, slidersHtml) {
+            const container = document.createElement('div');
+            container.id = id;
+            container.className = 'container';
+
+            const header = document.createElement('div');
+            header.className = 'header';
+
+            const titleElement = document.createElement('span');
+            titleElement.textContent = title;
+            header.appendChild(titleElement);
+
+            const closeButton = document.createElement('span');
+            closeButton.textContent = 'X';
+            closeButton.className = 'close-btn';
+            closeButton.addEventListener('click', () => {
+                container.style.display = 'none';
+            });
+            header.appendChild(closeButton);
+
+            const content = document.createElement('div');
+            content.className = 'slider-container';
+            content.innerHTML = slidersHtml;
+
+            container.appendChild(header);
+            container.appendChild(content);
+            containersDiv.appendChild(container);
+        }
+
+        function showContainer(id) {
+            const container = document.getElementById(id);
+            if (container) {
+                container.style.display = 'block';
+            }
+        }
+
+// Function to initialize sliders dynamically
+function sliderInit(name, var1, var2, var3, min1, min2, min3, max1, max2, max3, default1, default2, default3) {
+    const containerHtml = `
+        <label for="${name}_${var1}_slider">${var1.toUpperCase()}</label>
+        <input type="range" id="${name}_${var1}_slider" min="${min1}" max="${max1}" value="${default1}">
+        <label for="${name}_${var2}_slider">${var2.toUpperCase()}</label>
+        <input type="range" id="${name}_${var2}_slider" min="${min2}" max="${max2}" value="${default2}">
+        <label for="${name}_${var3}_slider">${var3.toUpperCase()}</label>
+        <input type="range" id="${name}_${var3}_slider" min="${min3}" max="${max3}" value="${default3}">
+    `;
+
+    createContainer(name, name.toUpperCase(), containerHtml);
+
+    sliders[name][`${var1}Slider`] = document.getElementById(`${name}_${var1}_slider`);
+    sliders[name][`${var2}Slider`] = document.getElementById(`${name}_${var2}_slider`);
+    sliders[name][`${var3}Slider`] = document.getElementById(`${name}_${var3}_slider`);
+}
+function sliderInit4(name, var1, var2, var3, var4, min1, min2, min3, min4, max1, max2, max3, max4, default1, default2, default3, default3) {
+    const containerHtml = `
+        <label for="${name}_${var1}_slider">${var1.toUpperCase()}</label>
+        <input type="range" id="${name}_${var1}_slider" min="${min1}" max="${max1}" value="${default1}">
+        <label for="${name}_${var2}_slider">${var2.toUpperCase()}</label>
+        <input type="range" id="${name}_${var2}_slider" min="${min2}" max="${max2}" value="${default2}">
+        <label for="${name}_${var3}_slider">${var3.toUpperCase()}</label>
+        <input type="range" id="${name}_${var3}_slider" min="${min3}" max="${max3}" value="${default3}">
+    `;
+
+    createContainer(name, name.toUpperCase(), containerHtml);
+
+    sliders[name][`${var1}Slider`] = document.getElementById(`${name}_${var1}_slider`);
+    sliders[name][`${var2}Slider`] = document.getElementById(`${name}_${var2}_slider`);
+    sliders[name][`${var3}Slider`] = document.getElementById(`${name}_${var3}_slider`);
+}
+
+// Function to initialize all sliders
+function init() {
+    sliderInit('rgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+    sliderInit('hsv', 'h', 's', 'v', 0, 0, 0, 360, 100, 100, 360, 100, 100);
+    sliderInit('hsl', 'h', 's', 'l', 0, 0, 0, 360, 100, 100, 360, 100, 100);
+    sliderInit('hwb', 'h', 'w', 'b', 0, 0, 0, 360, 100, 100, 360, 100, 100);
+	sliderInit('cmy', 'c', 'm', 'y', 0, 0, 0, 100, 100, 100, 0,0,0);
+	sliderInit('hcl', 'h', 'c', 'l', 0, 0, 0, 360, 100, 100, 360, 100, 100);
+	sliderInit('srgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+	sliderInit('scrgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+	sliderInit('ecirgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+ 
+   sliderInit('rgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+sliderInit('hsv', 'h', 's', 'v', 0, 0, 0, 360, 100, 100, 100, 100, 100);
+sliderInit('hsl', 'h', 's', 'l', 0, 0, 0, 360, 100, 100, 100, 100, 100);
+sliderInit('hwb', 'h', 'w', 'b', 0, 0, 0, 360, 100, 100, 100, 100, 100);
+sliderInit('hcl', 'h', 'c', 'l', 0, 0, 0, 360, 100, 100, 100, 100, 100);
+sliderInit('lch', 'l', 'c', 'h', 0, 0, 0, 100, 100, 360, 100, 100, 360);
+sliderInit('ycbcr', 'y', 'cb', 'cr', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+sliderInit('xyz', 'x', 'y', 'z', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+sliderInit('yjk', 'y', 'j', 'k', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+sliderInit('lab', 'l', 'a', 'b', 0, 0, 0, 100, 127, 127, 100, 127, 127);
+sliderInit('cmyk', 'c', 'm', 'y', 'k', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+sliderInit('cmy', 'c', 'm', 'y', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+sliderInit('uvw', 'u', 'v', 'w', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+sliderInit('lms', 'l', 'm', 's', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+sliderInit('ydbdr', 'y', 'db', 'dr', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+sliderInit('yiq', 'y', 'i', 'q', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+sliderInit('ycocg', 'y', 'co', 'cg', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+sliderInit('ycocgr', 'y', 'co', 'cg', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+sliderInit('yuv', 'y', 'u', 'v', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+sliderInit('ypbpr', 'y', 'pb', 'pr', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+sliderInit('bt', 'x', 'y', 'y', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+sliderInit('tsl', 't', 's', 'l', 0, 0, 0, 100, 100, 255, 100, 100, 255);
+sliderInit('luv', 'l', 'u', 'v', 0, 0, 0, 100, 100, 255, 100, 100, 255);
+sliderInit('srgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+sliderInit('scrgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+sliderInit('ecirgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+ 
+ 
+ 
+ // sliderInit('cmyk', 'c', 'm', 'y', 'k', 0, 0, 0, 0, 100, 100, 100, 100, 100, 100, 100, 100);
+
+    initializeSliders();
+}
+
+        init();
+    </script>
+</body>
+</html>
