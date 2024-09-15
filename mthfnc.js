@@ -584,9 +584,11 @@ function complex(value) {
 
 // Function for 'cis'
 function cis(b) {
-    return math.multiply(complex(1), math.add(math.multiply(math.cos(b), complex(1, 0)), math.multiply(math.sin(b), complex(0, 1))));
+    return math.add(math.multiply(math.sin(b),math.complex(0,1)),math.cos(b));
 }
-
+function sic(b) {
+    return math.add(math.multiply(math.cos(b),math.complex(0,1)),math.sin(b));
+}
 // Function for 'cas'
 function cas(b) {
     return math.add(math.multiply(math.sin(b), complex(1)), math.multiply(math.cos(b), complex(1)));
@@ -594,32 +596,34 @@ function cas(b) {
 
 // Function for 'cish'
 function cish(b) {
-    return math.add(math.multiply(math.cosh(b), complex(1, 0)), math.multiply(math.sinh(b), complex(0, 1)));
+    return math.add(math.multiply(math.sinh(b),math.complex(0,1)),math.cosh(b));
 }
 
 // Function for 'sich'
 function sich(b) {
-    return math.add(math.multiply(math.sinh(b), complex(1, 0)), math.multiply(math.cosh(b), complex(0, 1)));
+    return math.add(math.multiply(math.cosh(b),math.complex(0,1)),math.sinh(b));
 }
 
 // Function for 'cisc'
 function cisc(b) {
-    return math.divide(math.multiply(math.cos(b), complex(0, 1)), b);
+    return math.divide(cis(b),b);
 }
-
+function sicc(b) {
+    return math.divide(sic(b),b);
+}
 // Function for 'casc'
 function casc(b) {
-    return math.divide(math.add(math.sin(b), math.cos(b)), b);
+    return math.divide(cas(b),b);
 }
 
 // Function for 'cishc'
 function cishc(b) {
-    return math.divide(math.multiply(math.cosh(b), complex(0, 1)), b);
+   return math.divide(cish(b),b);
 }
 
 // Function for 'sichc'
 function sichc(b) {
-    return math.divide(math.multiply(math.sinh(b), complex(0, 1)), b);
+return math.divide(sich(b),b);
 }
 
 // Function for 'sinp'
@@ -2005,14 +2009,12 @@ function gammad(t, z) {
     return math.multiply(pow(t, math.subtract(z,toComplex(1)) ),math.exp(-t));
 }
 function gamma(z) {
-    // Convert z to a complex number if it's not already
+
     const complexZ = math.complex(z);
 
-    // Initialize the function with exp(-0.577216 * z) / z
     let fi = math.divide(math.exp(math.multiply(-0.577216, complexZ)), complexZ);
 
-    // Loop to compute the product
-    for (let i = 1; i < 20; i++) {
+    for (let i = 1; i < 50; i++) {
         let term = math.divide(complexZ, i);
         fi = math.multiply(fi, math.divide(math.exp(term), math.add(1, term)));
     }
@@ -3380,6 +3382,13 @@ function scbrt(b) {
     }
     return result;
 }
+function theta_e(b){
+	let fi=b;
+	            for (let i = 0; i < 58; i++) {
+                const term = math.multiply(math.complex(0, 1), bi, pi() * 2.0 * i);
+                fi = math.add(fi, math.multiply(knthetaa[i], math.exp(term)));
+
+}return fi;}
    function tetr(b) {
             const N = bign; // bign is set to 10000 for this example
 
@@ -3450,7 +3459,83 @@ fi = math.add(constant, math.pow(math.log(constant), math.subtract(fi, N)));
 
             return fi;
         }
+function pentts(x) {
 
+    // Constants
+    const c1 = math.complex(0.99727185142263340743455208346122, 0);
+    const c2 = math.complex(3.36767615671259898023746, 0);
+    const c3 = math.complex(-0.045007215859218115832617467992327, 0);
+    const c4 = math.complex(0.0088901369292365764437286761921372, 0);
+    const c5 = math.complex(0.045713734782598722205971510001068, 0);
+    const c6 = math.complex(-0.010706554884752458976051797391420, 0);
+    const c7 = math.complex(0.00011329335331439235574805971805731, 0);
+    const c8 = math.complex(0.0051620130076806122858704585184006, 0);
+    const c9 = math.complex(-0.0012422756898373028878826856222621, 0);
+    const c10 = math.complex(-0.00067376885079665208568672130450693, 0);
+    const c11 = math.complex(0.00050296665968765950574361816768155, 0);
+    const c12 = math.complex(0.000039905534193068199638492988158461, 0);
+    const c13 = math.complex(-0.000094623078715532686231662582532929, 0);
+    const c14 = math.complex(0.000026746817775170179559855402990613, 0);
+    const c15 = math.complex(0.000015560915176630839373361742908680, 0);
+    const c16 = math.complex(-0.000014806164180600879049897255662325, 0);
+    const c17 = math.complex(-0.0000010862859329576915398646271649914, 0);
+    const c18 = math.complex(0.0000059140073162222162194013397871868, 0);
+    const c19 = math.complex(-0.00000071091367653831526613315587588080, 0);
+    const c20 = math.complex(-0.0000017666311876111783264226773258896, 0);
+    const c21 = math.complex(0.00000051445590441872869647430881209296, 0);
+    const c22 = math.complex(0.00000036270009896115685098739030842790, 0);
+    const c23 = math.complex(-0.00000020971694575358607315821487792583, 0);
+    const c24 = math.complex(-0.000000021225391058732913781072384245741, 0);
+    const c25 = math.complex(0.000000064546351710396107513893801263449, 0);
+    const c26 = math.complex(-0.000000022236468044317568271338433775775, 0);
+
+    // Transformation of the imaginary part
+    const imagTransformed = math.multiply(c2, math.subtract(math.divide(math.im(x), c2), math.round(math.divide(math.im(x), c2))));
+
+    // Base term
+    const base = math.add(math.re(x), math.complex(1, 0));
+    const z = math.add(math.complex(math.re(base), 0), math.multiply(math.i, imagTransformed));
+
+    // Polynomial expression using powers of z
+    let result = math.add(
+        math.multiply(c1, z),
+        math.multiply(c3, math.pow(z, 2)),
+        math.multiply(c4, math.pow(z, 3)),
+        math.multiply(c5, math.pow(z, 4)),
+        math.multiply(c6, math.pow(z, 5)),
+        math.multiply(c7, math.pow(z, 6)),
+        math.multiply(c8, math.pow(z, 7)),
+        math.multiply(c9, math.pow(z, 8)),
+        math.multiply(c10, math.pow(z, 9)),
+        math.multiply(c11, math.pow(z, 10)),
+        math.multiply(c12, math.pow(z, 11)),
+        math.multiply(c13, math.pow(z, 12)),
+        math.multiply(c14, math.pow(z, 13)),
+        math.multiply(c15, math.pow(z, 14)),
+        math.multiply(c16, math.pow(z, 15)),
+        math.multiply(c17, math.pow(z, 16)),
+        math.multiply(c18, math.pow(z, 17)),
+        math.multiply(c19, math.pow(z, 18)),
+        math.multiply(c20, math.pow(z, 19)),
+        math.multiply(c21, math.pow(z, 20)),
+        math.multiply(c22, math.pow(z, 21)),
+        math.multiply(c23, math.pow(z, 22)),
+        math.multiply(c24, math.pow(z, 23)),
+        math.multiply(c25, math.pow(z, 24)),
+        math.multiply(c26, math.pow(z, 25))
+    );
+
+    return result;
+}
+	
+	function pent(x) {
+		let n=math.floor(x.re)+2;
+		if(n < 0)return math.add(-1.85035452902718141848345,math.exp(math.multiply(1.86573322813586677933545,math.add(x,2.2481745))));
+		let y = pentts(math.complex(math.mod(x.re,1)-2,x.im));
+	for(let i=0;i<n && i<5;i++){y = tetr(y);}
+	//	for(let i=0;i<-n;i++)y = slog(x);
+		return y;
+	}
 function filog(b) {
     // Convert b to a complex number if necessary
     let logB = math.log(b);
@@ -3521,7 +3606,92 @@ function nest(f, x, n) {
     return x;
 }
 
+
+
+function split(func,input){
+return math.complex(func(input.re-input.im)+func(input.re+input.im),func(input.re+input.im)-func(input.re-input.im));
+}
+function dual(func,input){
+return math.complex(func(input.re),input.im*(((func(input.re+1e-7)-func(input.re))/1e-7)));
+}
+function bireal(func,input){
+return math.complex(func(input.re),func(input.im));
+}
+function splite(func,input){
+
+	let xr = math.complex(input.re,1e-7);
+	let xi = math.complex(input.im,1e-7);
+	let dif = math.evaluate(func, { x: math.add(xr,xi) });
+	let sdd = math.evaluate(func, { x: math.subtract(xr,xi) });
+return	math.add(math.add(dif,sdd),math.multiply(math.subtract(dif,sdd),math.complex(0,1)));
+}function bireale(func,input){
+
+	let xr = math.complex(input.re,1e-7);
+	let xi = math.complex(input.im,1e-7);
+	let dif = math.evaluate(func, { x: xr });
+	let sdd = math.evaluate(func, { x: xi });
+return	math.add(dif,math.multiply(sdd,math.complex(0,1)));
+}
+function duale(func,input){
+	let xr = math.complex(input.re,1e-7);
+	let xi = math.complex(input.re+1e-7,1e-7);
+	let dif = math.divide(math.subtract(math.evaluate(func, { x: xi }),math.evaluate(func, { x: xr })),1e-7);
+	let sdd = math.evaluate(func, { x: xr });
+
+return math.add(sdd,math.multiply(dif,math.complex(input.im,0),math.complex(0,1)));
+
+
+}
+function derv(func,input){
+return ((math.divide(math.subtract(func(math.add(input,1e-7)),func(input)),1e-7)));
+}
+function derve(func,input){
+return ((math.divide(math.subtract(math.evaluate(func, { x: math.add(input,1e-7) }),math.evaluate(func, { x: input })),1e-7)));
+}
+function intg(func,input){
+return integral(func,0,input);
+
+}
+function intg(func,input,input2){
+return integral(func,0,input,input2);
+
+}
+function intge(func,input){
+    // Function to handle complex integration
+    function simpsonsRule(a, b, n) {
+        const h = math.divide(math.subtract(b, a), n);
+        let sum = math.complex(0,0);
+        
+        for (let i = 1; i < n; i += 2) {
+            sum = math.add(sum, math.multiply(math.complex(4,0), math.evaluate(func, { x:math.add(a, math.multiply(math.complex(i,0), h))})));
+        }
+        
+        for (let i = 2; i < n - 1; i += 2) {
+            sum = math.add(sum, math.multiply(math.complex(2,0), math.evaluate(func, { x:math.add(a, math.multiply(math.complex(i,0), h))})));
+        }
+        
+        return math.multiply(math.divide(h, math.complex(3,0)), sum);
+    }
+
+    // Adaptive Simpson's rule to ensure convergence
+          return simpsonsRule(math.complex(0,0),input, bign);
+       }
 math.import({
+	split:split,
+	bireal:bireal,
+	bireale:bireale,
+	splite:splite,
+	derv:derv,
+derve:derve,
+	intg:intg,
+	intge:intge,
+	dual:dual,
+	duale:duale
+	},{override:true});
+math.import({
+	pent:pent,
+	pentts:pentts,
+	theta_e:theta_e,
 	nest:nest,
 	factorial:factorial,
 	tetr:tetr,
@@ -4023,6 +4193,8 @@ math.import({
 });
 math.import({
     cis: cis,
+	sic: sic,
+	sicc: sicc,
     cas: cas,
     cish: cish,
     sich: sich,
