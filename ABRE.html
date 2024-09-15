@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBF</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: url('ABREbg.png');
+            background-size: cover;
+            background-position: center;
+            font-family: 'nbf';
+        }
+        .container {
+            text-align: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+        h1 {
+            font-size: 5em;
+        }
+        input[type="number"] {
+            padding: 10px;
+            font-size: 1.5em;
+            margin: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1.5em;
+            margin: 20px;
+            cursor: pointer;
+        }
+        .result {
+            font-size: 3em;
+            font-family: 'nbf';
+        }
+		#styleSelect {
+		font-size: 2em;
+		}
+        @font-face {
+            font-family: 'nbf';
+            src: local('VIGA-REGULAR.OTF');
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Create an array of input boxes -->
+        <div id="inputContainer">
+		 <input type="number" id="headInput" value="1">
+        <input type="number" id="exponentInput" value="1">
+     
+            <!-- Additional inputs will be added by JavaScript -->
+        </div>
+        <br>
+                <button onclick="addInput()">+</button>
+        <button onclick="removeInput()">-</button>
+		  <select id="styleSelect" onchange="updateStyle()">
+            <option value="nbf2">NBF</option>
+            <option value="taco">I. Taco</option>
+            <option value="levia">Levia J.</option>
+        </select>
+        <button onclick="calculate()">Calculate</button>
+        <h1 id="result">Result</h1>
+        <h1 id="formattedResult" class="result"></h1>
+    </div>
+
+    <script>
+               const styles = {
+            nbf2: {
+                 ones: ['', 'k', 'M', 'B', 'T', 'q', 'Q', 's', 'S', 'O', 'N' , "fuck you"],
+                 onesaboveten: ['', 'U', 'D', 'T', 'q', 'Q', 's', 'S', 'O', 'N'],
+                 tens: ['', 'D', 'V', 'TR', 'QU', 'QI', 'Sx', 'Sp', 'Oc', 'No'],
+                 tensabovehundred: ['', 'De', 'V', 'TR', 'QU', 'QI', 'Sx', 'Sp', 'Oc', 'No'],
+                 hundreds: ['', 'Ce', 'Du', 'Te', 'Qr', 'Qn', 'Se', 'St', 'Ot', 'Nn'],
+                 larger: ['', 'Mil', 'Mcr', 'Nan', 'Pic', 'Fmt', 'Att', 'Zpt', 'Yoc', 'Xon', 'Vec', 'Mec'],
+                 suffixes: ['px', 'dx', 'tx', 'qx', 'px', 'sx', 'hx', 'ox', 'nx', 'dx']
+            },
+            levia: {
+ones : ['', 'K', 'M', 'B', 'T', 'Qa', 'Qt', 'Sx', 'Sp', 'Oc', 'No'],
+onesaboveten : ['', 'U', 'D', 'T', 'Qa', 'Qt', 'Sx', 'Sp', 'O', 'N'],
+tens : ['', 'Dc', 'Vg', 'Tg', 'Qd', 'Qi', 'Se', 'St', 'Og', 'Nn'],
+tensabovehundred : ['', 'Dc', 'Vg', 'Tg', 'Qd', 'Qi', 'Se', 'St', 'Og', 'Nn'],
+hundreds : ['', 'Ce', 'Dn', 'Tc', 'Qe', 'Qu', 'Sc', 'Si', 'Oe', 'Ne'],
+larger:['','MI-','MC-','NA-','PC-','FM-','AT-', 'ZP-', 'YC-', 'XN-', 'VC-', 'MeC-'],
+suffixes : ['px', 'dx', 'tx', 'qx', 'px', 'sx', 'hx', 'ox', 'nx', 'dx']
+            },
+            taco: {
+				ones : ['', 'K', 'M', 'B', 'T', 'q', 'Q', 's', 'S', 'O', 'N'],
+     onesaboveten : ['', 'U', 'D', 'T', 'q', 'Q', 's', 'S', 'O', 'N'],
+     tens : ['', 'De', 'Vg', 'Tg', 'Qu', 'Qi', 'Se', 'Sp', 'Oc', 'No'],
+		tensabovehundred : ['', 'De', 'Vg', 'Tg', 'Qu', 'Qi', 'Se', 'Sp', 'Oc', 'No'],
+      hundreds : ['', 'Ce', 'Du', 'Te', 'Qr', 'Qn', 'Sc', 'St', 'Ot', 'Nn'],
+    larger:  ['', 'Mil', 'Mcr', 'Nan', 'Pic', 'Fmt', 'Att', 'Zpt', 'Yct', 'Xon', 'Vec'],
+     suffixes : ['px', 'dx', 'tx', 'qx', 'px', 'sx', 'hx', 'ox', 'nx', 'dx']
+            }
+        };
+		
+		        let currentStyle = styles.style1;
+
+        function updateStyle() {
+            const styleSelect = document.getElementById('styleSelect');
+            const selectedStyle = styleSelect.value;
+            currentStyle = styles[selectedStyle];
+        }
+updateStyle();
+        function nthdigit(num, n) {
+            return Math.floor(num / Math.pow(10, n)) % 10;
+        }
+
+        function getthrenum(num, groupIndex) {
+            return Math.floor(num / Math.pow(10, groupIndex * 3)) % 1000;
+        }
+
+        function formatNumber(num) {
+            let formattedString = '';
+
+            if (num < 10) {
+                formattedString +=  currentStyle.ones[num + 1];
+            } else if (num < 100) {
+                const  onesDigit = nthdigit(num, 0);
+                const  tensDigit = nthdigit(num, 1);
+                formattedString +=  currentStyle.onesaboveten[ onesDigit] +  currentStyle.tens[ tensDigit];
+            } else if (num < 1000) {
+                const  onesDigit = nthdigit(num, 0);
+                const  tensDigit = nthdigit(num, 1);
+                const  hundredsDigit = nthdigit(num, 2);
+                formattedString +=  currentStyle.onesaboveten[ onesDigit] +  currentStyle.tensabovehundred[ tensDigit] +  currentStyle.hundreds[ hundredsDigit];
+            } else {
+                let groupIndex = 0;
+                let numRemaining = num;
+
+                while (numRemaining > 0 && groupIndex <  currentStyle.larger.length) {
+                    const groupValue = getthrenum(num, groupIndex);
+                    if (groupValue > 0) {
+                        const  onesDigit = nthdigit(groupValue, 0);
+                        const  tensDigit = nthdigit(groupValue, 1);
+                        const  hundredsDigit = nthdigit(groupValue, 2);
+                        let groupFormatted = '';
+                        if ( onesDigit > 0) {
+                            groupFormatted +=  currentStyle.onesaboveten[onesDigit - 1];
+                        }
+                        if ( tensDigit > 0) {
+                            groupFormatted +=  currentStyle.tensabovehundred[ tensDigit];
+                        }
+                        if ( hundredsDigit > 0) {
+                            groupFormatted +=  currentStyle.hundreds[hundredsDigit];
+                        }
+                        formattedString = groupFormatted +  currentStyle.larger[groupIndex] + formattedString;
+                    }
+                    groupIndex++;
+                    numRemaining = Math.floor(num / Math.pow(10, groupIndex * 3));
+                }
+            }
+            return formattedString;
+        }
+        function addInput() {
+            const container = document.getElementById('inputContainer');
+            const count = container.getElementsByTagName('input').length;
+
+            if (count < 8) { // Allow up to 7 additional inputs
+                const newInput = document.createElement('input');
+                newInput.type = 'number';
+                newInput.value = 0;
+                newInput.placeholder = `Input ${count + 1}`;
+                container.appendChild(newInput);
+            }
+        }
+		  function removeInput() {
+            const container = document.getElementById('inputContainer');
+            const inputs = container.getElementsByTagName('input');
+
+            if (inputs.length > 2) { // Keep at least the power tower input
+                container.removeChild(inputs[inputs.length - 1]);
+            }
+        }
+        function calculate() {
+            const head = parseInt(document.getElementById('headInput').value);
+            let exponent = parseInt(document.getElementById('exponentInput').value);
+            let inputs = document.querySelectorAll('#inputContainer input');
+			let powerTa = parseInt(inputs[0].value);
+            const largeThreshold = 90000000000000000000003;
+		let exponents = Array.from(inputs).slice(1).map(input => parseInt(input.value) || 0);
+let exponents2 = Array.from(inputs).slice(1).map(input => parseInt(input.value) || 0);
+
+for(let i=0;i<exponents.length-1;i++){
+            if (exponents[i] > largeThreshold) {
+			
+                exponents[i] = Math.floor(Math.log10(exponents[i]));
+				exponents2[i]=exponents[i];
+                exponents[i+1] += 1;
+				exponents2[i+1]+=1;
+				}
+}
+
+              let resultString = '';
+            let formattedParts = [];
+            let lastNonZeroIndex = -1;
+
+            for (let i = 0; i < exponents.length; i++) {
+                if (exponents[i] > 0) {
+                    if (lastNonZeroIndex >= 0) {
+                        // Determine the number of | separators
+                        const numSeparators = i - lastNonZeroIndex;
+                        resultString = '|'.repeat(numSeparators) + resultString;
+                    }
+
+                    // Determine the number of ^ for this position
+                    let numCarets = i + 1; 
+                    resultString = `10${'^'.repeat(numCarets)}${exponents[i]}` + resultString ;
+                    lastNonZeroIndex = i;
+                }
+            }
+
+            if (resultString) {
+                resultString = `${powerTa}*${resultString}`;
+            }
+			
+            document.getElementById('result').textContent = resultString;
+
+            const sexpo = Math.floor((exponents[0] - 3) / 3);
+            let formattedSexpo = formatNumber(sexpo);
+
+            let formattedString = formattedSexpo;
+const count = document.getElementById('inputContainer').getElementsByTagName('input').length;
+            for(let i=2;i<count;i++){
+
+			let powerT = parseInt(exponents2[i-1]);
+			console.log(powerT);
+            if (powerT > 0) {
+                const formattedPowerT = formatNumber(powerT);
+				if(powerT == 1)
+				formattedString = formattedSexpo +  currentStyle.suffixes[i-2];
+				else
+                formattedString = formattedSexpo + 'ton' + formattedPowerT +  currentStyle.suffixes[i-2];
+            }
+			formattedSexpo = formattedString ;
+}
+            document.getElementById('formattedResult').textContent = head.toString() + formattedString;
+        }
+    </script>
+
+</body>
+</html>

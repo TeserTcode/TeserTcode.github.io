@@ -14,7 +14,8 @@
             height: 100vh;
             align-items: center;
             justify-content: center;
-            background-color: #f0f0f0;
+             background-image: url('epic1.png');
+			 background-position: center;
         }
         .container {
             display: flex;
@@ -26,15 +27,16 @@
         }
         .sidebar {
             width: 300px;
-            background-color: #ddd;
+            background-color: #222;
             padding: 20px;
-            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            box-shadow: 5px 0 25px rgba(0, 0, 0, 1);
         }
         .sidebar a {
             display: block;
             margin: 10px 0;
             text-decoration: none;
-            color: #333;
+            color: #ddd;
+			text-shadow:1px 1px 5px #022, 1px 1px 5px #033;
             font-weight: bold;
         }
         .content {
@@ -42,13 +44,17 @@
             text-align: center;
         }
         .title {
-            font-size: 3em;
+            font-size: 4em;
             font-weight: bold;
+			color: #fff;
+
+			text-shadow:1px 1px 10px #000, 1px 1px 10px #7dd;
             margin: 20px 0;
         }
         .small-text {
-            font-size: 0.8em;
-            color: #666;
+            font-size: 1.2em;
+			text-shadow:1px 1px 5px #a99, 1px 1px 5px #a99;
+            color: #fff;
             margin-top: 20px;
         }
         .gallery-button {
@@ -84,19 +90,21 @@ visibility: hidden;
             <a href="TTBPN.html">TTBPN</a>
             <a href="TTOBPN.html">TTOBPN</a>
       
-            <a href="TTFfq.html">TTFfq</a>
+         <a href="TTFfq.html">TTFfq</a>
 	    <a href="TTWWS.html">TTWws</a>
-            <a href="CSC.html">Complex Superfunction Calculator</a>
+        <a href="CSC.html">Complex Superfunction Calculator</a>
 	    <a href="AFKA.html">Generalized Abel Solver</a>
-            <a href="GF.html">Generalized Filog Solver</a>
-	    <a href="DC.html">Complex Domain Coloring</a>
+        <a href="GF.html">Generalized Filog Solver</a>
+	     <a id="domainLink" href="DC.html">Complex Domain Coloring</a>
  	    <a href="ESCTF.html">Escapetime Fractal Renderer</a>
 	    <a href="NEWF.html">Newton Fractal Renderer</a>
 	    <a href="BTBC.html">Number Base Comverter</a>
+		<a href="ABRE.html">Number -illion Abbreviator</a>
 		<a href="SUD.html">Sudoku Annihilator (SANT)</a>
 		<a href="2048.html">2048</a>
 		<a href="PT.html">Periodic Table</a>
 		<a href="BOCF.html">Bucholz Ordinal Collapsing Function</a>
+		<a href="PrSS.html">Primitive Sequence System</a>
 		<a href="ColP.html">Colour Space Picker</a>
         </div>
 <div id="esd" >
@@ -113,5 +121,19 @@ visibility: hidden;
         </div>
         <button class="gallery-button">G</button>
     </div>
+	    <script>
+        // 1% chance to change "Complex Domain Coloring" to "Complex Domain Expansion" and redirect to kaju.html
+        function randomizeDomainLink() {
+            const chance = Math.random(); // Generate a random number between 0 and 1
+            const domainLink = document.getElementById('domainLink');
+            if (chance <= 0.05) {
+                domainLink.textContent = "Complex Domain Expansion";
+                domainLink.href = "kaju.html"; // Change the href to direct to kaju.html
+            }
+        }
+
+        // Run the function when the page loads
+        window.onload = randomizeDomainLink;
+    </script>
 </body>
 </html>

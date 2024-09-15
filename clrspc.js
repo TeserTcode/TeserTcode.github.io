@@ -870,7 +870,9 @@ function luvToRgb(l, u, v) {
 
 
 
-
+function clamp255(value) {
+    return Math.min(255, Math.max(0, value));
+}
 
 			function complexToColor(complexInput, complexOutput, magnitudeToLightnessExpr, colorMode, saturationChroma, lightness, paletteImageData, contourThresholdd = 0.15, deriv = 1) {
     // Calculate magnitude and phase of the complex output
@@ -926,24 +928,18 @@ return [
     if (colorMode === 'hcl' || colorMode === 'cielch') {
         return colorMode === 'hcl'
             ? hclToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted)
-            : lchToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted);
+            : lchToRgb(lightnessAdjusted, chroma ,phase * 180 / Math.PI);
     }
- else if (colorMode === 'ycbcr') {
-	// complexOutput.re= = math.evaluate(magnitudeToLightnessExpr, { x: complexOutput.re });
-	// complexOutput.im= = math.evaluate(magnitudeToLightnessExpr, { x: complexOutput.im });
-    return ycbcrToRgb(lightnessAdjusted*saturationChroma/10, complexOutput.re*lightness, complexOutput.im*lightness);
-} else if (colorMode === 'ydbdr') {
-   // complexOutput.re= = math.evaluate(magnitudeToLightnessExpr, { x: complexOutput.re });
-	// complexOutput.im= = math.evaluate(magnitudeToLightnessExpr, { x: complexOutput.im });
-	return ydbdrToRgb(lightnessAdjusted*saturationChroma/10, complexOutput.re*lightness, complexOutput.im*lightness);
-} else if (colorMode === 'ycocg') {
-   // complexOutput.re= = math.evaluate(magnitudeToLightnessExpr, { x: complexOutput.re });
-	// complexOutput.im= = math.evaluate(magnitudeToLightnessExpr, { x: complexOutput.im });
-	return ycocgToRgb(lightnessAdjusted*saturationChroma/10, complexOutput.re*lightness, complexOutput.im*lightness);
-} else if (colorMode === 'ypbpr') {
-   // complexOutput.re= = math.evaluate(magnitudeToLightnessExpr, { x: complexOutput.re });
-	// complexOutput.im= = math.evaluate(magnitudeToLightnessExpr, { x: complexOutput.im });
-	return ypbprToRgb(lightnessAdjusted*saturationChroma/10, complexOutput.re*lightness, complexOutput.im*lightness);
+ const yuvModes = ['ycbcr', 'ydbdr', 'ycocg', 'ypbpr'];
+if (yuvModes.includes(colorMode)) {
+    const convertYUV = {
+        ycbcr: ycbcrToRgb,
+        ydbdr: ydbdrToRgb,
+        ycocg: ycocgToRgb,
+        ypbpr: ypbprToRgb
+    }[colorMode];
+
+    return convertYUV(lightnessAdjusted * saturationChroma / 10, complexOutput.re * lightness, complexOutput.im * lightness);
 }
     if (colorMode === '2d') {
         return [
@@ -963,6 +959,112 @@ return [
             paletteImageData[index + 2]
         ];
     }
+
+
+
+
+
+
+
+
+
+
+if (colorMode === 'isolines') {
+    const phaseDiff = Math.abs(phase % (2 * Math.PI) - Math.PI); // Difference from a reference phase
+    const isolineThreshold = 0.1; // Threshold for creating isolines
+    const isIsoline = (phaseDiff < isolineThreshold || Math.abs(phaseDiff - Math.PI) < isolineThreshold);
+
+    if (isIsoline) {
+        // Create isoline colors based on phase
+        return [
+            Math.floor(255 * (1 - Math.abs(phaseDiff / Math.PI - 0.5))),  // Ranges from 255 to 0 based on phase
+            0,
+            Math.floor(255 * Math.abs(phaseDiff / Math.PI - 0.5))   // Ranges from 0 to 255 based on phase
+        ];
+    }
+    return [255, 255, 255]; // Default white
+}
+
+
+
+// Color mode: 'dynamic'
+if (colorMode === 'dynamic') {
+    // Create a dynamic effect based on phase and magnitude
+    const timeEffect = 0; // Sinusoidal effect over time
+    const dynamicPhase = (phase + timeEffect * Math.PI) % (2 * Math.PI);
+
+    return [
+        Math.floor(127.5 * (Math.sin(dynamicPhase) + 1)), // Red channel with dynamic effect
+        Math.floor(127.5 * (Math.sin(dynamicPhase + Math.PI / 2) + 1)), // Green channel with offset
+        Math.floor(127.5 * (Math.sin(dynamicPhase + Math.PI) + 1)) // Blue channel with opposite phase
+    ];
+}
+
+// Color mode: 'magnitude'
+if (colorMode === 'magnitude') {
+    const normMagnitude = Math.min(magnitude / 10, 1); // Normalize magnitude
+    return [
+        Math.floor(255 * normMagnitude), // Red channel based on magnitude
+        Math.floor(255 * (1 - normMagnitude)), // Green channel inverse of magnitude
+        0 // Blue channel constant
+    ];
+}
+
+if (colorMode === 'neon') {
+    // Calculate the neon intensity based on complexOutput magnitude
+    const neonIntensity = Math.pow(Math.abs(((1000+complexOutput.re) % 2) - 1), 5) +
+                          Math.pow(Math.abs(((1000+complexOutput.im) % 2) - 1), 5);
+    
+    // Normalize neon intensity to range [0, 1]
+    const normalizedIntensity = Math.min(neonIntensity / 3, 1);
+
+    // Convert to HSV: Use hue as phase, saturation and value based on intensity
+    const hue = (phase * 180 / Math.PI) % 360; // Convert phase to hue
+    const saturation = 100; // Full saturation for neon effect
+    const value = normalizedIntensity*255; // Value based on intensity
+
+    // Convert HSV to RGB
+    return hsvToRgb(hue, saturation, value);
+}
+
+if (colorMode === 'differ') {
+    // Calculate absolute values
+    const absRe = Math.abs(complexOutput.re);
+    const absIm = Math.abs(complexOutput.im);
+    const absZ = Math.sqrt(absRe * absRe + absIm * absIm); // abs(z)
+    
+    // Calculate Green channel
+    const green = Math.min(Math.floor(absZ * 255), 255); // Limit to [0, 255]
+
+    // Calculate Red channel
+    const red = Math.min(Math.floor(Math.abs(complexOutput.re + complexOutput.im) * 255), 255); // Limit to [0, 255]
+
+    // Calculate Blue channel
+    const blue = Math.min(Math.floor(Math.pow(Math.sqrt(absRe) + Math.sqrt(absIm), 2) * 255), 255); // Limit to [0, 255]
+
+    return [red, green, blue];
+}
+
+if (colorMode === 'purify') {
+    // Calculate absolute values
+    const absRe = Math.abs(complexOutput.re);
+    const absIm = Math.abs(complexOutput.im);
+    const magnitude = Math.sqrt(absRe * absRe + absIm * absIm); // abs(z)
+    const phase = Math.atan2(complexOutput.im, complexOutput.re); // Angle in radians
+
+    // Calculate Red channel based on the absolute value of the real part
+    const red = Math.min(Math.floor(absRe * 255), 255);
+
+    // Calculate Green channel based on the absolute value of the imaginary part
+    const green = Math.min(Math.floor(absIm * 255), 255);
+
+    // Calculate Blue channel with a dynamic blend based on magnitude and phase
+    const dynamicBlue = Math.sin(phase * 2) * 0.5 + 0.5; // Create a smooth blend effect
+    const blue = Math.min(Math.floor(dynamicBlue * magnitude * 255), 255);
+
+    return [red, green, blue];
+}
+
 
     return [0, 0, 0]; // Default return if no color mode matches
 }

@@ -35,15 +35,40 @@ background-color: #bbd;
             display: flex;
             align-items: center;
             justify-content: center;
+         position: fixed;
+ right:calc(25% - 160px);top:160px;
+
+
+        }
+		#graphContainera {
+ padding: 10px;
+            width: 300px;
+            height: 300px;
+           
+            align-items: center;
+            justify-content: center;
             margin-left: auto;
   margin-right: auto;
-
+  right:calc(25% - 00px);top:160px;
+  display:none;
+ 
+position: fixed;
         }
-        #bmpCanvas {
-            transform-origin: center;
-
-  max-width: fit-content;
-        }
+			#graphContainer {
+ padding: 10px;
+            width: 300px;
+            height: 300px;
+           
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+  margin-right: auto;
+  right:calc(25% - 160px);top:160px;
+  display:none;
+ 
+position: fixed;
+        }	
+ 
 .split {
   height: 100%;
   width: 50%;
@@ -135,6 +160,9 @@ background-color: #eeeeee;
             <option value="cielch">CIELCH</option>
 	    <option value="2d">2d</option>
 		  <option value="contour">Contour</option>
+		   <option value="isolines">Isolines</option>
+		   <option value="neon">Neon</option>
+		   <option value="differ">Differ</option>
             <option value="palette">Palette</option>
         </select>
     </div>
@@ -162,13 +190,378 @@ background-color: #eeeeee;
     <div class="form-group">
         <label for="hue">Hue:</label>
         <input type="range" id="hue" name="hue" min="0" max="360" value="0">
-    </div>
+    <button id="createMeshButton">Create Mesh and Animate</button>
+	</div>
     <button onclick="renderBMP()">Generate</button></div>
-   <div class="split right"><div id="canvasContainer"> <canvas id="bmpCanvas" width="100" height="100"></canvas></div></div>
+	 
+   <div class="split right">
+       <div id="canvasContainer">
+        <canvas id="bmpCanvas" width="320" height="320"></canvas>
+    </div>
+		 <div id="graphContainera">
+        <canvas id="graphCanvasa" width="320" height="320"></canvas>
+		 
+    </div>
+    <div id="graphContainer">
+        <canvas id="graphCanvas" width="320" height="320"></canvas>
+		  <div><div id="coordinate-container"></div></div>
+    </div>
+<button onclick="change()" style="position: fixed; top: 70%; right: 25%;">></button>
+   </canvas></div></div>
+   
 <script src="clrspc.js"></script>
 <script src="mthfnc.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         let paletteImageData = null;
+	const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 300);
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(300,300);
+document.body.appendChild(renderer.domElement);
+document.getElementById('graphContainera').appendChild(renderer.domElement);
+// Create geometry and material placeholders
+let mesh;
+let geometry;
+let material;
+const gridSize = 200;  // Resolution of the grid
+let page=0;
+
+function change(){
+page = math.mod(page+1,3);
+ const canvasa = document.getElementById('canvasContainer');
+  const canvasb = document.getElementById('graphContainer');
+   const canvasc = document.getElementById('graphContainera');
+ canvasa.style.display = `none`;
+  canvasb.style.display = `none`;
+   canvasc.style.display = `none`;
+ 
+ if(page==0) canvasa.style.display = `flex`;
+  if(page==1) canvasb.style.display = `flex`;
+   if(page==2) canvasc.style.display = `flex`;
+}
+
+// Adjust the camera position
+camera.position.set(0, 20, 0);
+camera.lookAt(0, 0, 0);
+
+// Function to create and animate the mesh
+function createAndAnimateMesh() {
+ const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+            const colorMode = document.getElementById('color-mode').value;
+            const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+            const lightness = parseInt(document.getElementById('lightness').value);
+            const hue = parseInt(document.getElementById('hue').value);
+
+            const funcStr = document.getElementById('function').value.trim();
+
+    // If a previous mesh exists, remove it
+    if (mesh) {
+        scene.remove(mesh);
+        geometry.dispose();
+        material.dispose();
+    }
+
+    // Create a plane geometry for the mesh
+    geometry = new THREE.PlaneGeometry(10, 10, gridSize, gridSize);
+    material = new THREE.MeshBasicMaterial({ vertexColors: true, wireframe: false });
+    mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    // Function to update the mesh vertices and colors
+    function updateMesh() {
+        const positions = geometry.attributes.position.array;
+        const numVertices = positions.length / 3;
+
+        const colors = new Float32Array(numVertices * 3);  // Create color array
+
+        for (let i = 0; i < numVertices; i++) {
+            const x = positions[i * 3];
+            const y = positions[i * 3 + 1];
+
+            // Compute complex number z = x + iy
+            let z = math.complex(x, y);
+z =  math.evaluate(document.getElementById('function').value, { x: z });
+            // Height is the magnitude of z (|z|)
+            const zMagnitude = math.abs(z);
+			positions[i * 3 + 2] = -zMagnitude;
+            positions[i * 3 + 1] = -y;  // Set height to |z|
+
+            // Color based on the argument (arg(z))
+            
+            const color = complexToColor(math.complex(x, y), z, magnitudeToLightnessExpr, colorMode, saturationChroma, lightness, paletteImageData,0.1, 1);
+
+            // Set color in the array
+            colors[i * 3] = color[0] / 255;
+            colors[i * 3 + 1] = color[1] / 255;
+            colors[i * 3 + 2] = color[2] / 255;
+        }
+
+        geometry.attributes.position.needsUpdate = true;  // Notify Three.js that position has changed
+        geometry.computeVertexNormals();
+
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));  // Apply color array
+        geometry.attributes.color.needsUpdate = true;
+    }
+
+    // Animate function to continuously update the mesh
+    function animateMesh() {
+        
+        requestAnimationFrame(animateMesh);
+        renderer.render(scene, camera);
+    }
+updateMesh();
+    // Start the animation loop
+    animateMesh();
+}
+
+// Button to create and animate the mesh
+document.getElementById('createMeshButton').addEventListener('click', () => {
+    createAndAnimateMesh();
+});
+
+// WASD and QE camera controls
+let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+let rotateLeft = false, rotateRight = false, rotateUp = false, rotateDown = false, rotateUpc = false, rotateDownc = false,moveUp = false, moveDown = false;
+const moveSpeed = 0.1, rotateSpeed = 0.02;
+
+document.addEventListener('keydown', (event) => {
+    switch (event.key) {
+        case 'w': moveForward = true; break;
+        case 's': moveBackward = true; break;
+        case 'a': moveLeft = true; break;
+        case 'd': moveRight = true; break;
+        case 'q': rotateLeft = true; break;
+        case 'e': rotateRight = true; break;
+		case 'r': rotateUp = true; break;
+        case 'f': rotateDown = true; break;
+		case 'c': rotateUpc = true; break;
+        case 'v': rotateDownc = true; break;
+		case 'z': moveUp = true; break;
+		case 'x': moveDown = true; break;
+    }
+});
+
+document.addEventListener('keyup', (event) => {
+    switch (event.key) {
+        case 'w': moveForward = false; break;
+        case 's': moveBackward = false; break;
+        case 'a': moveLeft = false; break;
+        case 'd': moveRight = false; break;
+        case 'q': rotateLeft = false; break;
+        case 'e': rotateRight = false; break;
+			case 'r': rotateUp = false; break;
+        case 'f': rotateDown = false; break;
+				case 'c': rotateUpc = false; break;
+        case 'v': rotateDownc = false; break;
+		case 'z': moveUp = false; break;
+		case 'x': moveDown = false; break;
+    }
+});
+
+function updateCamera() {
+    if (moveForward) camera.position.z -= moveSpeed;
+    if (moveBackward) camera.position.z += moveSpeed;
+    if (moveLeft) camera.position.x -= moveSpeed;
+    if (moveRight) camera.position.x += moveSpeed;
+	if (moveUp) camera.position.y -= moveSpeed;
+    if (moveDown) camera.position.y += moveSpeed;
+    if (rotateLeft) camera.rotation.y += rotateSpeed;
+    if (rotateRight) camera.rotation.y -= rotateSpeed;
+	if (rotateUp) camera.rotation.x += rotateSpeed;
+    if (rotateDown) camera.rotation.x -= rotateSpeed;
+		if (rotateUpc) camera.rotation.z += rotateSpeed;
+    if (rotateDownc) camera.rotation.z -= rotateSpeed;
+}
+
+// Animation loop for the camera controls
+function animate() {
+    requestAnimationFrame(animate);
+    updateCamera();
+    renderer.render(scene, camera);
+}
+
+animate();	
+		
+		
+document.addEventListener('DOMContentLoaded', () => {
+    let clickCount = 0;
+    let firstPoint = { real: 0, imag: 0 };
+    let secondPoint = { real: 0, imag: 0 };
+    const container = document.getElementById('coordinate-container');
+
+
+
+   
+
+
+
+
+    function initializeCoordinateBoxes() {
+        if (!container) {
+            console.error('Coordinate container not found');
+            return;
+        }
+
+
+        if (container.children.length === 0) {
+            const labels = ['Start Real', 'Start Imaginary', 'End Real', 'End Imaginary'];
+            labels.forEach(label => {
+                const coordBox = document.createElement('div');
+                coordBox.classList.add('coordinate-box');
+
+                const pointLabel = document.createElement('label');
+                pointLabel.textContent = label + ': ';
+                coordBox.appendChild(pointLabel);
+
+            
+                const inputBox = document.createElement('input');
+                inputBox.type = 'number';
+                inputBox.step = 'any';
+                inputBox.classList.add(label.includes('Start') ? 'start-input' : 'end-input');
+                inputBox.addEventListener('input', updateGraph);
+                coordBox.appendChild(inputBox);
+
+                container.appendChild(coordBox);
+            });
+        }
+    }
+
+    function updateGraph() {
+        const startInputs = document.querySelectorAll('.start-input');
+        const endInputs = document.querySelectorAll('.end-input');
+
+        firstPoint = { real: parseFloat(startInputs[0].value), imag: parseFloat(startInputs[1].value) };
+        secondPoint = { real: parseFloat(endInputs[0].value), imag: parseFloat(endInputs[1].value) };
+
+        plotGraph(firstPoint, secondPoint);
+    }
+
+    // Event listener for canvas click
+    document.getElementById('bmpCanvas').addEventListener('click', function(event) {
+        const rect = this.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        const canvasWidth = this.width;
+        const canvasHeight = this.height;
+
+        const minReal = parseFloat(document.getElementById('min-real').value);
+        const maxReal = parseFloat(document.getElementById('max-real').value);
+        const minImag = parseFloat(document.getElementById('min-imag').value);
+        const maxImag = parseFloat(document.getElementById('max-imag').value);
+        const bmpheight = parseFloat(document.getElementById('bmp-height').value);
+        const bmpwidth = parseFloat(document.getElementById('bmp-width').value);
+
+        // Convert canvas coordinates to complex plane coordinates
+        const real = minReal + (x / (canvasWidth / bmpwidth * 300)) * (maxReal - minReal);
+        const imag = minImag + (y / (canvasHeight / bmpheight * 300)) * (maxImag - minImag);
+
+
+        initializeCoordinateBoxes();
+
+        if (clickCount === 0) {
+            document.querySelectorAll('.start-input')[0].value = real;
+            document.querySelectorAll('.start-input')[1].value = imag;
+            clickCount++;
+        } else if (clickCount === 1) {
+            document.querySelectorAll('.end-input')[0].value = real;
+            document.querySelectorAll('.end-input')[1].value = imag;
+            plotGraph(firstPoint, secondPoint);
+			updateGraph();
+            clickCount = 0;
+        }
+    });
+});
+
+function plotGraph(point1, point2) {
+    const canvas = document.getElementById('graphCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height); 
+
+    const numSamples = 1000;
+    const realValues = [];
+    const imagValues = [];
+    
+ 
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (math.min(point1.imag,point2.imag) < 0 && math.max(point1.imag,point2.imag) > 0) {
+        const zeroY = (point1.imag)/(point2.imag - point1.imag)*canvas.height+canvas.height;
+	
+        ctx.strokeStyle = 'DimGray';
+        ctx.beginPath();
+        ctx.moveTo(canvas.width-zeroY,0);
+        ctx.lineTo(canvas.width-zeroY,canvas.height);
+        ctx.stroke();
+    }
+    if (math.min(point1.real,point2.real) < 0 && math.max(point1.real,point2.real) > 0) {
+        const zeroY = (point1.real)/(point2.real - point1.real)*canvas.height+canvas.height;
+	
+        ctx.strokeStyle = 'black' ;
+        ctx.beginPath();
+        ctx.moveTo(canvas.width-zeroY,0);
+        ctx.lineTo(canvas.width-zeroY,canvas.height);
+        ctx.stroke();
+    }
+
+
+    for (let i = 0; i <= numSamples; i++) {
+        const t = i / numSamples;
+        const real = point1.real + t * (point2.real - point1.real);
+        const imag = point1.imag + t * (point2.imag - point1.imag);
+        
+        const z = math.complex(real, imag);
+        const fn = math.evaluate(document.getElementById('function').value, { x: z });
+        
+        realValues.push(fn.re);
+        imagValues.push(fn.im);
+    }
+    
+
+    const graphWidth = canvas.width;
+    const graphHeight = canvas.height;
+    const maxValue = Math.max(...imagValues, ...realValues);
+    const minValue = Math.min(...imagValues, ...realValues);
+
+	if (0>minValue && 0<maxValue) {
+        const zeroX = (-minValue)/(maxValue - minValue)*canvas.height;
+	
+        ctx.strokeStyle = 'black';
+        ctx.beginPath();
+        ctx.moveTo(0,canvas.height-zeroX);
+        ctx.lineTo(canvas.width,canvas.height- zeroX);
+        ctx.stroke();
+    }
+
+    ctx.beginPath();
+    ctx.strokeStyle = 'red';
+    for (let i = 0; i < realValues.length; i++) {
+        const x = (i / numSamples) * graphWidth;
+        const y = graphHeight - ((realValues[i] - minValue) / (maxValue - minValue)) * graphHeight;
+        if (i === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    }
+    ctx.stroke();
+
+
+    ctx.beginPath();
+    ctx.strokeStyle = 'blue';
+    for (let i = 0; i < imagValues.length; i++) {
+        const x = (i / numSamples) * graphWidth;
+        const y = graphHeight - ((imagValues[i] - minValue) / (maxValue - minValue)) * graphHeight;
+        if (i === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    }
+    ctx.stroke();
+}
 
         document.getElementById('color-mode').addEventListener('change', function() {
             if (this.value === 'palette') {
@@ -198,7 +591,7 @@ background-color: #eeeeee;
             }
         });
 function generateRandomColor() {
-    // Generate a random color in hex format
+
     return '#' + Math.floor(Math.random() * 0xFFFFFF).toString(16).padStart(6, '0');
 }
 
@@ -299,6 +692,7 @@ function generatePalette() {
 
 
         function renderBMP() {
+		
             const width = parseInt(document.getElementById('bmp-width').value);
             const height = parseInt(document.getElementById('bmp-height').value);
             const minReal = parseFloat(document.getElementById('min-real').value);
@@ -337,7 +731,7 @@ function generatePalette() {
                     try {
 					const complexValue = math.complex(re, im);
                         const funcValue = math.evaluate(funcStr, { x: complexValue });
-				
+				//console.log(funcValue);
 						color = complexToColor(complexValue, funcValue, magnitudeToLightnessExpr, colorMode, saturationChroma, lightness, paletteImageData,0.1, math.divide(math.subtract(funcValue,memo),imStep));
                 memo = funcValue;
 				} catch (e) {
@@ -352,12 +746,15 @@ function generatePalette() {
                 }
             }
             ctx.putImageData(imageData, 0, 0);
+			
 scaleCanvas();
+
         }
 
        
 
  const canvas = document.getElementById('bmpCanvas');
+
         const container = document.getElementById('canvasContainer');
 
         function scaleCanvas() {
