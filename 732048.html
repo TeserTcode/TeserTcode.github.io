@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{7,3} 2048</title>
+
+    <style>
+	h2 {
+	font-size: 15px;
+		font-family: "Comic Sans MS";
+		color:white;
+	text-align:center;
+	}h1 {
+	font-size: 20px;
+		font-family: "Comic Sans MS";
+		color:white;
+	text-align:center;
+	}
+        .polygon-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 500px;
+            width: 100%;
+            background-color: #f0f0f000;
+        }
+
+        .polygon-svg {
+            width: 80%;
+            height: 80%;
+        }
+
+        .polygon {
+            stroke: black;
+            stroke-width: 4;
+        }
+
+        .polygon-text {
+            fill: black;
+             box-shadow: 12px 12px 12px #888888;
+            font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+		        #error-message {
+            display: none;
+            color: red;
+            font-weight: bold;
+			font-size: 20px;
+			  position:fixed;
+  right:50%;
+  bottom: 5%;
+transform: translate(50%, 0);
+        }
+        #error-message2 {
+		font-size: 50px;
+            display: none;
+            color: red;
+            font-weight: bold;
+			
+        }
+		       #score, #highscore {
+    display: inline-block; /* Make sure elements stay on the same line */
+    width: 256px; /* Set the width of each element */
+    margin: 2px 0;
+    font-size: 22px;
+    background: #ebb467;
+    background-image: -webkit-linear-gradient(top, #00ffdd, #00ddff);
+    background-image: -moz-linear-gradient(top, #00ffdd, #00ddff);
+    background-image: -ms-linear-gradient(top, #00ffdd, #00ddff);
+    background-image: -o-linear-gradient(top, #00ffdd, #00ddff);
+    background-image: linear-gradient(to bottom, #00ffdd, #00ddff);
+    -webkit-border-radius: 0;
+    -moz-border-radius: 0;
+    border-radius: 0px;
+    -webkit-box-shadow: 0px 1px 3px #666666;
+    -moz-box-shadow: 0px 1px 3px #666666;
+    box-shadow: 0px 1px 3px #666666;
+    font-family: Arial;
+    color: #000000; /* Fix color code to #000000 */
+    padding: 2px 5px;
+    border: solid #000000 2px;
+    text-decoration: none;
+}
+		#retryButton {
+  background: #34d9d6;
+  background-image: -webkit-linear-gradient(top, #34d9d6, #2bb85a);
+  background-image: -moz-linear-gradient(top, #34d9d6, #2bb85a);
+  background-image: -ms-linear-gradient(top, #34d9d6, #2bb85a);
+  background-image: -o-linear-gradient(top, #34d9d6, #2bb85a);
+  background-image: linear-gradient(to bottom, #34d9d6, #2bb85a);
+  -webkit-border-radius: 26;
+  -moz-border-radius: 26;
+  border-radius: 26px;
+  font-family: Georgia;
+  color: #000000;
+  font-size: 40px;
+  padding: 20px 40px 20px 40px;
+  text-decoration: none;
+  position:fixed;
+  right:50%;
+  bottom: 5%;
+transform: translate(50%, 0);
+		}
+			body {
+	text-align: center;
+	background: url('7048bg.png') no-repeat center center fixed;
+	background-size: 100vw 100vh;
+	}
+        table {
+            border-collapse: collapse;
+			  margin-left: auto;
+  margin-right: auto;
+        }
+    </style>
+</head>
+<body>
+	<h1>{7,3} 2048</h1>
+	<h2>Join hyperbolic tiles to get to 28672</h2>
+    <div id="error-message2">Ultraskill issue</div>
+    <div>
+	
+<div id="score">Score: 0</div> <!-- Score display -->
+<div id="highscore">High-Score: 0</div> <!-- Highscore display -->
+</div>
+    <div class="polygon-container">
+        <svg viewBox="0 50 700 700" class="polygon-svg">
+            <!-- Define all polygons and text elements here -->
+            <polygon id="poly0" points="304,460 262,373 303,286 400,265 475,324 474,422 400,480" class="polygon"></polygon>
+            <text x="380" y="390" class="polygon-text">7</text>
+
+            <polygon id="poly1" points="250,528 266,594 316,625 373,621 420,568 400,480 304,460" class="polygon"></polygon>
+            <text x="345" y="560" class="polygon-text">8</text>
+
+            <polygon id="poly7" points="400,480 420,568 480,596 534,576 565,527 553,460 474,422" class="polygon"></polygon>
+            <text x="485" y="520" class="polygon-text">9</text>
+
+            <polygon id="poly6" points="474,422 553,460 614,428 633,374 613,319 551,289 475,324" class="polygon"></polygon>
+            <text x="555" y="370" class="polygon-text">10</text>
+
+            <polygon id="poly8" points="392,667 426,682 459,674 482,640 480,596 420,568 373,621" class="polygon"></polygon>
+            <text x="430" y="645" class="polygon-text">11</text>
+
+            <polygon id="poly5" points="418,180 480,154 536,172 564,220 551,289 475,324 400,265" class="polygon"></polygon>
+            <text x="485" y="240" class="polygon-text">12</text>
+
+            <polygon id="poly4" points="250,218 268,153 315,121 375,128 418,180 400,265 303,286" class="polygon"></polygon>
+            <text x="350" y="210" class="polygon-text">13</text>
+
+            <polygon id="poly3" points="180,222 250,218 303,286 262,373 175,376 135,320 141,262" class="polygon"></polygon>
+            <text x="220" y="290" class="polygon-text">14</text>
+
+            <polygon id="poly2" points="130,429 140,490 183,527 250,528 304,460 262,373 175,376" class="polygon"></polygon>
+            <text x="200" y="450" class="polygon-text">15</text>
+
+            <polygon id="poly9" points="306,669 327,700 349,702 373,695 392,667 373,621 316,625" class="polygon"></polygon>
+            <text x="350" y="670" class="polygon-text">16</text>
+
+            <polygon id="poly10" points="229,629 266,594 316,625 306,669 279,685 254,681 234,664" class="polygon"></polygon>
+            <text x="275" y="640" class="polygon-text">17</text>
+
+            <polygon id="poly11" points="167,607 193,627 229,629 266,594 250,528 183,527 158,571" class="polygon"></polygon>
+            <text x="215" y="590" class="polygon-text">18</text>
+
+            <polygon id="poly12" points="093,536 102,561 123,573 158,571 183,527 140,490 098,500" class="polygon"></polygon>
+            <text x="130" y="540" class="polygon-text">19</text>
+
+            <polygon id="poly13" points="084,421 062,444 059,472 073,494 098,500 140,490 130,429" class="polygon"></polygon>
+            <text x="110" y="460" class="polygon-text">20</text>
+
+            <polygon id="poly14" points="085,328 062,357 061,390 084,421 130,429 175,376 135,320" class="polygon"></polygon>
+            <text x="120" y="380" class="polygon-text">21</text>
+
+            <polygon id="poly15" points="100,243 071,255 059,276 064,303 085,328 135,320 141,262" class="polygon"></polygon>
+            <text x="110" y="280" class="polygon-text">22</text>
+
+            <polygon id="poly16" points="157,178 122,174 102,186 093,210 100,243 141,262 180,222" class="polygon"></polygon>
+            <text x="140" y="200" class="polygon-text">23</text>
+
+            <polygon id="poly17" points="230,116 268,153 250,218 180,222 157,178 166,140 192,121" class="polygon"></polygon>
+            <text x="210" y="180" class="polygon-text">24</text>
+
+            <polygon id="poly18" points="303,078 315,121 268,153 230,118 233,083 254,067 279,061" class="polygon"></polygon>
+            <text x="270" y="120" class="polygon-text">25</text>
+
+            <polygon id="poly19" points="391,082 375,128 315,121 303,078 324,052 347,044 374,053" class="polygon"></polygon>
+            <text x="350" y="100" class="polygon-text">26</text>
+
+            <polygon id="poly20" points="481,100 481,154 418,180 375,128 391,082 426,067 459,073" class="polygon"></polygon>
+            <text x="450" y="140" class="polygon-text">27</text>
+
+            <polygon id="poly21" points="562,135 536,172 480,154 481,100 513,084 540,087 558,104" class="polygon"></polygon>
+            <text x="520" y="120" class="polygon-text">28</text>
+
+            <polygon id="poly22" points="614,207 564,220 536,172 562,135 594,135 617,149 625,173" class="polygon"></polygon>
+            <text x="590" y="180" class="polygon-text">29</text>
+
+            <polygon id="poly23" points="652,290 613,319 551,289 564,220 614,207 648,222 662,251" class="polygon"></polygon>
+            <text x="600" y="270" class="polygon-text">30</text>
+
+            <polygon id="poly24" points="679,373 633,374 613,319 652,290 687,302 700,324 698,350" class="polygon"></polygon>
+            <text x="670" y="340" class="polygon-text">31</text>
+
+            <polygon id="poly25" points="653,458 614,428 633,374 679,373 700,395 700,422 686,446" class="polygon"></polygon>
+            <text x="670" y="410" class="polygon-text">32</text>
+
+            <polygon id="poly26" points="614,541 565,527 553,460 614,428 653,458 659,493 646,524" class="polygon"></polygon>
+            <text x="620" y="490" class="polygon-text">33</text>
+
+            <polygon id="poly27" points="563,610 534,570 565,527 614,541 626,573 615,598 594,604" class="polygon"></polygon>
+            <text x="570" y="570" class="polygon-text">34</text>
+
+            <polygon id="poly28" points="482,640 480,596 534,570 563,610 557,642 539,658 513,662" class="polygon"></polygon>
+            <text x="520" y="620" class="polygon-text">35</text>
+
+       </svg>
+	     
+	
+
+    
+	
+    <button id="retryButton">Retry</button> <!-- Add the retry button -->
+ <div id="error-message">Skill issue</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+	let score = 0; // Initialize score
+		let highscore = 0;
+  const septagons = Array.from({ length:29 }, (_, i) => i);
+let data = Array(29).fill(0); 
+ const scoreDisplay = document.getElementById('score');
+		const highscoreDisplay = document.getElementById('highscore');
+		 const errorMessage = document.getElementById('error-message');
+		 const errorMessage2 = document.getElementById('error-message2');
+
+        const colors = [
+                '#ffffff', 
+    '#fdfd96',
+    '#f7f780', 
+    '#f3e370', 
+    '#f2c260', 
+    '#f1a650', 
+    '#f07440', 
+    '#e65c30', 
+    '#d84315',
+    '#c62828', '#e57373', '#ef5350',
+            '#f44336', '#e57373', '#ffb74d', '#ff9800', '#ffeb3b', '#fdd835',
+            '#fbc02d', '#fbc02d', '#4caf50', '#43a047', '#388e3c', '#0288d1',
+            '#0277bd', '#01579b', '#0d47a1', '#9c27b0', '#8e24aa', '#6a1b9a',
+            '#4a148c', '#000000'
+        ];
+
+        const strings =
+		['',
+		'7',
+		'14',
+		'28',
+		'56',
+		'112',
+		'224',
+		'448',
+		'896',
+		'1792',
+		'3584',
+		'7168',
+		'14336',
+		'28672',
+		'57344',
+		'114688',
+		'229376',
+		'458752',
+		'917504',
+		'1835008',
+		'3670016',
+		'7340032',
+		'14680064',
+		'29360128',
+		'58720256',
+		'117440512',
+		'234881024',
+		'469762048',
+		'939524096',
+		'1879048192',
+		'3758096384',
+		'7516192768'
+		];
+        function retry() {
+            for (let i = 0; i < 29; i++) {
+                    data[i] = 0;
+                
+            }
+            score = 0; // Reset score
+            rain();
+            rain();
+            update();
+        }
+
+        function update() {
+            septagons.forEach(id => {
+			let index = data[id];
+                const polygon = document.getElementById(`poly${id}`);
+                const text = polygon.nextElementSibling; // Get the associated text element
+                
+                // Set the color and string based on index
+                if (polygon) {
+                    polygon.style.fill = colors[index];
+                }
+                if (text) {
+                   const textLength = strings[index].length;
+                    const polygonBBox = polygon.getBBox();
+                    const maxDimension = Math.max(polygonBBox.width, polygonBBox.height);
+                    const fontSize = 1.5 * maxDimension / (textLength + 1); // Adjust text size based on length and polygon size
+                    
+                    text.textContent = strings[index];
+                    text.setAttribute('font-size', Math.max(fontSize, 8)); // Ensure minimum font size
+                    text.setAttribute('x', polygonBBox.x + polygonBBox.width / 2);
+                    text.setAttribute('y', polygonBBox.y + polygonBBox.height / 2);
+                }
+            });
+			updateScore();
+        }
+		function updatehighScore() {
+		highscore=Math.max(score,highscore);
+            highscoreDisplay.textContent = `High-Score: ${highscore}`;
+        }
+        function updateScore() {
+            scoreDisplay.textContent = `Score: ${score}`;
+			updatehighScore();
+        }
+		function fail() {
+         
+            errorMessage.style.display = 'block';
+			
+        }
+		function rain(){
+			errorMessage.style.display = 'none'
+			errorMessage2.style.display = 'none'
+            const emp = [];
+            for (let i = 0; i < 29; i++)
+                    if (data[i] == 0)
+                        emp.push({ i });
+            const ran = Math.floor(Math.random() * emp.length);
+            const { i } = emp[ran];
+            data[i] = 1 + Math.floor(Math.random() * Math.random() * 2);
+		}
+		
+		const gv=[
+		[23,24],[22,23],[21,22],[20,21],[19,20],
+		
+		[6,26],[5,6],[4,5],[17,4],
+	//	[18,4],[6,25],
+		
+		[7,28],[0,7],[3,0],[15,3],
+	//	[16,3],[7,27],
+		
+		[1,9],[2,1],[13,2],
+	//	[14,2],[1,8],
+		
+		[12,11],[11,10]
+			
+		];
+		function chir(){
+		for(let i=2;i<=4;i++){
+		let memo = data[i];data[i]=data[8-i];data[8-i]=memo;
+		}
+		for(let i=12;i<=19;i++){
+		let memo = data[i];data[i]=data[40-i];data[40-i]=memo;
+		}
+		let memo=data[11];
+		data[11]=data[8];data[8]=memo;
+		memo=data[10];data[10]=data[9];data[9]=memo;
+		}
+		function rot(){
+		let memo=data[7];
+		for(let i=6;i>=1;i--)
+		data[i+1]=data[i];data[1]=memo;
+		memo=data[28];let memo2=data[27];let memo3=data[26];
+		for(let i=26;i>=8;i--)
+		data[i+3]=data[i];data[10]=memo;data[9]=memo2;data[8]=memo3;
+		}
+		function falla(){
+		gv.forEach(gw => {
+		if (data[gw[0]]!=0 && data[gw[1]]==0){
+		data[gw[1]]=data[gw[0]];data[gw[0]]=0;
+		}
+		});
+        }
+		function fallb(){
+		gv.forEach(gw => {
+		if (data[gw[0]]!=0 && data[gw[1]]==data[gw[0]]){
+		data[gw[1]]+=1;data[gw[0]]=0;score+=7*Math.pow(2,data[gw[1]]-1);
+		}
+		});
+        }
+		function fall(){
+		for(let i=0;i<=20;i++)falla();
+		fallb();
+		for(let i=0;i<=20;i++)falla();
+		}
+		function dc(array){
+		return array.map((x) => x);}
+	
+		
+		function x() {const ba = dc(data);fall();if (JSON.stringify(data) !== JSON.stringify(ba)) rain();else fail();update();}
+		function z() {const ba = dc(data);rot();rot();rot();rot();rot();rot();fall();rot(); if (JSON.stringify(data) !== JSON.stringify(ba)) rain();else fail();update();}
+		function a() {const ba = dc(data);rot();rot();rot();rot();rot();fall();rot();rot(); if (JSON.stringify(data) !== JSON.stringify(ba)) rain();else fail();update();}
+		function q() {const ba = dc(data);rot();rot();rot();rot();fall();rot();rot();rot(); if (JSON.stringify(data) !== JSON.stringify(ba)) rain();else fail();update();}
+		function w() {const ba = dc(data);rot();rot();rot();fall();rot();rot();rot();rot(); if (JSON.stringify(data) !== JSON.stringify(ba)) rain();else fail();update();}
+		function e() {const ba = dc(data);rot();rot();fall();rot();rot();rot();rot();rot(); if (JSON.stringify(data) !== JSON.stringify(ba)) rain();else fail();update();}
+		function d() {const ba = dc(data);rot();fall();rot();rot();rot();rot();rot();rot(); if (JSON.stringify(data) !== JSON.stringify(ba)) rain();else fail();update();}
+		
+		function b() {const ba = dc(data);chir();fall();chir();if (JSON.stringify(data) !== JSON.stringify(ba)) rain();else fail();update();}
+		function n() {const ba = dc(data);chir();rot();rot();rot();rot();rot();rot();fall();rot();chir(); if (JSON.stringify(data) !== JSON.stringify(ba)) rain();else fail();update();}
+		function h() {const ba = dc(data);chir();rot();rot();rot();rot();rot();fall();rot();rot();chir(); if (JSON.stringify(data) !== JSON.stringify(ba)) rain();else fail();update();}
+		function y() {const ba = dc(data);chir();rot();rot();rot();rot();fall();rot();rot();rot();chir(); if (JSON.stringify(data) !== JSON.stringify(ba)) rain();else fail();update();}
+		function t() {const ba = dc(data);chir();rot();rot();rot();fall();rot();rot();rot();rot();chir(); if (JSON.stringify(data) !== JSON.stringify(ba)) rain();else fail();update();}
+		function r() {const ba = dc(data);chir();rot();rot();fall();rot();rot();rot();rot();rot();chir(); if (JSON.stringify(data) !== JSON.stringify(ba)) rain();else fail();update();}
+		function f() {const ba = dc(data);chir();rot();fall();rot();rot();rot();rot();rot();rot();chir(); if (JSON.stringify(data) !== JSON.stringify(ba)) rain();else fail();update();}
+		
+		document.addEventListener('keydown', function(event) {
+            if (event.key==='q') {q();}
+			if (event.key==='w') {w();}
+			if (event.key==='e') {e();}
+			if (event.key==='a') {a();}
+			if (event.key==='d') {d();}
+			if (event.key==='z') {z();}
+			if (event.key==='x') {x();}
+			
+			if (event.key==='r') {r();}
+			if (event.key==='t') {t();}
+			if (event.key==='y') {y();}
+			if (event.key==='f') {f();}
+			if (event.key==='h') {h();}
+			if (event.key==='b') {b();}
+			if (event.key==='n') {n();}
+        });
+		
+rain();
+rain();
+document.getElementById('retryButton').addEventListener('click', retry);
+        update(); 
+    </script>
+</body>
+</html>
