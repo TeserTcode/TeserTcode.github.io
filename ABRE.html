@@ -66,6 +66,11 @@
             <option value="nbf2">NBF</option>
             <option value="taco">I. Taco</option>
             <option value="levia">Levia J.</option>
+			<option value="tesert">TeserT</option>
+			<option value="sc">SC</option>
+			<option value="finnio">Finnio</option>
+			<option value="fullname">Full Name</option>
+			<option value="tamisim">Tam İsim</option>
         </select>
         <button onclick="calculate()">Calculate</button>
         <h1 id="result">Result</h1>
@@ -73,6 +78,12 @@
     </div>
 
     <script>
+	
+	const eone=['','u', 'e' ,'θ' ,'b' ,'E' ,'c' ,'f' ,'s' ,'o' ,'α' ,'β' ,'γ' ,'δ','D'];
+	const eten=['','D', 'bD' ,'tD' ,'qD' ,'pD' ,'hD' ,'sD' ,'oD' ,'eD' ,'SD','vD' ,'cD','dD','H'];
+	const ehun=['H', 'bH', 'tH', 'qH', 'pH', 'hH', 'sH', 'oH', 'eH', 'SH', 'vH', 'cH', 'dH'];
+	const eplx=['','','','','','','','','','','','','',''];
+	
                const styles = {
             nbf2: {
                  ones: ['', 'k', 'M', 'B', 'T', 'q', 'Q', 's', 'S', 'O', 'N' , "fuck you"],
@@ -83,6 +94,26 @@
                  larger: ['', 'Mil', 'Mcr', 'Nan', 'Pic', 'Fmt', 'Att', 'Zpt', 'Yoc', 'Xon', 'Vec', 'Mec'],
                  suffixes: ['px', 'dx', 'tx', 'qx', 'px', 'sx', 'hx', 'ox', 'nx', 'dx']
             },
+			  fullname: {
+                 ones: ['', 'Thousand', 'Million', 'Billion', 'Trillion', 'Quadrillion', 'Quintillion', 'Sextillion', 'Septillion', 'Octillion', 'Nonillion' , "fuck you"],
+                 onesaboveten: ['', 'Un-', 'Duo-', 'Tre-', 'Quattuor-', 'Quin-', 'Sex-', 'Septen-', 'Octo-', 'Novem-'],
+                 tens: ['', 'Decillion', 'Vigintillion', 'Trigintillion', 'Quadragintillion', 'Quinquagintillion', 'Sexagintillion', 'Septuagintillion', 'Octogintillion', 'Nonagintillion'],
+                 tensabovehundred: ['', 'Deci-', 'Viginti-', 'Triginta-', 'Quadraginta-', 'Quinquaginta-', 'Sexaginta-', 'Septuaginta-', 'Octoginta-', 'Nonaginta-'],
+                 hundreds: ['', 'Centillion', 'Ducentillion', 'Trecentillion', 'Quadringentillion', 'Quingentillion', 'Sescentillion', 'Septingentillion', 'Octingentillion', 'Nongentillion'],
+                 larger: ['', 'Millinillion', 'Micrillion', 'Nanillion', 'Picillion', 'Femtillion', 'Attillion', 'Zeptillion', 'Yoctillion', 'Xonillion', 'Vecillion', 'Mecillion'],
+                 suffixes: ['plex', 'dex', 'threx', 'tetrex', 'pentex', 'hex', 'heptex', 'octex', 'ennex', 'decex']
+            },
+			
+    tamisim: {
+        "ones": ['', 'Bin', 'Milyon', 'Milyar', 'Trilyon', 'Katrilyon', 'Kentilyon', 'Sekstilyon', 'Septilyon', 'Oktilyon', 'Nonilyon', ''],
+        "onesaboveten": ['', 'Un-', 'Do-', 'Tre-', 'Kator-', 'Kenka-', 'Seks-', 'Septen-', 'Okto-', 'Novem-'],
+        "tens": ['', 'Desilyon', 'Vigintilyon', 'Trigintilyon', 'Katragintilyon', 'Kenkagintilyon', 'Seksagintilyon', 'Septegintilyon', 'Oktogintilyon', 'Nonagintilyon'],
+        "tensabovehundred": ['', 'Desi-', 'Viginti-', 'Triginti-', 'Katraginti-', 'Kenkaginti-', 'Seksaginti-', 'Septeginti-', 'Oktoginti-', 'Nonaginti-'],
+        "hundreds": ['', 'Sentilyon', 'Dosentilyon', 'Tresentilyon', 'Katorsentilyon', 'Kenkasentilyon', 'Seksasentilyon', 'Septasentilyon', 'Oktosentilyon', 'Novemseptilyon'],
+        "larger": ['', 'Millinilyon', 'Mikronilyon', 'Nanilyon', 'Pikilyon', 'Femtilyon', 'Attilyon', 'Zeptilyon', 'Yoktillion', 'Ksontillion', 'Vecillion', 'Mecillion'],
+        "suffixes": ['pleks', 'deks', 'treks', 'tetreks', 'penteks', 'heks', 'hepteks', 'okteks', 'enneks', 'deceks']
+    },
+
             levia: {
 ones : ['', 'K', 'M', 'B', 'T', 'Qa', 'Qt', 'Sx', 'Sp', 'Oc', 'No'],
 onesaboveten : ['', 'U', 'D', 'T', 'Qa', 'Qt', 'Sx', 'Sp', 'O', 'N'],
@@ -92,6 +123,15 @@ hundreds : ['', 'Ce', 'Dn', 'Tc', 'Qe', 'Qu', 'Sc', 'Si', 'Oe', 'Ne'],
 larger:['','MI-','MC-','NA-','PC-','FM-','AT-', 'ZP-', 'YC-', 'XN-', 'VC-', 'MeC-'],
 suffixes : ['px', 'dx', 'tx', 'qx', 'px', 'sx', 'hx', 'ox', 'nx', 'dx']
             },
+			tesert: {
+ones : ['', 'K', 'M', 'B', 'T', 'Q', 'K', 'S', 'H', 'O', 'N'],
+onesaboveten : ['', 'u', 'd', 't', 'q', 'k', 's', 'h', 'o', 'n'],
+tens : ['', 'D', 'Vg', 'Tg', 'Qg', 'Kg', 'Sg', 'Hg', 'Og', 'Ng'],
+tensabovehundred : ['', 'd', 'vg', 'tg', 'qg', 'kg', 'sg', 'hg', 'og', 'ng'],
+hundreds : ['', 'Ce', 'De', 'Te', 'Qe', 'Ke', 'Se', 'He', 'Oe', 'Ne'],
+larger:['','Mi','Bi','Ti','Qi','Ki','Si', 'Hi', 'Oi', 'Ni', 'Di', 'Vi'],
+suffixes : ['px', 'dx', 'tx', 'qx', 'kx', 'sx', 'hx', 'ox', 'nx', 'dx']
+            },
             taco: {
 				ones : ['', 'K', 'M', 'B', 'T', 'q', 'Q', 's', 'S', 'O', 'N'],
      onesaboveten : ['', 'U', 'D', 'T', 'q', 'Q', 's', 'S', 'O', 'N'],
@@ -100,7 +140,16 @@ suffixes : ['px', 'dx', 'tx', 'qx', 'px', 'sx', 'hx', 'ox', 'nx', 'dx']
       hundreds : ['', 'Ce', 'Du', 'Te', 'Qr', 'Qn', 'Sc', 'St', 'Ot', 'Nn'],
     larger:  ['', 'Mil', 'Mcr', 'Nan', 'Pic', 'Fmt', 'Att', 'Zpt', 'Yct', 'Xon', 'Vec'],
      suffixes : ['px', 'dx', 'tx', 'qx', 'px', 'sx', 'hx', 'ox', 'nx', 'dx']
-            }
+            },
+			sc:{
+			ones : ['', 'K', 'M', 'B', 'T', 'q', 'Q', 's', 'S', 'O', 'N'],
+onesaboveten : ['', 'U', 'D', 'T', 'q', 'Q', 's', 'S', 'O', 'N'],
+tens : ['', 'Dc', 'Vg', 'Tg', 'Qu', 'Qi', 'Sx', 'Sp', 'Oc', 'No'],
+tensabovehundred : ['', 'Dc', 'Vg', 'Tg', 'Qu', 'Qi', 'Sx', 'Sp', 'Oc', 'No'],
+hundreds : ['', 'Ce', 'Du', 'Tc', 'Qr', 'Qg', 'Sc', 'St', 'Ot', 'Ng'],
+larger:['','Mil','Mcr','Nan','Pic','Fmt','Att', 'Zpt', 'Yct', 'Rnt', 'Vec', 'Mec'],
+suffixes : ['px', 'dx', 'tx', 'qx', 'px', 'sx', 'hx', 'ox', 'nx', 'dx']
+			}
         };
 		
 		        let currentStyle = styles.style1;
@@ -118,7 +167,19 @@ updateStyle();
         function getthrenum(num, groupIndex) {
             return Math.floor(num / Math.pow(10, groupIndex * 3)) % 1000;
         }
+function nthdigite(num, n) {
+            return Math.floor(num / Math.pow(14, n)) % 14;
+        }
 
+        function getthrenume(num, groupIndex) {
+            return Math.floor(num / Math.pow(14, groupIndex * 3)) % 2744;
+        }
+        function formatNumberf(num) {
+                const  onesDigit = nthdigit(num, 0);
+                const  tensDigit = nthdigit(num, 1);
+                const  hundredsDigit = nthdigit(num, 2);
+                return currentStyle.onesaboveten[ onesDigit] +  currentStyle.tensabovehundred[ tensDigit] +  currentStyle.hundreds[ hundredsDigit];
+            } 
         function formatNumber(num) {
             let formattedString = '';
 
@@ -134,7 +195,61 @@ updateStyle();
                 const  hundredsDigit = nthdigit(num, 2);
                 formattedString +=  currentStyle.onesaboveten[ onesDigit] +  currentStyle.tensabovehundred[ tensDigit] +  currentStyle.hundreds[ hundredsDigit];
             } else {
-                let groupIndex = 0;
+	//		return 'fuckyou';
+              let groupIndex = 1;
+                let numRemaining = num;
+
+                while (numRemaining > 0 && groupIndex <  currentStyle.larger.length) {
+                    const groupValue = getthrenum(num, groupIndex);
+                    if (groupValue > 0) {
+                        const  onesDigit = nthdigit(groupValue, 0);
+                        const  tensDigit = nthdigit(groupValue, 1);
+                        const  hundredsDigit = nthdigit(groupValue, 2);
+						console.log(2);
+						console.log(onesDigit);
+						console.log(tensDigit);
+						console.log(hundredsDigit);
+                        let groupFormatted = '';
+                        if ( hundredsDigit > 0) {
+						groupFormatted +=  currentStyle.onesaboveten[onesDigit ];
+						groupFormatted +=  currentStyle.tensabovehundred[ tensDigit];
+                            groupFormatted +=  currentStyle.hundreds[hundredsDigit];
+                        }else
+                        if ( tensDigit > 0) {
+						groupFormatted +=  currentStyle.onesaboveten[onesDigit];
+                            groupFormatted +=  currentStyle.tensabovehundred[ tensDigit];
+                        }else
+                        if ( onesDigit > 0) {
+                            groupFormatted +=  currentStyle.onesaboveten[onesDigit-1];
+                        }
+                        formattedString = groupFormatted +  currentStyle.larger[groupIndex] + formattedString;
+                    }
+                    groupIndex++;
+                    numRemaining = Math.floor(num / Math.pow(10, groupIndex * 3));
+                }
+				 formattedString+=formatNumberf(getthrenum(num, 0));
+            }
+            return formattedString;
+        }
+		
+		
+		
+		function formatNumbere(num) {
+            let formattedString = '';
+
+            if (num < 14) {
+                formattedString +=  eone[num + 1];
+            } else if (num < 196) {
+                const  onesDigit = nthdigite(num, 0);
+                const  tensDigit = nthdigite(num, 1);
+                formattedString +=  eone[ onesDigit] +  eten[ tensDigit + 1];
+            } else if (num < 2744) {
+                const  onesDigit = nthdigite(num, 0);
+                const  tensDigit = nthdigite(num, 1);
+                const  hundredsDigit = nthdigite(num, 2);
+                formattedString +=  eone[ onesDigit] +  eten[ tensDigit] +  ehun[ hundredsDigit];
+            } else {
+         return 'fuckyou';/*       let groupIndex = 0;
                 let numRemaining = num;
 
                 while (numRemaining > 0 && groupIndex <  currentStyle.larger.length) {
@@ -145,19 +260,19 @@ updateStyle();
                         const  hundredsDigit = nthdigit(groupValue, 2);
                         let groupFormatted = '';
                         if ( onesDigit > 0) {
-                            groupFormatted +=  currentStyle.onesaboveten[onesDigit - 1];
+                            groupFormatted +=  eone[onesDigit - 1];
                         }
                         if ( tensDigit > 0) {
-                            groupFormatted +=  currentStyle.tensabovehundred[ tensDigit];
+                            groupFormatted +=  eten[ tensDigit];
                         }
                         if ( hundredsDigit > 0) {
-                            groupFormatted +=  currentStyle.hundreds[hundredsDigit];
+                            groupFormatted +=  ehun[hundredsDigit];
                         }
                         formattedString = groupFormatted +  currentStyle.larger[groupIndex] + formattedString;
                     }
                     groupIndex++;
-                    numRemaining = Math.floor(num / Math.pow(10, groupIndex * 3));
-                }
+                    numRemaining = Math.floor(num / Math.pow(14, groupIndex * 3));
+                }*/
             }
             return formattedString;
         }
@@ -182,14 +297,26 @@ updateStyle();
             }
         }
         function calculate() {
-            const head = parseInt(document.getElementById('headInput').value);
+		if(document.getElementById('styleSelect').value == "finnio"){
+		ecalc();
+		return;
+		}
+            let  head = parseInt(document.getElementById('headInput').value);
             let exponent = parseInt(document.getElementById('exponentInput').value);
             let inputs = document.querySelectorAll('#inputContainer input');
-			let powerTa = parseInt(inputs[0].value);
+			
             const largeThreshold = 90000000000000000000003;
 		let exponents = Array.from(inputs).slice(1).map(input => parseInt(input.value) || 0);
 let exponents2 = Array.from(inputs).slice(1).map(input => parseInt(input.value) || 0);
-
+let resz = 1;
+			if(exponents.length<2){resz = Math.pow(10,inputs[1].value%3);
+			exponents[0] = 3* parseInt(parseInt(inputs[1].value)/3);
+			}//10000009000o
+			console.log(Math.floor(Math.log10(inputs[0].value*resz)/3));
+			exponents[0] += Math.floor(Math.log10(inputs[0].value*resz)/3)*3;
+			resz /= Math.pow(10,Math.floor(Math.log10(inputs[0].value*resz)/3)*3);
+			let powerTa = parseInt(inputs[0].value*resz*1000)/1000;
+			head = powerTa;
 for(let i=0;i<exponents.length-1;i++){
             if (exponents[i] > largeThreshold) {
 			
@@ -240,6 +367,70 @@ const count = document.getElementById('inputContainer').getElementsByTagName('in
 				formattedString = formattedSexpo +  currentStyle.suffixes[i-2];
 				else
                 formattedString = formattedSexpo + 'ton' + formattedPowerT +  currentStyle.suffixes[i-2];
+            }
+			formattedSexpo = formattedString ;
+}
+            document.getElementById('formattedResult').textContent = head.toString() + formattedString;
+        }
+		
+		
+		
+		
+		        function ecalc() {
+
+            let head = parseInt(document.getElementById('headInput').value);
+            let exponent = parseInt(document.getElementById('exponentInput').value);
+            let inputs = document.querySelectorAll('#inputContainer input');
+			let powerTa = parseInt(inputs[0].value);
+            const largeThreshold = 2744;
+		let exponents = Array.from(inputs).slice(1).map(input => parseInt(input.value) || 0);
+let exponents2 = Array.from(inputs).slice(1).map(input => parseInt(input.value) || 0);
+
+for(let i=0;i<exponents.length-1;i++){
+            if (exponents[i] > largeThreshold) {
+			
+                exponents[i] = Math.floor((Math.log(exponents[i])/Math.log(14.0)));
+				exponents2[i]=exponents[i];
+                exponents[i+1] += 1;
+				exponents2[i+1]+=1;
+				}
+}
+              let resultString = '';
+            let formattedParts = [];
+            let lastNonZeroIndex = -1;
+            for (let i = 0; i < exponents.length; i++) {
+                if (exponents[i] > 0) {
+                    if (lastNonZeroIndex >= 0) {          
+                        const numSeparators = i - lastNonZeroIndex;
+                        resultString = '|'.repeat(numSeparators) + resultString;
+                    }
+                    let numCarets = i + 1; 
+                    resultString = `e${'^'.repeat(numCarets)}${exponents[i]}` + resultString ;
+                    lastNonZeroIndex = i;
+                }
+            }
+
+            if (resultString) {
+                resultString = `${powerTa}*${resultString}`;
+            }
+			
+            document.getElementById('result').textContent = resultString;
+
+            const sexpo = Math.floor((exponents[0] - 3) / 3);
+            let formattedSexpo = formatNumbere(sexpo);
+
+            let formattedString = formattedSexpo;
+const count = document.getElementById('inputContainer').getElementsByTagName('input').length;
+            for(let i=2;i<count;i++){
+
+			let powerT = parseInt(exponents2[i-1]);
+			console.log(powerT);
+            if (powerT > 0) {
+                const formattedPowerT = formatNumbere(powerT);
+				if(powerT == 1)
+				formattedString = formattedSexpo +  eplx[i-2];
+				else
+                formattedString = formattedSexpo  + formattedPowerT +  eplx[i-2];
             }
 			formattedSexpo = formattedString ;
 }

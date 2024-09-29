@@ -1,5 +1,5 @@
 let bign = 10;
-
+let globalc = math.complex(1,0);
       const knthetaa = [
 	   math.complex(-0.4884150884437966033074145688009828070846452019933144110659203258, -0.9223068629260569360028235559934401714062536024757296551070286184),
     math.complex(0.003851578735411204420399364109394585843185019100299557939634370175, -0.09056477795411682044547667460610562297963243478659090786228987894),
@@ -63,7 +63,21 @@ let bign = 10;
     math.complex(7.605260705023662591683674215491958711194575443441659148758242520e-5, -0.0005981647999801659300901133780805430707771024544719758191290647784)
 ];
 
+function add(...args) {
+    return args.reduce((acc, val) => math.add(acc, val));
+}
 
+function sub(...args) {
+    return args.reduce((acc, val) => math.subtract(acc, val));
+}
+
+function mul(...args) {
+    return args.reduce((acc, val) => math.multiply(acc, val));
+}
+
+function div(...args) {
+    return args.reduce((acc, val) => math.divide(acc, val));
+}
 
 const airyaizero=[-2.3381074104597670385, -4.0879494441309706166, 
 -5.5205598280955510591, -6.7867080900717589988, 
@@ -132,24 +146,33 @@ const sinczeros=[-3.1415926535897932385, -3.1415926535897932385,
 -81.681408993334624200, -84.823001646924417438, 
 -87.964594300514210677, -91.106186954104003915, 
 -94.247779607693797154, -97.389372261283590392];
+function tan(x){return math.tan(x);}
+function cot(x){return math.cot(x);}
+function cos(x){return math.cos(x);}
+function sin(x){return math.sin(x);}
+function atan(x){return math.atan(x);}
+function acot(x){return math.acot(x);}
+function acos(x){return math.acos(x);}
+function asin(x){return math.asin(x);}
+
 
 
 function integral(func, initial, end, input, N = bign) {
     // Function to handle complex integration
 	
     function simpsonsRule(a, b, n) {
-        const h = math.divide(math.subtract(b, a), n);
+        const h = div(sub(b, a), n);
         let sum = math.complex(0,0);
         
         for (let i = 1; i < n; i += 2) {
-            sum = math.add(sum, math.multiply(math.complex(4,0), func(math.add(a, math.multiply(math.complex(i,0), h)), input)));
+            sum = add(sum, mul(math.complex(4,0), func(add(a, mul(math.complex(i,0), h)), input)));
         }
         
         for (let i = 2; i < n - 1; i += 2) {
-            sum = math.add(sum, math.multiply(math.complex(2,0), func(math.add(a, math.multiply(math.complex(i,0), h)), input)));
+            sum = add(sum, mul(math.complex(2,0), func(add(a, mul(math.complex(i,0), h)), input)));
         }
         
-        return math.multiply(math.divide(h, math.complex(3,0)), sum);
+        return mul(div(h, math.complex(3,0)), sum);
     }
 
     // Adaptive Simpson's rule to ensure convergence
@@ -164,7 +187,7 @@ function sinc(z) {
             if (math.abs(z) === 0) {
                 return math.complex(1, 0);
             }
-            return math.divide(math.sin(z), z);
+            return div(math.sin(z), z);
         }
 // Function for the 'taxicab' operation
 function taxicab(b) {
@@ -217,65 +240,65 @@ function arcchebyshev(b) {
 
 // Function for 'powcos'
 function powcos(a, b) {
-    return math.multiply(math.pow(a, b), math.cos(a));
+    return mul(pow(a, b), math.cos(a));
 }
 
 // Function for 'powsin'
 function powsin(a, b) {
-    return math.multiply(math.pow(a, b), math.sin(a));
+    return mul(pow(a, b), math.sin(a));
 }
 
 
 
 // Function for 'exp+'
 function expPlus(a, b) {
-    return math.add(a, math.exp(b));
+    return add(a, math.exp(b));
 }
 
 // Function for 'exp2'
 function exp2( b) {
-    return  math.pow(2, b);
+    return  pow(2, b);
 }
 
 // Function for 'exp10'
 function exp10( b) {
-    return  math.pow(10, b);
+    return  pow(10, b);
 }
 
 
 // Function for 'expc'
 function expc(a, b) {
-    return math.divide(math.exp(b), math.pow(b, a));
+    return div(math.exp(b), pow(b, a));
 }
 
 // Function for 'expi'
 function expi( b) {
-    return math.divide(1, math.exp(b));
+    return div(1, math.exp(b));
 }
 
 // Function for 'expic'
 function expic( b) {
-    return  math.multiply(math.exp(b), math.add(b, 0.0001));
+    return  mul(math.exp(b), add(b, 0.0001));
 }
 
 // Function for 'expein'
 function expein(b) {
-    return math.divide(math.subtract(1.0, math.exp(math.unaryMinus(b))), math.add(b, 0.0001));
+    return div(sub(1.0, math.exp(math.unaryMinus(b))), add(b, 0.0001));
 }
 
 // Function for 'expsqr'
 function expsqr( b) {
-    return  math.exp(math.multiply(b, b));
+    return  math.exp(mul(b, b));
 }
 
 // Function for 'expmsqr'
 function expmsqr( b) {
-    return math.add(math.exp(math.unaryMinus(math.multiply(b, b))), 0.0001);
+    return add(math.exp(math.unaryMinus(mul(b, b))), 0.0001);
 }
 
 // Function for 'log-1'
 function logMinus1(b) {
-    return math.divide(1.0, math.log(b));
+    return div(1.0, math.log(b));
 }
 
 
@@ -307,67 +330,67 @@ function antilog10(b) {
 
 // Function for 'logc'
 function logc(b) {
-    return math.divide(math.log(b), b);
+    return div(math.log(b), b);
 }
 
 // Function for 'naplog'
 function naplog(b) {
-    return math.multiply(-10000000.0, math.log(math.divide(b, 10000000.0)));
+    return mul(-10000000.0, math.log(div(b, 10000000.0)));
 }
 
 // Function for 'dist'
 function dist(a, b) {
-    return math.add(math.multiply(a, a), math.multiply(b, b));
+    return add(mul(a, a), mul(b, b));
 }
 
 // Function for 'hypot'
 function hypot(a, b) {
-    return math.sqrt(math.add(math.multiply(a, a), math.multiply(b, b)));
+    return math.sqrt(add(mul(a, a), mul(b, b)));
 }
 
 // Function for 'sdist'
 function sdist(a, b) {
-    return math.subtract(math.multiply(a, a), math.multiply(b, b));
+    return sub(mul(a, a), mul(b, b));
 }
 
 // Function for 'zdist'
 function zdist(b) {
-    return math.divide(math.distz(b));
+    return div(math.distz(b));
 }
 
 // Utility function for degrees to radians
 function degreesToRadians(deg) {
-    return math.multiply(deg, math.pi / 180);
+    return mul(deg, math.pi / 180);
 }
 
 // Utility function for radians to degrees
 function radiansToDegrees(rad) {
-    return math.multiply(rad, 180 / math.pi);
+    return mul(rad, 180 / math.pi);
 }
 
 // Function for 'ramp'
 function ramp(a, b) {
-    return math.multiply(a, math.mod(b, 2 * math.pi) / math.pi - 1.0);
+    return mul(a, math.mod(b, 2 * math.pi) / math.pi - 1.0);
 }
 
 // Function for 'squarewave'
 function squarewave(a, b) {
-    return math.multiply(a, math.lessThan(math.mod(b, 2 * math.pi), math.pi) ? 1.0 : -1.0);
+    return mul(a, math.lessThan(math.mod(b, 2 * math.pi), math.pi) ? 1.0 : -1.0);
 }
 
 // Function for 'trianglewave'
 function trianglewave(a, b) {
-    return math.multiply(a, math.multiply(2.0 / math.pi, math.asin(math.sin(b))));
+    return mul(a, mul(2.0 / math.pi, math.asin(math.sin(b))));
 }
 
 // Function for 'sawtoothwave'
 function sawtoothwave(a, b) {
-    return math.multiply(a, math.multiply(2.0 / math.pi, math.subtract(math.pi, math.mod(b, 2 * math.pi))));
+    return mul(a, mul(2.0 / math.pi, sub(math.pi, math.mod(b, 2 * math.pi))));
 }
 
 // Function for 'pulse'
 function pulse(a, b) {
-    return math.multiply(a, math.sin(b) > 0 ? 1.0 : -1.0);
+    return mul(a, math.sin(b) > 0 ? 1.0 : -1.0);
 }
 
 // Function for 'todeg'
@@ -377,95 +400,95 @@ function todeg(b) {
 
 // Function for 'sind'
 function sind(a, b) {
-    return math.multiply(a, math.sin(degreesToRadians(b)));
+    return mul(a, math.sin(degreesToRadians(b)));
 }
 
 // Function for 'sinhdeg'
 function sinhdeg(a, b) {
-    return math.multiply(a, math.sinh(degreesToRadians(b)));
+    return mul(a, math.sinh(degreesToRadians(b)));
 }
 
 // Function for 'asind'
 function asind(a, b) {
-    return radiansToDegrees(math.multiply(a, math.asin(b)));
+    return radiansToDegrees(mul(a, math.asin(b)));
 }
 
 // Function for 'cosd'
 function cosd(a, b) {
-    return math.multiply(a, math.cos(degreesToRadians(b)));
+    return mul(a, math.cos(degreesToRadians(b)));
 }
 
 // Function for 'coshdeg'
 function coshdeg(a, b) {
-    return math.multiply(a, math.cosh(degreesToRadians(b)));
+    return mul(a, math.cosh(degreesToRadians(b)));
 }
 
 // Function for 'acosd'
 function acosd(a, b) {
-    return radiansToDegrees(math.multiply(a, math.acos(b)));
+    return radiansToDegrees(mul(a, math.acos(b)));
 }
 
 // Function for 'tand'
 function tand(a, b) {
-    return math.multiply(a, math.tan(degreesToRadians(b)));
+    return mul(a, math.tan(degreesToRadians(b)));
 }
 
 // Function for 'tanhdeg'
 function tanhdeg(a, b) {
-    return math.multiply(a, math.tanh(degreesToRadians(b)));
+    return mul(a, math.tanh(degreesToRadians(b)));
 }
 
 // Function for 'atand'
 function atand(a, b) {
-    return radiansToDegrees(math.multiply(a, math.atan(b)));
+    return radiansToDegrees(mul(a, math.atan(b)));
 }
 
 // Function for 'atan2d'
 function atan2d(a, b) {
-    return radiansToDegrees(math.atan(math.divide(a, b)));
+    return radiansToDegrees(math.atan(div(a, b)));
 }
 function cot(b) {
-    return math.divide(math.complex(1), math.tan(b));
+    return div(math.complex(1), math.tan(b));
 }
 
 // Function for 'coth'
 function coth(b) {
-    return math.divide(math.complex(1), math.tanh(b));
+    return div(math.complex(1), math.tanh(b));
 }
 
 // Function for 'sec'
 function sec(b) {
-    return math.divide(math.complex(1), math.cos(b));
+    return div(math.complex(1), math.cos(b));
 }
 
 // Function for 'sech'
 function sech(b) {
-    return math.divide(math.complex(1), math.cosh(b));
+    return div(math.complex(1), math.cosh(b));
 }
 
 // Function for 'csc'
 function csc(b) {
-    return math.divide(math.complex(1), math.sin(b));
+    return div(math.complex(1), math.sin(b));
 }
 
 // Function for 'csch'
 function csch(b) {
-    return math.divide(math.complex(1), math.sinh(b));
+    return div(math.complex(1), math.sinh(b));
 }
 
 // Function for 'crd'
 function crd(b) {
-    return math.multiply(math.sin(math.divide(b, math.complex(2))), math.complex(2));
+    return mul(math.sin(div(b, math.complex(2))), math.complex(2));
 }
 
 // Function for 'arccrd'
 function arccrd(b) {
-    return math.multiply(math.asin(math.divide(b, math.complex(2))), math.complex(2));
+    return mul(math.asin(div(b, math.complex(2))), math.complex(2));
 }
 
 // Function for 'arccrdd'
 function arccrdd(b) {
-    return radiansToDegrees(math.multiply(math.asin(math.divide(b, math.complex(2))), math.complex(2)));
+    return radiansToDegrees(mul(math.asin(div(b, math.complex(2))), math.complex(2)));
 }
 
 // Function for 'asinh'
@@ -485,152 +508,152 @@ function atanh(b) {
 
 // Function for 'asec'
 function asec(b) {
-    return math.acos(math.divide(math.complex(1), b));
+    return math.acos(div(math.complex(1), b));
 }
 
 // Function for 'asech'
 function asech(b) {
-    return math.acosh(math.divide(math.complex(1), b));
+    return math.acosh(div(math.complex(1), b));
 }
 
 // Function for 'acsc'
 function acsc(b) {
-    return math.asin(math.divide(math.complex(1), b));
+    return math.asin(div(math.complex(1), b));
 }
 
 // Function for 'acsch'
 function acsch(b) {
-    return math.asinh(math.divide(math.complex(1), b));
+    return math.asinh(div(math.complex(1), b));
 }
 
 // Function for 'exsec'
 function exsec(b) {
-    return math.subtract(math.sec(b), math.complex(1));
+    return sub(math.sec(b), math.complex(1));
 }
 
 // Function for 'excosec'
 function excosec(b) {
-    return math.subtract(math.csc(b), math.complex(1));
+    return sub(math.csc(b), math.complex(1));
 }
 
 // Function for 'versin'
 function versin(b) {
-    return math.subtract(math.complex(1), math.cos(b));
+    return sub(math.complex(1), math.cos(b));
 }
 
 // Function for 'vercosin'
 function vercosin(b) {
-    return math.add(math.complex(1), math.cos(b));
+    return add(math.complex(1), math.cos(b));
 }
 
 // Function for 'coversin'
 function coversin(b) {
-    return math.subtract(math.complex(1), math.sin(b));
+    return sub(math.complex(1), math.sin(b));
 }
 
 // Function for 'covercosine'
 function covercosine(b) {
-    return math.add(math.complex(1), math.sin(b));
+    return add(math.complex(1), math.sin(b));
 }
 
 // Function for 'haversin'
 function haversin(b) {
-    return math.multiply(math.subtract(math.complex(1), math.cos(b)), math.complex(0.5));
+    return mul(sub(math.complex(1), math.cos(b)), math.complex(0.5));
 }
 
 // Function for 'hacovercosin'
 function hacovercosin(b) {
-    return math.multiply(math.add(math.complex(1), math.sin(b)), math.complex(0.5));
+    return mul(add(math.complex(1), math.sin(b)), math.complex(0.5));
 }
 
 // Function for 'arcversin'
 function arcversin(b) {
-    return math.acos(math.subtract(math.complex(1), b));
+    return math.acos(sub(math.complex(1), b));
 }
 
 // Function for 'arcvercos'
 function arcvercos(b) {
-    return math.acos(math.subtract(b, math.complex(1)));
+    return math.acos(sub(b, math.complex(1)));
 }
 
 // Function for 'arccoversin'
 function arccoversin(b) {
-    return math.asin(math.subtract(math.complex(1), b));
+    return math.asin(sub(math.complex(1), b));
 }
 
 // Function for 'arccovercos'
 function arccovercos(b) {
-    return math.asin(math.subtract(b, math.complex(1)));
+    return math.asin(sub(b, math.complex(1)));
 }
 
 // Function for 'archaversin'
 function archaversin(b) {
-    return math.multiply(math.complex(2), math.asin(math.sqrt(b)));
+    return mul(math.complex(2), math.asin(math.sqrt(b)));
 }
 
 // Function for 'archavercos'
 function archavercos(b) {
-    return math.multiply(math.complex(2), math.acos(math.sqrt(b)));
+    return mul(math.complex(2), math.acos(math.sqrt(b)));
 }
 
 // Function for 'archacoversin'
 function archacoversin(b) {
-    return math.asin(math.subtract(math.complex(1), math.multiply(math.complex(2), b)));
+    return math.asin(sub(math.complex(1), mul(math.complex(2), b)));
 }
 
 // Function for 'archacovercos'
 function archacovercos(b) {
-    return math.asin(math.subtract(math.multiply(math.complex(2), b), math.complex(1)));
+    return math.asin(sub(mul(math.complex(2), b), math.complex(1)));
 }
 
 // Function for 'sinsqr'
 function sinsqr(b) {
-    return math.multiply(math.sin(math.multiply(b, b)), math.complex(1));
+    return mul(math.sin(mul(b, b)), math.complex(1));
 }
 
 // Function for 'cossqr'
 function cossqr(b) {
-    return math.multiply(math.cos(math.multiply(b, b)), math.complex(1));
+    return mul(math.cos(mul(b, b)), math.complex(1));
 }
 
 // Function for 'shid'
 function shid(b) {
-    return math.divide(math.sinh(b), math.add(b, math.complex(0.0001)));
+    return div(math.sinh(b), add(b, math.complex(0.0001)));
 }
 
 // Function for 'cosh-1'
 function coshminus1(b) {
-    return math.divide(math.complex(1), math.cosh(b));
+    return div(math.complex(1), math.cosh(b));
 }
 
 // Function for 'sinc'
 function sinc(b) {
-    return math.divide(math.sin(b), math.add(b, math.complex(0.0001)));
+    return div(math.sin(b), add(b, math.complex(0.0001)));
 }
 
 // Function for 'cosc'
 function cosc(b) {
-    return math.divide(math.cos(b), math.add(b, math.complex(0.0001)));
+    return div(math.cos(b), add(b, math.complex(0.0001)));
 }
 
 // Function for 'coshc'
 function coshc(b) {
-    return math.divide(math.cosh(b), math.add(b, math.complex(0.0001)));
+    return div(math.cosh(b), add(b, math.complex(0.0001)));
 }
 
 // Function for 'sinhc'
 function sinhc(b) {
-    return math.divide(math.sinh(b), math.add(b, math.complex(0.0001)));
+    return div(math.sinh(b), add(b, math.complex(0.0001)));
 }
 
 // Function for 'tanc'
 function tanc(b) {
-    return math.divide(math.tan(b), math.add(b, math.complex(0.0001)));
+    return div(math.tan(b), add(b, math.complex(0.0001)));
 }
 
 // Function for 'tanhc'
 function tanhc(b) {
-    return math.divide(math.tanh(b), math.add(b, math.complex(0.0001)));
+    return div(math.tanh(b), add(b, math.complex(0.0001)));
 }
 
 // Function for 'asinc'
@@ -638,17 +661,17 @@ function tanhc(b) {
 
 // Function for 'acoshc'
 function acoshc(b) {
-    return math.divide(math.cosh(b), math.add(b, math.complex(0.0001)));
+    return div(math.cosh(b), add(b, math.complex(0.0001)));
 }
 
 // Function for 'asinhc'
 function asinhc(b) {
-    return math.divide(math.sinh(b), math.add(b, math.complex(0.0001)));
+    return div(math.sinh(b), add(b, math.complex(0.0001)));
 }
 
 // Function for 'atanhc'
 function atanhc(b) {
-    return math.divide(math.tanh(b), math.add(b, math.complex(0.0001)));
+    return div(math.tanh(b), add(b, math.complex(0.0001)));
 }
 function complex(value) {
     return math.complex(value, 0);
@@ -656,182 +679,184 @@ function complex(value) {
 
 // Function for 'cis'
 function cis(b) {
-    return math.add(math.multiply(math.sin(b),math.complex(0,1)),math.cos(b));
+    return add(mul(math.sin(b),math.complex(0,1)),math.cos(b));
 }
 function sic(b) {
-    return math.add(math.multiply(math.cos(b),math.complex(0,1)),math.sin(b));
+    return add(mul(math.cos(b),math.complex(0,1)),math.sin(b));
 }
 // Function for 'cas'
 function cas(b) {
-    return math.add(math.multiply(math.sin(b), complex(1)), math.multiply(math.cos(b), complex(1)));
+    return add(mul(math.sin(b), complex(1)), mul(math.cos(b), complex(1)));
 }
 
 // Function for 'cish'
 function cish(b) {
-    return math.add(math.multiply(math.sinh(b),math.complex(0,1)),math.cosh(b));
+    return add(mul(math.sinh(b),math.complex(0,1)),math.cosh(b));
 }
 
 // Function for 'sich'
 function sich(b) {
-    return math.add(math.multiply(math.cosh(b),math.complex(0,1)),math.sinh(b));
+    return add(mul(math.cosh(b),math.complex(0,1)),math.sinh(b));
 }
 
 // Function for 'cisc'
 function cisc(b) {
-    return math.divide(cis(b),b);
+    return div(cis(b),b);
 }
 function sicc(b) {
-    return math.divide(sic(b),b);
+    return div(sic(b),b);
 }
 // Function for 'casc'
 function casc(b) {
-    return math.divide(cas(b),b);
+    return div(cas(b),b);
 }
 
 // Function for 'cishc'
 function cishc(b) {
-   return math.divide(cish(b),b);
+   return div(cish(b),b);
+}
+function cashc(b) {
+   return div(cash(b),b);
 }
 
 // Function for 'sichc'
 function sichc(b) {
-return math.divide(sich(b),b);
+return div(sich(b),b);
 }
 
 // Function for 'sinp'
 function sinp(b) {
-    return math.multiply(2.0, math.sinh(math.divide(math.asinh(math.divide(math.subtract(math.multiply(3.0, b), 4.0), 2.0)), 3.0)));
+    return mul(2.0, math.sinh(div(math.asinh(div(sub(mul(3.0, b), 4.0), 2.0)), 3.0)));
 }
 
 function cosp(b) {
-    const term = math.cosh(math.multiply(math.divide(2.0, 3.0), math.asinh(math.divide(math.subtract(math.multiply(3.0, b), 4.0), 2.0))));
-    return math.multiply(math.subtract(3.0, math.multiply(2.0, term)), complex(1));
+    const term = math.cosh(mul(div(2.0, 3.0), math.asinh(div(sub(mul(3.0, b), 4.0), 2.0))));
+    return mul(sub(3.0, mul(2.0, term)), complex(1));
 }
 
 // Function for 'tanp'
 function tanp(b) {
-    const asinhTerm = math.asinh(math.divide(math.subtract(math.multiply(3.0, b), 4.0), 2.0));
-    const sinhTerm = math.sinh(math.multiply(math.divide(1.0, 3.0), asinhTerm));
-    const coshTerm = math.cosh(math.multiply(math.divide(2.0, 3.0), asinhTerm));
-    return math.divide(sinhTerm, math.subtract(3.0, math.multiply(2.0, coshTerm)));
+    const asinhTerm = math.asinh(div(sub(mul(3.0, b), 4.0), 2.0));
+    const sinhTerm = math.sinh(mul(div(1.0, 3.0), asinhTerm));
+    const coshTerm = math.cosh(mul(div(2.0, 3.0), asinhTerm));
+    return div(sinhTerm, sub(3.0, mul(2.0, coshTerm)));
 }
 
 // Function for 'cscp'
 function cscp(b) {
-    const asinhTerm = math.asinh(math.divide(math.subtract(math.multiply(3.0, b), 4.0), 2.0));
-    const sinhTerm = math.sinh(math.multiply(math.divide(1.0, 3.0), asinhTerm));
-    return math.divide(complex(1), math.multiply(2.0, sinhTerm));
+    const asinhTerm = math.asinh(div(sub(mul(3.0, b), 4.0), 2.0));
+    const sinhTerm = math.sinh(mul(div(1.0, 3.0), asinhTerm));
+    return div(complex(1), mul(2.0, sinhTerm));
 }
 
 // Function for 'secp'
 function secp(b) {
-    const asinhTerm = math.asinh(math.divide(math.subtract(math.multiply(3.0, b), 4.0), 2.0));
-    const coshTerm = math.cosh(math.multiply(math.divide(2.0, 3.0), asinhTerm));
-    return math.divide(complex(1), math.subtract(3.0, math.multiply(2.0, coshTerm)));
+    const asinhTerm = math.asinh(div(sub(mul(3.0, b), 4.0), 2.0));
+    const coshTerm = math.cosh(mul(div(2.0, 3.0), asinhTerm));
+    return div(complex(1), sub(3.0, mul(2.0, coshTerm)));
 }
 
 // Function for 'cotp'
 function cotp(b) {
-    const asinhTerm = math.asinh(math.divide(math.subtract(math.multiply(3.0, b), 4.0), 2.0));
-    const sinhTerm = math.sinh(math.multiply(math.divide(1.0, 3.0), asinhTerm));
-    const coshTerm = math.cosh(math.multiply(math.divide(2.0, 3.0), asinhTerm));
-    return math.divide(sinhTerm, coshTerm);
+    const asinhTerm = math.asinh(div(sub(mul(3.0, b), 4.0), 2.0));
+    const sinhTerm = math.sinh(mul(div(1.0, 3.0), asinhTerm));
+    const coshTerm = math.cosh(mul(div(2.0, 3.0), asinhTerm));
+    return div(sinhTerm, coshTerm);
 }
 
 // Function for 'asinp'
 function asinp(b) {
-    const asinhTerm = math.asinh(math.divide(b, 2.0));
-    return math.multiply(math.divide(math.add(math.multiply(2.0, math.sinh(math.multiply(asinhTerm, 3.0))), 4.0), 3.0), complex(1));
+    const asinhTerm = math.asinh(div(b, 2.0));
+    return mul(div(add(mul(2.0, math.sinh(mul(asinhTerm, 3.0))), 4.0), 3.0), complex(1));
 }
 
 // Function for 'acosp'
 function acosp(b) {
-    const acoshTerm = math.acosh(math.divide(math.subtract(3.0, b), 2.0));
-    return math.multiply(math.divide(math.add(math.multiply(2.0, math.sinh(math.multiply(acoshTerm, math.divide(3.0, 2.0)))), 4.0), 3.0), complex(1));
+    const acoshTerm = math.acosh(div(sub(3.0, b), 2.0));
+    return mul(div(add(mul(2.0, math.sinh(mul(acoshTerm, div(3.0, 2.0)))), 4.0), 3.0), complex(1));
 }
 
 // Function for 'acscp'
 function acscp(b) {
-    const asinhTerm = math.asinh(math.divide(complex(1.0), b));
-    return math.multiply(math.divide(math.add(math.multiply(2.0, math.sinh(math.multiply(asinhTerm, 3.0))), 4.0), 3.0), complex(1));
+    const asinhTerm = math.asinh(div(complex(1.0), b));
+    return mul(div(add(mul(2.0, math.sinh(mul(asinhTerm, 3.0))), 4.0), 3.0), complex(1));
 }
 
 // Function for 'asecp'
 function asecp(b) {
-    const acoshTerm = math.acosh(math.divide(math.subtract(3.0, math.divide(complex(1.0), b)), 2.0));
-    return math.multiply(math.divide(math.add(math.multiply(2.0, math.sinh(math.multiply(acoshTerm, math.divide(3.0, 2.0)))), 4.0), 3.0), complex(1));
+    const acoshTerm = math.acosh(div(sub(3.0, div(complex(1.0), b)), 2.0));
+    return mul(div(add(mul(2.0, math.sinh(mul(acoshTerm, div(3.0, 2.0)))), 4.0), 3.0), complex(1));
 }
 
 
 function arithmeticmean(a, b) {
-    return math.divide(math.add(a, b), complex(2.0));
+    return div(add(a, b), complex(2.0));
 }
 
 function geometricmean(a, b) {
-    return math.sqrt(math.multiply(a, b));
+    return math.sqrt(mul(a, b));
 }
 
-function arithmeticgeometricmean(a, b) {
-    // Implement the AG method here
-    // Placeholder for AG function
+function arithmeticgeometricmean(a, b) {//be more elobrate then jsut give the code
+return arithmeticmean(arithmeticmean(arithmeticmean(arithmeticmean(a,b),geometricmean(a,b)),geometricmean(arithmeticmean(a,b),geometricmean(a,b))),geometricmean(arithmeticmean(arithmeticmean(a,b),geometricmean(a,b)),geometricmean(arithmeticmean(a,b),geometricmean(a,b))));
 }
 
 function arithmeticharmonicmean(a, b) {
-    const harmonicMean1 = math.divide(complex(1.0), math.add(math.divide(complex(1.0), a), math.divide(complex(1.0), ari(a, b))));
-    const harmonicMean2 = math.divide(complex(1.0), math.add(math.divide(complex(1.0), a), math.divide(complex(1.0), ari(a, b))));
-    return ari(harmonicMean1, harmonicMean2);
+    const harmonicMean1 = div(complex(1.0), add(div(complex(1.0), a), div(complex(1.0), arithmeticmean(a, b))));
+    const harmonicMean2 = div(complex(1.0), add(div(complex(1.0), a), div(complex(1.0), arithmeticmean(a, b))));
+    return arithmeticmean(harmonicMean1, harmonicMean2);
 }
 
 function geometricharmonicmean(a, b) {
-    const harmonicMean1 = math.divide(complex(1.0), math.add(math.divide(complex(1.0), a), math.divide(complex(1.0), geo(a, b))));
-    const harmonicMean2 = math.divide(complex(1.0), math.add(math.divide(complex(1.0), a), math.divide(complex(1.0), geo(a, b))));
-    return geo(harmonicMean1, harmonicMean2);
+    const harmonicMean1 = div(complex(1.0), add(div(complex(1.0), a), div(complex(1.0), geometricmean(a, b))));
+    const harmonicMean2 = div(complex(1.0), add(div(complex(1.0), a), div(complex(1.0), geometricmean(a, b))));
+    return geometricmean(harmonicMean1, harmonicMean2);
 }
 
 function harmonicmean(a, b) {
-    return math.divide(complex(1.0), math.add(math.divide(complex(1.0), a), math.divide(complex(1.0), b)));
+    return div(complex(1.0), add(div(complex(1.0), a), div(complex(1.0), b)));
 }
 
 function quadraticmean(a, b) {
-    return pow(math.add(pow(a, complex(2.0)), pow(b, complex(2.0))), complex(1.0 / 2.0));
+    return pow(add(pow(a, complex(2.0)), pow(b, complex(2.0))), complex(1.0 / 2.0));
 }
 
 function cubicmean(a, b) {
-    return pow(math.add(pow(a, complex(3.0)), pow(b, complex(3.0))), complex(1.0 / 3.0));
+    return pow(add(pow(a, complex(3.0)), pow(b, complex(3.0))), complex(1.0 / 3.0));
 }
 
 function heronianmean(a, b) {
-    return math.divide(math.add(math.add(a, b), sqrt(math.multiply(a, b))), complex(3.0));
+    return div(add(add(a, b), math.sqrt(mul(a, b))), complex(3.0));
 }
 
 function contraharmonicmean(a, b) {
-    const numerator = ari(pow(a, complex(2.0)), pow(b, complex(2.0)));
-    const denominator = ari(a, b);
-    return math.divide(numerator, denominator);
+    const numerator = arithmeticmean(pow(a, complex(2.0)), pow(b, complex(2.0)));
+    const denominator = arithmeticmean(a, b);
+    return div(numerator, denominator);
 }
 
 function neumansandormean(a, b) {
-    const numerator = math.subtract(a, b);
-    const denominator = math.multiply(complex(2.0), asinh(math.divide(math.subtract(a, b), math.add(a, b))));
-    return math.divide(numerator, denominator);
+    const numerator = sub(a, b);
+    const denominator = mul(complex(2.0), asinh(div(sub(a, b), add(a, b))));
+    return div(numerator, denominator);
 }
 
 function neumansandortmean(a, b) {
-    const numerator = math.subtract(a, b);
-    const denominator = math.multiply(complex(2.0), atan(math.divide(math.subtract(a, b), math.add(a, b))));
-    return math.divide(numerator, denominator);
+    const numerator = sub(a, b);
+    const denominator = mul(complex(2.0), atan(div(sub(a, b), add(a, b))));
+    return div(numerator, denominator);
 }
 
 function rootmean(a, b) {
-    return sqrt(ari(pow(a, complex(2.0)), pow(b, complex(2.0))));
+    return sqrt(arithmeticmean(pow(a, complex(2.0)), pow(b, complex(2.0))));
 }
 
 function logarithmicmean(a, b) {
-    return math.divide(math.subtract(a, b), math.subtract(log(a), log(b)));
+    return div(sub(a, b), sub(log(a), log(b)));
 }
 
 function identricmean(a, b) {
-    return pow(math.divide(pow(a, a), pow(b, b)), math.divide(complex(1.0), math.subtract(a, b))) / eulerc;
+    return div(pow(div(pow(a, a), pow(b, b)), div(complex(1.0), sub(a, b))) , eulerc());
 }
 
 function tocomp(value) {
@@ -843,35 +868,35 @@ function conj(value) {
 }
 
 function arg(value) {
-    return math.arg(tocomp(value));
+    return math.arg(math.complex(value));
 }
 
 function proj(value) {
-    return math.multiply(tocomp(value), math.divide(tocomp(value), math.abs(tocomp(value))));
+    return mul(math.complex(value), div(math.complex(value), math.abs(math.complex(value))));
 }
 
 function signum(value) {
     const absValue = math.abs(value);
-    return math.divide(value, absValue);
+    return div(value, absValue);
 }
 
 // Complex operations
 function dot(a, b) {
-    const aComp = tocomp(a);
-    const bComp = tocomp(b);
-    return math.add(math.multiply(aComp.re, bComp.re), math.multiply(aComp.im, bComp.im));
+    const aComp = math.complex(a);
+    const bComp = math.complex(b);
+    return add(mul(aComp.re, bComp.re), mul(aComp.im, bComp.im));
 }
 
 function cross(a, b) {
-    const aComp = tocomp(a);
-    const bComp = tocomp(b);
-    return math.subtract(math.multiply(aComp.re, bComp.im), math.multiply(aComp.im, bComp.re));
+    const aComp = math.complex(a);
+    const bComp = math.complex(b);
+    return sub(mul(aComp.re, bComp.im), mul(aComp.im, bComp.re));
 }
 
 function mandel(a, b) {
-    const c = tocomp(b);
-    const z = tocomp(a);
-    return math.add(math.multiply(z, z), c);
+    const c = math.complex(b);
+    const z = math.complex(a);
+    return add(mul(z, z), c);
 }
 
 function conjOp(b) {
@@ -883,11 +908,11 @@ function argOp(b) {
 }
 
 function im(b) {
-    return tocomp(b).im;
+    return math.complex(b).im;
 }
 
 function re(b) {
-    return tocomp(b).re;
+    return math.complex(b).re;
 }
 
 function dex(b) {
@@ -899,23 +924,22 @@ function doubleexp(b) {
 }
 
 function logOp(a, b) {
-    return math.multiply(a, log(b));
+    return mul(a, log(b));
 }
 
 function logPlus(a, b) {
-    return math.add(a, log(b));
+    return add(a, log(b));
 }
 
 function logp(b) {
-    return math.add(log(b), complex(1.0));
+    return add(log(b), complex(1.0));
 }
 
 function logpc(b) {
-    return math.divide(math.add(log(b), complex(1.0)), b);
+    return div(add(log(b), complex(1.0)), b);
 }
-
 function colog(b) {
-    return log(math.divide(complex(1.0), b));
+    return log(div(complex(1.0), b));
 }
 
 function cbrt(b) {
@@ -923,39 +947,39 @@ function cbrt(b) {
 }
 
 function rabs(b) {
-    return math.complex(math.abs(tocomp(b).re), tocomp(b).im);
+    return math.complex(math.abs(math.complex(b).re), math.complex(b).im);
 }
 
 function iabs(b) {
-    return math.complex(tocomp(b).re, math.abs(tocomp(b).im));
+    return math.complex(math.complex(b).re, math.abs(math.complex(b).im));
 }
 
 function cabs(b) {
-    return math.complex(math.abs(tocomp(b).re), math.abs(tocomp(b).im));
+    return math.complex(math.abs(math.complex(b).re), math.abs(math.complex(b).im));
 }
 
 function sabs(b) {
-    return sqrt(math.add(math.multiply(b, b), complex(0.0)));
+    return math.sqrt(add(mul(b, b), complex(0.0)));
 }
 
 function norm(b) {
-    return math.multiply(math.abs(b), math.abs(b));
+    return mul(math.abs(b), math.abs(b));
 }
 
 function real(b) {
-    return tocomp(b).re;
+    return math.complex(b).re;
 }
 
 function imag(b) {
-    return tocomp(b).im;
+    return math.complex(b).im;
 }
 
 function vdot(a, b) {
-    return math.multiply(conj(tocomp(a)), b);
+    return mul(conj(math.complex(a)), b);
 }
 
 function vcross(a, b) {
-    return math.multiply(a, conj(b));
+    return mul(a, conj(b));
 }
 
 function mag(b) {
@@ -967,11 +991,11 @@ function angle(b) {
 }
 
 function unit(b) {
-    return math.divide(b, math.abs(b));
+    return div(b, math.abs(b));
 }
 
 function signumOp(a, b) {
-    return math.multiply(a, signum(tocomp(b).re));
+    return mul(a, signum(math.complex(b).im));
 }
 
 // Helper functions
@@ -987,7 +1011,7 @@ function toDouble(value) {
     return Number(value);
 }
 
-function toComplex(value) {
+function tocomplex(value) {
     return math.complex(value);
 }
 
@@ -997,31 +1021,31 @@ function rand() {
 
 // Main operations
 function sqr(b) {
-    return math.multiply(b, b);
+    return mul(b, b);
 }
 
 function sqrm(b) {
-    return math.subtract(math.multiply(b, b), 1.0);
+    return sub(mul(b, b), 1.0);
 }
 
 function cum(b) {
-    return math.multiply(b, math.multiply(b, b));
+    return mul(b, mul(b, b));
 }
 
 function cumm(b) {
-    return math.subtract(math.multiply(b, math.multiply(b, b)), 1.0);
+    return sub(mul(b, mul(b, b)), 1.0);
 }
 
 function fz(b) {
-    return math.pow(b, b);
+    return pow(b, b);
 }
 
 function qnum(a, b) {
-    return math.divide(math.subtract(1.0, math.pow(b, a)), math.subtract(1.0, b));
+    return div(sub(1.0, pow(b, a)), sub(1.0, b));
 }
 
 function regularInteriorAngle(b) {
-    return math.multiply(math.subtract(b, 2.0), 180.0 / b);
+    return mul(sub(b, 2.0), 180.0 / b);
 }
 
 function regularExteriorAngle(b) {
@@ -1029,15 +1053,15 @@ function regularExteriorAngle(b) {
 }
 
 function regularApothem(a, b) {
-    return math.divide(a, math.multiply(2.0, math.tan(math.pi / b)));
+    return div(a, mul(2.0, math.tan(math.pi / b)));
 }
 
 function regularArea(a, b) {
-    return math.multiply(0.5, math.multiply(a, math.multiply(b, math.tan(math.pi / b))));
+    return mul(0.5, mul(a, mul(b, math.tan(math.pi / b))));
 }
 
 function average(a, b) {
-    return math.divide(math.add(a, b), 2.0);
+    return div(add(a, b), 2.0);
 }
 
 function clamp(a, b) {
@@ -1056,7 +1080,7 @@ function hstep(a, b) {
 
 function ustep(a, b) {
     if (toDouble(b) < 0) return 0;
-    if (math.equal(tocomplex(b), tocomplex(0))) return math.divide(a, 2.0);
+    if (math.equal(math.complex(b), math.complex(0))) return div(a, 2.0);
     return a;
 }
 
@@ -1067,7 +1091,7 @@ function hustep(a, b) {
 }
 
 function sqrt(a, b) {
-    return math.multiply(a, math.sqrt(b));
+    return mul(a, math.sqrt(b));
 }
 
 function ceiling(b) {
@@ -1087,11 +1111,11 @@ function floor(b) {
 }
 
 function randomInteger(a, b) {
-    return math.add(math.mod(math.multiply(rand(), math.round(b - a + 1)), math.round(b - a + 1)), math.round(a));
+    return add(math.mod(mul(rand(), math.round(b - a + 1)), math.round(b - a + 1)), math.round(a));
 }
 
 function randomFloat(a, b) {
-    return math.add(a, math.multiply(rand(), math.subtract(b, a)));
+    return add(a, mul(rand(), sub(b, a)));
 }
 
 // Helper functions
@@ -1101,23 +1125,23 @@ function toComplex(value) {
 
 // Main operations
 function cullen(b) {
-    return math.add(math.multiply(b, math.pow(toComplex(2.0), b)), toComplex(1.0));
+    return add(mul(b, pow(math.complex(2.0), b)), math.complex(1.0));
 }
 
 function mersenne(b) {
-    return math.subtract(math.pow(toComplex(2.0), b), toComplex(1.0));
+    return sub(pow(math.complex(2.0), b), math.complex(1.0));
 }
 
 function doubleMersenne(b) {
-    return math.subtract(math.pow(toComplex(2.0), math.subtract(math.pow(toComplex(2.0), b), toComplex(1.0))), toComplex(1.0));
+    return sub(pow(math.complex(2.0), sub(pow(math.complex(2.0), b), math.complex(1.0))), math.complex(1.0));
 }
 
 function doublePrimeMersenne(b) {
-    return math.subtract(math.pow(toComplex(2.0), math.subtract(math.pow(toComplex(2.0), nthPrime(b)), toComplex(1.0)))), toComplex(1.0);
+    return sub(pow(math.complex(2.0), sub(pow(math.complex(2.0), nthPrime(b)), math.complex(1.0)))), math.complex(1.0);
 }
 
 function fermat(b) {
-    return math.add(math.pow(toComplex(2.0), math.pow(toComplex(2.0), b)), toComplex(1.0));
+    return add(pow(math.complex(2.0), pow(math.complex(2.0), b)), math.complex(1.0));
 }
 
 function fermatPrime(b) {
@@ -1125,35 +1149,35 @@ function fermatPrime(b) {
 }
 
 function proth(a, b) {
-    return math.add(math.multiply(a, math.pow(toComplex(2.0), b)), toComplex(1.0));
+    return add(mul(a, pow(math.complex(2.0), b)), math.complex(1.0));
 }
 
 function isProthPrime(a, b) {
-    return isPrime(math.add(math.multiply(a, math.pow(toComplex(2.0), b)), toComplex(1.0)));
+    return isPrime(add(mul(a, pow(math.complex(2.0), b)), math.complex(1.0)));
 }
 
 function thabit(b) {
-    return math.subtract(math.multiply(toComplex(3.0), math.pow(toComplex(2.0), b)), toComplex(1.0));
+    return sub(mul(math.complex(3.0), pow(math.complex(2.0), b)), math.complex(1.0));
 }
 
 function thabit2(b) {
-    return math.add(math.multiply(toComplex(3.0), math.pow(toComplex(2.0), b)), toComplex(1.0));
+    return add(mul(math.complex(3.0), pow(math.complex(2.0), b)), math.complex(1.0));
 }
 
 function woodall(b) {
-    return math.subtract(math.multiply(b, math.pow(toComplex(2.0), b)), toComplex(1.0));
+    return sub(mul(b, pow(math.complex(2.0), b)), math.complex(1.0));
 }
 
 function genWoodall(a, b) {
-    return math.subtract(math.multiply(b, math.pow(a, b)), toComplex(1.0));
+    return sub(mul(b, pow(a, b)), math.complex(1.0));
 }
 
 function isGenWoodallPrime(a, b) {
-    return isPrime(math.subtract(math.multiply(b, math.pow(a, b)), toComplex(1.0)));
+    return isPrime(sub(mul(b, pow(a, b)), math.complex(1.0)));
 }
 
 function hilbert(b) {
-    return math.add(math.multiply(toComplex(4.0), b), toComplex(1.0));
+    return add(mul(math.complex(4.0), b), math.complex(1.0));
 }
 
 function idoneal(b) {
@@ -1161,19 +1185,19 @@ function idoneal(b) {
 }
 
 function leyland(a, b) {
-    return math.add(math.pow(a, b), math.pow(b, a));
+    return add(pow(a, b), pow(b, a));
 }
 
 function loschian(a, b) {
-    return math.add(math.add(math.pow(a, toComplex(2.0)), math.multiply(a, b)), math.pow(b, toComplex(2.0)));
+    return add(add(pow(a, math.complex(2.0)), mul(a, b)), pow(b, math.complex(2.0)));
 }
 
 function jacobsthal(b) {
-    return math.divide(math.subtract(math.pow(toComplex(2.0), b), math.cos(math.multiply(math.pi, b))), toComplex(3.0));
+    return div(sub(pow(math.complex(2.0), b), math.cos(mul(math.pi, b))), math.complex(3.0));
 }
 
 function jacobsthallucas(b) {
-    return math.subtract(math.pow(toComplex(2.0), b), math.cos(math.multiply(math.pi, b)));
+    return sub(pow(math.complex(2.0), b), math.cos(mul(math.pi, b)));
 }
 
 function jacobsthaloblong(b) {
@@ -1183,171 +1207,168 @@ function jacobsthaloblong(b) {
 
 
 function pell(b) {
-    return math.divide(math.subtract(math.pow(math.add(toComplex(1.0), math.sqrt(toComplex(2.0))), b), math.multiply(math.pow(math.add(toComplex(1.0), math.sqrt(toComplex(2.0))), math.subtract(0,b)), math.cos(math.multiply(math.pi, b)))), math.multiply(math.sqrt(toComplex(2.0)), toComplex(2.0)));
+    return div(sub(pow(add(math.complex(1.0), math.sqrt(math.complex(2.0))), b), mul(pow(add(math.complex(1.0), math.sqrt(math.complex(2.0))), sub(0,b)), math.cos(mul(math.pi, b)))), mul(math.sqrt(math.complex(2.0)), math.complex(2.0)));
 }
 
 function pellLucas(b) {
-    return math.divide(math.subtract(math.pow(math.add(toComplex(1.0), math.sqrt(toComplex(2.0))), b), math.multiply(math.pow(math.add(toComplex(1.0), math.sqrt(toComplex(2.0))), math.subtract(0,b)), math.cos(math.multiply(math.pi, b)))), math.multiply(math.sqrt(toComplex(2.0)), toComplex(2.0)));
+    return div(sub(pow(add(math.complex(1.0), math.sqrt(math.complex(2.0))), b), mul(pow(add(math.complex(1.0), math.sqrt(math.complex(2.0))), sub(0,b)), math.cos(mul(math.pi, b)))), mul(math.sqrt(math.complex(2.0)), math.complex(2.0)));
 }
 
 
 
 function fibonacci(b) {
-    return math.divide(math.subtract(math.pow(toComplex(1.61803399), b), math.multiply(math.pow(toComplex(1.61803399), math.subtract(0,b)), math.cos(math.multiply(math.pi, b)))), math.sqrt(toComplex(5.0)));
+    return div(sub(pow(math.complex(1.61803399), b), mul(pow(math.complex(1.61803399), sub(0,b)), math.cos(mul(math.pi, b)))), math.sqrt(math.complex(5.0)));
 }
 
 function lucas(b) {
-    return math.subtract(math.pow(toComplex(1.61803399), b), math.multiply(math.pow(toComplex(1.61803399), math.subtract(0,b)), math.cos(math.multiply(math.pi, b))));
+    return sub(pow(math.complex(1.61803399), b), mul(pow(math.complex(1.61803399), sub(0,b)), math.cos(mul(math.pi, b))));
 }
 
 
 function orientedTree(b) {
-    return math.round(math.multiply(toComplex(0.22571615379282714232305), math.divide(math.pow(toComplex(5.64654261623294971289271351621), b), math.pow(b, math.divide(toComplex(5.0), toComplex(2.0))))));
+    return math.round(mul(math.complex(0.22571615379282714232305), div(pow(math.complex(5.64654261623294971289271351621), b), pow(b, div(math.complex(5.0), math.complex(2.0))))));
 }
 
 function magic(b) {
-    return math.multiply(toComplex(2.0), math.add(ncr(b, toComplex(1.0)), math.add(ncr(b, toComplex(2.0)), ncr(b, toComplex(3.0)))));
+    return mul(math.complex(2.0), add(ncr(b, math.complex(1.0)), add(ncr(b, math.complex(2.0)), ncr(b, math.complex(3.0)))));
 }
 
 function magicConst(b) {
-    return math.divide(math.multiply(b, math.add(math.pow(b, toComplex(2.0)), toComplex(1.0))), toComplex(2.0));
+    return div(mul(b, add(pow(b, math.complex(2.0)), math.complex(1.0))), math.complex(2.0));
 }
 
 function alucin(b) {
-    return math.divide(math.divide(math.pow(b, toComplex(3.0))), math.multiply(math.subtract(toComplex(1.0), math.pow(b, toComplex(2.0))), math.multiply(math.subtract(toComplex(1.0), math.pow(b, toComplex(3.0))), math.subtract(toComplex(1.0), math.pow(b, toComplex(4.0))))));
+    return div(div(pow(b, math.complex(3.0))), mul(sub(math.complex(1.0), pow(b, math.complex(2.0))), mul(sub(math.complex(1.0), pow(b, math.complex(3.0))), sub(math.complex(1.0), pow(b, math.complex(4.0))))));
 }
 
 function metallicRatio(b) {
-    return math.divide(math.add(b, math.sqrt(math.add(math.pow(b, toComplex(2.0)), toComplex(4.0)))), toComplex(2.0));
+    return div(add(b, math.sqrt(add(pow(b, math.complex(2.0)), math.complex(4.0)))), math.complex(2.0));
 }
 
 function joukowsky(b) {
-    return math.add(b, math.divide(toComplex(1.0), b));
+    return add(b, div(math.complex(1.0), b));
 }
 
 function karmantrefftz(a, b) {
-    const expPart = math.pow(math.add(b, a), math.subtract(toComplex(2.0), math.divide(globalc, math.pi)));
-    const denom = math.subtract(expPart, math.pow(math.subtract(b, a), math.subtract(toComplex(2.0), math.divide(globalc, math.pi))));
-    return math.divide(math.multiply(math.subtract(toComplex(2.0), math.divide(globalc, math.pi)), expPart), denom);
+    const expPart = pow(add(b, a), sub(math.complex(2.0), div(globalc, math.pi)));
+    const denom = sub(expPart, pow(sub(b, a), sub(math.complex(2.0), div(globalc, math.pi))));
+    return div(mul(sub(math.complex(2.0), div(globalc, math.pi)), expPart), denom);
 }
 
 function symmetricalJoukowsky(b, a) {
-    return math.multiply(math.exp(math.complex(0, globalc)), math.add(math.subtract(b, a), math.add(math.divide(toComplex(1.0), math.subtract(b, a)), math.divide(math.multiply(toComplex(2.0), math.pow(a, toComplex(2.0))), math.add(a, globalc)))));
+    return mul(math.exp(mul(math.complex(0,1), globalc)), add(sub(b, a), add(div(math.complex(1.0), sub(b, a)), div(mul(math.complex(2.0), pow(a, math.complex(2.0))), add(a, globalc)))));
 }
 
 function cayley(b) {
-    return math.divide(math.subtract(b, math.complex(0.0, 1.0)), math.add(b, math.complex(1.0, 0.0)));
+    return div(sub(b, math.complex(0.0, 1.0)), add(b, math.complex(1.0, 0.0)));
 }
 
 function bilinear(b) {
-    return math.divide(math.subtract(b, toComplex(1.0)), math.add(b, toComplex(1.0)));
+    return div(sub(b, math.complex(1.0)), add(b, math.complex(1.0)));
 }
 
 function poincareDiscMetric(a, b) {
-    return math.multiply(toComplex(2.0), math.atanh(math.divide(math.subtract(a, b), math.subtract(toComplex(1.0), math.multiply(a, math.conj(b))))));
+    return mul(math.complex(2.0), math.atanh(div(sub(a, b), sub(math.complex(1.0), mul(a, math.conj(b))))));
 }
 
 function poincareMetric(a, b) {
-    return math.multiply(toComplex(2.0), math.atanh(math.divide(math.subtract(a, b), math.subtract(a, math.conj(b)))));
+    return mul(math.complex(2.0), math.atanh(div(sub(a, b), sub(a, math.conj(b)))));
 }
 
-// Helper functions
-function toComplex(value) {
-    return math.complex(value);
-}
+
 
 function pow(base, exponent) {
     return math.pow(base, exponent);
 }
 
 function sigm(x) {
-    return math.divide(1.0, math.add(1.0, math.exp(math.multiply(-1.0, x))));
+    return div(1.0, add(1.0, math.exp(mul(-1.0, x))));
 }
 
 // Main operations
 function collatz(b) {
-    return math.add(
-        math.multiply(math.divide(b, toComplex(2.0)), pow(math.cos(math.multiply(math.pi, math.divide(b, toComplex(2.0)))), toComplex(2.0))),
-        math.multiply(
-            math.add(math.multiply(toComplex(3.0), b), toComplex(1.0)),
-            pow(math.sin(math.multiply(math.pi, math.divide(b, toComplex(2.0)))), toComplex(2.0))
+    return add(
+        mul(div(b, math.complex(2.0)), pow(math.cos(mul(math.pi, div(b, math.complex(2.0)))), math.complex(2.0))),
+        mul(
+            add(mul(math.complex(3.0), b), math.complex(1.0)),
+            pow(math.sin(mul(math.pi, div(b, math.complex(2.0)))), math.complex(2.0))
         )
     );
 }
 
 function zeromosaic(b, a) {
-    const quotient = math.round(math.divide(b, a));
-    return math.multiply(
-        pow(math.subtract(b, math.multiply(a, quotient)), a),
-        pow(math.divide(a, toComplex(2.0)), math.multiply(-a, quotient))
+    const quotient = math.round(div(b, a));
+    return mul(
+        pow(sub(b, mul(a, quotient)), a),
+        pow(div(a, math.complex(2.0)), mul(sub(0,a), quotient))
     );
 }
 
 function initialmass(b) {
-    return math.multiply(
-        math.divide(toComplex(79.0), math.multiply(math.multiply(toComplex(500.0), b), math.log(toComplex(10.0)))),
-        pow(math.exp(math.multiply(-1.0, math.divide(
-            math.multiply(toComplex(5000.0), pow(math.subtract(math.log(b), math.log(toComplex(2.0, 25.0))), toComplex(2.0))),
-            math.multiply(math.multiply(toComplex(4761.0), math.log(toComplex(10.0))), math.log(toComplex(10.0)))
-        ))), toComplex(1.0))
+    return mul(
+        div(math.complex(79.0), mul(mul(math.complex(500.0), b), math.log(math.complex(10.0)))),
+        pow(math.exp(mul(-1.0, div(
+            mul(math.complex(5000.0), pow(sub(math.log(b), math.log(math.complex(2.0, 25.0))), math.complex(2.0))),
+            mul(mul(math.complex(4761.0), math.log(math.complex(10.0))), math.log(math.complex(10.0)))
+        ))), math.complex(1.0))
     );
 }
 
 function initialmass2(b) {
-    return math.multiply(
-        math.divide(toComplex(43.0), math.multiply(math.multiply(toComplex(500.0), b), math.log(toComplex(10.0)))),
-        pow(math.exp(math.multiply(-1.0, math.divide(
-            math.multiply(toComplex(5000.0), pow(math.subtract(math.log(b), math.log(toComplex(11.0, 50.0))), toComplex(2.0))),
-            math.multiply(math.multiply(toComplex(3249.0), math.log(toComplex(10.0))), math.log(toComplex(10.0)))
-        ))), toComplex(1.0))
+    return mul(
+        div(math.complex(43.0), mul(mul(math.complex(500.0), b), math.log(math.complex(10.0)))),
+        pow(math.exp(mul(-1.0, div(
+            mul(math.complex(5000.0), pow(sub(math.log(b), math.log(math.complex(11.0, 50.0))), math.complex(2.0))),
+            mul(mul(math.complex(3249.0), math.log(math.complex(10.0))), math.log(math.complex(10.0)))
+        ))), math.complex(1.0))
     );
 }
 
 function kroupa(a, b) {
-    return math.add(
-        math.multiply(pow(a, math.multiply(toComplex(-23.0), math.divide(toComplex(1.0), toComplex(10.0)))), sigm(math.multiply(math.subtract(a, toComplex(0.5)), math.exp(b)))),
-        math.multiply(
-            toComplex(2.0),
-            math.multiply(
-                pow(a, math.multiply(toComplex(-13.0), math.divide(toComplex(1.0), toComplex(10.0)))),
-                sigm(math.multiply(math.subtract(a, toComplex(0.5)), math.exp(b)))
+    return add(
+        mul(pow(a, mul(math.complex(-23.0), div(math.complex(1.0), math.complex(10.0)))), sigm(mul(sub(a, math.complex(0.5)), math.exp(b)))),
+        mul(
+            math.complex(2.0),
+            mul(
+                pow(a, mul(math.complex(-13.0), div(math.complex(1.0), math.complex(10.0)))),
+                sigm(mul(sub(a, math.complex(0.5)), math.exp(b)))
             )
         )
     );
 }
 
 function kroupatoutgilmore(a, b) {
-    return math.add(
-        math.multiply(
-            pow(a, math.multiply(toComplex(-27.0), math.divide(toComplex(1.0), toComplex(10.0)))),
-            sigm(math.multiply(math.subtract(a, toComplex(1.0)), math.exp(b)))
+    return add(
+        mul(
+            pow(a, mul(math.complex(-27.0), div(math.complex(1.0), math.complex(10.0)))),
+            sigm(mul(sub(a, math.complex(1.0)), math.exp(b)))
         ),
-        math.multiply(
-            math.multiply(toComplex(19.0), math.divide(toComplex(1.0), toComplex(1000.0))),
-            math.multiply(
-                pow(a, math.multiply(toComplex(-11.0), math.divide(toComplex(1.0), toComplex(5.0)))),
-                sigm(math.multiply(math.subtract(a, toComplex(1.0)), math.exp(b)))
+        mul(
+            mul(math.complex(19.0), div(math.complex(1.0), math.complex(1000.0))),
+            mul(
+                pow(a, mul(math.complex(-11.0), div(math.complex(1.0), math.complex(5.0)))),
+                sigm(mul(sub(a, math.complex(1.0)), math.exp(b)))
             )
         )
     );
 }
 
 function larsona(b) {
-    return math.multiply(pow(b, math.multiply(toComplex(-47.0), math.divide(toComplex(1.0), toComplex(20.0)))), math.exp(math.divide(toComplex(1.0), b)));
+    return mul(pow(b, mul(math.complex(-47.0), div(math.complex(1.0), math.complex(20.0)))), math.exp(div(math.complex(1.0), b)));
 }
 
 function larsonb(b) {
-    return math.multiply(
-        math.multiply(
-            pow(toComplex(2.0), math.multiply(toComplex(27.0), math.divide(toComplex(1.0), toComplex(20.0)))),
-            pow(math.add(b, toComplex(1.0)), math.multiply(toComplex(-27.0), math.divide(toComplex(1.0), toComplex(20.0))))
+    return mul(
+        mul(
+            pow(math.complex(2.0), mul(math.complex(27.0), div(math.complex(1.0), math.complex(20.0)))),
+            pow(add(b, math.complex(1.0)), mul(math.complex(-27.0), div(math.complex(1.0), math.complex(20.0))))
         ),
-        math.divide(toComplex(1.0), b)
+        div(math.complex(1.0), b)
     );
 }
 
 function salpeter(b) {
-    return pow(b, math.multiply(toComplex(-47.0), math.divide(toComplex(1.0), toComplex(20.0))));
+    return pow(b, mul(math.complex(-47.0), div(math.complex(1.0), math.complex(20.0))));
 }
 
 function sigmoid(b) {
@@ -1355,78 +1376,78 @@ function sigmoid(b) {
 }
 
 function generalizedlogistic(b, a) {
-    return pow(math.add(toComplex(1.0), math.exp(math.multiply(toComplex(-1.0), b))), math.multiply(-a, toComplex(1.0)));
+    return pow(add(math.complex(1.0), math.exp(mul(math.complex(-1.0), b))), mul(sub(0,a), math.complex(1.0)));
 }
 
 function logisticphi(b, a) {
-    return math.equal(b, toComplex(0.0))
-        ? math.exp(math.multiply(-a, toComplex(1.0)))
-        : pow(math.subtract(toComplex(1.0), math.multiply(b, a)), math.divide(toComplex(1.0), b));
+    return math.equal(b, math.complex(0.0))
+        ? math.exp(mul(sub(0,a), math.complex(1.0)))
+        : pow(sub(math.complex(1.0), mul(b, a)), div(math.complex(1.0), b));
 }
 
 function logisticregression(b) {
-    return math.divide(toComplex(1.0), math.add(toComplex(1.0), math.exp(math.multiply(toComplex(-1.0), b))));
+    return div(math.complex(1.0), add(math.complex(1.0), math.exp(mul(math.complex(-1.0), b))));
 }
 
 function softplus(b) {
-    return math.log(math.add(toComplex(1.0), math.exp(b)));
+    return math.log(add(math.complex(1.0), math.exp(b)));
 }
 
 function sobolevatanh(b) {
-    return math.add(math.tanh(b), math.multiply(b, math.multiply(
-        math.divide(toComplex(1.0), math.cosh(b)),
-        math.divide(toComplex(1.0), math.cosh(b))
+    return add(math.tanh(b), mul(b, mul(
+        div(math.complex(1.0), math.cosh(b)),
+        div(math.complex(1.0), math.cosh(b))
     )));
 }
 
 function swish(b) {
-    return math.divide(b, math.add(toComplex(1.0), math.exp(math.multiply(toComplex(-1.0), b))));
+    return div(b, add(math.complex(1.0), math.exp(mul(math.complex(-1.0), b))));
 }
 
 function fermidirac(b) {
-    return math.divide(toComplex(1.0), math.add(math.exp(b), toComplex(1.0)));
+    return div(math.complex(1.0), add(math.exp(b), math.complex(1.0)));
 }
 
 function boseeinstein(b, a) {
-    return math.divide(pow(b, a), math.subtract(math.exp(math.subtract(b, globalc)), toComplex(1.0)));
+    return div(pow(b, a), sub(math.exp(sub(b, globalc)), math.complex(1.0)));
 }
 
 function einstein1(b) {
-    return math.divide(math.multiply(b, b, math.exp(b)), pow(math.subtract(math.exp(b), toComplex(1.0)), toComplex(2.0)));
+    return div(mul(b, b, math.exp(b)), pow(sub(math.exp(b), math.complex(1.0)), math.complex(2.0)));
 }
 
 function einstein2(b) {
-    return math.divide(b, math.subtract(math.exp(b), toComplex(1.0)));
+    return div(b, sub(math.exp(b), math.complex(1.0)));
 }
 
 function einstein3(b) {
-    return math.log(math.subtract(toComplex(1.0), math.exp(math.multiply(toComplex(-1.0), b))));
+    return math.log(sub(math.complex(1.0), math.exp(mul(math.complex(-1.0), b))));
 }
 
 function einstein4(b) {
-    return math.subtract(
-        math.divide(b, math.subtract(math.exp(b), toComplex(1.0))),
-        math.log(math.subtract(toComplex(1.0), math.exp(math.multiply(toComplex(-1.0), b))))
+    return sub(
+        div(b, sub(math.exp(b), math.complex(1.0))),
+        math.log(sub(math.complex(1.0), math.exp(mul(math.complex(-1.0), b))))
     );
 }
 
 function probit(a, b) {
-    return math.multiply(
-        math.sqrt(toComplex(2.0)),
-        math.multiply(
+    return mul(
+        math.sqrt(math.complex(2.0)),
+        mul(
             a,
-            math.add(
-                math.multiply(math.sqrt(math.pi), math.divide(b, toComplex(2.0))),
-                math.multiply(
-                    math.divide(math.multiply(b, b, b, math.pi), toComplex(12.0)),
-                    math.add(
-                        math.divide(
-                            math.multiply(pow(math.subtract(toComplex(2.0), b), toComplex(5.0)), toComplex(7.0)), 
-                            math.multiply(math.pi, toComplex(480.0))
+            add(
+                mul(math.sqrt(math.pi), div(b, math.complex(2.0))),
+                mul(
+                    div(mul(b, b, b, math.pi), math.complex(12.0)),
+                    add(
+                        div(
+                            mul(pow(sub(math.complex(2.0), b), math.complex(5.0)), math.complex(7.0)), 
+                            mul(math.pi, math.complex(480.0))
                         ),
-                        math.divide(
-                            math.multiply(pow(math.subtract(toComplex(2.0), b), toComplex(7.0)), toComplex(127.0)),
-                            math.multiply(math.pi, math.multiply(toComplex(40320.0), math.pi))
+                        div(
+                            mul(pow(sub(math.complex(2.0), b), math.complex(7.0)), math.complex(127.0)),
+                            mul(math.pi, mul(math.complex(40320.0), math.pi))
                         )
                     )
                 )
@@ -1436,181 +1457,181 @@ function probit(a, b) {
 }
 
 function logitlogistic(a, b) {
-    return math.divide(a, math.add(toComplex(1.0), math.exp(math.multiply(toComplex(-1.0), b))));
+    return div(a, add(math.complex(1.0), math.exp(mul(math.complex(-1.0), b))));
 }
 
 function cloglog(b) {
-    return math.multiply(-1.0, math.log(math.multiply(-1.0, math.log(math.subtract(toComplex(1.0), math.exp(math.multiply(toComplex(-1.0), b)))))));
+    return mul(-1.0, math.log(mul(-1.0, math.log(sub(math.complex(1.0), math.exp(mul(math.complex(-1.0), b)))))));
 }
 
 function gompertz(a, b) {
-    return math.exp(math.multiply(-1.0, math.exp(math.multiply(-a, math.subtract(b, toComplex(1.0))))));
+    return math.exp(mul(-1.0, math.exp(mul(sub(0,a), sub(b, math.complex(1.0))))));
 }
 
 function log_logistic(a, b) {
-    return math.divide(toComplex(1.0), math.add(toComplex(1.0), pow(math.divide(b, a), toComplex(-1.0))));
+    return div(math.complex(1.0), add(math.complex(1.0), pow(div(b, a), math.complex(-1.0))));
 }
 
 function logistic_exponential(a, b) {
-    return math.divide(math.multiply(a, math.exp(b)), math.add(toComplex(1.0), math.exp(b)));
+    return div(mul(a, math.exp(b)), add(math.complex(1.0), math.exp(b)));
 }
 
 function log_odds(b) {
-    return math.log(math.divide(b, math.subtract(toComplex(1.0), b)));
+    return math.log(div(b, sub(math.complex(1.0), b)));
 }
 
 function pi() {
-    return toComplex(math.pi);
+    return math.complex(math.pi);
 }
 
 // Main functions
 function rastrigin(a, b) {
-    const ten = toComplex(10.0);
-    const twoPi = math.multiply(toComplex(2.0), pi());
-    return math.add(
-        math.multiply(ten, toComplex(2.0)),
-        math.add(
-            math.subtract(math.multiply(a, a), math.multiply(ten, math.cos(math.multiply(twoPi, a)))),
-            math.subtract(math.multiply(b, b), math.multiply(ten, math.cos(math.multiply(twoPi, b))))
+    const ten = math.complex(10.0);
+    const twoPi = mul(math.complex(2.0), pi());
+    return add(
+        mul(ten, math.complex(2.0)),
+        add(
+            sub(mul(a, a), mul(ten, math.cos(mul(twoPi, a)))),
+            sub(mul(b, b), mul(ten, math.cos(mul(twoPi, b))))
         )
     );
 }
 
 function ackley(a, b) {
-    const negTwenty = toComplex(-20.0);
+    const negTwenty = math.complex(-20.0);
     const e = math.e;
-    const half = toComplex(0.5);
-    const expTerm = math.exp(math.multiply(negTwenty, math.sqrt(math.multiply(half, math.add(math.multiply(a, a), math.multiply(b, b))))));
-    const cosTerm = math.exp(math.multiply(0.5, math.add(math.cos(math.multiply(toComplex(2.0), pi(), a)), math.cos(math.multiply(toComplex(2.0), pi(), b)))));
-    return math.add(
-        math.subtract(expTerm, cosTerm),
-        math.add(e, toComplex(20.0))
+    const half = math.complex(0.5);
+    const expTerm = math.exp(mul(negTwenty, math.sqrt(mul(half, add(mul(a, a), mul(b, b))))));
+    const cosTerm = math.exp(mul(0.5, add(math.cos(mul(math.complex(2.0), pi(), a)), math.cos(mul(math.complex(2.0), pi(), b)))));
+    return add(
+        sub(expTerm, cosTerm),
+        add(e, math.complex(20.0))
     );
 }
 
 function sphere(a, b) {
-    return math.add(math.multiply(a, a), math.multiply(b, b));
+    return add(mul(a, a), mul(b, b));
 }
 
 function rosenbrock(a, b) {
-    const hundred = toComplex(100.0);
-    return math.add(
-        math.multiply(hundred, math.pow(math.subtract(b, math.multiply(a, a)), 2)),
-        math.pow(math.subtract(toComplex(1.0), a), 2)
+    const hundred = math.complex(100.0);
+    return add(
+        mul(hundred, pow(sub(b, mul(a, a)), 2)),
+        pow(sub(math.complex(1.0), a), 2)
     );
 }
 
 function beale(a, b) {
-    return math.add(
-        math.pow(math.subtract(math.add(toComplex(1.5), math.multiply(math.subtract(a, math.multiply(a, b)), b)), math.multiply(a, b)), 2),
-        math.add(
-            math.pow(math.subtract(math.add(toComplex(2.25), math.multiply(math.subtract(a, math.multiply(a, b)), math.multiply(b, b))), math.multiply(a, math.multiply(b, b))), 2),
-            math.pow(math.subtract(math.add(toComplex(2.625), math.multiply(math.subtract(a, math.multiply(a, b)), math.multiply(b, b, b))), math.multiply(a, math.multiply(b, b, b))), 2)
+    return add(
+        pow(sub(add(math.complex(1.5), mul(sub(a, mul(a, b)), b)), mul(a, b)), 2),
+        add(
+            pow(sub(add(math.complex(2.25), mul(sub(a, mul(a, b)), mul(b, b))), mul(a, mul(b, b))), 2),
+            pow(sub(add(math.complex(2.625), mul(sub(a, mul(a, b)), mul(b, b, b))), mul(a, mul(b, b, b))), 2)
         )
     );
 }
 
 function goldsteinprice(a, b) {
-    const one = toComplex(1.0);
-    const thirty = toComplex(30.0);
-    const nineteen = toComplex(19.0);
-    const fourteen = toComplex(14.0);
-    const three = toComplex(3.0);
-    const eighteen = toComplex(18.0);
-    const thirtyTwo = toComplex(32.0);
-    const twelve = toComplex(12.0);
-    const fortyEight = toComplex(48.0);
-    const thirtySix = toComplex(36.0);
-    const twentySeven = toComplex(27.0);
+    const one = math.complex(1.0);
+    const thirty = math.complex(30.0);
+    const nineteen = math.complex(19.0);
+    const fourteen = math.complex(14.0);
+    const three = math.complex(3.0);
+    const eighteen = math.complex(18.0);
+    const thirtyTwo = math.complex(32.0);
+    const twelve = math.complex(12.0);
+    const fortyEight = math.complex(48.0);
+    const thirtySix = math.complex(36.0);
+    const twentySeven = math.complex(27.0);
 
-    const term1 = math.add(
-        one,
-        math.multiply(math.pow(math.add(a, b, one), 2), math.add(
-            nineteen,
-            math.subtract(math.multiply(fourteen, a), math.multiply(three, math.pow(a, 2))),
-            math.subtract(math.multiply(fourteen, b), math.multiply(math.multiply(six, a), b)),
-            math.multiply(three, math.pow(b, 2))
+    const term1 = add(
+        1,
+        mul(pow(add(a, b, 1), 2), add(
+            19,
+            sub(mul(14, a), mul(3, pow(a, 2))),
+            sub(mul(14, b), mul(mul(6, a), b)),
+            mul(3, pow(b, 2))
         ))
     );
-    const term2 = math.add(
-        thirty,
-        math.multiply(math.pow(math.subtract(math.multiply(two, a), math.multiply(three, b)), 2), math.add(
-            eighteen,
-            math.subtract(math.multiply(thirtyTwo, a), math.multiply(twelve, math.pow(a, 2))),
-            math.add(
+    const term2 = add(
+        30,
+        mul(pow(sub(mul(2, a), mul(3, b)), 2), add(
+            18,
+            sub(mul(32, a), mul(12, pow(a, 2))),
+            add(
                 fortyEight,
-                math.subtract(math.multiply(thirtySix, a), math.multiply(math.multiply(three, a), b)),
-                math.multiply(twentySeven, math.pow(b, 2))
+                sub(mul(36, a), mul(mul(3, a), b)),
+                mul(27, pow(b, 2))
             )
         ))
     );
 
-    return math.multiply(term1, term2);
+    return mul(term1, term2);
 }
 
 function booth(a, b) {
-    return math.add(
-        math.pow(math.subtract(math.add(a, math.multiply(two, b)), toComplex(7.0)), 2),
-        math.pow(math.subtract(math.add(math.multiply(two, a), b), toComplex(5.0)), 2)
+    return add(
+        pow(sub(add(a, mul(2, b)), math.complex(7.0)), 2),
+        pow(sub(add(mul(2, a), b), math.complex(5.0)), 2)
     );
 }
 
 function bukin(a, b) {
-    const hundred = toComplex(100.0);
-    const point01 = toComplex(0.01);
-    return math.add(
-        math.multiply(hundred, math.sqrt(math.abs(math.subtract(b, math.multiply(point01, math.pow(a, 2)))))),
-        math.multiply(point01, math.abs(math.add(a, toComplex(10.0))))
+    const hundred = math.complex(100.0);
+    const point01 = math.complex(0.01);
+    return add(
+        mul(hundred, math.sqrt(math.abs(sub(b, mul(point01, pow(a, 2)))))),
+        mul(point01, math.abs(add(a, math.complex(10.0))))
     );
 }
 
 function matyas(a, b) {
-    return math.subtract(
-        math.multiply(toComplex(0.26), math.add(math.multiply(a, a), math.multiply(b, b))),
-        math.multiply(toComplex(0.48), math.multiply(a, b))
+    return sub(
+        mul(math.complex(0.26), add(mul(a, a), mul(b, b))),
+        mul(math.complex(0.48), mul(a, b))
     );
 }
 
 function levi(a, b) {
-    const threePi = math.multiply(toComplex(3.0), pi());
-    const twoPi = math.multiply(toComplex(2.0), pi());
-    return math.add(
-        math.pow(math.sin(threePi, a), 3),
-        math.multiply(math.pow(math.subtract(a, toComplex(1.0)), 2), math.add(toComplex(1.0), math.pow(math.sin(threePi, b), 3))),
-        math.multiply(math.pow(math.subtract(b, toComplex(1.0)), 2), math.add(toComplex(1.0), math.pow(math.sin(twoPi, b), 2)))
+    const threePi = mul(math.complex(3.0), pi());
+    const twoPi = mul(math.complex(2.0), pi());
+    return add(
+        pow(math.sin(mul(threePi, a)), 3),
+        mul(pow(sub(a, math.complex(1.0)), 2), add(math.complex(1.0), pow(math.sin(mul(threePi, b)), 3))),
+        mul(pow(sub(b, math.complex(1.0)), 2), add(math.complex(1.0), pow(math.sin(mul(twoPi, b)), 2)))
     );
 }
 
 function himmelblau(a, b) {
-    return math.add(
-        math.pow(math.subtract(math.multiply(a, a), toComplex(11.0)), 2),
-        math.pow(math.subtract(math.multiply(a, math.multiply(b, b)), toComplex(7.0)), 2)
+    return add(
+        pow(sub(mul(a, a), math.complex(11.0)), 2),
+        pow(sub(mul(a, mul(b, b)), math.complex(7.0)), 2)
     );
 }
 
 function threehump(a, b) {
-    return math.add(
-        math.multiply(toComplex(2.0), math.pow(a, 2)),
-        math.subtract(
-            math.multiply(toComplex(1.05), math.pow(a, 4)),
-            math.divide(math.multiply(a, math.pow(a, 4)), toComplex(6.0))
+    return add(
+        mul(math.complex(2.0), pow(a, 2)),
+        sub(
+            mul(math.complex(1.05), pow(a, 4)),
+            div(mul(a, pow(a, 4)), math.complex(6.0))
         ),
-        math.add(
-            math.multiply(a, b),
-            math.multiply(b, b)
+        add(
+            mul(a, b),
+            mul(b, b)
         )
     );
 }
 
 function easom(a, b) {
-    return math.multiply(
-        math.multiply(math.cos(a), math.cos(b)),
-        math.exp(math.subtract(
-            math.multiply(
-                toComplex(-1.0),
-                math.add(
-                    math.pow(math.subtract(a, pi()), 2),
-                    math.pow(math.subtract(b, pi()), 2)
+    return mul(
+        mul(math.cos(a), math.cos(b)),
+        math.exp(sub(
+            mul(
+                math.complex(-1.0),
+                add(
+                    pow(sub(a, pi()), 2),
+                    pow(sub(b, pi()), 2)
                 )
             )
         ))
@@ -1618,56 +1639,56 @@ function easom(a, b) {
 }
 
 function crossintray(a, b) {
-    return math.pow(
-        math.subtract(
-            toComplex(-0.0001),
-            math.multiply(
+    return pow(
+        sub(
+            math.complex(-0.0001),
+            mul(
                 math.sin(a),
                 math.sin(b),
                 math.exp(
                     math.abs(
-                        math.subtract(
-                            toComplex(100.0),
-                            math.divide(math.sqrt(math.add(math.pow(a, 2), math.pow(b, 2))), pi())
+                        sub(
+                            math.complex(100.0),
+                            div(math.sqrt(add(pow(a, 2), pow(b, 2))), pi())
                         )
                     )
                 )
             )
         ),
-        toComplex(0.1)
+        math.complex(0.1)
     );
 }
 function eggholder(a, b) {
-    const fortySeven = toComplex(47.0);
-    return math.multiply(
-        toComplex(-1.0),
-        math.add(
-            math.multiply(math.add(b, fortySeven), math.sin(math.sqrt(math.abs(math.add(math.divide(a, toComplex(2.0)), fortySeven))))),
-            math.multiply(math.sin(math.sqrt(math.abs(math.subtract(a, math.add(b, fortySeven))))), toComplex(-1.0))
+    const fortySeven = math.complex(47.0);
+    return mul(
+        math.complex(-1.0),
+        add(
+            mul(add(b, fortySeven), math.sin(math.sqrt(math.abs(add(div(a, math.complex(2.0)), fortySeven))))),
+            mul(math.sin(math.sqrt(math.abs(sub(a, add(b, fortySeven))))), math.complex(-1.0))
         )
     );
 }
 
 function holdertable(a, b) {
-    return math.multiply(
-        toComplex(-1.0),
+    return mul(
+        math.complex(-1.0),
         math.abs(
-            math.multiply(math.sin(a), math.cos(b)),
-            math.exp(math.abs(math.subtract(toComplex(1.0), math.divide(math.sqrt(math.add(math.pow(a, 2), math.pow(b, 2))), pi()))))
-        )
+            mul(math.sin(a), math.cos(b),
+            math.exp(math.abs(sub(math.complex(1.0), div(math.sqrt(add(pow(a, 2), pow(b, 2))), pi()))))
+        ))
     );
 }
 
 function mccormick(a, b) {
-    return math.add(
-        math.sin(math.add(a, b)),
-        math.add(
-            math.pow(math.subtract(a, b), 2),
-            math.add(
-                math.multiply(toComplex(-1.5), a),
-                math.add(
-                    math.multiply(toComplex(2.5), b),
-                    toComplex(1.0)
+    return add(
+        math.sin(add(a, b)),
+        add(
+            pow(sub(a, b), 2),
+            add(
+                mul(math.complex(-1.5), a),
+                add(
+                    mul(math.complex(2.5), b),
+                    math.complex(1.0)
                 )
             )
         )
@@ -1675,98 +1696,98 @@ function mccormick(a, b) {
 }
 
 function schaffern2(a, b) {
-    const denom = math.pow(math.add(toComplex(1.0), math.multiply(toComplex(0.001), math.add(math.pow(a, 2), math.pow(b, 2)))), 2);
-    return math.divide(
-        math.subtract(math.pow(math.sin(math.subtract(math.pow(a, 2), math.pow(b, 2))), 2), toComplex(0.5)),
+    const denom = pow(add(math.complex(1.0), mul(math.complex(0.001), add(pow(a, 2), pow(b, 2)))), 2);
+    return div(
+        sub(pow(math.sin(sub(pow(a, 2), pow(b, 2))), 2), math.complex(0.5)),
         denom
     );
 }
 
 function schaffern4(a, b) {
-    const denom = math.pow(math.add(toComplex(1.0), math.multiply(toComplex(0.001), math.add(math.pow(a, 2), math.pow(b, 2)))), 2);
-    return math.divide(
-        math.subtract(math.pow(math.cos(math.sin(math.abs(math.subtract(math.pow(a, 2), math.pow(b, 2))))), 2), toComplex(0.5)),
+    const denom = pow(add(math.complex(1.0), mul(math.complex(0.001), add(pow(a, 2), pow(b, 2)))), 2);
+    return div(
+        sub(pow(math.cos(math.sin(math.abs(sub(pow(a, 2), pow(b, 2))))), 2), math.complex(0.5)),
         denom
     );
 }
 
 function styblinskitang(a, b) {
-    const sixteen = toComplex(16.0);
-    const five = toComplex(5.0);
-    return math.divide(
-        math.add(
-            math.add(
-                math.subtract(math.pow(a, 4), math.multiply(sixteen, a)),
-                math.add(five, a)
+    const sixteen = math.complex(16.0);
+    const five = math.complex(5.0);
+    return div(
+        add(
+            add(
+                sub(pow(a, 4), mul(sixteen, a)),
+                add(five, a)
             ),
-            math.add(
-                math.subtract(math.pow(b, 4), math.multiply(sixteen, b)),
-                math.add(five, b)
+            add(
+                sub(pow(b, 4), mul(sixteen, b)),
+                add(five, b)
             )
         ),
-        toComplex(2.0)
+        math.complex(2.0)
     );
 }
 
 function mihrasbird(a, b) {
-    return math.add(
-        math.multiply(math.sin(b), math.exp(math.pow(math.subtract(toComplex(1.0), math.cos(a)), 2))),
-        math.add(
-            math.multiply(math.sin(a), math.exp(math.pow(math.subtract(toComplex(1.0), math.cos(b)), 2))),
-            math.pow(math.subtract(a, b), 2)
+    return add(
+        mul(math.sin(b), math.exp(pow(sub(math.complex(1.0), math.cos(a)), 2))),
+        add(
+            mul(math.sin(a), math.exp(pow(sub(math.complex(1.0), math.cos(b)), 2))),
+            pow(sub(a, b), 2)
         )
     );
 }
 
 function townsend(a, b) {
-    return math.subtract(
-        toComplex(-1.0),
-        math.add(
-            math.pow(math.cos(math.multiply(math.subtract(a, toComplex(0.1)), b)), 2),
-            math.multiply(a, math.sin(math.add(math.multiply(toComplex(3.0), a), b)))
+    return sub(
+        math.complex(-1.0),
+        add(
+            pow(math.cos(mul(sub(a, math.complex(0.1)), b)), 2),
+            mul(a, math.sin(add(mul(math.complex(3.0), a), b)))
         )
     );
 }
 
 function gomezlevi(a, b) {
-    const four = toComplex(4.0);
-    const twoPointOne = toComplex(2.1);
-    const six = toComplex(6.0);
-    return math.add(
-        math.add(
-            math.multiply(four, math.pow(a, 2)),
-            math.subtract(
-                math.multiply(twoPointOne, math.pow(a, 4)),
-                math.divide(math.pow(a, 5), six)
+    const four = math.complex(4.0);
+    const twoPointOne = math.complex(2.1);
+    const six = math.complex(6.0);
+    return add(
+        add(
+            mul(four, pow(a, 2)),
+            sub(
+                mul(twoPointOne, pow(a, 4)),
+                div(pow(a, 5), six)
             )
         ),
-        math.add(
-            math.multiply(a, b),
-            math.subtract(
-                math.multiply(four, math.pow(b, 2)),
-                math.multiply(four, math.pow(b, 4))
+        add(
+            mul(a, b),
+            sub(
+                mul(four, pow(b, 2)),
+                mul(four, pow(b, 4))
             )
         )
     );
 }
 
 function simionescu(a, b) {
-    return math.multiply(toComplex(0.1), math.multiply(a, b));
+    return mul(math.complex(0.1), mul(a, b));
 }
 
 function griewank(a, b) {
-    const sum = math.add(math.pow(a, 2), math.pow(b, 2));
-    return math.add(
-        toComplex(1.0),
-        math.subtract(
-            math.divide(sum, toComplex(4000.0)),
-            math.multiply(math.cos(a), math.cos(math.divide(b, math.sqrt(toComplex(2.0)))))
+    const sum = add(pow(a, 2), pow(b, 2));
+    return add(
+        math.complex(1.0),
+        sub(
+            div(sum, math.complex(4000.0)),
+            mul(math.cos(a), math.cos(div(b, math.sqrt(math.complex(2.0)))))
         )
     );
 }
 
 function schwefel221(a, b) {
-    return math.multiply(toComplex(0.01), math.add(math.abs(a), math.abs(b)));
+    return mul(math.complex(0.01), add(math.abs(a), math.abs(b)));
 }
 
 function schwefel222(a, b) {
@@ -1774,39 +1795,39 @@ function schwefel222(a, b) {
 }
 
 function bird(a, b) {
-    return math.add(
-        math.multiply(math.sin(a), math.exp(math.pow(math.subtract(toComplex(1.0), math.cos(b)), 2))),
-        math.add(
-            math.multiply(math.cos(b), math.exp(math.pow(math.subtract(toComplex(1.0), math.sin(a)), 2))),
-            math.pow(math.subtract(a, b), 2)
+    return add(
+        mul(math.sin(a), math.exp(pow(sub(math.complex(1.0), math.cos(b)), 2))),
+        add(
+            mul(math.cos(b), math.exp(pow(sub(math.complex(1.0), math.sin(a)), 2))),
+            pow(sub(a, b), 2)
         )
     );
 }
 
 function alpine(a, b) {
-    return math.add(
-        math.abs(math.add(math.multiply(a, math.sin(a)), math.multiply(toComplex(0.1), a))),
-        math.abs(math.add(math.multiply(b, math.sin(b)), math.multiply(toComplex(0.1), b)))
+    return add(
+        math.abs(add(mul(a, math.sin(a)), mul(math.complex(0.1), a))),
+        math.abs(add(mul(b, math.sin(b)), mul(math.complex(0.1), b)))
     );
 }
 
 function sdp(a, b) {
-    return math.add(
-        math.pow(math.abs(a), 2),
-        math.pow(math.abs(b), 3)
+    return add(
+        pow(math.abs(a), 2),
+        pow(math.abs(b), 3)
     );
 }
 
 function sumsquaresonsphere(a, b) {
-    return math.add(
-        math.add(
-            math.pow(a, 2),
-            math.pow(b, 2)
+    return add(
+        add(
+            pow(a, 2),
+            pow(b, 2)
         ),
-        math.subtract(
-            math.subtract(
-                math.cos(math.multiply(toComplex(18.0), a, pi())),
-                math.cos(math.multiply(toComplex(18.0), b, pi()))
+        sub(
+            sub(
+                math.cos(mul(math.complex(18.0), a, pi())),
+                math.cos(mul(math.complex(18.0), b, pi()))
             )
         )
     );
@@ -1814,108 +1835,108 @@ function sumsquaresonsphere(a, b) {
 
 function michalewicz(a, b) {
     const m = math.round(a); // rounding a to nearest integer for use in the loop
-    let sum = toComplex(0.0);
+    let sum = math.complex(0.0);
     for (let i = 1; i <= m; i++) {
-        sum = math.add(sum, math.multiply(
+        sum = add(sum, mul(
             math.sin(b),
-            math.pow(math.sin(math.multiply(i, b, b, math.divide(math.pi, m))), math.multiply(2, m))
+            pow(math.sin(mul(i, b, b, div(math.pi, m))), mul(2, m))
         ));
     }
-    return math.multiply(toComplex(-1.0), sum);
+    return mul(math.complex(-1.0), sum);
 }
 
 function booths(a, b) {
-    return math.add(
-        math.pow(math.add(a, math.multiply(toComplex(2.0), b), toComplex(-7.0)), 2),
-        math.pow(math.add(math.multiply(toComplex(2.0), a), b, toComplex(-5.0)), 2)
+    return add(
+        pow(add(a, mul(math.complex(2.0), b), math.complex(-7.0)), 2),
+        pow(add(mul(math.complex(2.0), a), b, math.complex(-5.0)), 2)
     );
 }
 
 function sumsquares(a, b) {
-    return math.add(
-        math.pow(a, 2),
-        math.pow(b, 2)
+    return add(
+        pow(a, 2),
+        pow(b, 2)
     );
 }
 
 function bohachevsky(a, b) {
-    return math.add(
-        math.add(
-            math.pow(a, 2),
-            math.multiply(toComplex(2.0), math.pow(b, 2))
+    return add(
+        add(
+            pow(a, 2),
+            mul(math.complex(2.0), pow(b, 2))
         ),
-        math.add(
-            math.multiply(toComplex(-0.3), math.cos(math.multiply(toComplex(3.0), pi(), a))),
-            math.add(
-                math.multiply(toComplex(-0.4), math.cos(math.multiply(toComplex(4.0), pi(), b))),
-                toComplex(0.7)
+        add(
+            mul(math.complex(-0.3), math.cos(mul(math.complex(3.0), pi(), a))),
+            add(
+                mul(math.complex(-0.4), math.cos(mul(math.complex(4.0), pi(), b))),
+                math.complex(0.7)
             )
         )
     );
 }
 
 function sixhumpcamel(a, b) {
-    return math.add(
-        math.multiply(
-            math.add(
-                toComplex(4.0),
-                math.subtract(math.multiply(toComplex(-2.1), math.pow(a, 2)), math.divide(math.pow(a, 4), toComplex(3.0)))
+    return add(
+        mul(
+            add(
+                math.complex(4.0),
+                sub(mul(math.complex(-2.1), pow(a, 2)), div(pow(a, 4), math.complex(3.0)))
             ),
-            math.pow(a, 2)
+            pow(a, 2)
         ),
-        math.add(
-            math.multiply(a, b),
-            math.multiply(
-                math.subtract(
-                    toComplex(-4.0),
-                    math.multiply(toComplex(4.0), math.pow(b, 2))
+        add(
+            mul(a, b),
+            mul(
+                sub(
+                    math.complex(-4.0),
+                    mul(math.complex(4.0), pow(b, 2))
                 ),
-                math.pow(b, 2)
+                pow(b, 2)
             )
         )
     );
 }
 
 function shubert(a, b) {
-    let sum1 = toComplex(0.0);
-    let sum2 = toComplex(0.0);
+    let sum1 = math.complex(0.0);
+    let sum2 = math.complex(0.0);
     for (let i = 1; i <= 5; i++) {
-        sum1 = math.add(
+        sum1 = add(
             sum1,
-            math.multiply(i, math.cos(math.add(math.multiply(math.add(i, toComplex(1.0)), a), i)))
+            mul(i, math.cos(add(mul(add(i, math.complex(1.0)), a), i)))
         );
-        sum2 = math.add(
+        sum2 = add(
             sum2,
-            math.multiply(i, math.cos(math.add(math.multiply(math.add(i, toComplex(1.0)), b), i)))
+            mul(i, math.cos(add(mul(add(i, math.complex(1.0)), b), i)))
         );
     }
-    return math.multiply(sum1, sum2);
+    return mul(sum1, sum2);
 }
 
 function acosc(b) {
-    const const1 = toComplex(2.798386045783887);
-    const const2 = toComplex(0.33650841691839534);
-    const const3 = toComplex(-0.33650841691839534);
-    const const4 = toComplex(3.0 * 2.798386045783887 * -0.33650841691839534);
+    const const1 = math.complex(2.798386045783887);
+    const const2 = math.complex(0.33650841691839534);
+    const const3 = math.complex(-0.33650841691839534);
+    const const4 = math.complex(3.0 * 2.798386045783887 * -0.33650841691839534);
 
-    let fi = math.subtract(
+    let fi = sub(
         const1,
-        math.pow(math.divide(math.multiply(toComplex(2.0), math.add(b, const2)), const2), toComplex(0.5))
+        pow(div(mul(math.complex(2.0), add(b, const2)), const2), math.complex(0.5))
     );
 
-    fi = math.subtract(
+    fi = sub(
         fi,
-        math.divide(math.multiply(toComplex(2.0), math.add(b, const2)), const4)
+        div(mul(math.complex(2.0), add(b, const2)), const4)
     );
 
     for (let i = 0; i < 5; i++) {
-        const fiDenom = math.divide(
-            math.subtract(math.cos(fi), fi),
-            math.multiply(math.divide(math.subtract(math.sin(fi), math.cos(fi)), fi), fi)
+        const fiDenom = div(
+            sub(math.cos(fi), fi),
+            mul(div(sub(math.sin(fi), math.cos(fi)), fi), fi)
         );
 
-        fi = math.add(fi, math.divide(
-            math.subtract(b, math.divide(math.cos(fi), fi)),
+        fi = add(fi, div(
+            sub(b, div(math.cos(fi), fi)),
             fiDenom
         ));
     }
@@ -1924,27 +1945,27 @@ function acosc(b) {
 }
 
 function acosq(b) {
-    return acosc(math.multiply(
-        toComplex(0, 1),
-        math.divide(pi(), toComplex(4.0))
-    ) * toComplex(b));
+    return acosc(mul(
+        math.complex(0, 1),
+        div(pi(), math.complex(4.0))
+    ,b));
 }
 
 function asinc(b) {
-    const bs = math.subtract(toComplex(1.0), b);
-    let fi = math.divide(
-        math.multiply(math.sqrt(math.multiply(toComplex(6.0), bs)), math.sin(bs)),
+    const bs = sub(math.complex(1.0), b);
+    let fi = div(
+        mul(math.sqrt(mul(math.complex(6.0), bs)), math.sin(bs)),
         bs
     );
 
     for (let i = 0; i < 5; i++) {
-        const fiDenom = math.divide(
-            math.subtract(math.cos(fi), math.sin(fi)),
-            math.multiply(math.divide(math.subtract(math.sin(fi), math.cos(fi)), fi), fi)
+        const fiDenom = div(
+            sub(math.cos(fi), math.sin(fi)),
+            mul(div(sub(math.sin(fi), math.cos(fi)), fi), fi)
         );
 
-        fi = math.add(fi, math.divide(
-            math.subtract(b, math.divide(math.sin(fi), fi)),
+        fi = add(fi, div(
+            sub(b, div(math.sin(fi), fi)),
             fiDenom
         ));
     }
@@ -1955,30 +1976,30 @@ function asinc(b) {
 function dedekindeta(z) {
  
     const eulerConstant = eulerc();
-    const exponent = math.multiply(toComplex(2.0), z, pi(), math.complex(0,1));
-    const q = math.pow(eulerConstant, exponent);
-    let p = math.pow(q, math.divide(toComplex(1.0), toComplex(24.0)));
+    const exponent = mul(math.complex(2.0), z, pi(), math.complex(0,1));
+    const q = pow(eulerConstant, exponent);
+    let p = pow(q, div(math.complex(1.0), math.complex(24.0)));
     
 
 
     for (let id = 1; id < 20; id++) {
-        const qi = math.pow(q, toComplex(id));
-        p = math.multiply(p, math.subtract(toComplex(1.0), qi));
+        const qi = pow(q, math.complex(id));
+        p = mul(p, sub(math.complex(1.0), qi));
     }
 
     return p;
 }
 
 function einsteinseries(a, b) {
-    let fi = toComplex(0);
-    const limit = toComplex(5);
+    let fi = math.complex(0);
+    const limit = math.complex(5);
     
     for (let i = -limit; i < limit; i++) {
         for (let j = -limit; j < limit; j++) {
             if (i !== 0 || j !== 0) {
-                const denominator = pow(math.add(i,math.multiply(j ,b)), a);
+                const denominator = pow(add(i,mul(j ,b)), a);
                 if (denominator !== 0) {
-                    fi = math.add(fi, math.divide(toComplex(1), denominator));
+                    fi = add(fi, div(math.complex(1), denominator));
                 }
             }
         }
@@ -1989,33 +2010,40 @@ function einsteinseries(a, b) {
 
 // Fourier Einstein function
 function fouriereinstein(a, b) {
-    return math.multiply(einsteinseries(a, b), toComplex(2.0), ZZZ(a));
+    return mul(einsteinseries(a, b), math.complex(2.0), ZZZ(a));
 }
 
+
+function casin(x){return div(asin(x),x);}
+function cacos(x){return div(acos(x),x);}
+function catan(x){return div(atan(x),x);}
+function casec(x){return div(asec(x),x);}
+function cacsc(x){return div(acsc(x),x);}
+function cacot(x){return div(acot(x),x);}
 
 
 // Define ZZZ function based on your actual implementation
 function ZZZ(x) {
-        return math.multiply(math.divide(toComplex(1.0), math.subtract(toComplex(1.0), math.pow(toComplex(2.0), math.subtract(toComplex(1.0), x)))),dirichleteta(x));
+        return mul(div(math.complex(1.0), sub(math.complex(1.0), pow(math.complex(2.0), sub(math.complex(1.0), x)))),dirichleteta(x));
 }
 
 function laurentexpansion(a,c,z) {
-    let fi = toComplex(0);
+    let fi = math.complex(0);
     for (let i = 1; i < 30; i++) {
-        fi =  math.add(pow(math.multiply(math.subtract(z,c),a),toComplex(i)), fi);
+        fi =  add(pow(mul(sub(z,c),a),math.complex(i)), fi);
     }
 return fi;
 }
 
 // Dirichlet Character function
 function dirichletchar(a, b) {
-    return (abs(gcd(a, b)) === 1) ? toComplex(1.0) : toComplex(0.0);
+    return (abs(gcd(a, b)) === 1) ? math.complex(1.0) : math.complex(0.0);
 }
 function ncr(n, r) 
 { 
 	if(Number.isInteger(n)){return facti(n) / (facti(r) * facti(n - r))}; 
 
-    return math.divide(factorial(n) , math.multiply(factorial(r) , factorial(math.subtract(n , r)))); 
+    return div(factorial(n) , mul(factorial(r) , factorial(sub(n , r)))); 
 } 
 function npr(n, r) 
 { 
@@ -2023,7 +2051,7 @@ function npr(n, r)
         return facti(n) / facti(n - r);
     }
 
-    return math.divide(factorial(n), factorial(math.subtract(n, r)));
+    return div(factorial(n), factorial(sub(n, r)));
 }
 
 function fallingfactorial(n, r) 
@@ -2036,18 +2064,18 @@ function fallingfactorial(n, r)
         return result;
     }
 
-    // For non-integers, using math.js functions:
-    return math.divide(factorial(n), factorial(math.subtract(n, r)));
+    // For nonsub(0,i)ntegers, using math.js functions:
+    return div(factorial(n), factorial(sub(n, r)));
 }
 
 function pochhammer(x,n){
-	 return math.divide(gamma(math.add(n, x)),gamma(x));
+	 return div(gamma(add(n, x)),gamma(x));
 }
 function hankelsymbol(v,n){
-	 return math.divide(math.multiply(pow(-1,n),math.cos(math.multiply(pi(),v)),gamma(math.subtract(math.add(0.5,n), v)),gamma(math.add(m, v,0.5))),math.multiply(gamma(n),pi()));
+	 return div(mul(pow(-1,n),math.cos(mul(pi(),v)),gamma(sub(add(0.5,n), v)),gamma(add(m, v,0.5))),mul(gamma(n),pi()));
 }
 function krampsymbol(a,b,c){
-	 return math.divide(math.multiply(pow(b,a),gamma(math.add(a,math.divide(c,b)))),gamma(math.divide(c,b)));
+	 return div(mul(pow(b,a),gamma(add(a,div(c,b)))),gamma(div(c,b)));
 }
 
 // Returns factorial of n 
@@ -2062,32 +2090,32 @@ function facti(n)
 } 
 // Dirichlet Eta function
 function dirichleteta(b) {
-    let t = toComplex(0);
-    let fi = toComplex(0);
+    let t = math.complex(0);
+    let fi = math.complex(0);
     
     for (let i = 0; i < 15; i++) {
-        t = toComplex(0);
+        t = math.complex(0);
         for (let j = 0; j <= i; j++) {
-            t = math.add(t, math.multiply(ncr(i, j), math.divide(pow(-1.0, j), pow(j + 1.0, b))));
+            t = add(t, mul(ncr(i, j), div(pow(-1.0, j), pow(j + 1.0, b))));
         }
-        fi = math.add(fi, math.divide(t, pow(2.0, i + 1.0)));
+        fi = add(fi, div(t, pow(2.0, i + 1.0)));
     }
     
     return fi;
 }
 
 function dirichletbeta(b) {
-    b = toComplex(b); // Ensure b is complex
-    let fi = toComplex(0);
-    let mul = toComplex(1);
+    b = math.complex(b); // Ensure b is complex
+    let fi = math.complex(0);
+    let mul = math.complex(1);
 
     if (b.re <= 0.5) {
         // Calculate multiplication factor
-        const piHalf = math.divide(pi(), toComplex(2));
-        const bMinus1 = math.subtract( toComplex(1),b);
-        mul = math.multiply(
-            math.pow(piHalf, math.subtract(toComplex(0),bMinus1)),
-            math.sin(math.divide(math.multiply(pi(), bMinus1), toComplex(2))),
+        const piHalf = div(pi(), math.complex(2));
+        const bMinus1 = sub( math.complex(1),b);
+        mul = mul(
+            pow(piHalf, sub(math.complex(0),bMinus1)),
+            math.sin(div(mul(pi(), bMinus1), math.complex(2))),
             gamma(bMinus1),dirichletbeta(bMinus1)
         );
 
@@ -2097,11 +2125,11 @@ return mul;
 
     // Summation part
     for (let n = 0; n < bign; n++) {
-        fi = math.add(
+        fi = add(
             fi,
-            math.divide(
-                math.pow(-1, n),
-                math.pow(math.add(2 * n, 1), b)
+            div(
+                pow(-1, n),
+                pow(add(2 * n, 1), b)
             )
         );
     }
@@ -2112,108 +2140,113 @@ return mul;
 
 
 function gammad(t, z) {
-    return math.multiply(pow(t, math.subtract(z,toComplex(1)) ),math.exp(-t));
+    return mul(pow(t, sub(z,math.complex(1)) ),math.exp(-t));
 }
 function gamma(z) {
+	return math.gamma(z);
+		if(math.complex(z).re<0)return div(sub(0,pi()),mul(z,math.sin(mul(pi(),z)), integral(gammad,0,bign/4,sub(0,z))));
+
+	if(math.complex(z).re<1)return div(sub(pi(),0),mul(z,math.sin(mul(pi(),z)),gamma(sub(1,z))));
+return integral(gammad,0,bign/4,z);
 
     const complexZ = math.complex(z);
 
-    let fi = math.divide(math.exp(math.multiply(-0.577216, complexZ)), complexZ);
+    let fi = div(math.exp(mul(-0.577216, complexZ)), complexZ);
 
     for (let i = 1; i < bign; i++) {
-        let term = math.divide(complexZ, i);
-        fi = math.multiply(fi, math.divide(math.exp(term), math.add(1, term)));
+        let term = div(complexZ, i);
+        fi = mul(fi, div(math.exp(term), add(1, term)));
     }
 
     return fi;
 }
 
-function jacobiTheta1(z, q) {
+function jacobitheta1(z, q) {
     let fi = math.complex(0, 0);
     
     for (let n = 0; n < bign; n++) {
-        let term = math.multiply(
-            math.pow(-1, n),
-            math.pow(q, math.pow(n + 0.5, 2)),
-            math.sin(math.multiply(2 * n + 1, z))
+        let term = mul(
+            pow(-1, n),
+            pow(q, pow(n + 0.5, 2)),
+            math.sin(mul(2 * n + 1, z))
         );
-        fi = math.add(fi, term);
+        fi = add(fi, term);
     }
     
-    return math.multiply(fi, 2.0);
+    return mul(fi, 2.0);
 }
 
-// Define the jacobiTheta2 function
-function jacobiTheta2(z, q) {
+// Define the jacobitheta2 function
+function jacobitheta2(z, q) {
     let fi = math.complex(0, 0);
     
     for (let n = 0; n < bign; n++) {
-        let term = math.multiply(
-            math.pow(q, math.pow(n + 0.5, 2)),
-            math.cos(math.multiply(2 * n + 1, z))
+        let term = mul(
+            pow(q, pow(n + 0.5, 2)),
+            math.cos(mul(2 * n + 1, z))
         );
-        fi = math.add(fi, term);
+        fi = add(fi, term);
     }
     
-    return math.multiply(fi, 2.0);
+    return mul(fi, 2.0);
 }
 
-// Define the jacobiTheta3 function
-function jacobiTheta3(z, q) {
+// Define the jacobitheta3 function
+function jacobitheta3(z, q) {
     let fi = math.complex(1, 0);
     
     for (let n = 1; n < bign; n++) {
-        let term = math.multiply(
-            math.pow(q, n * n),
-            math.cos(math.multiply(2 * n, z))
+        let term = mul(
+            pow(q, n * n),
+            math.cos(mul(2 * n, z))
         );
-        fi = math.add(fi, term);
+        fi = add(fi, term);
     }
     
-    return math.multiply(fi, 2.0);
+    return mul(fi, 2.0);
 }
 
-// Define the jacobiTheta4 function
-function jacobiTheta4(z, q) {
+// Define the jacobitheta4 function
+function jacobitheta4(z, q) {
     let fi = math.complex(1, 0);
     
     for (let n = 1; n < bign; n++) {
-        let term = math.multiply(
-            math.pow(-1, n),
-            math.pow(q, n * n),
-            math.cos(math.multiply(2 * n, z))
+        let term = mul(
+            pow(-1, n),
+            pow(q, n * n),
+            math.cos(mul(2 * n, z))
         );
-        fi = math.add(fi, term);
+        fi = add(fi, term);
     }
     
-    return math.multiply(fi, 2.0);
+    return mul(fi, 2.0);
 }
 
 function jinvariant(z) {
     // Calculate a1 and a2
-    const a1 = math.pow(dedekindeta(z), 24.0);
-    const a2 = math.pow(dedekindeta(math.multiply(2.0, z)), 24.0);
+    const a1 = pow(dedekindeta(z), 24.0);
+    const a2 = pow(dedekindeta(mul(2.0, z)), 24.0);
     
     // Compute the final result
-    const numerator = math.pow(math.add(a1, math.multiply(256.0, a2)), 3.0);
-    const denominator = math.multiply(1728.0, math.pow(a1, 2.0), a2);
+    const numerator = pow(add(a1, mul(256.0, a2)), 3.0);
+    const denominator = mul(1728.0, pow(a1, 2.0), a2);
     
-    return math.divide(numerator, denominator);
+    return div(numerator, denominator);
 }
 function lemniscaten(b) {
-    return math.divide(
-        lemniscatem(math.multiply(math.complex(1.0, 1.0), b)),
-        math.multiply(math.complex(1.0, 1.0), lemniscatem( b))
+    return div(
+        lemniscatem(mul(math.complex(1.0, 1.0), b)),
+        mul(math.complex(1.0, 1.0), lemniscatem( b))
     );
 }
 
 function lemniscatem(b) {
-    let fi = toComplex(b);
+    let fi = math.complex(b);
     for (let i = 1; i < 5; i++) {
         for (let j = 0; j < 5; j++) {
-            const l = math.complex(math.multiply(2.62205755 , i), math.multiply(2.62205755 , j));
-            const term = math.divide(math.pow(b, 4), math.pow(l, 4));
-            fi = math.multiply(fi, math.subtract(toComplex(1.0), term));
+            const l = math.complex(mul(2.62205755 , i), mul(2.62205755 , j));
+            const term = div(pow(b, 4), pow(l, 4));
+            fi = mul(fi, sub(math.complex(1.0), term));
         }
     }
     return fi;
@@ -2221,83 +2254,83 @@ function lemniscatem(b) {
 
 
 function lemniscates(b) {
-    return math.subtract(
-        math.pow(lemniscaten(math.divide(b, math.complex(1.0, 1.0))), toComplex(2)),
-        math.multiply(math.complex(0, 1), math.pow(lemniscatem( math.divide(b, math.complex(1.0, 1.0))), toComplex(2)))
+    return sub(
+        pow(lemniscaten(div(b, math.complex(1.0, 1.0))), math.complex(2)),
+        mul(math.complex(0, 1), pow(lemniscatem( div(b, math.complex(1.0, 1.0))), math.complex(2)))
     );
 }
 
 function lemniscatet(a) {
-let b = math.multiply(a,math.complex(0,1));
+let b = mul(a,math.complex(0,1));
     return lemniscates(b);
 }
 
 
 
 function sl(a) {
-let b = math.subtract(1.311028775 , a);
+let b = sub(1.311028775 , a);
     const l1 = lemniscates(b);
     const l2 = lemniscatet(b);
-    return math.divide(l1, l2);
+    return div(l1, l2);
 }
 
 function cl(x) {
     const l1 = lemniscates(x);
     const l2 = lemniscatet(x);
-    return math.divide(l1, l2);
+    return div(l1, l2);
 }
 
 function lemniscatetan(b) {
-    return math.divide(
+    return div(
         sl(b),
         cl(b)
     );
 }
 
 function lemniscatecot(b) {
-    return math.divide(
+    return div(
         cl(b),
         sl(b)
     );
 }
 
 function lemniscatecsc(b) {
-  return math.divide(toComplex(1),sl(s));
+  return div(math.complex(1),sl(s));
 }
 
 function lemniscatesec(b) {
- return math.divide(toComplex(1),cl(s));
+ return div(math.complex(1),cl(s));
 }
 
 function tlh(b) {
-    const fisl = sl(math.divide(b, math.sqrt(2.0)));
-    const ficl = cl(math.divide(b, math.sqrt(2.0)));
-    return math.multiply(fisl, math.sqrt(math.divide(math.add(math.pow(ficl, 2), toComplex(1.0)), math.add(math.pow(fisl, 2), math.multiply(ficl, ficl)))));
+    const fisl = sl(div(b, math.sqrt(2.0)));
+    const ficl = cl(div(b, math.sqrt(2.0)));
+    return mul(fisl, math.sqrt(div(add(pow(ficl, 2), math.complex(1.0)), add(pow(fisl, 2), mul(ficl, ficl)))));
 }
 
 function ctlh(b) {
-    const fisl = sl(math.divide(b, math.sqrt(2.0)));
-    const ficl = cl(math.divide(b, math.sqrt(2.0)));
-    return math.multiply(ficl, math.sqrt(math.divide(math.add(math.pow(fisl, 2), toComplex(1.0)), math.add(math.pow(fisl, 2), math.multiply(ficl, ficl)))));
+    const fisl = sl(div(b, math.sqrt(2.0)));
+    const ficl = cl(div(b, math.sqrt(2.0)));
+    return mul(ficl, math.sqrt(div(add(pow(fisl, 2), math.complex(1.0)), add(pow(fisl, 2), mul(ficl, ficl)))));
 
    }
 
 function polygonal(a, b) {
-    return math.divide(
-        math.subtract(
-            math.multiply(math.subtract(a, toComplex(2.0)), math.pow(b, 2)),
-            math.multiply(math.subtract(a, toComplex(4.0)), b)
+    return div(
+        sub(
+            mul(sub(a, math.complex(2.0)), pow(b, 2)),
+            mul(sub(a, math.complex(4.0)), b)
         ),
-        toComplex(2.0)
+        math.complex(2.0)
     );
 }
 
 function antisidepolygonal(a, b) {
-    const term1 = math.multiply(toComplex(8.0), math.subtract(a, toComplex(2.0)));
-    const term2 = math.subtract(math.pow(b, 2), math.multiply(toComplex(4.0), b));
-    return math.divide(
-        math.add(math.sqrt(math.add(term1, term2)), math.subtract(a, toComplex(4.0))),
-        math.subtract(math.multiply(toComplex(2.0), a), toComplex(4.0))
+    const term1 = mul(math.complex(8.0), sub(a, math.complex(2.0)));
+    const term2 = sub(pow(b, 2), mul(math.complex(4.0), b));
+    return div(
+        add(math.sqrt(add(term1, term2)), sub(a, math.complex(4.0))),
+        sub(mul(math.complex(2.0), a), math.complex(4.0))
     );
 }
 
@@ -2306,415 +2339,415 @@ function antipolygonal(a, b) {
 }
 
 function centeredpolygonal(a, b) {
-    return math.add(
-        math.multiply(math.divide(a, toComplex(2.0)), math.multiply(b, math.subtract(b, toComplex(1.0)))),
-        toComplex(1.0)
+    return add(
+        mul(div(a, math.complex(2.0)), mul(b, sub(b, math.complex(1.0)))),
+        math.complex(1.0)
     );
 }
 
 function pyramidal(a, b) {
-    return math.divide(
-        math.add(
-            math.multiply(toComplex(3.0), math.pow(b, 2)),
-            math.add(
-                math.multiply(math.pow(b, 2), math.subtract(a, toComplex(2.0))),
-                math.subtract(math.multiply(toComplex(-1.0), b), math.subtract(a, toComplex(5.0)))
+    return div(
+        add(
+            mul(math.complex(3.0), pow(b, 2)),
+            add(
+                mul(pow(b, 2), sub(a, math.complex(2.0))),
+                sub(mul(math.complex(-1.0), b), sub(a, math.complex(5.0)))
             )
         ),
-        toComplex(6.0)
+        math.complex(6.0)
     );
 }
 
 function star(b) {
-    return math.add(
-        math.multiply(toComplex(6.0), math.multiply(b, math.subtract(b, toComplex(1.0)))),
-        toComplex(1.0)
+    return add(
+        mul(math.complex(6.0), mul(b, sub(b, math.complex(1.0)))),
+        math.complex(1.0)
     );
 }
 
 function starprime(b) {
-    let i = toComplex(0.0);
+    let i = math.complex(0.0);
     while (math.larger(math.abs(i), math.abs(b))) {
-        if (isPrime(math.add(math.multiply(toComplex(6.0), math.multiply(i, math.subtract(i, toComplex(1.0)))), toComplex(1.0)))) {
-            i = math.add(i, toComplex(1.0));
+        if (isPrime(add(mul(math.complex(6.0), mul(i, sub(i, math.complex(1.0)))), math.complex(1.0)))) {
+            i = add(i, math.complex(1.0));
         }
     }
     return i;
 }
 
 function superstarprime(b) {
-    let i = toComplex(0.0);
+    let i = math.complex(0.0);
     while (math.larger(math.abs(i), math.abs(b))) {
-        if (isPrime(math.add(math.multiply(toComplex(6.0), math.multiply(nthPrime(i), math.subtract(nthPrime(i), toComplex(1.0)))), toComplex(1.0)))) {
-            i = math.add(i, toComplex(1.0));
+        if (isPrime(add(mul(math.complex(6.0), mul(nthPrime(i), sub(nthPrime(i), math.complex(1.0)))), math.complex(1.0)))) {
+            i = add(i, math.complex(1.0));
         }
     }
     return i;
 }
 
 function reversesuperstar(b) {
-    return math.add(
-        math.multiply(toComplex(6.0), math.multiply(nthPrime(b), math.subtract(nthPrime(b), toComplex(1.0)))),
-        toComplex(1.0)
+    return add(
+        mul(math.complex(6.0), mul(nthPrime(b), sub(nthPrime(b), math.complex(1.0)))),
+        math.complex(1.0)
     );
 }
 
 function superballot(b) {
-    return math.divide(
-        math.multiply(toComplex(60.0), gamma(math.add(math.multiply(toComplex(2.0), b), toComplex(1.0)))),
-        math.multiply(gamma(math.add(b, toComplex(1.0))), gamma(math.add(b, toComplex(4.0))))
+    return div(
+        mul(math.complex(60.0), gamma(add(mul(math.complex(2.0), b), math.complex(1.0)))),
+        mul(gamma(add(b, math.complex(1.0))), gamma(add(b, math.complex(4.0))))
     );
 }
 
 function hauyoctahedral(b) {
-    return math.divide(
-        math.multiply(
-            math.subtract(math.multiply(toComplex(2.0), b), toComplex(1.0)),
-            math.subtract(math.multiply(toComplex(2.0), math.pow(b, 2)), math.add(math.multiply(toComplex(-2.0), b), toComplex(3.0)))
+    return div(
+        mul(
+            sub(mul(math.complex(2.0), b), math.complex(1.0)),
+            sub(mul(math.complex(2.0), pow(b, 2)), add(mul(math.complex(-2.0), b), math.complex(3.0)))
         ),
-        toComplex(3.0)
+        math.complex(3.0)
     );
 }
 
 function hauyrhombicdodecahedronal(b) {
-    return math.multiply(
-        math.subtract(math.multiply(toComplex(2.0), b), toComplex(1.0)),
-        math.subtract(math.multiply(toComplex(8.0), math.pow(b, 2)), math.add(math.multiply(toComplex(-14.0), b), toComplex(7.0)))
+    return mul(
+        sub(mul(math.complex(2.0), b), math.complex(1.0)),
+        sub(mul(math.complex(8.0), pow(b, 2)), add(mul(math.complex(-14.0), b), math.complex(7.0)))
     );
 }
 
 function hauysquarepyramid(b) {
-    return math.divide(
-        math.multiply(b, math.subtract(math.multiply(toComplex(4.0), math.pow(b, 2)), toComplex(1.0))),
-        toComplex(3.0)
+    return div(
+        mul(b, sub(mul(math.complex(4.0), pow(b, 2)), math.complex(1.0))),
+        math.complex(3.0)
     );
 }
 
 function octahedral(b) {
-    return math.divide(
-        math.multiply(b, math.add(math.multiply(toComplex(2.0), math.pow(b, 2)), toComplex(1.0))),
-        toComplex(3.0)
+    return div(
+        mul(b, add(mul(math.complex(2.0), pow(b, 2)), math.complex(1.0))),
+        math.complex(3.0)
     );
 }
 
 function pronic(b) {
-    return math.multiply(b, math.add(b, toComplex(1.0)));
+    return mul(b, add(b, math.complex(1.0)));
 }
 
 function biquadratic(b) {
-    return math.pow(b, 4);
+    return pow(b, 4);
 }
 
 function surfolide(b) {
-    return math.pow(b, 5);
+    return pow(b, 5);
 }
 
 function secondsurfolide(b) {
-    return math.pow(b, 7);
+    return pow(b, 7);
 }
 
 function thirdsurfolide(b) {
-    return math.pow(b, 11);
+    return pow(b, 11);
 }
 
 function fourthsurfolide(b) {
-    return math.pow(b, 13);
+    return pow(b, 13);
 }
 
 function fifthsurfolide(b) {
-    return math.pow(b, 17);
+    return pow(b, 17);
 }
 
 function sixthsurfolide(b) {
-    return math.pow(b, 19);
+    return pow(b, 19);
 }
 
 function seventhsurfolide(b) {
-    return math.pow(b, 23);
+    return pow(b, 23);
 }
 
 function nthsurfolide(b, a) {
-    return math.pow(b, nthPrime(a + 2.0));
+    return pow(b, nthPrime(a + 2.0));
 }
 
 function zenzicube(b) {
-    return math.pow(b, 6);
+    return pow(b, 6);
 }
 
 function cubicube(b) {
-    return math.pow(b, 9);
+    return pow(b, 9);
 }
 
 function zenzizenzizenzic(b) {
-    return math.pow(b, 8);
+    return pow(b, 8);
 }
 
 function zenzizenzicube(b) {
-    return math.pow(b, 12);
+    return pow(b, 12);
 }
 
 function zenzizenzizenzizenzic(b) {
-    return math.pow(b, 16);
+    return pow(b, 16);
 }
 
 function zenzicubicube(b) {
-    return math.pow(b, 18);
+    return pow(b, 18);
 }
 
 function zenzizenzizenzicube(b) {
-    return math.pow(b, 24);
+    return pow(b, 24);
 }
 
 function nthzenzic(b, a) {
-    return math.pow(b, math.pow(toComplex(2.0), a));
+    return pow(b, pow(math.complex(2.0), a));
 }
 
 function rhombicdodecahedronal(b) {
-    return math.multiply(
-        math.subtract(math.multiply(toComplex(2.0), b), toComplex(1.0)),
-        math.subtract(math.multiply(toComplex(2.0), math.pow(b, 2)), math.add(math.multiply(toComplex(-2.0), b), toComplex(1.0)))
+    return mul(
+        sub(mul(math.complex(2.0), b), math.complex(1.0)),
+        sub(mul(math.complex(2.0), pow(b, 2)), add(mul(math.complex(-2.0), b), math.complex(1.0)))
     );
 }
 
 function truncoctahedral(b) {
-    return math.add(
-        math.subtract(math.multiply(toComplex(16.0), math.pow(b, 3)), math.multiply(toComplex(33.0), math.pow(b, 2))),
-        math.add(math.multiply(toComplex(24.0), b), toComplex(-6.0))
+    return add(
+        sub(mul(math.complex(16.0), pow(b, 3)), mul(math.complex(33.0), pow(b, 2))),
+        add(mul(math.complex(24.0), b), math.complex(-6.0))
     );
 }
 
 function trunctetrahedral(b) {
-    return math.divide(
-        math.multiply(b, math.subtract(math.multiply(toComplex(23.0), math.pow(b, 2)), math.add(math.multiply(toComplex(-27.0), b), toComplex(10.0)))),
-        toComplex(6.0)
+    return div(
+        mul(b, sub(mul(math.complex(23.0), pow(b, 2)), add(mul(math.complex(-27.0), b), math.complex(10.0)))),
+        math.complex(6.0)
     );
 }
 
 function trigonal(b) {
-    return math.divide(math.multiply(b, math.subtract(b, toComplex(1.0))), toComplex(2.0));
+    return div(mul(b, sub(b, math.complex(1.0))), math.complex(2.0));
 }
 
 function pentagonal(b) {
-    return math.divide(
-        math.subtract(
-            math.multiply(math.subtract(toComplex(5.0), toComplex(2.0)), math.pow(b, 2)),
-            math.multiply(math.subtract(toComplex(5.0), toComplex(4.0)), b)
+    return div(
+        sub(
+            mul(sub(math.complex(5.0), math.complex(2.0)), pow(b, 2)),
+            mul(sub(math.complex(5.0), math.complex(4.0)), b)
         ),
-        toComplex(2.0)
+        math.complex(2.0)
     );
 }
 
 function hexagonal(b) {
-    return math.divide(
-        math.subtract(
-            math.multiply(math.subtract(toComplex(6.0), toComplex(2.0)), math.pow(b, 2)),
-            math.multiply(math.subtract(toComplex(6.0), toComplex(4.0)), b)
+    return div(
+        sub(
+            mul(sub(math.complex(6.0), math.complex(2.0)), pow(b, 2)),
+            mul(sub(math.complex(6.0), math.complex(4.0)), b)
         ),
-        toComplex(2.0)
+        math.complex(2.0)
     );
 }
 
 function septagonal(b) {
-    return math.divide(
-        math.subtract(
-            math.multiply(math.subtract(toComplex(7.0), toComplex(2.0)), math.pow(b, 2)),
-            math.multiply(math.subtract(toComplex(7.0), toComplex(4.0)), b)
+    return div(
+        sub(
+            mul(sub(math.complex(7.0), math.complex(2.0)), pow(b, 2)),
+            mul(sub(math.complex(7.0), math.complex(4.0)), b)
         ),
-        toComplex(2.0)
+        math.complex(2.0)
     );
 }
 
 function octagonal(b) {
-    return math.divide(
-        math.subtract(
-            math.multiply(math.subtract(toComplex(8.0), toComplex(2.0)), math.pow(b, 2)),
-            math.multiply(math.subtract(toComplex(8.0), toComplex(4.0)), b)
+    return div(
+        sub(
+            mul(sub(math.complex(8.0), math.complex(2.0)), pow(b, 2)),
+            mul(sub(math.complex(8.0), math.complex(4.0)), b)
         ),
-        toComplex(2.0)
+        math.complex(2.0)
     );
 }
 
 function nonagonal(b) {
-    return math.divide(
-        math.subtract(
-            math.multiply(math.subtract(toComplex(9.0), toComplex(2.0)), math.pow(b, 2)),
-            math.multiply(math.subtract(toComplex(9.0), toComplex(4.0)), b)
+    return div(
+        sub(
+            mul(sub(math.complex(9.0), math.complex(2.0)), pow(b, 2)),
+            mul(sub(math.complex(9.0), math.complex(4.0)), b)
         ),
-        toComplex(2.0)
+        math.complex(2.0)
     );
 }
 
 function decaagonal(b) {
-    return math.divide(
-        math.subtract(
-            math.multiply(math.subtract(toComplex(12.0), toComplex(2.0)), math.pow(b, 2)),
-            math.multiply(math.subtract(toComplex(10.0), toComplex(4.0)), b)
+    return div(
+        sub(
+            mul(sub(math.complex(12.0), math.complex(2.0)), pow(b, 2)),
+            mul(sub(math.complex(10.0), math.complex(4.0)), b)
         ),
-        toComplex(2.0)
+        math.complex(2.0)
     );
 }
 
 function dodecagonalgonal(b) {
-    return math.divide(
-        math.subtract(
-            math.multiply(math.subtract(toComplex(12.0), toComplex(2.0)), math.pow(b, 2)),
-            math.multiply(math.subtract(toComplex(12.0), toComplex(4.0)), b)
+    return div(
+        sub(
+            mul(sub(math.complex(12.0), math.complex(2.0)), pow(b, 2)),
+            mul(sub(math.complex(12.0), math.complex(4.0)), b)
         ),
-        toComplex(2.0)
+        math.complex(2.0)
     );
 }
 
 function icosagonal(b) {
-    return math.divide(
-        math.subtract(
-            math.multiply(math.subtract(toComplex(20.0), toComplex(2.0)), math.pow(b, 2)),
-            math.multiply(math.subtract(toComplex(20.0), toComplex(4.0)), b)
+    return div(
+        sub(
+            mul(sub(math.complex(20.0), math.complex(2.0)), pow(b, 2)),
+            mul(sub(math.complex(20.0), math.complex(4.0)), b)
         ),
-        toComplex(2.0)
+        math.complex(2.0)
     );
 }
 
 function myriagonal(b) {
-    return math.divide(
-        math.subtract(
-            math.multiply(math.subtract(toComplex(10000.0), toComplex(2.0)), math.pow(b, 2)),
-            math.multiply(math.subtract(toComplex(10000.0), toComplex(4.0)), b)
+    return div(
+        sub(
+            mul(sub(math.complex(10000.0), math.complex(2.0)), pow(b, 2)),
+            mul(sub(math.complex(10000.0), math.complex(4.0)), b)
         ),
-        toComplex(2.0)
+        math.complex(2.0)
     );
 }
 
 // Simplex and Higher Dimensional Functions
 function tetrahedral(b) {
-    return ncr(math.add(b, toComplex(2.0)), toComplex(3.0));
+    return ncr(add(b, math.complex(2.0)), math.complex(3.0));
 }
 
 function pentachoric(b) {
-    return ncr(math.add(b, toComplex(3.0)), toComplex(4.0));
+    return ncr(add(b, math.complex(3.0)), math.complex(4.0));
 }
 
 function simplex(b, a) {
-    return ncr(math.add(b, a, toComplex(-1.0)), a);
+    return ncr(add(b, a, math.complex(-1.0)), a);
 }
 
 // Gnomon Function
 function gnomon(b) {
-    return math.add(math.multiply(toComplex(2.0), b), toComplex(1.0));
+    return add(mul(math.complex(2.0), b), math.complex(1.0));
 }
 
 const PI = math.pi;
 
 // Barnes-G Function
 function barnesg(b) {
-    const aggs = math.multiply(pow(2.0 * PI, math.divide(b, 2.0)),  math.exp(math.multiply(-1, math.divide(math.add(b, math.multiply(b, math.add(b, 0.5772156649))), 2.0))));
-    let aggt = toComplex(1, 0);
+    const aggs = mul(pow(2.0 * PI, div(b, 2.0)),  math.exp(mul(-1, div(add(b, mul(b, add(b, 0.5772156649))), 2.0))));
+    let aggt = math.complex(1, 0);
 
     for (let k = 1; k < bign; k++) {
-        aggt = math.multiply(aggt, math.multiply(pow(math.add(1.0 , math.divide(b,k)), k), math.exp(math.subtract(math.divide(math.pow(b, 2), math.multiply(2,k)), b))));
+        aggt = mul(aggt, mul(pow(add(1.0 , div(b,k)), k), math.exp(sub(div(pow(b, 2), mul(2,k)), b))));
     }
 
-    return math.multiply(aggs, aggt);
+    return mul(aggs, aggt);
 }
 
 // K-function (Corrected)
 function kfunc(b) {
-    const aggs = math.multiply(pow(2.0 * PI, math.divide(b, 2.0)), math.exp(math.multiply(-1, math.divide(math.add(b, math.multiply(b, math.add(b, 0.5772156649))), 2.0))));
-    let aggt = toComplex(1, 0);
+    const aggs = mul(pow(2.0 * PI, div(b, 2.0)), math.exp(mul(-1, div(add(b, mul(b, add(b, 0.5772156649))), 2.0))));
+    let aggt = math.complex(1, 0);
 
     for (let k = 1; k < bign; k++) {
-        aggt = math.multiply(aggt, math.multiply(pow(math.add(1.0 , math.divide(b,k)), k), math.exp(math.subtract(math.divide(math.pow(b, 2),math.multiply(2,k)), b))));
+        aggt = mul(aggt, mul(pow(add(1.0 , div(b,k)), k), math.exp(sub(div(pow(b, 2),mul(2,k)), b))));
     }
 
-    return math.divide(math.pow(gamma(b), math.subtract(b, 1.0)), math.multiply(aggs, aggt));
+    return div(pow(gamma(b), sub(b, 1.0)), mul(aggs, aggt));
 }
 
 // Beta Function
 function beta(a, b) {
-    return math.divide(math.multiply(gamma(a), gamma(b)), gamma(a + b));
+    return div(mul(gamma(a), gamma(b)), gamma(a + b));
 }
 
 // Pi number Functiondigamma(x)
 function pin(b) {
-    return math.divide(math.pow(gamma(math.divide(1, b)), toComplex(2)), gamma(math.add(math.divide(1, b), math.divide(1, b))));
+    return div(pow(gamma(div(1, b)), math.complex(2)), gamma(add(div(1, b), div(1, b))));
 }
 
 // Digamma Function (Approximation)
 function digamma(b, epsilon=1e-5) {
     const m1 = math.log(gamma(b));
-    const m2 = math.log(gamma(math.add(b , epsilon)));
-    return math.multiply(math.divide(math.subtract(m2, m1), epsilon), 1.0);
+    const m2 = math.log(gamma(add(b , epsilon)));
+    return mul(div(sub(m2, m1), epsilon), 1.0);
 }
 
 // Trigamma Function (Approximation)
 function trigamma(b, epsilon=1e-5) {
     const m1 = math.log(gamma(b));
-    const m2 = math.log(gamma(math.add(b , epsilon)));
-    const m3 = math.log(gamma(math.add(math.add(b , epsilon) , epsilon)));
-    return math.divide(math.subtract(math.subtract(m2, m1), math.subtract(m3, m2)), epsilon*epsilon);
+    const m2 = math.log(gamma(add(b , epsilon)));
+    const m3 = math.log(gamma(add(add(b , epsilon) , epsilon)));
+    return div(sub(sub(m2, m1), sub(m3, m2)), epsilon*epsilon);
 }
 function ellipticModulus(a, b) {
-    return pow(math.divide(jacobiTheta2(a, b) , jacobiTheta1(a, b)), toComplex(2));
+    return pow(div(jacobitheta2(a, b) , jacobitheta1(a, b)), math.complex(2));
 }
 
 function compEllipticModulus(a, b) {
-    return pow(math.divide(jacobiTheta4(a, b) , jacobiTheta1(a, b)), toComplex(2));
+    return pow(div(jacobitheta4(a, b) , jacobitheta1(a, b)), math.complex(2));
 }
 
 function ellipticLambda(a, b) {
-    return pow(math.divide(jacobiTheta2(a, b) , jacobiTheta3(a, b)), toComplex(4));
+    return pow(div(jacobitheta2(a, b) , jacobitheta3(a, b)), math.complex(4));
 }
 
 function g2(b) {
-    return math.multiply(60.0, einsteinseries(toComplex(4), b));
+    return mul(60.0, einsteinseries(math.complex(4), b));
 }
 
 function g3(b) {
-    return math.multiply(140.0, einsteinseries(toComplex(6), b));
+    return mul(140.0, einsteinseries(math.complex(6), b));
 }
 
 function picardFuchsJ(b) {
     const g2Val = g2(b);
     const g3Val = g3(b);
-    return math.divide(pow(g2Val, toComplex(3)), (pow(g2Val, toComplex(3)) - math.multiply(27.0, pow(g3Val, toComplex(2)))));
+    return div(pow(g2Val, math.complex(3)), (pow(g2Val, math.complex(3)) - mul(27.0, pow(g3Val, math.complex(2)))));
 }
 
 function ellipticDiscriminant(b) {
     const g2Val = g2(b);
     const g3Val = g3(b);
-    return math.subtract(pow(g2Val, toComplex(3)), math.multiply(27.0, pow(g3Val, toComplex(2))));
+    return sub(pow(g2Val, math.complex(3)), mul(27.0, pow(g3Val, math.complex(2))));
 }
 
 function ellipticLambdaStar(a, b) {
-    return pow(math.divide(jacobiTheta2(a, b), jacobiTheta3(a, b )), toComplex(2));
+    return pow(div(jacobitheta2(a, b), jacobitheta3(a, b )), math.complex(2));
 }
 function ci(b) {
-    return math.multiply(-1.0, integral(cosc, b, bign));
+    return mul(-1.0, integral(cosc, b, bign));
 }
 
 function nielsenci(a, b) {
-    return math.multiply(-a, integral(cosc, b, bign));
+    return mul(sub(0,a), integral(cosc, b, bign));
 }
 
 function si(b) {
-    return math.multiply(-1.0, integral(sinc, 0, b));
+    return mul(-1.0, integral(sinc, 0, b));
 }
 
 function nielsensi(a, b) {
-    return math.multiply(-a, integral(sinc, 0, b));
+    return mul(sub(0,a), integral(sinc, 0, b));
 }
 
 function triintgauxf(b) {
     const integral_cosc = integral(cosc, b, bign);
     const integral_sinc = integral(sinc, 0, b);
-    return math.add(
-        math.multiply(
-            math.multiply(-1.0, integral_cosc),
+    return add(
+        mul(
+            mul(-1.0, integral_cosc),
             math.sin(b)
         ),
-        math.multiply(
-            math.subtract(
-                math.divide(math.PI, 2.0),
-                math.multiply(-1.0, integral_sinc)
+        mul(
+            sub(
+                div(math.PI, 2.0),
+                mul(-1.0, integral_sinc)
             ),
             math.cos(b)
         )
@@ -2728,27 +2761,27 @@ function lnsec(x,n=1){return pow(math.log(math.sec(x)),n);}
 function lncot(x,n=1){return pow(math.log(math.cot(x)),n);}
 function lncsc(x,n=1){return pow(math.log(math.csc(x)),n);}
 
-function logsin(x){return integral(lnsin,math.complex(0,0),math.divide(pi(),2),x);}
-function logcos(x){return integral(lncos,math.complex(0,0),math.divide(pi(),2),x);}
-function logtan(x){return integral(lntan,math.complex(0,0),math.divide(pi(),2),x);}
-function logsec(x){return integral(lnsec,math.complex(0,0),math.divide(pi(),2),x);}
-function logcsc(x){return integral(lncsc,math.complex(0,0),math.divide(pi(),2),x);}
-function logcot(x){return integral(lncot,math.complex(0,0),math.divide(pi(),2),x);}
+function logsin(x){return integral(lnsin,math.complex(0,0),div(pi(),2),x);}
+function logcos(x){return integral(lncos,math.complex(0,0),div(pi(),2),x);}
+function logtan(x){return integral(lntan,math.complex(0,0),div(pi(),2),x);}
+function logsec(x){return integral(lnsec,math.complex(0,0),div(pi(),2),x);}
+function logcsc(x){return integral(lncsc,math.complex(0,0),div(pi(),2),x);}
+function logcot(x){return integral(lncot,math.complex(0,0),div(pi(),2),x);}
 
 
 
 function triintgauxg(b) {
     const integral_cosc = integral(cosc, b, bign);
     const integral_sinc = integral(sinc, 0, b);
-    return math.add(
-        math.multiply(
-            math.multiply(-1.0, integral_cosc),
+    return add(
+        mul(
+            mul(-1.0, integral_cosc),
             math.cos(b)
         ),
-        math.multiply(
-            math.subtract(
-                math.divide(math.PI, 2.0),
-                math.multiply(-1.0, integral_sinc)
+        mul(
+            sub(
+                div(math.PI, 2.0),
+                mul(-1.0, integral_sinc)
             ),
             math.sin(b)
         )
@@ -2760,34 +2793,34 @@ function ein(b) {
     return integral(expein, 0, b);
 }
 function ssi(b) {
-    return math.multiply(-1.0, integral(sinhc, 0, b));
+    return mul(-1.0, integral(sinhc, 0, b));
 }
 
 function shi(b) {
-    return math.multiply(-1.0, integral(sind, 0, b));
+    return mul(-1.0, integral(sind, 0, b));
 }
-function rec(b){return math.divide(1,b);}
+function rec(b){return div(1,b);}
 function chi(b) {
-    return math.add(
+    return add(
         0.5772156649,
-        math.subtract(
-            math.multiply(log(b), integral(coshc, 0, b)),
+        sub(
+            mul(log(b), integral(coshc, 0, b)),
             integral(rec, 0, b)
         )
     );
 }
 function expcp(t,nx){
-	//return math.multiply(math.exp(math.divide(math.subtract(0,nx[1]),t)),pow(t,math.subtract(nx[0],2)));
-	return math.divide(math.exp(math.multiply(-1,nx[1],t)),pow(t,nx[0]))
+	//return mul(math.exp(div(sub(0,nx[1]),t)),pow(t,sub(nx[0],2)));
+	return div(math.exp(mul(-1,nx[1],t)),pow(t,nx[0]))
 }
 function en(n,b){
-	//let fi=math.multiply(pow(b,math.subtract(n,1)),gamma(math.subtract(1,n)));
+	//let fi=mul(pow(b,sub(n,1)),gamma(sub(1,n)));
 	//for(let i=0;i<math.complex(n).re)
 	//return integral(expcp, 0, 1, [n,b]);
 	return integral(expcp, 1, bign, [n,b]);
 }
 function ei(b) {
-    return integral(expc, -bign, b);
+    return integral(expc, sub(0,bign), b);
 }
 function fresnelc(b) {
     return integral(cossqr, 0, b);
@@ -2800,21 +2833,21 @@ function fresnels(b) {
 function fresnelt(b) {
     const sinsqrIntegral = integral(sinsqr, 0, b);
     const cossqrIntegral = integral(cossqr, 0, b);
-    return math.divide(sinsqrIntegral, cossqrIntegral);
+    return div(sinsqrIntegral, cossqrIntegral);
 }
 
 function fresnelct(b) {
     const cossqrIntegral = integral(cossqr, 0, b);
     const sinsqrIntegral = integral(sinsqr, 0, b);
-    return math.divide(cossqrIntegral, sinsqrIntegral);
+    return div(cossqrIntegral, sinsqrIntegral);
 }
 
 function fresnelsc(b) {
-    return math.divide(1.0, integral(cossqr, 0, b));
+    return div(1.0, integral(cossqr, 0, b));
 }
 
 function fresnelcs(b) {
-    return math.divide(1.0, integral(sinsqr, 0, b));
+    return div(1.0, integral(sinsqr, 0, b));
 }
 
 function gudermannian(b) {
@@ -2826,7 +2859,7 @@ function gudermanniani(b) {
 }
 let gcei1d = 0;
 function compellint1d(a) {
-return math.divide(1.0,math.sqrt(math.multiply(math.subtract(1.0,math.multiply(a,a)),math.subtract(1.0,math.multiply(math.multiply(a,a),math.multiply(gcei1d,gcei1d)))))) ;
+return div(1.0,math.sqrt(mul(sub(1.0,mul(a,a)),sub(1.0,mul(mul(a,a),mul(gcei1d,gcei1d)))))) ;
 }
 function compellint1(a) {
 gcei1d=a;
@@ -2835,19 +2868,19 @@ gcei1d=a;
 }
 function nevthetc(a, b) {
     const K = compellint1(b);
-    const Kp = compellint1(math.sqrt(math.subtract(1, math.pow(b, 2))));
-        const Q = math.exp(math.multiply(math.complex(-math.pi), math.divide(Kp, K)));
+    const Kp = compellint1(math.sqrt(sub(1, pow(b, 2))));
+        const Q = math.exp(mul(math.complex(-math.pi), div(Kp, K)));
 
     let fi = math.complex(0);
 
     for (let i = 0; i < bign; i++) {
-        const term = math.multiply(math.pow(Q, math.multiply(i, math.add(i, 1)))
-            ,math.cos(math.divide(math.multiply(math.pi, a ,toComplex(2*i+1)), math.multiply(2, K))));
-        fi = math.add(fi, term);
+        const term = mul(pow(Q, mul(i, add(i, 1)))
+            ,math.cos(div(mul(math.pi, a ,math.complex(2*i+1)), mul(2, K))));
+        fi = add(fi, term);
     }
 
-    return math.multiply(
-        math.divide(math.sqrt(math.multiply(2, math.pi)), math.multiply(math.sqrt(K), math.pow(b, math.complex(0.25)))),
+    return mul(
+        div(math.sqrt(mul(2, math.pi)), mul(math.sqrt(K), pow(b, math.complex(0.25)))),
         fi
     );
 }
@@ -2855,64 +2888,64 @@ function nevthetc(a, b) {
 // nevthetd function
 function nevthetd(a, b) {
     const K = compellint1(b);
-    const Kp = compellint1(math.sqrt(math.subtract(1, math.pow(b, 2))));
-        const Q = math.exp(math.multiply(math.complex(-math.pi), math.divide(Kp, K)));
+    const Kp = compellint1(math.sqrt(sub(1, pow(b, 2))));
+        const Q = math.exp(mul(math.complex(-math.pi), div(Kp, K)));
 
     let fi = math.complex(0);
 
     for (let i = 1; i < bign; i++) {
-        const term = math.multiply(math.pow(Q, math.multiply(i, i))
-            ,(math.cos(math.divide(math.multiply(math.pi, a, toComplex(i)), K))));
-        fi = math.add(fi, term);
+        const term = mul(pow(Q, mul(i, i))
+            ,(math.cos(div(mul(math.pi, a, math.complex(i)), K))));
+        fi = add(fi, term);
     }
 
-    return math.multiply(
-        math.divide(math.sqrt(math.multiply(2, math.pi)), math.multiply(2, math.sqrt(K))),
-        math.add(math.complex(1), math.multiply(math.complex(2), fi))
+    return mul(
+        div(math.sqrt(mul(2, math.pi)), mul(2, math.sqrt(K))),
+        add(math.complex(1), mul(math.complex(2), fi))
     );
 }
 
 // nevthetn function
 function nevthetn(a, b) {
     const K = compellint1(b);
-    const Kp = compellint1(math.sqrt(math.subtract(1, math.pow(b, 2))));
-      const Q = math.exp(math.multiply(math.complex(-math.pi), math.divide(Kp, K)));
+    const Kp = compellint1(math.sqrt(sub(1, pow(b, 2))));
+      const Q = math.exp(mul(math.complex(-math.pi), div(Kp, K)));
 
     let fi = math.complex(0);
 
     for (let i = 1; i < bign; i++) {
-        const term = math.multiply(math.pow(math.complex(-1), i)
-            ,(math.pow(Q, math.multiply(i, i)))
-            ,(math.cos(math.divide(math.multiply(math.pi, a , toComplex(i)), K))));
-        fi = math.add(fi, term);
+        const term = mul(pow(math.complex(-1), i)
+            ,(pow(Q, mul(i, i)))
+            ,(math.cos(div(mul(math.pi, a , math.complex(i)), K))));
+        fi = add(fi, term);
     }
 
-    return math.multiply(
-        math.divide(math.sqrt(math.multiply(2, math.pi)), math.multiply(math.sqrt(K), math.pow(math.subtract(1, b), math.complex(0.25)))),
-        math.add(math.complex(1), math.multiply(math.complex(2), fi))
+    return mul(
+        div(math.sqrt(mul(2, math.pi)), mul(math.sqrt(K), pow(sub(1, b), math.complex(0.25)))),
+        add(math.complex(1), mul(math.complex(2), fi))
     );
 }
 
 // nevthets function
 function nevthets(a, b) {
     const K = compellint1(b);
-    const Kp = compellint1(math.sqrt(math.subtract(1, math.pow(b, 2))));
-    const Q = math.exp(math.multiply(math.complex(-1), math.divide(math.pi, Kp)));
+    const Kp = compellint1(math.sqrt(sub(1, pow(b, 2))));
+    const Q = math.exp(mul(math.complex(-1), div(math.pi, Kp)));
     let fi = math.complex(0);
 
     for (let i = 0; i < bign; i++) {
-        const term = math.multiply(math.pow(math.complex(-1), i)
-            ,(math.pow(Q, math.multiply(i, math.add(i, 1))))
-            ,(math.sin(math.divide(math.multiply(math.pi, a,toComplex(2*i+1)), math.multiply(2, K)))));
-        fi = math.add(fi, term);
+        const term = mul(pow(math.complex(-1), i)
+            ,(pow(Q, mul(i, add(i, 1))))
+            ,(math.sin(div(mul(math.pi, a,math.complex(2*i+1)), mul(2, K)))));
+        fi = add(fi, term);
     }
 
-    return math.multiply(
-        math.divide(
-            math.multiply(math.sqrt(math.multiply(2, math.pi)), math.pow(Q, math.complex(0.25))),
-            math.divide(
+    return mul(
+        div(
+            mul(math.sqrt(mul(2, math.pi)), pow(Q, math.complex(0.25))),
+            div(
                 math.sqrt(K),
-                math.multiply(math.pow(math.subtract(1, b), math.complex(0.25)), math.pow(b, math.complex(0.25)))
+                mul(pow(sub(1, b), math.complex(0.25)), pow(b, math.complex(0.25)))
             )
         ),
         fi
@@ -2924,121 +2957,121 @@ function cc(a, b) {
 
 // cs
 function cs(a, b) {
-    return math.divide(nevthetc(a, b), nevthetd(a, b));
+    return div(nevthetc(a, b), nevthetd(a, b));
 }
 
 // cn
 function cn(a, b) {
-    return math.divide(nevthetc(a, b), nevthetn(a, b));
+    return div(nevthetc(a, b), nevthetn(a, b));
 }
 
 // cd
 function cd(a, b) {
-    return math.divide(nevthetc(a, b), nevthetd(a, b));
+    return div(nevthetc(a, b), nevthetd(a, b));
 }
 
 // sc
 function sc(a, b) {
-    return math.divide(nevthetd(a, b), nevthetc(a, b));
+    return div(nevthetd(a, b), nevthetc(a, b));
 }
 
 // ss
 function ss(a, b) {
-    return math.divide(nevthetd(a, b), nevthetd(a, b));
+    return div(nevthetd(a, b), nevthetd(a, b));
 }
 
 // sn
 function sn(a, b) {
-    return math.divide(nevthetd(a, b), nevthetn(a, b));
+    return div(nevthetd(a, b), nevthetn(a, b));
 }
 
 // sd
 function sd(a, b) {
-    return math.divide(nevthetd(a, b), nevthetd(a, b));
+    return div(nevthetd(a, b), nevthetd(a, b));
 }
 
 // nc
 function nc(a, b) {
-    return math.divide(nevthetn(a, b), nevthetc(a, b));
+    return div(nevthetn(a, b), nevthetc(a, b));
 }
 
 // ns
 function ns(a, b) {
-    return math.divide(nevthetn(a, b), nevthetd(a, b));
+    return div(nevthetn(a, b), nevthetd(a, b));
 }
 
 // nn
 function nn(a, b) {
-    return math.divide(nevthetn(a, b), nevthetn(a, b));
+    return div(nevthetn(a, b), nevthetn(a, b));
 }
 
 // nd
 function nd(a, b) {
-    return math.divide(nevthetn(a, b), nevthetd(a, b));
+    return div(nevthetn(a, b), nevthetd(a, b));
 }
 
 // dc
 function dc(a, b) {
-    return math.divide(nevthets(a, b), nevthetc(a, b));
+    return div(nevthets(a, b), nevthetc(a, b));
 }
 
 // ds
 function ds(a, b) {
-    return math.divide(nevthets(a, b), nevthetd(a, b));
+    return div(nevthets(a, b), nevthetd(a, b));
 }
 
 // dn
 function dn(a, b) {
-    return math.divide(nevthets(a, b), nevthetn(a, b));
+    return div(nevthets(a, b), nevthetn(a, b));
 }
 
 // dd
 function dd(a, b) {
-    return math.divide(nevthets(a, b), nevthetd(a, b));
+    return div(nevthets(a, b), nevthetd(a, b));
 }
 
 
 function lacunary(a,b) {
-    let fi = toComplex(0.0);
+    let fi = math.complex(0.0);
     for (let i = 0; i < bign; i++) {
-        fi = math.add(fi, math.pow(b, math.pow(toComplex(a), i)));
+        fi = add(fi, pow(b, pow(math.complex(a), i)));
     }
     return fi;
 }
 
 // Updated functions
 function weberf(b) {
-    return math.divide(
-        math.pow(dedekindeta(b), 2),
-        math.multiply(dedekindeta(math.divide(b, toComplex(2.0))), dedekindeta(math.multiply(toComplex(2.0), b)))
+    return div(
+        pow(dedekindeta(b), 2),
+        mul(dedekindeta(div(b, math.complex(2.0))), dedekindeta(mul(math.complex(2.0), b)))
     );
 }
 
 function weberf1(b) {
-    return math.divide(
-        dedekindeta(math.divide(b, toComplex(2.0))),
+    return div(
+        dedekindeta(div(b, math.complex(2.0))),
         dedekindeta(b)
     );
 }
 
 function weberf2(b) {
-    return math.divide(
-        math.multiply(math.sqrt(toComplex(2.0)), dedekindeta(math.multiply(toComplex(2.0), b))),
+    return div(
+        mul(math.sqrt(math.complex(2.0)), dedekindeta(mul(math.complex(2.0), b))),
         dedekindeta(b)
     );
 }
 
 function weberr(a,b) {
-    return math.divide(
-        math.multiply(math.pow(toComplex(2.0), math.divide(math.subtract(a,toComplex(1.0)), toComplex(4.0))), qpocinf(math.pow(b, toComplex(a)), math.pow(b, math.multiply(toComplex(a), toComplex(2.0))), bign)),
-        math.pow(qpocinf(b, math.pow(b, 2), bign), toComplex(a))
+    return div(
+        mul(pow(math.complex(2.0), div(sub(a,math.complex(1.0)), math.complex(4.0))), qpocinf(pow(b, math.complex(a)), pow(b, mul(math.complex(a), math.complex(2.0))), bign)),
+        pow(qpocinf(b, pow(b, 2), bign), math.complex(a))
     );
 }
 
 function weberr5(a,b) {
-    return math.divide(
-        math.multiply(math.pow(toComplex(2.0), math.divide(math.subtract(toComplex(5.0),toComplex(1.0)), toComplex(4.0))), qpocinf(math.pow(b, toComplex(a)), math.pow(b, toComplex(10.0)), bign)),
-        math.pow(qpocinf(b, math.pow(b, 2), bign), toComplex(5))
+    return div(
+        mul(pow(math.complex(2.0), div(sub(math.complex(5.0),math.complex(1.0)), math.complex(4.0))), qpocinf(pow(b, math.complex(a)), pow(b, math.complex(10.0)), bign)),
+        pow(qpocinf(b, pow(b, 2), bign), math.complex(5))
     );
 }
 function todoub(x) {
@@ -3047,16 +3080,16 @@ function todoub(x) {
 
 function qnum(a, b) {
     if (math.equal(b, math.complex(1.0, 0))) return a;
-    return math.divide(
-        math.subtract(math.complex(1.0, 0), pow(b, a)),
-        math.subtract(math.complex(1.0, 0), b)
+    return div(
+        sub(math.complex(1.0, 0), pow(b, a)),
+        sub(math.complex(1.0, 0), b)
     );
 }
 
 function qfac(n, q) {
     let fi = math.complex(1.0, 0);
     for (let i = 1; i <= todoub(n); i++) {
-        fi = math.multiply(fi, qnum(math.complex(i, 0), q));
+        fi = mul(fi, qnum(math.complex(i, 0), q));
     }
     return fi;
 }
@@ -3064,7 +3097,7 @@ function qfac(n, q) {
 function qpocinf(a, q) {
     let fi = math.complex(1.0, 0);
     for (let i = 0; i < bign; i++) {
-        fi = math.multiply(fi, math.subtract(math.complex(1.0, 0), math.multiply(a, pow(q, i))));
+        fi = mul(fi, sub(math.complex(1.0, 0), mul(a, pow(q, i))));
     }
     return fi;
 }
@@ -3072,7 +3105,7 @@ function qpocinf(a, q) {
 function qexp(q, n) {
     let fi = math.complex(0, 0);
     for (let i = 0; i < bign; i++) {
-        fi = math.add(fi, math.divide(pow(n, i), qfac(math.complex(i, 0), q)));
+        fi = add(fi, div(pow(n, i), qfac(math.complex(i, 0), q)));
     }
     return fi;
 }
@@ -3080,7 +3113,7 @@ function qexp(q, n) {
 function dqexp(q, n) {
     let fi = math.complex(0, 0);
     for (let i = 0; i < bign; i++) {
-        fi = math.add(fi, math.divide(pow(n, i), qfac(math.complex(i, 0), q)));
+        fi = add(fi, div(pow(n, i), qfac(math.complex(i, 0), q)));
     }
     return fi;
 }
@@ -3089,14 +3122,14 @@ function qpoch(a, q, k) {
     let fi = math.complex(1.0, 0);
     if (todoub(k) > 0) {
         for (let i = 0; i <= todoub(k) - 1.0; i++) {
-            fi = math.multiply(fi, math.subtract(math.complex(1.0, 0), math.multiply(a, pow(q, i))));
+            fi = mul(fi, sub(math.complex(1.0, 0), mul(a, pow(q, i))));
         }
         return fi;
     }
     if (todoub(k) === 0) return math.complex(0, 0);
     if (todoub(k) < 0) {
         for (let i = 1; i <= math.abs(todoub(k)); i++) {
-            fi = math.multiply(fi, math.divide(math.complex(1.0, 0), math.subtract(math.complex(1.0, 0), math.multiply(a, pow(q, -i)))));
+            fi = mul(fi, div(math.complex(1.0, 0), sub(math.complex(1.0, 0), mul(a, pow(q, sub(0,i))))));
         }
         return fi;
     }
@@ -3108,80 +3141,107 @@ bign = x;
 return 0;
 }
 function clausencos(a,b) {
-    let fi = toComplex(0);
+    let fi = math.complex(0);
     for (let i = 1; i < bign; i++) {
-        fi = math.add(fi, math.divide(math.cos(math.multiply(b,i)), math.pow(i, toComplex(a))));
+        fi = add(fi, div(math.cos(mul(b,i)), pow(i, math.complex(a))));
     }
     return fi;
 }
 
 function clausensin(a,b) {
-    let fi = toComplex(0);
+    let fi = math.complex(0);
     for (let i = 1; i < bign; i++) {
-        fi = math.add(fi, math.divide(math.sin(math.multiply(b,i)), math.pow(i, toComplex(a))));
+        fi = add(fi, div(math.sin(mul(b,i)), pow(i, math.complex(a))));
     }
     return fi;
 }
 
 function legendrechi(a,b) {
-    let fi = toComplex(0);
+    let fi = math.complex(0);
     for (let i = 0; i < bign; i++) {
-        fi = math.add(fi, math.divide(math.pow(b, toComplex(2 * i + 1)), math.pow(2 * i + 1, toComplex(a))));
+        fi = add(fi, div(pow(b, math.complex(2 * i + 1)), pow(2 * i + 1, math.complex(a))));
     }
     return fi;
 }
 function besselj(a, b) {
     let fi = math.complex(0, 0);
     for (let n = 0; n < bign/2; n++) {
-        const sign = math.pow(math.complex(-1.0, 0), n);
-        const numerator = math.multiply(sign, pow(math.divide(b, math.complex(2.0, 0)), math.add(a, math.multiply(2.0, n))));
-        const denominator = math.multiply(gamma(math.add(n, math.complex(1.0, 0))), gamma(math.add(a, n, math.complex(1.0, 0))));
-        fi = math.add(fi, math.divide(numerator, denominator));
+        const sign = pow(math.complex(-1.0, 0), n);
+        const numerator = mul(sign, pow(div(b, math.complex(2.0, 0)), add(a, mul(2.0, n))));
+        const denominator = mul(gamma(add(n, math.complex(1.0, 0))), gamma(add(a, n, math.complex(1.0, 0))));
+        fi = add(fi, div(numerator, denominator));
     }
     return fi;
 }
 
 function besselk(a, b) {
-    const term1 = besseli(math.multiply(math.complex(-1.0, 0), a), b);
+    const term1 = besseli(mul(math.complex(-1.0, 0), a), b);
     const term2 = besseli(a, b);
-    const numerator = math.subtract(term1, term2);
-    const denominator = math.sin(math.multiply(pi(), a));
-    return math.multiply(math.divide(numerator, denominator), math.divide(pi(), math.complex(2.0, 0)));
+    const numerator = sub(term1, term2);
+    const denominator = math.sin(mul(pi(), a));
+    return mul(div(numerator, denominator), div(pi(), math.complex(2.0, 0)));
 }
 
 function besseli(a, b) {
     let fi = math.complex(0, 0);
     for (let n = 0; n < bign/2; n++) {
-        const numerator = pow(math.divide(b, math.complex(2.0, 0)), math.add(a, math.multiply(2.0, n)));
-        const denominator = math.multiply(gamma(math.add(n, math.complex(1.0, 0))), gamma(math.add(a, n, math.complex(1.0, 0))));
-        fi = math.add(fi, math.divide(numerator, denominator));
+        const numerator = pow(div(b, math.complex(2.0, 0)), add(a, mul(2.0, n)));
+        const denominator = mul(gamma(add(n, math.complex(1.0, 0))), gamma(add(a, n, math.complex(1.0, 0))));
+        fi = add(fi, div(numerator, denominator));
     }
     return fi;
+}function bessely(a,b){
+	return mul(math.csc(mul(a,pi())),sub(mul(a,pi(),besselj(a,b)),besselj(sub(0,a),b)));
 }
-
+function hankel1(a, b) {
+    return add(mul(math.complex(0,1),bessely(a,b)),besselj(a,b));
+}
+function hankel2(a, b) {
+    return sub(besselj(a,b),mul(math.complex(0,1),bessely(a,b)));
+}
+function sphbesseli(a,b){return mul(math.sqrt(div(pi(),add(b,b))),besseli(add(a,0.5),b));}
+function sphbesselj(a,b){return mul(math.sqrt(div(pi(),add(b,b))),besselj(add(a,0.5),b));}
+function sphbesselk(a,b){return mul(math.sqrt(div(pi(),add(b,b))),besselk(add(a,0.5),b));}
+function sphbessely(a,b){return mul(math.sqrt(div(pi(),add(b,b))),bessely(add(a,0.5),b));}
+function sphhankel1(a,b){return mul(math.sqrt(div(pi(),add(b,b))),hankel1(add(a,0.5),b));}
+function sphhankel2(a,b){return mul(math.sqrt(div(pi(),add(b,b))),hankel2(add(a,0.5),b));}
+function ricattibessels(n,x){return mul(x,sphbesselj(n,x));}
+function ricattibesselc(n,x){return mul(-1,x,sphbessely(n,x));}
+function ricattibesselxi(n,x){return mul(x,sphhankel1(n,x));}
+function ricattibesselzeta(n,x){return mul(x,sphhankel2(n,x));}
 
 // Converted functions
 function neuman(a, b) {
-    const term1 = math.multiply(besselj(a, b), math.cos(math.multiply(pi(), a)));
-    const term2 = besselj(math.multiply(math.complex(-1.0, 0), a), b);
-    const numerator = math.subtract(term1, term2);
-    const denominator = math.sin(math.multiply(pi(), a));
-    return math.divide(numerator, denominator);
+    const term1 = mul(besselj(a, b), math.cos(mul(pi(), a)));
+    const term2 = besselj(mul(math.complex(-1.0, 0), a), b);
+    const numerator = sub(term1, term2);
+    const denominator = math.sin(mul(pi(), a));
+    return div(numerator, denominator);
 }
 
 function struve(a, b) {
     let fi = math.complex(0, 0);
     for (let n = 0; n < math.log(bign); n++) {
-        const sign = math.pow(math.complex(-1.0, 0), n);
-        const numerator = math.multiply(sign, pow(math.divide(b, math.complex(2.0, 0)), math.multiply(2.0, n)));
-        const denominator = math.multiply(gamma(math.add(n, math.complex(1.5, 0))), gamma(math.add(a, n, math.complex(1.5, 0))));
-        fi = math.add(fi, math.divide(numerator, denominator));
+        const sign = pow(math.complex(-1.0, 0), n);
+        const numerator = mul(sign, pow(div(b, math.complex(2.0, 0)), mul(2.0, n)));
+        const denominator = mul(gamma(add(n, math.complex(1.5, 0))), gamma(add(a, n, math.complex(1.5, 0))));
+        fi = add(fi, div(numerator, denominator));
     }
-    return math.multiply(pow(math.divide(b, math.complex(2.0, 0)), math.add(a, math.complex(1.0, 0))), fi);
+    return mul(pow(div(b, math.complex(2.0, 0)), add(a, math.complex(1.0, 0))), fi);
+}
+function struvel(a, b) {
+    let fi = math.complex(0, 0);
+    for (let n = 0; n < math.log(bign); n++) {
+        const sign = 1;
+        const numerator = mul(sign, pow(div(b, math.complex(2.0, 0)), mul(2.0, n)));
+        const denominator = mul(gamma(add(n, math.complex(1.5, 0))), gamma(add(a, n, math.complex(1.5, 0))));
+        fi = add(fi, div(numerator, denominator));
+    }
+    return mul(pow(div(b, math.complex(2.0, 0)), add(a, math.complex(1.0, 0))), fi);
 }
 function modc(a, b) {
-	let ac = toComplex(a);
-	let bc = toComplex(b);
+	let ac = math.complex(a);
+	let bc = math.complex(b);
 	if (b.re == 0 || b.im == 0){
 	return a;}
     return math.complex(math.mod(ac.re, bc.re), math.mod(ac.im, bc.im));
@@ -3189,15 +3249,15 @@ function modc(a, b) {
 
 function weierstrasselliptic(bn, w, ww) {
 	
-    let fi =  math.divide(1.0, math.pow(bn, 2));
+    let fi =  div(1.0, pow(bn, 2));
     let bgn = math.floor(math.sqrt(bign * 3) / 2);  // Adjust bign if needed
-    for (let i = -bgn; i <= bgn; i++) {
-        for (let j = -bgn; j <= bgn; j++) {
+    for (let i = sub(0,bgn); i <= bgn; i++) {
+        for (let j = sub(0,bgn); j <= bgn; j++) {
             if (! (i == 0 && j == 0)) {
-                let l = math.add(math.multiply(w, i), math.multiply(ww, j)); // Ensure l is treated as a complex number
-                let term1 = math.divide(1.0, math.pow(math.subtract(bn, l), 2));
-                let term2 = math.divide(1.0, math.pow(l, 2));
-                fi = math.add(fi, math.subtract(term1, term2));
+                let l = add(mul(w, i), mul(ww, j)); // Ensure l is treated as a complex number
+                let term1 = div(1.0, pow(sub(bn, l), 2));
+                let term2 = div(1.0, pow(l, 2));
+                fi = add(fi, sub(term1, term2));
             }
         }
     }
@@ -3207,28 +3267,28 @@ function weierstrassellipticd(bn, w, ww) {
 	
     let fi = 0;
     let bgn = math.floor(math.sqrt(bign * 3) / 2);  // Adjust bign if needed
-    for (let i = -bgn; i <= bgn; i++) {
-        for (let j = -bgn; j <= bgn; j++) {
+    for (let i = sub(0,bgn); i <= bgn; i++) {
+        for (let j = sub(0,bgn); j <= bgn; j++) {
      
-                let l = math.add(math.multiply(w, i), math.multiply(ww, j)); // Ensure l is treated as a complex number
-                let term1 = math.divide(1.0, math.pow(math.subtract(bn, l), 3));
-                fi = math.add(fi,term1);
+                let l = add(mul(w, i), mul(ww, j)); // Ensure l is treated as a complex number
+                let term1 = div(1.0, pow(sub(bn, l), 3));
+                fi = add(fi,term1);
             
         }
     }
-    return math.multiply(fi,-2);
+    return mul(fi,-2);
 }
 function weierstrassellipticsigma(bn, w, ww) {
 	
     let fi = bn;
     let bgn = math.floor(math.sqrt(bign * 3) / 2);  // Adjust bign if needed
-    for (let i = -bgn; i <= bgn; i++) {
-        for (let j = -bgn; j <= bgn; j++) {
+    for (let i = sub(0,bgn); i <= bgn; i++) {
+        for (let j = sub(0,bgn); j <= bgn; j++) {
       if (! (i == 0 && j == 0)) {
-                let l = math.add(math.multiply(w, i), math.multiply(ww, j)); // Ensure l is treated as a complex number
-                let term1 = math.multiply(math.subtract(1,math.divide(bn,l)),math.exp(math.add(math.divide(bn,l),math.divide(math.multiply(bn,bn),math.multiply(l,l,2)))));
+                let l = add(mul(w, i), mul(ww, j)); // Ensure l is treated as a complex number
+                let term1 = mul(sub(1,div(bn,l)),math.exp(add(div(bn,l),div(mul(bn,bn),mul(l,l,2)))));
                 
-                fi = math.multiply(fi, term1);
+                fi = mul(fi, term1);
             }
         }
     }
@@ -3236,16 +3296,16 @@ function weierstrassellipticsigma(bn, w, ww) {
 }
 function weierstrassellipticzeta(bn, w, ww) {
 
-    let fi =  math.divide(1.0, math.pow(bn, 1));
+    let fi =  div(1.0, pow(bn, 1));
     let bgn = math.floor(math.sqrt(bign * 3) / 2);  // Adjust bign if needed
-    for (let i = -bgn; i <= bgn; i++) {
-        for (let j = -bgn; j <= bgn; j++) {
+    for (let i = sub(0,bgn); i <= bgn; i++) {
+        for (let j = sub(0,bgn); j <= bgn; j++) {
             if (! (i == 0 && j == 0)) {
-                let l = math.add(math.multiply(w, i), math.multiply(ww, j)); // Ensure l is treated as a complex number
-                let term1 = math.divide(1.0,math.subtract(bn, l));
-                let term2 = math.divide(1.0, l);
-				 let term3 = math.divide(bn, math.pow(l, 2));
-                fi = math.add(fi,term3,term1, term2);
+                let l = add(mul(w, i), mul(ww, j)); // Ensure l is treated as a complex number
+                let term1 = div(1.0,sub(bn, l));
+                let term2 = div(1.0, l);
+				 let term3 = div(bn, pow(l, 2));
+                fi = add(fi,term3,term1, term2);
             }
         }
     }
@@ -3253,7 +3313,7 @@ function weierstrassellipticzeta(bn, w, ww) {
 }
 function weierstrassellipticeta(bn, w, ww) {
 	
-   return math.subtract( weierstrassellipticzeta(math.add(randc,bn),w,ww),weierstrassellipticzeta(randc,w,ww));
+   return sub( weierstrassellipticzeta(add(randc,bn),w,ww),weierstrassellipticzeta(randc,w,ww));
 }
 let globw = 1;
 let	globww = 1;
@@ -3272,19 +3332,19 @@ function arcweierstrassellipticd(a, b) {
     let imagA = aComplex.im;
 
     // Calculate the term under the square root
-    let term = math.subtract(math.multiply(4.0, math.pow(b, 3)), realA * b, imagA);
+    let term = sub(mul(4.0, pow(b, 3)), realA * b, imagA);
 
     // Calculate the result
-    let result = math.divide(1.0, math.sqrt(term));
+    let result = div(1.0, math.sqrt(term));
 
     return result;
 }
 function arcweierstrasselliptic(a, b) {
-	return integral(arcweierstrassellipticd,toComplex(bign),b,a);
+	return integral(arcweierstrassellipticd,math.complex(bign),b,a);
 }
 function bickleynaylor(a, b) {
 	bngc = a;
-	return integral(bickleynaylord,toComplex(0),toComplex(bign),b);
+	return integral(bickleynaylord,math.complex(0),math.complex(bign),b);
 }
 let bngc = 0;
 function bickleynaylord(a, b) {
@@ -3292,12 +3352,12 @@ function bickleynaylord(a, b) {
     let aComplex = math.complex(a);
     let bComplex = math.complex(b);
 
-    // Calculate exp(-a*cosh(b)) / (cosh(b)^globalc)
-    let expTerm = math.exp(math.multiply(-aComplex, math.cosh(bComplex)));
-    let coshTerm = math.pow(math.cosh(bComplex), bngc);
+    // Calculate exp(sub(0,a)*cosh(b)) / (cosh(b)^globalc)
+    let expTerm = math.exp(mul(sub(0,aComplex), math.cosh(bComplex)));
+    let coshTerm = pow(math.cosh(bComplex), bngc);
 
     // Calculate the result
-    let result = math.divide(expTerm, coshTerm);
+    let result = div(expTerm, coshTerm);
 
     return result;
 }
@@ -3307,14 +3367,14 @@ function weierstrassauxf1(a, b) {
     let aComplex = math.complex(a);
     
     // Calculate the terms
-    let term1 = math.pow(math.cosh(math.divide(math.multiply(aComplex, b) , 2.0)), 2);
-    let term2 = math.subtract(1.0, math.multiply(2.0, math.exp(-aComplex)));
-    let term3 = math.cosh(math.multiply(aComplex, b));
-    let term4 = math.exp(math.multiply(-2.0 , aComplex));
+    let term1 = pow(math.cosh(div(mul(aComplex, b) , 2.0)), 2);
+    let term2 = sub(1.0, mul(2.0, math.exp(sub(0,aComplex))));
+    let term3 = math.cosh(mul(aComplex, b));
+    let term4 = math.exp(mul(-2.0 , aComplex));
 
     // Calculate the result
-    let result = math.divide(term1, term2);
-    result = math.add(math.multiply(result, term3), term4);
+    let result = div(term1, term2);
+    result = add(mul(result, term3), term4);
 
     return result;
 }
@@ -3325,198 +3385,198 @@ function weierstrassauxf2(a, b) {
     let bComplex = math.complex(b);
 
     // Calculate the terms
-    let term1 = math.pow(math.cos(math.divide(aComplex , 2.0)), 2);
-    let term2 = math.subtract(1.0, math.multiply(2.0, math.exp(math.multiply(aComplex, bComplex))));
+    let term1 = pow(math.cos(div(aComplex , 2.0)), 2);
+    let term2 = sub(1.0, mul(2.0, math.exp(mul(aComplex, bComplex))));
     let term3 = math.cos(aComplex);
-    let term4 = math.exp(math.multiply(2.0, aComplex, bComplex));
+    let term4 = math.exp(mul(2.0, aComplex, bComplex));
 
     // Calculate the result
-    let result = math.divide(term1, term2);
-    result = math.add(math.multiply(result, term3), term4);
+    let result = div(term1, term2);
+    result = add(mul(result, term3), term4);
 
     return result;
 }
 
 function arcsld(b) {
     // Calculate the result for arcsld
-    let term = math.sqrt(math.add(1.0, math.pow(b, 4)));
-    return math.divide(1.0, math.add(term, 0.0001));
+    let term = math.sqrt(add(1.0, pow(b, 4)));
+    return div(1.0, add(term, 0.0001));
 }
 
 function arcslhd(b) {
     // Calculate the result for arcslhd
-    let term = math.sqrt(math.add(1.0, math.pow(b, 4)));
-    return math.divide(1.0, math.add(term, 0.0001));
+    let term = math.sqrt(add(1.0, pow(b, 4)));
+    return div(1.0, add(term, 0.0001));
 }
 
-function arcsl(b){return integral(arcsld,b,toComplex(1));}
-function arccl(b){return integral(arcsld,toComplex(0),b);}
-function arcslh(b){return integral(arcslhd,b,toComplex(1));}
-function arcclh(b){return integral(arcslhd,toComplex(0),b);}
+function arcsl(b){return integral(arcsld,b,math.complex(1));}
+function arccl(b){return integral(arcsld,math.complex(0),b);}
+function arcslh(b){return integral(arcslhd,b,math.complex(1));}
+function arcclh(b){return integral(arcslhd,math.complex(0),b);}
 
 
 function slh(b) {
     let w = math.complex(1, 0);
     let divisor = math.sqrt(2.0);
-    w = math.divide(w, divisor);
+    w = div(w, divisor);
 
     let term1 = nevthets(b, w);
     let term2 = nevthetd(b, w);
     let term3 = nevthetc(b, w);
     let term4 = nevthetn(b, w);
 
-    return math.divide(math.multiply(term1, term2), math.multiply(term3, term4));
+    return div(mul(term1, term2), mul(term3, term4));
 }
 
 function clh(b) {
     let w = math.complex(1, 0);
     let divisor = math.sqrt(2.0);
-    w = math.divide(w, divisor);
+    w = div(w, divisor);
 
     let term1 = nevthetc(b, w);
     let term2 = nevthetn(b, w);
     let term3 = nevthets(b, w);
     let term4 = nevthetd(b, w);
 
-    return math.divide(math.multiply(term1, term2), math.multiply(term3, term4));
+    return div(mul(term1, term2), mul(term3, term4));
 }
 
 
 
 function arcsnd(a, b) {
-    let term1 = math.subtract(1.0, math.multiply(b, b));
-    let term2 = math.subtract(1.0, math.multiply(a, math.multiply(b, b)));
-    let denominator = math.multiply(term1, term2);
-    return math.divide(1.0, math.sqrt(denominator));
+    let term1 = sub(1.0, mul(b, b));
+    let term2 = sub(1.0, mul(a, mul(b, b)));
+    let denominator = mul(term1, term2);
+    return div(1.0, math.sqrt(denominator));
 }
 
 function arccnd(a, b) {
-    let term1 = math.subtract(1.0, math.multiply(b, b));
-    let term2 = math.subtract(math.add(a, math.multiply(a, math.multiply(b, b))), 1.0);
-    let denominator = math.multiply(term1, term2);
-    return math.divide(1.0, math.sqrt(denominator));
+    let term1 = sub(1.0, mul(b, b));
+    let term2 = sub(add(a, mul(a, mul(b, b))), 1.0);
+    let denominator = mul(term1, term2);
+    return div(1.0, math.sqrt(denominator));
 }
 
 function arcdnd(a, b) {
-    let term1 = math.subtract(1.0, math.multiply(b, b));
-    let term2 = math.add(math.multiply(b, b), math.subtract(a, 1.0));
-    let denominator = math.multiply(term1, term2);
-    return math.divide(1.0, math.sqrt(denominator));
+    let term1 = sub(1.0, mul(b, b));
+    let term2 = add(mul(b, b), sub(a, 1.0));
+    let denominator = mul(term1, term2);
+    return div(1.0, math.sqrt(denominator));
 }
 
 function arccdd(a, b) {
-    let term1 = math.subtract(1.0, math.multiply(b, b));
-    let term2 = math.subtract(1.0, math.multiply(a, math.multiply(b, b)));
-    let denominator = math.multiply(term1, term2);
-    return math.divide(1.0, math.sqrt(denominator));
+    let term1 = sub(1.0, mul(b, b));
+    let term2 = sub(1.0, mul(a, mul(b, b)));
+    let denominator = mul(term1, term2);
+    return div(1.0, math.sqrt(denominator));
 }
 
 function arccsd(a, b) {
-    let term1 = math.add(1.0, math.multiply(b, b));
-    let term2 = math.add(math.subtract(b, a), 1.0);
-    let denominator = math.multiply(term1, term2);
-    return math.divide(1.0, math.sqrt(denominator));
+    let term1 = add(1.0, mul(b, b));
+    let term2 = add(sub(b, a), 1.0);
+    let denominator = mul(term1, term2);
+    return div(1.0, math.sqrt(denominator));
 }
 
 function arcdsd(a, b) {
-    let term1 = math.add(a, math.multiply(b, b));
-    let term2 = math.add(math.multiply(b, b), math.subtract(a, 1.0));
-    let denominator = math.multiply(term1, term2);
-    return math.divide(1.0, math.sqrt(denominator));
+    let term1 = add(a, mul(b, b));
+    let term2 = add(mul(b, b), sub(a, 1.0));
+    let denominator = mul(term1, term2);
+    return div(1.0, math.sqrt(denominator));
 }
 
 
-function arcsn(a, b) {return integral(arcsnd,toComplex(0),a,b);}
-function arccn(a, b) {return integral(arccnd,a,toComplex(1),b);}
-function arcdn(a, b) {return integral(arcdnd,a,toComplex(1),b);}
-function arcns(a, b) {return integral(arcsnd,toComplex(0),math.divide(1,a),b);}
-function arcnc(a, b) {return integral(arccnd,math.divide(1,a),toComplex(1),b);}
-function arcnd(a, b) {return integral(arcdnd,math.divide(1,a),toComplex(1),b);}
-function arccd(a, b) {return integral(arccdd,a,toComplex(1),b);}
-function arccs(a, b) {return integral(arccsd,a,toComplex(bign),b);}
-function arcds(a, b) {return integral(arcdsd,a,toComplex(bign),b);}
-function arcdc(a, b) {return integral(arccdd,math.divide(1,a),toComplex(1),b);}
-function arcsc(a, b) {return integral(arccsd,math.divide(1,a),toComplex(bign),b);}
-function arcsd(a, b) {return integral(arcdsd,math.divide(1,a),toComplex(bign),b);}
+function arcsn(a, b) {return integral(arcsnd,math.complex(0),a,b);}
+function arccn(a, b) {return integral(arccnd,a,math.complex(1),b);}
+function arcdn(a, b) {return integral(arcdnd,a,math.complex(1),b);}
+function arcns(a, b) {return integral(arcsnd,math.complex(0),div(1,a),b);}
+function arcnc(a, b) {return integral(arccnd,div(1,a),math.complex(1),b);}
+function arcnd(a, b) {return integral(arcdnd,div(1,a),math.complex(1),b);}
+function arccd(a, b) {return integral(arccdd,a,math.complex(1),b);}
+function arccs(a, b) {return integral(arccsd,a,math.complex(bign),b);}
+function arcds(a, b) {return integral(arcdsd,a,math.complex(bign),b);}
+function arcdc(a, b) {return integral(arccdd,div(1,a),math.complex(1),b);}
+function arcsc(a, b) {return integral(arccsd,div(1,a),math.complex(bign),b);}
+function arcsd(a, b) {return integral(arcdsd,div(1,a),math.complex(bign),b);}
 
 
-function erf(b){return math.multiply(2*math.sqrt(pi()),integral(expmsqr,toComplex(0),b));}
-function erfc(b){return math.subtract(1,math.multiply(2*math.sqrt(pi()),integral(expmsqr,toComplex(0),b)));}
-function erfcx(b){return math.multiply(math.exp(math.multiply(b,b)),math.subtract(1,math.multiply(2*math.sqrt(pi()),integral(expmsqr,toComplex(0),b))));}
-function erfi(b){return math.multiply(math.complex(0,-1),math.multiply(2*math.sqrt(pi()),integral(expmsqr,toComplex(0),math.multiply(b,math.complex(0,1)))));}
-function dawsondplus(b){return math.multiply(math.sqrt(pi())/2,math.exp(math.multiply(b,b,-1)),erfi(b));}
-function dawsondminus(b){return math.multiply(math.sqrt(pi())/2,math.exp(math.multiply(b,b)),erf(b));}
-function faddeeva(b){return erfcx(math.multiply(b,math.complex(0,-1)));}
-function hilberttransform(b){return math.multiply(2/math.sqrt(pi()),dawsondplus(b));}//hilberttransormofthe gaussian
-function hilberttransformsub(b){return math.multiply(2/math.sqrt(pi()),dawsondplus(math.sqrt(b)));}//hilberttransormofthe x^2n e^-x^2
+function erf(b){return mul(2*math.sqrt(pi()),integral(expmsqr,math.complex(0),b));}
+function erfc(b){return sub(1,mul(2*math.sqrt(pi()),integral(expmsqr,math.complex(0),b)));}
+function erfcx(b){return mul(math.exp(mul(b,b)),sub(1,mul(2*math.sqrt(pi()),integral(expmsqr,math.complex(0),b))));}
+function erfi(b){return mul(math.complex(0,-1),mul(2*math.sqrt(pi()),integral(expmsqr,math.complex(0),mul(b,math.complex(0,1)))));}
+function dawsondplus(b){return mul(math.sqrt(pi())/2,math.exp(mul(b,b,-1)),erfi(b));}
+function dawsondminus(b){return mul(math.sqrt(pi())/2,math.exp(mul(b,b)),erf(b));}
+function faddeeva(b){return erfcx(mul(b,math.complex(0,-1)));}
+function hilberttransform(b){return mul(2/math.sqrt(pi()),dawsondplus(b));}//hilberttransormofthe gaussian
+function hilberttransformsub(b){return mul(2/math.sqrt(pi()),dawsondplus(math.sqrt(b)));}//hilberttransormofthe x^2n e^sub(0,x)^2
 
-function lambertwd(a,b){return math.log(math.add(1,math.multiply(b,sinc(a),math.exp(math.divide(a,math.tan(a))))));}
-function lambertw(b){return math.divide(integral(lambertwd,toComplex(0),toComplex(3.1415925),b,50),pi());}
+function lambertwd(a,b){return math.log(add(1,mul(b,sinc(a),math.exp(div(a,math.tan(a))))));}
+function lambertw(b){return div(integral(lambertwd,math.complex(0),math.complex(3.1415925),b,50),pi());}
 
 function peritet(b) {
-    let lambertW = lambertw(math.subtract(0,math.log(b)));
-    let result = math.divide(math.multiply( pi() , math.complex(0.0, -2.0)) , math.log(math.subtract(0,lambertW)));
+    let lambertW = lambertw(sub(0,math.log(b)));
+    let result = div(mul( pi() , math.complex(0.0, -2.0)) , math.log(sub(0,lambertW)));
     return result;
 }
 
 function weakexpofactorial(b) {
-    return math.pow(b, gamma(b));
+    return pow(b, gamma(b));
 }
 
 function qfunc(b) {
-    let arg = math.divide(b, math.sqrt(2.0));
+    let arg = div(b, math.sqrt(2.0));
     let integralq = integral(expmsqr,0, arg);
-    return math.subtract(0.5, math.multiply(0.5, math.multiply(2.0 / pi(), integralq)));
+    return sub(0.5, mul(0.5, mul(2.0 / pi(), integralq)));
 }
 
 function ramanujantautheta(b) {
-    let logGammaTerm1 = math.log(gamma(math.add(6.0, math.multiply(math.complex(0.0, 1.0), b))));
-    let logGammaTerm2 = math.log(gamma(math.subtract(6.0, math.multiply(math.complex(0.0, 1.0), b))));
-    let result = math.subtract(math.multiply(-math.log(2.0 * pi()), b), math.divide(math.subtract(logGammaTerm1, logGammaTerm2), 2.0));
+    let logGammaTerm1 = math.log(gamma(add(6.0, mul(math.complex(0.0, 1.0), b))));
+    let logGammaTerm2 = math.log(gamma(sub(6.0, mul(math.complex(0.0, 1.0), b))));
+    let result = sub(mul(-math.log(2.0 * pi()), b), div(sub(logGammaTerm1, logGammaTerm2), 2.0));
     return result;
 }
 function schlaflian(b) {
-    return math.multiply(4.0, pow(math.sin(math.divide(pi(), b)), 2.0));
+    return mul(4.0, pow(math.sin(div(pi(), b)), 2.0));
 }
 
 function wexzal(b) {
-    let lambertW_pow = lambertw(math.pow(b, 10.0));
+    let lambertW_pow = lambertw(pow(b, 10.0));
     let log_b = math.log(b);
-    let term1 = math.divide(log_b, math.log(lambertW_pow));
-    let exponent = math.add(term1, 1.0);
-    let result = lambertw(math.multiply(term1, math.exp(exponent)));
+    let term1 = div(log_b, math.log(lambertW_pow));
+    let exponent = add(term1, 1.0);
+    let result = lambertw(mul(term1, math.exp(exponent)));
     return result;
 }
 
 function dexp(b) {
-    return math.multiply(0.5, math.exp(math.divide(math.multiply(b, b), 2.0))
-        ,  math.add(math.multiply(math.sqrt(2.0 * pi()),erf(math.divide(b,math.sqrt(2)))) , 2.0));
+    return mul(0.5, math.exp(div(mul(b, b), 2.0))
+        ,  add(mul(math.sqrt(2.0 * pi()),erf(div(b,math.sqrt(2)))) , 2.0));
 }
 
 function serpentine(b) {
-    return math.divide(b, math.add(math.multiply(b, b), 1.0));
+    return div(b, add(mul(b, b), 1.0));
 }
 
 function witchofagnesi(b) {
-    return math.divide(1.0, math.add(math.multiply(b, b), 1.0));
+    return div(1.0, add(mul(b, b), 1.0));
 }
 function ssrt(b) {
-    return math.divide(math.log(b), lambertw(math.log(b)));
+    return div(math.log(b), lambertw(math.log(b)));
 }
 
 function scbrt(b) {
     // Iteratively applying lambertw and exp as described
-    let result = math.multiply(b, math.log(b));
+    let result = mul(b, math.log(b));
     for (let i = 0; i < 8; i++) {
-        result = math.exp(lambertw(lambertw(math.multiply(result,math.log(b)))));
+        result = math.exp(lambertw(lambertw(mul(result,math.log(b)))));
     }
     return result;
 }
 function theta_e(b){
 	let fi=b;
 	            for (let i = 0; i < 58; i++) {
-                const term = math.multiply(math.complex(0, 1), bi, pi() * 2.0 * i);
-                fi = math.add(fi, math.multiply(knthetaa[i], math.exp(term)));
+                const term = mul(math.complex(0, 1), bi, pi() * 2.0 * i);
+                fi = add(fi, mul(knthetaa[i], math.exp(term)));
 
 }return fi;}
    function tetr(b) {
@@ -3526,12 +3586,12 @@ function theta_e(b){
             const bi = math.complex(math.mod(math.re(b), 1.0), math.im(fi));
 
             for (let i = 0; i < 58; i++) {
-                const term = math.multiply(math.complex(0, 1), bi, pi() * 2.0 * i);
-                fi = math.add(fi, math.multiply(knthetaa[i], math.exp(term)));
+                const term = mul(math.complex(0, 1), bi, pi() * 2.0 * i);
+                fi = add(fi, mul(knthetaa[i], math.exp(term)));
             }
 
             const constant = math.complex(0.318132, 1.33724);
-            fi = math.add(constant, math.pow(math.log(constant), math.subtract(fi, N)));
+            fi = add(constant, pow(math.log(constant), sub(fi, N)));
 
             for (let i = 0; i < N; i++) {
                 fi = math.exp(fi);
@@ -3550,12 +3610,12 @@ function theta_e(b){
             const bi = math.complex(math.mod(math.re(b), 1.0), math.im(fi));
 
             for (let i = 0; i < 58; i++) {
-                const term = math.multiply(math.complex(0, 1), bi, pi() * 2.0 * i);
-                fi = math.add(fi, math.multiply(knthetaa[i], math.exp(term)));
+                const term = mul(math.complex(0, 1), bi, pi() * 2.0 * i);
+                fi = add(fi, mul(knthetaa[i], math.exp(term)));
             }
 
             const constant = math.complex(0.318132, 1.33724);
-            fi = math.add(constant, math.pow(math.log(constant), math.subtract(fi, N)));
+            fi = add(constant, pow(math.log(constant), sub(fi, N)));
 
             for (let i = 0; i < N; i++) {
                 fi = math.exp(fi);
@@ -3577,7 +3637,7 @@ function theta_e(b){
 
             let constant = conj(filog(a));
 			
-fi = math.add(constant, math.pow(math.log(constant), math.subtract(fi, N)));
+fi = add(constant, pow(math.log(constant), sub(fi, N)));
 
             for (let i = 0; i < N; i++) {
                 fi = pow(a,fi);
@@ -3620,39 +3680,39 @@ function pentts(x) {
     const c26 = math.complex(-0.000000022236468044317568271338433775775, 0);
 
     // Transformation of the imaginary part
-    const imagTransformed = math.multiply(c2, math.subtract(math.divide(math.im(x), c2), math.round(math.divide(math.im(x), c2))));
+    const imagTransformed = mul(c2, sub(div(math.im(x), c2), math.round(div(math.im(x), c2))));
 
     // Base term
-    const base = math.add(math.re(x), math.complex(1, 0));
-    const z = math.add(math.complex(math.re(base), 0), math.multiply(math.i, imagTransformed));
+    const base = add(math.re(x), math.complex(1, 0));
+    const z = add(math.complex(math.re(base), 0), mul(math.i, imagTransformed));
 
     // Polynomial expression using powers of z
-    let result = math.add(
-        math.multiply(c1, z),
-        math.multiply(c3, math.pow(z, 2)),
-        math.multiply(c4, math.pow(z, 3)),
-        math.multiply(c5, math.pow(z, 4)),
-        math.multiply(c6, math.pow(z, 5)),
-        math.multiply(c7, math.pow(z, 6)),
-        math.multiply(c8, math.pow(z, 7)),
-        math.multiply(c9, math.pow(z, 8)),
-        math.multiply(c10, math.pow(z, 9)),
-        math.multiply(c11, math.pow(z, 10)),
-        math.multiply(c12, math.pow(z, 11)),
-        math.multiply(c13, math.pow(z, 12)),
-        math.multiply(c14, math.pow(z, 13)),
-        math.multiply(c15, math.pow(z, 14)),
-        math.multiply(c16, math.pow(z, 15)),
-        math.multiply(c17, math.pow(z, 16)),
-        math.multiply(c18, math.pow(z, 17)),
-        math.multiply(c19, math.pow(z, 18)),
-        math.multiply(c20, math.pow(z, 19)),
-        math.multiply(c21, math.pow(z, 20)),
-        math.multiply(c22, math.pow(z, 21)),
-        math.multiply(c23, math.pow(z, 22)),
-        math.multiply(c24, math.pow(z, 23)),
-        math.multiply(c25, math.pow(z, 24)),
-        math.multiply(c26, math.pow(z, 25))
+    let result = add(
+        mul(c1, z),
+        mul(c3, pow(z, 2)),
+        mul(c4, pow(z, 3)),
+        mul(c5, pow(z, 4)),
+        mul(c6, pow(z, 5)),
+        mul(c7, pow(z, 6)),
+        mul(c8, pow(z, 7)),
+        mul(c9, pow(z, 8)),
+        mul(c10, pow(z, 9)),
+        mul(c11, pow(z, 10)),
+        mul(c12, pow(z, 11)),
+        mul(c13, pow(z, 12)),
+        mul(c14, pow(z, 13)),
+        mul(c15, pow(z, 14)),
+        mul(c16, pow(z, 15)),
+        mul(c17, pow(z, 16)),
+        mul(c18, pow(z, 17)),
+        mul(c19, pow(z, 18)),
+        mul(c20, pow(z, 19)),
+        mul(c21, pow(z, 20)),
+        mul(c22, pow(z, 21)),
+        mul(c23, pow(z, 22)),
+        mul(c24, pow(z, 23)),
+        mul(c25, pow(z, 24)),
+        mul(c26, pow(z, 25))
     );
 
     return result;
@@ -3660,55 +3720,55 @@ function pentts(x) {
 	
 	function pent(x) {
 		let n=math.floor(x.re)+2;
-		if(n < 0)return math.add(-1.85035452902718141848345,math.exp(math.multiply(1.86573322813586677933545,math.add(x,2.2481745))));
+		if(n < 0)return add(-1.85035452902718141848345,math.exp(mul(1.86573322813586677933545,add(x,2.2481745))));
 		let y = pentts(math.complex(math.mod(x.re,1)-2,x.im));
 	for(let i=0;i<n && i<5;i++){y = tetr(y);}
-	//	for(let i=0;i<-n;i++)y = slog(x);
+	//	for(let i=0;i<sub(0,n);i++)y = slog(x);
 		return y;
 	}
 function filog(b) {
     // Convert b to a complex number if necessary
     let logB = math.log(b);
-    let lambertW = lambertw(math.subtract(0,logB));
-    return math.divide(math.subtract(0,lambertW), logB);
+    let lambertW = lambertw(sub(0,logB));
+    return div(sub(0,lambertW), logB);
 }
 
 function bouncingfactorial(b) {
-    return math.divide(math.pow(tetr(math.gamma(math.add(b,1)), math.gamma(math.add(b,1))), 2.0)
-        , math.gamma(math.add(b,1)));
+    return div(pow(tetr(math.gamma(add(b,1)), math.gamma(add(b,1))), 2.0)
+        , math.gamma(add(b,1)));
 }
 
 function dilbertlambda(b) {
-    return math.divide(math.sqrt(lambertw(math.multiply(2.0, math.multiply(b, b))))
+    return div(math.sqrt(lambertw(mul(2.0, mul(b, b))))
         , math.sqrt(2.0));
 }
 
 function olga(b) {
-    return math.divide(b, math.add(math.multiply(b, b), 1.0));
+    return div(b, add(mul(b, b), 1.0));
 }
 
 function glog(b) {
-    return lambertw(math.multiply(-1.0, math.divide(1.0, b)));
+    return lambertw(mul(-1.0, div(1.0, b)));
 }
 
 function arcshoka(b) {
-    return math.divide(math.log(math.subtract(math.exp(b), 1.0)), math.log(math.subtract(math.e, 1.0)));
+    return div(math.log(sub(math.exp(b), 1.0)), math.log(sub(math.e, 1.0)));
 }
 
 function arctania(b) {
-    return math.add(b, math.log(b), -1.0);
+    return add(b, math.log(b), -1.0);
 }
 
 function anka(b) {
-    return math.multiply(b, math.exp(math.subtract(b, 1.0)));
+    return mul(b, math.exp(sub(b, 1.0)));
 }
 
 function nemtsov(b, a) {
-    return math.add(b, math.add(math.multiply(b, math.multiply(b, b)), math.multiply(a, math.multiply(b, math.multiply(b, b)))));
+    return add(b, add(mul(b, mul(b, b)), mul(a, mul(b, mul(b, b)))));
 }
 
 function logit(b) {
-    return math.multiply(-1, math.log(math.subtract(math.divide(1.0, b), 1.0)));
+    return mul(-1, math.log(sub(div(1.0, b), 1.0)));
 }
 
 function wrightw(b) {
@@ -3716,28 +3776,40 @@ function wrightw(b) {
 }
 
 function tania(b) {
-    return lambertw(math.exp(math.add(b, 1.0)));
+    return lambertw(math.exp(add(b, 1.0)));
 }
 
 function arctrappmann(b) {
-    return math.subtract(b, lambertw(math.exp(b)));
+    return sub(b, lambertw(math.exp(b)));
 }
 
 function doya(b) {
-    return lambertw(math.multiply(b, math.exp(math.add(b, 1.0))));
+    return lambertw(mul(b, math.exp(add(b, 1.0))));
 }
 function factorial(b) {
-    return gamma(math.add(b,1));
+	if(b==0)return 0;
+    return gamma(add(b,1));
+}
+function nfactorial(b) {
+	//console.log(b);
+	if(math.complex(b).re<=0)return 0;
+	if(b==math.Infinity)return 0;
+    return gamma(add(b,1));
 }
 
+
 function incgammad(t,a){
-	return math.multiply(pow(t,math.subtract(a,1)),pow(eulerc(),math.subtract(0,t)));
+	return mul(pow(t,sub(a,1)),pow(eulerc(),sub(0,t)));
 }
 function incgamma(a,x){return integral(incgammad,x,bign,a,bign*2);}
 function lincgamma(a,x){return integral(incgammad,0,x,a,bign*2);}
-function gammaq(a,x){return math.divide(incgamma(a,x),gamma(a));}
-function gammap(a,x){return math.divide(lincgamma(a,x),gamma(a));}
-function et(t,v,a){return math.divide(math.multiply(pow(a,math.subtract(0,v)),math.exp(math.multiply(a,t)),lincgamma(v,math.multiply(a,t))),gamma(v));}
+function gincgamma(a,y,x){return integral(incgammad,y,x,a,bign*2);}
+function gammaq(a,x){return div(incgamma(a,x),gamma(a));}
+function gammap(a,x){return div(lincgamma(a,x),gamma(a));}
+function et(t,v,a){return div(mul(pow(a,sub(0,v)),math.exp(mul(a,t)),lincgamma(v,mul(a,t))),gamma(v));}
+function gammareg(a,z){return div(incgamma(a,z),gamma(a));}
+function lgammareg(a,z){return div(lincgamma(a,z),gamma(a));}
+function ggammareg(a,x,z){return div(gincgamma(a,x,z),gamma(a));}
 
 function nests(f, x, n) {
     for (let i = 0; i < n; i++) {
@@ -3754,7 +3826,7 @@ function nest(f, x, n) {
 
 
 function split(func,input){
-return math.complex(func(input.re-input.im)+func(input.re+input.im),func(input.re+input.im)-func(input.re-input.im));
+return math.complex(func(sub(input.re,input.im))+func(input.re+input.im),func(input.re+input.im)-func(sub(input.re,input.im)));
 }
 function dual(func,input){
 return math.complex(func(input.re),input.im*(((func(input.re+1e-7)-func(input.re))/1e-7)));
@@ -3766,32 +3838,32 @@ function splite(func,input){
 
 	let xr = math.complex(input.re,1e-7);
 	let xi = math.complex(input.im,1e-7);
-	let dif = math.evaluate(func, { x: math.add(xr,xi) });
-	let sdd = math.evaluate(func, { x: math.subtract(xr,xi) });
-return	math.add(math.add(dif,sdd),math.multiply(math.subtract(dif,sdd),math.complex(0,1)));
+	let dif = math.evaluate(func, { x: add(xr,xi) });
+	let sdd = math.evaluate(func, { x: sub(xr,xi) });
+return	add(add(dif,sdd),mul(sub(dif,sdd),math.complex(0,1)));
 }function bireale(func,input){
 
 	let xr = math.complex(input.re,1e-7);
 	let xi = math.complex(input.im,1e-7);
 	let dif = math.evaluate(func, { x: xr });
 	let sdd = math.evaluate(func, { x: xi });
-return	math.add(dif,math.multiply(sdd,math.complex(0,1)));
+return	add(dif,mul(sdd,math.complex(0,1)));
 }
 function duale(func,input){
 	let xr = math.complex(input.re,1e-7);
 	let xi = math.complex(input.re+1e-7,1e-7);
-	let dif = math.divide(math.subtract(math.evaluate(func, { x: xi }),math.evaluate(func, { x: xr })),1e-7);
+	let dif = div(sub(math.evaluate(func, { x: xi }),math.evaluate(func, { x: xr })),1e-7);
 	let sdd = math.evaluate(func, { x: xr });
 
-return math.add(sdd,math.multiply(dif,math.complex(input.im,0),math.complex(0,1)));
+return add(sdd,mul(dif,math.complex(input.im,0),math.complex(0,1)));
 
 
 }
 function derv(func,input){
-return ((math.divide(math.subtract(func(math.add(input,1e-7)),func(input)),1e-7)));
+return ((div(sub(func(add(input,1e-7)),func(input)),1e-7)));
 }
 function derve(func,input){
-return ((math.divide(math.subtract(math.evaluate(func, { x: math.add(input,1e-7) }),math.evaluate(func, { x: input })),1e-7)));
+return ((div(sub(math.evaluate(func, { x: add(input,1e-7) }),math.evaluate(func, { x: input })),1e-7)));
 }
 function intg(func,input){
 return integral(func,0,input);
@@ -3802,37 +3874,48 @@ return integral(func,0,input,input2);
 
 }
 function nthderiv(func,input,n){
-	const h=1;
+	const h=pow(10,add(-7,div(n,1.2)));
 let fi=math.complex(0,0);
-for(let i=0;i<=bign;i++)
-fi = math.add(fi,math.multiply(pow(-1,i),ncr(n,i),math.evaluate(func,{x:math.subtract(math.add(input,math.divide(n,2)),math.multiply(h,i))})));	
-//return math.divide(fi,pow(h,n));
+for(let i=0;i<=n;i++)
+fi = add(fi,mul(pow(-1,i),ncr(n,i),math.evaluate(func,{x:sub(add(input,div(n,2)),mul(h,i))})));	
+return div(fi,pow(h,n));
+return fi;
+}
+function rmod(x,n){return math.complex(math.mod(x.re,n),x.im);}
+function rfloor(x,n){return math.complex(math.floor(x.re,n),x.im);}
+
+function fractionalderiv(func,input,n){
+const h=pow(10,add(-7,div(n,1.2)));
+let fi=math.complex(0,0);
+for(let i=0;i<=math.ceil(math.complex(n).re);i++)
+fi = add(fi,mul(pow(-1,i),ncr(math.ceil(math.complex(n).re),i),fractionalintg(func,sub(add(input,div(math.ceil(math.complex(n).re),2)),mul(h,i)),sub(1,rmod(math.complex(n),1.00001)))));	
+return div(fi,pow(h,math.ceil(math.complex(n).re)));
 return fi;
 }
 function fractionalintg(func,input,m){
 	       function simpsonsRule(a, b, n) {
-        const h = math.divide(math.subtract(b, a), n);let sum = math.complex(0,0);      for (let i = 1; i < n; i += 2) {
-            sum = math.add(sum, math.multiply(math.complex(4,0),pow(math.subtract(input,math.add(a, math.multiply(math.complex(i,0), h))),math.subtract(m,1)),math.evaluate(func, { x:math.add(a, math.multiply(math.complex(i,0), h))})));} for (let i = 2; i < n - 1; i += 2) {
-            sum = math.add(sum, math.multiply(math.complex(2,0),pow(math.subtract(input,math.add(a, math.multiply(math.complex(i,0), h))),math.subtract(m,1)) , math.evaluate(func, { x:math.add(a, math.multiply(math.complex(i,0), h))})));}      
-        return math.multiply(math.divide(h, math.complex(3,0)), sum);}
+        const h = div(sub(b, a), n);let sum = math.complex(0,0);      for (let i = 1; i < n; i += 2) {
+            sum = add(sum, mul(math.complex(4,0),pow(sub(input,add(a, mul(math.complex(i,0), h))),sub(m,1)),math.evaluate(func, { x:add(a, mul(math.complex(i,0), h))})));} for (let i = 2; i < n - 1; i += 2) {
+            sum = add(sum, mul(math.complex(2,0),pow(sub(input,add(a, mul(math.complex(i,0), h))),sub(m,1)) , math.evaluate(func, { x:add(a, mul(math.complex(i,0), h))})));}      
+        return mul(div(h, math.complex(3,0)), sum);}
     
 	return simpsonsRule(0,input,bign);
 }
 function intge(func,input){
     // Function to handle complex integration
     function simpsonsRule(a, b, n) {
-        const h = math.divide(math.subtract(b, a), n);
+        const h = div(sub(b, a), n);
         let sum = math.complex(0,0);
         
         for (let i = 1; i < n; i += 2) {
-            sum = math.add(sum, math.multiply(math.complex(4,0), math.evaluate(func, { x:math.add(a, math.multiply(math.complex(i,0), h))})));
+            sum = add(sum, mul(math.complex(4,0), math.evaluate(func, { x:add(a, mul(math.complex(i,0), h))})));
         }
         
         for (let i = 2; i < n - 1; i += 2) {
-            sum = math.add(sum, math.multiply(math.complex(2,0), math.evaluate(func, { x:math.add(a, math.multiply(math.complex(i,0), h))})));
+            sum = add(sum, mul(math.complex(2,0), math.evaluate(func, { x:add(a, mul(math.complex(i,0), h))})));
         }
         
-        return math.multiply(math.divide(h, math.complex(3,0)), sum);
+        return mul(div(h, math.complex(3,0)), sum);
     }
 
     // Adaptive Simpson's rule to ensure convergence
@@ -3841,10 +3924,10 @@ function intge(func,input){
 	   function intge(func,input){
     // Function to handle complex integration
     function simpsonsRule(a, b, n) {
-        const h = math.divide(math.subtract(b, a), n);let sum = math.complex(0,0);      for (let i = 1; i < n; i += 2) {
-            sum = math.add(sum, math.multiply(math.complex(4,0), math.evaluate(func, { x:math.add(a, math.multiply(math.complex(i,0), h))})));} for (let i = 2; i < n - 1; i += 2) {
-            sum = math.add(sum, math.multiply(math.complex(2,0), math.evaluate(func, { x:math.add(a, math.multiply(math.complex(i,0), h))})));}      
-        return math.multiply(math.divide(h, math.complex(3,0)), sum);}
+        const h = div(sub(b, a), n);let sum = math.complex(0,0);      for (let i = 1; i < n; i += 2) {
+            sum = add(sum, mul(math.complex(4,0), math.evaluate(func, { x:add(a, mul(math.complex(i,0), h))})));} for (let i = 2; i < n - 1; i += 2) {
+            sum = add(sum, mul(math.complex(2,0), math.evaluate(func, { x:add(a, mul(math.complex(i,0), h))})));}      
+        return mul(div(h, math.complex(3,0)), sum);}
 
     // Adaptive Simpson's rule to ensure convergence
           return simpsonsRule(math.complex(0,0),input, bign);
@@ -3852,123 +3935,905 @@ function intge(func,input){
 function ramanujansum(func,input)
 {
 	    function simpsonsRule(a, b, n) {
-        const h = math.divide(math.subtract(b, a), n);let sum = math.complex(0,0);      for (let i = 1; i < n; i += 2) {
-            sum = math.add(sum, math.multiply(math.complex(4,0), math.evaluate(func, { n:math.add(a, math.multiply(math.complex(i,0), h)),x:input})));} for (let i = 2; i < n - 1; i += 2) {
-            sum = math.add(sum, math.multiply(math.complex(2,0), math.evaluate(func, { n:math.add(a, math.multiply(math.complex(i,0), h)),x:input})));}      
-        return math.multiply(math.divide(h, math.complex(3,0)), sum);}
+        const h = div(sub(b, a), n);let sum = math.complex(0,0);      for (let i = 1; i < n; i += 2) {
+            sum = add(sum, mul(math.complex(4,0), math.evaluate(func, { n:add(a, mul(math.complex(i,0), h)),x:input})));} for (let i = 2; i < n - 1; i += 2) {
+            sum = add(sum, mul(math.complex(2,0), math.evaluate(func, { n:add(a, mul(math.complex(i,0), h)),x:input})));}      
+        return mul(div(h, math.complex(3,0)), sum);}
 		
-	let fi= math.subtract(0,simpsonsRule(math.complex(1,0),bign, bign*2));
+	let fi= sub(0,simpsonsRule(math.complex(1,0),bign, bign*2));
 	
 	for(let i=1;i<=bign;i++){
-		fi=math.add(fi,math.evaluate(func, { n: math.complex(i,0) ,x:input}));
+		fi=add(fi,math.evaluate(func, { n: math.complex(i,0) ,x:input}));
 	}
 	return fi;
 }
 
-function zog(b){return math.multiply(b,math.log(b));}
+function zog(b){return mul(b,math.log(b));}
 
-function zechlog(b){return math.log(math.add(1,b));}
-function keller(b){return math.log(math.add(1,math.exp(math.add(1,b)),math.subtract(0,eulerc())));}
-function arckeller(b){return math.add(math.log(math.add(-1,math.exp(b),-1)),-1);}
-function shoka(b){return math.add(b,log(math.add(exp(math.subtract(0,b)),eulerc(),-1)));}
-function fibpoly(n,b){ return  math.divide(math.subtract(pow(math.add(b,math.sqrt(math.add(math.multiply(b,b),4))),n),pow(math.subtract(b,math.sqrt(math.add(math.multiply(b,b),4))),n)),math.multiply(pow(2,n),math.sqrt(math.add(math.multiply(b,b),4))));}
-//function fib(n){return math.divide(math.subtract(pow(1+sqrt(5),n),pow(1-sqrt(5),n))),math.multiply(sqrt(5),pow(2,n)));}
-function lucaspoly(n,b){ return math.multiply(pow(2,math.subtract(0,n)),math.add(pow(math.add(b,math.sqrt(math.add(math.multiply(b,b),4))),n),pow(math.subtract(b,math.sqrt(math.add(math.multiply(b,b),4))),n)));}
+function zechlog(b){return math.log(add(1,b));}
+function keller(b){return math.log(add(1,math.exp(add(1,b)),sub(0,eulerc())));}
+function arckeller(b){return add(math.log(add(-1,math.exp(b),-1)),-1);}
+function shoka(b){return add(b,log(add(exp(sub(0,b)),eulerc(),-1)));}
+function fibpoly(n,b){ return  div(sub(pow(add(b,math.sqrt(add(mul(b,b),4))),n),pow(sub(b,math.sqrt(add(mul(b,b),4))),n)),mul(pow(2,n),math.sqrt(add(mul(b,b),4))));}
+//function fib(n){return div(sub(pow(1+sqrt(5),n),pow(1-sqrt(5),n))),mul(sqrt(5),pow(2,n)));}
+function lucaspoly(n,b){ return mul(pow(2,sub(0,n)),add(pow(add(b,math.sqrt(add(mul(b,b),4))),n),pow(sub(b,math.sqrt(add(mul(b,b),4))),n)));}
 	  
-function	 chebyshevu(n,b){return math.divide(math.sin(math.multiply(math.add(1,n),math.acos(b))),sin(acos(b)));}  
-function	 chebyshevw(n,b){return math.divide(math.sin(math.multiply(math.add(n,0.5),math.acos(b))),sin(math.divide(math.acos(x),2)));}//return math.divide(cos(math.multiply(math.add(1,n),b)),cos(b));}  
-function	 chebyshevt(n,b){return  math.multiply(math.sqrt(math.subtract(1,math.multiply(b,b))),chebyshevw(math.add(n,1),b));}  
-function	 chebyshevv(n,b){return math.multiply(math.sqrt(math.subtract(1,math.multiply(b,b))),chebyshevu(math.subtract(n,1),b));}  
-function dirichletkernel(n,b){return math.divide(math.sin(math.multiply(0.5,math.add(math.add(n,n),1),b)),sin(math.divide(b,2)));}	   
-function chebyshevc(n,b){return math.multiply(2,chebyshevt(n,math.multiply(0.5,b)));}
-function chebyshevs(n,b){return math.multiply(1,chebyshevu(n,math.multiply(0.5,b)));}
-function chebyshevtstar(n,b){return chebyshevt(n,math.subtract(math.add(b,b),1));}
-	function chebyshevustar(n,b){return chebyshevu(n,math.subtract(math.add(b,b),1));}
+function	 chebyshevu(n,b){return div(math.sin(mul(add(1,n),math.acos(b))),sin(acos(b)));}  
+function	 chebyshevw(n,b){return div(math.sin(mul(add(n,0.5),math.acos(b))),sin(div(math.acos(x),2)));}//return div(cos(mul(add(1,n),b)),cos(b));}  
+function	 chebyshevt(n,b){return  mul(math.sqrt(sub(1,mul(b,b))),chebyshevw(add(n,1),b));}  
+function	 chebyshevv(n,b){return mul(math.sqrt(sub(1,mul(b,b))),chebyshevu(sub(n,1),b));}  
+function dirichletkernel(n,b){return div(math.sin(mul(0.5,add(add(n,n),1),b)),sin(div(b,2)));}	   
+function chebyshevc(n,b){return mul(2,chebyshevt(n,mul(0.5,b)));}
+function chebyshevs(n,b){return mul(1,chebyshevu(n,mul(0.5,b)));}
+function chebyshevtstar(n,b){return chebyshevt(n,sub(add(b,b),1));}
+	function chebyshevustar(n,b){return chebyshevu(n,sub(add(b,b),1));}
 	
 	
 	function dicksond(n,x,a){
 		let fi = math.complex(0,0);
 		for (let i=0;i<=floor(n/2);i++)
-		fi = math.add(fi,math.multiply(math.divide(n,math.subtract(n,i)),ncr(math.subtract(n,i),i),pow(math.subtract(0,a),i),pow(x,math.subtract(n,math.add(i,i)))));
+		fi = add(fi,mul(div(n,sub(n,i)),ncr(sub(n,i),i),pow(sub(0,a),i),pow(x,sub(n,add(i,i)))));
 	return fi;}
 	function dicksone(n,x,a){
 		let fi = math.complex(0,0);
 		for (let i=0;i<=floor(n/2);i++)
-		fi = math.add(fi,math.multiply(ncr(math.subtract(n,i),i),pow(math.subtract(0,a),i),pow(x,math.subtract(n,math.add(i,i)))));
+		fi = add(fi,mul(ncr(sub(n,i),i),pow(sub(0,a),i),pow(x,sub(n,add(i,i)))));
 	return fi;}
 	function dicksongeneral(n,k,x,a){
 		let fi = math.complex(0,0);
 		for (let i=0;i<=floor(n/2);i++)
-		fi = math.add(fi,math.multiply(math.divide(math.subtract(n,math.multiply(k,i)),math.subtract(n,i)),ncr(math.subtract(n,i),i),pow(math.subtract(0,a),i),pow(x,math.subtract(n,math.add(i,i)))));
+		fi = add(fi,mul(div(sub(n,mul(k,i)),sub(n,i)),ncr(sub(n,i),i),pow(sub(0,a),i),pow(x,sub(n,add(i,i)))));
 	return fi;}
 	/* function brewersum(n,a){
 		let fi = math.complex(0,0);
 		for (let i=0;i<=floor(n/2);i++)
-		fi=math.add(fi,legendresymbol(dicksond(),p));
+		fi=add(fi,legendresymbol(dicksond(),p));
 	return fi;
 	} */
 	
 	function twoindexharmonic(n,j){
 		let fi=math.complex(0,0);
 		for(let i=1;i<=math.complex(n).re;i++)
-			fi=math.add(fi,math.multiply(ncr(n,i),pow(-1,math.subtract(i,1)),pow(i,math.subtract(0,j))));
+			fi=add(fi,mul(ncr(n,i),pow(-1,sub(i,1)),pow(i,sub(0,j))));
 		return fi;
 	}
 	function harmoniclog(n,t,x){
 		let fi=math.complex(0,0);
 		for(let j=0;j<=math.complex(t).re;j++)
-			fi=math.add(fi,math.multiply(pow(-1,j),pochhammer(t,j),pow(math.log(x),math.subtract(t,j)),twoindexharmonic(n,j)));
-		return math.multiply(pow(x,n),fi);
+			fi=add(fi,mul(pow(-1,j),pochhammer(t,j),pow(math.log(x),sub(t,j)),twoindexharmonic(n,j)));
+		return mul(pow(x,n),fi);
 	}
 	function harmonicc(t){
 		let fi=math.complex(0,0);
 		for(let j=1;j<=bign;j++)
-			fi=math.add(fi,math.divide(math.cos(math.multiply(j,t)),math.multiply(j,j)));
+			fi=add(fi,div(math.cos(mul(j,t)),mul(j,j)));
 		return fi;
 	}
 		function harmonics(t){
 		let fi=math.complex(0,0);
 		for(let j=1;j<=bign;j++)
-			fi=math.add(fi,math.divide(math.sin(math.multiply(j,t)),math.multiply(j,j)));
+			fi=add(fi,div(math.sin(mul(j,t)),mul(j,j)));
 		return fi;
 	}
 	
-//	function scorergid(t,x){return math.sin(math.add(math.divide(math.multiply(t,t,t),3),math.multiply(x,t)));}
-		function scorergid(t,x){ return math.multiply(math.exp(math.subtract(math.divide(math.multiply(t,t,t),-3),math.divide(math.multiply(t,x),2))),math.cos(math.add(math.multiply(0.5,math.sqrt(3),x,t),math.divide(pi(),1.5))));}
-	function scorerhid(t,x){return math.exp(math.add(math.divide(math.multiply(t,t,t),-3),math.multiply(x,t)));}
-	function scorergi(x){return math.divide(integral(scorergid,0,math.multiply(bign,0.5),x,math.multiply(bign,2)),math.subtract(0,pi()));}
-	function scorerhi(x){return math.divide(integral(scorerhid,0,math.multiply(bign,0.5),x,math.multiply(bign,2)),pi());}
+//	function scorergid(t,x){return math.sin(add(div(mul(t,t,t),3),mul(x,t)));}
+		function scorergid(t,x){ return mul(math.exp(sub(div(mul(t,t,t),-3),div(mul(t,x),2))),math.cos(add(mul(0.5,math.sqrt(3),x,t),div(pi(),1.5))));}
+	function scorerhid(t,x){return math.exp(add(div(mul(t,t,t),-3),mul(x,t)));}
+	function scorergi(x){return div(integral(scorergid,0,mul(bign,0.5),x,mul(bign,2)),sub(0,pi()));}
+	function scorerhi(x){return div(integral(scorerhid,0,mul(bign,0.5),x,mul(bign,2)),pi());}
 	
 	function ai(x){
-	if(x.re>0) return math.multiply(1/pi(),math.sqrt(math.divide(x,3)),besselk(0.333333333,math.multiply(0.666666666,pow(x,1.5))));
-	return math.multiply(math.sqrt(math.divide(math.subtract(0,x),9)),math.add(besselj(0.33333333,math.multiply(pow(math.subtract(0,x),1.5),0.666666666)),besselj(-0.33333333,math.multiply(pow(math.subtract(0,x),1.5),0.666666666))));}
+	if(x.re>0) return mul(1/pi(),math.sqrt(div(x,3)),besselk(0.333333333,mul(0.666666666,pow(x,1.5))));
+	return mul(math.sqrt(div(sub(0,x),9)),add(besselj(0.33333333,mul(pow(sub(0,x),1.5),0.666666666)),besselj(-0.33333333,mul(pow(sub(0,x),1.5),0.666666666))));}
 	function bi(x){
-	if(x.re>0) return math.multiply(math.sqrt(math.divide(x,3)),math.add(besseli(-0.33333333,math.multiply(pow(x,1.5),0.666666666)),besseli(0.33333333,math.multiply(pow(x,1.5),0.666666666))));
-	return math.multiply(math.sqrt(math.divide(math.subtract(0,x),3)),math.subtract(besselj(-0.33333333,math.multiply(pow(math.subtract(0,x),1.5),0.666666666)),besselj(0.33333333,math.multiply(pow(math.subtract(0,x),1.5),0.666666666))));}
+	if(x.re>0) return mul(math.sqrt(div(x,3)),add(besseli(-0.33333333,mul(pow(x,1.5),0.666666666)),besseli(0.33333333,mul(pow(x,1.5),0.666666666))));
+	return mul(math.sqrt(div(sub(0,x),3)),sub(besselj(-0.33333333,mul(pow(sub(0,x),1.5),0.666666666)),besselj(0.33333333,mul(pow(sub(0,x),1.5),0.666666666))));}
 
-function airyc(x){return math.divide(bi(x),ai(x));}
+function airyc(x){return div(bi(x),ai(x));}
+
 function airyzeta(x){let fi=math.complex(0,0);
-for(let i=0;i<50;i++)fi=math.add(fi,pow(airyaizero[i],i));
+for(let i=0;i<30;i++)fi=add(fi,pow(math.abs(airyaizero[i]),sub(0,x)));
 return fi;
 }
 function airybizeta(x){let fi=math.complex(0,0);
-for(let i=0;i<50;i++)fi=math.add(fi,pow(airybizero[i],i));
+for(let i=0;i<30;i++)fi=add(fi,pow(math.abs(airybizero[i]),sub(0,x)));
 return fi;
 }
 function sinczeta(x){let fi=math.complex(0,0);
-for(let i=0;i<50;i++)fi=math.add(fi,pow(sinczero[i],i));
+for(let i=0;i<20;i++)fi=add(fi,pow(math.abs(sinczero[i]),sub(0,x)));
 return fi;
 }
 //function airytn(n,z){
 	
 //}
+function qpochhammer(a,q,n){
+	let fi=math.complex(1,0);
+	for(let i=0;i<n;i++)
+	fi=mul(fi,sub(1,mul(a,pow(q,i))));	
+	return fi;
+}
+function infqpochhammer(a,q){
+	let fi=math.complex(1,0);
+	for(let i=0;i<bign;i++)
+	fi=mul(fi,sub(1,mul(a,pow(q,i))));	
+	return fi;
+}
+function multiqpochhammer(A,q,n){
+	let fi=math.complex(1,0);
+	for(let i=0;i<leng(A);i++)
+	fi=mul(fi,qpochhammer(g(A,i),q,i));	
+	return fi;
+}
+function modifiedjacobitheta(x,p){
+return mul(infqpochhammer(div(p,x),p),infqpochhammer(x,p));	
+}
+
+function polymodifiedjacobitheta(X,p){
+	let fi=math.complex(1,0);
+	for(let i=0;i<leng(X);i++)
+	fi=mul(fi,modifiedjacobithet(g(X,i),p));
+return fi;
+}
+function ellipticshiftedfactorial(x,q,p,n){
+let fi=math.complex(1,0);
+for(let i=0;i<n;i++)fi=mul(fi,modifiedjacobitheta(mul(x,pow(q,i)),p));
+return fi;
+}
+function polyellipticshiftedfactorial(X,q,p,n){
+	let fi=math.complex(1,0);
+	for(let i=0;i<leng(X);i++)
+	fi=mul(fi,ellipticshiftedfactorial(g(X,i),q,p,n));
+return fi;
+}
+
+function thetahypergeometric(A,B,q,p,z){//E
+let fi=math.complex(0,0);
+	for(let n=0;n<bign;n++){
+	let nom=pow(z,n);
+		for(let i=0;i<leng(A);i++)
+			nom=mul(nom,ellipticshiftedfactorial(g(A,i),q,p,n));
+	let denom=math.complex(1,0);
+		for(let i=0;i<leng(B);i++)
+			denom=mul(denom,ellipticshiftedfactorial(g(B,i),q,p,n));
+	fi=add(fi,div(nom,denom));
+	}
+	return fi;
+}
+function bilateralthetahypergeometric(A,B,q,p,z){//G
+let fi=math.complex(0,0);
+	for(let n=sub(0,bign);n<=bign;n++){
+	let nom=pow(z,n);
+		for(let i=0;i<leng(A);i++)
+			nom=mul(nom,ellipticshiftedfactorial(g(A,i),q,p,n));
+	let denom=math.complex(1,0);
+		for(let i=0;i<leng(B);i++)
+			denom=mul(denom,ellipticshiftedfactorial(g(B,i),q,p,n));
+	fi=add(fi,div(nom,denom));
+	}
+	return fi;
+}
+function poisedhetahypergeometric(a,A,q,p,z){//V
+let fi=math.complex(0,0);
+	for(let n=sub(0,bign);n<=bign;n++){
+	let nom=mul(pow(z,n),mul(nom,ellipticshiftedfactorial(a,q,p,n)));
+		for(let i=0;i<leng(A);i++)
+			nom=mul(1,ellipticshiftedfactorial(g(A,i),q,p,n));
+	let denom=mul(modifiedjacobitheta(a,p),ellipticshiftedfactorial(q,q,p,n));
+		for(let i=0;i<leng(A);i++)
+			denom=mul(denom,ellipticshiftedfactorial(div(q,g(A,i)),q,p,n));
+	fi=add(fi,div(mul(modifiedjacobitheta(mul(a,pow(q,add(n,n))),p),nom),denom));
+	}
+	return fi;
+}
+function ellipticnum(a,s,t){//https://en.wikipedia.org/wiki/Elliptic_hypergeometric_series
+	return  div(jacobitheta1(mul(pi(),s,a),math.exp(mul(pi(),math.complex(0,1),t))),jacobitheta1(mul(pi(),s),math.exp(mul(pi(),math.complex(0,1),t))));
+}
+function additiveellipticshifteddactorial(a,s,t,n){
+	let fi=math.complex(1,0);
+	for(let i=0;i<n;i++)fi=mul(fi,ellipticnum(add(a,i),s,t));
+	return fi;
+}
+function polyadditiveellipticshifteddactorial(A,s,t,n){
+	let fi=math.complex(1,0);
+	for(let i=0;i<leng(A);i++)fi=mul(fi,additiveellipticshifteddactorial(g(A,i),s,t,n));
+	return fi;
+}
+function additivethetahypergeometric(A,B,q,p,z){//e
+let fi=math.complex(0,0);
+	for(let n=0;n<bign;n++){
+	let nom=pow(z,n);
+		for(let i=0;i<leng(A);i++)
+			nom=mul(nom,additiveellipticshifteddactorial(g(A,i),q,p,n));
+	let denom=math.complex(1,0);
+		for(let i=0;i<leng(B);i++)
+			denom=mul(denom,additiveellipticshifteddactorial(g(B,i),q,p,n));
+	fi=add(fi,div(nom,denom));
+	}
+	return fi;
+}
+function additivebilateralthetahypergeometric(A,B,q,p,z){//g
+let fi=math.complex(0,0);
+	for(let n=sub(0,bign);n<=bign;n++){
+	let nom=pow(z,n);
+		for(let i=0;i<leng(A);i++)
+			nom=mul(nom,additiveellipticshifteddactorial(g(A,i),q,p,n));
+	let denom=math.complex(1,0);
+		for(let i=0;i<leng(B);i++)
+			denom=mul(denom,additiveellipticshifteddactorial(g(B,i),q,p,n));
+	fi=add(fi,div(nom,denom));
+	}
+	return fi;
+}
+function additivepoisedhetahypergeometric(a,A,q,p,z){//v 
+let fi=math.complex(0,0);
+	for(let n=sub(0,bign);n<=bign;n++){
+	let nom=mul(pow(z,n),mul(1,additiveellipticshifteddactorial(a,q,p,n)));
+		for(let i=0;i<leng(A);i++)
+			nom=mul(nom,additiveellipticshifteddactorial(g(A,i),q,p,n));
+	let denom=mul(ellipticnum(add(a,n,n),q,p),additiveellipticshifteddactorial(q,q,p,n));
+		for(let i=0;i<leng(A);i++)
+			denom=mul(denom,additiveellipticshifteddactorial(div(q,g(A,i)),q,p,n));
+	fi=add(fi,div(mul(ellipticnum(a,q,p),nom),denom));
+	}
+	return fi;
+}
+
+function leng(A){
+	if( A._data !== undefined)return A._data.length;
+	return A.length;	
+}
+function g(A,n){
+	if( A._data !== undefined)return A._data[n];
+	return A[n];	
+}
+
+function polynomial(A,x){
+	let fi=math.complex(0,0);
+	//console.log((A._data).length);
+	for(let i=0;i<leng(A);i++){
+	//	console.log(i);
+	fi = add(fi,mul(pow(x,i),g(A,i)));}
+return fi;
+}
+function hypergeometric(A,B,x){
+	let fi=math.complex(0,0);
+	for(let n=0;n<bign;n++){
+	let nom=pow(x,n);
+		for(let i=0;i<leng(A);i++)
+			nom=mul(nom,pochhammer(g(A,i),n));
+	let denom=facti(n);
+	
+		for(let i=0;i<leng(B);i++)
+			denom=mul(denom,pochhammer(g(B,i),n));
+	fi=add(fi,div(nom,denom));
+	}
+	return fi;
+}
+function reghypergeometric(A,B,x){
+	let fi=math.complex(0,0);
+	for(let n=0;n<bign;n++){
+	let nom=pow(x,n);
+		for(let i=0;i<leng(A);i++)
+			nom=mul(nom,pochhammer(g(A,i),n));
+	let denom=facti(n);
+	
+		for(let i=0;i<leng(B);i++)
+			denom=mul(denom,gamma(add(g(B,i),n)));
+	fi=add(fi,div(nom,denom));
+	}
+	return fi;
+}
+function bilateralhypergeometric(A,B,x){
+	let fi=math.complex(0,0);
+	for(let n=sub(0,bign);n<=bign;n++){
+	let nom=pow(x,n);
+		for(let i=0;i<leng(A);i++)
+			nom=mul(nom,pochhammer(g(A,i),n));
+	let denom=math.complex(1,0);
+	
+		for(let i=0;i<leng(B);i++)
+			denom=mul(denom,pochhammer(g(B,i),n));
+	fi=add(fi,div(nom,denom));
+	}
+	return fi;
+}
+
+function mwright(a,z){
+		const r = mul(a,z);
+	return mul(awright(a),pow(r,div(sub(a,0.5),sub(1,a))),math.exp(mul(-1,bwright(a),pow(r,div(1,sub(1,a))))))
+}
+function awright(a){//https://en.wikipedia.org/wiki/Fox–Wright_function
+
+	return div(1,math.sqrt(mul(2,pi(),sub(1,a))));
+}
+function bwright(a){
+	return div(sub(1,a),a);
+}
+function macroberte(){}
+
+function gammastar(a){
+	if(a==0)return 1;
+	if(Number.isInteger(a))
+	return facti(a-1);
+return gamma(a);
+}
+/*
+function meijerg(m,n,A,B,z){
+	let p=leng(A)-1;let q=leng(B);
+	let fi=math.complex(0,0);
+	for(let h=0;h<=m;h++){
+		let noma=pow(z,B._data[h]);
+		let nomb=math.complex(1,0);
+		let denoma=math.complex(1,0);
+		let denomb=math.complex(1,0);
+	for(let j=0;j<=m;j++)
+	noma=mul(noma,gammastar(sub(B._data[j],B._data[h])));	
+	for(let j=0;j<=n;j++)
+	nomb=mul(nomb,gammastar(add(1,sub(B._data[h],A._data[j]))));	
+	for(let j=m+1;j<q;j++)
+	denoma=mul(denoma,gammastar(add(1,sub(B._data[h],B._data[j]))));		
+	for(let j=n+1;j<p;j++)
+	denomb=mul(denomb,gammastar(sub(A._data[j],B._data[h])));		
+	let C=[];let D=[];
+for(let j=0;j=p;j++)C.push(add(1,B._data[h],sub(0,A._data[j])));
+for(let j=0;j<=h;j++)D.push(add(1,B._data[h],sub(0,B._data[j])));	
+for(let j=h+1;j<q;j++)D.push(add(1,B._data[h],sub(0,B._data[j])));	
+	fi=add(fi,mul(div(mul(noma,nomb),mul(denoma,denomb)),hypergeometric(C,D,mul(pow(-1,sub(p,sub(m,n))),z))));
+	}
+	return fi;
+}*/
+
+
+
+function meijerg(A,B,C,D,z,r){//f this s
+	let fi =math.complex(0,0);
+	for(let k=0;k<leng(C);k++){
+		let bk = g(C,k);
+	let num=math.complex(1,0);
+	let dnum1=math.complex(1,0);
+	let dnum2=math.complex(1,0);
+	for(let i=0;i<leng(A);i++)num=mul(num,gamma(add(sub(1,g(A,i)),bk)));
+	for(let i=0;i<leng(B);i++)dnum2=mul(dnum2,gamma(sub(g(B,i),bk)));
+	for(let i=0;i<leng(C);i++)if(i!==k)dnum2=mul(dnum2,sin(mul(pi(),(sub(g(B,i),bk)))));
+	let E = [];let F = [];
+	for(let i=0;i<leng(A);i++)E.push(add(sub(1,g(A,i)),bk));
+	for(let i=0;i<leng(B);i++)E.push(add(sub(1,g(B,i)),bk));
+	for(let i=0;i<leng(C)-1;i++)F.push(add(sub(1,g(C,i)),bk));
+	for(let i=0;i<leng(D);i++)F.push(add(sub(1,g(D,i)),bk));
+	fi = add(fi,mul(div(num,mul(dnum1,dnum2)),pow(z,div(bk,r)),reghypergeometric(E,F,mul(pow(-1,sub(sub(leng(B),leng(C)),leng(A))),pow(z,div(1,r))))));
+	}
+	
+	return mul(fi,pow(pi(),sub(leng(C),1))); 
+}
+
+
+function riemannp(a,b,c,al,bl,cl,ap,bp,cp,z){//https://en.wikipedia.org/wiki/Riemann%27s_differential_equation
+return mul(pow(div(sub(z,a),sub(z,b)),al),pow(div(sub(z,c),sub(z,b)),cl),hypergeometric([add(al,bl,cl),add(al,bp,cl)],[add(1,sub(a,ap))],div(mul(sub(z,a),sub(c,b)),mul(sub(z,b),sub(c,a)))));
+}
+function multiset(n,r){
+	return div(factorial(add(n,r,-1)),mul(factorial(r),factorial(sub(n,1))));
+}
+function  confluenthypergeometricm(a,b,z){
+	return hypergeometric([a,bign],[b],div(z,bign));
+}
+function  confluenthypergeometricu(a,b,z){
+	return add(mul(div(gamma(sub(1,b)),add(a,sub(1,b))),confluenthypergeometricm(a,b,z)),mul(div(gamma(add(b,-1)),gamma(a)),pow(z,sub(1,b)),confluenthypergeometricm(add(a,sub(1,b)),sub(2,b),z)));
+}
+
+function associatedlegendre(l,m,x){
+	let fi=math.complex(0,0);for(let k=m;k<=l;k++)
+		fi = add(fi,mul(div(factorial(k),factorial(sub(k,m))),pow(x,sub(k,m)),ncr(l,k),ncr(div(add(l,k,-1),2),l)));
+	return mul(fi,pow(-1,m),pow(2,l),pow(sub(1,mul(x,x)),div(m,2)));
+}
+function sphericalharmonic(l, m, theta, phi) {
+    const term1 = pow(-1, m);
+    const term2 = math.sqrt(
+        div(
+            mul(
+                mul(2 * l + 1, gamma(sub(l, m))),
+                div(1, gamma(add(l, m)))
+            ),
+            4 * math.pi
+        )
+    );
+    const legendre = associatedlegendre(l, m, math.cos(theta));
+    const expTerm = math.exp(mul(math.complex(0, 1), mul(m , phi)));
+    return mul(mul(term1, term2), mul(legendre, expTerm));
+}
+
+// Spherical harmonic for acoustic applications
+function sphericalharmonicacoustic(l, m, theta, phi) {
+    const term1 = math.sqrt(
+        div(
+            mul(
+                mul(2 * l + 1, gamma(sub(l, m))),
+                div(1, gamma(add(l, m)))
+            ),
+            4 * math.pi
+        )
+    );
+    const legendre = associatedlegendre(l, m, math.cos(theta));
+    const expTerm = math.exp(mul(math.complex(0, 1), mul(m , phi)));
+    return mul(term1, mul(legendre, expTerm));
+}
+
+// Spherical harmonic for geodesy
+function sphericalharmonicgeodesy(l, m, theta, phi) {
+    const term1 = math.sqrt(
+        div(
+            mul(gamma(sub(l, m)), 1),
+            gamma(add(l, m))
+        )
+    );
+    const legendre = associatedlegendre(l, m, math.cos(theta));
+    const expTerm = math.exp(mul(math.complex(0, 1), mul(m , phi)));
+    return mul(term1, mul(legendre, expTerm));
+}
+
+// Spherical harmonic for magnetics
+function sphericalharmonicmagnetics(l, m, theta, phi) {
+    const term1 = math.sqrt(
+        div(
+            gamma(sub(l, m)),
+            gamma(add(l, m))
+        )
+    );
+    const legendre = associatedlegendre(l, m, math.cos(theta));
+    const expTerm = math.exp(mul(math.complex(0, 1), mul(m , phi)));
+    return mul(term1, mul(legendre, expTerm));
+}
+function inftozero(term){if (math.abs(math.complex(term).re)===math.Infinity)return 0;return term;}
+
+function wigner3j(j1,j2,j3,m1,m2,m3) {
+    let fi = math.complex(0,0);
+	const j1a=math.complex(j1).re;const j2a=math.complex(j2).re;const j3a=math.complex(j3).re;
+	const m1a=math.complex(m1).re;const m2a=math.complex(m2).re;const m3a=math.complex(m3).re;
+    const kStart = math.max(0,sub(sub(j2a,j3a),m1a),add(sub(j1a,j3a),m2a));
+    const kEnd =math.min(sub(j1a,m1a),add(j2a,m2a),sub(add(j1a,j2a),j3a));
+//console.log(kStart);   
+//console.log(kEnd);
+   for (let k = kStart; k <= kEnd; k++) {
+        const term = div(
+            pow(-1, k),
+            mul(
+                nfactorial(k),
+                nfactorial(add(j1, j2, sub(0,j3), sub(0,k))),
+                nfactorial(sub(sub(j1, m1), k)),
+                nfactorial(sub(sub(j2, m2), k)),
+                nfactorial(add(j3, sub(0,j2), m1, k)),
+                nfactorial(add(j3, sub(0,j1), sub(0,m2), k))
+            ));
+	//	console.log(term);
+        fi = add(fi, inftozero(term));
+
+    }
+//	console.log(fi);
+    const multiplier = mul(
+        pow(-1, sub(sub(j1, j2), m3)),
+        math.sqrt(
+            ntriangef(j1,j2,j3)
+        ),
+        math.sqrt(
+            mul(
+                nfactorial(sub(j1, m1)),
+                nfactorial(add(j1, m1)),
+                nfactorial(sub(j2, m2)),
+                nfactorial(add(j2, m2)),
+                nfactorial(sub(j3, m3)),
+                nfactorial(add(j3, m3))
+            )
+        )
+    );
+
+    return mul(multiplier, fi);
+}
+
+function wignerd(j,b,mp,m){
+	let fi=math.complex(0,0);
+	for(let s=math.max(0,sub(m,mp));s<=math.min(add(j,m),sub(j,mp));s++)
+		fi=add(fi,inftozero(div(mul(pow(-1,add(sub(mp,m),s)),pow(math.cos(div(b,2)),sub(add(j,j,m),add(mp,s,s))),pow(math.sin(div(b,2)),add(sub(mp,m),s,s))),mul(factorial(sub(add(j,m),s)),factorial(add(sub(mp,m),s)),factorial(sub(sub(j,mp),s)),factorial(s)))));
+	return mul(fi,math.sqrt(mul(factorial(add(j,mp)),factorial(sub(j,mp)),factorial(add(j,m)),factorial(sub(j,m)))));
+}
+function wigner6j(j1,j2,j3,J1,J2,J3){
+	let fi=math.complex(0,0)
+	for(let t=math.max(add(J1,j2,J3),add(J1,J2,j3),add(j1,J2,J3),add(j1,j2,j3));t<math.min(add(j1,j2,J1,J2),add(j2,j3,J2,J3),add(j1,j3,J1,J3));t++)
+	{fi=add(fi,inftozero(div(mul(pow(-1,t),factorial(add(t,1))),wigner6jf(j1,j2,j3,J1,J2,J3,t+0.01))));
+	}//console.log (inftozero(fi));
+	return mul(fi,math.sqrt(mul(triangef(j1,j2,j3),triangef(j1,J2,J3),triangef(J1,j2,J3),triangef(J1,J2,j3))));
+}
+
+function wigner6jf(j1,j2,j3,J1,J2,J3,t){
+	return mul(
+	factorial(sub(t,add(j1,j2,j3))),
+	factorial(sub(t,add(j1,J2,J3))),
+	factorial(sub(t,add(J1,J2,j3))),
+	factorial(sub(t,add(J1,j2,J3))),
+	factorial(sub(add(j1,j2,J1,J2),t)),
+	factorial(sub(add(j2,j3,J2,J3),t)),
+	factorial(sub(add(j1,j3,J1,J3),t))
+	)
+}
+
+ 
+function triangef(a, b, c) {
+    const term1 = factorial(add(a, b, mul(-1, c)));
+    const term2 = factorial(add(a, mul(-1, b), c));
+    const term3 = factorial(sub(add(b, c), a));
+    const term4 = factorial(add(a, b, c, 1));
+
+    return div(mul(term1, term2, term3), term4);
+}
+function ntriangef(a, b, c) {
+    const term1 = nfactorial(add(a, b, mul(-1, c)));
+    const term2 = nfactorial(add(a, mul(-1, b), c));
+    const term3 = nfactorial(sub(add(b, c), a));
+    const term4 = nfactorial(add(a, b, c, 1));
+
+    return div(mul(term1, term2, term3), term4);
+}
+
+
+
+
+function wigner3jhypg(j1,j2,j3,m1,m2,m3){
+	j1=add(j1,1e-7);j2=add(j2,1e-7);j3=add(j3,1e-7);
+	m1=add(m1,1e-7);m2=add(m2,1e-7);m3=add(m3,1e-7);
+	return div(mul(
+	pow(-1,sub(add(j2,m3),j1)),
+	
+	math.sqrt(factorial(sub(add(j3,j1),j2))),
+	math.sqrt(factorial(sub(add(j3,j2),j1))),
+	math.sqrt(factorial(sub(j3,m3))),
+    math.sqrt(factorial(add(j3,m3))),
+	math.sqrt(factorial(add(j1,m1))),
+	math.sqrt(factorial(sub(j2,m2))),
+	hypergeometric([sub(j3,add(j1,j2)),sub(m1,j1),sub(j2,m2)],[sub(add(1,j3,m1),j2),sub(add(j3,1),add(m2,j1))],1))
+	,mul(math.sqrt(factorial(sub(add(j2,j1),j3)))
+	,math.sqrt(factorial(sub(0,add(j3,j1,1,j2))))
+	,math.sqrt(factorial(add(j2,m2)))
+	,math.sqrt(factorial(sub(j1,m1)))
+	))
+	
+	; }
+
+
+function wigner6jhypg(j1,j2,j3,j4,j5,j6){
+	j1=add(j1,1e-7);j2=add(j2,1e-7);j3=add(j3,1e-7);
+	j4=add(j4,1e-7);j5=add(j5,1e-7);j6=add(j6,1e-7);
+	return div(mul(
+	pow(-1,sub(0,add(j1,j2,j4,j5))),
+	pi(),math.csc(mul(pi(),add(j1,j2,j4,j5))),
+	math.sqrt(factorial(sub(add(j3,j1),j2))),
+	math.sqrt(factorial(sub(add(j3,j2),j1))),
+	math.sqrt(factorial(sub(add(j3,j4),j5))),
+	math.sqrt(factorial(sub(add(j3,j5),j4))),
+	 math.sqrt(factorial(sub(add(j6,j2),j4))),
+	 math.sqrt(factorial(sub(add(j6,j4),j2))),
+	 math.sqrt(factorial(sub(add(j6,j1),j5))),
+	 math.sqrt(factorial(sub(add(j6,j5),j1))),
+	hypergeometric([sub(j3,add(j1,j2)),sub(j3,add(j4,j5)),sub(j6,add(j2,j4)),sub(j6,add(j1,j5))],[sub(0,add(j1,j2,j4,j5,1)),sub(add(1,j3,j6),add(j1,j4)),sub(add(1,j3,j6),add(j2,j5))],1))
+	,mul(math.sqrt(factorial(sub(add(j2,j1),j3)))
+	,math.sqrt(factorial(add(1,j2,j3,j1)))
+	,math.sqrt(factorial(sub(add(j5,j4),j3)))
+	,math.sqrt(factorial(add(1,j3,j4,j5)))
+	,math.sqrt(factorial(add(1,j2,j4,j6)))
+	,math.sqrt(factorial(add(1,j6,j5,j1)))
+	,math.sqrt(factorial(sub(add(j2,j4),j6)))
+	,math.sqrt(factorial(sub(add(j1,j5),j6)))
+	))
+	
+	; }
+
+
+function rubixcomb(x){
+	let divo = sub(div(sub(x,2),2),mul(0.5,sqr(math.sin(mul(div(sub(x,2),2),pi())))));
+	return mul(3674160.0,pow(11771943321600.0,sqr(math.sin(mul(x,pi(),0.5)))),pow(620448401733239439360000.0,divo),pow(3246670537110000,sqr(divo)));
+}
+function redrubixcomb(x){
+	let divo = sub(div(sub(x,2),2),mul(0.5,sqr(math.sin(mul(div(sub(x,2),2),pi())))));
+	return mul(1,pow(12,sqr(math.sin(mul(x,pi(),0.5)))),pow(24,divo),pow(6,sqr(divo)));
+}
+
+function gauntcoefficient(l1,l2,l3,m1,m2,m3){
+	return mul(math.sqrt(div(mul(add(l1,l1,1),add(l2,l2,1),add(l3,l3,1)),mul(4,pi()))),wigner3jhypg(l1,l2,l3,0,0,0),wigner3jhypg(l1,l2,l3,m1,m2,m3));
+}
+function spinweightedsphericalharmonic(l1,l2,l3,m1,m2,m3,s1,s2,s3){
+	return mul(math.sqrt(div(mul(add(l1,l1,1),add(l2,l2,1),add(l3,l3,1)),mul(4,pi()))),wigner3jhypg(l1,l2,l3,sub(0,s1),sub(0,s2),sub(0,s3)),wigner3jhypg(l1,l2,l3,m1,m2,m3));
+}
+function wigner1jm(j,m,mp){
+	return mul(math.sqrt(add(j,j,1)),wigner3jhypg(j,0,j,m,0,mp));
+}
+function racahv(j1,j2,j3,m1,m2,m3){
+	return mul(pow(-1,sub(sub(j1,j2),j3)),wigner3jhypg(j1,j2,j3,m1,m2,m3));
+}
+function racahw(j1,j2,j3,j4,j5,j6){
+	return mul(pow(-1,add(j1,j2,j3,j4)),wigner3jhypg(j1,j2,j3,j4,j5,j6));
+}
+function clebschgordan(j1,j2,j,m1,m2,m){
+ return mul(math.sqrt(add(j,j,1)),pow(-1,sub(add(m,j1),j2)),wigner3jhypg(j1,j2,j,m1,m2,sub(0,j)));
+}
+function recouplingcoefficient(j1,j2,j3,j4,j5,j6,j7,j8,j9){
+ return mul(math.sqrt(mul(add(j3,j3,1),add(j6,j6,1),add(j7,j7,1),add(j8,j8,1))),wigner9j(j1,j2,j3,j4,j5,j6,j7,j8,j9));
+}
+function triangulardelta(j1,j2,j3){
+	if(math.abs(sub(j1,j2)) <= math.abs(j3) && math.abs(add(j1,j2))>=math.abs(j3)){
+		return 1;
+	}
+	return 0;
+}
+function hexagonaldelta(j1,j2,j3,j4,j5,j6){
+	if(triangulardelta(j1,j2,j3) && triangulardelta(j1,j5,j6) && triangulardelta(j4,j2,j6) && triangulardelta(j3,j4,j5)){
+		return 1;
+	}
+	return 0;
+}
+function wigner9j(j1,j2,j3,j4,j5,j6,j7,j8,j9){
+let fi=math.complex(0,0);
+let x = math.complex(0,0);
+for(let q=0;x<=add(j1,j2,j3,j4,j5,j6,j7,j8,j9);x=add(x,0.5)){
+	if(hexagonaldelta(j1,j4,j7,j8,j9,x) && hexagonaldelta(j2,j5,j8,j4,x,j6) && hexagonaldelta(j3,j6,j9,x,j1,j2))
+	fi=add(fi,inftozero(mul(pow(-1,add(x,x)),add(x,x,1),wigner6jhypg(j1,j4,j7,j8,j9,x),wigner6jhypg(j2,j5,j8,j4,x,j6),wigner6jhypg(j3,j6,j9,x,j1,j2))));
+}
+	return fi;
+}
+
+
+function bei(v,z){
+	const term = mul(pow(-1,0.25),z);
+	return mul(-0.5,math.complex(0,1),math.exp(mul(-0.75,math.complex(0,1),pi(),v)),pow(z,v),pow(term,sub(0,v)),sub(mul(math.exp(mul(math.complex(0,1.5),pi(),v)),besseli(v,term)),besselj(v,term)));
+}
+function ber(v,z){
+	const term = mul(pow(-1,0.25),z);
+	return mul(0.5,math.complex(0,1),math.exp(mul(-0.75,math.complex(0,1),pi(),v)),pow(z,v),pow(term,sub(0,v)),add(mul(math.exp(mul(math.complex(0,1.5),pi(),v)),besseli(v,term)),besselj(v,term)));
+}
+function ker(v,z){
+	v = math.add(0.00000002,v);
+	const term = mul(pow(-1,0.25),z);
+	return mul(0.25,pi(),math.csc(mul(pi(),v)),math.exp(mul(-0.75,math.complex(0,1),pi(),v)),pow(z,sub(0,v)),pow(term,sub(0,v)),
+	sub(
+	mul(pow(term,add(v,v)),add(besseli(sub(0,v),term),mul(math.exp(mul(math.complex(0,1.5),pi(),v)),besselj(sub(0,v),term)))),
+	mul(math.exp(mul(math.complex(0,0.5),pi(),v)),pow(z,add(v,v)),add(besseli(v,term),mul(math.exp(mul(math.complex(0,0.5),pi(),v)),besselj(v,term))))
+	));}
+function kei(v,z){
+	v = math.add(0.00000002,v);
+	const term = mul(pow(-1,0.25),z);
+	return mul(-0.25,pi(),math.csc(mul(pi(),v)),math.exp(mul(-0.75,math.complex(0,1),pi(),v)),pow(z,sub(0,v)),pow(term,sub(0,v)),
+	sub(
+	mul(pow(term,add(v,v)),sub(besseli(sub(0,v),term),mul(math.exp(mul(math.complex(0,1.5),pi(),v)),besselj(sub(0,v),term)))),
+	mul(math.exp(mul(math.complex(0,0.5),pi(),v)),pow(z,add(v,v)),sub(besseli(v,term),mul(math.exp(mul(math.complex(0,0.5),pi(),v)),besselj(v,term))))
+	));}
+function bei0(x){return bei(0,x);}
+function ber0(x){return ber(0,x);}
+function kei0(x){return kei(0,x);}
+function ker0(x){return ker(0,x);}
+
+
+
+function polygamma(z){
+	const m1 = math.log(gamma(b));
+    const m2 = math.log(gamma(add(b , epsilon)));
+    const m3 = math.log(gamma(add(add(b , epsilon) , epsilon)));
+    return div(sub(sub(m2, m1), sub(m3, m2)), epsilon*epsilon);
+	let fi=math.complex(0,0);
+	for(let k=1;k<bign;k++)
+		fi=add(fi,sub(div(1,k),div(1,add(k,z,1))));
+	return sub(fi,0.5772156649);
+}
+
+function mobiustransform(a,b,c,d,z){
+	return div(add(mul(a,z),b),add(mul(c,z),d));
+}
+function tesseract(x){return mul(mul(x,x),mul(x,x));}
+function tesseractroot(x){return pow(x,0.25)};
+function penteract(x){return mul(mul(x,x),mul(x,x),x);}
+function penteractroot(x){return pow(x,0.2)};
+
+function plex(x){return pow(10,x);}
+function minex(x){return pow(10,sub(0,x));}
+function ty(x){return mul(10,x);}
+function teen(x){return add(10,x);}
+function ylion(x){return pow(10,pow(2,add(2,x)));}
+function yriad(x){return pow(10000,x);}
+function last(x){return pow(10,mul(3,pow(1000,x)));}
+function illion(x){return pow(10,mul(3,add(1,x)));}
+function illiard(x){return pow(10,mul(6,add(0.5,x)));}
+function illiad(x){return pow(10,pow(6,x));}//long scale illion
+function illiob(x){return pow(10,add(3,mul(3,pow(10,add(3,mul(3,x))))));}
+function exian(x){return pow(6,mul(4,x));}
+function eciam(x){return pow(6,mul(4,pow(2,x)));}
+//prefixes
+function beasta(x){return mul(666,x);}
+function beasto(x){return div(x,666);}
+//fz
+function gar(x){return mul(x,x); }
+function fuga(x){return pow(x,pow(x,sub(x,1))); }
+function megafuga(x){return tetrbcc(x,x);}
+function googo(x){return pow(add(x,x),x);}
+function googolple(x){return pow(x,pow(x,pow(x,2)));}
+function googople(x,y){return pow(y,pow(mul(2,x),x));}
+function ogoogolple(x){return pow(x,pow(mul(2,x),x));}//original googolple
+
+function quecto(x){return mul(pow(10,-30),x);}
+function ronto(x){return mul(pow(10,-27),x);}
+function yocto(x){return mul(pow(10,-24),x);}
+function zepto(x){return mul(pow(10,-21),x);}
+function atto(x){return mul(pow(10,-18),x);}
+function femto(x){return mul(pow(10,-15),x);}
+function pico(x){return mul(pow(10,-12),x);}
+function nano(x){return mul(pow(10,-9),x);}
+function micro(x){return mul(pow(10,-6),x);}
+function milli(x){return mul(pow(10,-3),x);}
+function centi(x){return mul(pow(10,-2),x);}
+function deci(x){return mul(pow(10,-1),x);}
+function unumilli(x){return mul(1.001,x);}
+function unidecamilli(x){return mul(1.01,x);}
+function unihectomilli(x){return mul(1.1,x);}
+function unipentohectomilli(x){return mul(1.5,x);}
+function deca(x){return mul(pow(10,1),x);}
+function hecto(x){return mul(pow(10,2),x);}
+function kilo(x){return mul(pow(10,3),x);}
+function myria(x){return mul(10000,x);}
+function laka(x){return mul(100000,x);}
+function mega(x){return mul(pow(10,6),x);}
+function crora(x){return mul(10000000,x);}
+function giga(x){return mul(pow(10,9),x);}
+function dialogia(x){return mul(pow(10,10),x);}
+function tera(x){return mul(pow(10,12),x);}
+function peta(x){return mul(pow(10,15),x);}
+function exa(x){return mul(pow(10,18),x);}
+function guppa(x){return mul(pow(10,20),x);}
+function zetta(x){return mul(pow(10,21),x);}
+function yotta(x){return mul(pow(10,24),x);}
+function minna(x){return mul(pow(10,25),x);}
+function ronna(x){return mul(pow(10,27),x);}
+function deca(x){return mul(pow(10,30),x);}
+function quetta(x){return mul(pow(10,35),x);}
+function googola(x){return mul(pow(10,100),x);}
+
+
 
 math.import({
+	polygamma:polygamma,
+	bei:bei,ber:ber,ker:ker,kei:kei,
+	 meijerg: meijerg,
+		wigner9j:wigner9j,
+		wigner1jm:wigner1jm,
+		spinweightedsphericalharmonic:spinweightedsphericalharmonic,
+		gauntcoefficient:gauntcoefficient,
+		hexagonaldelta:hexagonaldelta,
+		triangulardelta:triangulardelta,
+		recouplingcoefficient:recouplingcoefficient,
+		clebschgordan:clebschgordan,
+		racahw:racahw,
+		racahv:racahv,
+		rubixcomb:rubixcomb,
+	redrubixcomb:redrubixcomb,
+		wigner3j:wigner3jhypg,
+		wigner6j:wigner6jhypg,
+		triangef:triangef,
+	wigner6jf:wigner6jf,
+	wigner6jalt:wigner6j,
+		wigner3jalt:wigner3j,
+        sphericalharmonic:sphericalharmonic,
+        sphericalharmonicacoustic:sphericalharmonicacoustic,
+        sphericalharmonicgeodesy:sphericalharmonicgeodesy,
+        sphericalharmonicmagnetics:sphericalharmonicmagnetics,
+    },
+    { override: true }
+);
+math.import({
+	wignerd:wignerd,
+	associatedlegendre:associatedlegendre,
+	confluenthypergeometricu:confluenthypergeometricu,
+	confluenthypergeometricm:confluenthypergeometricm,
+	multiset:multiset,
+	bwright:bwright,
+	awright:awright,
+	bwright:bwright,
+	mwright:mwright,
+	riemannp:riemannp,
+	ellipticnum:ellipticnum,
+additivepoisedhetahypergeometric:additivepoisedhetahypergeometric,
+additivebilateralthetahypergeometric:additivebilateralthetahypergeometric,
+additivethetahypergeometric:additivethetahypergeometric,	
+poisedhetahypergeometric:poisedhetahypergeometric,
+bilateralthetahypergeometric:bilateralthetahypergeometric,
+thetahypergeometric:thetahypergeometric,
+polyellipticshiftedfactorial:polyellipticshiftedfactorial,
+ellipticshiftedfactorial:ellipticshiftedfactorial,
+polyadditiveellipticshifteddactorial:polyadditiveellipticshifteddactorial,
+additiveellipticshifteddactorial:additiveellipticshifteddactorial,
+polymodifiedjacobitheta:polymodifiedjacobitheta,
+modifiedjacobitheta:modifiedjacobitheta,
+multiqpochhammer:multiqpochhammer,
+qpochhammer:qpochhammer,
+	polynomial:polynomial,
+hypergeometric:hypergeometric,
+reghypergeometric:reghypergeometric,
+gammastar:gammastar,
+bilateralhypergeometric:bilateralhypergeometric,
+//meijerg:meijerg
+	macroberte:macroberte,
+	
+	
+	
+	penteract:penteract,
+	penteractroot:penteractroot,
+		mobiustransform: mobiustransform,
+	tesseract: tesseract,
+	tesseractroot: tesseractroot,
+	plex: plex,
+	minex: minex,
+	ty: ty,
+	teen: teen,
+	ylion: ylion,
+	yriad: yriad,
+	last: last,
+	illion: illion,
+	illiard: illiard,
+	illiad: illiad,
+	illiob: illiob,
+	exian: exian,
+	eciam: eciam,
+	beasta: beasta,
+	beasto: beasto,
+	gar: gar,
+	fuga: fuga,
+	megafuga: megafuga,
+	googo: googo,
+	googolple: googolple,
+	googople: googople,
+	ogoogolple: ogoogolple,
+	quecto: quecto,
+	ronto: ronto,
+	yocto: yocto,
+	zepto: zepto,
+	atto: atto,
+	femto: femto,
+	pico: pico,
+	nano: nano,
+	micro: micro,
+	milli: milli,
+	centi: centi,
+	deci: deci,
+	unumilli: unumilli,
+	unidecamilli: unidecamilli,
+	unihectomilli: unihectomilli,
+	unipentohectomilli: unipentohectomilli,
+	deca: deca,
+	hecto: hecto,
+	kilo: kilo,
+	myria: myria,
+	laka: laka,
+	mega: mega,
+	crora: crora,
+	giga: giga,
+	dialogia: dialogia,
+	tera: tera,
+	peta: peta,
+	exa: exa,
+	guppa: guppa,
+	zetta: zetta,
+	yotta: yotta,
+	minna: minna,
+	ronna: ronna,
+	quatta: quetta,
+	googola: googola
+
+		},{override:true});
+math.import({
+	bessely:bessely,
+	hankel1:hankel1,
+	hankel2:hankel2,
 	et:et,
 	gammaq:gammaq,
 	gammap:gammap,
 	lincgamma:lincgamma,
 	 incgamma: incgamma,
+	 gincgamma:gincgamma,
+	 gammareg:gammareg,
+	 lgammareg:lgammareg,
+	 ggammareg:ggammareg,
 	nthderiv:nthderiv,
 	airybizeta:airybizeta,
 	sinczeta:sinczeta,
@@ -4012,6 +4877,7 @@ math.import({
 	intg:intge,
 	duals:dual,
 	dual:duale,
+	fracderiv:fractionalderiv,
 	lnsin:lnsin,
 	logsin:logsin,
 	lncos:lncos,
@@ -4098,6 +4964,8 @@ math.import({
     arcdc:arcdc,
     arcsc:arcsc,
     arcsd:arcsd
+	
+	
 });
 math.import({
     arcsnd: arcsnd,
@@ -4149,7 +5017,7 @@ math.import({
     besselk: besselk,
     besseli: besseli,
     neuman: neuman,
-
+ struvel: struvel,
     struve: struve
 });
 
@@ -4324,10 +5192,10 @@ tlh:tlh,
 });
 
 math.import({
-    jacobiTheta1:jacobiTheta1,
-    jacobiTheta2:jacobiTheta2,
-    jacobiTheta3:jacobiTheta3,
-    jacobiTheta4:jacobiTheta4,
+    jacobitheta1:jacobitheta1,
+    jacobitheta2:jacobitheta2,
+    jacobitheta3:jacobitheta3,
+    jacobitheta4:jacobitheta4,
 jinvariant:jinvariant
 });
 math.import({
@@ -4336,7 +5204,7 @@ math.import({
     dirichleteta: dirichleteta,
     dirichletbeta: dirichletbeta,
 gammad:gammad,
-gamma:gamma
+gammac:gamma
 },{override:true});
 math.import({
     einsteinseries: einsteinseries,
@@ -4432,17 +5300,23 @@ math.import({
 math.import({
     cullen: cullen,
     mersenne: mersenne,
-    double_mersenne: doubleMersenne,
+    doubleMersenne: doubleMersenne,
+	doublemersenne: doubleMersenne,
     double_prime_mersenne: doublePrimeMersenne,
+	doublePrimeMersenne: doublePrimeMersenne,
     fermat: fermat,
     fermat_prime: fermatPrime,
+	fermatPrime: fermatPrime,
     proth: proth,
     is_proth_prime: isProthPrime,
+	isProthPrime: isProthPrime,
     thabit: thabit,
     thabit2: thabit2,
     woodall: woodall,
     gen_woodall: genWoodall,
     is_gen_woodall_prime: isGenWoodallPrime,
+	 genWoodall: genWoodall,
+    isGenWoodallPrime: isGenWoodallPrime,
     hilbert: hilbert,
     idoneal: idoneal,
     leyland: leyland,
@@ -4457,17 +5331,33 @@ math.import({
     lucas: lucas,
  
     oriented_tree: orientedTree,
+	orientedTree:orientedTree,
     magic: magic,
     magic_const: magicConst,
+	 magicConst: magicConst,
     alucin: alucin,
     metallic_ratio: metallicRatio,
+	metallicRatio: metallicRatio,
     joukowsky: joukowsky,
     karmantrefftz: karmantrefftz,
     symmetrical_joukowsky: symmetricalJoukowsky,
+	symmetricalJoukowsky: symmetricalJoukowsky,
     cayley: cayley,
     bilinear: bilinear,
     poincare_disc_metric: poincareDiscMetric,
-    poincare_metric: poincareMetric
+    poincare_metric: poincareMetric,
+	poincareDiscMetric: poincareDiscMetric,
+    poincareMetric: poincareMetric,
+	sphbesseli:sphbesseli,
+	sphbesselj:sphbesselj,
+	sphbesselk:sphbesselk,
+	sphbessely:sphbessely,
+	sphhankel1:sphhankel1,
+	sphhankel2:sphhankel2,
+	ricattibessels:ricattibessels,
+	ricattibesselc:ricattibesselc,
+	ricattibesselxi:ricattibesselxi,
+	ricattibesselzeta:ricattibesselzeta
 });
 math.import({
     sqr: sqr,
@@ -4494,8 +5384,8 @@ math.import({
     random_float: randomFloat
 });
 math.import({
-    dotp: dot,
-    crossp: cross,
+    dot: dot,
+    cross: cross,
     mandel: mandel,
             dex: dex,
     doubleexp: doubleexp,
@@ -4517,8 +5407,9 @@ math.import({
     mag: mag,
     angle: angle,
     unitv: unit,
-    signum: signumOp
-});
+	signum:signum,
+    signumop: signumOp
+	},{override:true});
 math.import({
     arithmeticmean: arithmeticmean,
     geometricmean: geometricmean,
@@ -4546,6 +5437,7 @@ math.import({
     cisc: cisc,
     casc: casc,
     cishc: cishc,
+	 cashc: cashc,
     sichc: sichc,
     sinp: sinp,
     cosp: cosp,
@@ -4588,6 +5480,12 @@ math.import({
     sinhc: sinhc,
     tanc: tanc,
     tanhc: tanhc,
+casin:casin,
+cacos:cacos,
+catan:catan,
+casec:casec,
+cacsc:cacsc,
+cacot:cacot
 
 });
 math.import({

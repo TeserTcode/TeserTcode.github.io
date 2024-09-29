@@ -941,6 +941,16 @@ if (yuvModes.includes(colorMode)) {
 
     return convertYUV(lightnessAdjusted * saturationChroma / 10, complexOutput.re * lightness, complexOutput.im * lightness);
 }
+
+if (colorMode === 'real') {
+return ycbcrToRgb(lightnessAdjusted * saturationChroma / 10,  complexOutput.re * lightness, -complexOutput.re * lightness);
+ //   return ycbcrToRgb(lightnessAdjusted * saturationChroma / 10, complexOutput.re * 100,lightness);
+}
+
+if (colorMode === 'imag') {
+
+    return ycbcrToRgb(lightnessAdjusted * saturationChroma / 10,lightness, complexOutput.im * 100);
+}
     if (colorMode === '2d') {
         return [
             math.sign(complexOutput.re) * 50 + math.sign(complexOutput.im) * 100,

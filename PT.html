@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Periodic Table 10x18</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 80%;
+            height: 80vh;
+            margin: 0 auto;
+            position: relative; /* Ensure positioning context for overlay */
+        }
+        td {
+            height: 40px;
+            width: 40px;
+            border: 1px solid #000;
+            text-align: center;
+            vertical-align: middle;
+            padding: 10px;
+            font-size: 12px;
+            position: relative;
+            cursor: pointer;
+        }
+        td.existing {
+            background-color: #d4f1f4;
+            border: 3px solid #000;
+        }
+        td.not-existing {
+            background-color: #0000;
+            border: 0px solid #0000;
+            color: #0000;
+            visibility: hidden;
+        }
+        td.type-1 { background-color: #ffebcd; } /* Rare Earth Metals */
+        td.type-2 { background-color: #f0e68c; } /* Earth Metals */
+        td.type-3 { background-color: #d3ffd3; } /* Transition Metals */
+        td.type-4 { background-color: #f5deb3; } /* Semi-metals */
+        td.type-5 { background-color: #ffb6c1; } /* Halogens */
+        td.type-6 { background-color: #e0ffff; } /* Noble Gases */
+        td.type-7 { background-color: #f08080; } /* Actinides */
+        td.type-8 { background-color: #d3d3d3; } /* Lanthanides */
+        td.type-9 { background-color: #f5f5f5; } /* Nonmetals */
+        td.type-10 { background-color: #fafad2; } /* Post-transition Metals */
+        
+        .atomic-number {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            font-size: 10px;
+        }
+		.atomic-numbera {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            font-size: 20px;
+        }
+        .symbol {
+            font-size: 30px;
+            margin-top: 0px;
+        }
+		.symbola {
+            font-size: 60px;
+            margin-top: 0px;
+        }
+        .full-name {
+            position: absolute;
+            bottom: 5px;
+            left: 0;
+            width: 100%;
+            font-size: 12px;
+        }
+.full-namea {
+           position: absolute;
+            bottom: 10px;
+            left: 0;
+            width: 100%;
+            font-size: 24px;
+        }
+		.full-nameas {
+           position: absolute;
+            bottom: 40px;
+            left: 0;
+            width: 100%;
+            font-size: 12px;
+        }
+        #elementName {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 24px;
+            font-weight: bold;
+			display:none;
+			}
+
+        /* Style for the overlay div */
+        #overlay {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            width: 150px;
+            height: 150px; /* Adjust height based on content */
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 2px solid #000;
+            z-index: 10; /* Ensure it is above the table */
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            font-size: 18px;
+            display: block; /* Always visible */
+        }
+        #overlay-info {
+            display: block; /* Hide type information initially */
+            margin-top: 20px;
+            font-size: 10px;
+            line-height: 50%;
+            text-align: left;
+            border-top: 1px solid #ddd;
+            padding-top: 0px;
+        }
+    </style>
+</head>
+<body>
+    <table id="periodicTable"></table>
+    <div id="elementName"></div>
+    <div id="overlay">
+        <div id="elementDetails"></div>
+        <div id="overlay-info">
+                  </div>
+    </div>
+
+    <script>
+        const rows = 10; // 10 main + 2 for Lanthanides and Actinides
+        const cols = 18;
+        // List of elements in a 10x18 grid format with type information
+        const elements = [
+               [1, 'H', 'Hydrogen', 9], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [2, 'He', 'Helium', 6],
+            [3, 'Li', 'Lithium', 3], [4, 'Be', 'Beryllium', 2], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0],
+            [5, 'B', 'Boron', 4],[6, 'C', 'Carbon', 9],[7, 'N', 'Nitrogen', 9],[8, 'O', 'Oxygen', 9],[9, 'F', 'Fluorine', 5], [10, 'Ne', 'Neon', 6],
+            [11, 'Na', 'Sodium', 3], [12, 'Mg', 'Magnesium', 2], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [13, 'Al', 'Aluminum', 10], [14, 'Si', 'Silicon', 4], [15, 'P', 'Phosphorus', 9],[16, 'S', 'Sulfur', 9],[17, 'Cl', 'Chlorine', 5], [18, 'Ar', 'Argon', 6],
+            [19, 'K', 'Potassium', 3], [20, 'Ca', 'Calcium', 2], [21, 'Sc', 'Scandium', 1], [22, 'Ti', 'Titanium', 1], [23, 'V', 'Vanadium', 1], [24, 'Cr', 'Chromium', 1], [25, 'Mn', 'Manganese', 1], [26, 'Fe', 'Iron', 1], [27, 'Co', 'Cobalt', 1], [28, 'Ni', 'Nickel', 1], [29, 'Cu', 'Copper', 1], [30, 'Zn', 'Zinc', 1],
+            [31, 'Ga', 'Gallium', 10], [32, 'Ge', 'Germanium', 4], [33, 'As', 'Arsenic', 4],[34, 'Se', 'Selenium', 9],[35, 'Br', 'Bromine', 5], [36, 'Kr', 'Krypton', 6],
+            [37, 'Rb', 'Rubidium', 3], [38, 'Sr', 'Strontium', 2], [39, 'Y', 'Yttrium', 1], [40, 'Zr', 'Zirconium', 1], [41, 'Nb', 'Niobium', 1], [42, 'Mo', 'Molybdenum', 1], [43, 'Tc', 'Technetium', 1], [44, 'Ru', 'Ruthenium', 1], [45, 'Rh', 'Rhodium', 1], [46, 'Pd', 'Palladium', 1], [47, 'Ag', 'Silver', 1], [48, 'Cd', 'Cadmium', 1],
+            [49, 'In', 'Indium', 10], [50, 'Sn', 'Tin', 10], [51, 'Sb', 'Antimony', 4],[52, 'Te', 'Tellurium', 4],[53, 'I', 'Iodine', 5], [54, 'Xe', 'Xenon', 6],
+            [55, 'Cs', 'Cesium', 3], [56, 'Ba', 'Barium', 2], [0,'0','0', 0],
+            [72, 'Hf', 'Hafnium', 1], [73, 'Ta', 'Tantalum', 1], [74, 'W', 'Tungsten', 1], [75, 'Re', 'Rhenium', 1], [76, 'Os', 'Osmium', 1], [77, 'Ir', 'Iridium', 1], [78, 'Pt', 'Platinum', 1], [79, 'Au', 'Gold', 1], [80, 'Hg', 'Mercury', 1],
+            [81, 'Tl', 'Thallium', 10], [82, 'Pb', 'Lead', 10], [83, 'Bi', 'Bismuth', 10], [84, 'Po', 'Polonium', 10], [85, 'At', 'Astatine', 5], [86, 'Rn', 'Radon', 6],
+            [87, 'Fr', 'Francium', 3], [88, 'Ra', 'Radium', 2], [0,'0','0', 0],
+            [104, 'Rf', 'Rutherfordium', 1], [105, 'Db', 'Dubnium', 1], [106, 'Sg', 'Seaborgium', 1], [107, 'Bh', 'Bohrium', 1], [108, 'Hs', 'Hassium', 1], [109, 'Mt', 'Meitnerium', 1], [110, 'Ds', 'Darmstadtium', 1], [111, 'Rg', 'Roentgenium', 1], [0,'0','0', 0],
+            [113, 'Nh', 'Nihonium', 10], [114, 'Uuq', 'Ununquadium', 10], [115, 'Mc', 'Moscovium', 10], [116, 'Lv', 'Livermorium', 10], [117, 'Ts', 'Tennessine', 5], [118, 'Og', 'Oganesson', 6],
+              [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],[0,'0','0', 0], [0,'0','0', 0],
+            [57, 'La', 'Lanthanum', 8], [58, 'Ce', 'Cerium', 8], [59, 'Pr', 'Praseodymium', 8], [60, 'Nd', 'Neodymium', 8], [61, 'Pm', 'Promethium', 8], [62, 'Sm', 'Samarium', 8], [63, 'Eu', 'Europium', 8], [64, 'Gd', 'Gadolinium', 8], [65, 'Tb', 'Terbium', 8], [66, 'Dy', 'Dysprosium', 8], [67, 'Ho', 'Holmium', 8], [68, 'Er', 'Erbium', 8], [69, 'Tm', 'Thulium', 8], [70, 'Yb', 'Ytterbium', 8], [71, 'Lu', 'Lutetium', 8],
+               [0,'0','0', 0],[0,'0','0', 0], [0,'0','0', 0],[89, 'Ac', 'Actinium', 7], [90, 'Th', 'Thorium', 7], [91, 'Pa', 'Protactinium', 7], [92, 'U', 'Uranium', 7], [93, 'Np', 'Neptunium', 7], [94, 'Pu', 'Plutonium', 7], [95, 'Am', 'Americium', 7], [96, 'Cm', 'Curium', 7], [97, 'Bk', 'Berkelium', 7], [98, 'Cf', 'Californium', 7], [99, 'Es', 'Einsteinium', 7], [100, 'Fm', 'Fermium', 7], [101, 'Md', 'Mendelevium', 7], [102, 'No', 'Nobelium', 7], [103, 'Lr', 'Lawrencium', 7],
+			    [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],[0,'0','0', 0], [0,'0','0', 0]
+        ];
+        const table = document.getElementById('periodicTable');
+        const overlay = document.getElementById('overlay');
+        const overlayInfo = document.getElementById('overlay-info');
+        const elementDetails = document.getElementById('elementDetails');
+        const elementName = document.getElementById('elementName');
+
+        for (let row = 0; row < rows; row++) {
+            const tr = document.createElement('tr');
+            for (let col = 0; col < cols; col++) {
+                const td = document.createElement('td');
+                const element = elements[row * cols + col];
+
+                if (element) {
+                    td.className = 'type-' + (element[3] || 0); // Assign class based on type
+                    td.innerHTML = 
+                        `<div class="atomic-number">${element[0]}</div>
+                         <div class="symbol">${element[1]}</div>
+                         <div class="full-name">${element[2]}</div>`;
+                   td.onclick = function() {
+    // Get the element data (assumed to be in the format [atomicNumber, symbol, fullName, type])
+    const atomicNumber = element[0];
+    const symbol = element[1];
+    const fullName = element[2];
+    const type = element[3];
+    const typenam = typename(type);
+
+    // Update the HTML content
+    elementDetails.innerHTML = `
+        <div class="atomic-numbera">${atomicNumber}</div>
+        <div class="symbola">${symbol}</div>
+        <div class="full-namea">${fullName}</div>
+        <div  class="full-nameas">${typenam}</div>
+        
+    `;
+
+    elementName.innerHTML = `${symbol} - ${fullName}`;
+    overlayInfo.style.display = 'none'; // Hide type information
+};
+                }
+                if (element[3] === 0) {
+                    td.className = "not-existing";
+                } 
+                tr.appendChild(td);
+            }
+            table.appendChild(tr);
+        }
+function typename(type){
+const elementTypes = [
+    'Unreal', // 0
+    'Trans Metal', // 1
+    'Earth Metal', // 2
+    'Alkali Metal', // 3
+    'Metalloid', // 4
+    'Halogen', // 5
+    'Noble Gas', // 6
+    'Actinide', // 7
+    'Lanthanide', // 8
+    'Ametal', // 9
+    'other metal', // 10
+];
+ return elementTypes[type];
+}
+    </script>
+</body>
+</html>
