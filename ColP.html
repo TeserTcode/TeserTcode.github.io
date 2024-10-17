@@ -20,6 +20,17 @@
             margin: 20px;
             border: 1px solid #000;
         }
+		.gradient-box {
+            width: 500px;
+            height: 50px;
+            margin: 20px;
+            border: 1px solid #000;
+        }
+		.gradient-boxx {
+
+            margin: 20px;
+            border: 1px solid #000;
+        }
         .container {
             border: 1px solid #000;
             margin: 10px;
@@ -72,11 +83,73 @@
             border-radius: 3px;
             padding: 3px 5px;
         }
+		
+		
+		
+input[type="range"] {
+
+    -webkit-appearance: none;
+    appearance: none;
+    background: none;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 8px;
+    cursor: pointer;
+
+    border-radius: 5px;
+	  background: transparent; 
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #111111;
+    cursor: pointer;
+    border-radius: 0%;
+    margin-top: -6px; /* Adjust for thumb height */
+	
+}
+
+input[type="range"]::-moz-range-track {
+
+    width: 100%;
+    height: 8px;
+    cursor: pointer;
+    background: #e0e0e0;
+    border-radius: 5px;
+}
+
+input[type="range"]::-moz-range-thumb {
+
+    width: 20px;
+    height: 20px;
+    background: #4CAF50;
+    cursor: pointer;
+    border-radius: 50%;
+}
+        #gradientBox {
+
+            background: #fff;
+
+        }
+
+        #colorDisplay {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="color-box" id="colorBox"></div>
     <p id="hexValue">#FFFFFF</p>
+	
+	<div class="gradient-box"id="gradientBox"></div>
+<canvas class="gradient-boxx" id="gradientBoxx" width="256" height="256"></canvas>
+
 
     <div id="containers" class="containers"></div>
 
@@ -85,6 +158,10 @@
         <button onclick="showContainer('rgb')">RGB</button>
         <button onclick="showContainer('hsv')">HSV</button>
         <button onclick="showContainer('hsl')">HSL</button>
+		<button onclick="showContainer('hsi')">HSI</button>
+		<button onclick="showContainer('hsm')">HSM</button>
+		<button onclick="showContainer('hsg')">HSG</button>
+		<button onclick="showContainer('hsh')">HSh</button>
         <button onclick="showContainer('hwb')">HWB</button>
         <button onclick="showContainer('hcl')">HCL</button>
         <button onclick="showContainer('lch')">LCh</button>
@@ -92,6 +169,7 @@
         <button onclick="showContainer('xyz')">XYZ</button>
         <button onclick="showContainer('yjk')">YJK</button>
         <button onclick="showContainer('lab')">LAB</button>
+		<button onclick="showContainer('oklab')">OKLAB</button>
         <button onclick="showContainer('cmy')">CMY</button>
         <button onclick="showContainer('uvw')">UVW</button>
         <button onclick="showContainer('lms')">LMS</button>
@@ -107,18 +185,29 @@
 		<button onclick="showContainer('srgb')">sRGB</button>
 		<button onclick="showContainer('scrgb')">scRGB</button>
 		<button onclick="showContainer('ecirgb')">eciRGB</button>
-    </div>
+ <button onclick="showContainer('rxy')">rXY</button>
+  <button onclick="showContainer('lcw')">LCW</button>
+   <button onclick="showContainer('lct')">LCT</button>
+   </div>
 </div>
 <script src="clrspc.js"></script>
     <script>
         const colorBox = document.getElementById('colorBox');
+		const gradientBox = document.getElementById('gradientBox');
+		const gradientBoxx = document.getElementById('gradientBoxx');
         const hexValue = document.getElementById('hexValue');
         const containersDiv = document.getElementById('containers');
-
+let gr=0;
+let gb=0;
+let gg=0;
 const sliders = {
     rgb: ['rSlider', 'gSlider', 'bSlider'],
     hsv: ['hSlider', 'sSlider', 'vSlider'],
     hsl: ['hSlider', 'sSlider', 'lSlider'],
+	 hsi: ['hSlider', 'sSlider', 'iSlider'],
+	  hsm: ['hSlider', 'sSlider', 'mSlider'],
+	   hsg: ['hSlider', 'sSlider', 'gSlider'],
+	    hsh: ['hSlider', 'sSlider', 'hhSlider'],
     hwb: ['hSlider', 'wSlider', 'bSlider'],
     hcl: ['hSlider', 'cSlider', 'lSlider'],
     lch: ['lSlider', 'cSlider', 'hSlider'],
@@ -126,6 +215,7 @@ const sliders = {
     xyz: ['xSlider', 'ySlider', 'zSlider'],
     yjk: ['ySlider', 'jSlider', 'kSlider'],
     lab: ['lSlider', 'aSlider', 'bSlider'],
+	 oklab: ['lSlider', 'aSlider', 'bSlider'],
     cmyk: ['cSlider', 'mSlider', 'ySlider', 'kSlider'],
     cmy: ['cSlider', 'mSlider', 'ySlider'],
     uvw: ['uSlider', 'vSlider', 'wSlider'],
@@ -137,12 +227,18 @@ const sliders = {
     ycocgr: ['ySlider', 'coSlider', 'cgSlider'],
     yuv: ['ySlider', 'uSlider', 'vSlider'],
     ypbpr: ['ySlider', 'pbSlider', 'prSlider'],
-    bt: ['xSlider', 'ySlider', 'ySlider'],
+    ypbpr: ['ySlider', 'pbSlider', 'prSlider'],
+    bt: ['xSlider', 'ySlider', 'zSlider'],
     tsl: ['tSlider', 'sSlider', 'lSlider'],
     luv: ['lSlider', 'uSlider', 'vSlider'],
 	 srgb: ['rSlider', 'gSlider', 'bSlider'],
 	  scrgb: ['rSlider', 'gSlider', 'bSlider'],
-	   ecirgb: ['rSlider', 'gSlider', 'bSlider']
+	   lab: ['lSlider', 'aSlider', 'bSlider'],
+	    lch: ['lSlider', 'cSlider', 'hSlider'],
+	   ecirgb: ['rSlider', 'gSlider', 'bSlider'],
+	    rxy: ['rSlider', 'xSlider', 'ySlider'],
+		lcw: ['lSlider', 'cSlider', 'wSlider'],
+		lct: ['lSlider', 'cSlider', 'tSlider']
 };
 
 // Initialize sliders to null
@@ -158,11 +254,15 @@ Object.keys(sliders).forEach(space => {
 
 
 
-function updateSliders(r, g, b, name) {
+function updateSliders(r, g, b, name,conversionFunction,conversions , r1,g1,b1) {
     // Convert RGB to other color spaces
     const conversionss = {
         hsv: rgbToHsv(r, g, b),
         hsl: rgbToHsl(r, g, b),
+		hsi: rgbToHsi(r, g, b),
+		hsm: rgbToHsm(r, g, b),
+		hsg: rgbToHsg(r, g, b),
+		hsh: rgbToHsh(r, g, b),
         hwb: rgbToHwb(r, g, b),
         cmy: rgbToCmy(r, g, b),
         hcl: rgbToHcl(r, g, b),
@@ -184,7 +284,12 @@ function updateSliders(r, g, b, name) {
 		srgb: rgbToSrgb(r, g, b),
 		scrgb: rgbToScrgb(r, g, b),
 		ecirgb: rgbToEcirgb(r, g, b),
-        luv: rgbToLuv(r, g, b)
+        luv: rgbToLuv(r, g, b),
+		 rxy: rgbToRxy(r, g, b),
+		 lcw: rgbToLcw(r, g, b),
+		 lct: rgbToLct(r, g, b),
+		  oklab: rgbToOklab(r, g, b),
+		 rgb:rgbToRgb(r,g,b)
     };
 
     // Update RGB sliders
@@ -193,23 +298,51 @@ function updateSliders(r, g, b, name) {
         sliders.rgb.gSlider.value = g;
         sliders.rgb.bSlider.value = b;
     }
-
+let [aa,bb,cc]=[0,0,0];
     // Update other sliders based on color space
     Object.keys(conversionss).forEach(space => {
-        if (name !== space) {
-            const [a, b, c] = conversionss[space];
+	const container = document.getElementById(space);
+        if (name !== space && container) {
+		    const values = {};
+    const slidersGroup = sliders[name];
+	
+
+try{
+             [aa, bb, cc] = conversionss[space];}catch (error){[aa, bb, cc]=[0,0,0];}
             if (sliders[space]) {
                 const [slider1, slider2, slider3] = Object.values(sliders[space]);
-                if (slider1) slider1.value = a;
-                if (slider2) slider2.value = b;
-                if (slider3) slider3.value = c;
+                if (slider1) slider1.value = aa;
+                if (slider2) slider2.value = bb;
+                if (slider3) slider3.value = cc;
             }
-        }
+        
+		
+		    values.r=aa;
+			values.g=bb;
+			values.b=cc;
+		//	console.log(values);
+		 updateSlidersWithSampledGradient(values, conversionFunctions[`${space}ToRgb`],conversionFunctions[`${space}ToRgb`], space);
+
+		
+		}
+			//	console.log(space);
+	  //  updateSlidersWithSampledGradient([aa,bb,cc], conversionFunction, conversions, space);
     });
+	  const values = {};
+	try{   [aa, bb, cc] = conversionss[name];}catch (error){[aa, bb, cc]=[0,0,0];}
+	 values.r=r1;
+			values.g=g1;
+			values.b=b1;
+	updateSlidersWithSampledGradient(values, conversionFunctions[`${name}ToRgb`],conversionFunctions[`${name}ToRgb`], name);
+
 }
 const conversionFunctions = {
     hsvToRgb: hsvToRgb,
     hslToRgb: hslToRgb,
+	hsiToRgb: hsiToRgb,
+	hsmToRgb: hsmToRgb,
+	hsgToRgb: hsgToRgb,
+	hshToRgb: hshToRgb,
     hwbToRgb: hwbToRgb,
 //	    cmykToRgb: cmykToRgb,
     cmyToRgb: cmyToRgb,
@@ -221,9 +354,9 @@ const conversionFunctions = {
 srgbToRgb:srgbToRgb,  
 scrgbToRgb:scrgbToRgb, 
 ecirgbToRgb:ecirgbToRgb, 
-
+ ycbcr: ycbcrToRgb,
     lchToRgb: lchToRgb,
-    ycbcrToRgb: ycbcrToRgb,
+   
     xyzToRgb: xyzToRgb,
     yjkToRgb: yjkToRgb,
     labToRgb: labToRgb,
@@ -239,8 +372,13 @@ ecirgbToRgb:ecirgbToRgb,
     btToRgb: btToRgb,
     tslToRgb: tslToRgb,
     luvToRgb: luvToRgb,
+	
+	rxyToRgb: rxyToRgb,
+	lcwToRgb: lcwToRgb,
+	lctToRgb: lctToRgb,
+	oklabToRgb: oklabToRgb,
 
-	rgbToRgb:null
+	rgbToRgb:rgbToRgb
 };
 // Function to create colorConversions object
 function createColorConversions(colorSpaces) {
@@ -248,25 +386,71 @@ function createColorConversions(colorSpaces) {
 
     colorSpaces.forEach(space => {
         conversions[space] = {
-            convertToRgb: space === 'rgb' ? null : conversionFunctions[`${space}ToRgb`]
+            convertToRgb:  conversionFunctions[`${space}ToRgb`]
         };
     });
 
     return conversions;
 }
+function draw2DGradient(gradient, canvasId) {
+    let canvas = document.getElementById(canvasId);
+    let ctx = canvas.getContext('2d');
+    
+    let gradientWidth = gradient[0].length;
+    let gradientHeight = gradient.length;
+    
+    let cellWidth = canvas.width / gradientWidth;
+    let cellHeight = canvas.height / gradientHeight;
 
+    // Create an image data object to fill
+    let imgData = ctx.createImageData(canvas.width, canvas.height);
+
+    // Fill the canvas with the gradient colors
+    for (let y = 0; y < gradientHeight; y++) {
+        for (let x = 0; x < gradientWidth; x++) {
+            let q = gradient[y][x];
+		//	console.log(q);
+            let [r, g, b] = q;
+
+            // Calculate the starting pixel position on the canvas for each gradient cell
+            let startX = Math.floor(x * cellWidth);
+            let startY = Math.floor(y * cellHeight);
+
+            // Fill the corresponding pixels in the canvas for each gradient cell
+            for (let dy = 0; dy < cellHeight; dy++) {
+                for (let dx = 0; dx < cellWidth; dx++) {
+                    let pixelIndex = ((startY + dy) * canvas.width + (startX + dx)) * 4;
+                    imgData.data[pixelIndex] = r;     // Red
+                    imgData.data[pixelIndex + 1] = Math.min(255,Math.max(0,g)); // Green
+                    imgData.data[pixelIndex + 2] = Math.min(255,Math.max(0,b)); // Blue
+                    imgData.data[pixelIndex + 3] = 255; // Alpha (fully opaque)
+                }
+            }
+        }
+    }
+
+    ctx.putImageData(imgData, 0, 0);
+}
 // Initialize the colorSpaces and colorConversions
 const colorSpaces = [
-    'rgb', 'hsv', 'hsl', 'hwb', 'hcl', 'lch', 'ycbcr', 'xyz', 
-    'yjk', 'lab', 'cmyk', 'cmy', 'uvw', 'lms', 'ydbdr', 'yiq', 
-     'ycocg', 'ycocgr', 'yuv', 'ypbpr', 'tsl', 'luv', 'srgb','scrgb','ecirgb'
+    'rgb', 'hsv', 'hsl', 'hwb', 'hcl', 'lch', 'ycbcr', 'xyz', 'hsi','hsm','hsh','hsg',
+    'yjk', 'lab', 'cmyk', 'cmy', 'uvw', 'lms', 'ydbdr', 'yiq', 'lcw','lct',
+     'ycocg', 'ycocgr', 'yuv', 'ypbpr', 'tsl', 'luv', 'srgb','scrgb','ecirgb','rxy','oklab',
 ];
 const colorConversions = createColorConversions(colorSpaces);
+let isopen={};
+document.querySelectorAll('.color-slider').forEach(slider => {
+            // When the slider changes, update its background
+            slider.addEventListener('input', updateSliderBackground);
 
-// Generalized update function
+            // Initialize the slider background on page load
+            updateSliderBackground({ target: slider });
+        });
+
 function updateColorFromSliders(name, conversions) {
     const values = {};
     const slidersGroup = sliders[name];
+	
     Object.keys(slidersGroup).forEach(param => {
         if (param.endsWith('Slider')) {
             const key = param.replace('Slider', '');
@@ -274,18 +458,176 @@ function updateColorFromSliders(name, conversions) {
         }
     });
 
-    const [r, g, b] = conversions.convertToRgb ? conversions.convertToRgb(...Object.values(values)) : [values.r, values.g, values.b];
-    const boundedR = Math.min(255, Math.max(0, Math.floor(r)));
-const boundedG = Math.min(255, Math.max(0, Math.floor(g)));
-const boundedB = Math.min(255, Math.max(0, Math.floor(b)));
+    const dropdown = document.querySelector(`#${name} select`);
+    const selectedConversion = dropdown ? dropdown.value : 'normal';
 
-const hex = rgbToHex(boundedR, boundedG, boundedB, name);
+     const conversionFunction = window[selectedConversion]; // Assuming functions are globally available
+    
+	
+	//const reg = 30;
+	//let r2=values.r/reg;let g2=values.g/reg;let b2=values.b/reg;
+	let r2=values.r;let g2=values.g;let b2=values.b;
+	let [r1, g1, b1] = conversionFunction ? conversionFunction(...Object.values(values)) : [r2,g2,b2];
+	//r1=r1*reg;g1=g1*reg;b1=b1*reg;
+	let [ra, ga, ba] =[0,0,0];
+    try{[ra, ga, ba] = conversions.convertToRgb ? conversions.convertToRgb(...Object.values(values)) : [r1, g1, b1];}
+	catch(error){}
+//console.log(...Object.values(values));
+    const boundedR = Math.min(255, Math.max(0, Math.floor(ra)));
+    const boundedG = Math.min(255, Math.max(0, Math.floor(ga)));
+    const boundedB = Math.min(255, Math.max(0, Math.floor(ba)));
+
+    const hex = rgbToHex(boundedR, boundedG, boundedB, name);
 
     colorBox.style.backgroundColor = hex;
     hexValue.textContent = hex;
-    updateSliders(r, g, b,name);
-}
+    
+	updateSliders(ra,ga,ba, name,conversionFunction, conversions ,r1,g1,b1);
+	//updateSlidersWithSampledGradient(values, conversionFunction, conversions, name);
+	
+	
+	    function generateGradientSamples2(fixedValue1, fixedValue2, fixedValue3, alt1, alt2, alt3, fixedChannel) {
+        let gradient = [];
+		let min=0;max = 100;
+        for (let i = min; i <= max; i += 1) {
+            let r, g, b;
 
+                [r, g, b] = convertColor( ((max-i)*fixedValue1+(i*alt1))/max, ((max-i)*fixedValue2+(i*alt2))/max, ((max-i)*fixedValue3+(i*alt3))/max);
+
+            gradient.push(`rgb(${r}, ${g}, ${b})`);
+        }
+        return gradient.join(',');
+    }
+	function generate2DGradientSamples(alt1Min, alt1Max, alt2Min, alt2Max, altt1, altt2,alt3) {
+    let gradient2D = [];
+    let step = 5; 
+
+    for (let alt1 = alt1Min; alt1 <= alt1Max; alt1 += step) {
+        let row = [];
+        for (let alt2 = alt2Min; alt2 <= alt2Max; alt2 += step) {
+             [r, g, b] = convertColor(alt1,alt2,alt3);
+
+            row.push([r,g,b]);
+        }
+        gradient2D.push(row);
+    }
+    return gradient2D;
+}
+	function convertColor(ra, ga, ba) {try {
+        let [r1, g1, b1] = conversionFunction ? conversionFunction(ra, ga, ba) : [ra, ga, ba];
+        let [r2, g2, b2] = conversions.convertToRgb ? conversions.convertToRgb(r1, g1, b1) : [r1, g1, b1];
+        return [
+            Math.min(255, Math.max(0, Math.floor(r2))),
+            Math.min(255, Math.max(0, Math.floor(g2))),
+            Math.min(255, Math.max(0, Math.floor(b2)))
+        ];} catch (error) {
+      //  console.error('Error converting color:', error.message);
+        // Return a default value or handle the error as needed
+        return [0, 0, 0]; // Default to black in case of error
+    }
+    }
+	
+	 const conversionss = {
+        hsv: rgbToHsv(gr, gg, gb),
+        hsl: rgbToHsl(gr, gg, gb),
+		hsi: rgbToHsi(gr, gg, gb),
+		hsm: rgbToHsm(gr, gg, gb),
+		hsg: rgbToHsg(gr, gg, gb),
+		hsh: rgbToHsh(gr, gg, gb),
+        hwb: rgbToHwb(gr, gg, gb),
+        cmy: rgbToCmy(gr, gg, gb),
+        hcl: rgbToHcl(gr, gg, gb),
+        lch: rgbToLch(gr, gg, gb),
+        ycbcr: rgbToYcbcr(gr, gg, gb),
+        xyz: rgbToXyz(gr, gg, gb),
+        yjk: rgbToYjk(gr, gg, gb),
+        lab: rgbToLab(gr, gg, gb),
+        uvw: rgbToUvw(gr, gg, gb),
+        lms: rgbToLms(gr, gg, gb),
+        ydbdr: rgbToYdbdr(gr, gg, gb),
+        yiq: rgbToYiq(gr, gg, gb),
+        ycocg: rgbToYcocg(gr, gg, gb),
+        ycocgr: rgbToYcocgR(gr, gg, gb),
+        yuv: rgbToYuv(gr, gg, gb),
+        ypbpr: rgbToYpbpr(gr, gg, gb),
+        bt: rgbToBt(gr, gg, gb),
+        tsl: rgbToTsl(gr, gg, gb),
+		srgb: rgbToSrgb(gr, gg, gb),
+		scrgb: rgbToScrgb(gr, gg, gb),
+		ecirgb: rgbToEcirgb(gr, gg, gb),
+        luv: rgbToLuv(gr, gg, gb),
+		 rxy: rgbToRxy(gr, gg, gb),
+		 lcw: rgbToLcw(gr, gg, gb),
+		 lct: rgbToLct(gr, gg, gb),
+		  oklab: rgbToOklab(gr, gg, gb),
+		 rgb:rgbToRgb(gr,gg,gb)
+    };
+	
+	let qqq = conversionss[name];
+	let qGradient = generateGradientSamples2(qqq[0],qqq[1],qqq[2],...Object.values(values));
+	//console.log(sliders[name][0].min);
+	let qqGradient = generate2DGradientSamples(parseInt(sliders[name][0].min),parseInt(sliders[name][0].max),parseInt(sliders[name][1].min),parseInt(sliders[name][1].max),...Object.values(values));
+	gradientBox.style.background = `linear-gradient(to right, ${qGradient})`;
+	draw2DGradient(qqGradient,'gradientBoxx');
+}
+function updateSlidersWithSampledGradient(values, conversionFunction, conversions, name) {
+    // Helper function to convert a color based on the selected conversion
+	
+    function convertColor(ra, ga, ba) {try {
+        let [r1, g1, b1] = conversionFunction ? conversionFunction(ra, ga, ba) : [ra, ga, ba];
+        let [r2, g2, b2] = conversions.convertToRgb ? conversions.convertToRgb(r1, g1, b1) : [r1, g1, b1];
+        return [
+            Math.min(255, Math.max(0, Math.floor(r2))),
+            Math.min(255, Math.max(0, Math.floor(g2))),
+            Math.min(255, Math.max(0, Math.floor(b2)))
+        ];} catch (error) {
+      //  console.error('Error converting color:', error.message);
+        // Return a default value or handle the error as needed
+        return [0, 0, 0]; // Default to black in case of error
+    }
+    }
+
+    function generateGradientSamples(channel, min, max, step, fixedValue1, fixedValue2, fixedChannel) {
+        let gradient = [];
+        for (let i = min; i <= max; i += step) {
+            let r, g, b;
+            if (channel === 'r') {
+                [r, g, b] = convertColor(i, fixedValue1, fixedValue2);
+            } else if (channel === 'g') {
+                [r, g, b] = convertColor(fixedValue1, i, fixedValue2);
+            } else if (channel === 'b') {
+                [r, g, b] = convertColor(fixedValue1, fixedValue2, i);
+            }
+            gradient.push(`rgb(${r}, ${g}, ${b})`);
+        }
+        return gradient.join(',');
+    }
+
+    // Sample size for gradient steps
+    const stepSize = 4;
+	//initializeSliders();
+    // Generate Red slider gradient using current green and blue values
+//	console.log(sliders);
+	   const redSlider = sliders[name][0];
+    if (redSlider) {
+        const redGradient = generateGradientSamples('r', parseInt(redSlider.min), parseInt(redSlider.max), stepSize, values.g, values.b);
+        redSlider.style.background = `linear-gradient(to right, ${redGradient})`;
+    }
+
+    // Generate Green slider gradient using current red and blue values
+    const greenSlider = sliders[name][1];
+    if (greenSlider) {
+        const greenGradient = generateGradientSamples('g', parseInt(greenSlider.min), parseInt(greenSlider.max), stepSize, values.r, values.b);
+        greenSlider.style.background = `linear-gradient(to right, ${greenGradient})`;
+    }
+
+    // Generate Blue slider gradient using current red and green values
+    const blueSlider = sliders[name][2];
+    if (blueSlider) {
+        const blueGradient = generateGradientSamples('b', parseInt(blueSlider.min), parseInt(blueSlider.max), stepSize, values.r, values.g);
+        blueSlider.style.background = `linear-gradient(to right, ${blueGradient})`;
+    }
+}
 // Generalized createSliders function
 function createSliders(name, slidersParams, conversions) {
     try {
@@ -305,6 +647,10 @@ function initializeSliders() {
     createSliders('rgb', ['r', 'g', 'b'], colorConversions.rgb);
     createSliders('hsv', ['h', 's', 'v'], colorConversions.hsv);
     createSliders('hsl', ['h', 's', 'l'], colorConversions.hsl);
+	createSliders('hsi', ['h', 's', 'i'], colorConversions.hsi);
+	createSliders('hsm', ['h', 's', 'm'], colorConversions.hsm);
+	createSliders('hsg', ['h', 's', 'g'], colorConversions.hsg);
+	createSliders('hsh', ['h', 's', 'hh'], colorConversions.hsh);
     createSliders('hwb', ['h', 'w', 'b'], colorConversions.hwb);
     createSliders('hcl', ['h', 'c', 'l'], colorConversions.hcl);
     createSliders('lch', ['l', 'c', 'h'], colorConversions.lch);
@@ -312,7 +658,8 @@ function initializeSliders() {
     createSliders('xyz', ['x', 'y', 'z'], colorConversions.xyz);
     createSliders('yjk', ['y', 'j', 'k'], colorConversions.yjk);
     createSliders('lab', ['l', 'a', 'b'], colorConversions.lab);
-    createSliders('cmyk', ['c', 'm', 'y', 'k'], colorConversions.cmyk);
+	createSliders('oklab', ['l', 'a', 'b'], colorConversions.oklab);
+   // createSliders('cmyk', ['c', 'm', 'y', 'k'], colorConversions.cmyk);
     createSliders('cmy', ['c', 'm', 'y'], colorConversions.cmy);
     createSliders('uvw', ['u', 'v', 'w'], colorConversions.uvw);
     createSliders('lms', ['l', 'm', 's'], colorConversions.lms);
@@ -328,11 +675,17 @@ function initializeSliders() {
 	 createSliders('srgb', ['r', 'g', 'b'], colorConversions.srgb);
 	  createSliders('scrgb', ['r', 'g', 'b'], colorConversions.scrgb);
 	   createSliders('ecirgb', ['r', 'g', 'b'], colorConversions.ecirgb);
+	   createSliders('rxy', ['r', 'x', 'y'], colorConversions.rxy);
+	   createSliders('lcw', ['l', 'c', 'w'], colorConversions.lcw);
+	   createSliders('lct', ['l', 'c', 't'], colorConversions.lct);
 }
         function toggleContainer(id) {
             const container = document.getElementById(id);
+			console.log(id);    
             container.style.display = container.style.display === 'none' ? 'block' : 'none';
-        }
+   
+	//   isopen.id=1;
+		}
 
         function createContainer(id, title, slidersHtml) {
             const container = document.createElement('div');
@@ -351,6 +704,7 @@ function initializeSliders() {
             closeButton.className = 'close-btn';
             closeButton.addEventListener('click', () => {
                 container.style.display = 'none';
+	//			isopen.style=0;
             });
             header.appendChild(closeButton);
 
@@ -358,44 +712,106 @@ function initializeSliders() {
             content.className = 'slider-container';
             content.innerHTML = slidersHtml;
 
+			    const dropdown = document.createElement('select');
+    const options = [
+        'normal', 'SPH', 'iSPH', 'CYL', 'iCYL', 'TRP','TPH', 'TOR', 'PCC', 'OSC', 
+        'OSCzxp', 'OSCstp', 'PSC', 'PC', 'ECC', 'CC', 'BCC', 'BC', 'rgG', 'ROT1','ROT2',
+        'HSV', 'HSL', 'CMY', 'iCMY'
+    ];
+	    options.forEach(optionText => {
+        const option = document.createElement('option');
+        option.value = optionText;
+        option.textContent = optionText;
+        dropdown.appendChild(option);
+    });
+
+    dropdown.style.marginTop = '10px'; // Add some whitespace before the dropdown
+dropdown.style.marginBottom = '10px'; // Optional: Add margin below as well
+
+
+    content.appendChild(dropdown);
+
             container.appendChild(header);
             container.appendChild(content);
             containersDiv.appendChild(container);
         }
-
+	
         function showContainer(id) {
             const container = document.getElementById(id);
             if (container) {
                 container.style.display = 'block';
             }
         }
+document.querySelectorAll('.color-slider').forEach(slider => {
+    // Update slider background on input change
+    slider.addEventListener('input', updateSliderBackground);
+    
+    // Initialize slider backgrounds on page load
+    updateSliderBackground({target: slider});
+});
 
+function updateSliderBackground(event) {
+    const slider = event.target;
+    const value = parseInt(slider.value);
+    const min = parseInt(slider.min);
+    const max = parseInt(slider.max);
+    
+    // Get 10 positions along the slider range
+    const positions = getEmulatedPositions(min, max, 10);
+
+    // Create an array of colors for the 10 positions
+    const colors = positions.map(pos => {
+        return getColorFromPosition(pos);
+    });
+    
+    // Create a linear gradient for the slider background
+    const gradient = `linear-gradient(to right, ${colors.join(', ')})`;
+
+    // Set the background of the slider
+    slider.style.backgroundImage = gradient;
+}
+
+// Emulate 10 positions between min and max
+function getEmulatedPositions(min, max, steps) {
+    const stepSize = (max - min) / (steps - 1);
+    const positions = [];
+    for (let i = 0; i < steps; i++) {
+        positions.push(min + i * stepSize);
+    }
+    return positions;
+}
+
+// Get color from a position (for simplicity, a grayscale gradient)
+function getColorFromPosition(pos) {
+    const grayValue = Math.floor(pos).toString(16).padStart(2, '0');  // Convert to hex
+    return `#${grayValue}${grayValue}${grayValue}`;  // Grayscale color
+}
 // Function to initialize sliders dynamically
 function sliderInit(name, var1, var2, var3, min1, min2, min3, max1, max2, max3, default1, default2, default3) {
-    const containerHtml = `
-        <label for="${name}_${var1}_slider">${var1.toUpperCase()}</label>
-        <input type="range" id="${name}_${var1}_slider" min="${min1}" max="${max1}" value="${default1}">
-        <label for="${name}_${var2}_slider">${var2.toUpperCase()}</label>
-        <input type="range" id="${name}_${var2}_slider" min="${min2}" max="${max2}" value="${default2}">
-        <label for="${name}_${var3}_slider">${var3.toUpperCase()}</label>
-        <input type="range" id="${name}_${var3}_slider" min="${min3}" max="${max3}" value="${default3}">
-    `;
+    const containerHtml = `<label for="${name}_${var1}_slider">${var1.toUpperCase()}</label>
+    <input class="range-slider" type="range" id="${name}_${var1}_slider" min="${min1}" max="${max1}" value="${default1}">
+    <label for="${name}_${var2}_slider">${var2.toUpperCase()}</label>
+    <input class="range-slider" type="range" id="${name}_${var2}_slider" min="${min2}" max="${max2}" value="${default2}">
+    <label for="${name}_${var3}_slider">${var3.toUpperCase()}</label>
+    <input class="range-slider" type="range" id="${name}_${var3}_slider" min="${min3}" max="${max3}" value="${default3}">`;
+  
 
+    
     createContainer(name, name.toUpperCase(), containerHtml);
-
+        sliders[name][0] = document.getElementById(`${name}_${var1}_slider`);
+		sliders[name][1] = document.getElementById(`${name}_${var2}_slider`);
+		sliders[name][2] = document.getElementById(`${name}_${var3}_slider`);
     sliders[name][`${var1}Slider`] = document.getElementById(`${name}_${var1}_slider`);
     sliders[name][`${var2}Slider`] = document.getElementById(`${name}_${var2}_slider`);
     sliders[name][`${var3}Slider`] = document.getElementById(`${name}_${var3}_slider`);
 }
 function sliderInit4(name, var1, var2, var3, var4, min1, min2, min3, min4, max1, max2, max3, max4, default1, default2, default3, default3) {
-    const containerHtml = `
-        <label for="${name}_${var1}_slider">${var1.toUpperCase()}</label>
+    const containerHtml = `<label for="${name}_${var1}_slider">${var1.toUpperCase()}</label>
         <input type="range" id="${name}_${var1}_slider" min="${min1}" max="${max1}" value="${default1}">
         <label for="${name}_${var2}_slider">${var2.toUpperCase()}</label>
         <input type="range" id="${name}_${var2}_slider" min="${min2}" max="${max2}" value="${default2}">
         <label for="${name}_${var3}_slider">${var3.toUpperCase()}</label>
-        <input type="range" id="${name}_${var3}_slider" min="${min3}" max="${max3}" value="${default3}">
-    `;
+        <input type="range" id="${name}_${var3}_slider" min="${min3}" max="${max3}" value="${default3}">`;
 
     createContainer(name, name.toUpperCase(), containerHtml);
 
@@ -409,6 +825,10 @@ function init() {
     sliderInit('rgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255);
     sliderInit('hsv', 'h', 's', 'v', 0, 0, 0, 360, 100, 100, 360, 100, 100);
     sliderInit('hsl', 'h', 's', 'l', 0, 0, 0, 360, 100, 100, 360, 100, 100);
+	sliderInit('hsi', 'h', 's', 'i', 0, 0, 0, 360, 100, 100, 360, 100, 100);
+	sliderInit('hsm', 'h', 's', 'm', 0, 0, 0, 360, 100, 100, 360, 100, 100);
+	sliderInit('hsg', 'h', 's', 'g', 0, 0, 0, 360, 100, 100, 360, 100, 100);
+	sliderInit('hsh', 'h', 's', 'hh', 0, 0, 0, 360, 100, 100, 360, 100, 100);
     sliderInit('hwb', 'h', 'w', 'b', 0, 0, 0, 360, 100, 100, 360, 100, 100);
 	sliderInit('cmy', 'c', 'm', 'y', 0, 0, 0, 100, 100, 100, 0,0,0);
 	sliderInit('hcl', 'h', 'c', 'l', 0, 0, 0, 360, 100, 100, 360, 100, 100);
@@ -421,28 +841,33 @@ sliderInit('hsv', 'h', 's', 'v', 0, 0, 0, 360, 100, 100, 100, 100, 100);
 sliderInit('hsl', 'h', 's', 'l', 0, 0, 0, 360, 100, 100, 100, 100, 100);
 sliderInit('hwb', 'h', 'w', 'b', 0, 0, 0, 360, 100, 100, 100, 100, 100);
 sliderInit('hcl', 'h', 'c', 'l', 0, 0, 0, 360, 100, 100, 100, 100, 100);
-sliderInit('lch', 'l', 'c', 'h', 0, 0, 0, 100, 100, 360, 100, 100, 360);
-sliderInit('ycbcr', 'y', 'cb', 'cr', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+sliderInit('lch', 'l', 'c', 'h', 0, 0, -180, 150, 150, 180, 100, 100, 0);
+sliderInit('ycbcr', 'y', 'cb', 'cr', 0 -255, -255, 255, 255, 255, 255, 255, 255);
 sliderInit('xyz', 'x', 'y', 'z', 0, 0, 0, 255, 255, 255, 255, 255, 255);
 sliderInit('yjk', 'y', 'j', 'k', 0, 0, 0, 255, 255, 255, 255, 255, 255);
-sliderInit('lab', 'l', 'a', 'b', 0, 0, 0, 100, 127, 127, 100, 127, 127);
-sliderInit('cmyk', 'c', 'm', 'y', 'k', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+sliderInit('lab', 'l', 'a', 'b', 0, -127, -127, 150, 127, 127, 100, 127, 127);
 sliderInit('cmy', 'c', 'm', 'y', 0, 0, 0, 255, 255, 255, 255, 255, 255);
 sliderInit('uvw', 'u', 'v', 'w', 0, 0, 0, 255, 255, 255, 255, 255, 255);
 sliderInit('lms', 'l', 'm', 's', 0, 0, 0, 255, 255, 255, 255, 255, 255);
-sliderInit('ydbdr', 'y', 'db', 'dr', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+sliderInit('ydbdr', 'y', 'db', 'dr', 0, -255, -255, 255, 255, 255, 255, 255, 255);
 sliderInit('yiq', 'y', 'i', 'q', 0, 0, 0, 255, 255, 255, 255, 255, 255);
-sliderInit('ycocg', 'y', 'co', 'cg', 0, 0, 0, 255, 255, 255, 255, 255, 255);
-sliderInit('ycocgr', 'y', 'co', 'cg', 0, 0, 0, 255, 255, 255, 255, 255, 255);
-sliderInit('yuv', 'y', 'u', 'v', 0, 0, 0, 255, 255, 255, 255, 255, 255);
-sliderInit('ypbpr', 'y', 'pb', 'pr', 0, 0, 0, 255, 255, 255, 255, 255, 255);
-sliderInit('bt', 'x', 'y', 'y', 0, 0, 0, 255, 255, 255, 255, 255, 255);
+sliderInit('ycocg', 'y', 'co', 'cg', 0, -255, -255, 255, 255, 255, 255, 255, 255);
+sliderInit('ycocgr', 'y', 'co', 'cg', 0, -255 -255, 255, 255, 255, 255, 255, 255);
+sliderInit('yuv', 'y', 'u', 'v', 0, -255, -255, 255, 255, 255, 255, 255, 255);
+sliderInit('ypbpr', 'y', 'pb', 'pr', 0, -255, -255, 255, 255, 255, 255, 255, 255);
+sliderInit('bt', 'x', 'y', 'z', 0, -255, -255, 255, 255, 255, 255, 255, 255);
 sliderInit('tsl', 't', 's', 'l', 0, 0, 0, 100, 100, 255, 100, 100, 255);
 sliderInit('luv', 'l', 'u', 'v', 0, 0, 0, 100, 100, 255, 100, 100, 255);
 sliderInit('srgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255);
 sliderInit('scrgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255);
 sliderInit('ecirgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255);
- 
+sliderInit('lab', 'l', 'a', 'b', 0, -255, -255, 255, 255, 255, 255, 255, 255);
+sliderInit('oklab', 'l', 'a', 'b', 0, -255, -255, 255, 255, 255, 255, 255, 255);
+sliderInit('lch', 'l', 'c', 'h', 0, 0, 0, 255, 255, 255, 255, 255, 360);
+ sliderInit('rxy', 'r', 'x', 'y', 0, -255, -255, 255, 255, 255, 255, 255, 360);
+ sliderInit('lcw', 'l', 'c', 'w', 0, 0, 0, 255, 255, 1000, 255, 255, 1000);
+sliderInit('lct', 'l', 'c', 't', 0, 0, 0, 255, 255, 10000, 255, 255, 10000);
+
  
  
  // sliderInit('cmyk', 'c', 'm', 'y', 'k', 0, 0, 0, 0, 100, 100, 100, 100, 100, 100, 100, 100);
@@ -451,6 +876,34 @@ sliderInit('ecirgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255);
 }
 
         init();
+		
+		
+		
+		
+        function hexToRgb(hex) {
+            let bigint = parseInt(hex.slice(1), 16);
+            let r = (bigint >> 16) & 255;
+            let g = (bigint >> 8) & 255;
+            let b = bigint & 255;
+            return [r, g, b];
+        }
+
+        // Event listener for key press
+        document.addEventListener("keydown", function(event) {
+            if (event.code === "Space") {
+                // Get the hex color from the HTML element
+                const hexColor = document.getElementById("hexValue").textContent;
+
+                // Extract RGB values from hex and update gr, gg, gb
+                [gr, gg, gb] = hexToRgb(hexColor);
+
+                // Update the displayed RGB value
+             //   document.getElementById("rgbValue").textContent = `rgb(${gr}, ${gg}, ${gb})`;
+            }
+        });
+		
+
+		
     </script>
 </body>
 </html>
