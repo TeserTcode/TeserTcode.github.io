@@ -142,6 +142,65 @@ function cmyToRgb(c, m, y) {
             }
             return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
         }
+		function rgbToHsi(r, g, b) {
+    // Normalize the RGB values to [0, 1]
+    r /= 255;
+    g /= 255;
+    b /= 255;
+
+    // Intensity calculation
+    let I = (r + g + b) / 3;
+
+    // Saturation calculation
+    let minVal = Math.min(r, g, b);
+    let S = I === 0 ? 0 : 1 - minVal / I;
+
+    // Hue calculation
+    let H = 0;
+    if (S !== 0) {
+        let num = 0.5 * ((r - g) + (r - b));
+        let den = Math.sqrt((r - g) * (r - g) + (r - b) * (g - b));
+        H = Math.acos(num / den); // Hue in radians
+        if (b > g) {
+            H = 2 * Math.PI - H;
+        }
+        H = H * (180 / Math.PI); // Convert to degrees
+    }
+
+    return [Math.round(H), Math.round(S * 100), Math.round(I * 100)];
+}
+
+// Convert HSI to RGB
+function hsiToRgb(h, s, i) {
+    h = h % 360; // Make sure hue is between 0-360
+    s /= 100;
+    i /= 100;
+
+    let r, g, b;
+
+    if (h < 120) {
+        r = i * (1 + s * Math.cos(h * (Math.PI / 180)) / Math.cos((60 - h) * (Math.PI / 180)));
+        g = i * (1 + s * (1 - Math.cos(h * (Math.PI / 180)) / Math.cos((60 - h) * (Math.PI / 180))));
+        b = i * (1 - s);
+    } else if (h < 240) {
+        h -= 120;
+        g = i * (1 + s * Math.cos(h * (Math.PI / 180)) / Math.cos((60 - h) * (Math.PI / 180)));
+        b = i * (1 + s * (1 - Math.cos(h * (Math.PI / 180)) / Math.cos((60 - h) * (Math.PI / 180))));
+        r = i * (1 - s);
+    } else {
+        h -= 240;
+        b = i * (1 + s * Math.cos(h * (Math.PI / 180)) / Math.cos((60 - h) * (Math.PI / 180)));
+        r = i * (1 + s * (1 - Math.cos(h * (Math.PI / 180)) / Math.cos((60 - h) * (Math.PI / 180))));
+        g = i * (1 - s);
+    }
+
+    // Convert normalized values back to [0, 255]
+    r = Math.round(r * 255);
+    g = Math.round(g * 255);
+    b = Math.round(b * 255);
+
+    return [r, g, b];
+}
 function rgbToHwb(r, g, b) {
     let h = r;
     let s = g;
@@ -286,29 +345,6 @@ function srgbToRgb(r, g, b) {
     });
 }
 
-function rgbToLch(r, g, b) {
-    const mtx = [
-       [ 0.490, 0.310, 0.200],
-       [ 0.176, 0.812, 0.010],
-       [ 0.000, 0.010, 0.990]
-    ];
-
-    [r, g, b] = matrixMult(r, g, b, mtx);
-
-    const r1 = r;
-    const g1 = g;
-    const b1 = b;
-
-    r = 116 * cielabf(g1 / 100) - 16;
-    g = 500 * (cielabf(r1 / 95.048) - cielabf(g1 / 100));
-    b = 200 * (cielabf(g1 / 100) - cielabf(b1 / 108.884));
-
-    const chroma = Math.sqrt(g * g + b * b);
-    const hue = Math.atan2(b, g)/3.14159265*180; // atan2(y, x) is used for correct quadrant determination
-
-    return [r, chroma, hue];
-}
-
 function rgbToYcbcr(r, g, b) {
     // Define the conversion matrix for YCbCr
     const mtx = [
@@ -347,7 +383,33 @@ function rgbToXyz(r, g, b) {
     
     return [r, g, b];
 }
-
+function rgbToOklab(r, g, b) {
+    // Define the conversion matrix for XYZ
+    const mtx = [
+        [0.490, 0.310, 0.200],
+        [0.176, 0.812, 0.010],
+        [0.000, 0.010, 0.990]
+    ];
+	const mtx1 = [
+        [0.818, 0.362,-0.129],
+        [0.033, 0.929, 0.036],
+        [0.048, 0.264, 0.634]
+    ];
+	const mtx2 = [
+        [0.210, 0.794,-0.004],
+        [1.978,-2.429, 0.451],
+        [0.026, 0.783, 0.809]
+    ];
+    
+    // Apply matrix multiplication
+    [r, g, b] = matrixMult(r, g, b, mtx);
+	
+	[r, g, b] = matrixMult(r, g, b, mtx1);
+	r=Math.pow(r/255,1/3)*255;g=Math.pow(g/255,1/3)*255;b=Math.pow(b/255,1/3)*255;
+	[r, g, b] = matrixMult(r, g, b, mtx2);
+    
+    return [r, g, b];
+}
 
 function rgbToYjk(r, g, b) {
     // Calculate YJK values
@@ -360,6 +422,29 @@ function rgbToYjk(r, g, b) {
     b = g1 - r;
     
     return [r, g, b];
+}
+
+function rgbToLch(r, g, b) {
+    const mtx = [
+       [ 0.490, 0.310, 0.200],
+       [ 0.176, 0.812, 0.010],
+       [ 0.000, 0.010, 0.990]
+    ];
+
+    [r, g, b] = matrixMult(r, g, b, mtx);
+
+    const r1 = r;
+    const g1 = g;
+    const b1 = b;
+
+    r = 116 * cielabf(g1 / 100) - 16;
+    g = 500 * (cielabf(r1 / 95.048) - cielabf(g1 / 100));
+    b = 200 * (cielabf(g1 / 100) - cielabf(b1 / 108.884));
+
+    const chroma = Math.sqrt(g * g + b * b);
+    const hue = Math.atan2(b, g)/3.14159265*180; // atan2(y, x) is used for correct quadrant determination
+
+    return [r, chroma, hue];
 }
 
 
@@ -405,7 +490,7 @@ function rgbToUvw(r, g, b) {
 }
 
 function rgbToLms(r, g, b) {
-    // Define the conversion matrices for LMS
+    // Define the conversion matrices for Lms
     const mtx1 = [
         [0.490, 0.310, 0.200],
         [0.176, 0.812, 0.010],
@@ -651,6 +736,35 @@ function xyzToRgb(x, y, z) {
     return [x , y , z];
 }
 
+function oklabToRgb(r, g, b) {
+    // Define the conversion matrix for XYZ
+    const mtx = [
+        [2.364, -0.896, -0.468],
+        [-0.515, 1.426, 0.088],
+        [0.005, -0.014, 1.009]
+    ];
+	const mtx1 = [
+        [ 1.228,-0.558, 0.281],
+        [-0.041, 1.112,-0.071],
+        [-0.076,-0.421, 1.585]
+    ];
+	const mtx2 = [
+        [ 1.321, 0.367,-0.198],
+        [ 0.905,-0.096, 0.058],
+        [-0.918, 0.081, 1.185]
+    ];
+    
+    // Apply matrix multiplication
+    [r, g, b] = matrixMult(r, g, b, mtx2);
+	r=Math.pow(r/255,3)*255;g=Math.pow(g/255,3)*255;b=Math.pow(b/255,3)*255;
+	[r, g, b] = matrixMult(r, g, b, mtx1);
+	
+	[r, g, b] = matrixMult(r, g, b, mtx1);
+    
+    return [r, g, b];
+}
+
+
 function yjkToRgb(r, g, b) {
     // Convert YJK to RGB
     const r1 = r;
@@ -702,7 +816,7 @@ function uvwToRgb(u, v, w) {
 }
 
 function lmsToRgb(l, m, s) {
-    // Define the conversion matrices for LMS to RGB
+    // Define the conversion matrices for Lms to RGB
     const mtx = [
         [2.364, -0.896, -0.468],
         [-0.515, 1.426, 0.088],
@@ -858,7 +972,7 @@ function luvToRgb(l, u, v) {
         g = 100 * Math.pow((l + 16) / 116, 3);
     }
     
-    const r = g * (9 * up) / (4 * vp);
+    let r = g * (9 * up) / (4 * vp);
     b = g * (12 - 3 * up - 20 * vp) / (4 * vp);
 
     // Apply matrix multiplication
@@ -866,6 +980,666 @@ function luvToRgb(l, u, v) {
 
     return [r, g, b];// Just returns the input values as an array
 }
+
+
+
+
+
+
+
+
+
+
+
+function rgbToHsm(r, g, b) {
+    // Normalize the RGB values to [0, 1]
+    r /= 255;
+    g /= 255;
+    b /= 255;
+
+    // Magnitude calculation (M)
+    let M = Math.sqrt(r * r + g * g + b * b);
+
+    // Minimum RGB component (m)
+    let m = Math.min(r, g, b);
+
+    // Saturation calculation (S)
+    let S = m === 0 ? 0 : 1 - (M / m);
+
+    // Hue calculation (H), similar to HSI
+    let H = 0;
+    if (M !== 0) {
+        let num = 0.5 * ((r - g) + (r - b));
+        let den = Math.sqrt((r - g) * (r - g) + (r - b) * (g - b));
+        H = Math.acos(num / den); // Hue in radians
+        if (b > g) {
+            H = 2 * Math.PI - H;
+        }
+        H = H * (180 / Math.PI); // Convert to degrees
+    }
+
+    return [Math.round(H), Math.round(S * 100), Math.round(M * 100)];
+}
+function hsmToRgb(h, s, m) {
+    h = h % 360; // Ensure hue is within 0-360
+    s /= 100;    // Scale saturation to [0, 1]
+    m /= 100;    // Scale magnitude to [0, 1]
+
+    // Calculate intermediate values based on hue and saturation
+    let r, g, b;
+
+    if (h < 120) {
+        r = m * (1 + s * Math.cos(h * (Math.PI / 180)) / Math.cos((60 - h) * (Math.PI / 180)));
+        g = m * (1 + s * (1 - Math.cos(h * (Math.PI / 180)) / Math.cos((60 - h) * (Math.PI / 180))));
+        b = m * (1 - s);
+    } else if (h < 240) {
+        h -= 120;
+        g = m * (1 + s * Math.cos(h * (Math.PI / 180)) / Math.cos((60 - h) * (Math.PI / 180)));
+        b = m * (1 + s * (1 - Math.cos(h * (Math.PI / 180)) / Math.cos((60 - h) * (Math.PI / 180))));
+        r = m * (1 - s);
+    } else {
+        h -= 240;
+        b = m * (1 + s * Math.cos(h * (Math.PI / 180)) / Math.cos((60 - h) * (Math.PI / 180)));
+        r = m * (1 + s * (1 - Math.cos(h * (Math.PI / 180)) / Math.cos((60 - h) * (Math.PI / 180))));
+        g = m * (1 - s);
+    }
+
+    // Convert normalized values back to [0, 255]
+    r = Math.round(r * 255);
+    g = Math.round(g * 255);
+    b = Math.round(b * 255);
+
+    return [r, g, b];
+}
+
+
+
+// HSH to RGB: Converts HSH to RGB
+function hshToRgb(h, s, hValue2) {
+    h /= 360.0; // Normalize hue to [0, 1]
+    s /= 100.0; // Normalize saturation to [0, 1]
+let hValue=hValue2/100;
+    // Harmonic mean in reverse
+    let r, g, b;
+
+    // If there's no saturation, it's a shade of gray
+    if (s === 0) {
+        r = g = b = hValue; // Set RGB to the harmonic mean (HSH component)
+    } else {
+        // Find the intermediate RGB values
+        const hue2rgb = (p, q, t) => {
+            if (t < 0) t += 1.0;
+            if (t > 1) t -= 1.0;
+            if (t < 1 / 6) return p + (q - p) * 6.0 * t;
+            if (t < 1 / 2) return q;
+            if (t < 2 / 3) return p + (q - p) * (2 / 3.0 - t) * 6.0;
+            return p;
+        };
+
+        const q = hValue < 0.5 ? hValue * (1 + s) : hValue + s - hValue * s;
+        const p = 2 * hValue - q;
+
+        r = hue2rgb(p, q, h + 1 / 3.0);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1 / 3.0);
+
+        // Reverse harmonic mean calculation
+        const invR = 1 / r;
+        const invG = 1 / g;
+        const invB = 1 / b;
+
+        r = hValue / invR;
+        g = hValue / invG;
+        b = hValue / invB;
+    }
+
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+}
+// HSG to RGB: Converts HSG to RGB
+function hsgToRgb(h, s, g) {
+    h /= 360; // Normalize hue to [0, 1]
+    s /= 100; // Normalize saturation to [0, 1]
+    g /= 100; // Normalize G to [0, 1]
+
+    let r, b, g_;
+    
+    // If there's no saturation, it's a shade of gray
+    if (s === 0) {
+        r = g_ = b = g * g; // Square the G value to undo the sqrt from rgbToHsg
+    } else {
+        // Find the intermediate RGB values
+        const hue2rgb = (p, q, t) => {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1 / 6) return p + (q - p) * 6 * t;
+            if (t < 1 / 2) return q;
+            if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+            return p;
+        };
+
+        const q = g < 0.5 ? g * (1 + s) : g + s - g * s;
+        const p = 2 * g - q;
+
+        r = hue2rgb(p, q, h + 1 / 3);
+        g_ = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1 / 3);
+
+        // Square the RGB components to reverse the sqrt from rgbToHsg
+        r = r * r;
+        g_ = g_ * g_;
+        b = b * b;
+    }
+
+    return [Math.round(r * 255), Math.round(g_ * 255), Math.round(b * 255)];
+}
+function rgbToHsg(r, g, b) {
+    const sqrtR = Math.sqrt(r/255);
+    const sqrtG = Math.sqrt(g/255);
+    const sqrtB = Math.sqrt(b/255);
+    
+    // Calculate Hue (H)
+    const max = Math.max(sqrtR, sqrtG, sqrtB);
+    const min = Math.min(sqrtR, sqrtG, sqrtB);
+    const delta = max - min;
+    let H = 0;
+
+    if (delta !== 0) {
+        if (max === sqrtR) {
+            H = (sqrtG - sqrtB) / delta + (sqrtG < sqrtB ? 6 : 0);
+        } else if (max === sqrtG) {
+            H = (sqrtB - sqrtR) / delta + 2;
+        } else {
+            H = (sqrtR - sqrtG) / delta + 4;
+        }
+        H /= 6; // Normalize to [0, 1]
+    }
+
+    const S = (max === 0) ? 0 : (delta / max); // Saturation calculation
+    const G = Math.sqrt(sqrtR * sqrtR + sqrtG * sqrtG + sqrtB * sqrtB); // G calculation
+
+    return [Math.round(H * 360), Math.round(S * 100), Math.round(G * 100)];
+}
+
+// HSH: Converts RGB to HSH
+function rgbToHsh(r, g, b) {
+    const H = (255 / (255 / r + 255 / g + 255 / b)); // Harmonic mean
+
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const delta = max - min;
+    let hue = 0, saturation = 0;
+
+    if (delta !== 0) {
+        if (max === r) {
+            hue = (g - b) / delta + (g < b ? 6 : 0);
+        } else if (max === g) {
+            hue = (b - r) / delta + 2;
+        } else {
+            hue = (r - g) / delta + 4;
+        }
+        hue /= 6; // Normalize to [0, 1]
+    }
+
+    saturation = (max === 0) ? 0 : (delta / max); // Saturation calculation
+
+    return [Math.round(hue * 360), Math.round(saturation * 100), Math.round(H)];
+}
+
+function labToLch(L, a, b) {
+    const C = Math.sqrt(a * a + b * b);
+    const H = Math.atan2(b, a) * (180 / Math.PI); // in degrees
+    return [L, C, H < 0 ? H + 360 : H]; // Normalize H to [0, 360]
+}
+function labToLms(L, a, b) {
+    // Reference white D65
+    const refY = 100;
+
+    // Calculate Y from L
+    const Y = (L + 16) / 116 * refY;
+    const X = a / 500 + Y;
+    const Z = Y - b / 200;
+
+    // Inverse transformation to get RGB values
+    const fx = (t) => (t > 0.206897) ? t * t * t : (t - 16 / 116) / 7.787;
+
+    const X_ref = 95.047;
+    const Y_ref = 100.000;
+    const Z_ref = 108.883;
+
+    const l = fx(X) * X_ref;
+    const m = fx(Y) * Y_ref;
+    const s = fx(Z) * Z_ref;
+
+    return [l, m, s];
+}
+function dLmsDwavelength(wavelength) {
+    const epsilon = 1e-6; // Small change for numerical derivative
+    const [L1, M1, S1] = wavelengthToLms(wavelength);
+    const [L2, M2, S2] = wavelengthToLms(wavelength + epsilon);
+
+    return [
+        (L2 - L1) / epsilon,
+        (M2 - M1) / epsilon,
+        (S2 - S1) / epsilon,
+    ]; // Return derivatives as an array
+}
+
+// Newton's Method to find wavelength for given LMS values
+function lmsToWavelength(L, M, S, initialGuess = 500, tolerance = 1e-6, maxIterations = 100) {
+    let wavelength = initialGuess;
+    let iteration = 0;
+
+    while (iteration < maxIterations) {
+        const [currentL, currentM, currentS] = wavelengthToLms(wavelength);
+        const [dL, dM, dS] = dLmsDwavelength(wavelength);
+
+        // Calculate the error
+        const errorL = L - currentL;
+        const errorM = M - currentM;
+        const errorS = S - currentS;
+
+        // If the error is within the tolerance, we have found our wavelength
+        if (Math.abs(errorL) < tolerance && Math.abs(errorM) < tolerance && Math.abs(errorS) < tolerance) {
+            return wavelength;
+        }
+
+        // Update the wavelength using Newton's method
+        wavelength += (errorL / dL + errorM / dM + errorS / dS) / 3; // Average adjustment
+        iteration++;
+    }
+
+    return wavelength; // Return the estimated wavelength
+}
+
+function wavelengthToLms(wavelength) {
+    let L, M, S;
+
+    if (wavelength >= 380 && wavelength <= 780) {
+        L = 0.400 * Math.exp(-0.5 * Math.pow((wavelength - 605) / 50, 2));
+        M = 0.700 * Math.exp(-0.5 * Math.pow((wavelength - 535) / 50, 2));
+        S = 1.000 * Math.exp(-0.5 * Math.pow((wavelength - 445) / 50, 2));
+    } else {
+        L = M = S = 0; // Out of range
+    }
+
+    return [L, M, S]; // Return LMS as an array
+}
+// Function to convert RGB to LCW
+function rgbToLcw(r, g, b) {
+    const [L, a, b_lab] = rgbToLab(r, g, b);
+    const [L_chroma, C, H] = labToLch(L, a, b_lab);
+    const [L_lms, M_lms, S_lms] = rgbToLms(r, g, b);
+
+    // Wavelength calculation using Lms
+    const W = lmsToWavelength(L_lms, M_lms, S_lms);
+    return [L_chroma, C, W];
+}
+function lmsToLab(L, M, S) {
+    // Apply inverse transformation
+    const X = L * 0.4002 + M * 0.7075 + S * -0.0808; // Linear transformation to XYZ
+    const Y = L * -0.2263 + M * 1.1653 + S * 0.0457;
+    const Z = L * 0.0000 + M * 0.0000 + S * 0.8252;
+
+    const refX = 95.047;
+    const refY = 100.000;
+    const refZ = 108.883;
+
+    // Normalize values
+    const x = X / refX;
+    const y = Y / refY;
+    const z = Z / refZ;
+
+    // Convert to CIELAB
+    const f = (t) => (t > 0.008856) ? Math.cbrt(t) : (t * 7.787 + 16 / 116);
+    
+    const L2 = Math.max(0, Math.min(100, 116 * f(y) - 16));
+    const a = 500 * (f(x) - f(y));
+    const b_lab = 200 * (f(y) - f(z));
+
+    return [L2, a, b_lab];
+}
+function lmsToLch(L, M, S) {
+    // Convert LMS to CIELAB
+    const [L_lab, a, b_lab] = lmsToLab(L, M, S);
+
+    // Convert CIELAB to LCH
+    const C = Math.sqrt(a ** 2 + b_lab ** 2); // Calculate Chroma
+    const H = Math.atan2(b_lab, a) * (180 / Math.PI); // Calculate Hue in degrees
+
+    return [L_lab, C, H < 0 ? H + 360 : H]; // Ensure Hue is positive
+}
+function lcwToRgb(L, C, W) {
+    // Step 1: Convert wavelength to LMS
+    const [L_lms, M_lms, S_lms] = wavelengthToLms(W);
+
+    // Step 2: Scale LMS values based on Luma
+    const scale = L / Math.sqrt(L_lms ** 2 + M_lms ** 2 + S_lms ** 2);
+    const scaledLMS = [L_lms * scale, M_lms * scale, S_lms * scale];
+
+    // Step 3: Convert LMS to LCH
+    const [L_lab, newC, newH] = lmsToLch(scaledLMS[0], scaledLMS[1], scaledLMS[2]);
+
+    return lchToRgb(L,C,newH);
+}
+
+function temperatureToWavelength(temperature) {
+    const b = 2898e-6; // Wien's displacement constant in meters*K
+    return b / temperature * 1e9; // Convert to nanometers
+}
+function wavelengthToTemperature(wavelength) {
+    const b = 2898e-6; // Wien's displacement constant in meters*K
+    return b / (wavelength * 1e-9); // Convert nm to meters
+}
+function lctToRgb(L, C, T) {
+    // Calculate the wavelength from temperature
+    const W = temperatureToWavelength(T);
+    return lcwToRgb(L,C,W);
+    // Convert wavelength to Lms
+    const [L_lms, M_lms, S_lms] = wavelengthToLms(W);
+    
+    // Adjust Lms values based on chroma
+    // Calculate a scaling factor based on C (Chroma)
+    const scale = C / Math.sqrt(L_lms ** 2 + M_lms ** 2 + S_lms ** 2);
+    const adjustedL = L_lms * scale;
+    const adjustedM = M_lms * scale;
+    const adjustedS = S_lms * scale;
+
+    // Convert adjusted Lms back to RGB
+    return lmsToRgb(adjustedL, adjustedM, adjustedS);
+}
+function rgbToLct(r, g, b) {
+    // Step 1: Convert RGB to CIELAB
+    const [L, a, b_lab] = rgbToLab(r, g, b);
+    
+    // Step 2: Convert CIELAB to Lms
+    const [L_lms, M_lms, S_lms] = labToLms(L, a, b_lab);
+
+    // Step 3: Calculate wavelength from Lms
+    const wavelength = lmsToWavelength(L_lms, M_lms, S_lms);
+
+    // Step 4: Calculate temperature from wavelength
+    const temperature = wavelengthToTemperature(wavelength);
+
+    // Step 5: Calculate Chroma (C)
+    const C = Math.sqrt(L_lms ** 2 + M_lms ** 2 + S_lms ** 2);
+
+    return { L, C, T: temperature };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//SOLARZONE
+
+function add(...args) {
+    return args.reduce((acc, val) => (acc+ val));
+}
+
+function sub(...args) {
+    return args.reduce((acc, val) =>(acc-val));
+}
+
+function mul(...args) {
+    return args.reduce((acc, val) => (acc*val));
+}
+
+function div(...args) {
+    return args.reduce((acc, val) => (acc/val));
+}
+
+function rxyToRgb(r, x, y) {
+let a = Math.sqrt(sub(sub(mul(3,r,r),mul(2,x,x)),mul(2,y,y)));
+return [mul(add(a,y,y),1),mul(1,sub(add(a,mul(1.73205081,x)),y)),mul(sub(add(a,mul(-1,1.73205081,x)),y),1)];
+}
+function rgbToRxy(r, x, y) {
+rp = div(r,1);
+xp = div(x,1);
+yp = div(y,1);
+return [Math.sqrt(add(mul(rp,rp),mul(xp,xp),mul(yp,yp))),add(mul(1.73205081,-0.5,rp),mul(1.73205081,-0.5,xp)),add(mul(-0.5,rp),mul(-0.5,xp),yp)]
+
+
+}
+//SOLARZONE ENDS
+
+
+
+
+
+//STUFF IDK IT MDOES STUFF
+const reg = 30;
+function rgbToRgb (r, g, b) {
+	return [r,g,b];
+}
+
+function normal(r, g, b) {
+	return [r,g,b];
+}
+
+function ROT1(r, g, b) {
+	return [b,r,g];
+}
+
+
+function ROT2(r, g, b) {
+	return [g,b,r];
+}
+
+
+function rgG(r, g, b) {
+
+    let r1 = r * b / g;
+    let b1 = (1.0 - r - g) * b / g;
+    r = r1;
+    g = b;
+    b = b1;
+    return [r, g, b];
+}
+
+function SPH(r, g, b) {
+//		console.log(r);
+    let rho = r;
+    let the = g;
+    let phi = b;
+    r = rho * Math.sin(the/reg) * Math.cos(phi/reg);
+    g = rho * Math.sin(the/reg) * Math.sin(phi/reg);
+    b = rho * Math.cos(the/reg);
+    return [r, g, b];
+}
+
+function CYL(r, g, b) {
+    let x = r;
+    let y = g;
+    r = x * Math.cos(y/reg);
+    g = x * Math.sin(y/reg);
+    return [r, g, b];
+}
+
+function TRP(r, g, b) {
+    let x = r;
+    let y = g;
+    r = x * Math.sin(y/reg);
+    g = x * Math.sin(y/reg + 2 * Math.PI / 3);
+    b = x * Math.sin(y/reg + 4 * Math.PI / 3);
+    return [r, g, b];
+}
+function TPH(r, g, b){//threeohase
+ let x = r;
+    let y = g;
+    r = b + x * Math.sin(y/reg);
+    g = b + x * Math.sin(y/reg+2*3.14159265/3);
+	b = b + x * Math.sin(y/reg+4*3.14159265/3);
+    return [r, g, b];
+}
+function HSV(r,g,b){return hsvToRgb(r,g,b);}
+function HSL(r,g,b){return hslToRgb(r,g,b);}
+function CMY(r,g,b){return cmyToRgb(r,g,b);}
+
+function TOR(r, g, b) {
+    let t = r;
+    let s = g;
+    let p = b;
+    r = Math.sinh(t/reg) / (Math.cosh(t/reg) - Math.cos(s/reg)) * Math.cos(p/reg);
+    g = Math.sinh(t/reg) / (Math.cosh(t/reg) - Math.cos(s/reg)) * Math.sin(p/reg);
+    b = Math.sin(t/reg) / (Math.cosh(t/reg) - Math.cos(s/reg));
+    return [r*100, g*100, b*100];
+}
+
+function PCC(r, g, b) {
+    let s = r/100;
+    let t = g/100;
+    r = s * t;
+    g = (t * t - s * s) / 2.0;
+    return [r*100, g*100, b];
+}
+
+function OSC(r, g, b) {
+    let m = r;
+    let v = g;
+    let p = b;
+    r = Math.cosh(m/reg) * Math.cos(v/reg) * Math.cos(p/reg);
+    g = Math.cosh(m/reg) * Math.cos(v/reg) * Math.sin(p/reg);
+    b = Math.sinh(m/reg) * Math.sin(v/reg);
+    return [r, g, b];
+}
+
+function OSCzxp(r, g, b) {
+    let z = r/100;
+    let x = g/100;
+    let p = b;
+    r = Math.sqrt((1.0 + z * z) * (1.0 - x * x)) * Math.cos(p/reg);
+    g = Math.sqrt((1.0 + z * z) * (1.0 - x * x)) * Math.sin(p/reg);
+    b = z * x;
+    return [r*100, g*100, b*100];
+}
+
+function OSCstp(r, g, b) {
+    let s = r/100;
+    let t = g/100;
+    let p = b;
+    r = s * t * Math.cos(p/reg);
+    g = s * t * Math.sin(p/reg);
+    b = (s * s - 1.0) * (1.0 - t * t);
+    return [r*100, g*100, b*100];
+}
+
+function PSC(r, g, b) {
+    let m = r;
+    let v = g;
+    let p = b;
+    r = Math.sinh(m/reg) * Math.sin(v/reg) * Math.cos(p/reg);
+    g = Math.sinh(m/reg) * Math.sin(v/reg) * Math.sin(p/reg);
+    b = Math.cosh(m/reg) * Math.cos(v/reg);
+    return [r*100, g*100, b*100];
+}
+
+function PC(r, g, b) {
+    let m = r/100;
+    let v = g/100;
+    let l = b/100;
+    let B = 1;
+    let C = 1;
+    r = Math.sqrt(4.0 / (B - C) * (m - B) * (B - v) * (B - l));
+    g = Math.sqrt(4.0 / (B - C) * (m - C) * (C - v) * (l - C));
+    b = m + v + l - B - C;
+    return [r*100, g*100, b*100];
+}
+
+function ECC(r, g, b) {
+    let m = r;
+    let v = g;
+    r = Math.cosh(m/reg) * Math.cos(v/reg);
+    g = Math.sinh(m/reg) * Math.sin(v/reg);
+    return [r*100, g*100, b];
+}
+
+function CC(r, g, b) {
+    let r1 = r/100;
+    let m = g/100;
+    let v = b/100;
+    let B = 1;
+    let C = 1;
+    r = r1 * m * v / B / C;
+    g = r1 / B * Math.sqrt(((m * m - B * B) * (v * v - B * B)) / (B * B - C * C));
+    b = r1 / C * Math.sqrt(((m * m - C * C) * (v * v - C * C)) / (C * C - B * B));
+    return [r*100, g*100, b*100];
+}
+
+function BC(r, g, b) {
+    let t = r;
+    let s = g;
+    let p = b;
+    r = Math.sin(s/reg) / (Math.cosh(t/reg) - Math.cos(s/reg)) * Math.cos(p/reg);
+    g = Math.sin(s/reg) / (Math.cosh(t/reg) - Math.cos(s/reg)) * Math.sin(p/reg);
+    b = Math.sinh(t/reg) / (Math.cosh(t/reg) - Math.cos(s/reg));
+    return [r*100, g*100, b*100];
+}
+
+function BCC(r, g, b) {
+    let s = r;
+    let t = g;
+    r = Math.sinh(t/reg) / (Math.cosh(t/reg) - Math.cos(s/reg));
+    g = Math.sin(s/reg) / (Math.cosh(t/reg) - Math.cos(s/reg));
+    return [r*100, g*100, b];
+}
+
+function rgGp(r, g, b) {
+    let r1 = r / (r + g + b);
+    let g1 = g / (r + g + b);
+    r = r1*100;
+    g = g1*100;
+    b = g;
+    return [r, g, b];
+}
+
+function iCMY(r, g, b) {
+    let c = 255 - r;
+    let m = 255 - g;
+    let y = 255 - b;
+    r = c;
+    g = m;
+    b = y;
+    return [r, g, b];
+}
+
+function iSPH(r, g, b) {
+    let x = r/100;
+    let y = g/100;
+    let z = b/100;
+    r = Math.sqrt(x * x + y * y + z * z);
+    g = Math.acos(100*z / r)*100;
+    b = Math.sign(y) * Math.acos(x / Math.sqrt(x * x + y * y));
+    return [r*100, g, b*100];
+}
+
+function iCYL(r, g, b) {
+    let x = r/100;
+    let y = g/100;
+    r = Math.sqrt(x * x + y * y);
+    g = Math.atan2(y, x);
+    return [r*100, g*100, b*100];
+}
+
+
+
+
+
 
 
 
@@ -888,9 +1662,9 @@ function clamp255(value) {
     // Calculate the differences from the nearest integers for contour mode
 
  if (colorMode === 'contour') {
-	// complexOutput.re=math.evaluate(magnitudeToLightnessExpr, { x: complexOutput.re });
-	// complexOutput.im=math.evaluate(magnitudeToLightnessExpr, { x: complexOutput.im });
- 	const contourThreshold=contourThresholdd * math.abs(deriv);
+	// complexOutput.re=Math.evaluate(magnitudeToLightnessExpr, { x: complexOutput.re });
+	// complexOutput.im=Math.evaluate(magnitudeToLightnessExpr, { x: complexOutput.im });
+ 	const contourThreshold=contourThresholdd * Math.abs(deriv);
     const reDiff = Math.abs(complexOutput.re % 1);
     const imDiff = Math.abs(complexOutput.im % 1);
     const minDiff = Math.min(reDiff, imDiff);
@@ -953,9 +1727,9 @@ if (colorMode === 'imag') {
 }
     if (colorMode === '2d') {
         return [
-            math.sign(complexOutput.re) * 50 + math.sign(complexOutput.im) * 100,
-            math.abs(complexOutput.re) * 255,
-            math.abs(complexOutput.im) * 255
+            Math.sign(complexOutput.re) * 50 + Math.sign(complexOutput.im) * 100,
+            Math.abs(complexOutput.re) * 255,
+            Math.abs(complexOutput.im) * 255
         ];
     }
 

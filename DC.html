@@ -121,10 +121,10 @@ background-color: #eeeeee;
 <body>
     <h1>Complex Domain Coloring</h1>
 <div class="split left">
-    <div class="form-group">
-        <label for="function">Function (e.g., '2^x'):</label>
-        <input type="text" id="function" name="function" value="2^x" required>
-    </div>
+<div class="form-group">
+    <label for="function">Function (e.g., '2^x'):</label>
+    <textarea id="function" rows="1" cols="20" name="function">2^x</textarea>
+</div>
     <div class="form-group">
         <label for="min-real">Min Real:</label>
         <input type="number" id="min-real" name="min-real" step="any" value="-7" required>
@@ -163,6 +163,8 @@ background-color: #eeeeee;
 		   <option value="isolines">Isolines</option>
 		   <option value="neon">Neon</option>
 		   <option value="differ">Differ</option>
+		   <option value="real">Real</option>
+		   <option value="imag">Imaginary</option>
             <option value="palette">Palette</option>
         </select>
     </div>
@@ -198,13 +200,19 @@ background-color: #eeeeee;
        <div id="canvasContainer">
         <canvas id="bmpCanvas" width="320" height="320"></canvas>
     </div>
-		 <div id="graphContainera">
+<div id="graphContainera" style="text-align: center;">
+    <div>
         <canvas id="graphCanvasa" width="320" height="320"></canvas>
-		 
     </div>
+    <div style="margin-top: 10px;"> <!-- This div will appear below the canvas -->
+        <label for="max-height">Maximum Height:</label>
+        <input type="number" id="max-height" value="1" step="0.1">
+    </div>
+</div>
     <div id="graphContainer">
         <canvas id="graphCanvas" width="320" height="320"></canvas>
 		  <div><div id="coordinate-container"></div></div>
+
     </div>
 <button onclick="change()" style="position: fixed; top: 70%; right: 25%;">></button>
    </canvas></div></div>
@@ -215,7 +223,7 @@ background-color: #eeeeee;
     <script>
         let paletteImageData = null;
 	const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 300);
+const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(300,300);
 document.body.appendChild(renderer.domElement);
@@ -224,9 +232,9 @@ document.getElementById('graphContainera').appendChild(renderer.domElement);
 let mesh;
 let geometry;
 let material;
-const gridSize = 200;  // Resolution of the grid
+let gridSize = 100;  // Resolution of the grid
 let page=0;
-
+let negmag =0;
 function change(){
 page = math.mod(page+1,3);
  const canvasa = document.getElementById('canvasContainer');
@@ -247,6 +255,7 @@ camera.lookAt(0, 0, 0);
 
 // Function to create and animate the mesh
 function createAndAnimateMesh() {
+gridSize = document.getElementById('bmp-width').value;
  const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
             const colorMode = document.getElementById('color-mode').value;
             const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
@@ -254,6 +263,7 @@ function createAndAnimateMesh() {
             const hue = parseInt(document.getElementById('hue').value);
 
             const funcStr = document.getElementById('function').value.trim();
+  const maxHeight = parseFloat(document.getElementById('max-height').value);
 
     // If a previous mesh exists, remove it
     if (mesh) {
@@ -283,9 +293,14 @@ function createAndAnimateMesh() {
             let z = math.complex(x, y);
 z =  math.evaluate(document.getElementById('function').value, { x: z });
             // Height is the magnitude of z (|z|)
-            const zMagnitude = math.abs(z);
+            const zMagnitude = math.min(maxHeight,math.abs(z));
+			if(negmag==1)
+			{positions[i * 3 + 2] = -z.re;
+			}else if(negmag==2){
+			positions[i * 3 + 2] = -z.im;
+			}else{
 			positions[i * 3 + 2] = -zMagnitude;
-            positions[i * 3 + 1] = -y;  // Set height to |z|
+           } positions[i * 3 + 1] = -y;  // Set height to |z|
 
             // Color based on the argument (arg(z))
             
@@ -320,60 +335,77 @@ document.getElementById('createMeshButton').addEventListener('click', () => {
     createAndAnimateMesh();
 });
 
-// WASD and QE camera controls
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-let rotateLeft = false, rotateRight = false, rotateUp = false, rotateDown = false, rotateUpc = false, rotateDownc = false,moveUp = false, moveDown = false;
-const moveSpeed = 0.1, rotateSpeed = 0.02;
+let rotateLeft = false, rotateRight = false, rotateUp = false, rotateDown = false, rotateUpc = false, rotateDownc = false, moveUp = false, moveDown = false;
+const moveSpeed = 0.1, rotateSpeed = 0.02, acceleration = 0.05;
+
+let velocity = new THREE.Vector3();
+let rotationVelocity = new THREE.Vector3();
 
 document.addEventListener('keydown', (event) => {
     switch (event.key) {
-        case 'w': moveForward = true; break;
-        case 's': moveBackward = true; break;
-        case 'a': moveLeft = true; break;
-        case 'd': moveRight = true; break;
-        case 'q': rotateLeft = true; break;
-        case 'e': rotateRight = true; break;
-		case 'r': rotateUp = true; break;
-        case 'f': rotateDown = true; break;
-		case 'c': rotateUpc = true; break;
-        case 'v': rotateDownc = true; break;
-		case 'z': moveUp = true; break;
-		case 'x': moveDown = true; break;
+        case 'W': moveForward = true; break;
+        case 'S': moveBackward = true; break;
+        case 'A': moveLeft = true; break;
+        case 'D': moveRight = true; break;
+        case 'Q': rotateLeft = true; break;
+        case 'E': rotateRight = true; break;
+        case 'R': rotateUp = true; break;
+        case 'F': rotateDown = true; break;
+        case 'C': rotateUpc = true; break;
+        case 'V': rotateDownc = true; break;
+        case 'Z': moveUp = true; break;
+        case 'X': moveDown = true; break;
+        case 'T': negmag = math.mod(negmag + 1, 3); break;
     }
 });
 
 document.addEventListener('keyup', (event) => {
     switch (event.key) {
-        case 'w': moveForward = false; break;
-        case 's': moveBackward = false; break;
-        case 'a': moveLeft = false; break;
-        case 'd': moveRight = false; break;
-        case 'q': rotateLeft = false; break;
-        case 'e': rotateRight = false; break;
-			case 'r': rotateUp = false; break;
-        case 'f': rotateDown = false; break;
-				case 'c': rotateUpc = false; break;
-        case 'v': rotateDownc = false; break;
-		case 'z': moveUp = false; break;
-		case 'x': moveDown = false; break;
+        case 'W': moveForward = false; break;
+        case 'S': moveBackward = false; break;
+        case 'A': moveLeft = false; break;
+        case 'D': moveRight = false; break;
+        case 'Q': rotateLeft = false; break;
+        case 'E': rotateRight = false; break;
+        case 'R': rotateUp = false; break;
+        case 'F': rotateDown = false; break;
+        case 'C': rotateUpc = false; break;
+        case 'V': rotateDownc = false; break;
+        case 'Z': moveUp = false; break;
+        case 'X': moveDown = false; break;
     }
 });
 
 function updateCamera() {
-    if (moveForward) camera.position.z -= moveSpeed;
-    if (moveBackward) camera.position.z += moveSpeed;
-    if (moveLeft) camera.position.x -= moveSpeed;
-    if (moveRight) camera.position.x += moveSpeed;
-	if (moveUp) camera.position.y -= moveSpeed;
-    if (moveDown) camera.position.y += moveSpeed;
-    if (rotateLeft) camera.rotation.y += rotateSpeed;
-    if (rotateRight) camera.rotation.y -= rotateSpeed;
-	if (rotateUp) camera.rotation.x += rotateSpeed;
-    if (rotateDown) camera.rotation.x -= rotateSpeed;
-		if (rotateUpc) camera.rotation.z += rotateSpeed;
-    if (rotateDownc) camera.rotation.z -= rotateSpeed;
-}
+    // Reset velocities
+    velocity.set(0, 0, 0);
+    rotationVelocity.set(0, 0, 0);
+    
+    // Smooth Movement Controls
+    if (moveForward) velocity.z -= moveSpeed;
+    if (moveBackward) velocity.z += moveSpeed;
+    if (moveLeft) velocity.x -= moveSpeed;
+    if (moveRight) velocity.x += moveSpeed;
+    if (moveUp) velocity.y -= moveSpeed;
+    if (moveDown) velocity.y += moveSpeed;
 
+    // Apply movement based on camera's current orientation
+    camera.position.add(velocity.applyQuaternion(camera.quaternion));
+
+    // Smooth Rotation Controls (quaternion based)
+    if (rotateLeft) rotationVelocity.y += rotateSpeed;
+    if (rotateRight) rotationVelocity.y -= rotateSpeed;
+    if (rotateUp) rotationVelocity.x += rotateSpeed;
+    if (rotateDown) rotationVelocity.x -= rotateSpeed;
+    if (rotateUpc) rotationVelocity.z += rotateSpeed;
+    if (rotateDownc) rotationVelocity.z -= rotateSpeed;
+
+    // Apply rotation
+    let quaternion = new THREE.Quaternion();
+    quaternion.setFromEuler(new THREE.Euler(rotationVelocity.x, rotationVelocity.y, rotationVelocity.z, 'XYZ'));
+    camera.quaternion.multiplyQuaternions(quaternion, camera.quaternion);
+}
 // Animation loop for the camera controls
 function animate() {
     requestAnimationFrame(animate);

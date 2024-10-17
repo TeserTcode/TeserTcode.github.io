@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fictional Element Calculator</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .calculator {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+       .element-box {
+    width: 300px; /* Set a fixed width */
+    height: 300px; /* Set height equal to width to make it a square */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid #000;
+    margin-bottom: 20px;
+    padding: 10px;
+    position: relative;
+}
+        .element-box .symbol {
+            font-size: 64px;
+            font-weight: bold;
+        }
+        .element-box .suffix {
+            font-size: 24px;
+            margin-top: 5px;
+        }
+        .element-box .weight {
+            font-size: 20px;
+            margin-top: 10px;
+        }
+        .element-box .electron-config {
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        .element-box .electron-shells {
+            font-size: 14px;
+            margin-top: 10px;
+            font-style: italic;
+        }
+        .input-number-display {
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        input[type="number"] {
+            width: 100px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+        }
+        .s-block { background-color: #ffcccc; }  /* Light red */
+        .p-block { background-color: #ccffcc; }  /* Light green */
+        .d-block { background-color: #ccccff; }  /* Light blue */
+        .f-block { background-color: #ffccff; }  /* Light pink */
+    </style>
+</head>
+<body>
+
+<div class="calculator">
+    <div class="element-box" id="elementBox">
+        <div class="input-number-display" id="inputDisplay" >Number</div> <!-- Input number display -->
+        <div class="symbol" id="symbol">Element</div>
+        <div class="suffix" id="suffix">-ium</div>
+        <div class="weight" id="weight">Weight</div>
+        <div class="electron-config" id="electronConfig">Electron Configuration</div> <!-- Electron Configuration -->
+        <div class="electron-shells" id="electronShells">Electrons in Shells</div> <!-- Electrons in Shells -->
+		 <div class="radius" id="radius">Atomic Radius</div> <!-- Electrons in Shells -->
+		  <div class="nradius" id="nradius">Nucleus Radius</div> <!-- Electrons in Shells -->
+    </div>
+
+    <input type="number" id="inputNumber" placeholder="Enter a number" value="150"step="any">
+    <br><br>
+    <button onclick="generateElement()">Enter</button>
+</div>
+
+<script>
+
+
+const elementSymbols = [
+    "H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne",
+    "Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar", "K", "Ca",
+    "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn",
+    "Ga", "Ge", "As", "Se", "Br", "Kr", "Rb", "Sr", "Y", "Zr",
+    "Nb", "Mo", "Tc", "Ru", "Rh", "Pd", "Ag", "Cd", "In", "Sn",
+    "Sb", "Te", "I", "Xe", "Cs", "Ba", "La", "Ce", "Pr", "Nd",
+    "Pm", "Sm", "Eu", "Gd", "Tb", "Dy", "Ho", "Er", "Tm", "Yb",
+    "Lu", "Hf", "Ta", "W", "Re", "Os", "Ir", "Pt", "Au", "Hg",
+    "Tl", "Pb", "Bi", "Po", "At", "Rn", "Fr", "Ra", "Ac", "Th",
+    "Pa", "U", "Np", "Pu", "Am", "Cm", "Bk", "Cf", "Es", "Fm",
+    "Md", "No", "Lr", "Rf", "Db", "Sg", "Bh", "Hs", "Mt", "Ds",
+    "Rg", "Cn", "Nh", "Fl", "Mc", "Lv", "Ts", "Og"
+];
+
+const elementNames = [
+    "Hydrogen", "Helium", "Lithium", "Beryllium", "Boron", "Carbon", "Nitrogen", "Oxygen", "Fluorine", "Neon",
+    "Sodium", "Magnesium", "Aluminum", "Silicon", "Phosphorus", "Sulfur", "Chlorine", "Argon", "Potassium", "Calcium",
+    "Scandium", "Titanium", "Vanadium", "Chromium", "Manganese", "Iron", "Cobalt", "Nickel", "Copper", "Zinc",
+    "Gallium", "Germanium", "Arsenic", "Selenium", "Bromine", "Krypton", "Rubidium", "Strontium", "Yttrium", "Zirconium",
+    "Niobium", "Molybdenum", "Technetium", "Ruthenium", "Rhodium", "Palladium", "Silver", "Cadmium", "Indium", "Tin",
+    "Antimony", "Tellurium", "Iodine", "Xenon", "Cesium", "Barium", "Lanthanum", "Cerium", "Praseodymium", "Neodymium",
+    "Promethium", "Samarium", "Europium", "Gadolinium", "Terbium", "Dysprosium", "Holmium", "Erbium", "Thulium", "Ytterbium",
+    "Lutetium", "Hafnium", "Tantalum", "Tungsten", "Rhenium", "Osmium", "Iridium", "Platinum", "Gold", "Mercury",
+    "Thallium", "Lead", "Bismuth", "Polonium", "Astatine", "Radon", "Francium", "Radium", "Actinium", "Thorium",
+    "Protactinium", "Uranium", "Neptunium", "Plutonium", "Americium", "Curium", "Berkelium", "Californium", "Einsteinium", "Fermium",
+    "Mendelevium", "Nobelium", "Lawrencium", "Rutherfordium", "Dubnium", "Seaborgium", "Bohrium", "Hassium", "Meitnerium", "Darmstadtium",
+    "Roentgenium", "Copernicium", "Nihonium", "Flerovium", "Moscovium", "Livermorium", "Tennessine", "Oganesson"
+];
+
+
+    const protonMass = 938.27208943; // MeV/c
+    const neutronBaseMass = 939.56542052; // MeV/c
+    const neutronMassFactor = 0.666;
+    const neutronPower = 1.185;
+    const digitToLetterMap = ['n', 'u', 'b', 't', 'q', 'p', 'h', 's', 'o', 'e'];
+    const prefixMap = ['nil', 'un', 'bi', 'tri', 'quad', 'pent', 'hex', 'sept', 'oct', 'enn'];
+    const orbitals = ['s', 'p', 'd', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r']; // Extended orbitals
+    function maxElectronsPerOrbital(l){return 4*l+2;}
+    let nobleGases = {};
+
+    function mapToElement(number) {
+	if (number<=118)return elementSymbols[number-1];
+        let strNumber = number.toString();
+        let length = strNumber.length;
+
+        let symbol = '';
+        // Loop through each digit and map to letters
+        for (let i = 0; i < length; i++) {
+            let digit = parseInt(strNumber[i]);
+            if (i === 0) {
+                symbol += digitToLetterMap[digit].toUpperCase(); // Capitalize the first letter
+            } else {
+                symbol += digitToLetterMap[digit]; // Lowercase for the rest
+            }
+        }
+        return symbol;
+    }
+
+    function mapToIumSuffix(number) {
+	if (number<=118)return elementNames[number-1];
+        let strNumber = number.toString();
+        let length = strNumber.length;
+        let result = "";
+
+        // Loop through digits to form the prefix
+        for (let i = 0; i < length; i++) {
+            let digit = parseInt(strNumber[i]);
+
+            // Special rules for 'bi' and 'tri'
+            if (i == length - 1 && (digit === 2 || digit === 3)) {
+                if (digit === 2) {
+                    result += "" + 'b';
+				//	length--;
+                } else if (digit === 3) {
+                    result += "" + 'tr';
+				//	length--;
+                }
+            } else {
+                result += prefixMap[digit];
+            }
+
+            if (digit === 0 && i === length - 2 && strNumber[i + 1] === '0') {
+                result += 'nil'; // Special rule for 'ennil'
+            }
+        }
+        result += "ium";
+        return result;
+    }
+function massNumber(protons){
+return  Math.ceil(protons + neutronMassFactor * Math.pow(protons, neutronPower));
+}
+function getNucleusRadius(protons){
+return  (1.25*Math.pow(massNumber(protons),0.3333)).toFixed(3);
+}
+    function calculateWeight(a) {
+        // Neutron mass = 0.666 * neutronBaseMass * a^1.185
+        let neutronMass = neutronMassFactor * neutronBaseMass * Math.pow(a, neutronPower);
+        
+        // Calculate total weight
+        let totalWeight = ((a * protonMass) + neutronMass) / 1000;
+        return totalWeight.toFixed(2); // Return weight with two decimal places
+    }
+function maxSumBelow(electrons) {
+    let maxSum = 0;
+    for (let i = 1; ; i++) {
+        const currentSum = sumss(i);
+        if (currentSum >= electrons) {
+            break;
+        }
+        maxSum = currentSum;
+    }
+    return maxSum;
+}
+function getSubshellLabel(l) {
+   
+    return orbitals[l] || `[${l}]`; // Handle extended subshells
+}
+let shell=[];
+let lastshell=0;
+function generateElectronConfig(electrons) {
+shell = new Array(getPeriod(electrons)).fill(0);
+    let config = "";
+    let totalElectrons = electrons;
+    let orbitals = [];
+    
+    // Generate orbitals based on diagonal rule (n + l)
+    for (let n = 1; n < getPeriod(electrons)**2/4+4; n++) {  // You can extend n further if needed
+        for (let l = 0; l < n; l++) {
+            orbitals.push({ n, l, energy: n + l });
+        }
+    }
+
+    // Sort orbitals based on diagonal rule: first by (n + l), then by n
+    orbitals.sort((a, b) => a.energy === b.energy ? a.n - b.n : a.energy - b.energy);
+
+    let shellElectrons = [];
+
+    // Fill the orbitals
+    for (let i = 0; i < orbitals.length && totalElectrons > 0; i++) {
+        const { n, l } = orbitals[i];
+        const maxElectronsInSubshell = maxElectronsPerOrbital(l);
+        const electronsInThisSubshell = Math.min(totalElectrons, maxElectronsInSubshell);
+
+        // Add to the electron configuration string
+		//console.log(totalElectrons);
+    if(totalElectrons<=electrons-maxSumBelow(electrons))    config += `${n}${getSubshellLabel(l)}${electronsInThisSubshell} `;
+shell[n-1]+=electronsInThisSubshell;
+lastshell=n;
+        // Track electrons per shell
+        if (!shellElectrons[n - 1]) {
+            shellElectrons[n - 1] = 0;
+        }
+        shellElectrons[n - 1] += electronsInThisSubshell;
+
+        totalElectrons -= electronsInThisSubshell;
+    }
+
+    return { config: config.trim(), shellElectrons };
+}
+
+function generateNobleGases(maxPeriod) {
+     nobleGases = [];
+    let totalElectrons = 0;
+
+    for (let n = 1; n <= maxPeriod; n++) {
+        const electronsInPeriod = 2 * n * n; // Using the formula 2n^2
+        totalElectrons += electronsInPeriod;
+
+        // Generate the symbol using mapToElement
+        const nobleGasSymbol = mapToElement(totalElectrons);
+
+        nobleGases.push({ number: totalElectrons, symbol: nobleGasSymbol });
+    }
+
+    return;
+}
+    function nobleGasAbbreviation(electrons) {
+        let closestNobleGas = maxSumBelow(electrons);
+//console.log(closestNobleGas);
+        const remainingElectrons = electrons - closestNobleGas;
+        const abbreviatedConfig = '['+mapToElement(closestNobleGas) + '] ' + generateElectronConfig(electrons).config;
+
+        return abbreviatedConfig;
+    }
+
+function hsvToRgb(h, s, v) {
+    let f = (n, k = (n + h / 60) % 6) => v - v * s * Math.max(Math.min(k, 4 - k, 1), 0);
+    return [Math.round(f(5) * 255), Math.round(f(3) * 255), Math.round(f(1) * 255)];
+}
+
+function determineBlock(n) {
+    // Calculate hue using the formula 360 * cos(n * n * 1233)
+    const hue = 360 * Math.cos(n * n * 1233)* Math.cos(n * n * 1233);
+console.log(hue);
+    // Set fixed pastel saturation and value (S = 50%, V = 100%)
+    const saturation = 0.5;
+    const value = 1.0;
+
+    // Convert HSV to RGB
+    const [r, g, b] = hsvToRgb(hue, saturation, value);
+
+    // Return the color as a CSS-compatible RGB string
+    return `rgb(${r}, ${g}, ${b})`;
+}
+function calculateAtomicRadius(period, group) {
+
+
+    // Calculate radius at the start and end of the period
+    const R_start = 1.3 * Math.sqrt(period - 1);  // Start (Group 1A)
+    const R_end = 0.65 * Math.sqrt(period - 1);   // End (Noble gas)
+
+    // Interpolate between start and end based on group number
+    const radius = R_start*(1-group)+R_end*group;
+
+    return radius.toFixed(3) + " Å";
+}
+function sumss(num){
+let fi=0;
+for(let i=0;i<num;i++)
+fi=fi+2*(Math.ceil(i/2)+1)*(Math.ceil(i/2)+1);
+return fi;
+}
+function getPeriod(electron) {
+    // Regular expression to match 's' orbital configurations
+    let fi=electron;let i=0;
+	for( i=1;fi>sumss(i);i++);;
+	return i;
+}
+function getGrouper(electron) {
+    // Determine the nearest sum of squares (sumss) for given electrons
+    let lowerSum = 0;
+    let upperSum = 0;
+
+    for (let i = 1; ; i++) {
+        const currentSum = sumss(i);
+        if (currentSum >= electron) {
+            upperSum = currentSum;
+            break;
+        }
+        lowerSum = currentSum; // Keep track of the last lower sum
+    }
+
+    // Calculate the difference to determine closeness
+    const distanceToLower = electron - lowerSum;
+    const distanceToUpper = upperSum - electron;
+
+    if (distanceToLower === 0) {
+        return 1; // Exactly equal to a sum
+    } else if (distanceToUpper === 0) {
+        return 0; // Exactly equal to the next sum
+    } else if (distanceToLower < distanceToUpper) {
+        return distanceToLower / (distanceToLower + distanceToUpper); // Closer to the lower sum
+    } else {
+        return 1 - (distanceToUpper / (distanceToLower + distanceToUpper)); // Closer to the upper sum
+    }
+}
+    function generateElement() {
+        let inputNumber = document.getElementById('inputNumber').value;
+        if (inputNumber === '' || isNaN(inputNumber)) return;
+
+        let numberLength = inputNumber.length;
+
+        // Update the input number display at the top left
+        document.getElementById('inputDisplay').innerHTML = inputNumber;
+
+       
+
+        // Assume 'a' is the first digit (proton count) for weight calculation
+        let a = parseFloat(inputNumber) || 1;
+
+        // Calculate weight using the formula
+        let elementWeight = calculateWeight(a);
+        
+        // Calculate electron configuration with noble gas abbreviation
+        let electronConfig = nobleGasAbbreviation(a);
+ let grouper=getGrouper(inputNumber);
+ let period=getPeriod(inputNumber);
+ generateNobleGases(period+1+10);
+// console.log(grouper);
+        let symbol = mapToElement(inputNumber);
+        let iumSuffix = mapToIumSuffix(inputNumber);
+		let radius = calculateAtomicRadius(period,grouper);
+		let nradius = getNucleusRadius(inputNumber);
+        // Calculate electrons in each shell
+        let shellInfo = generateElectronConfig(a);
+        let electronsInShells = shellInfo.shellElectrons.map((e, i) => `Shell ${i + 1}: ${e}`).join(', ');
+
+        // Determine block and change background color accordingly
+        let block = determineBlock(lastshell);
+        document.getElementById('elementBox').style.backgroundColor = block;
+
+        // Update the element box with the symbol, suffix, weight, and electron configuration
+        document.getElementById('symbol').innerHTML = symbol;
+        document.getElementById('suffix').innerHTML = iumSuffix;
+        document.getElementById('weight').innerHTML = `Weight: ${elementWeight} GeV/c`;
+        document.getElementById('electronConfig').innerHTML = `Electron Config: ${electronConfig}`;
+        document.getElementById('electronShells').innerHTML = `Electrons per Shell: ${shell}`;
+		document.getElementById('radius').innerHTML = `Atomic Radius ${radius}`;
+		document.getElementById('nradius').innerHTML = `Nucleus Radius ${nradius} fm`;
+    }
+</script>
+
+</body>
+</html>
