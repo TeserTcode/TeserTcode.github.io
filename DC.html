@@ -193,9 +193,10 @@ background-color: #eeeeee;
         <label for="hue">Hue:</label>
         <input type="range" id="hue" name="hue" min="0" max="360" value="0">
     <button id="createMeshButton">Create Mesh and Animate</button>
+	<button id="createMeshButtonsph">Create Spherical Mesh and Animate</button>
 	</div>
-    <button onclick="renderBMP()">Generate</button></div>
-	 
+    <button onclick="renderBMP()">Generate</button>
+	 <button onclick="renderBMPinv()">Generate Inverse</button></div>
    <div class="split right">
        <div id="canvasContainer">
         <canvas id="bmpCanvas" width="320" height="320"></canvas>
@@ -215,12 +216,26 @@ background-color: #eeeeee;
 
     </div>
 <button onclick="change()" style="position: fixed; top: 70%; right: 25%;">></button>
+<button onclick="change(1)" style="position: fixed; top: 75%; right: 20%;">Domain</button>
+<button onclick="change(2)" style="position: fixed; top: 75%; right: 30%;">Graphing</button>
+
+<button onclick="change(3)" style="position: fixed; top: 80%; right: 20%;">Heightmap</button>
+<button onclick="change(4)" style="position: fixed; top: 80%; right: 30%;">Spherical</button>
+
    </canvas></div></div>
    
 <script src="clrspc.js"></script>
 <script src="mthfnc.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
+	/*
+"X.X...XXX...X.....X........X.X...XXX...XXX...X.X..."
+"X.X...X.....X.....X........X.X...X.....X.X...X.X..."
+"XXX...XXX...X.....X........XXX...XXX...XXX...XXX..."
+"X.X...X.....X.....X.........X....X.....X.X...X.X..."
+"X.X...XXX...XXX...XXX.......X....XXX...X.X...X.X..."
+	*/
+	
         let paletteImageData = null;
 	const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
@@ -235,7 +250,10 @@ let material;
 let gridSize = 100;  // Resolution of the grid
 let page=0;
 let negmag =0;
-function change(){
+function change(a){
+if(a)
+page = a-1;
+else
 page = math.mod(page+1,3);
  const canvasa = document.getElementById('canvasContainer');
   const canvasb = document.getElementById('graphContainer');
@@ -245,13 +263,13 @@ page = math.mod(page+1,3);
    canvasc.style.display = `none`;
  
  if(page==0) canvasa.style.display = `flex`;
-  if(page==1) canvasb.style.display = `flex`;
+  if(page==1){ canvasb.style.display = `flex`;}
    if(page==2) canvasc.style.display = `flex`;
 }
 
 // Adjust the camera position
-camera.position.set(0, 20, 0);
-camera.lookAt(0, 0, 0);
+camera.position.set(0, 20, -5);
+camera.lookAt(0, 0, -5);
 
 // Function to create and animate the mesh
 function createAndAnimateMesh() {
@@ -329,10 +347,114 @@ updateMesh();
     // Start the animation loop
     animateMesh();
 }
+function createAndAnimateMeshSPH() {
+    const gridSize = document.getElementById('bmp-width').value;
+    const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+    const lightness = parseInt(document.getElementById('lightness').value);
+    const hue = parseInt(document.getElementById('hue').value);
+
+    const funcStr = document.getElementById('function').value.trim();
+    const maxHeight = parseFloat(document.getElementById('max-height').value);
+
+    // If a previous mesh exists, remove it
+    if (mesh) {
+        scene.remove(mesh);
+        geometry.dispose();
+        material.dispose();
+    }
+
+    // Create a sphere geometry for the mesh
+    geometry = new THREE.SphereGeometry(5, gridSize, gridSize); // Adjust radius and grid size as needed
+    material = new THREE.MeshBasicMaterial({ vertexColors: true, wireframe: false });
+    mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    // Function to update the mesh vertices and colors
+    function updateMesh() {
+        const positions = geometry.attributes.position.array;
+        const numVertices = positions.length / 3;
+
+        const colors = new Float32Array(numVertices * 3);  // Create color array
+
+        for (let i = 0; i < numVertices; i++) {
+            const x = positions[i * 3];
+            const y = positions[i * 3 + 1];
+            const z = positions[i * 3 + 2];
+
+            // Convert (x, y, z) from Cartesian to spherical coordinates
+            const r = Math.sqrt(x * x + y * y + z * z);
+            const theta = Math.acos(z / r);  // Theta is the polar angle from the z-axis
+            const phi = Math.atan2(y, x);    // Phi is the azimuthal angle in the xy-plane
+
+            // Use theta (real part) and phi (imaginary part) in the complex function
+            let sphericalInput = math.complex(theta, phi);  // Construct complex number with theta and phi
+            sphericalInput = math.evaluate(funcStr, { x: sphericalInput });  // Evaluate user-provided function
+
+            // Height (Z-axis) is determined by the magnitude (radius) of the complex output
+            const zMagnitude = math.min(maxHeight, math.abs(sphericalInput));
+
+            // Keep the same theta and phi, but modify the radius (magnitude)
+            const newRadius = zMagnitude;
+
+            // Recalculate the Cartesian coordinates using spherical-to-Cartesian conversion
+            positions[i * 3] = newRadius * Math.sin(theta) * Math.cos(phi);  // Update X
+            positions[i * 3 + 1] = newRadius * Math.sin(theta) * Math.sin(phi);  // Update Y
+            positions[i * 3 + 2] = newRadius * Math.cos(theta);  // Update Z
+
+            // Color the mesh based on the complex output
+            const color = complexToColor(
+                math.complex(x, y),  // The current vertex position as a complex number
+                sphericalInput,  // Complex output from the function
+                magnitudeToLightnessExpr,  // Expression for mapping magnitude to lightness
+                colorMode,  // Color mode (e.g., hue-based, etc.)
+                saturationChroma,  // Saturation or chroma value
+                lightness,  // Lightness value
+                paletteImageData,  // Palette for color mapping
+                0.1,  // Minimum lightness threshold
+                1  // Maximum lightness threshold
+            );
+
+            // Set color in the array (normalized RGB values)
+            colors[i * 3] = color[0] / 255;
+            colors[i * 3 + 1] = color[1] / 255;
+            colors[i * 3 + 2] = color[2] / 255;
+        }
+
+        // Update the geometry with new vertex positions and colors
+        geometry.attributes.position.needsUpdate = true;
+        geometry.computeVertexNormals();
+
+        // Apply the new colors to the mesh
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));  // Apply color array
+        geometry.attributes.color.needsUpdate = true;
+    }
+
+    // Animate function to continuously update the mesh
+    function animateMesh() {
+        requestAnimationFrame(animateMesh);
+        renderer.render(scene, camera);
+    }
+
+    updateMesh();  // Initial update of the mesh
+    // Start the animation loop
+    animateMesh();
+}
+
+
+
+
+
+
+
 
 // Button to create and animate the mesh
 document.getElementById('createMeshButton').addEventListener('click', () => {
     createAndAnimateMesh();
+});
+document.getElementById('createMeshButtonsph').addEventListener('click', () => {
+    createAndAnimateMeshSPH();
 });
 
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
@@ -415,7 +537,7 @@ function animate() {
 
 animate();	
 		
-		
+
 document.addEventListener('DOMContentLoaded', () => {
     let clickCount = 0;
     let firstPoint = { real: 0, imag: 0 };
@@ -423,13 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('coordinate-container');
 
 
-
-   
-
-
-
-
-    function initializeCoordinateBoxes() {
+	    function initializeCoordinateBoxes() {
         if (!container) {
             console.error('Coordinate container not found');
             return;
@@ -437,7 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         if (container.children.length === 0) {
-            const labels = ['Start Real', 'Start Imaginary', 'End Real', 'End Imaginary'];
+            const labels = ['Start Real', 'Start Imaginary', 'End Real', 'End Imaginary','Maximum'];
             labels.forEach(label => {
                 const coordBox = document.createElement('div');
                 coordBox.classList.add('coordinate-box');
@@ -457,7 +573,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 container.appendChild(coordBox);
             });
         }
-    }
+    }	
+   
+ initializeCoordinateBoxes();
+
+
+
+
 
     function updateGraph() {
         const startInputs = document.querySelectorAll('.start-input');
@@ -506,7 +628,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+
 function plotGraph(point1, point2) {
+const maximum= parseFloat(document.getElementById('maximum').value);
     const canvas = document.getElementById('graphCanvas');
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height); 
@@ -554,7 +678,7 @@ function plotGraph(point1, point2) {
 
     const graphWidth = canvas.width;
     const graphHeight = canvas.height;
-    const maxValue = Math.max(...imagValues, ...realValues);
+    const maxValue = Math.min(maximum,(Math.max(...imagValues, ...realValues)));
     const minValue = Math.min(...imagValues, ...realValues);
 
 	if (0>minValue && 0<maxValue) {
@@ -782,6 +906,66 @@ function generatePalette() {
 scaleCanvas();
 
         }
+function renderBMPinv() {
+    const width = parseInt(document.getElementById('bmp-width').value);
+    const height = parseInt(document.getElementById('bmp-height').value);
+    const minReal = parseFloat(document.getElementById('min-real').value);
+    const maxReal = parseFloat(document.getElementById('max-real').value);
+    const minImag = parseFloat(document.getElementById('min-imag').value);
+    const maxImag = parseFloat(document.getElementById('max-imag').value);
+    const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+    const lightness = parseInt(document.getElementById('lightness').value);
+    const hue = parseInt(document.getElementById('hue').value);
+
+    const funcStr = document.getElementById('function').value.trim();
+    const canvas = document.getElementById('bmpCanvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.createImageData(width, height);
+
+    const reStep = (maxReal - minReal) / width;
+    const imStep = (maxImag - minImag) / height;
+
+    for (let x = 0; x < width*2; x++) {
+        let memo = 0;
+        for (let y = 0; y < height*2; y++) {
+            const re = minReal + x * reStep/2;
+            const im = maxImag - y * imStep/2;
+
+            let color = [0, 0, 0];
+            try {
+                const complexValue = math.complex(re, im);
+                const funcValue = math.evaluate(funcStr, { x: complexValue });
+                
+                // Use input values (complexValue) for coloring
+                color = complexToColor(funcValue, complexValue, magnitudeToLightnessExpr, colorMode, saturationChroma, lightness, paletteImageData, 0.1, math.divide(math.subtract(funcValue, memo), imStep));
+                memo = funcValue;
+                
+                // Calculate output-based positions
+                const outputX = Math.round(((funcValue.re - minReal) / (maxReal - minReal)) * width);
+                const outputY = Math.round(((maxImag - funcValue.im) / (maxImag - minImag)) * height);
+
+                // Ensure positions are within bounds
+                if (outputX >= 0 && outputX < width && outputY >= 0 && outputY < height) {
+                    const index = (outputY * width + outputX) * 4;
+                    imageData.data[index] = color[0];
+                    imageData.data[index + 1] = color[1];
+                    imageData.data[index + 2] = color[2];
+                    imageData.data[index + 3] = 255;  
+                }
+
+            } catch (e) {
+                console.error('Error evaluating function or applying color transformation:', e);
+            }
+        }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    scaleCanvas();
+}
 
        
 
