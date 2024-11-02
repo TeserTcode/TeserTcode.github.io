@@ -10,6 +10,19 @@ function cielabfm(t) {
     return t > threshold ? Math.pow(t, 3) : 3 * Math.pow(6.0 / 29.0, 2) * (t - 4.0 / 29.0);
 }
 
+function hexToRgb(hex) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return [r, g, b];
+}
+
+function interpolateColor(rgb1, rgb2, factor) {
+    const r = Math.round(rgb1[0] + (rgb2[0] - rgb1[0]) * factor);
+    const g = Math.round(rgb1[1] + (rgb2[1] - rgb1[1]) * factor);
+    const b = Math.round(rgb1[2] + (rgb2[2] - rgb1[2]) * factor);
+    return [r, g, b];
+}
 
 
 function rgbToCmyk(r, g, b) {
@@ -1387,7 +1400,7 @@ function rgbToLct(r, g, b) {
 
 
 //SOLARZONE
-
+/*
 function add(...args) {
     return args.reduce((acc, val) => (acc+ val));
 }
@@ -1415,7 +1428,7 @@ yp = div(y,1);
 return [Math.sqrt(add(mul(rp,rp),mul(xp,xp),mul(yp,yp))),add(mul(1.73205081,-0.5,rp),mul(1.73205081,-0.5,xp)),add(mul(-0.5,rp),mul(-0.5,xp),yp)]
 
 
-}
+}*/
 //SOLARZONE ENDS
 
 
@@ -1664,7 +1677,7 @@ function clamp255(value) {
  if (colorMode === 'contour') {
 	// complexOutput.re=Math.evaluate(magnitudeToLightnessExpr, { x: complexOutput.re });
 	// complexOutput.im=Math.evaluate(magnitudeToLightnessExpr, { x: complexOutput.im });
- 	const contourThreshold=contourThresholdd * Math.abs(deriv);
+ 	const contourThreshold=contourThresholdd * mag(deriv);
     const reDiff = Math.abs(complexOutput.re % 1);
     const imDiff = Math.abs(complexOutput.im % 1);
     const minDiff = Math.min(reDiff, imDiff);
@@ -1793,6 +1806,11 @@ if (colorMode === 'magnitude') {
         0 // Blue channel constant
     ];
 }
+if (colorMode === 'magnitudecolour') {
+   // const normMagnitude = Math.min(magnitude / 10, 1); // Normalize magnitude
+    const lightnessValue = math.evaluate(magnitudeToLightnessExpr, { x: magnitude });
+    return hsvToRgb(lightnessValue,100,Math.max(lightnessValue,20))
+}
 
 if (colorMode === 'neon') {
     // Calculate the neon intensity based on complexOutput magnitude
@@ -1847,6 +1865,19 @@ if (colorMode === 'purify') {
     const blue = Math.min(Math.floor(dynamicBlue * magnitude * 255), 255);
 
     return [red, green, blue];
+}
+
+if (colorMode === 'quadrant') {
+   if (complexOutput.re > 0 && complexOutput.im > 0 ) return [255,128,255];
+   if (complexOutput.re > 0 && complexOutput.im < 0 ) return [255,128,0];
+   if (complexOutput.re > 0 && complexOutput.im ==0 ) return [255,128,125];
+   if (complexOutput.re < 0 && complexOutput.im > 0 ) return [0,128,255];
+   if (complexOutput.re < 0 && complexOutput.im < 0 ) return [0,128,0];
+   if (complexOutput.re < 0 && complexOutput.im ==0 ) return [0,128,128];
+   if (complexOutput.re ==0 && complexOutput.im > 0 ) return [128,128,255];
+   if (complexOutput.re ==0 && complexOutput.im < 0 ) return [128,128,0];
+   if (complexOutput.re ==0 && complexOutput.im ==0 ) return [128,128,128];
+return [0,0,0];
 }
 
 

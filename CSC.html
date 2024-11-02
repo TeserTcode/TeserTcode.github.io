@@ -231,7 +231,19 @@ background-color: #eeeeee;
 			<option value="tci">Inverse 4th Order Generalized Abel</option>
 			<option value="zch">0th order generalized Abel</option>
 			<option value="zci">Inverse 0th Order Generalized Abel</option>
-        </select>
+    
+			<option value="ablj">Conjugate Abel</option>
+			<option value="abij">Conjugate Inverse Abel</option>
+			<option value="schj">Conjugate Scröder</option>
+			<option value="scij">Conjugate Inverse Schröder</option>
+			<option value="bchj">Conjugate Böttcher</option>
+			<option value="bcij">Conjugate Inverse Böttcher</option>
+			 
+		
+		
+		
+		
+		</select>
     </div>
         <div class="form-group">
         <label for="ifunction">Inverse Function:</label>
@@ -413,7 +425,7 @@ const posf = document.getElementById('postfunc').value.trim();
 
             const aReal = parseFloat(document.getElementById('a-real').value);
             const aImag = parseFloat(document.getElementById('a-imag').value);
- const bReal = parseFloat(document.getElementById('a-real').value);
+ const bReal = parseFloat(document.getElementById('b-real').value);
             const bImag = parseFloat(document.getElementById('b-imag').value);
     const globalcReal = parseFloat(document.getElementById('globalc-real').value);
             const globalcImag = parseFloat(document.getElementById('globalc-imag').value);
@@ -421,6 +433,8 @@ const posf = document.getElementById('postfunc').value.trim();
  const a = math.complex(aReal, aImag);
  const b = math.complex(bReal, bImag);
  const bs = math.complex(bReal, bImag);
+  const bss = math.complex(bReal, bImag);
+   const as = math.complex(aReal, aImag);
  const globalc = math.complex(globalcReal, globalcImag);
      const applyConjugate = document.getElementById('apply-conjugate').checked;
 const ffgh = document.getElementById('fgh').checked;
@@ -830,11 +844,27 @@ const globalcd = numericalDerivative(funcStr, fix, 0.00001);
 
 
 
+ function abelj(funcStr, a, bf, globalc, bign) {
+return mathsc(funcStr,math.subtract(findInverse(funcStr,bf,initialGuess,bign),1));
+}
 
+ function invabelj(funcStr, a, bf, globalc, bign) {
+return mathsc(funcStr,math.add(1,findInverse(funcStr,bf,initialGuess,bign)));
+}
+ function schroderj(funcStr, a, bf, globalc, bign) {
+return mathsc(funcStr,math.divide(findInverse(funcStr,bf,initialGuess,bign),a));
+}
 
+ function invschroderj(funcStr, a, bf, globalc, bign) {
+return mathsc(funcStr,math.multiply(a,findInverse(funcStr,bf,initialGuess,bign)));
+}
+ function bottcherj(funcStr, a, bf, globalc, bign) {
+return mathsc(funcStr,math.pow(findInverse(funcStr,bf,initialGuess,bign),math.divide(1,a)));
+}
 
-
-
+ function invbottcherj(funcStr, a, bf, globalc, bign) {
+return mathsc(funcStr,math.pow(findInverse(funcStr,bf,initialGuess,bign),a));
+}
 
 
 
@@ -919,8 +949,8 @@ fi = math.subtract(fix,pow(globalcd,math.add(1,bf,fi)));
 
 
 
-const resultw = superfunc(funcStr, a, bs, globalc, bign);
-document.getElementById('outputText').innerText = `[${funcStr}]^{${bs.toString()}} (${a.toString()}) = ${resultw.toString()}`;
+const resultw = superfuncosp(funcStr, as,bss, globalc, bign);
+document.getElementById('outputText').innerText = `[${funcStr}]^{${bss.toString()}} (${as.toString()}) = ${resultw.toString()}`;
 
 for (let i = 0; i < width; i++) {
     for (let j = 0; j < height; j++) {
@@ -1025,7 +1055,7 @@ if(!ffri){ result = abel(funcStr, a, xgl, globalc, bign);
 if(calcm == 'abi'){
 try {
 if(!ffri){ result = invabel(funcStr, a, xgl, globalc, bign);
-}else{result = superfuncrir(funcStr, xgl,b, globalc, bign);}
+}else{result = invabelj(funcStr, xgl,b, globalc, bign);}
 } catch (e) {console.error(e); }}
 
 if(calcm == 'sch'){
@@ -1050,6 +1080,41 @@ if(calcm == 'bci'){
 try {
 if(!ffri){ result = invbottcher(funcStr, a, xgl, globalc, bign);
 }else{result = invbottcher(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+if(calcm == 'ablj'){
+try {
+if(!ffri){ result = abelj(funcStr, a, xgl, globalc, bign);
+}else{result = abelj(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'abij'){
+try {
+if(!ffri){ result = invabelj(funcStr, a, xgl, globalc, bign);
+}else{result = invabelj(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'schj'){
+try {
+if(!ffri){ result = schroderj(funcStr, a, xgl, globalc, bign);
+}else{result = schroderj(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'scij'){
+try {
+if(!ffri){ result = invschroderj(funcStr, a, xgl, globalc, bign);
+}else{result = invschroderj(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'bchj'){
+try {
+if(!ffri){ result = bottcherj(funcStr, a, xgl, globalc, bign);
+}else{result = bottchej,rj(funcStr, xgl,b, globalc, bign);}
+} catch (e) {console.error(e); }}
+
+if(calcm == 'bcij'){
+try {
+if(!ffri){ result = invbottcherj(funcStr, a, xgl, globalc, bign);
+}else{result = invbottcherj(funcStr, xgl,b, globalc, bign);}
 } catch (e) {console.error(e); }}
 
 if(calcm == 'tch'){
