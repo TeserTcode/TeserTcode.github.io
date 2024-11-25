@@ -174,10 +174,12 @@ function nthdigite(num, n) {
         function getthrenume(num, groupIndex) {
             return Math.floor(num / Math.pow(14, groupIndex * 3)) % 2744;
         }
+		function ppp(x){if (x<1)return x;return x+1;}
         function formatNumberf(num) {
                 const  onesDigit = nthdigit(num, 0);
                 const  tensDigit = nthdigit(num, 1);
                 const  hundredsDigit = nthdigit(num, 2);
+				 return currentStyle.ones[ppp( onesDigit)] +  currentStyle.tensabovehundred[ tensDigit] +  currentStyle.hundreds[ hundredsDigit];
                 return currentStyle.onesaboveten[ onesDigit] +  currentStyle.tensabovehundred[ tensDigit] +  currentStyle.hundreds[ hundredsDigit];
             } 
         function formatNumber(num) {
@@ -201,6 +203,7 @@ function nthdigite(num, n) {
 
                 while (numRemaining > 0 && groupIndex <  currentStyle.larger.length) {
                     const groupValue = getthrenum(num, groupIndex);
+					console.log(666);console.log(groupValue);
                     if (groupValue > 0) {
                         const  onesDigit = nthdigit(groupValue, 0);
                         const  tensDigit = nthdigit(groupValue, 1);
@@ -220,8 +223,10 @@ function nthdigite(num, n) {
                             groupFormatted +=  currentStyle.tensabovehundred[ tensDigit];
                         }else
                         if ( onesDigit > 0) {
-                            groupFormatted +=  currentStyle.onesaboveten[onesDigit-1];
-                        }
+						
+          //         if(document.getElementById('styleSelect').value=='sc'){console.log(4);groupFormatted +=  currentStyle.ones[onesDigit];}else	
+				   groupFormatted +=  currentStyle.onesaboveten[onesDigit-1];
+                       }
                         formattedString = groupFormatted +  currentStyle.larger[groupIndex] + formattedString;
                     }
                     groupIndex++;

@@ -34,6 +34,13 @@
             width: 500px;
             height: 500px;
         }
+		.selector2 {
+            margin-top: 20px;
+			 position: fixed;top: 660px;
+            right: 10px;
+            width: 500px;
+            height: 500px;
+        }
         #domainCanvas {
             position: fixed;
             top: 10px;
@@ -102,7 +109,25 @@ margin: 18px 18px;
 background: linear-gradient(-45deg, #ddaa23, #aa00aa);
 
 }
+.fancy-button2 {
+margin: 10px 10px;
+            background: linear-gradient(25deg, #ae0ae0, #aee179);
+          border: none;
+            border-radius: 15px;
+            color: white;
+            padding: 15px 30px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 5px 15px rgba(255, 105, 180, 0.4);
+            position: relative;
+            overflow: hidden;
+			transition: background 0.3s, color 0.3s; 
+        }
+.fancy-button2:hover {
+background: linear-gradient(-25deg, #d1aa23, #1a00aa);
 
+}
 
     </style>
 </head>
@@ -111,7 +136,7 @@ background: linear-gradient(-45deg, #ddaa23, #aa00aa);
 <div class="container">
     <div class="function-description">
        <div>
-    <button class="fancy-button" onclick="toggleCategory('trigFunctions')">Toggle Trigonometric Functions</button>
+    <button class="fancy-button" onclick="toggleCategory('trigFunctions')">Trigonometric Functions</button>
     <div id="trigFunctions" style="display:none;">
 
         <!-- Standard Trigonometric Functions -->
@@ -130,7 +155,7 @@ background: linear-gradient(-45deg, #ddaa23, #aa00aa);
             <button onclick="setFunction('tan(x)')">Set to tan(x)</button>
 
             <h3>csc(x)</h3>
-            <p>Cosecant is the reciprocal of sine, defined as csc(x) = 1/sin(x).</p>
+            <p>cscant is the reciprocal of sine, defined as csc(x) = 1/sin(x).</p>
             <button onclick="setFunction('csc(x)')">Set to csc(x)</button>
 
             <h3>sec(x)</h3>
@@ -158,7 +183,7 @@ background: linear-gradient(-45deg, #ddaa23, #aa00aa);
             <button onclick="setFunction('atan(x)')">Set to atan(x)</button>
 
             <h3>acsc(x)</h3>
-            <p>Arccosecant is the inverse of cosecant, providing the angle whose cosecant is x.</p>
+            <p>Arccscant is the inverse of cscant, providing the angle whose cscant is x.</p>
             <button onclick="setFunction('acsc(x)')">Set to acsc(x)</button>
 
             <h3>asec(x)</h3>
@@ -171,68 +196,121 @@ background: linear-gradient(-45deg, #ddaa23, #aa00aa);
         </div>
 
         <!-- Cardinal Trigonometric Functions -->
-        <h2 onclick="toggleCategory('cardinalFunctions')">Cardinal Trigonometric Functions</h2>
+        <h2 onclick="toggleCategory('cardinalFunctions')">-c Analogous Trigonometric Functions</h2>
         <div id="cardinalFunctions" style="display:none; padding-left: 20px;">
             <h3>sinc(x)</h3>
             <p>The cardinal sine function, defined as sinc(x) = sin(x)/x.</p>
             <button onclick="setFunction('sinc(x)')">Set to sinc(x)</button>
 
             <h3>cosc(x)</h3>
-            <p>The cardinal cosine function, defined as cosc(x) = cos(x)/x.</p>
+            <p>The analog of sinc of the cosine function, defined as cosc(x) = cos(x)/x.</p>
             <button onclick="setFunction('cosc(x)')">Set to cosc(x)</button>
 
-            <h3>tanc(x)</h3>
-            <p>The cardinal tangent function, defined as tanc(x) = tan(x)/x.</p>
-            <button onclick="setFunction('tanc(x)')">Set to tanc(x)</button>
+			<h3>tanc(x)</h3>
+			<p>The analog of sinc of the tangent function, defined as tanc(x) = tan(x)/x.</p>
+			<button onclick="setFunction('tanc(x)')">Set to tanc(x)</button>
 
-            <h3>cscc(x)</h3>
-            <p>The cardinal cosecant function, defined as cscc(x) = csc(x)/x.</p>
-            <button onclick="setFunction('cscc(x)')">Set to cscc(x)</button>
+			<h3>cscc(x)</h3>
+			<p>The analog of sinc of the cosecant function, defined as cscc(x) = csc(x)/x.</p>
+			<button onclick="setFunction('cscc(x)')">Set to cscc(x)</button>
 
-            <h3>secc(x)</h3>
-            <p>The cardinal secant function, defined as secc(x) = sec(x)/x.</p>
-            <button onclick="setFunction('secc(x)')">Set to secc(x)</button>
+			<h3>secc(x)</h3>
+			<p>The analog of sinc of the secant function, defined as secc(x) = sec(x)/x.</p>
+			<button onclick="setFunction('secc(x)')">Set to secc(x)</button>
 
-            <h3>cotc(x)</h3>
-            <p>The cardinal cotangent function, defined as cotc(x) = cot(x)/x.</p>
-            <button onclick="setFunction('cotc(x)')">Set to cotc(x)</button>
+			<h3>cotc(x)</h3>
+			<p>The analog of sinc of the cotangent function, defined as cotc(x) = cot(x)/x.</p>
+			<button onclick="setFunction('cotc(x)')">Set to cotc(x)</button>
+
+			<h3>jinc(x)</h3>
+			<p>The analog of sinc of the Bessel J function, defined as jinc(x) = J1(x)/x.</p>
+			<button onclick="setFunction('jinc(x)')">Set to jinc(x)</button>
+			
+			<h3>somb(x)</h3>
+			<p>Somvrero function, alternate jinc function that is normalised also called besinc function, defined as somb(x,y) = 2*J1(p*pi)/p*pi [p^2=x^2+y^2].</p>
+			<button onclick="setFunction('somb(x)')">Set to somb(x)</button>
+			<button onclick="setFunction('somb(x.re,x.im)')">Set to somb(x.re,x.im) [airy disc]</button>
+
+			<h3>exsecc(x)</h3>
+			<p>The analog of sinc of the secant function, defined as exsecc(x) = sec(x)/x.</p>
+			<button onclick="setFunction('exsecc(x)')">Set to exsecc(x)</button>
+
+			<h3>excscc(x)</h3>
+			<p>The analog of sinc of the cosecant function, defined as excscc(x) = csc(x)/x.</p>
+			<button onclick="setFunction('excscc(x)')">Set to excscc(x)</button>
+
+			<h3>versinc(x)</h3>
+			<p>The analog of sinc of the versed sine function, defined as versinc(x) = versin(x)/x.</p>
+			<button onclick="setFunction('versinc(x)')">Set to versinc(x)</button>
+
+			<h3>vercosinc(x)</h3>
+			<p>The analog of sinc of the vercosine function, defined as vercosinc(x) = vercos(x)/x.</p>
+			<button onclick="setFunction('vercosinc(x)')">Set to vercosinc(x)</button>
+
+			<h3>coversinc(x)</h3>
+			<p>The analog of sinc of the coversed sine function, defined as coversinc(x) = coversin(x)/x.</p>
+			<button onclick="setFunction('coversinc(x)')">Set to coversinc(x)</button>
+
+			<h3>covercosc(x)</h3>
+			<p>The analog of sinc of the covercosine function, defined as covercosc(x) = covercos(x)/x.</p>
+			<button onclick="setFunction('covercosc(x)')">Set to covercosc(x)</button>
+
+			<h3>haversinc(x)</h3>
+			<p>The analog of sinc of the haversine function, defined as haversinc(x) = haversin(x)/x.</p>
+			<button onclick="setFunction('haversinc(x)')">Set to haversinc(x)</button>
+
+			<h3>hacovercosc(x)</h3>
+			<p>The analog of sinc of the hacovercoe function, defined as hacovercosc(x) = hacovercos(x)/x.</p>
+			<button onclick="setFunction('hacovercosc(x)')">Set to hacovercosc(x)</button>
+
+			 <h3>sinc(x)</h3>
+            <p>The analog of sinc of the sine function, defined as sinc(x) = sin(x)/x.</p>
+            <button onclick="setFunction('sinc(x)')">Set to sinc(x)</button>
+			
+			 <h3>sinc(x)</h3>
+            <p>The analog of sinc of the sine function, defined as sinc(x) = sin(x)/x.</p>
+            <button onclick="setFunction('sinc(x)')">Set to sinc(x)</button>
+			
+			 <h3>sinc(x)</h3>
+            <p>The analog of sinc of the sine function, defined as sinc(x) = sin(x)/x.</p>
+            <button onclick="setFunction('sinc(x)')">Set to sinc(x)</button>
         </div>
 		<h2 onclick="toggleCategory('inversecardinalFunctions')">Inverse Cardinal Trigonometric Functions</h2>
         <div id="inversecardinalFunctions" style="display:none; padding-left: 20px;">
             <h3>asinc(x)</h3>
-            <p>Inverse of the cardinal sine function</p>
+            <p>Inverse of The analog of sinc of the sine function</p>
             <button onclick="setFunction('asinc(x)')">Set to asinc(x)</button>
 
             <h3>acosc(x)</h3>
-            <p>Inverse of the cardinal cosine function</p>
+            <p>Inverse of The analog of sinc of the cosine function</p>
             <button onclick="setFunction('acosc(x)')">Set to acosc(x)</button>
 
 			<h3>acosq(x)</h3>
-            <p>Quarter inverse of the cardinal cosine function. Defined as acosq(x) = acosc(i*x/4pi)</p>
+            <p>Quarter inverse of The analog of sinc of the cosine function. Defined as acosq(x) = acosc(i*x/4pi)</p>
             <button onclick="setFunction('acosq(x)')">Set to acosq(x)</button>
 			
 			 <h3>casin(x)</h3>
-            <p>The cardinal arcsine function, defined as casin(x) = asin(x)/x.</p>
+            <p>The analog of sinc of the arcsine function, defined as casin(x) = asin(x)/x.</p>
             <button onclick="setFunction('casin(x)')">Set to casin(x)</button>
 
             <h3>cacos(x)</h3>
-            <p>The cardinal arccosine function, defined as cacos(x) = acos(x)/x.</p>
+            <p>The analog of sinc of the arccosine function, defined as cacos(x) = acos(x)/x.</p>
             <button onclick="setFunction('cacos(x)')">Set to cacos(x)</button>
 
             <h3>catan(x)</h3>
-            <p>The cardinal arctangent function, defined as catan(x) = atan(x)/x.</p>
+            <p>The analog of sinc of the arctangent function, defined as catan(x) = atan(x)/x.</p>
             <button onclick="setFunction('catan(x)')">Set to catan(x)</button>
 
             <h3>cacsc(x)</h3>
-            <p>The cardinal arccosecant function, defined as cacsc(x) = acsc(x)/x.</p>
+            <p>The analog of sinc of the arccscant function, defined as cacsc(x) = acsc(x)/x.</p>
             <button onclick="setFunction('cacsc(x)')">Set to cacsc(x)</button>
 
             <h3>casec(x)</h3>
-            <p>The Cardinal arcsecant function, defined as casec(x) = asec(x)/x.</p>
+            <p>The analog of sinc of the arcsecant function, defined as casec(x) = asec(x)/x.</p>
             <button onclick="setFunction('casec(x)')">Set to casec(x)</button>
 
             <h3>cacot(x)</h3>
-            <p>The cardinal arccotangent function, defined as cot(x) = acot(x)/x.</p>
+            <p>The analog of sinc of the arccotangent function, defined as cot(x) = acot(x)/x.</p>
             <button onclick="setFunction('cacot(x)')">Set to cacot(x)</button>
         </div>
         <!-- Specialized Trigonometric Functions -->
@@ -242,9 +320,9 @@ background: linear-gradient(-45deg, #ddaa23, #aa00aa);
             <p>Exsec is defined as sec(x) - 1.</p>
             <button onclick="setFunction('exsec(x)')">Set to exsec(x)</button>
 
-            <h3>Excosec(x)</h3>
-            <p>Excosec is defined as csc(x) - 1.</p>
-            <button onclick="setFunction('excosec(x)')">Set to excosec(x)</button>
+            <h3>Excsc(x)</h3>
+            <p>Excsc is defined as csc(x) - 1.</p>
+            <button onclick="setFunction('excsc(x)')">Set to excsc(x)</button>
 
             <h3>Versin(x)</h3>
             <p>Versine is defined as 1 - cos(x).</p>
@@ -266,9 +344,9 @@ background: linear-gradient(-45deg, #ddaa23, #aa00aa);
             <p>Haversine is defined as 0.5 * (1 - cos(x)).</p>
             <button onclick="setFunction('haversin(x)')">Set to haversin(x)</button>
 
-            <h3>Hacovercosin(x)</h3>
-            <p>Hacovercosine is defined as 0.5 * (1 + sin(x)).</p>
-            <button onclick="setFunction('hacovercosin(x)')">Set to hacovercosin(x)</button>
+            <h3>hacoverco(x)</h3>
+            <p>hacovercoe is defined as 0.5 * (1 + sin(x)).</p>
+            <button onclick="setFunction('hacoverco(x)')">Set to hacoverco(x)</button>
 
             <h3>Arcversin(x)</h3>
             <p>Arcversine is the inverse of versine.</p>
@@ -291,14 +369,14 @@ background: linear-gradient(-45deg, #ddaa23, #aa00aa);
             <button onclick="setFunction('archaversin(x)')">Set to archaversin(x)</button>
 
             <h3>Archacovercos(x)</h3>
-            <p>Archacovercosine is the inverse of hacovercosine.</p>
+            <p>Archacovercoe is the inverse of hacovercoe.</p>
             <button onclick="setFunction('archacovercos(x)')">Set to archacovercos(x)</button>
         </div>
     
 	
 	
 	<div>
-    <button class="fancy-button" onclick="toggleCategory('hyperbolicFunctions')">Toggle Hyperbolic Functions</button>
+    <button class="fancy-button2" onclick="toggleCategory('hyperbolicFunctions')">Hyperbolic Functions</button>
     <div id="hyperbolicFunctions" style="display:none;">
 
         <!-- Standard Hyperbolic Functions -->
@@ -388,7 +466,7 @@ background: linear-gradient(-45deg, #ddaa23, #aa00aa);
     </div>
 </div>
 	 <div>
-        <button class="fancy-button" onclick="toggleCategory('combinedFunctions')">Combined Functions</button>
+        <button class="fancy-button2" onclick="toggleCategory('combinedFunctions')">Combined Functions</button>
         <div id="combinedFunctions" style="display:none; padding-left: 20px;">
 
             <h2 onclick="toggleCategory('cisFunctions')">cis and sic Functions</h2>
@@ -454,7 +532,7 @@ background: linear-gradient(-45deg, #ddaa23, #aa00aa);
         </div>
     </div>
 	 <div>  
-            <button class="fancy-button" onclick="toggleCategory('parabolicFunctions')">Parabolic Functions</button>
+            <button class="fancy-button2" onclick="toggleCategory('parabolicFunctions')">Parabolic Functions</button>
        
         <div id="parabolicFunctions" style="display:none; padding-left: 20px;">
             <h3>sinp(x)</h3>
@@ -747,7 +825,7 @@ background: linear-gradient(-45deg, #ddaa23, #aa00aa);
 
         <h3>Metallic Ratio (x)</h3>
         <p>Function for 'Metallic Ratio': <code>metallicRatio(x) = (x + sqrt(x^2 + 4)) / 2</code>.</p>
-        <button onclick="setFunction('metallicRatio(x)')">Set to Metallic Ratio</button>
+        <button onclick="setFunction('metallicratio(x)')">Set to Metallic Ratio</button>
 
         <h3>Joukowsky (x)</h3>
         <p>Function for 'Joukowsky': <code>joukowsky(x) = x + (1 / x)</code>.</p>
@@ -761,9 +839,9 @@ background: linear-gradient(-45deg, #ddaa23, #aa00aa);
 
         <h3>Symmetrical Joukowsky (x, a)</h3>
         <p>Function for 'Symmetrical Joukowsky': <code>symmetricalJoukowsky(x, a) = exp(i*c) * [x - a + (1 / (x - a)) + 2a^2 / (a + c)]</code>.</p>
-        <button onclick="setFunction('symmetricalJoukowsky(x, 1)')">Set to Symmetrical Joukowsky 1</button>
-		<button onclick="setFunction('symmetricalJoukowsky(x, 2)')">Set to Symmetrical Joukowsky 2</button>
-		<button onclick="setFunction('symmetricalJoukowsky(x, i)')">Set to Symmetrical Joukowsky i</button>
+        <button onclick="setFunction('symmetricaljoukowsky(x, 1)')">Set to Symmetrical Joukowsky 1</button>
+		<button onclick="setFunction('symmetricaljoukowsky(x, 2)')">Set to Symmetrical Joukowsky 2</button>
+		<button onclick="setFunction('symmetricaljoukowsky(x, i)')">Set to Symmetrical Joukowsky i</button>
 
         <h3>Cayley (x)</h3>
         <p>Function for 'Cayley': <code>cayley(x) = (x - i) / (x + 1)</code>.</p>
@@ -775,15 +853,137 @@ background: linear-gradient(-45deg, #ddaa23, #aa00aa);
 
         <h3>Poincaré Disc Metric (a, x)</h3>
         <p>Function for 'Poincaré Disc Metric': <code>poincareDiscMetric(a, x) = 2 * atanh((a - x) / (1 - a * conj(x)))</code>.</p>
-        <button onclick="setFunction('poincareDiscMetric(1, x)')">Set to Poincaré Disc Metric 1</button>
-		<button onclick="setFunction('poincareDiscMetric(2, x)')">Set to Poincaré Disc Metric 2</button>
-		<button onclick="setFunction('poincareDiscMetric(i, x)')">Set to Poincaré Disc Metric i</button>
+        <button onclick="setFunction('poincarediscmetric(1, x)')">Set to Poincaré Disc Metric 1</button>
+		<button onclick="setFunction('poincaredicmetric(2, x)')">Set to Poincaré Disc Metric 2</button>
+		<button onclick="setFunction('poincarediscmetric(i, x)')">Set to Poincaré Disc Metric i</button>
 
         <h3>Poincaré Metric (a, x)</h3>
         <p>Function for 'Poincaré Metric': <code>poincareMetric(a, x) = 2 * atanh((a - x) / (a - conj(x)))</code>.</p>
         <button onclick="setFunction('poincareMetric(1, x)')">Set to Poincaré Metric 1</button>
-<button onclick="setFunction('poincareMetric(2, x)')">Set to Poincaré Metric 2</button>
-<button onclick="setFunction('poincareMetric(i, x)')">Set to Poincaré Metric i</button>
+<button onclick="setFunction('poincaremetric(2, x)')">Set to Poincaré Metric 2</button>
+<button onclick="setFunction('poincaremetric(i, x)')">Set to Poincaré Metric i</button>
+<div>
+    <h3>Super Ballot Function</h3>
+    <p>Function: <code>superballot(b) = (60 * Gamma(2 * b + 1)) / (Gamma(b + 1) * Gamma(b + 4))</code></p>
+    <button onclick="setFunction('superballot(x)')">Set to Super Ballot</button>
+</div>
+
+<div>
+    <h3>Necklace Numbers (k, n)</h3>
+    <p>
+        The <strong>Necklace Numbers</strong> calculate the number of n-bead necklaces with up to k different colored beads.
+    </p>
+    <p>Function definition: <code>necklacel(k, n) = ...</code></p>
+    <button onclick="setFunction('necklacel(2,x)')">Set to Necklace Numbers (2,x)</button>
+    <button onclick="setFunction('necklacel(3,x)')">Set to Necklace Numbers (3,x)</button>
+    <button onclick="setFunction('necklacel(i,x)')">Set to Necklace Numbers (i,x)</button>
+</div>
+<div>
+    <h3>Corrected Necklace Numbers (k, n)</h3>
+    <p>
+        The <strong>Corrected Necklace Numbers</strong> are a variation of the necklace function, the number of n-bead necklaces with exactly k different colored beads.
+    </p>
+    <p>Function definition: <code>necklaceb(k, n) = ...</code></p>
+    <button onclick="setFunction('necklaceb(2,x)')">Set to Corrected Necklace Numbers (2,x)</button>
+    <button onclick="setFunction('necklaceb(3,x)')">Set to Corrected Necklace Numbers (3,x)</button>
+    <button onclick="setFunction('necklaceb(i,x)')">Set to Corrected Necklace Numbers (i,x)</button>
+</div>
+
+
+<div>
+    <h3>Eulerian Number 2 (n, k)</h3>
+    <p>Function for 'Eulerian Number 2': <code>euleriannum2(n, k) = ...</code>.</p>
+    <button onclick="setFunction('euleriannum2(1, x)')">Set to Eulerian Number 2 (1, x)</button>
+    <button onclick="setFunction('euleriannum2(2, x)')">Set to Eulerian Number 2 (2, x)</button>
+    <button onclick="setFunction('euleriannum2(i, x)')">Set to Eulerian Number 2 (i, x)</button>
+</div>
+
+<div>
+    <h3>Schroder-Hipparchus Function (x)</h3>
+    <p>Function for 'Schroder-Hipparchus': <code>schroderhipparchus(x) = ...</code>.</p>
+    <button onclick="setFunction('schroderhipparchus(x)')">Set to Schroder-Hipparchus (x)</button>
+</div>
+
+<div>
+    <h3>Generalized Schroder-Hipparchus Function (k, x)</h3>
+    <p>Function for 'Generalized Schroder-Hipparchus': <code>generalizedschroderhipparchus(k, x) = ...</code>.</p>
+    <button onclick="setFunction('generalizedschroderhipparchus(1, x)')">Set to Generalized Schroder-Hipparchus (1, x)</button>
+    <button onclick="setFunction('generalizedschroderhipparchus(2, x)')">Set to Generalized Schroder-Hipparchus (2, x)</button>
+    <button onclick="setFunction('generalizedschroderhipparchus(i, x)')">Set to Generalized Schroder-Hipparchus (i, x)</button>
+</div>
+
+<div>
+    <h3>Iverson Bracket (t)</h3>
+    <p>Function for 'Iverson Bracket': <code>iversonbracketeq0(t) = ...</code>.</p>
+    <button onclick="setFunction('iversonbracketeq0(x)')">Set to Iverson Bracket (x)</button>
+</div>
+
+<div>
+    <h3>Diagentringer Number (x)</h3>
+    <p>Function for 'Diagentringer Number': <code>diagentringernum(x) = ...</code>.</p>
+    <button onclick="setFunction('diagentringernum(x)')">Set to Diagentringer Number (x)</button>
+</div>
+
+<div>
+    <h3>Number of De Bruijn (k, n)</h3>
+    <p>Function for 'Number of De Bruijn': <code>numberofdebrujin(k, n) = ...</code>.</p>
+    <button onclick="setFunction('numberofdebrujin(2, x)')">Set to Number of De Bruijn (2, x)</button>
+    <button onclick="setFunction('numberofdebrujin(3, x)')">Set to Number of De Bruijn (3, x)</button>
+    <button onclick="setFunction('numberofdebrujin(i, x)')">Set to Number of De Bruijn (i, x)</button>
+</div>
+
+<div>
+    <h3>Stirling 2 (a, b)</h3>
+    <p>Function for 'Stirling 2': <code>stirling2(a, b) = ...</code>.</p>
+    <button onclick="setFunction('stirling2(1, x)')">Set to Stirling 2 (1, x)</button>
+    <button onclick="setFunction('stirling2(2, x)')">Set to Stirling 2 (2, x)</button>
+    <button onclick="setFunction('stirling2(i, x)')">Set to Stirling 2 (i, x)</button>
+</div>
+
+<div>
+    <h3>Stirling (x, y)</h3>
+    <p>Function for 'Stirling': <code>stirling(x, y) = ...</code>.</p>
+    <button onclick="setFunction('stirling(1, x)')">Set to Stirling (1, x)</button>
+    <button onclick="setFunction('stirling(2,x)')">Set to Stirling (2, x)</button>
+    <button onclick="setFunction('stirling(i, x)')">Set to Stirling (i, x)</button>
+</div>
+
+<div>
+    <h3>Unsigned Stirling (x, y)</h3>
+    <p>Function for 'Unsigned Stirling': <code>unsignedstirling(x, y) = ...</code>.</p>
+    <button onclick="setFunction('unsignedstirling(1, x)')">Set to Unsigned Stirling (1, x)</button>
+    <button onclick="setFunction('unsignedstirling(2, x)')">Set to Unsigned Stirling (2, x)</button>
+    <button onclick="setFunction('unsignedstirling(i, x)')">Set to Unsigned Stirling (i, x)</button>
+</div>
+
+<div>
+    <h3>Gregory Coefficient Derivative (t, n)</h3>
+    <p>Function for 'Gregory Coefficient D': <code>gregorycoefd(t, n) = ...</code>.</p>
+    <button onclick="setFunction('gregorycoefd(1, x)')">Set to Gregory Coefficient D (1, x)</button>
+    <button onclick="setFunction('gregorycoefd(2,x)')">Set to Gregory Coefficient D (2, x)</button>
+    <button onclick="setFunction('gregorycoefd(i,x)')">Set to Gregory Coefficient D (i, x)</button></div>
+
+<div>
+    <h3>Gregory Coefficient (n)</h3>
+    <p>Function for 'Gregory Coefficient': <code>gregorycoef(x) = ...</code>.</p>
+    <button onclick="setFunction('gregorycoef(x)')">Set to Gregory Coefficient (x)</button>
+</div>
+
+<div>
+    <h3>Nielsen Ramanujan Derivative (b, a)</h3>
+    <p>Function for 'Nielsen Ramanujan': <code>nielsenramanujand(b, a) = ...</code>.</p>
+    <button onclick="setFunction('nielsenramanujand(1, x)')">Set to Nielsen Ramanujan Function (1, x)</button>
+    <button onclick="setFunction('nielsenramanujand(2, x)')">Set to Nielsen Ramanujan Function (2, x)</button>
+    <button onclick="setFunction('nielsenramanujand(i, x)')">Set to Nielsen Ramanujan Function (i, x)</button>
+</div>
+
+
+
+
+
+
+
+
 
     </div>
 </div>
@@ -1156,23 +1356,1278 @@ background: linear-gradient(-45deg, #ddaa23, #aa00aa);
 
 	</div>
 	
+
+<button class="fancy-button" onclick="toggleCategory('polygonal')">Polygonal Functions</button>		
+    <div id="polygonal" style="display:none; padding-left: 20px;">
+ <h2 onclick="toggleCategory('ppolygonal')">Polygonal Functions</h2> 
+ <div id="ppolygonal" style="display:none; padding-left: 20px;">
+ <div>
+ <div>
+ <div>
+    <h3>Polygonal Function</h3>
+    <p>Function: <code>polygonal(a, b) = ((a - 2) * b^2 - (a - 4) * b) / 2</code></p>
+    <button onclick="setFunction('polygonal(0.5, x)')">Set to 0.5-gonal</button>
+	<button onclick="setFunction('polygonal(i, x)')">Set to i-gonal</button>
+	<button onclick="setFunction('polygonal(i+1, x)')">Set to i+1-gonal</button>
+</div>
+
+<div>
+    <h3>Antiside Polygonal Function</h3>
+    <p>Function: <code>antisidepolygonal(a, b) = (sqrt(8 * (a - 2) + b^2 - 4 * b) + (a - 4)) / (2 * a - 4)</code></p>
+    <button onclick="setFunction('antisidepolygonal(0.5, x)')">Set to Antiside 0.5-gonal</button>
+	<button onclick="setFunction('antisidepolygonal(i, x)')">Set to Antiside i-gonalgonal</button>
+	<button onclick="setFunction('antisidepolygonal(i+1, x)')">Set to Antiside i+1-gonal</button>
+</div>
+
+<div>
+    <h3>Antipolygonal Function</h3>
+    <p>Function: <code>antipolygonal(a, b) = antisidepolygonal(a, b)</code></p>
+	 <button onclick="setFunction('antisidepolygonal(0.5, x)')">Set to Anti, 0.5-gonal</button>
+	<button onclick="setFunction('antisidepolygonal(i, x)')">Set to Anti i-gonal</button>
+	<button onclick="setFunction('antisidepolygonal(i+1, x)')">Set to Anti i+1-gonal</button>
+</div>
+
+<div>
+    <h3>Centered Polygonal Function</h3>
+    <p>Function: <code>centeredpolygonal(a, b) = (a / 2 * b * (b - 1)) + 1</code></p>
+	 <button onclick="setFunction('centeredpolygonal(0.5, x)')">Set to Centered 0.5-gonal</button>
+	<button onclick="setFunction('centeredpolygonal(i, x)')">Set to Centered i-gonal</button>
+	<button onclick="setFunction('centeredpolygonal(i+1, x)')">Set to Centered i+1-gonal</button>
+</div>
+
+<div>
+    <h3>Pyramidal Function</h3>
+    <p>Function: <code>pyramidal(a, b) = (3 * b^2 + (b^2 * (a - 2)) - b - (a - 5)) / 6</code></p>
+	 <button onclick="setFunction('pyramidal(0.5, x)')">Set to 0.5-Pyramidal</button>
+	<button onclick="setFunction('pyramidal(i, x)')">Set to i-Pyramidal</button>
+	<button onclick="setFunction('pyramidal(i+1, x)')">Set to i+1-Pyramidal</button>
+</div>
+
+<div>
+    <h3>Star Function</h3>
+    <p>Function: <code>star(b) = 6 * b * (b - 1) + 1</code></p>
+    <button onclick="setFunction('star(x)')">Set to Star</button>
+</div>
+
+<div>
+    <h3>Star Prime Function</h3>
+    <p>Function: <code>starprime(b)</code></p>
+    <button onclick="setFunction('starprime(x)')">Set to Star Prime</button>
+</div>
+
+<div>
+    <h3>Superstar Prime Function</h3>
+    <p>Function: <code>superstarprime(b)</code></p>
+    <button onclick="setFunction('superstarprime(x)')">Set to Superstar Prime</button>
+</div>
+
+<div>
+    <h3>Reverse Superstar Function</h3>
+    <p>Function: <code>reversesuperstar(b)</code></p>
+    <button onclick="setFunction('reversesuperstar(x)')">Set to Reverse Superstar</button>
+</div>
+    <h3>Trigonal (b)</h3>
+    <p>Function for 'Trigonal': <code>trigonal(b)</code> is a geometric function involving complex numbers.</p>
+    <button onclick="setFunction('trigonal(x)')">Set to Trigonal</button>
+</div>
+
+<div>
+    <h3>Pentagonal (b)</h3>
+    <p>Function for 'Pentagonal': <code>pentagonal(b)</code> is a geometric function involving complex numbers.</p>
+    <button onclick="setFunction('pentagonal(x)')">Set to Pentagonal</button>
+</div>
+
+<div>
+    <h3>Hexagonal (b)</h3>
+    <p>Function for 'Hexagonal': <code>hexagonal(b)</code> is a geometric function involving complex numbers.</p>
+    <button onclick="setFunction('hexagonal(x)')">Set to Hexagonal</button>
+</div>
+
+<div>
+    <h3>Septagonal (b)</h3>
+    <p>Function for 'Septagonal': <code>septagonal(b)</code> is a geometric function involving complex numbers.</p>
+    <button onclick="setFunction('septagonal(x)')">Set to Septagonal</button>
+</div>
+
+<div>
+    <h3>Octagonal (b)</h3>
+    <p>Function for 'Octagonal': <code>octagonal(b)</code> is a geometric function involving complex numbers.</p>
+    <button onclick="setFunction('octagonal(x)')">Set to Octagonal</button>
+</div>
+
+<div>
+    <h3>Nonagonal (b)</h3>
+    <p>Function for 'Nonagonal': <code>nonagonal(b)</code> is a geometric function involving complex numbers.</p>
+    <button onclick="setFunction('nonagonal(x)')">Set to Nonagonal</button>
+</div>
+
+<div>
+    <h3>Decaagonal (b)</h3>
+    <p>Function for 'Decaagonal': <code>decaagonal(b)</code> is a geometric function involving complex numbers.</p>
+    <button onclick="setFunction('decaagonal(x)')">Set to Decaagonal</button>
+</div>
+
+<div>
+    <h3>Dodecagonal (b)</h3>
+    <p>Function for 'Dodecagonal': <code>dodecagonalgonal(b)</code> is a geometric function involving complex numbers.</p>
+    <button onclick="setFunction('dodecagonalgonal(x)')">Set to Dodecagonal</button>
+</div>
+
+<div>
+    <h3>Icosagonal (b)</h3>
+    <p>Function for 'Icosagonal': <code>icosagonal(b)</code> is a geometric function involving complex numbers.</p>
+    <button onclick="setFunction('icosagonal(x)')">Set to Icosagonal</button>
+</div>
+
+<div>
+    <h3>Myriagonal (b)</h3>
+    <p>Function for 'Myriagonal': <code>myriagonal(b)</code> is a geometric function involving complex numbers.</p>
+    <button onclick="setFunction('myriagonal(x)')">Set to Myriagonal</button>
+</div>
+    <h3>Gnomon (b)</h3>
+    <p>Function for 'Gnomon': <code>gnomon(b) = 2b + 1</code>.</p>
+    <button onclick="setFunction('gnomon(x)')">Set to Gnomon</button>
+</div>
+
+<div>
+    <h3>Pronic</h3>
+    <p>Function for 'Pronic': <code>pronic(b) = b(b + 1)</code>.</p>
+    <button onclick="setFunction('pronic(x)')">Set to Pronic</button>
+</div>
+ </div>
+ <h2 onclick="toggleCategory('polyhedral')">Polyhedral Functions</h2> 
+ <div id="polyhedral" style="display:none; padding-left: 20px;">
+ <div>
+    <h3>Hauy Octahedral</h3>
+    <p>Function for 'Hauy Octahedral': <code>hauyoctahedral(b) = (2b - 1)((2b²) - (2b + 3)) / 3</code>.</p>
+    <button onclick="setFunction('hauyoctahedral(x)')">Set to Hauy Octahedral</button>
+</div>
+
+<div>
+    <h3>Hauy Rhombic Dodecahedronal</h3>
+    <p>Function for 'Hauy Rhombic Dodecahedronal': <code>hauyrhombicdodecahedronal(b) = (2b - 1)((8b²) - (14b + 7))</code>.</p>
+    <button onclick="setFunction('hauyrhombicdodecahedronal(x)')">Set to Hauy Rhombic Dodecahedronal</button>
+</div>
+
+<div>
+    <h3>Hauy Square Pyramid</h3>
+    <p>Function for 'Hauy Square Pyramid': <code>hauysquarepyramid(b) = b(4b² - 1) / 3</code>.</p>
+    <button onclick="setFunction('hauysquarepyramid(x)')">Set to Hauy Square Pyramid</button>
+</div>
+
+<div>
+    <h3>Octahedral</h3>
+    <p>Function for 'Octahedral': <code>octahedral(b) = b(2b² + 1) / 3</code>.</p>
+    <button onclick="setFunction('octahedral(x)')">Set to Octahedral</button>
+</div>
+ <div>
+    <h3>Rhombic Dodecahedronal (b)</h3>
+    <p>Function for 'Rhombic Dodecahedronal': <code>rhombicdodecahedronal(b)</code> is a geometric function involving complex numbers.</p>
+    <button onclick="setFunction('rhombicdodecahedronal(x)')">Set to Rhombic Dodecahedronal</button>
+</div>
+
+<div>
+    <h3>Truncoctahedral (b)</h3>
+    <p>Function for 'Truncoctahedral': <code>truncoctahedral(b)</code> is a geometric function involving complex numbers.</p>
+    <button onclick="setFunction('truncoctahedral(x)')">Set to Truncoctahedral</button>
+</div>
+
+<div>
+    <h3>Trunc Tetrahedral (b)</h3>
+    <p>Function for 'Trunc Tetrahedral': <code>trunctetrahedral(b)</code> is a geometric function involving complex numbers.</p>
+    <button onclick="setFunction('trunctetrahedral(x)')">Set to Trunc Tetrahedral</button>
+</div>
+ </div>
+ <h2 onclick="toggleCategory('polytopes')">Polytope+ Functions</h2> 
+ <div id="polytopes" style="display:none; padding-left: 20px;">
+ <div>
+    <h3>Tetrahedral (b)</h3>
+    <p>Function for 'Tetrahedral': <code>tetrahedral(b)</code> is a geometric function involving binomial coefficients.</p>
+    <button onclick="setFunction('tetrahedral(x)')">Set to Tetrahedral</button>
+</div>
+
+<div>
+    <h3>Pentachoric (b)</h3>
+    <p>Function for 'Pentachoric': <code>pentachoric(b)</code> is a geometric function involving binomial coefficients.</p>
+    <button onclick="setFunction('pentachoric(x)')">Set to Pentachoric</button>
+</div>
+
+<div>
+    <h3>Simplex (b, a)</h3>
+    <p>Function for 'Simplex': <code>simplex(b, a)</code> simplex(b,a)=ncr(b+a-1,a)</p>
+    <button onclick="setFunction('simplex(0.5, x)')">Set to 0.5-Simplex</button>
+	<button onclick="setFunction('simplex(i, x)')">Set to i-Simplex</button>
+	<button onclick="setFunction('simplex(i+1, x)')">Set to i+1-Simplex</button>
+</div>
+ </div>
+ 		<h2 onclick="toggleCategory('ppowers')">Perfect Power Functions</h2> 
+ <div id="ppowers" style="display:none; padding-left: 20px;">
+ <div>
+  <div>
+      <h3>Dot</h3>
+    <p>Function for 'Dot': <code>x⁰ = 1</code>.</p>
+    <button onclick="setFunction('1')">Set to Dot</button>
+</div>
+ <div>
+    <h3>Line</h3>
+    <p>Function for 'Line': <code>x¹ = x</code>.</p>
+    <button onclick="setFunction('x')">Set to Line</button>
+</div>
+ <div>
+    <h3>Square</h3>
+    <p>Function for 'Square': <code>sqr(x) = b²</code>.</p>
+    <button onclick="setFunction('sqr(x)')">Set to Square</button>
+</div>
+ <div>
+    <h3>Cube</h3>
+    <p>Function for 'Cube': <code>cum(x) = b³</code>.</p>
+    <button onclick="setFunction('cum(x)')">Set to Cube</button>
+</div>
+ <div>
+    <h3>Tesseract</h3>
+    <p>Function for 'Tesseract': <code>tesseract(x) = b⁴</code>.</p>
+    <button onclick="setFunction('tesseract(x)')">Set to Tesseract</button>
+</div>
+ <div>
+    <h3>Penteract</h3>
+    <p>Function for 'Penteract': <code>Penteract(x) = b⁵</code>.</p>
+    <button onclick="setFunction('penteract(x)')">Set to Penteract</button>
+</div>
+ <div>
+    <h3>Biquadratic</h3>
+    <p>Function for 'Biquadratic': <code>biquadratic(x) = b⁴</code>.</p>
+    <button onclick="setFunction('biquadratic(x)')">Set to Biquadratic</button>
+</div>
+
+<div>
+    <h3>Surfolide</h3>
+    <p>Function for 'Surfolide': <code>surfolide(x) = b⁵</code>.</p>
+    <button onclick="setFunction('surfolide(x)')">Set to Surfolide</button>
+</div>
+
+<div>
+    <h3>Second Surfolide</h3>
+    <p>Function for 'Second Surfolide': <code>secondsurfolide(x) = b⁷</code>.</p>
+    <button onclick="setFunction('secondsurfolide(x)')">Set to Second Surfolide</button>
+</div>
+
+<div>
+    <h3>Third Surfolide</h3>
+    <p>Function for 'Third Surfolide': <code>thirdsurfolide(x) = b¹¹</code>.</p>
+    <button onclick="setFunction('thirdsurfolide(x)')">Set to Third Surfolide</button>
+</div>
+
+<div>
+    <h3>Fourth Surfolide</h3>
+    <p>Function for 'Fourth Surfolide': <code>fourthsurfolide(x) = b¹³</code>.</p>
+    <button onclick="setFunction('fourthsurfolide(x)')">Set to Fourth Surfolide</button>
+</div>
+
+<div>
+    <h3>Fifth Surfolide</h3>
+    <p>Function for 'Fifth Surfolide': <code>fifthsurfolide(x) = b¹⁷</code>.</p>
+    <button onclick="setFunction('fifthsurfolide(x)')">Set to Fifth Surfolide</button>
+</div>
+
+<div>
+    <h3>Sixth Surfolide</h3>
+    <p>Function for 'Sixth Surfolide': <code>sixthsurfolide(x) = b¹⁹</code>.</p>
+    <button onclick="setFunction('sixthsurfolide(x)')">Set to Sixth Surfolide</button>
+</div>
+
+<div>
+    <h3>Seventh Surfolide</h3>
+    <p>Function for 'Seventh Surfolide': <code>seventhsurfolide(x) = b²³</code>.</p>
+    <button onclick="setFunction('seventhsurfolide(x)')">Set to Seventh Surfolide</button>
+</div>
+
+<div>
+    <h3>Nth Surfolide</h3>
+    <p>Function for 'Nth Surfolide': <code>nthsurfolide(x, a) = x<sup>nthPrime(a+2)</sup></code>.</p>
+    <button onclick="setFunction('nthsurfolide(x,1)')">Set to 1st Surfolide</button>
+	<button onclick="setFunction('nthsurfolide(x,10)')">Set to 10th Surfolide</button>
+	<button onclick="setFunction('nthsurfolide(x,20)')">Set to 20th Surfolide</button>
+	
+</div>
+    <h3>Zenzicube (x)</h3>
+    <p>Function for 'Zenzicube': <code>zenzicube(x) = x^6</code>.</p>
+    <button onclick="setFunction('zenzicube(x)')">Set to Zenzicube</button>
+</div>
+
+<div>
+    <h3>Cubicube (x)</h3>
+    <p>Function for 'Cubicube': <code>cubicube(x) = x^9</code>.</p>
+    <button onclick="setFunction('cubicube(x)')">Set to Cubicube</button>
+</div>
+
+<div>
+    <h3>Zenzizenzizenzic (x)</h3>
+    <p>Function for 'Zenzizenzizenzic': <code>zenzizenzizenzic(x) = x^8</code>.</p>
+    <button onclick="setFunction('zenzizenzizenzic(x)')">Set to Zenzizenzizenzic</button>
+</div>
+
+<div>
+    <h3>Zenzizenzicube (x)</h3>
+    <p>Function for 'Zenzizenzicube': <code>zenzizenzicube(x) = x^12</code>.</p>
+    <button onclick="setFunction('zenzizenzicube(x)')">Set to Zenzizenzicube</button>
+</div>
+
+<div>
+    <h3>Zenzizenzizenzizenzic (x)</h3>
+    <p>Function for 'Zenzizenzizenzizenzic': <code>zenzizenzizenzizenzic(x) = x^16</code>.</p>
+    <button onclick="setFunction('zenzizenzizenzizenzic(x)')">Set to Zenzizenzizenzizenzic</button>
+</div>
+
+<div>
+    <h3>Zenzicubicube (x)</h3>
+    <p>Function for 'Zenzicubicube': <code>zenzicubicube(x) = x^18</code>.</p>
+    <button onclick="setFunction('zenzicubicube(x)')">Set to Zenzicubicube</button>
+</div>
+
+<div>
+    <h3>Zenzizenzizenzicube (x)</h3>
+    <p>Function for 'Zenzizenzizenzicube': <code>zenzizenzizenzicube(x) = x^24</code>.</p>
+    <button onclick="setFunction('zenzizenzizenzicube(x)')">Set to Zenzizenzizenzicube</button>
+</div>
+
+<div>
+    <h3>Nth Zenzic (x, a)</h3>
+    <p>Function for 'Nth Zenzic': <code>nthzenzic(x, a) = x^(2^a)</code>.</p>
+    <button onclick="setFunction('nthzenzic(x, 0.5)')">Set to 0.5-th Zenzic</button>
+	<button onclick="setFunction('nthzenzic(x, i)')">Set to i-th Zenzic</button>
+	<button onclick="setFunction('nthzenzic(x, i+1)')">Set to i+1-th Zenzic</button>
+</div>
+
+
+		</div>
+	</div>
+	
+		 <button class="fancy-button" onclick="toggleCategory('bessel')">Bessel Functions</button>
+	 <div id="bessel" style="display:none; padding-left: 20px;">
+	 
+	<div>
+    <h3>Bessel K (a, x)</h3>
+    <p>Function for 'Bessel K': <code>besselk(a, x) = (Bessel I(-a, x) - Bessel I(a, x)) / sin(pi * a)</code>.</p>
+    <button onclick="setFunction('besselk(0,x)')">Set to Bessel K_0 (x)</button>
+    <button onclick="setFunction('besselk(0.5,x)')">Set to Bessel K_0.5 (x)</button>
+    <button onclick="setFunction('besselk(i,x)')">Set to Bessel K_i (x)</button>
+</div>
+
+<div>
+    <h3>Bessel I (a, x)</h3>
+    <p>Function for 'Bessel I': <code>besseli(a, x) = Σ (x/2)^a / (Γ(n+1) * Γ(a+n+1))</code>.</p>
+    <button onclick="setFunction('besseli(0,x)')">Set to Bessel I_0 (x)</button>
+    <button onclick="setFunction('besseli(0.5,x)')">Set to Bessel I_0.5 (x)</button>
+    <button onclick="setFunction('besseli(i,x)')">Set to Bessel I_i (x)</button>
+</div>
+<div>
+    <h3>Bessel J (a, x)</h3>
+    <p>Function for 'Bessel J': <code>besseli(a, x) = idk</code>.</p>
+    <button onclick="setFunction('besselj(0,x)')">Set to Bessel J_0 (x)</button>
+    <button onclick="setFunction('besselj(0.5,x)')">Set to Bessel J_0.5 (x)</button>
+    <button onclick="setFunction('besselj(i,x)')">Set to Bessel J_i (x)</button>
+</div>
+<div>
+    <h3>Bessel Y (a, x)</h3>
+    <p>Function for 'Bessel Y': <code>bessely(a, x) = csc(pi * a) * (a * pi * J(a, x) - J(0, x))</code>.</p>
+    <button onclick="setFunction('bessely(0,x)')">Set to Bessel Y_0 (x)</button>
+    <button onclick="setFunction('bessely(0.5,x)')">Set to Bessel Y_0.5 (x)</button>
+    <button onclick="setFunction('bessely(i,x)')">Set to Bessel Y_i (x)</button>
+</div>
+
+<div>
+    <h3>Hankel Function (1)</h3>
+    <p>Function for 'Hankel Function 1': <code>hankel1(a, x) = Bessel Y(a, x) + i * Bessel J(a, x)</code>.</p>
+    <button onclick="setFunction('hankel1(0,x)')">Set to Hankel H_1(0, x)</button>
+    <button onclick="setFunction('hankel1(0.5,x)')">Set to Hankel H_1(0.5, x)</button>
+</div>
+
+<div>
+    <h3>Hankel Function (2)</h3>
+    <p>Function for 'Hankel Function 2': <code>hankel2(a, x) = Bessel J(a, x) - i * Bessel Y(a, x)</code>.</p>
+    <button onclick="setFunction('hankel2(0,x)')">Set to Hankel H_2(0, x)</button>
+    <button onclick="setFunction('hankel2(0.5,x)')">Set to Hankel H_2(0.5, x)</button>
+</div>
+
+<div>
+    <h3>Spherical Bessel I (a, x)</h3>
+    <p>Function for 'Spherical Bessel I': <code>sphbesseli(a, x) = sqrt(π/(x+x)) * besseli(a + 0.5, x)</code>.</p>
+    <button onclick="setFunction('sphbesseli(0,x)')">Set to Spherical Bessel I_0 (x)</button>
+    <button onclick="setFunction('sphbesseli(0.5,x)')">Set to Spherical Bessel I_0.5 (x)</button>
+</div>
+
+<div>
+    <h3>Spherical Bessel J (a, x)</h3>
+    <p>Function for 'Spherical Bessel J': <code>sphbesselj(a, x) = sqrt(π/(x+x)) * besselj(a + 0.5, x)</code>.</p>
+    <button onclick="setFunction('sphbesselj(0,x)')">Set to Spherical Bessel J_0 (x)</button>
+    <button onclick="setFunction('sphbesselj(0.5,x)')">Set to Spherical Bessel J_0.5 (x)</button>
+</div>
+<div>
+    <h3>Spherical Bessel K (a,x)</h3>
+    <p>Function for 'Spherical Bessel K': <code>sphbesselk(a,x) = sqrt(π / (x + x)) * besselk(a + 0.5, x)</code>.</p>
+    <button onclick="setFunction('sphbesselk(0,x)')">Set to Spherical Bessel K (0,x)</button>
+    <button onclick="setFunction('sphbesselk(1,x)')">Set to Spherical Bessel K (1,x)</button>
+</div>
+
+<div>
+    <h3>Spherical Bessel Y (a,x)</h3>
+    <p>Function for 'Spherical Bessel Y': <code>sphbessely(a,x) = sqrt(π / (x + x)) * bessely(a + 0.5, x)</code>.</p>
+    <button onclick="setFunction('sphbessely(0,x)')">Set to Spherical Bessel Y (0,x)</button>
+    <button onclick="setFunction('sphbessely(1,x)')">Set to Spherical Bessel Y (1,x)</button>
+</div>
+
+<div>
+    <h3>Spherical Hankel 1 (a,x)</h3>
+    <p>Function for 'Spherical Hankel 1': <code>sphhankel1(a,x) = sqrt(π / (x + x)) * hankel1(a + 0.5, x)</code>.</p>
+    <button onclick="setFunction('sphhankel1(0,x)')">Set to Spherical Hankel 1 (0,x)</button>
+    <button onclick="setFunction('sphhankel1(1,x)')">Set to Spherical Hankel 1 (1,x)</button>
+</div>
+
+<div>
+    <h3>Spherical Hankel 2 (a,x)</h3>
+    <p>Function for 'Spherical Hankel 2': <code>sphhankel2(a,x) = sqrt(π / (x + x)) * hankel2(a + 0.5, x)</code>.</p>
+    <button onclick="setFunction('sphhankel2(0,x)')">Set to Spherical Hankel 2 (0,x)</button>
+    <button onclick="setFunction('sphhankel2(1,x)')">Set to Spherical Hankel 2 (1,x)</button>
+</div>
+<div>
+    <h3>Ricatti Bessel S (n, x)</h3>
+    <p>Function for 'Ricatti Bessel S': <code>ricattibessels(n, x) = x * sphbesselj(n, x)</code>.</p>
+    <button onclick="setFunction('ricattibessels(0,x)')">Set to Ricatti Bessel S_0 (x)</button>
+    <button onclick="setFunction('ricattibessels(1,x)')">Set to Ricatti Bessel S_1 (x)</button>
+</div>
+
+<div>
+    <h3>Ricatti Bessel C (n, x)</h3>
+    <p>Function for 'Ricatti Bessel C': <code>ricattibesselc(n, x) = -1 * x * sphbessely(n, x)</code>.</p>
+    <button onclick="setFunction('ricattibesselc(0,x)')">Set to Ricatti Bessel C_0 (x)</button>
+    <button onclick="setFunction('ricattibesselc(1,x)')">Set to Ricatti Bessel C_1 (x)</button>
+</div>
+	<div>
+    <h3>Ricatti Bessel Xi (n,x)</h3>
+    <p>Function for 'Ricatti Bessel Xi': <code>ricattibesselxi(n,x) = x * sphhankel1(n,x)</code>.</p>
+    <button onclick="setFunction('ricattibesselxi(1,x)')">Set to Ricatti Bessel Xi (1,x)</button>
+    <button onclick="setFunction('ricattibesselxi(2,x)')">Set to Ricatti Bessel Xi (2,x)</button>
+</div>
+
+<div>
+    <h3>Ricatti Bessel Zeta (n,x)</h3>
+    <p>Function for 'Ricatti Bessel Zeta': <code>ricattibesselzeta(n,x) = x * sphhankel2(n,x)</code>.</p>
+    <button onclick="setFunction('ricattibesselzeta(1,x)')">Set to Ricatti Bessel Zeta (1,x)</button>
+    <button onclick="setFunction('ricattibesselzeta(2,x)')">Set to Ricatti Bessel Zeta (2,x)</button>
+</div>
+
+<div>
+    <h3>Neuman (a,x)</h3>
+    <p>Function for 'Neuman': <code>neuman(a,x) = (besselj(a, x) * cos(pi * a) - besselj(-a, x)) / sin(pi * a)</code>.</p>
+    <button onclick="setFunction('neuman(0,x)')">Set to Neuman (0,x)</button>
+    <button onclick="setFunction('neuman(1,x)')">Set to Neuman (1,x)</button>
+</div>
+
+<div>
+    <h3>Struve H (a,x)</h3>
+    <p>Function for 'Struve H': <code>struve(a,x) = (x / 2)^(a + 1) * Σ ((-1)^n * (x / 2)^(2n) / (Γ(n + 3/2) * Γ(a + n + 3/2)))</code>.</p>
+    <button onclick="setFunction('struve(0,x)')">Set to Struve H (0,x)</button>
+    <button onclick="setFunction('struve(1,x)')">Set to Struve H (1,x)</button>
+</div>
+
+<div>
+    <h3>Struve L (a,x)</h3>
+    <p>Function for 'Struve L': <code>struvel(a,x) = (x / 2)^(a + 1) * Σ ((x / 2)^(2n) / (Γ(n + 3/2) * Γ(a + n + 3/2)))</code>.</p>
+    <button onclick="setFunction('struvel(0,x)')">Set to Struve L (0,x)</button>
+    <button onclick="setFunction('struvel(1,x)')">Set to Struve L (1,x)</button>
+</div>
+
+<div>
+    <h3>Struve K (a,x)</h3>
+    <p>Function for 'Struve K': <code>struvek(a,x) = struve(a,x) - struvel(a,x)</code>.</p>
+    <button onclick="setFunction('struvek(0,x)')">Set to Struve K (0,x)</button>
+    <button onclick="setFunction('struvek(1,x)')">Set to Struve K (1,x)</button>
+</div>
+
+<div>
+    <h3>Struve M (a,x)</h3>
+    <p>Function for 'Struve M': <code>struvem(a,x) = struvevel(a,x) - besseli(a,x)</code>.</p>
+    <button onclick="setFunction('struvem(0,x)')">Set to Struve M (0,x)</button>
+    <button onclick="setFunction('struvem(1,x)')">Set to Struve M (1,x)</button>
+</div>
+<div>
+    <h3>Scorer G' (t, x)</h3>
+    <p>Function for 'Scorer G Integral': <code>scorergid(t, x) = ...</code>.</p>
+    <button onclick="setFunction('scorergid(0, x)')">Set to Scorer G' (0, x)</button>
+    <button onclick="setFunction('scorergid(0.5, x)')">Set to Scorer G' (0.5, x)</button>
+</div>
+
+<div>
+    <h3>Scorer H' (t, x)</h3>
+    <p>Function for 'Scorer H Integral': <code>scorerhid(t, x) = ...</code>.</p>
+    <button onclick="setFunction('scorerhid(0, x)')">Set to Scorer H' (0, x)</button>
+    <button onclick="setFunction('scorerhid(0.5, x)')">Set to Scorer H' (0.5, x)</button>
+</div>
+
+<div>
+    <h3>Scorer G (x)</h3>
+    <p>Function for 'Scorer G': <code>scorergi(x) = ...</code>.</p>
+    <button onclick="setFunction('scorergi(x)')">Set to Scorer G (x)</button>
+</div>
+
+<div>
+    <h3>Scorer H (x)</h3>
+    <p>Function for 'Scorer H': <code>scorerhi(x) = ...</code>.</p>
+    <button onclick="setFunction('scorerhi(x)')">Set to Scorer H (x)</button>
+</div>
+
+<div>
+    <h3>Ai (x)</h3>
+    <p>Function for 'Ai': <code>ai(x) = ...</code>.</p>
+    <button onclick="setFunction('ai(x)')">Set to Ai (x)</button>
+</div>
+
+<div>
+    <h3>Bi (x)</h3>
+    <p>Function for 'Bi': <code>bi(x) = ...</code>.</p>
+    <button onclick="setFunction('bi(x)')">Set to Bi (x)</button>
+</div>
+
+<div>
+    <h3>Ai' (x)</h3>
+    <p>Function for 'Ai'': <code>ai(x) = ...</code>.</p>
+    <button onclick="setFunction('aid(x)')">Set to Ai' (x)</button>
+</div>
+
+<div>
+    <h3>Bi' (x)</h3>
+    <p>Function for 'Bi'': <code>bi(x) = ...</code>.</p>
+    <button onclick="setFunction('bid(x)')">Set to Bi' (x)</button>
+</div>
+
+
+<div>
+    <h3>Airy C (x)</h3>
+    <p>Function for 'Airy C': <code>airyc(x) = bi(x) / ai(x)</code>.</p>
+    <button onclick="setFunction('airyc(x)')">Set to Airy C (x)</button>
+</div>
+
+<div>
+    <h3>Airy Zeta (x)</h3>
+    <p>Function for 'Airy Zeta': <code>airyzeta(x) = ...</code>.</p>
+    <button onclick="setFunction('airyzeta(x)')">Set to Airy Zeta (x)</button>
+</div>
+
+<div>
+    <h3>Airy Bi Zeta (x)</h3>
+    <p>Function for 'Airy Bi Zeta': <code>airybizeta(x) = ...</code>.</p>
+    <button onclick="setFunction('airybizeta(x)')">Set to Airy Bi Zeta (x)</button>
+</div>
+
+<div>
+    <h3>Sinc Zeta (x)</h3>
+    <p>Function for 'Sinc Zeta': <code>sinczeta(x) = ...</code>.</p>
+    <button onclick="setFunction('sinczeta(x)')">Set to Sinc Zeta (x)</button>
+</div>
+	</div>
+	
+	 <button class="fancy-button" onclick="toggleCategory('integral')">*-Integral Functions</button>
+	 <div id="integral" style="display:none; padding-left: 20px;">
+	 <div>
+    <h3>Logarithm of Cosine (x,n)</h3>
+    <p>Function for 'Logarithm of Cosine': <code>lncos(x,n) = (log(cos(x)))^n</code>.</p>
+    <button onclick="setFunction('lncos(x)')">Set to lncos(x)</button>
+    <button onclick="setFunction('lncos(x,2)')">Set to lncos(x,2)</button>
+</div>
+
+<div>
+    <h3>Logarithm of Sine (x,n)</h3>
+    <p>Function for 'Logarithm of Sine': <code>lnsin(x,n) = (log(sin(x)))^n</code>.</p>
+    <button onclick="setFunction('lnsin(x)')">Set to lnsin(x)</button>
+    <button onclick="setFunction('lnsin(x,2)')">Set to lnsin(x,2)</button>
+</div>
+
+<div>
+    <h3>Logarithm of Tangent (x,n)</h3>
+    <p>Function for 'Logarithm of Tangent': <code>lntan(x,n) = (log(tan(x)))^n</code>.</p>
+    <button onclick="setFunction('lntan(x)')">Set to lntan(x)</button>
+    <button onclick="setFunction('lntan(x,2)')">Set to lntan(x,2)</button>
+</div>
+
+<div>
+    <h3>Logarithm of Secant (x,n)</h3>
+    <p>Function for 'Logarithm of Secant': <code>lnsec(x,n) = (log(sec(x)))^n</code>.</p>
+    <button onclick="setFunction('lnsec(x)')">Set to lnsec(x)</button>
+    <button onclick="setFunction('lnsec(x,2)')">Set to lnsec(x,2)</button>
+</div>
+
+<div>
+    <h3>Logarithm of Cotangent (x,n)</h3>
+    <p>Function for 'Logarithm of Cotangent': <code>lncot(x,n) = (log(cot(x)))^n</code>.</p>
+    <button onclick="setFunction('lncot(x)')">Set to lncot(x)</button>
+    <button onclick="setFunction('lncot(x,2)')">Set to lncot(x,2)</button>
+</div>
+
+<div>
+    <h3>Logarithm of cscant (x,n)</h3>
+    <p>Function for 'Logarithm of cscant': <code>lncsc(x,n) = (log(csc(x)))^n</code>.</p>
+    <button onclick="setFunction('lncsc(x)')">Set to lncsc(x)</button>
+    <button onclick="setFunction('lncsc(x,2)')">Set to lncsc(x,2)</button>
+</div>
+
+<div>
+    <h3>Log Integral Sine (x)</h3>
+    <p>Function for 'Log Integral Sine': <code>logsin(x) = ∫ ln(sin(t)) dt from 0 to π/2</code>.</p>
+    <button onclick="setFunction('logsin(x)')">Set to logsin(x)</button>
+</div>
+
+<div>
+    <h3>Log Integral Cosine (x)</h3>
+    <p>Function for 'Log Integral Cosine': <code>logcos(x) = ∫ ln(cos(t)) dt from 0 to π/2</code>.</p>
+    <button onclick="setFunction('logcos(x)')">Set to logcos(x)</button>
+</div>
+
+<div>
+    <h3>Log Integral Tangent (x)</h3>
+    <p>Function for 'Log Integral Tangent': <code>logtan(x) = ∫ ln(tan(t)) dt from 0 to π/2</code>.</p>
+    <button onclick="setFunction('logtan(x)')">Set to logtan(x)</button>
+</div>
+
+<div>
+    <h3>Log Integral Secant (x)</h3>
+    <p>Function for 'Log Integral Secant': <code>logsec(x) = ∫ ln(sec(t)) dt from 0 to π/2</code>.</p>
+    <button onclick="setFunction('logsec(x)')">Set to logsec(x)</button>
+</div>
+
+<div>
+    <h3>Log Integral cscant (x)</h3>
+    <p>Function for 'Log Integral cscant': <code>logcsc(x) = ∫ ln(csc(t)) dt from 0 to π/2</code>.</p>
+    <button onclick="setFunction('logcsc(x)')">Set to logcsc(x)</button>
+</div>
+
+<div>
+    <h3>Log Integral Cotangent (x)</h3>
+    <p>Function for 'Log Integral Cotangent': <code>logcot(x) = ∫ ln(cot(t)) dt from 0 to π/2</code>.</p>
+    <button onclick="setFunction('logcot(x)')">Set to logcot(x)</button>
+</div>
+
+<div>
+    <h3>Trigonometric Integral Auxiliary (x)</h3>
+    <p>Function for 'Trigonometric Integral Auxiliary': <code>triintgauxg(x) = -∫ cos(t) dt from x to bign + (π/2 - ∫ sin(t) dt from 0 to x) * sin(x)</code>.</p>
+    <button onclick="setFunction('triintgauxg(x)')">Set to triintgauxg(x)</button>
+</div>
+
+<div>
+    <h3>Exponential Integral (x)</h3>
+    <p>Function for 'Exponential Integral': <code>ein(x) = ∫ e^(i*t) dt from 0 to x</code>.</p>
+    <button onclick="setFunction('ein(x)')">Set to ein(x)</button>
+</div>
+
+<div>
+    <h3>Si Integral (x)</h3>
+    <p>Function for 'Si Integral': <code>ssi(x) = -∫ sinh(t) dt from 0 to x</code>.</p>
+    <button onclick="setFunction('ssi(x)')">Set to ssi(x)</button>
+</div>
+
+<div>
+    <h3>Shi Integral (x)</h3>
+    <p>Function for 'Shi Integral': <code>shi(x) = -∫ sin(t) dt from 0 to x</code>.</p>
+    <button onclick="setFunction('shi(x)')">Set to shi(x)</button>
+</div>
+
+<div>
+    <h3>Reciprocal (x)</h3>
+    <p>Function for 'Reciprocal': <code>rec(x) = 1/x</code>.</p>
+    <button onclick="setFunction('rec(x)')">Set to rec(x)</button>
+</div>
+
+<div>
+    <h3>Chi Integral (x)</h3>
+    <p>Function for 'Chi Integral': <code>chi(x) = 0.5772156649 + log(x) * ∫ cosh(t) dt from 0 to x - ∫ (1/t) dt from 0 to x</code>.</p>
+    <button onclick="setFunction('chi(x)')">Set to chi(x)</button>
+</div>
+
+<div>
+    <h3>Exponential Complex Power (t,n)</h3>
+    <p>Function for 'Exponential Complex Power': <code>expcp(t,nx) = exp(-nx[1]/t) * t^(n[0]-2)</code>.</p>
+    <button onclick="setFunction('expcp(1,nx)')">Set to expcp(1,nx)</button>
+	<button onclick="setFunction('expcp(2,nx)')">Set to expcp(2,nx)</button>
+	<button onclick="setFunction('expcp(i,nx)')">Set to expcp(i,nx)</button>
+</div>
+
+<div>
+    <h3>Exponential Integral (n,x)</h3>
+    <p>Function for 'Exponential Integral': <code>en(n,x) = ∫ exp(t) dt from 1 to bign</code>.</p>
+    <button onclick="setFunction('en(1,x)')">Set to en(1,x)</button>
+	 <button onclick="setFunction('en(2,x)')">Set to en(2,x)</button>
+	  <button onclick="setFunction('en(i,x)')">Set to en(i,x)</button>
+</div>
+
+<div>
+    <h3>Ei Integral (x)</h3>
+    <p>Function for 'Ei Integral': <code>ei(x) = ∫ exp(t) dt from -bign to x</code>.</p>
+    <button onclick="setFunction('ei(x)')">Set to ei(x)</button>
+</div>
+
+<div>
+    <h3>Fresnel C (x)</h3>
+    <p>Function for 'Fresnel C': <code>fresnelc(x) = ∫ cos(t^2) dt from 0 to x</code>.</p>
+    <button onclick="setFunction('fresnelc(x)')">Set to fresnelc(x)</button>
+</div>
+
+<div>
+    <h3>Fresnel S (x)</h3>
+    <p>Function for 'Fresnel S': <code>fresnels(x) = ∫ sin(t^2) dt from 0 to x</code>.</p>
+    <button onclick="setFunction('fresnels(x)')">Set to fresnels(x)</button>
+</div>
+
+<div>
+    <h3>Fresnel T (x)</h3>
+    <p>Function for 'Fresnel T': <code>fresnelt(x) = ...</code>.</p>
+    <button onclick="setFunction('fresnelt(x)')">Set to Fresnel T (x)</button>
+</div>
+
+<div>
+    <h3>Fresnel CT (x)</h3>
+    <p>Function for 'Fresnel CT': <code>fresnelct(x) = ...</code>.</p>
+    <button onclick="setFunction('fresnelct(x)')">Set to Fresnel CT (x)</button>
+</div>
+
+<div>
+    <h3>Fresnel SC (x)</h3>
+    <p>Function for 'Fresnel SC': <code>fresnelsc(x) = ...</code>.</p>
+    <button onclick="setFunction('fresnelsc(x)')">Set to Fresnel SC (x)</button>
+</div>
+
+<div>
+    <h3>Fresnel CS (x)</h3>
+    <p>Function for 'Fresnel CS': <code>fresnelcs(x) = ...</code>.</p>
+    <button onclick="setFunction('fresnelcs(x)')">Set to Fresnel CS (x)</button>
+</div>
+
+<div>
+    <h3>Gudermannian (x)</h3>
+    <p>Function for 'Gudermannian': <code>gudermannian(x) = integral(sech, 0, x)</code>.</p>
+    <button onclick="setFunction('gudermannian(x)')">Set to Gudermannian (x)</button>
+</div>
+
+<div>
+    <h3>Inverse Gudermannian (x)</h3>
+    <p>Function for 'Inverse Gudermannian': <code>gudermanniani(x) = integral(cosh_inv, 0, x)</code>.</p>
+    <button onclick="setFunction('gudermanniani(x)')">Set to Inverse Gudermannian (x)</button>
+</div>
+
+<div>
+    <h3>Cosine Integral (x)</h3>
+    <p>Function for 'Cosine Integral': <code>ci(x) = -integral(cosc, x, bign)</code>.</p>
+    <button onclick="setFunction('ci(x)')">Set to ci (x)</button>
+</div>
+
+<div>
+    <h3>Si (x)</h3>
+    <p>Function for 'Si': <code>si(x) = -integral(sinc, 0, x)</code>.</p>
+    <button onclick="setFunction('si(x)')">Set to Si (x)</button>
+</div>
+
+<div>
+    <h3>Trigonometric Integral Auxiliary Function (x)</h3>
+    <p>Function for 'Triangular Integral Auxiliary': <code>triintgauxf(x) = ...</code>.</p>
+    <button onclick="setFunction('triintgauxf(x)')">Set to Triangular Integral Auxiliary (x)</button>
+</div>
+
+<div>
+    <h3>Nielsen Cosine Integral (a, x)</h3>
+    <p>Function for 'Nielsen Integral': <code>nielsenci(a, x) = ...</code>.</p>
+    <button onclick="setFunction('nielsenci(1,x)')">Set to Nielsen Cosine Integral (1,x)</button>
+	<button onclick="setFunction('nielsenci(2,x)')">Set to Nielsen Cosine Integral (2,x)</button>
+	<button onclick="setFunction('nielsenci(i,x)')">Set to Nielsen Cosine Integral (i,x)</button>
+</div>
+
+<div>
+    <h3>Nielsen Sine Integral (a, x)</h3>
+    <p>Function for 'Nielsen Sine Integral': <code>nielsensi(a, x) = ...</code>.</p>
+    <button onclick="setFunction('nielsensi(1,x)')">Set to Nielsen Sine Integral (1,x)</button>
+	<button onclick="setFunction('nielsensi(2,x)')">Set to Nielsen Sine Integral (2,x)</button>
+	<button onclick="setFunction('nielsensi(i,x)')">Set to Nielsen Sine Integral (i,x)</button>
+</div>
+
+<div>
+    <h3>Compelling Integral 1 (a)</h3>
+    <p>Function for 'Compelling Integral 1': <code>compellint1(a) = integral(compellint1d, 0, 1)</code>.</p>
+    <button onclick="setFunction('compellint1(x)')">Set to Compelling Integral 1 (x)</button>
+</div>
+
+<div>
+    <h3>Compelling Integral 1D (a)</h3>
+    <p>Function for 'Compelling Integral 1D': <code>compellint1d(a) = ...</code>.</p>
+    <button onclick="setFunction('compellint1d(x)')">Set to Compelling Integral 1D (x)</button>
+</div>
+	 </div>
+	
+
+	<button class="fancy-button" onclick="toggleCategory('algebraic')">Algebraic Curves</button>
+	 <div id="algebraic" style="display:none; padding-left: 20px;">
+	 
+	 
+	 <h2 onclick="toggleCategory('helperfuncalg')">Helper/Auxilary Functions</h2>   
+    <div id="helperfuncalg" style="display:none; padding-left: 20px;">
+	
+	<div>
+    <h3>xpsin(x)</h3>
+    <p>Function for 'xpsin': <code>xpsin(x) = x + sin(x)</code>.</p>
+    <button onclick="setFunction('xpsin(x)')">Set to xpsin(x)</button>
+</div>
+
+<div>
+    <h3>xmsin(x)</h3>
+    <p>Function for 'xmsin': <code>xmsin(x) = x - sin(x)</code>.</p>
+    <button onclick="setFunction('xmsin(x)')">Set to xmsin(x)</button>
+</div>
+
+<div>
+    <h3>arcxmsin(x)</h3>
+    <p>Function for 'arcxmsin': <code>arcxmsin(x) = newtoninv("xmsin(x)", ...)</code>.</p>
+    <button onclick="setFunction('arcxmsin(x)')">Set to arcxmsin(x)</button>
+</div>
+
+<div>
+    <h3>arcxpsin(x)</h3>
+    <p>Function for 'arcxpsin': <code>arcxpsin(x) = newtoninv("xpsin(x)", ...)</code>.</p>
+    <button onclick="setFunction('arcxpsin(x)')">Set to arcxpsin(x)</button>
+</div>
+
+<div>
+    <h3>arcxmdsin(x, d)</h3>
+    <p>Function for 'arcxmdsin': <code>arcxmdsin(x, d) = newtoninv("x - d*sin(x)", ...)</code>.</p>
+    <button onclick="setFunction('arcxmdsin(x, 1)')">Set to arcxmdsin(x, 1)</button>
+    <button onclick="setFunction('arcxmdsin(x, 2)')">Set to arcxmdsin(x, 2)</button>
+    <button onclick="setFunction('arcxmdsin(x, i)')">Set to arcxmdsin(x, i)</button>
+</div>
+
+<div>
+    <h3>tcospcost(x, t)</h3>
+    <p>Function for 'tcospcost': <code>tcospcost(x, t) = t*cos(x) + cos(t*x)</code>.</p>
+    <button onclick="setFunction('tcospcost(x, 1)')">Set to tcospcost(x, 1)</button>
+    <button onclick="setFunction('tcospcost(x, 2)')">Set to tcospcost(x, 2)</button>
+    <button onclick="setFunction('tcospcost(x, i)')">Set to tcospcost(x, i)</button>
+</div>
+
+<div>
+    <h3>arctcospcost(x, d)</h3>
+    <p>Function for 'arctcospcost': <code>arctcospcost(x, d) = newtoninv("tcospcost(x, d)", ...)</code>.</p>
+    <button onclick="setFunction('arctcospcost(x, 1)')">Set to arctcospcost(x, 1)</button>
+    <button onclick="setFunction('arctcospcost(x, 2)')">Set to arctcospcost(x, 2)</button>
+    <button onclick="setFunction('arctcospcost(x, i)')">Set to arctcospcost(x, i)</button>
+</div>
+
+<div>
+    <h3>tcosmcost(x, t)</h3>
+    <p>Function for 'tcosmcost': <code>tcosmcost(x, t) = t*cos(x) - cos(t*x)</code>.</p>
+    <button onclick="setFunction('tcosmcost(x, 1)')">Set to tcosmcost(x, 1)</button>
+    <button onclick="setFunction('tcosmcost(x, 2)')">Set to tcosmcost(x, 2)</button>
+    <button onclick="setFunction('tcosmcost(x, i)')">Set to tcosmcost(x, i)</button>
+</div>
+
+<div>
+    <h3>arctcosmcost(x, d)</h3>
+    <p>Function for 'arctcosmcost': <code>arctcosmcost(x, d) = newtoninv("tcosmcost(x, d)", ...)</code>.</p>
+    <button onclick="setFunction('arctcosmcost(x, 1)')">Set to arctcosmcost(x, 1)</button>
+    <button onclick="setFunction('arctcosmcost(x, 2)')">Set to arctcosmcost(x, 2)</button>
+    <button onclick="setFunction('arctcosmcost(x, i)')">Set to arctcosmcost(x, i)</button>
+</div>
+
+<div>
+    <h3>tcospdcost(x, d, t)</h3>
+    <p>Function for 'tcospdcost': <code>tcospdcost(x, d, t) = t*cos(x) + d*cos(t*x)</code>.</p>
+    <button onclick="setFunction('tcospdcost(x, 1, 1)')">Set to tcospdcost(x, 1, 1)</button>
+    <button onclick="setFunction('tcospdcost(x, 1, 2)')">Set to tcospdcost(x, 1, 2)</button>
+    <button onclick="setFunction('tcospdcost(x, 2, 1)')">Set to tcospdcost(x, 2, 1)</button>
+</div>
+
+<div>
+    <h3>arctcospdcost(x, d, t)</h3>
+    <p>Function for 'arctcospdcost': <code>arctcospdcost(x, d, t) = newtoninv("tcospdcost(x, d, t)", ...)</code>.</p>
+    <button onclick="setFunction('arctcospdcost(x, 1, 1)')">Set to arctcospdcost(x, 1, 1)</button>
+    <button onclick="setFunction('arctcospdcost(x, 1, 2)')">Set to arctcospdcost(x, 1, 2)</button>
+    <button onclick="setFunction('arctcospdcost(x, 2, 1)')">Set to arctcospdcost(x, 2, 1)</button>
+</div>
+
+<div>
+    <h3>wittgensteinsc(x, h, v, l)</h3>
+    <p>Function for 'wittgensteinsc': <code>wittgensteinsc(x, h, v, l) = ...</code>.</p>
+    <button onclick="setFunction('wittgensteinsc(x, 1, 1, 1)')">Set to wittgensteinsc(x, 1, 1, 1)</button>
+    <button onclick="setFunction('wittgensteinsc(x, 1, 2, 1)')">Set to wittgensteinsc(x, 1, 2, 1)</button>
+    <button onclick="setFunction('wittgensteinsc(x, 2, 1, 1)')">Set to wittgensteinsc(x, 2, 1, 1)</button>
+</div>
+
+<div>
+    <h3>arcwittgensteinsc(x, h, v, l)</h3>
+    <p>Function for 'arcwittgensteinsc': <code>arcwittgensteinsc(x, h, v, l) = newtoninv("wittgensteinsc(x, h, v, l)", ...)</code>.</p>
+    <button onclick="setFunction('arcwittgensteinsc(x, 1, 1, 1)')">Set to arcwittgensteinsc(x, 1, 1, 1)</button>
+    <button onclick="setFunction('arcwittgensteinsc(x, 1, 2, 1)')">Set to arcwittgensteinsc(x, 1, 2, 1)</button>
+    <button onclick="setFunction('arcwittgensteinsc(x, 2, 1, 1)')">Set to arcwittgensteinsc(x, 2, 1, 1)</button>
+</div>
+
+<div>
+    <h3>dtanpi4pcos(x, d)</h3>
+    <p>Function for 'dtanpi4pcos': <code>dtanpi4pcos(x, d) = d*tan(x + π/4) + cos(x)</code>.</p>
+    <button onclick="setFunction('dtanpi4pcos(x, 1)')">Set to dtanpi4pcos(x, 1)</button>
+    <button onclick="setFunction('dtanpi4pcos(x, 2)')">Set to dtanpi4pcos(x, 2)</button>
+    <button onclick="setFunction('dtanpi4pcos(x, i)')">Set to dtanpi4pcos(x, i)</button>
+</div>
+
+<div>
+    <h3>arcdtanpi4pcos(x, d)</h3>
+    <p>Function for 'arcdtanpi4pcos': <code>arcdtanpi4pcos(x, d) = newtoninv("dtanpi4pcos(x, d)", ...)</code>.</p>
+    <button onclick="setFunction('arcdtanpi4pcos(x, 1)')">Set to arcdtanpi4pcos(x, 1)</button>
+    <button onclick="setFunction('arcdtanpi4pcos(x, 2)')">Set to arcdtanpi4pcos(x, 2)</button>
+    <button onclick="setFunction('arcdtanpi4pcos(x, i)')">Set to arcdtanpi4pcos(x, i)</button>
+</div>
+
+<div>
+    <h3>sin2tan(x)</h3>
+    <p>Function for 'sin2tan': <code>sin2tan(x) = sin^3(x) / cos(x)</code>.</p>
+    <button onclick="setFunction('sin2tan(x)')">Set to sin2tan(x)</button>
+</div>
+
+<div>
+    <h3>arcsin2tan(x)</h3>
+    <p>Function for 'arcsin2tan': <code>arcsin2tan(x) = newtoninv("sin^3(x)/cos(x)", ...)</code>.</p>
+    <button onclick="setFunction('arcsin2tan(x)')">Set to arcsin2tan(x)</button>
+</div>
+	
+		</div>	 
+ 
+	 <h2 onclick="toggleCategory('algbuyfunc')">Functions That Draw the Curve</h2>   
+    <div id="algbuyfunc" style="display:none; padding-left: 20px;">
+		
+<div>
+    <h3>Circle (x, p=1, parity=0)</h3>
+    <p>Function for 'Circle': <code>circle(x, p, parity) = ...</code>.</p>
+    <button onclick="setFunction('circle(x,1,0)')">Set to Circle (x, 1, 0)</button>
+    <button onclick="setFunction('circle(x,2,1)')">Set to Circle (x, 2, 1)</button>
+    <button onclick="setFunction('circle(x,i,0)')">Set to Circle (x, i, 0)</button>
+</div>
+
+<div>
+    <h3>Ellipse (x, px=1, py=1, parity=0)</h3>
+    <p>Function for 'Ellipse': <code>ellipse(x, px, py, parity) = ...</code>.</p>
+    <button onclick="setFunction('ellipse(x,1,1,0)')">Set to Ellipse (x, 1, 1, 0)</button>
+    <button onclick="setFunction('ellipse(x,1,2,1)')">Set to Ellipse (x, 1, 2, 1)</button>
+    <button onclick="setFunction('ellipse(x,2,1,0)')">Set to Ellipse (x, 2, 1, 0)</button>
+</div>
+
+<div>
+    <h3>Superellipse (x, p=1, parity=0, n=2)</h3>
+    <p>Function for 'Superellipse': <code>superellipse(x, p, parity, n) = ...</code>.</p>
+    <button onclick="setFunction('superellipse(x,1,0,2)')">Set to Superellipse (x, 1, 0, 2)</button>
+    <button onclick="setFunction('superellipse(x,2,1,3)')">Set to Superellipse (x, 2, 1, 3)</button>
+    <button onclick="setFunction('superellipse(x,i,0,4)')">Set to Superellipse (x, i, 0, 4)</button>
+</div>
+
+<div>
+    <h3>Cycloid (x, p=1)</h3>
+    <p>Function for 'Cycloid': <code>cycloid(x, p) = ...</code>.</p>
+    <button onclick="setFunction('cycloid(x,1)')">Set to Cycloid (x, 1)</button>
+    <button onclick="setFunction('cycloid(x,2)')">Set to Cycloid (x, 2)</button>
+    <button onclick="setFunction('cycloid(x,i)')">Set to Cycloid (x, i)</button>
+</div>
+
+<div>
+    <h3>Tautochrone (x, p=1)</h3>
+    <p>Function for 'Tautochrone': <code>tautochrone(x, p) = ...</code>.</p>
+    <button onclick="setFunction('tautochrone(x,1)')">Set to Tautochrone (x, 1)</button>
+    <button onclick="setFunction('tautochrone(x,2)')">Set to Tautochrone (x, 2)</button>
+    <button onclick="setFunction('tautochrone(x,i)')">Set to Tautochrone (x, i)</button>
+</div>
+
+<div>
+    <h3>Trochoid (x, d=1, p=1)</h3>
+    <p>Function for 'Trochoid': <code>trochoid(x, d, p) = ...</code>.</p>
+    <button onclick="setFunction('trochoid(x,1,1)')">Set to Trochoid (x, 1, 1)</button>
+    <button onclick="setFunction('trochoid(x,1,2)')">Set to Trochoid (x, 1, 2)</button>
+    <button onclick="setFunction('trochoid(x,2,1)')">Set to Trochoid (x, 2, 1)</button>
+</div>
+
+<div>
+    <h3>Hypocycloid (x, k=1)</h3>
+    <p>Function for 'Hypocycloid': <code>hypocycloid(x, k) = ...</code>.</p>
+    <button onclick="setFunction('hypocycloid(x,1)')">Set to Hypocycloid (x, 1)</button>
+    <button onclick="setFunction('hypocycloid(x,2)')">Set to Hypocycloid (x, 2)</button>
+    <button onclick="setFunction('hypocycloid(x,i)')">Set to Hypocycloid (x, i)</button>
+</div>
+
+<div>
+    <h3>Hypotrochoid (x, d=1, k=1)</h3>
+    <p>Function for 'Hypotrochoid': <code>hypotrochoid(x, d, k) = ...</code>.</p>
+    <button onclick="setFunction('hypotrochoid(x,1,1)')">Set to Hypotrochoid (x, 1, 1)</button>
+    <button onclick="setFunction('hypotrochoid(x,1,2)')">Set to Hypotrochoid (x, 1, 2)</button>
+    <button onclick="setFunction('hypotrochoid(x,2,1)')">Set to Hypotrochoid (x, 2, 1)</button>
+</div>
+
+<div>
+    <h3>Epitrochoid (x, d=1, k=1)</h3>
+    <p>Function for 'Epitrochoid': <code>epitrochoid(x, d, k) = ...</code>.</p>
+    <button onclick="setFunction('epitrochoid(x,1,1)')">Set to Epitrochoid (x, 1, 1)</button>
+    <button onclick="setFunction('epitrochoid(x,1,2)')">Set to Epitrochoid (x, 1, 2)</button>
+    <button onclick="setFunction('epitrochoid(x,2,1)')">Set to Epitrochoid (x, 2, 1)</button>
+</div>
+
+<div>
+    <h3>Epicycloid (x, k=1)</h3>
+    <p>Function for 'Epicycloid': <code>epicycloid(x, k) = ...</code>.</p>
+    <button onclick="setFunction('epicycloid(x,1)')">Set to Epicycloid (x, 1)</button>
+    <button onclick="setFunction('epicycloid(x,2)')">Set to Epicycloid (x, 2)</button>
+    <button onclick="setFunction('epicycloid(x,i)')">Set to Epicycloid (x, i)</button>
+</div>
+<div>
+    <h3>Lissajous (x, wx=1, wy=1, dx=0, dy=0, ax=1, bx=1)</h3>
+    <p>Function for 'Lissajous': <code>lissajous(x, wx, wy, dx, dy, ax, bx) = ...</code>.</p>
+    <button onclick="setFunction('lissajous(x,1,1,0,0,1,1)')">Set to Lissajous (x, 1, 1, 0, 0, 1, 1)</button>
+    <button onclick="setFunction('lissajous(x,2,1,0.5,0.5,2,1)')">Set to Lissajous (x, 2, 1, 0.5, 0.5, 2, 1)</button>
+</div>
+
+<div>
+    <h3>Lissajous Simple (x, wx=1, dx=0, ax=1, bx=1)</h3>
+    <p>Function for 'Lissajous Simple': <code>lissajoussimple(x, wx, dx, ax, bx) = ...</code>.</p>
+    <button onclick="setFunction('lissajoussimple(x,1,0,1,1)')">Set to Lissajous Simple (x, 1, 0, 1, 1)</button>
+    <button onclick="setFunction('lissajoussimple(x,2,0.5,2,1)')">Set to Lissajous Simple (x, 2, 0.5, 2, 1)</button>
+</div>
+
+<div>
+    <h3>Wittgenstein's Function (x, h=1, v=1, l=1)</h3>
+    <p>Function for 'Wittgenstein's': <code>wittgensteins(x, h, v, l) = ...</code>.</p>
+    <button onclick="setFunction('wittgensteins(x,1,1,1)')">Set to Wittgenstein's (x, 1, 1, 1)</button>
+    <button onclick="setFunction('wittgensteins(x,2,1,1.5)')">Set to Wittgenstein's (x, 2, 1, 1.5)</button>
+</div>
+
+<div>
+    <h3>Cardioid (x, parity=1, parity2=0)</h3>
+    <p>Function for 'Cardioid': <code>cardioid(x, parity, parity2) = ...</code>.</p>
+    <button onclick="setFunction('cardioid(x,1,0)')">Set to Cardioid (x, 1, 0)</button>
+    <button onclick="setFunction('cardioid(x,2,1)')">Set to Cardioid (x, 2, 1)</button>
+</div>
+
+<div>
+    <h3>Deltoid (x, parity=1)</h3>
+    <p>Function for 'Deltoid': <code>deltoid(x, parity) = ...</code>.</p>
+    <button onclick="setFunction('deltoid(x,1)')">Set to Deltoid (x, 1)</button>
+    <button onclick="setFunction('deltoid(x,2)')">Set to Deltoid (x, 2)</button>
+</div>
+
+<div>
+    <h3>Astroid (x, parity=1)</h3>
+    <p>Function for 'Astroid': <code>astroid(x, parity) = ...</code>.</p>
+    <button onclick="setFunction('astroid(x,1)')">Set to Astroid (x, 1)</button>
+    <button onclick="setFunction('astroid(x,2)')">Set to Astroid (x, 2)</button>
+</div>
+
+<div>
+    <h3>Generalized Cardioid (x, parity=1, limach=1, parity2=0)</h3>
+    <p>Function for 'Generalized Cardioid': <code>generalizedcardioid(x, parity, limach, parity2) = ...</code>.</p>
+    <button onclick="setFunction('generalizedcardioid(x,1,1,0)')">Set to Generalized Cardioid (x, 1, 1, 0)</button>
+    <button onclick="setFunction('generalizedcardioid(x,2,1.5,1)')">Set to Generalized Cardioid (x, 2, 1.5, 1)</button>
+</div>
+
+<div>
+    <h3>Nephroid (x, parity=2)</h3>
+    <p>Function for 'Nephroid': <code>nephroid(x, parity) = ...</code>.</p>
+    <button onclick="setFunction('nephroid(x,2)')">Set to Nephroid (x, 2)</button>
+    <button onclick="setFunction('nephroid(x,3)')">Set to Nephroid (x, 3)</button>
+</div>
+
+<div>
+    <h3>Nephroid Y (x, parity=2)</h3>
+    <p>Function for 'Nephroid Y': <code>nephroidy(x, parity) = ...</code>.</p>
+    <button onclick="setFunction('nephroidy(x,2)')">Set to Nephroid Y (x, 2)</button>
+    <button onclick="setFunction('nephroidy(x,3)')">Set to Nephroid Y (x, 3)</button>
+</div>
+<div>
+    <h3>Conchoid of de Sluze (x, a=1, parity=0)</h3>
+    <button onclick="setFunction('conchoidsluze(x,1,0)')">Set to Conchoid (x, 1, 0)</button>
+    <button onclick="setFunction('conchoidsluze(x,2,1)')">Set to Conchoid (x, 2, 1)</button>
+</div>
+
+<div>
+    <h3>Conchoid of Durer (y) (x, a=3, b=1, parity=0)</h3>
+    <button onclick="setFunction('conchoiddurery(x,3,1,0)')">Set to Conchoid Durer (y, 3, 1, 0)</button>
+    <button onclick="setFunction('conchoiddurery(x,2,1,1)')">Set to Conchoid Durer (y, 2, 1, 1)</button>
+</div>
+
+<div>
+    <h3>Conchoid of Durer (r) (x, a=3, b=1, parity=0)</h3>
+    <button onclick="setFunction('conchoiddurer(x,3,1,0)')">Set to Conchoid Durer (r, 3, 1, 0)</button>
+    <button onclick="setFunction('conchoiddurer(x,2,1,1)')">Set to Conchoid Durer (r, 2, 1, 1)</button>
+</div>
+
+<div>
+    <h3>Strophoid (x, a=1, parity=0)</h3>
+    <button onclick="setFunction('strophoid(x,1,0)')">Set to Strophoid (x, 1, 0)</button>
+    <button onclick="setFunction('strophoid(x,2,1)')">Set to Strophoid (x, 2, 1)</button>
+</div>
+
+<div>
+    <h3>Lemniscate of Bernoulli (x, a=1, parity=0, parity2=0)</h3>
+    <button onclick="setFunction('lemniscatebernouilli(x,1,0,0)')">Set to Lemniscate (x, 1, 0, 0)</button>
+    <button onclick="setFunction('lemniscatebernouilli(x,2,1,1)')">Set to Lemniscate (x, 2, 1, 1)</button>
+</div>
+
+<div>
+    <h3>Cissoid of Diocles (x, a=1, parity=0)</h3>
+    <button onclick="setFunction('cissoiddiocles(x,1,0)')">Set to Cissoid (x, 1, 0)</button>
+    <button onclick="setFunction('cissoiddiocles(x,2,1)')">Set to Cissoid (x, 2, 1)</button>
+</div>
+
+<div>
+    <h3>Cissoid of Diocles (y) (x, a=1, parity=0)</h3>
+    <button onclick="setFunction('cissoiddioclesy(x,1,0)')">Set to Cissoid (y, 1, 0)</button>
+    <button onclick="setFunction('cissoiddioclesy(x,2,1)')">Set to Cissoid (y, 2, 1)</button>
+</div>
+
+<div>
+    <h3>Devil's Curve (x, a=1, b=1, parity=0, parity2=0)</h3>
+    <button onclick="setFunction('devilscurve(x,1,1,0,0)')">Set to Devil's Curve (x, 1, 1, 0, 0)</button>
+    <button onclick="setFunction('devilscurve(x,2,2,1,1)')">Set to Devil's Curve (x, 2, 2, 1, 1)</button>
+</div>
+
+<div>
+    <h3>Devil's Curve (y) (x, a=1, b=1, parity=0, parity2=0)</h3>
+    <button onclick="setFunction('devilscurvey(x,1,1,0,0)')">Set to Devil's Curve (y, 1, 1, 0, 0)</button>
+    <button onclick="setFunction('devilscurvey(x,2,2,1,1)')">Set to Devil's Curve (y, 2, 2, 1, 1)</button>
+</div>
+
+<div>
+    <h3>Electric Motor (x, parity=0, parity2=0)</h3>
+    <button onclick="setFunction('electricmotor(x,0,0)')">Set to Electric Motor (x, 0, 0)</button>
+    <button onclick="setFunction('electricmotor(x,1,1)')">Set to Electric Motor (x, 1, 1)</button>
+</div>
+
+<div>
+    <h3>Electric Motor (y) (x, a=1, b=1, parity=0, parity2=0)</h3>
+    <button onclick="setFunction('electricmotory(x,1,1,0,0)')">Set to Electric Motor (y, 1, 1, 0, 0)</button>
+    <button onclick="setFunction('electricmotory(x,2,2,1,1)')">Set to Electric Motor (y, 2, 2, 1, 1)</button>
+</div>
+
+<div>
+    <h3>Lemniscate Gerono (x, parity=0, parity2=0)</h3>
+    <button onclick="setFunction('lemnicategerono(x,0,0)')">Set to Lemniscate Gerono (x, 0, 0)</button>
+    <button onclick="setFunction('lemnicategerono(x,1,1)')">Set to Lemniscate Gerono (x, 1, 1)</button>
+</div>
+
+<div>
+    <h3>Lemniscate Gerono (y) (x, parity=0)</h3>
+    <button onclick="setFunction('lemnicategeronoy(x,0)')">Set to Lemniscate Gerono (y, 0)</button>
+    <button onclick="setFunction('lemnicategeronoy(x,1)')">Set to Lemniscate Gerono (y, 1)</button>
+</div>
+
+	</div>	
+
+	 <h2 onclick="toggleCategory('algbuycis')">cis Analouges</h2>   
+    <div id="algbuycis" style="display:none; padding-left: 20px;">
+		
+<div>
+    <h3>Cissoidal Limacon (x, b=2, a=1)</h3>
+    <button onclick="setFunction('cislimacon(x,2,1)')">Set to Limacon (x, 2, 1)</button>
+    <button onclick="setFunction('cislimacon(x,3,2)')">Set to Limacon (x, 3, 2)</button>
+</div>
+
+<div>
+    <h3>Cissoidal Cardioid (x, b=2, a=1)</h3>
+    <button onclick="setFunction('ciscardioid(x,2,1)')">Set to Cardioid (x, 2, 1)</button>
+    <button onclick="setFunction('ciscardioid(x,3,2)')">Set to Cardioid (x, 3, 2)</button>
+</div>
+
+<div>
+    <h3>Cissoidal Nephroid (x, a=1, n=3)</h3>
+    <button onclick="setFunction('cisnephroid(x,1,3)')">Set to Nephroid (x, 1, 3)</button>
+    <button onclick="setFunction('cisnephroid(x,2,4)')">Set to Nephroid (x, 2, 4)</button>
+</div>
+
+<div>
+    <h3>Cissoidal Deltoid (x, a=1)</h3>
+    <button onclick="setFunction('cisdeltoid(x,1)')">Set to Deltoid (x, 1)</button>
+    <button onclick="setFunction('cisdeltoid(x,2)')">Set to Deltoid (x, 2)</button>
+</div>
+
+	</div>	
+	
+	 <h2 onclick="toggleCategory('algbuyporp')">Properties of the Curve</h2>   
+    <div id="algbuyporp" style="display:none; padding-left: 20px;">
+		<div>
+    <h3>Conchoid of de Sluze - Curvature (x, a=1)</h3>
+    <button onclick="setFunction('conchoidsluzecurvature(x,1)')">Set to Curvature (x, 1)</button>
+    <button onclick="setFunction('conchoidsluzecurvature(x,2)')">Set to Curvature (x, 2)</button>
+</div>
+
+<div>
+    <h3>Conchoid of de Sluze - Tangential Angle (x, a=1)</h3>
+    <button onclick="setFunction('conchoidsluzetangentialangle(x,1)')">Set to Tangential Angle (x, 1)</button>
+    <button onclick="setFunction('conchoidsluzetangentialangle(x,2)')">Set to Tangential Angle (x, 2)</button>
+</div>
+
+<div>
+    <h3>Conchoid of de Sluze - Loops Area (x, a=1)</h3>
+    <button onclick="setFunction('conchoidsluzeloopsarea(x,1)')">Set to Loops Area (x, 1)</button>
+    <button onclick="setFunction('conchoidsluzeloopsarea(x,2)')">Set to Loops Area (x, 2)</button>
+</div>
+
+<div>
+    <h3>Conchoid of Nicomedes - Curvature (x, a=1, b=3)</h3>
+    <button onclick="setFunction('conchoidnicomedescurvature(x,1,3)')">Set to Curvature (x, 1, 3)</button>
+    <button onclick="setFunction('conchoidnicomedescurvature(x,2,4)')">Set to Curvature (x, 2, 4)</button>
+</div>
+
+<div>
+    <h3>Conchoid of Nicomedes - Tangential Angle (x, a=1, b=3)</h3>
+    <button onclick="setFunction('conchoidnicomedestangentialangle(x,1,3)')">Set to Tangential Angle (x, 1, 3)</button>
+    <button onclick="setFunction('conchoidnicomedestangentialangle(x,2,4)')">Set to Tangential Angle (x, 2, 4)</button>
+</div>
+
+<div>
+    <h3>Cissoid of Diocles - Arc Length (x, a=1)</h3>
+    <button onclick="setFunction('cissoiddioclesarc(x,1)')">Set to Arc Length (x, 1)</button>
+    <button onclick="setFunction('cissoiddioclesarc(x,2)')">Set to Arc Length (x, 2)</button>
+</div>
+
+<div>
+    <h3>Cissoid of Diocles - Curvature (x, a=1)</h3>
+    <button onclick="setFunction('cissoiddioclescurvature(x,1)')">Set to Curvature (x, 1)</button>
+    <button onclick="setFunction('cissoiddioclescurvature(x,2)')">Set to Curvature (x, 2)</button>
+</div>
+
+<div>
+    <h3>Cissoid of Diocles - Tangential Angle (x, a=1)</h3>
+    <button onclick="setFunction('cissoiddioclestangentialangle(x,1)')">Set to Tangential Angle (x, 1)</button>
+    <button onclick="setFunction('cissoiddioclestangentialangle(x,2)')">Set to Tangential Angle (x, 2)</button>
+</div>
+
+
+	</div>	
+
+	
+		</div>	
+
+
+
+
+		
 	 <button class="fancy-button" onclick="toggleCategory('generalized')">Generalized Functions</button>
 	 <div id="generalized" style="display:none; padding-left: 20px;">
 	 
 	 
 	<h2 onclick="toggleCategory('hypergeometric')">Hypergeometric Functions</h2>   
     <div id="hypergeometric" style="display:none; padding-left: 20px;">
+  		
+	 		<h2 onclick="toggleCategory('mellisbarnes')">Defined by Mellis-Barnes Integral</h2> 
+ <div id="mellisbarnes" style="display:none; padding-left: 20px;">
  
+ </div>	
+		<h2 onclick="toggleCategory('mellisbarnes')">Defined by Mellis-Barnes Integral</h2> 
+ <div id="mellisbarnes" style="display:none; padding-left: 20px;">
+ 
+ </div>
 		</div>
 	<h2 onclick="toggleCategory('polyfactorial')">Multiparameter Factorial Functions</h2>   
     <div id="polyfactorial" style="display:none; padding-left: 20px;">
  
 		</div>	
 		
-		
-		
-		
-		
+
 			</div>
 	
 	
@@ -1189,9 +2644,38 @@ background: linear-gradient(-45deg, #ddaa23, #aa00aa);
 			<option value="bireal">Bireal</option>
 </select>
         </div>
+		
+			   <div class="selector">
+            <select name="hyperc" id="hyperc">
+			<option value="complex">Complex</option>
+			<option value="split">Split</option>
+			<option value="dual">Dual</option>
+			<option value="bireal">Bireal</option>
+</select>
+        </div>
+<div class="selector2">
+        <label for="color-mode">Color Mode:</label>
+        <select id="color-mode" name="color-mode">
+ <option value="hsv">HSV</option>
+            <option selected value="hsl">HSL</option>
+            <option value="hcl">HCL</option>
+			 <option value="ycbcr">YCbCr</option>
+			  <option value="ydbdr">YDbDr</option>
+			   <option value="ycocg">YCoCg</option>
+			    <option value="ypbpr">YPbPr</option>
+            <option value="cielch">CIELCH</option>
+	    <option value="2d">2d</option>
+		  <option value="contour">Contour</option>
+		<!--   <option value="isolines">Isolines</option> -->
+		   <option value="neon">Neon</option>
+		   <option value="differ">Differ</option>
+		   <option value="real">Real</option>
+		   <option value="imag">Imaginary</option>
+		   <option value="magnitudecolour">Magnitude</option>
+		   <option value="quadrant">Quadrant</option>
+  </div>
 </div>
-</div>
-    
+ </div>   
 
     <div>
         <canvas id="domainCanvas" width="100" height="100"></canvas>
@@ -1237,13 +2721,13 @@ background: linear-gradient(-45deg, #ddaa23, #aa00aa);
 		funcStr =newFunction;
 		break;
 		case 'split':
-		  funcStr = "split('"+newFunction+"',x)";
+		  funcStr = "splite('"+newFunction+"',x)";
 		break;
 		case 'dual':
-		  funcStr = "dual('"+newFunction+"',x)";
+		  funcStr = "duale('"+newFunction+"',x)";
 		break;
 		case 'bireal':
-		  funcStr = "bireal('"+newFunction+"',x)";
+		  funcStr = "bireale('"+newFunction+"',x)";
 		break;
 		}
       document.getElementById('functionInput').value = funcStr;
@@ -1256,6 +2740,7 @@ background: linear-gradient(-45deg, #ddaa23, #aa00aa);
     }
 
     function renderDomain() {
+		colorMode = document.getElementById('color-mode').value;
         let imageData = domainCtx.createImageData(width, height);
         for (let x = 0; x < width; x++) {
             let memo = 0;
@@ -1284,11 +2769,15 @@ background: linear-gradient(-45deg, #ddaa23, #aa00aa);
 
     // Function to move/zoom using WASD and Z/X
     document.addEventListener('keydown', (event) => {
-        switch (event.key) {
+         const activeElement = document.activeElement;
+        if (activeElement.tagName === 'TEXTAREA' && activeElement.id === 'functionInput') {
+            return; 
+        }  switch (event.key) {
 			case 'r':
                 offsetX = 0;
                 offsetY = 0;
                 zoomLevel = 1;
+				bign = 10;
                 break;
             case 's':
                 offsetY -= zoomLevel/1;
@@ -1307,6 +2796,11 @@ background: linear-gradient(-45deg, #ddaa23, #aa00aa);
                 break;
             case 'x':
                 zoomLevel *= 1.5;
+			case 'c':
+                bign += 1;
+                break;
+            case 'v':
+                bign -= 1;
                                 break;
             case 'q':  // Decrease render quality
                 width =floor( Math.max(10, width / 1.5));

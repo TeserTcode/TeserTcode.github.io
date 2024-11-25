@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Enhanced Grid Game</title>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; }
+        canvas { border: 2px solid black; display: block; margin: 20px auto; }
+        #controls { margin: 20px; }
+        label, select, input, button { margin: 5px; }
+		 #colouras { 
+            font-size: 0.8em; 
+            padding: 0px;  
+            margin: 0px auto;
+            display: inline-block;
+        }
+		input[type="color"] {
+        width: 15px;   
+        height: 20px; 
+        padding: 0;   
+		margin: 0;    		
+        border: 1px solid #ccc;
+        border-radius: 0px;
+    }
+    </style>
+</head>
+<body>
+    <h1>labirent thingy</h1>
+
+    <div id="controls">
+        <label for="gridSize">Grid Size (N):</label>
+        <input type="number" id="gridSize" value="10" min="5" max="50">
+
+        <label for="generationMethod">Generation Method:</label>
+        <select id="generationMethod">
+            <option value="default">Random (ng)</option>
+            <option value="sparse">Sparse Random (ng)</option>
+            <option value="dense">Dense Random (ng)</option>
+			<option value="---">-----------</option>
+			<option selected="kruskals" value="kruskals">Kruskal's Algorithm</option>
+			<option value="depthfirst">Depth-First Search</option>
+			<option value="prims">Prim's Algorithm</option>
+			<option value="wilsons">Wilsons's Algorithm</option>
+			<option value="aldousbroder">Aldous-Broder algorithm</option>
+			<option value="hounston">Hounston's algorithm</option>
+			<option value="recursive">Recursive Division</option>
+			<option value="binary">Binary Division</option>
+			<option value="fractal">Fractal Tessellation</option>
+			<option value="sidewinder">Sidewinder</option>
+			<option value="ellers">Eller's Algorithm</option>
+			<option value="hunt">Hunt and Kill</option>
+			<option value="binarytree">Binary Tree</option>
+			<option value="blob">Blob Division</option>
+			<option value="origin">Origin Shift</option>
+			<option value="weave">Weave</option>
+			<option value="braid">Braid</option>
+			<option value="preeliminate">Pre-Eliminate Squares</option>
+			<option value="randomrestart">Random Restarts</option>
+			<!--  https://pergamos.lib.uoa.gr/uoa/dl/frontend/file/lib/default/data/1324569/theFile --->
+			<option value="---">-----------</option>
+			<option value="---">-----------</option>
+			<option value="fill">Flled (test)</option>
+			<option value="bare">Bare (test)</option>
+        </select>
+		<br>
+		<div id="colouras">
+        <label for="wallColor">Wall Color:</label>
+        <input type="color" id="wallColor" value="#008b8b">
+
+        <label for="emptyColor">Empty Color:</label>
+        <input type="color" id="emptyColor" value="#d3d3d3">
+
+        <label for="playerColor">Player Color:</label>
+        <input type="color" id="playerColor" value="#0000ff">
+
+        <label for="finishColor">Finish Color:</label>
+        <input type="color" id="finishColor" value="#008000">
+		
+		<label for="borderColor">Border Color:</label>
+        <input type="color" id="borderColor" value="#000000">
+		</div>
+        <br>
+		
+        <label for="borderThickness">Border Thickness:</label>
+        <input type="number" id="borderThickness" value="0" min="0" max="5">
+		<br>
+        <button onclick="startGame()">Generate</button>
+        <button onclick="toggleDisplay()">Toggle Display</button>
+    </div>
+
+    <div>
+        <p>Generation Time: <span id="generationTime">0</span> ms</p>
+        <p>Completion Time: <span id="completionTime">0</span> s</p>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const tileColors = {
+            wall: 'darkcyan',
+            empty: 'lightgrey',
+            player: 'blue',
+			border: 'black',
+            finish: 'green'
+        };
+
+        let grid = [];
+        let N = 10;
+        let playerPos = { x: 1, y: 1 };
+        let finishPos = { x: N, y: N };
+        let tileSize = 40; // Size of each tile in pixels
+        let showPlayerAndFinish = true;
+        let generationStart, generationEnd, gameStart, gameEnd;
+        let generationTimer, completionTimer;
+		let borderThicknes = 1;
+ function updateColors() {
+            tileColors.wall = document.getElementById('wallColor').value;
+            tileColors.empty = document.getElementById('emptyColor').value;
+            tileColors.player = document.getElementById('playerColor').value;
+            tileColors.finish = document.getElementById('finishColor').value;
+			 tileColors.border = document.getElementById('borderColor').value;
+        }
+        function startGame() {
+            N = parseInt(document.getElementById('gridSize').value);
+            const method = document.getElementById('generationMethod').value;
+			tileSize = Math.max(1,400/N);
+			 updateColors();
+             borderThickness = parseInt(document.getElementById('borderThickness').value);
+            generationStart = performance.now();
+
+			const functionName = `generate_${method}`;
+
+			if (typeof window[functionName] === 'function') {
+			window[functionName]();
+			} else {
+			console.error(`Function ${functionName} is not real.`);
+			}
+            
+            // End generation timer
+            generationEnd = performance.now();
+            document.getElementById('generationTime').textContent = (generationEnd - generationStart).toFixed(2);
+
+            // Start game timer
+            gameStart = new Date();
+            updateCompletionTimer();
+        }
+
+        function updateCompletionTimer() {
+            completionTimer = setInterval(() => {
+                const now = new Date();
+				
+                const elapsed = (now - gameStart) / 1000; // in seconds
+				//if (!(playerPos.x === finishPos.x && playerPos.y === finishPos.y)){
+                document.getElementById('completionTime').textContent = elapsed.toFixed(2);//}
+            }, 100);
+        }
+
+        function generate_default() {
+            generateGrid(0.3); // 30% walls
+        }
+
+        function generate_sparse() {
+            generateGrid(0.2); // 20% walls
+        }
+
+        function generate_dense() {
+            generateGrid(0.4); // 40% walls
+        }
+		
+		
+		
+		
+		
+		
+		
+		//////////////////////////////////////////////////////
+		
+		
+		
+		function generate_fractal() {
+    const size = Math.pow(2, Math.ceil(Math.log2(N))) - 1; // Ensure the size is a power of 2 minus 1
+    grid = Array.from({ length: size + 2 }, () => Array(size + 2).fill(1));
+
+    function carve(x, y, level) {
+if (level == 2)return; 
+        const subSize = Math.pow(2, level - 1) - 1;
+
+        for (let i = 0; i <= 1; i++) {
+            for (let j = 0; j <= 1; j++) {
+                carve(x + i * (subSize + 1), y + j * (subSize + 1), level - 1);
+            }
+        }
+
+        const mx = x + subSize;
+        const my = y + subSize;
+
+        grid[my][x + subSize + 1] = 0; 
+        grid[y + subSize + 1][mx] = 0;
+        grid[my][mx] = 0; 
+    }
+
+carve(1, 1,5 );
+
+    playerPos = { x: 1, y: 1 };
+    finishPos = { x: N - 1, y: N - 1 };
+    grid[playerPos.y][playerPos.x] = 0;
+    grid[finishPos.y][finishPos.x] = 0;
+
+    canvas.width = (N + 1) * tileSize;
+    canvas.height = (N + 1) * tileSize;
+    drawGrid();
+}
+		
+		
+		
+		
+		
+		
+		
+		
+		function generate_recursive() {
+    generate_bare();
+
+    function divide(x1, y1, x2, y2) {
+        if (x2 - x1 < 2 || y2 - y1 < 2) return;
+
+        let horizontal = (x2 - x1) < (y2 - y1);
+
+        if (horizontal) {
+            let y = Math.floor(Math.random() * ((y2 - y1) / 2)) * 2 + y1 + 1;
+            for (let i = x1; i <= x2; i++) grid[y][i] = 1;
+            let gap = Math.floor(Math.random() * ((x2 - x1) / 2)) * 2 + x1 + 0;
+            grid[y][gap] = 0;
+            divide(x1, y1, x2, y);
+            divide(x1, y + 1, x2, y2);
+        } else {
+            let x = Math.floor(Math.random() * ((x2 - x1) / 2)) * 2 + x1 + 1;
+            for (let i = y1; i <= y2; i++) grid[i][x] = 1;
+            let gap = Math.floor(Math.random() * ((y2 - y1) / 2)) * 2 + y1 +0;
+            grid[gap][x] = 0;
+            divide(x1, y1, x, y2);
+            divide(x + 1, y1, x2, y2);
+        }
+    }
+
+    divide(1, 1, N-1, N-1);
+
+    playerPos = { x: 1, y: 1 };
+    finishPos = { x: N - 1, y: N - 1 };
+    grid[playerPos.y][playerPos.x] = 0;
+    grid[finishPos.y][finishPos.x] = 0;
+
+    canvas.width = (N + 1) * tileSize;
+    canvas.height = (N + 1) * tileSize;
+    drawGrid();
+}
+
+function generate_binary() {
+    generate_bare();
+
+    function divide(x1, y1, x2, y2) {
+        if (x2 - x1 < 2 || y2 - y1 < 2) return;
+
+        let horizontal = Math.random() < 0.5;
+
+        if (horizontal) {
+            let y = Math.floor(Math.random() * ((y2 - y1) / 2)) * 2 + y1 + 1;
+            for (let i = x1; i <= x2; i++) grid[y][i] = 1;
+            let gap = Math.floor(Math.random() * ((x2 - x1) / 2)) * 2 + x1 + 0;
+            grid[y][gap] = 0;
+            divide(x1, y1, x2, y);
+            divide(x1, y + 1, x2, y2);
+        } else {
+            let x = Math.floor(Math.random() * ((x2 - x1) / 2)) * 2 + x1 + 1;
+            for (let i = y1; i <= y2; i++) grid[i][x] = 1;
+            let gap = Math.floor(Math.random() * ((y2 - y1) / 2)) * 2 + y1 + 0;
+            grid[gap][x] = 0;
+            divide(x1, y1, x, y2);
+            divide(x + 1, y1, x2, y2);
+        }
+    }
+
+    divide(1, 1, N - 1, N - 1);
+
+    playerPos = { x: 1, y: 1 };
+    finishPos = { x: N - 1, y: N - 1 };
+    grid[playerPos.y][playerPos.x] = 0;
+    grid[finishPos.y][finishPos.x] = 0;
+
+    canvas.width = (N + 1) * tileSize;
+    canvas.height = (N + 1) * tileSize;
+    drawGrid();
+}
+
+
+		function generate_hounston() {
+grid = Array.from({ length: N + 2 }, () => Array(N + 2).fill(1));
+
+    let currentX = Math.floor(Math.random() * N / 2)*2 + 1;
+    let currentY = Math.floor(Math.random() * N / 2)*2 + 1;
+
+    grid[currentY][currentX] = 0;
+
+    const visited = new Set();
+    visited.add(`${currentX},${currentY}`);
+
+    while (visited.size < N * N / 12) {
+        let directions = [
+            [currentX + 2, currentY], [currentX - 2, currentY],
+            [currentX, currentY + 2], [currentX, currentY - 2]
+        ];
+
+        directions = directions.filter(([nx, ny]) => nx > 0 && nx <= N && ny > 0 && ny <= N);
+
+        let [nextX, nextY] = directions[Math.floor(Math.random() * directions.length)];
+
+        if (!visited.has(`${nextX},${nextY}`)) {
+            grid[(currentX + nextX) / 2][(currentY + nextY) / 2] = 0;
+            grid[nextY][nextX] = 0;
+            visited.add(`${nextX},${nextY}`);
+        }
+
+        currentX = nextX;
+        currentY = nextY;
+    }
+
+	
+	            grid = Array.from({ length: N + 2 }, () => Array(N + 2).fill(1));
+    for (let i = 1; i <= N; i++) {
+        for (let j = 1; j <= N; j++) {
+            if (i % 2 === 1 && j % 2 === 1) {
+                grid[i][j] = 0; 
+            }
+        }
+    }
+	
+    // Switch to Wilson's Algorithm once N * N / 6 cells are visited
+    function walk(x, y) {
+        let visited = new Set();
+        visited.add(`${x},${y}`);
+        
+        while (visited.size < (N * N) / 4) {
+            let directions = [
+                [x + 2, y], [x - 2, y], [x, y + 2], [x, y - 2]
+            ];
+
+            directions = directions.filter(([nx, ny]) => nx > 0 && nx <= N && ny > 0 && ny <= N);
+
+            let [nx, ny] = directions[Math.floor(Math.random() * directions.length)];
+            if (!visited.has(`${nx},${ny}`)) {
+                visited.add(`${nx},${ny}`);
+                grid[(x + nx) / 2][(y + ny) / 2] = 0;
+            }
+
+            x = nx;
+            y = ny;
+        }
+
+        for (let [vx, vy] of visited) {
+            grid[vx][vy] = 0;
+        }
+    }
+
+    // Now continue with Wilson's algorithm from a random position
+    let randomX = Math.floor(Math.random() * N / 2) * 2 + 1;
+    let randomY = Math.floor(Math.random() * N / 2) * 2 + 1;
+
+    walk(randomX, randomY);
+
+    playerPos = { x: 1, y: 1 };
+    finishPos = { x: N - 1, y: N - 1 };
+    grid[playerPos.y][playerPos.x] = 0;
+    grid[finishPos.y][finishPos.x] = 0;
+
+    canvas.width = (N + 1) * tileSize;
+    canvas.height = (N + 1) * tileSize;
+    drawGrid();
+}
+
+
+
+
+
+		function generate_aldousbroder() {
+    grid = Array.from({ length: N + 2 }, () => Array(N + 2).fill(1));
+
+    let currentX = Math.floor(Math.random() * N / 2)*2 + 1;
+    let currentY = Math.floor(Math.random() * N / 2)*2 + 1;
+
+    grid[currentY][currentX] = 0;
+
+    const visited = new Set();
+    visited.add(`${currentX},${currentY}`);
+
+    while (visited.size < N * N / 4) {
+        let directions = [
+            [currentX + 2, currentY], [currentX - 2, currentY],
+            [currentX, currentY + 2], [currentX, currentY - 2]
+        ];
+
+        directions = directions.filter(([nx, ny]) => nx > 0 && nx <= N && ny > 0 && ny <= N);
+
+        let [nextX, nextY] = directions[Math.floor(Math.random() * directions.length)];
+
+        if (!visited.has(`${nextX},${nextY}`)) {
+            grid[(currentX + nextX) / 2][(currentY + nextY) / 2] = 0;
+            grid[nextY][nextX] = 0;
+            visited.add(`${nextX},${nextY}`);
+        }
+
+        currentX = nextX;
+        currentY = nextY;
+    }
+
+    playerPos = { x: 1, y: 1 };
+    finishPos = { x: N - 1, y: N - 1 };
+    grid[playerPos.y][playerPos.x] = 0;
+    grid[finishPos.y][finishPos.x] = 0;
+
+    canvas.width = (N + 1) * tileSize;
+    canvas.height = (N + 1) * tileSize;
+    drawGrid();
+}
+
+	function generate_wilsons() {
+        grid = Array.from({ length: N + 2 }, () => Array(N + 2).fill(1));
+    for (let i = 1; i <= N; i++) {
+        for (let j = 1; j <= N; j++) {
+            if (i % 2 === 1 && j % 2 === 1) {
+                grid[i][j] = 0; 
+            }
+        }
+    }
+
+    let randomX = Math.floor(Math.random() * N / 2)*2 + 1;
+    let randomY = Math.floor(Math.random() * N / 2)*2 + 1;
+
+    let set = new Set();
+    set.add(`${randomX},${randomY}`);
+
+    function walk(x, y) {
+        let visited = new Set();
+        visited.add(`${x},${y}`);
+        
+        while (visited.size < (N * N) / 4) {
+		console.log(x)
+            let directions = [
+                [x + 2, y], [x - 2, y], [x, y + 2], [x, y - 2]
+            ];
+
+            directions = directions.filter(([nx, ny]) => nx > 0 && nx <= N && ny > 0 && ny <= N);
+
+            let [nx, ny] = directions[Math.floor(Math.random() * directions.length)];
+            if (!visited.has(`${nx},${ny}`)) {
+                visited.add(`${nx},${ny}`);
+                grid[(x + nx) / 2][(y + ny) / 2] = 0;
+            }
+
+            x = nx;
+            y = ny;
+        }
+
+        for (let [vx, vy] of visited) {
+            grid[vx][vy] = 0;
+        }
+		
+    }
+
+    walk(randomX, randomY);
+
+    playerPos = { x: 1, y: 1 };
+    finishPos = { x: N - 1, y: N - 1 };
+    grid[playerPos.y][playerPos.x] = 0;
+    grid[finishPos.y][finishPos.x] = 0;
+
+    canvas.width = (N + 1) * tileSize;
+    canvas.height = (N + 1) * tileSize;
+    drawGrid();
+}	
+		function generate_prims() {
+    grid = Array.from({ length: N + 2 }, () => Array(N + 2).fill(1));
+    let walls = [];
+    let startX = 1, startY = 1;
+    playerPos = { x: startX, y: startY };
+    finishPos = { x: N - 1, y: N - 1 };
+    grid[startY][startX] = 0;
+    walls.push([startX, startY, startX + 2, startY]);
+    walls.push([startX, startY, startX, startY + 2]);
+    while (walls.length > 0) {
+        let randomIndex = Math.floor(Math.random() * walls.length);
+        let [x1, y1, x2, y2] = walls.splice(randomIndex, 1)[0];
+        if (x2 > 0 && x2 <= N && y2 > 0 && y2 <= N && grid[y2][x2] === 1) {
+            grid[y2][x2] = 0;
+            grid[(y1 + y2) / 2][(x1 + x2) / 2] = 0;
+            walls.push([x2, y2, x2 + 2, y2]);
+            walls.push([x2, y2, x2 - 2, y2]);
+            walls.push([x2, y2, x2, y2 + 2]);
+            walls.push([x2, y2, x2, y2 - 2]);
+        }
+    }
+    grid[playerPos.y][playerPos.x] = 0;
+    grid[finishPos.y][finishPos.x] = 0;
+    canvas.width = (N + 1) * tileSize;
+    canvas.height = (N + 1) * tileSize;
+    drawGrid();
+}
+
+		
+		
+function generate_depthfirst() {
+    grid = Array.from({ length: N + 2 }, () => Array(N + 2).fill(1));
+
+    const stack = [];
+
+    let startX = 1;
+    let startY = 1;
+    playerPos = { x: startX, y: startY };
+    finishPos = { x: N - 1, y: N - 1 };
+
+    grid[startY][startX] = 0;
+    stack.push([startX, startY]);
+
+    const directions = [
+        [0, -2], // up
+        [2, 0],  // right
+        [0, 2],  // down
+        [-2, 0]  // left
+    ];
+
+    while (stack.length > 0) {
+        const [x, y] = stack[stack.length - 1];
+
+        const neighbors = [];
+        for (const [dx, dy] of directions) {
+            const nx = x + dx;
+            const ny = y + dy;
+
+            if (nx > 0 && nx < N + 1 && ny > 0 && ny < N + 1 && grid[ny][nx] === 1) {
+                neighbors.push([nx, ny]);
+            }
+        }
+
+        if (neighbors.length > 0) {
+            const [nextX, nextY] = neighbors[Math.floor(Math.random() * neighbors.length)];
+
+            const wallX = (x + nextX) / 2;
+            const wallY = (y + nextY) / 2;
+            grid[wallY][wallX] = 0;
+
+            grid[nextY][nextX] = 0;
+            stack.push([nextX, nextY]);
+        } else {
+            stack.pop();
+        }
+    }
+
+    grid[playerPos.y][playerPos.x] = 0;
+
+    grid[finishPos.y][finishPos.x] = 0;
+
+    canvas.width = (N + 1) * tileSize;
+    canvas.height = (N + 1) * tileSize;
+    drawGrid();
+}
+
+		function generate_bare() {
+		grid = Array.from({ length: N + 2 }, () => Array(N + 2).fill(0));
+			for (let i = 0; i <= N; i++) {
+				for (let j = 0; j <= N; j++) {
+					if (i % 2 === 0 && j % 2 === 0) 
+						grid[i][j] = 1;
+						if(i==0 || i==N || j==0 || j==N) grid[i][j]=1}}
+			playerPos = { x: 1, y: 1 };
+			grid[playerPos.y][playerPos.x] = 0;
+
+			finishPos = { x: N-1, y: N-1 };
+			grid[finishPos.y][finishPos.x] = 0;
+
+			canvas.width = (N + 1) * tileSize;
+			canvas.height = (N + 1) * tileSize;
+			drawGrid();
+		}
+function generate_fill() {
+		grid = Array.from({ length: N + 2 }, () => Array(N + 2).fill(1));
+			for (let i = 1; i <= N; i++) {
+				for (let j = 1; j <= N; j++) {
+					if (i % 2 === 1 && j % 2 === 1) {
+						grid[i][j] = 0;}}}
+			playerPos = { x: 1, y: 1 };
+			grid[playerPos.y][playerPos.x] = 0;
+
+			finishPos = { x: N-1, y: N-1 };
+			grid[finishPos.y][finishPos.x] = 0;
+
+			canvas.width = (N + 1) * tileSize;
+			canvas.height = (N + 1) * tileSize;
+			drawGrid();
+		}
+
+function generate_kruskals() {
+
+    grid = Array.from({ length: N + 2 }, () => Array(N + 2).fill(1));
+    for (let i = 1; i <= N; i++) {
+        for (let j = 1; j <= N; j++) {
+            if (i % 2 === 1 && j % 2 === 1) {
+                grid[i][j] = 0; 
+            }
+        }
+    }
+    const sets = new Map();
+    const edges = [];
+    let setId = 1;
+    for (let i = 1; i <= N; i += 2) {
+        for (let j = 1; j <= N; j += 2) {
+            const cell = `${i},${j}`;
+            sets.set(cell, setId++);
+
+            if (i + 2 <= N) edges.push([[i, j], [i + 2, j]]); 
+            if (j + 2 <= N) edges.push([[i, j], [i, j + 2]]);
+        }
+    }
+    for (let i = edges.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [edges[i], edges[j]] = [edges[j], edges[i]];
+    }
+    for (const [[x1, y1], [x2, y2]] of edges) {
+        const cell1 = `${x1},${y1}`;
+        const cell2 = `${x2},${y2}`
+        const set1 = sets.get(cell1);
+        const set2 = sets.get(cell2);
+        if (set1 !== set2) {
+            for (let [cell, setId] of sets) {
+                if (setId === set2) sets.set(cell, set1);
+            }
+            const wallX = (x1 + x2) / 2;
+            const wallY = (y1 + y2) / 2;
+            grid[wallX][wallY] = 0; 
+        }
+    }
+    playerPos = { x: 1, y: 1 };
+    grid[playerPos.y][playerPos.x] = 0;
+
+    finishPos = { x: N - 1, y: N - 1 };
+    grid[finishPos.y][finishPos.x] = 0;
+
+    canvas.width = (N + 1) * tileSize;
+    canvas.height = (N + 1) * tileSize;
+    drawGrid();
+}
+
+
+
+        function generateGrid(wallProbability) {
+            grid = Array.from({ length: N + 2 }, () => Array(N + 2).fill(1));
+
+            for (let i = 1; i <= N; i++) {
+                for (let j = 1; j <= N; j++) {
+                    grid[i][j] = Math.random() > wallProbability ? 0 : 1;
+                }
+            }
+
+            // Set player starting position
+            playerPos = { x: 1, y: 1 };
+            grid[playerPos.y][playerPos.x] = 0;
+
+            // Set finish position
+            finishPos = { x: N, y: N };
+            grid[finishPos.y][finishPos.x] = 0;
+
+            canvas.width = (N + 2) * tileSize;
+            canvas.height = (N + 2) * tileSize;
+            drawGrid();
+        }
+     
+	 function drawGrid() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < N + 2; i++) {
+                for (let j = 0; j < N + 2; j++) {
+                    if (showPlayerAndFinish && i === playerPos.y && j === playerPos.x) {
+                        ctx.fillStyle = tileColors.player;
+                    } else if (showPlayerAndFinish && i === finishPos.y && j === finishPos.x) {
+                        ctx.fillStyle = tileColors.finish;
+                    } else {
+                        ctx.fillStyle = grid[i][j] === 1 ? tileColors.wall : tileColors.empty;
+                    }
+                    ctx.fillRect(j * tileSize, i * tileSize, tileSize, tileSize);
+
+                    if (borderThickness > 0) {
+                        ctx.lineWidth = borderThickness;
+                        ctx.strokeStyle = tileColors.border;
+                        ctx.strokeRect(j * tileSize, i * tileSize, tileSize, tileSize);
+                    }
+                }
+            }
+        }
+
+
+        function movePlayer(dx, dy) {
+            const newX = playerPos.x + dx;
+            const newY = playerPos.y + dy;
+
+            if (newX >= 0 && newX < N + 2 && newY >= 0 && newY < N + 2 && grid[newY][newX] === 0) {
+                playerPos.x = newX;
+                playerPos.y = newY;
+                drawGrid();
+
+                if (playerPos.x === finishPos.x && playerPos.y === finishPos.y) {
+                    clearInterval(completionTimer);
+					const now2 = new Date();
+				const elapsed2 = (now2 - gameStart) / 1000;
+                    alert('Congratulations! You reached the finish in '+elapsed2.toFixed(3));
+                    gameEnd = new Date();
+                    drawGrid();
+                }
+            }
+        }
+
+        function toggleDisplay() {
+            showPlayerAndFinish = !showPlayerAndFinish;
+            drawGrid();
+        }
+
+        window.addEventListener('keydown', (event) => {
+            switch (event.key.toLowerCase()) {
+                case 'w': movePlayer(0, -1); break; // Up
+                case 'a': movePlayer(-1, 0); break; // Left
+                case 's': movePlayer(0, 1); break; // Down
+                case 'd': movePlayer(1, 0); break; // Right
+            }
+        });
+    </script>
+</body>
+</html>

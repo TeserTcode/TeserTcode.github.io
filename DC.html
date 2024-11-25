@@ -204,8 +204,14 @@ background-color: #eeeeee;
     <div class="form-group">
         <label for="hue">Hue:</label>
         <input type="range" id="hue" name="hue" min="0" max="360" value="0">
+		<div class="button-group">
+    <button id="btn-negative-positive">-+</button>
+    <button id="btn-zero-positive">0+</button>
+    <button id="btn-negative-one-positive-one">1</button>
+</div>
     <button id="createMeshButton">Create Mesh and Animate</button>
 	<button id="createMeshButtonsph">Create Spherical Mesh and Animate</button>
+	
 	</div>
     <button onclick="renderBMP()">Generate</button>
 	 <button onclick="renderBMPinv()">Generate Inverse</button></div>
@@ -958,7 +964,30 @@ let thick = parseFloat(document.getElementById('thick').value);
 }
 
        
+ document.getElementById('btn-negative-positive').addEventListener('click', function() {
+        const maxReal = parseFloat(document.getElementById('max-real').value);
+        document.getElementById('min-real').value = -maxReal;
+        document.getElementById('max-real').value = maxReal;
+        document.getElementById('min-imag').value = -maxReal;
+        document.getElementById('max-imag').value = maxReal;
+    });
 
+    // Button 2: Set minimums to 0 and maximums to positive (based on max real)
+    document.getElementById('btn-zero-positive').addEventListener('click', function() {
+        const maxReal = parseFloat(document.getElementById('max-real').value);
+        document.getElementById('min-real').value = 0;
+        document.getElementById('max-real').value = maxReal;
+        document.getElementById('min-imag').value = 0;
+        document.getElementById('max-imag').value = maxReal;
+    });
+
+    // Button 3: Set minimums to -1 and maximums to 1
+    document.getElementById('btn-negative-one-positive-one').addEventListener('click', function() {
+        document.getElementById('min-real').value = -1;
+        document.getElementById('max-real').value = 1;
+        document.getElementById('min-imag').value = -1;
+        document.getElementById('max-imag').value = 1;
+    });
  const canvas = document.getElementById('bmpCanvas');
 
         const container = document.getElementById('canvasContainer');

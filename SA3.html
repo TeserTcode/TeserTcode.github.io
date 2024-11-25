@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Attractor Simulator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; }
+        canvas { border: 1px solid black; margin: 20px; }
+        .controls { display: flex; gap: 10px; flex-wrap: wrap; }
+        .controls input { width: 150px; }
+        .textbox { display: flex; flex-direction: column; }
+		
+		
+		.collapsible {
+  background-color: #eee;
+  color: #444;
+  cursor: pointer;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: 15px;
+}
+
+/* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+.active, .collapsible:hover {
+  background-color: #ccc;
+}
+
+/* Style the collapsible content. Note: hidden by default */
+.content {
+  padding: 0 18px;
+  display: none;
+  overflow: hidden;
+  background-color: #f1f1f1;
+}
+    </style>
+</head>
+<body>
+    <h2>3-Dimensional Attractor Simulator</h2>
+    <canvas id="attractorCanvas" width="800" height="600"></canvas>
+    
+    <div class="controls">
+        <div class="textbox">
+            <label for="funcX">dx/dt:</label>
+            <input type="text" id="funcX" value="10 * (y - x)">
+        </div>
+        <div class="textbox">
+            <label for="funcY">dy/dt:</label>
+            <input type="text" id="funcY" value="x * (28 - z) - y">
+        </div>
+        <div class="textbox">
+            <label for="funcZ">dz/dt:</label>
+            <input type="text" id="funcZ" value="x * y - 8/3 * z">
+        </div>
+        <div>
+    <label for="preset-attractor">Preset Attractor:</label>
+    <select id="preset-attractor" onchange="updateEquations()">
+        <option value="lorenz">Lorenz Attractor</option>
+        <option value="rossler">Rössler Attractor</option>
+        <option value="chen">Chen Attractor</option>
+        <option value="halvorsen">Halvorsen Attractor</option>
+        <option value="thomas">Thomas Attractor</option>
+        <option value="aizawa">Aizawa Attractor</option>
+    </select>
+</div>
+        <div>
+            <label for="stepSize">Step Size:</label>
+            <input type="number" id="stepSize" value="0.01" step="0.001">
+        </div>
+        <div>
+            <label for="numParticles">Particles:</label>
+            <input type="number" id="numParticles" value="100">
+        </div>
+        <div>
+            <label for="spread">Initial Spread:</label>
+            <input type="number" id="spread" value="2" step="1">
+        </div>
+		<div>
+            <label for="trail">Trail:</label>
+            <input type="number" id="trail" value="0.05" step="0.01">
+			 <label for="numit">Number of Iterations (lyap):</label>
+            <input type="number" id="numit" value="30" step="1">
+        </div>
+<div>
+            <label for="diff-mode">Differential Mode:</label>
+            <select id="diff-mode">             
+                <option value="runge4">Runge Kutta 4</option>
+				<option value="euler">Euler</option>
+				<option value="heun">Heun</option>
+				<option value="midpoint">Midpoint</option>
+                
+            </select>
+        </div>
+        <div>
+            <label for="color-mode">Color Mode:</label>
+            <select id="color-mode">
+                
+                <option value="red">Red</option>
+                <option value="blue">Blue</option>
+                <option value="green">Green</option>
+				<option value="cyan">Cyan</option>
+            <option value="magenta">Magenta</option>
+            <option value="yellow">Yellow</option>
+			<option value="orange">Orange</option>
+			<option value="purple">Purple</option>
+			<option value="pink">Pink</option>
+			 <option value="white">White</option>
+			 
+			 <option value="random">Random</option>
+                <option value="rainbow">Rainbow</option>
+				 <option value="depth">Depth</option>
+            </select>
+        </div>
+		 <button onclick="startSimulation()">Start Simulation</button>
+		  <button onclick="startlyapSimulation()">Start Lyapunov Simulation</button>
+		  <button onclick="oop2()">Stop Simulation</button>
+    </div>
+
+
+		<button type="button" class="collapsible">Open Collapsible</button>
+		<div class="content">
+		<div>
+            <label for="x1">Xx:</label>
+            <input type="number" id="x1" value="1" step="0.1">
+			<label for="x2">Yx:</label>
+            <input type="number" id="x2" value="0" step="0.1">
+			<label for="x3">Zx:</label>
+            <input type="number" id="x3" value="0" step="0.1">
+        </div>
+				<div>
+            <label for="y1">Xy:</label>
+            <input type="number" id="y1" value="0" step="0.1">
+			<label for="y2">Yy:</label>
+            <input type="number" id="y2" value="1" step="0.1">
+			<label for="y3">Zy:</label>
+            <input type="number" id="y3" value="0" step="0.1">
+        </div>
+		</div>
+<script src="clrspc.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="mthfnc.js"></script>
+
+ 
+    <script>
+	
+
+	var funcX = document.getElementById('funcX').value;
+var funcY = document.getElementById('funcY').value;
+var funcZ = document.getElementById('funcZ').value;
+var diffMode = document.getElementById('diff-mode').value;
+	var coll = document.getElementsByClassName("collapsible");
+
+
+for (let i = 0; i < coll.length; i++) {
+  coll[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var content = this.nextElementSibling;
+    if (content.style.display === "block") {
+      content.style.display = "none";
+    } else {
+      content.style.display = "block";
+    }
+  });
+}
+	
+
+        const canvas = document.getElementById('attractorCanvas');
+        const ctx = canvas.getContext('2d');
+        let stepSize, numParticles, spread;
+        let particles = [];
+        let colorMode;
+		let trail = 0.05;
+		
+let oop=0;
+let ooq=1;
+function oop2(){
+for(let i=0;i<1000 && ooq==1;i++)
+oop=0;ooq=1;}
+
+
+
+
+        function startSimulation() {
+		oop2();
+funcX = document.getElementById('funcX').value;
+funcY = document.getElementById('funcY').value;
+funcZ = document.getElementById('funcZ').value;
+ diffMode = document.getElementById('diff-mode').value;
+            colorMode = document.getElementById('color-mode').value;
+			trail = document.getElementById('trail').value;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.fillStyle = 'rgb(0, 0, 0)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            particles = [];
+            stepSize = parseFloat(document.getElementById('stepSize').value);
+            numParticles = parseInt(document.getElementById('numParticles').value);
+            spread = parseFloat(document.getElementById('spread').value);
+            
+            for (let i = 0; i < numParticles; i++) {
+                const x = spread * (Math.random() - 0.5);
+                const y = spread * (Math.random() - 0.5);
+                const z = spread * (Math.random() - 0.5);
+                const color = colorMode === 'random' ? getRandomColor() : null;
+                particles.push({ x, y, z, color });
+            }
+oop=1;
+            requestAnimationFrame(simulate);
+        }
+		
+	
+        function simulate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, '+trail+')';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const baseX = [ document.getElementById('x1').value, document.getElementById('x2').value, document.getElementById('x3').value];
+            const baseY = [document.getElementById('y1').value,  document.getElementById('y2').value, document.getElementById('y3').value];
+
+            for (const p of particles) {
+
+switch (diffMode) {
+    case 'runge4':rungeKutta4(p, funcX, funcY, funcZ);break;
+	case 'euler':euler(p, funcX, funcY, funcZ);break;
+    case 'heun':heun(p, funcX, funcY, funcZ);break;
+    case 'midpoint': midpoint(p, funcX, funcY, funcZ);break;
+}
+
+
+                ctx.fillStyle = colorMode === 'random' ? p.color : colorMode === 'rainbow' ? getRainbowColor(): colorMode === 'depth' ? getdepthcolor(p) : colorMode;
+                ctx.fillRect(400 + (p.x * baseX[0] + p.y * baseX[1] + p.z * baseX[2]) * 10, 300 - (p.x * baseY[0] + p.y * baseY[1] + p.z * baseY[2]) * 10, 3, 3);
+            }
+			if(oop)
+            requestAnimationFrame(simulate);
+			else
+			ooq=0;
+        }
+		
+		
+	function startlyapSimulation() {
+     funcX = document.getElementById('funcX').value;
+     funcY = document.getElementById('funcY').value;
+     funcZ = document.getElementById('funcZ').value;
+    diffMode = document.getElementById('diff-mode').value;
+    colorMode = document.getElementById('color-mode').value;
+    trail = document.getElementById('trail').value;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'rgb(0, 0, 0)';
+	  numParticles = parseInt(document.getElementById('numParticles').value);
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    stepSize = parseFloat(document.getElementById('stepSize').value);
+    spread = parseFloat(document.getElementById('spread').value);
+ numit = parseFloat(document.getElementById('numit').value);
+	const time = numit * stepSize;
+    const baseX = [
+        parseFloat(document.getElementById('x1').value),
+        parseFloat(document.getElementById('x2').value),
+        parseFloat(document.getElementById('x3').value)
+    ];
+    const baseY = [
+        parseFloat(document.getElementById('y1').value),
+        parseFloat(document.getElementById('y2').value),
+        parseFloat(document.getElementById('y3').value)
+    ];
+let avg=0;
+    // Loop through each starting point to calculate the Lyapunov exponent
+    for (let i = 0; i < numParticles && oop === 0; i++) {
+	
+        const x = 10*spread * (Math.random() - 0.5);
+        const y = 10*spread * (Math.random() - 0.5);
+        const z = 10*spread * (Math.random() - 0.5);
+        const p = { x, y, z };
+
+        // Create a perturbed particle
+        const delta = trail/5000;
+        const pp = { x: x + delta, y: y + delta, z: z + delta };
+
+        let sumLogDivergence = 0;
+        const numIterations = numit;
+
+        // Compute the Lyapunov exponent using numerical methods
+        for (let t = 0; t < numIterations; t++) {
+            switch (diffMode) {
+                case 'runge4':
+                    rungeKutta4(p, funcX, funcY, funcZ);
+                    rungeKutta4(pp, funcX, funcY, funcZ);
+                    break;
+                case 'euler':
+                    euler(p, funcX, funcY, funcZ);
+                    euler(pp, funcX, funcY, funcZ);
+                    break;
+                case 'heun':
+                    heun(p, funcX, funcY, funcZ);
+                    heun(pp, funcX, funcY, funcZ);
+                    break;
+                case 'midpoint':
+                    midpoint(p, funcX, funcY, funcZ);
+                    midpoint(pp, funcX, funcY, funcZ);
+                    break;
+            }
+
+            // Calculate the Euclidean distance between the original and perturbed particles
+            const distance = Math.sqrt(
+                Math.pow(pp.x - p.x, 2) +
+                Math.pow(pp.y - p.y, 2) +
+                Math.pow(pp.z - p.z, 2)
+            );
+
+            // Sum the logarithm of the divergence ratio
+            if (distance > 0) {
+                sumLogDivergence += Math.log(distance / delta);
+            }
+
+            // Renormalize the perturbed particle to avoid overflow
+            const scale = delta / distance;
+            pp.x = p.x + (pp.x - p.x) * scale;
+            pp.y = p.y + (pp.y - p.y) * scale;
+            pp.z = p.z + (pp.z - p.z) * scale;
+        }
+
+
+        const lyapunovExponent = sumLogDivergence / numIterations;
+avg+=lyapunovExponent/numParticles;
+        const normalizedValue = Math.min(Math.max(lyapunovExponent, -2), 2) / 2;
+        const colorValue = Math.floor(255 * ( 250*normalizedValue)); // Scale to 0-255
+        
+//console.log(colorValue);
+
+        const screenX = 400 + (x * baseX[0] + y * baseX[1] + z * baseX[2]) * 10;
+        const screenY = 300 - (x * baseY[0] + y * baseY[1] + z * baseY[2]) * 10;
+ctx.fillStyle = `rgb(${Math.min(255,Math.max(0,colorValue))}, ${Math.min(255,Math.max(0, - colorValue))}, ${Math.min(255,Math.max(0,sqrt(abs(colorValue))))})`;
+       
+            ctx.fillRect(screenX, screenY, 5, 5);
+
+    }
+//	const resexp = avg/time
+	console.log(avg);
+}
+
+		
+		
+{//stugg
+        function rungeKutta4(p, funcX, funcY, funcZ) {
+            const evaluate = (x, y, z) => ({
+                dx: math.evaluate(funcX, { x, y, z }),
+                dy: math.evaluate(funcY, { x, y, z }),
+                dz: math.evaluate(funcZ, { x, y, z })
+            });
+
+            const k1 = evaluate(p.x, p.y, p.z);
+            const k2 = evaluate(p.x + stepSize * k1.dx / 2, p.y + stepSize * k1.dy / 2, p.z + stepSize * k1.dz / 2);
+            const k3 = evaluate(p.x + stepSize * k2.dx / 2, p.y + stepSize * k2.dy / 2, p.z + stepSize * k2.dz / 2);
+            const k4 = evaluate(p.x + stepSize * k3.dx, p.y + stepSize * k3.dy, p.z + stepSize * k3.dz);
+
+            p.x += stepSize / 6 * (k1.dx + 2 * k2.dx + 2 * k3.dx + k4.dx);
+            p.y += stepSize / 6 * (k1.dy + 2 * k2.dy + 2 * k3.dy + k4.dy);
+            p.z += stepSize / 6 * (k1.dz + 2 * k2.dz + 2 * k3.dz + k4.dz);
+        }
+function euler(p, funcX, funcY, funcZ) {
+    const dx = math.evaluate(funcX, { x: p.x, y: p.y, z: p.z });
+    const dy = math.evaluate(funcY, { x: p.x, y: p.y, z: p.z });
+    const dz = math.evaluate(funcZ, { x: p.x, y: p.y, z: p.z });
+
+    p.x += stepSize * dx;
+    p.y += stepSize * dy;
+    p.z += stepSize * dz;
+}
+
+function heun(p, funcX, funcY, funcZ) {
+    const evaluate = (x, y, z) => ({
+        dx: math.evaluate(funcX, { x, y, z }),
+        dy: math.evaluate(funcY, { x, y, z }),
+        dz: math.evaluate(funcZ, { x, y, z })
+    });
+
+    const k1 = evaluate(p.x, p.y, p.z);
+    const k2 = evaluate(
+        p.x + stepSize * k1.dx,
+        p.y + stepSize * k1.dy,
+        p.z + stepSize * k1.dz
+    );
+
+    p.x += stepSize / 2 * (k1.dx + k2.dx);
+    p.y += stepSize / 2 * (k1.dy + k2.dy);
+    p.z += stepSize / 2 * (k1.dz + k2.dz);
+}
+function midpoint(p, funcX, funcY, funcZ) {
+    const evaluate = (x, y, z) => ({
+        dx: math.evaluate(funcX, { x, y, z }),
+        dy: math.evaluate(funcY, { x, y, z }),
+        dz: math.evaluate(funcZ, { x, y, z })
+    });
+
+    const k1 = evaluate(p.x, p.y, p.z);
+    const k2 = evaluate(
+        p.x + stepSize / 2 * k1.dx,
+        p.y + stepSize / 2 * k1.dy,
+        p.z + stepSize / 2 * k1.dz
+    );
+
+    p.x += stepSize * k2.dx;
+    p.y += stepSize * k2.dy;
+    p.z += stepSize * k2.dz;
+}
+
+}
+
+
+
+
+{//colours
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+		
+		function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        function getRainbowColor() {
+            const time = new Date().getTime() * 0.002;
+            const r = Math.floor(128 + 128 * Math.sin(time));
+            const g = Math.floor(128 + 128 * Math.sin(time + 2));
+            const b = Math.floor(128 + 128 * Math.sin(time + 4));
+            return `rgb(${r},${g},${b})`;
+        }
+		 function getdepthcolor(p) {
+            const r = Math.floor(128 + p.x*30);
+            const g = Math.floor(128 + p.y*30);
+            const b = Math.floor(128 + p.z*30);
+            return `rgb(${r},${g},${b})`;
+        }
+	}	
+
+		function updateEquations() {
+    const preset = document.getElementById('preset-attractor').value;
+    const funcXInput = document.getElementById('funcX');
+    const funcYInput = document.getElementById('funcY');
+    const funcZInput = document.getElementById('funcZ');
+
+    switch (preset) {
+        case 'lorenz':
+            funcXInput.value = "10*(y-x)";
+            funcYInput.value = "x*(28-z)-y";
+            funcZInput.value = "x*y-8/3*z";
+            break;
+
+        case 'rossler':
+            funcXInput.value = "-y-z";
+            funcYInput.value = "x+0.2*y";
+            funcZInput.value = "0.2+z*(x-5.7)";
+            break;
+
+        case 'chen':
+            funcXInput.value = "40*(y-x)";
+            funcYInput.value = "(28-40)*x-x*z+28*y";
+            funcZInput.value = "x*y-3*z";
+            break;
+
+        case 'halvorsen':
+            funcXInput.value = "-1.4 * x - 4 * y - 4 * z - y * y";
+            funcYInput.value = "-1.4 * y - 4 * z - 4 * x - z * z";
+            funcZInput.value = "-1.4 * z - 4 * x - 4 * y - x * x";
+            break;
+
+        case 'thomas':
+            funcXInput.value = "-0.18*x+sin(y)";
+            funcYInput.value = "-0.18*y+sin(z)";
+            funcZInput.value = "-0.18*z+sin(x)";
+            break;
+
+        case 'aizawa':
+            funcXInput.value = "(z-0.7)*x-3.5*y";
+            funcYInput.value = "3.5*x+(z-0.7)*y";
+			funcZInput.value = "0.6+0.95*z-z^3/3-x^2+0.1*z*x^3";
+        //    funcZInput.value = "0.6+0.95*z-(z^3/3/3.5)-(x^2+y^2)*(1+0.25+z)+0.1*z*x^3";
+            break;
+
+        default:
+            funcXInput.value = "10*(y-x)";
+            funcYInput.value = "x*(28-z)-y";
+            funcZInput.value = "x*y-8/3*z";
+            break;
+    }
+}
+    </script>
+</body>
+</html>
