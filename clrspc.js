@@ -1675,8 +1675,7 @@ function clamp255(value) {
     // Calculate the differences from the nearest integers for contour mode
 
  if (colorMode === 'contour') {
-	// complexOutput.re=Math.evaluate(magnitudeToLightnessExpr, { x: complexOutput.re });
-	// complexOutput.im=Math.evaluate(magnitudeToLightnessExpr, { x: complexOutput.im });
+	
  	const contourThreshold=contourThresholdd * mag(deriv);
     const reDiff = Math.abs(complexOutput.re % 1);
     const imDiff = Math.abs(complexOutput.im % 1);
@@ -1685,7 +1684,7 @@ function clamp255(value) {
     const halfThreshold = Math.min(Math.abs(complexInput.re % 1), Math.abs(complexInput.im % 1));
 
     if (minDiff < contourThreshold) {
-        // Check if the closest integer is 0 for either the real or imaginary part
+    
         const isCloseToZero = (Math.abs(complexOutput.re % 1) < doubleThreshold  && Math.abs(complexOutput.re) < doubleThreshold ) ||
                               (Math.abs(complexOutput.im % 1) < doubleThreshold  && Math.abs(complexOutput.im) < doubleThreshold );
         
@@ -1693,15 +1692,42 @@ function clamp255(value) {
 
 
 return [
-    ((complexOutput.im < 0 && imDiff === minDiff) || (complexOutput.re > 0 && reDiff === minDiff)) ? 255 : 0,   // Red
+    ((complexOutput.im < 0 && imDiff === minDiff) || (complexOutput.re > 0 && reDiff === minDiff)) ? 255 : 0,   
     complexOutput.im > 0 && imDiff === minDiff ? 255 : 0     // Blue
-       ,  // Green
-    complexOutput.re < 0 && reDiff === minDiff ? 255 :  (complexOutput.im < 0 && imDiff === minDiff ? 255 : 0)    // Purple (Red + Blue)
+       , 
+    complexOutput.re < 0 && reDiff === minDiff ? 255 :  (complexOutput.im < 0 && imDiff === minDiff ? 255 : 0)    
 ];
     }
 	if (halfThreshold < contourThresholdd/2) return [128, 128, 128];
-    return [255, 255, 255]; // White otherwise
+    return [255, 255, 255]; 
 }
+
+
+if (colorMode === 'acontour') {
+
+}
+
+
+
+
+
+ if (colorMode === 'pcontour') {
+	
+ 	const contourThreshold=contourThresholdd * mag(deriv);
+    const reDiff = Math.abs((arg(complexOutput)*8/3.14159265) % 1);
+    const imDiff = mag(complexOutput) % 1;
+ 
+    const doubleThreshold = contourThreshold * 1;
+    const halfThreshold = Math.min(Math.abs(complexInput.re % 1), Math.abs(complexInput.im % 1));
+
+if(reDiff*mag(complexOutput)<doubleThreshold)return [255, 0, 0];
+if(imDiff<doubleThreshold)return [ 0,255, 0];
+
+    if (halfThreshold < contourThresholdd/2) return [128, 128, 128];
+    return [255, 255, 255]; 
+}
+
+
  const lightnessValue = math.evaluate(magnitudeToLightnessExpr, { x: magnitude });
     const chroma = saturationChroma;
     const lightnessAdjusted = lightnessValue * lightness;
@@ -1798,18 +1824,22 @@ if (colorMode === 'dynamic') {
 }
 
 // Color mode: 'magnitude'
-if (colorMode === 'magnitude') {
-    const normMagnitude = Math.min(magnitude / 10, 1); // Normalize magnitude
+if (colorMode === 'magnitudeold') {
+    const normMagnitude = (magnitude / 10); // Normalize magnitude
     return [
         Math.floor(255 * normMagnitude), // Red channel based on magnitude
-        Math.floor(255 * (1 - normMagnitude)), // Green channel inverse of magnitude
-        0 // Blue channel constant
+        Math.floor(25 * (10 - normMagnitude)), // Green channel inverse of magnitude
+        mag( normMagnitude*10) // Blue channel constant
     ];
+}
+if (colorMode === 'magnitude') {
+    const nore = (mag(complexOutput) / 10); // Normalize magnitude
+    return hsvToRgb(nore*520,50+30*sin(58*nore),50+30*cos(72*nore));
 }
 if (colorMode === 'magnitudecolour') {
    // const normMagnitude = Math.min(magnitude / 10, 1); // Normalize magnitude
     const lightnessValue = math.evaluate(magnitudeToLightnessExpr, { x: magnitude });
-    return hsvToRgb(lightnessValue,100,Math.max(lightnessValue,20))
+    return hsvToRgb(lightnessValue*100,100,Math.max(lightnessValue,50))
 }
 
 if (colorMode === 'neon') {
@@ -1836,13 +1866,14 @@ if (colorMode === 'differ') {
     const absZ = Math.sqrt(absRe * absRe + absIm * absIm); // abs(z)
     
     // Calculate Green channel
-    const green = Math.min(Math.floor(absZ * 255), 255); // Limit to [0, 255]
+    const green = Math.min(Math.floor(absZ * 255)+(absRe-2*complexOutput.re+absIm-2*complexOutput.im)*100, 255); // Limit to [0, 255]
 
     // Calculate Red channel
-    const red = Math.min(Math.floor(Math.abs(complexOutput.re + complexOutput.im) * 255), 255); // Limit to [0, 255]
+    const red = Math.min(Math.floor(Math.abs(complexOutput.re + complexOutput.im) * 255 + absZ*50), 255); // Limit to [0, 255]
 
     // Calculate Blue channel
-    const blue = Math.min(Math.floor(Math.pow(Math.sqrt(absRe) + Math.sqrt(absIm), 2) * 255), 255); // Limit to [0, 255]
+	// const blue = Math.min(Math.floor(Math.pow(Math.sqrt(absRe) + Math.sqrt(absIm), 2) * 555), 255); // Limit to [0, 255]
+    const blue = Math.min(Math.floor(Math.abs(-complexOutput.re + complexOutput.im) * 155 + absZ*50), 255);  // Limit to [0, 255]
 
     return [red, green, blue];
 }

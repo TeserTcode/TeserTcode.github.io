@@ -120,6 +120,24 @@ background-color: #eeeeee;
             display: grid;
             gap: 3px;
         }
+		   #autocomplete-list {
+      position: absolute;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      max-height: 150px;
+      overflow-y: auto;
+      background-color: white;
+      z-index: 1000;
+    }
+
+    #autocomplete-list div {
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    #autocomplete-list div:hover {
+      background-color: #e9e9e9;
+    }
 
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
@@ -129,7 +147,8 @@ background-color: #eeeeee;
 <div class="split left">
 <div class="form-group">
     <label for="function">Function (e.g., '2^x'):</label>
-    <textarea id="function" rows="1" cols="40" name="function">2^x</textarea>
+     <textarea id="function" rows="1" cols="40" name="function">2^x</textarea>
+  <div id="autocomplete-list" style="display: none;"></div>
 </div>
     <div class="form-group">
         <label for="min-real">Min Real:</label>
@@ -166,12 +185,17 @@ background-color: #eeeeee;
             <option value="cielch">CIELCH</option>
 	    <option value="2d">2d</option>
 		  <option value="contour">Contour</option>
-		<!--   <option value="isolines">Isolines</option> -->
+		 <option value="pcontour">Polar Contour</option>
+		 <!-- <option value="acontour">Antialias Contour</option> -->
+		 <!--   <option value="isolines">Isolines</option> -->
 		   <option value="neon">Neon</option>
 		   <option value="differ">Differ</option>
+		   <option value="purify">Purify</option>
 		   <option value="real">Real</option>
 		   <option value="imag">Imaginary</option>
-		   <option value="magnitudecolour">Magnitude</option>
+		   <option value="magnitude">Magnitude</option>
+		   <option value="magnitudeold">Magnitude 2</option>
+		   <option value="magnitudecolour">Magnitude 3</option>
 		   <option value="quadrant">Quadrant</option>
             <option value="palette">Palette</option>
         </select>
@@ -276,6 +300,7 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(300,300);
 document.body.appendChild(renderer.domElement);
 document.getElementById('graphContainera').appendChild(renderer.domElement);
+const autocompleteList = document.getElementById("autocomplete-list");
 // Create geometry and material placeholders
 let mesh;
 let geometry;
@@ -724,7 +749,7 @@ function plotGraph(point1, point2) {
             } else {
                 document.getElementById('palette-group').style.display = 'none';
             }
-			if (this.value === 'contour') {
+			if (this.value === 'contour'||this.value === 'pcontour'||this.value === 'acontour') {
                 document.getElementById('contour-group').style.display = 'block';
             } else {
                 document.getElementById('contour-group').style.display = 'none';
@@ -998,7 +1023,63 @@ let thick = parseFloat(document.getElementById('thick').value);
             const scale = Math.min(widthScale, heightScale);
             canvas.style.transform = `scale(${scale})`;
         }
+		
+		
+		
+		
+		
+   const textarea = document.getElementById("function");
+      textarea.addEventListener("input", (e) => {
+      const cursorPosition = textarea.selectionStart;
+      const text = textarea.value;
 
+      const prefixMatch = /[a-zA-Z0-9]+$/;
+      const match = text.slice(0, cursorPosition).match(prefixMatch);
+      const prefix = match ? match[0] : "";
+
+      autocompleteList.innerHTML = "";
+      if (!prefix) {
+        autocompleteList.style.display = "none";
+        return;
+      }
+
+      const suggestions = allFunctionsNames
+        .filter((name) => name.startsWith(prefix))
+        .sort((a, b) => a.length - b.length);
+
+      if (suggestions.length === 0) {
+        autocompleteList.style.display = "none";
+        return;
+      }
+
+      autocompleteList.style.display = "block";
+      autocompleteList.style.left = `${textarea.offsetLeft}px`;
+      autocompleteList.style.top = `${textarea.offsetTop + textarea.offsetHeight}px`;
+      autocompleteList.style.width = `${textarea.offsetWidth}px`;
+
+      suggestions.forEach((suggestion) => {
+        const params = getParamNames(allFunctions[suggestion]) || [];
+        const paramsText = params.length > 0 ? `(${params.join(", ")})` : "()";
+
+        const suggestionDiv = document.createElement("div");
+        suggestionDiv.textContent = `${suggestion} ${paramsText}`;
+
+        suggestionDiv.addEventListener("click", () => {
+          const beforeCursor = text.slice(0, cursorPosition);
+          const afterCursor = text.slice(cursorPosition);
+          const updatedBeforeCursor = beforeCursor.replace(prefixMatch, suggestion);
+          textarea.value = updatedBeforeCursor + afterCursor;
+          textarea.selectionStart = textarea.selectionEnd = updatedBeforeCursor.length;
+          autocompleteList.style.display = "none";
+        });
+
+        autocompleteList.appendChild(suggestionDiv);
+      });
+    });
+
+    textarea.addEventListener("blur", () => {
+      setTimeout(() => (autocompleteList.style.display = "none"), 200);
+    });
 
     </script>
 </body>
