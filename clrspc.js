@@ -1681,12 +1681,12 @@ function clamp255(value) {
     const imDiff = Math.abs(complexOutput.im % 1);
     const minDiff = Math.min(reDiff, imDiff);
     const doubleThreshold = contourThreshold * 1;
-    const halfThreshold = Math.min(Math.abs(complexInput.re % 1), Math.abs(complexInput.im % 1));
+    const halfThreshold = Math.min(Math.abs(complexInput.re % dd), Math.abs(complexInput.im % dd));
 
     if (minDiff < contourThreshold) {
     
-        const isCloseToZero = (Math.abs(complexOutput.re % 1) < doubleThreshold  && Math.abs(complexOutput.re) < doubleThreshold ) ||
-                              (Math.abs(complexOutput.im % 1) < doubleThreshold  && Math.abs(complexOutput.im) < doubleThreshold );
+        const isCloseToZero = (Math.abs(complexOutput.re % dd) < doubleThreshold  && Math.abs(complexOutput.re) < doubleThreshold ) ||
+                              (Math.abs(complexOutput.im % dd) < doubleThreshold  && Math.abs(complexOutput.im) < doubleThreshold );
         
         if (isCloseToZero) return [00, 00, 00]; // Black if the closest integer is 0
 
@@ -1704,8 +1704,37 @@ return [
 
 
 if (colorMode === 'acontour') {
+	const dd=1;
+    const lightnessValue = math.evaluate(magnitudeToLightnessExpr, { x: magnitude });
+        const chroma = saturationChroma;
+    const lightnessAdjusted = lightnessValue * lightness;
+ const ccomplexOutput=div(complexOutput,(lightnessAdjusted / mag(complexOutput)))
+ 	const contourThreshold=contourThresholdd * mag(deriv);
+    const reDiff = Math.abs(ccomplexOutput.re % dd);
+    const imDiff = Math.abs(ccomplexOutput.im % dd);
+    const minDiff = Math.min(reDiff, imDiff);
+    const doubleThreshold = contourThreshold * 1;
+    const halfThreshold = Math.min(Math.abs(complexInput.re % dd), Math.abs(complexInput.im % dd));
 
+    if (minDiff < contourThreshold) {
+    
+        const isCloseToZero = (Math.abs(ccomplexOutput.re % dd) < doubleThreshold  && Math.abs(ccomplexOutput.re) < doubleThreshold ) ||
+                              (Math.abs(ccomplexOutput.im % dd) < doubleThreshold  && Math.abs(ccomplexOutput.im) < doubleThreshold );
+        
+        if (isCloseToZero) return [00, 00, 00]; // Black if the closest integer is 0
+
+
+return [
+    ((ccomplexOutput.im < 0 && imDiff === minDiff) || (ccomplexOutput.re > 0 && reDiff === minDiff)) ? 255 : 0,   
+    ccomplexOutput.im > 0 && imDiff === minDiff ? 255 : 0     // Blue
+       , 
+    ccomplexOutput.re < 0 && reDiff === minDiff ? 255 :  (ccomplexOutput.im < 0 && imDiff === minDiff ? 255 : 0)    
+];
+    }
+	if (halfThreshold < contourThresholdd/2) return [128, 128, 128];
+    return [255, 255, 255]; 
 }
+
 
 
 

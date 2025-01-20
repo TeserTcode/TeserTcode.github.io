@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Complex Domain Coloring</title>
+    <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
     <style>
           body {
 background-color: #bbd;
@@ -138,12 +139,85 @@ background-color: #eeeeee;
     #autocomplete-list div:hover {
       background-color: #e9e9e9;
     }
+.preset-button {
+        appearance: none; /* Removes defa
+        background-color: #ddd;
+        color: white; /* Text color */
+        border: none;
+        border: 1px solid #888;
+      border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        text-align: center;
+        display: inline-block;
+        border-radius: 5px; /* Rounded corners */
+        width: 20px; /* Square-ish size */
+        height: 20px; /* Square-ish size */
+    }
 
+    .preset-button:hover {
+    background-color: #888;
+        font-size: 16px;
+    }
+    
+    
+    
+    
+    
+    
+    
+   .dark-mode #autocomplete-list {
+    background-color: #000;  /* Black background for autocomplete list */
+    color: #688;  /* White text in autocomplete list */
+    border: 1px solid #444;  /* Dark border for autocomplete list */
+}
+    
+    body.dark-mode {
+    background-color: #000;
+       color: #000;
+    }
+.dark-mode input, .dark-mode textarea, .dark-mode button, .dark-mode select{
+    background-color: #333;  /* Dark background for input in dark mode */
+    color: #fff;  /* White text for input */
+    box-shadow:  #005555 0px 0px 10px -6px;
+    border: 1px solid #444;  /* Darker border for input */
+}
+      .dark-mode .left, .dark-mode .right {
+            background-color: #121212;
+            border-color: #033;
+            box-shadow: inset #005555 0px 0px 60px -6px;
+            color: #ddd;
+            
+        }
+
+        .dark-mode h1, .dark-mode h2 {
+        box-shadow: inset #005555 0px 0px 60px -6px;
+        font-family: 'UnifrakturCook', cursive;
+        background-color: #000;
+            color: #fff;
+        }
+
+        #darkModeToggle {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 10px;
+            cursor: pointer;
+            background-color: #444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        #darkModeToggle:hover {
+            background-color: #666;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
 </head>
 <body>
     <h1>Complex Domain Coloring</h1>
+     <button id="darkModeToggle">Dark Mode</button>
 <div class="split left">
 <div class="form-group">
     <label for="function">Function (e.g., '2^x'):</label>
@@ -168,10 +242,28 @@ background-color: #eeeeee;
         <label for="bmp-height">BMP Height:</label>
         <input type="number" id="bmp-height" name="bmp-height" step="1" value="100" required>
     </div>
-    <div class="form-group">
-        <label for="magnitude-to-lightness">Magnitude to Lightness Conversion:</label>
-        <input type="text" id="magnitude-to-lightness" name="magnitude-to-lightness" value="log(1+x)" required>
-    </div>
+<div class="form-group">
+    <label for="magnitude-to-lightness">Magnitude to Lightness Conversion:</label>
+    <input type="text" id="magnitude-to-lightness" name="magnitude-to-lightness" value="log(1+x)" required>
+    
+    <select id="lightness-presets" class="preset-button">
+        <option value="">.....Presets</option>
+        <option value="log(1+x)">Logarithmic: log(1+x)</option>
+        <option value="sqrt(x)">Square Root: sqrt(x)</option>
+        <option value="x / (1 + x)">Fractional: x / (1 + x)</option>
+        <option value="tanh(x)">Hyperbolic Tangent: tanh(x)</option>
+        <option value="2*sigm(x)-1">Sigmoid: sigm(x)</option>
+        <option value="((x/3)^0.43275)/(1+(x/3)^0.43275)">SageMat</option>
+        <option value="atan(x)">Arctangent: atan(x)</option>
+        <option value="asinh(x)">Inverse Sinh: asinh(x)</option>
+        <option value="acosh(x+1)">Inverse Cosh: acosh(x+1)</option>
+        <option value="x^2">Quadratic: x²</option>
+        <option value="x^3">Cubic: x³</option>
+        <option value="cantor(x)">Cantor: cantor(x)</option>
+        <option value="exp(x) - 1">Exponential: exp(x) - 1</option>
+        <option value="(x^0.5) / (1 + x^0.5)">Smooth Root: (x^0.5)/(1+x^0.5)</option>
+    </select>
+</div>
     <div class="form-group">
         <label for="color-mode">Color Mode:</label>
         <select id="color-mode" name="color-mode">
@@ -223,7 +315,7 @@ background-color: #eeeeee;
     </div>
     <div class="form-group">
         <label for="lightness">Lightness:</label>
-        <input type="range" id="lightness" name="lightness" min="0" max="100" value="50">
+        <input type="range" id="lightness" name="lightness" min="0" max="100" value="100">
     </div>
     <div class="form-group">
         <label for="hue">Hue:</label>
@@ -695,11 +787,18 @@ function plotGraph(point1, point2) {
         const z = math.complex(real, imag);
         const fn = math.evaluate(document.getElementById('function').value, { x: z });
         
-        realValues.push(fn.re);
-        imagValues.push(fn.im);
+             if (!isNaN(fn.re) && !isNaN(fn.im) && isFinite(fn.re) && isFinite(fn.im)) {
+            realValues.push(fn.re);
+            imagValues.push(fn.im);
+        } else {
+            // Skip this value if it's invalid
+            realValues.push(null);
+            imagValues.push(null);
+        }
     }
     
 //console.log(maximum);
+ctx.lineWidth = Math.max(1,canvas.width/100);
     const graphWidth = canvas.width;
     const graphHeight = canvas.height;
     const maxValue = Math.min(maximum,(Math.max(...imagValues, ...realValues)));
@@ -742,6 +841,16 @@ function plotGraph(point1, point2) {
     }
     ctx.stroke();
 }
+
+
+
+
+
+
+
+
+
+
 
         document.getElementById('color-mode').addEventListener('change', function() {
             if (this.value === 'palette') {
@@ -865,8 +974,7 @@ const xxx = math.complex(xre,xim);
   document.getElementById("outputBoxa").value = funcValue;
  
 }
-
-        function renderBMP() {
+ function renderBMP() {
 		
             const width = parseInt(document.getElementById('bmp-width').value);
             const height = parseInt(document.getElementById('bmp-height').value);
@@ -905,7 +1013,8 @@ const xxx = math.complex(xre,xim);
                     let color = [0, 0, 0];
                     try {
 					const complexValue = math.complex(re, im);
-                        const funcValue = math.evaluate(funcStr, { x: complexValue });
+                       const funcValue = math.evaluate(funcStr, { x: complexValue });
+                  //        const funcValue = math.evaluate(funcStr, { x: complexValue, q:exp(mul(I,pi(),complexValue)) });
 				//console.log(funcValue);
 				
 						color = complexToColor(complexValue, funcValue, magnitudeToLightnessExpr, colorMode, saturationChroma, lightness, paletteImageData,thick, math.divide(math.subtract(funcValue,memo),imStep));
@@ -920,12 +1029,18 @@ const xxx = math.complex(xre,xim);
                     imageData.data[index + 2] = color[2];
                     imageData.data[index + 3] = 255;
                 }
+                
             }
             ctx.putImageData(imageData, 0, 0);
 			
 scaleCanvas();
 
         }
+
+
+        
+        
+        
 function renderBMPinv() {
     const width = parseInt(document.getElementById('bmp-width').value);
     const height = parseInt(document.getElementById('bmp-height').value);
@@ -1080,7 +1195,26 @@ let thick = parseFloat(document.getElementById('thick').value);
     textarea.addEventListener("blur", () => {
       setTimeout(() => (autocompleteList.style.display = "none"), 200);
     });
+document.addEventListener("keydown", function(event) {
+    // Check if the Enter key is pressed
+    if (event.key === "Enter") {
+        renderBMP();
+    }
+});
+ document.getElementById('lightness-presets').addEventListener('change', function() {
+        if (this.value) {
+            document.getElementById('magnitude-to-lightness').value = this.value;
+        }
+    });
+       document.getElementById('darkModeToggle').addEventListener('click', function () {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode') ? 'enabled' : 'disabled');
+        });
 
+        // Load dark mode state from localStorage
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            document.body.classList.add('dark-mode');
+        }
     </script>
 </body>
 </html>
