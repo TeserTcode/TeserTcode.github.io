@@ -188,6 +188,8 @@ input[type="range"]::-moz-range-thumb {
  <button onclick="showContainer('rxy')">rXY</button>
   <button onclick="showContainer('lcw')">LCW</button>
    <button onclick="showContainer('lct')">LCT</button>
+   
+      <button onclick="showContainer('ypo')">YPO</button>
    </div>
 </div>
 <script src="clrspc.js"></script>
@@ -238,9 +240,15 @@ const sliders = {
 	   ecirgb: ['rSlider', 'gSlider', 'bSlider'],
 	    rxy: ['rSlider', 'xSlider', 'ySlider'],
 		lcw: ['lSlider', 'cSlider', 'wSlider'],
-		lct: ['lSlider', 'cSlider', 'tSlider']
+		lct: ['lSlider', 'cSlider', 'tSlider'],
+		
+		ypo: ['ySlider', 'pSlider', 'oSlider'],
 };
-
+const colorSpaces = [
+    'rgb', 'hsv', 'hsl', 'hwb', 'hcl', 'lch', 'ycbcr', 'xyz', 'hsi','hsm','hsh','hsg',
+    'yjk', 'lab', 'cmyk', 'cmy', 'uvw', 'lms', 'ydbdr', 'yiq', 'lcw','lct',
+     'ycocg', 'ycocgr', 'yuv', 'ypbpr', 'tsl', 'luv', 'srgb','scrgb','ecirgb','rxy','oklab','ypo'
+];
 // Initialize sliders to null
 Object.keys(sliders).forEach(space => {
     sliders[space] = sliders[space].reduce((acc, key) => {
@@ -256,41 +264,9 @@ Object.keys(sliders).forEach(space => {
 
 function updateSliders(r, g, b, name,conversionFunction,conversions , r1,g1,b1) {
     // Convert RGB to other color spaces
-    const conversionss = {
-        hsv: rgbToHsv(r, g, b),
-        hsl: rgbToHsl(r, g, b),
-		hsi: rgbToHsi(r, g, b),
-		hsm: rgbToHsm(r, g, b),
-		hsg: rgbToHsg(r, g, b),
-		hsh: rgbToHsh(r, g, b),
-        hwb: rgbToHwb(r, g, b),
-        cmy: rgbToCmy(r, g, b),
-        hcl: rgbToHcl(r, g, b),
-        lch: rgbToLch(r, g, b),
-        ycbcr: rgbToYcbcr(r, g, b),
-        xyz: rgbToXyz(r, g, b),
-        yjk: rgbToYjk(r, g, b),
-        lab: rgbToLab(r, g, b),
-        uvw: rgbToUvw(r, g, b),
-        lms: rgbToLms(r, g, b),
-        ydbdr: rgbToYdbdr(r, g, b),
-        yiq: rgbToYiq(r, g, b),
-        ycocg: rgbToYcocg(r, g, b),
-        ycocgr: rgbToYcocgR(r, g, b),
-        yuv: rgbToYuv(r, g, b),
-        ypbpr: rgbToYpbpr(r, g, b),
-        bt: rgbToBt(r, g, b),
-        tsl: rgbToTsl(r, g, b),
-		srgb: rgbToSrgb(r, g, b),
-		scrgb: rgbToScrgb(r, g, b),
-		ecirgb: rgbToEcirgb(r, g, b),
-        luv: rgbToLuv(r, g, b),
-		 rxy: rgbToRgb(r, g, b),
-		 lcw: rgbToLcw(r, g, b),
-		 lct: rgbToLct(r, g, b),
-		  oklab: rgbToOklab(r, g, b),
-		 rgb:rgbToRgb(r,g,b)
-    };
+   const conversionss = Object.fromEntries(
+    colorSpaces.map(space => [space, window[`rgbTo${space.charAt(0).toUpperCase() + space.slice(1)}`]?.(r, g, b)])
+);
 
     // Update RGB sliders
     if (name !== 'rgb') {
@@ -335,51 +311,13 @@ try{
 			values.b=b1;
 	updateSlidersWithSampledGradient(values, conversionFunctions[`${name}ToRgb`],conversionFunctions[`${name}ToRgb`], name);
 
-}
-const conversionFunctions = {
-    hsvToRgb: hsvToRgb,
-    hslToRgb: hslToRgb,
-	hsiToRgb: hsiToRgb,
-	hsmToRgb: hsmToRgb,
-	hsgToRgb: hsgToRgb,
-	hshToRgb: hshToRgb,
-    hwbToRgb: hwbToRgb,
-//	    cmykToRgb: cmykToRgb,
-    cmyToRgb: cmyToRgb,
-	hclToRgb: hclToRgb,
-/*	rgbToSrgb:rgbToSrgb,
-	rgbToScrgb:rgbToScrgb,
-	rgbToEcirgb:rgbToEcirgb,
-  */
-srgbToRgb:srgbToRgb,  
-scrgbToRgb:scrgbToRgb, 
-ecirgbToRgb:ecirgbToRgb, 
- ycbcr: ycbcrToRgb,
-    lchToRgb: lchToRgb,
-   
-    xyzToRgb: xyzToRgb,
-    yjkToRgb: yjkToRgb,
-    labToRgb: labToRgb,
-
-    uvwToRgb: uvwToRgb,
-    lmsToRgb: lmsToRgb,
-    ydbdrToRgb: ydbdrToRgb,
-    yiqToRgb: yiqToRgb,
-    ycocgToRgb: ycocgToRgb,
-    ycocgrToRgb: ycocgrToRgb,
-    yuvToRgb: yuvToRgb,
-    ypbprToRgb: ypbprToRgb,
-    btToRgb: btToRgb,
-    tslToRgb: tslToRgb,
-    luvToRgb: luvToRgb,
-	
-	rxyToRgb: rgbToRgb,
-	lcwToRgb: lcwToRgb,
-	lctToRgb: lctToRgb,
-	oklabToRgb: oklabToRgb,
-
-	rgbToRgb:rgbToRgb
-};
+}const conversionFunctions = Object.fromEntries(
+    colorSpaces.map(space => {
+        const funcName = `${space}ToRgb`; // e.g., "hsvToRgb"
+        const func = window[funcName]; // Retrieve function dynamically
+        return [funcName, func || null]; // Assign function if exists, otherwise null
+    })
+);
 // Function to create colorConversions object
 function createColorConversions(colorSpaces) {
     const conversions = {};
@@ -432,11 +370,7 @@ function draw2DGradient(gradient, canvasId) {
     ctx.putImageData(imgData, 0, 0);
 }
 // Initialize the colorSpaces and colorConversions
-const colorSpaces = [
-    'rgb', 'hsv', 'hsl', 'hwb', 'hcl', 'lch', 'ycbcr', 'xyz', 'hsi','hsm','hsh','hsg',
-    'yjk', 'lab', 'cmyk', 'cmy', 'uvw', 'lms', 'ydbdr', 'yiq', 'lcw','lct',
-     'ycocg', 'ycocgr', 'yuv', 'ypbpr', 'tsl', 'luv', 'srgb','scrgb','ecirgb','rxy','oklab',
-];
+
 const colorConversions = createColorConversions(colorSpaces);
 let isopen={};
 document.querySelectorAll('.color-slider').forEach(slider => {
@@ -527,41 +461,14 @@ function updateColorFromSliders(name, conversions) {
     }
     }
 	
-	 const conversionss = {
-        hsv: rgbToHsv(gr, gg, gb),
-        hsl: rgbToHsl(gr, gg, gb),
-		hsi: rgbToHsi(gr, gg, gb),
-		hsm: rgbToHsm(gr, gg, gb),
-		hsg: rgbToHsg(gr, gg, gb),
-		hsh: rgbToHsh(gr, gg, gb),
-        hwb: rgbToHwb(gr, gg, gb),
-        cmy: rgbToCmy(gr, gg, gb),
-        hcl: rgbToHcl(gr, gg, gb),
-        lch: rgbToLch(gr, gg, gb),
-        ycbcr: rgbToYcbcr(gr, gg, gb),
-        xyz: rgbToXyz(gr, gg, gb),
-        yjk: rgbToYjk(gr, gg, gb),
-        lab: rgbToLab(gr, gg, gb),
-        uvw: rgbToUvw(gr, gg, gb),
-        lms: rgbToLms(gr, gg, gb),
-        ydbdr: rgbToYdbdr(gr, gg, gb),
-        yiq: rgbToYiq(gr, gg, gb),
-        ycocg: rgbToYcocg(gr, gg, gb),
-        ycocgr: rgbToYcocgR(gr, gg, gb),
-        yuv: rgbToYuv(gr, gg, gb),
-        ypbpr: rgbToYpbpr(gr, gg, gb),
-        bt: rgbToBt(gr, gg, gb),
-        tsl: rgbToTsl(gr, gg, gb),
-		srgb: rgbToSrgb(gr, gg, gb),
-		scrgb: rgbToScrgb(gr, gg, gb),
-		ecirgb: rgbToEcirgb(gr, gg, gb),
-        luv: rgbToLuv(gr, gg, gb),
-		 rxy: rgbToRgb(gr, gg, gb),
-		 lcw: rgbToLcw(gr, gg, gb),
-		 lct: rgbToLct(gr, gg, gb),
-		  oklab: rgbToOklab(gr, gg, gb),
-		 rgb:rgbToRgb(gr,gg,gb)
-    };
+	const conversionss = Object.fromEntries(
+    colorSpaces.map(space => {
+        const funcName = `rgbTo${space.charAt(0).toUpperCase() + space.slice(1)}`;
+        const func = window[funcName]; // Retrieve function dynamically
+        return [space, func ? func(gr, gg, gb) : null]; // Call function if it exists
+    })
+);
+
 	
 	let qqq = conversionss[name];
 	let qGradient = generateGradientSamples2(qqq[0],qqq[1],qqq[2],...Object.values(values));
@@ -678,6 +585,9 @@ function initializeSliders() {
 	   createSliders('rxy', ['r', 'x', 'y'], colorConversions.rxy);
 	   createSliders('lcw', ['l', 'c', 'w'], colorConversions.lcw);
 	   createSliders('lct', ['l', 'c', 't'], colorConversions.lct);
+
+
+createSliders('ypo', ['y', 'p', 'o'], colorConversions.ypo);
 }
         function toggleContainer(id) {
             const container = document.getElementById(id);
@@ -788,13 +698,19 @@ function getColorFromPosition(pos) {
 }
 // Function to initialize sliders dynamically
 function sliderInit(name, var1, var2, var3, min1, min2, min3, max1, max2, max3, default1, default2, default3) {
+    function getStep(min, max) {
+        return Number.isInteger(min) && Number.isInteger(max) ? 1 : 0.01;
+    }
+
     const containerHtml = `<label for="${name}_${var1}_slider">${var1.toUpperCase()}</label>
-    <input class="range-slider" type="range" id="${name}_${var1}_slider" min="${min1}" max="${max1}" value="${default1}">
+    <input class="range-slider" type="range" id="${name}_${var1}_slider" min="${min1}" max="${max1}" step="${getStep(min1, max1)}" value="${default1}">
     <label for="${name}_${var2}_slider">${var2.toUpperCase()}</label>
-    <input class="range-slider" type="range" id="${name}_${var2}_slider" min="${min2}" max="${max2}" value="${default2}">
+    <input class="range-slider" type="range" id="${name}_${var2}_slider" min="${min2}" max="${max2}" step="${getStep(min2, max2)}" value="${default2}">
     <label for="${name}_${var3}_slider">${var3.toUpperCase()}</label>
-    <input class="range-slider" type="range" id="${name}_${var3}_slider" min="${min3}" max="${max3}" value="${default3}">`;
+    <input class="range-slider" type="range" id="${name}_${var3}_slider" min="${min3}" max="${max3}" step="${getStep(min3, max3)}" value="${default3}">`;
+
   
+
 
     
     createContainer(name, name.toUpperCase(), containerHtml);
@@ -865,9 +781,10 @@ sliderInit('lab', 'l', 'a', 'b', 0, -255, -255, 255, 255, 255, 255, 255, 255);
 sliderInit('oklab', 'l', 'a', 'b', 0, -255, -255, 255, 255, 255, 255, 255, 255);
 sliderInit('lch', 'l', 'c', 'h', 0, 0, 0, 255, 255, 255, 255, 255, 360);
  sliderInit('rxy', 'r', 'x', 'y', 0, -255, -255, 255, 255, 255, 255, 255, 360);
- sliderInit('lcw', 'l', 'c', 'w', 0, 0, 0, 255, 255, 1000, 255, 255, 1000);
-sliderInit('lct', 'l', 'c', 't', 0, 0, 0, 255, 255, 10000, 255, 255, 10000);
-
+ sliderInit('lcw', 'l', 'c', 'w', 0, 0, 380, 255, 255, 780, 255, 255, 1000);
+ 
+sliderInit('lct', 'l', 'c', 't', 0, 0, 4000, 255, 255, 7000, 255, 255, 5000);
+sliderInit('ypo', 'y', 'p', 'o', 0, -160, -165, 100, 361, 155, 0, 1, 1);
  
  
  // sliderInit('cmyk', 'c', 'm', 'y', 'k', 0, 0, 0, 0, 100, 100, 100, 100, 100, 100, 100, 100);
