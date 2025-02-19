@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Function Encyclopedia</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+			
+			background-image: url("bgssad.png");
+				
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+        canvas {
+            border: 1px solid black;
+        }
+        .function-description {
+
+            margin-right: 600px;
+			
+        }
+        .controls {
+            margin-top: 20px;
+			 position: fixed;top: 510px;
+            right: 10px;
+            width: 500px;
+            height: 500px;
+        }
+		.selector {
+            margin-top: 20px;
+			 position: fixed;top: 630px;
+            right: 10px;
+            width: 500px;
+            height: 500px;
+        }
+		.selector2 {
+            margin-top: 20px;
+			 position: fixed;top: 660px;
+            right: 10px;
+            width: 500px;
+            height: 500px;
+        }
+        #domainCanvas {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 500px;
+            height: 500px;
+            border: 2px solid black;
+        }
+		.collapsible {
+            background-color: #777;
+            color: white;
+            cursor: pointer;
+            padding: 10px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 18px;
+        }
+		p {
+		
+		 font-family: 'Arial', 'Helvetica', sans-serif;
+		 line-height: 1.2;
+		 font-size: 16px;
+		 text-shadow: 0px 0px 5px #FFF;
+		 text-shadow: 2px 0px 10px #FFF;
+		 text-shadow: 0px 2px 10px #FFF;
+		 text-shadow: -2px 0px 10px #FFF;
+		 text-shadow: 0px -2px 10px #FFF;
+		}
+		h2 {
+    cursor: pointer; 
+    background-color: #f0f0f0; 
+    color: #0056b3;
+    border: 1px solid #007bff;
+    padding: 10px; 
+    border: 1px solid transparent; 
+    border-radius: 4px; 
+    transition: background-color 0.3s, color 0.3s; 
+}
+
+h2:hover {
+    background-color: #f0f0f0; 
+    color: #0056b3; 
+    border: 1px solid #007bff; 
+}
+
+
+        .active, .collapsible:hover {
+            background-color: #555;
+        }
+
+        .content {
+		
+            padding: 0 18px;
+            display: none;
+            overflow: hidden;
+            background-color: #f1f1f1;
+        }
+
+.fancy-button {
+margin: 18px 18px;
+            background: linear-gradient(45deg, #ff6a00, #ee0979);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            padding: 15px 30px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 5px 15px rgba(255, 105, 180, 0.4);
+            position: relative;
+            overflow: hidden;
+			transition: background 0.3s, color 0.3s; 
+        }
+.fancy-button:hover {
+background: linear-gradient(-45deg, #ddaa23, #aa00aa);
+
+}
+.fancy-button2 {
+margin: 10px 10px;
+            background: linear-gradient(25deg, #ae0ae0, #aee179);
+          border: none;
+            border-radius: 15px;
+            color: white;
+            padding: 15px 30px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 5px 15px rgba(255, 105, 180, 0.4);
+            position: relative;
+            overflow: hidden;
+			transition: background 0.3s, color 0.3s; 
+        }
+.fancy-button2:hover {
+background: linear-gradient(-25deg, #d1aa23, #1a00aa);
+
+}
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="function-description">
+</div>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	   <div class="controls">
+            <h3>Custom Function</h3>
+            <textarea id="functionInput" rows="2" cols="20"></textarea>
+        </div>
+		
+	   <div class="selector">
+            <select name="hyperc" id="hyperc">
+			<option value="complex">Complex</option>
+			<option value="split">Split</option>
+			<option value="dual">Dual</option>
+			<option value="bireal">Bireal</option>
+</select>
+        </div>
+		
+<div class="selector2">
+        <label for="color-mode">Color Mode:</label>
+        <select id="color-mode" name="color-mode">
+ <option value="hsv">HSV</option>
+            <option selected value="hsl">HSL</option>
+            <option value="hcl">HCL</option>
+			 <option value="ycbcr">YCbCr</option>
+			  <option value="ydbdr">YDbDr</option>
+			   <option value="ycocg">YCoCg</option>
+			    <option value="ypbpr">YPbPr</option>
+            <option value="cielch">CIELCH</option>
+	    <option value="2d">2d</option>
+		  <option value="contour">Contour</option>
+		  <option value="pcontour">Polar Contour</option>
+		<!--   <option value="isolines">Isolines</option> -->
+		   <option value="neon">Neon</option>
+		   <option value="differ">Differ</option>
+		   <option value="real">Real</option>
+		   <option value="imag">Imaginary</option>
+		   <option value="magnitude">Magnitude</option>
+		   <option value="quadrant">Quadrant</option>
+		   </select>
+  </div>
+</div>
+ </div>   
+
+    <div>
+        <canvas id="domainCanvas" width="100" height="100"></canvas>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+<script src="clrspc.js"></script>
+<script src="mthfnc.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+    let domainCanvas = document.getElementById('domainCanvas');
+    let domainCtx = domainCanvas.getContext('2d');
+
+    let funcStr = "sin(x)";
+    let magnitudeToLightnessExpr = "log(1+x)";
+    let colorMode = 'hsl';
+    let width = 100;
+    let height = 100;
+    let minReal = -10, maxReal = 10, minImag = -10, maxImag = 10;
+    let reStep = (maxReal - minReal) / width;
+    let imStep = (maxImag - minImag) / height;
+    
+    let offsetX = 0;
+    let offsetY = 0;
+    let zoomLevel = 1;
+
+
+    function toggleCategory(categoryId) {
+        var category = document.getElementById(categoryId);
+        if (category.style.display === "none") {
+            category.style.display = "block";
+        } else {
+            category.style.display = "none";
+        }
+    }
+    function setFunction(newFunction) {
+       
+		 let d = document.getElementById("hyperc").value;
+	//	 console.log(d);
+		switch(d){
+		case 'complex':
+		funcStr =newFunction;
+		break;
+		case 'split':
+		  funcStr = "splite('"+newFunction+"',x)";
+		break;
+		case 'dual':
+		  funcStr = "duale('"+newFunction+"',x)";
+		break;
+		case 'bireal':
+		  funcStr = "bireale('"+newFunction+"',x)";
+		break;
+		}
+      document.getElementById('functionInput').value = funcStr;
+        renderDomain();
+    }
+
+    function updateFunction() {
+        funcStr = document.getElementById('functionInput').value;
+        renderDomain();
+    }
+
+    function renderDomain() {
+		colorMode = document.getElementById('color-mode').value;
+        let imageData = domainCtx.createImageData(width, height);
+        for (let x = 0; x < width; x++) {
+            let memo = 0;
+            for (let y = 0; y < height; y++) {
+                const re = (minReal + x * reStep) * zoomLevel + offsetX;
+                const im = (maxImag - y * imStep) * zoomLevel + offsetY;
+                let color = [0, 0, 0];
+                try {
+                    const complexValue = math.complex(re, im);
+                    const funcValue = math.evaluate(funcStr, { x: complexValue });
+                    color = complexToColor(complexValue, funcValue, magnitudeToLightnessExpr, colorMode, 100, 50, 0, 0.1, math.divide(math.subtract(funcValue, memo), imStep));
+                    memo = funcValue;
+                } catch (e) {
+                    console.error('Error evaluating function or applying color transformation:', e);
+                }
+                
+                const index = (y * width + x) * 4;
+                imageData.data[index] = color[0];
+                imageData.data[index + 1] = color[1];
+                imageData.data[index + 2] = color[2];
+                imageData.data[index + 3] = 255;
+            }
+        }
+        domainCtx.putImageData(imageData, 0, 0);
+    }
+
+    // Function to move/zoom using WASD and Z/X
+    document.addEventListener('keydown', (event) => {
+         const activeElement = document.activeElement;
+        if (activeElement.tagName === 'TEXTAREA' && activeElement.id === 'functionInput') {
+            return; 
+        }  switch (event.key) {
+			case 'r':
+                offsetX = 0;
+                offsetY = 0;
+                zoomLevel = 1;
+				bign = 10;
+                break;
+            case 's':
+                offsetY -= zoomLevel/1;
+                break;
+            case 'w':
+                offsetY += zoomLevel/1;
+                break;
+            case 'a':
+                offsetX -= zoomLevel/1;
+                break;
+            case 'd':
+                offsetX += zoomLevel/1;
+                break;
+            case 'z':
+                zoomLevel /= 1.5;
+                break;
+            case 'x':
+                zoomLevel *= 1.5;
+			case 'c':
+                bign += 1;
+                break;
+            case 'v':
+                bign -= 1;
+                                break;
+            case 'q':  // Decrease render quality
+                width =floor( Math.max(10, width / 1.5));
+                height = floor(Math.max(10, height / 1.5));
+                domainCanvas.width = width;
+                domainCanvas.height = height;
+                reStep = (maxReal - minReal) / width;
+                imStep = (maxImag - minImag) / height;
+                break;
+            case 'e':  // Increase render quality
+                width = floor(Math.min(500, width * 1.5));
+                height = floor(Math.min(500, height * 1.5));
+                domainCanvas.width = width;
+                domainCanvas.height = height;
+                reStep = (maxReal - minReal) / width;
+                imStep = (maxImag - minImag) / height;
+                break;
+			case ':':
+			updateFunction();
+			break;
+        }
+        renderDomain();
+    });
+
+    // Initial render
+    renderDomain();
+</script>
+
+</body>
+</html>

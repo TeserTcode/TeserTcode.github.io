@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Gallery</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            max-width: 1200px;
+        }
+        .gallery img {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+        .gallery img:hover {
+            transform: scale(1.05);
+            box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .fullscreen-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .fullscreen-overlay img {
+            max-width: 90%;
+            max-height: 80%;
+            border-radius: 5px;
+            box-shadow: 4px 4px 20px rgba(0, 0, 0, 0.5);
+            animation: zoomIn 0.5s ease;
+        }
+        .filename {
+            color: #fff;
+            margin-top: 10px;
+            font-size: 1.2em;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes zoomIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="gallery" id="gallery"></div>
+    <div class="fullscreen-overlay" id="fullscreenOverlay">
+        <img id="fullscreenImage" src="" alt="">
+        <div class="filename" id="filename"></div>
+    </div>
+    <script>
+        const imageNames = [
+            "sudbg", "resistbg1", "logo", "inductorbg", "epic1", "diodebg", "capacitorbg", "bgssad", "basee", "ABREbg", "7048bg", "7024bg", "2048bg","plantelligence","flowers"
+        ];
+        for (let i = 0; i <= 17; i++) {
+            imageNames.push(`${i}`);
+        }
+        
+        const galleryDiv = document.getElementById("gallery");
+        const fullscreenOverlay = document.getElementById("fullscreenOverlay");
+        const fullscreenImage = document.getElementById("fullscreenImage");
+        const filenameDiv = document.getElementById("filename");
+
+        imageNames.forEach(name => {
+            const img = document.createElement("img");
+            img.src = `./${name}.png`;
+            img.alt = name;
+            img.addEventListener('click', () => {
+                fullscreenImage.src = img.src;
+                filenameDiv.textContent = name;
+                fullscreenOverlay.style.display = 'flex';
+            });
+            galleryDiv.appendChild(img);
+        });
+
+        fullscreenOverlay.addEventListener('click', () => {
+            fullscreenOverlay.style.display = 'none';
+        });
+    </script>
+</body>
+</html>

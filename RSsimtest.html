@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resistor-Battery Circuit Simulation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Resistor-Battery Circuit Simulation</h1>
+
+    <!-- Input Parameters -->
+    <div class="input-group">
+        <label for="voltage">Voltage (V):</label>
+        <input type="number" id="voltage" value="12" step="0.1">
+    </div>
+    <div class="input-group">
+        <label for="resistance">Resistance (Ω):</label>
+        <input type="number" id="resistance" value="100" step="1">
+    </div>
+    <div class="input-group">
+        <label for="tolerance">Resistor Tolerance (%):</label>
+        <input type="number" id="tolerance" value="5" step="0.1">
+    </div>
+    <div class="input-group">
+        <label for="tcr">Resistor TCR (ppm/°C):</label>
+        <input type="number" id="tcr" value="100" step="1">
+    </div>
+    <div class="input-group">
+        <label for="roomTemp">Room Temperature (°C):</label>
+        <input type="number" id="roomTemp" value="25" step="0.1">
+    </div>
+    <div class="input-group">
+        <label for="tempCoef">Temperature Coefficient (W/°C):</label>
+        <input type="number" id="tempCoef" value="0.1" step="0.01">
+    </div>
+
+    <!-- Simulation Button -->
+    <button onclick="runSimulation()">Run Simulation</button>
+
+    <!-- Result Display -->
+    <div class="result" id="result"></div>
+
+    <script>
+        function runSimulation() {
+            // Get input values
+            const voltage = parseFloat(document.getElementById("voltage").value);
+            const resistance = parseFloat(document.getElementById("resistance").value);
+            const tolerance = parseFloat(document.getElementById("tolerance").value);
+            const tcr = parseFloat(document.getElementById("tcr").value);
+            const roomTemp = parseFloat(document.getElementById("roomTemp").value);
+            const tempCoef = parseFloat(document.getElementById("tempCoef").value);
+
+            // Calculate current (I = V / R)
+            const current = voltage / resistance;
+
+            // Calculate power (P = I² * R)
+            const power = Math.pow(current, 2) * resistance;
+
+            // Calculate temperature rise (ΔT = P * tempCoef)
+            const tempRise = power * tempCoef;
+
+            // Calculate adjusted resistance (R_adjusted = R * (1 + TCR * ΔT))
+            const adjustedResistance = resistance * (1 + (tcr * 1e-6) * tempRise);
+
+            // Calculate adjusted current (I_adjusted = V / R_adjusted)
+            const adjustedCurrent = voltage / adjustedResistance;
+
+            // Display results
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = `
+                <p><strong>Initial Current (I):</strong> ${current.toFixed(4)} A</p>
+                <p><strong>Power Dissipated (P):</strong> ${power.toFixed(4)} W</p>
+                <p><strong>Temperature Rise (ΔT):</strong> ${tempRise.toFixed(4)} °C</p>
+                <p><strong>Adjusted Resistance (R_adjusted):</strong> ${adjustedResistance.toFixed(4)} Ω</p>
+                <p><strong>Adjusted Current (I_adjusted):</strong> ${adjustedCurrent.toFixed(4)} A</p>
+            `;
+        }
+
+        // Initial simulation run
+        runSimulation();
+    </script>
+</body>
+</html>

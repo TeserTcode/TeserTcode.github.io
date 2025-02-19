@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capacitor Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: url('capacitorbg.png') center center fixed;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .color-box {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #000;
+        }
+        .slider {
+            width: 100%;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+        .hidden {
+            display: none;
+        }
+        .converter {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Capacitor Calculator</h1>
+
+    <!-- Slider for number of digits -->
+    <label for="digitSlider">Number of Digits:</label>
+    <input type="range" id="digitSlider" min="2" max="3" value="2" class="slider">
+    <span id="digitCount">2</span>
+
+    <!-- Toggles for additional properties -->
+    <div>
+        <label>
+            <input type="checkbox" id="toggleTolerance" checked> Include Tolerance
+        </label>
+        <label>
+            <input type="checkbox" id="toggleVoltage" checked> Include Voltage
+        </label>
+        <label>
+            <input type="checkbox" id="toggleCharacteristic" checked> Include Characteristic
+        </label>
+        <label>
+            <input type="checkbox" id="toggleTemp" checked> Include Operating Temperature
+        </label>
+        <label>
+            <input type="checkbox" id="toggleEIA" checked> Include EIA/Vibration
+        </label>
+    </div>
+
+    <!-- Container for all selectors -->
+    <div class="container" id="selectorContainer"></div>
+
+    <!-- Display Capacitance Button -->
+    <button onclick="displayCapacitance()">Display Capacitance</button>
+
+    <!-- Result display -->
+    <div class="result" id="result"></div>
+
+    <!-- Converter -->
+    <div class="converter">
+        <label for="unitConverter">Convert to:</label>
+        <select id="unitConverter">
+            <option value="1">pF</option>
+            <option value="1e-6">nF</option>
+            <option value="1e-12">µF</option>
+        </select>
+        <button onclick="convertCapacitor()">Convert</button>
+        <div id="conversionResult"></div>
+    </div>
+
+    <div class="capacitor-visualizer">
+        <h2>Capacitor Bands</h2>
+        <canvas id="capacitorCanvas" width="300" height="100"></canvas>
+    </div>
+
+    <script>
+        const colorData = {
+            digits: [
+                { value: 0, color: "black", label: "Black (0)" },
+                { value: 1, color: "brown", label: "Brown (1)" },
+                { value: 2, color: "red", label: "Red (2)" },
+                { value: 3, color: "orange", label: "Orange (3)" },
+                { value: 4, color: "yellow", label: "Yellow (4)" },
+                { value: 5, color: "green", label: "Green (5)" },
+                { value: 6, color: "blue", label: "Blue (6)" },
+                { value: 7, color: "purple", label: "Violet (7)" },
+                { value: 8, color: "gray", label: "Gray (8)" },
+                { value: 9, color: "white", label: "White (9)" }
+            ],
+            multiplier: [
+                { value: 1, color: "black", label: "Black (1)", display: "10^0" },
+                { value: 10, color: "brown", label: "Brown (10)", display: "10^1" },
+                { value: 100, color: "red", label: "Red (100)", display: "10^2" },
+                { value: 1000, color: "orange", label: "Orange (1k)", display: "10^3" },
+                { value: 10000, color: "yellow", label: "Yellow (10k)", display: "10^4" },
+                { value: 100000, color: "green", label: "Green (100k)", display: "10^5" },
+                { value: 1000000, color: "blue", label: "Blue (1M)", display: "10^6" },
+                { value: 10000000, color: "purple", label: "Violet (10M)", display: "10^7" }
+            ],
+            tolerance: [
+                { value: 1, color: "brown", label: "Brown (F)", display: "±1%" },
+                { value: 2, color: "red", label: "Red (G)", display: "±2%" },
+                { value: 5, color: "gold", label: "Gold (J)", display: "±5%" },
+                { value: 10, color: "silver", label: "Silver (K)", display: "±10%" }
+            ],
+            voltage: [
+                { value: 100, color: "brown", label: "Brown (100V)", display: "100V" },
+                { value: 300, color: "orange", label: "Orange (300V)", display: "300V" },
+                { value: 500, color: "green", label: "Green (500V)", display: "500V" },
+                { value: 1000, color: "gold", label: "Gold (1000V)", display: "1000V" }
+            ],
+            characteristic: [
+                { value: "B", color: "brown", label: "Brown (B)", display: "B" },
+                { value: "C", color: "red", label: "Red (C)", display: "C" },
+                { value: "D", color: "orange", label: "Orange (D)", display: "D" },
+                { value: "E", color: "yellow", label: "Yellow (E)", display: "E" },
+                { value: "F", color: "green", label: "Green (F)", display: "F" }
+            ],
+            temp: [
+                { value: "-55 to +70", color: "black", label: "Black", display: "−55 to +70°C" },
+                { value: "-55 to +85", color: "red", label: "Red", display: "−55 to +85°C" },
+                { value: "-55 to +125", color: "yellow", label: "Yellow", display: "−55 to +125°C" },
+                { value: "-55 to +150", color: "blue", label: "Blue", display: "−55 to +150°C" }
+            ],
+            eia: [
+                { value: "10 to 55", color: "black", label: "Black", display: "10 to 55 Hz" },
+                { value: "10 to 2000", color: "yellow", label: "Yellow", display: "10 to 2000 Hz" },
+                { value: "EIA", color: "white", label: "White", display: "EIA" }
+            ]
+        };
+
+        const digitSlider = document.getElementById("digitSlider");
+        const digitCount = document.getElementById("digitCount");
+        const selectorContainer = document.getElementById("selectorContainer");
+        const toggleTolerance = document.getElementById("toggleTolerance");
+        const toggleVoltage = document.getElementById("toggleVoltage");
+        const toggleCharacteristic = document.getElementById("toggleCharacteristic");
+        const toggleTemp = document.getElementById("toggleTemp");
+        const toggleEIA = document.getElementById("toggleEIA");
+        const resultDiv = document.getElementById("result");
+        const conversionResultDiv = document.getElementById("conversionResult");
+
+        // Update the number of digits and regenerate selectors
+        digitSlider.addEventListener("input", () => {
+            const count = digitSlider.value;
+            digitCount.textContent = count;
+            generateSelectors(count);
+        });
+
+        toggleTolerance.addEventListener("change", () => {
+            drawCapacitor();
+            toggleColumn("Tolerance", toggleTolerance.checked);
+        });
+
+        toggleVoltage.addEventListener("change", () => {
+            drawCapacitor();
+            toggleColumn("Voltage", toggleVoltage.checked);
+        });
+
+        toggleCharacteristic.addEventListener("change", () => {
+            drawCapacitor();
+            toggleColumn("Characteristic", toggleCharacteristic.checked);
+        });
+
+        toggleTemp.addEventListener("change", () => {
+            drawCapacitor();
+            toggleColumn("Operating Temperature", toggleTemp.checked);
+        });
+
+        toggleEIA.addEventListener("change", () => {
+            drawCapacitor();
+            toggleColumn("EIA/Vibration", toggleEIA.checked);
+        });
+
+        function toggleColumn(label, isVisible) {
+            const column = [...document.querySelectorAll(".column")].find(col =>
+                col.querySelector("h3")?.textContent.includes(label)
+            );
+            if (column) {
+                column.classList.toggle("hidden", !isVisible);
+            }
+        }
+
+        function generateSelectors(digitCount) {
+            selectorContainer.innerHTML = "";
+
+            // Generate digit selectors
+            for (let i = 1; i <= digitCount; i++) {
+                const column = document.createElement("div");
+                column.className = "column";
+                column.innerHTML = `<h3>Digit ${i}</h3>`;
+                column.appendChild(createCheckboxGroup(colorData.digits, 0));
+                selectorContainer.appendChild(column);
+            }
+
+            // Add multiplier, tolerance, voltage, characteristic, temp, and EIA selectors
+			
+            const multiplierColumn = document.createElement("div");
+            multiplierColumn.className = "column";
+            multiplierColumn.innerHTML = `<h3>Multiplier</h3>`;
+            multiplierColumn.appendChild(createCheckboxGroup(colorData.multiplier, "display"));
+            selectorContainer.appendChild(multiplierColumn);
+if(toggleTolerance.checked){
+            const toleranceColumn = document.createElement("div");
+            toleranceColumn.className = "column";
+            toleranceColumn.innerHTML = `<h3>Tolerance</h3>`;
+            toleranceColumn.appendChild(createCheckboxGroup(colorData.tolerance, "display"));
+            selectorContainer.appendChild(toleranceColumn);
+}if(toggleVoltage.checked){
+            const voltageColumn = document.createElement("div");
+            voltageColumn.className = "column";
+            voltageColumn.innerHTML = `<h3>Voltage</h3>`;
+            voltageColumn.appendChild(createCheckboxGroup(colorData.voltage, "display"));
+            selectorContainer.appendChild(voltageColumn);
+}if(toggleCharacteristic.checked){
+            const characteristicColumn = document.createElement("div");
+            characteristicColumn.className = "column";
+            characteristicColumn.innerHTML = `<h3>Characteristic</h3>`;
+            characteristicColumn.appendChild(createCheckboxGroup(colorData.characteristic, "display"));
+            selectorContainer.appendChild(characteristicColumn);
+}if(toggleTemp.checked){
+            const tempColumn = document.createElement("div");
+            tempColumn.className = "column";
+            tempColumn.innerHTML = `<h3>Operating Temperature</h3>`;
+            tempColumn.appendChild(createCheckboxGroup(colorData.temp, "display"));
+            selectorContainer.appendChild(tempColumn);
+}if(toggleEIA.checked){
+            const eiaColumn = document.createElement("div");
+            eiaColumn.className = "column";
+            eiaColumn.innerHTML = `<h3>EIA/Vibration</h3>`;
+            eiaColumn.appendChild(createCheckboxGroup(colorData.eia, "display"));
+            selectorContainer.appendChild(eiaColumn);
+}
+            // Add event listeners for exclusive selection
+            addExclusiveSelectionListeners();
+
+            // Calculate capacitor value initially
+            calculateCapacitor();
+        }
+
+        // Create a checkbox group for a given data set
+        function createCheckboxGroup(data, displayKey = "label") {
+            const group = document.createElement("div");
+            data.forEach(item => {
+                const checkboxDiv = document.createElement("div");
+                checkboxDiv.className = "checkbox-group";
+                checkboxDiv.innerHTML = `
+                    <input type="checkbox" name="${item.label}" value="${item.value}">
+                    <div class="color-box" style="background-color: ${item.color};"></div>
+                    <label>${item.label} ${displayKey === 0 ? "" : `(${item[displayKey]})`}</label>
+                `;
+                group.appendChild(checkboxDiv);
+            });
+            return group;
+        }
+
+        // Add event listeners for exclusive selection within each column
+        function addExclusiveSelectionListeners() {
+            const columns = document.querySelectorAll(".column");
+            columns.forEach(column => {
+                const checkboxes = column.querySelectorAll("input[type='checkbox']");
+                checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener("change", () => {
+                        if (checkbox.checked) {
+                            checkboxes.forEach(cb => {
+                                if (cb !== checkbox) cb.checked = false;
+                            });
+                        }
+                        calculateCapacitor();
+                    });
+                });
+            });
+        }
+
+        // Calculate and display the result
+        function calculateCapacitor() {
+            drawCapacitor();
+            const digits = [];
+            const columns = document.querySelectorAll(".column");
+            columns.forEach(column => {
+                const header = column.querySelector("h3");
+                if (header && header.textContent.includes('Digit')) {
+                    const selected = column.querySelector("input[type='checkbox']:checked");
+                    if (selected) digits.push(parseInt(selected.value));
+                }
+            });
+
+            let multiplier = 1;
+            const multiplierColumn = Array.from(columns).find(column => column.querySelector("h3")?.textContent.includes('Multiplier'));
+            if (multiplierColumn) {
+                multiplier = multiplierColumn.querySelector("input[type='checkbox']:checked")?.value || 1;
+            }
+
+            let tolerance = "none";
+            if (toggleTolerance.checked) {
+                const toleranceColumn = Array.from(columns).find(column => column.querySelector("h3")?.textContent.includes('Tolerance'));
+                if (toleranceColumn) {
+                    tolerance = toleranceColumn.querySelector("input[type='checkbox']:checked")?.value || 20;
+                }
+            }
+
+            let voltage = "none";
+            if (toggleVoltage.checked) {
+                const voltageColumn = Array.from(columns).find(column => column.querySelector("h3")?.textContent.includes('Voltage'));
+                if (voltageColumn) {
+                    voltage = voltageColumn.querySelector("input[type='checkbox']:checked")?.value || 100;
+                }
+            }
+
+            let characteristic = "none";
+            if (toggleCharacteristic.checked) {
+                const characteristicColumn = Array.from(columns).find(column => column.querySelector("h3")?.textContent.includes('Characteristic'));
+                if (characteristicColumn) {
+                    characteristic = characteristicColumn.querySelector("input[type='checkbox']:checked")?.value || "B";
+                }
+            }
+
+            let temp = "none";
+            if (toggleTemp.checked) {
+                const tempColumn = Array.from(columns).find(column => column.querySelector("h3")?.textContent.includes('Operating Temperature'));
+                if (tempColumn) {
+                    temp = tempColumn.querySelector("input[type='checkbox']:checked")?.value || "-55 to +70";
+                }
+            }
+
+            let eia = "none";
+            if (toggleEIA.checked) {
+                const eiaColumn = Array.from(columns).find(column => column.querySelector("h3")?.textContent.includes('EIA/Vibration'));
+                if (eiaColumn) {
+                    eia = eiaColumn.querySelector("input[type='checkbox']:checked")?.value || "10 to 55";
+                }
+            }
+
+            const capacitorValue = parseInt(digits.join("")) * parseFloat(multiplier);
+            const capacitor = {
+                pF: capacitorValue,
+                tol: tolerance,
+                volt: voltage,
+                char: characteristic,
+                temp: temp,
+                eia: eia
+            };
+
+            resultDiv.textContent = JSON.stringify(capacitor, null, 2);
+        }
+
+        // Display Capacitance, Tolerance, Voltage, Characteristic, Temp, and EIA
+        function displayCapacitance() {
+            calculateCapacitor();
+            const capacitor = JSON.parse(resultDiv.textContent);
+            alert(`Capacitance: ${capacitor.pF} pF\nTolerance: ${capacitor.tol}\nVoltage: ${capacitor.volt}\nCharacteristic: ${capacitor.char}\nOperating Temperature: ${capacitor.temp}\nEIA/Vibration: ${capacitor.eia}`);
+        }
+
+        // Convert capacitor value to selected unit
+        function convertCapacitor() {
+            const capacitor = JSON.parse(resultDiv.textContent);
+            const unit = parseFloat(document.getElementById("unitConverter").value);
+            const convertedValue = capacitor.pF * unit;
+            conversionResultDiv.textContent = `Converted Value: ${convertedValue}`;
+        }
+
+        function drawCapacitor() {
+            const ctx = capacitorCanvas.getContext("2d");
+            ctx.clearRect(0, 0, capacitorCanvas.width, capacitorCanvas.height);
+
+            // Draw grey lines (capacitor leads)
+            ctx.fillStyle = "grey";
+            ctx.fillRect(0, 40, 40, 20); // Left lead
+            ctx.fillRect(240, 40, 150, 20); // Right lead
+
+            // Draw beige rectangle (capacitor body)
+            ctx.fillStyle = "lightblue";
+            ctx.fillRect(25, 30, 250, 40);
+
+            // Draw bands
+            const digitColumns = document.querySelectorAll(".column");
+            const bands = [];
+
+            // Filter out the digit columns by looking for column headers containing 'Digit'
+            digitColumns.forEach(column => {
+                const header = column.querySelector("h3");
+                if (header && header.textContent.includes("Digit")) {
+                    const selected = column.querySelector("input[type='checkbox']:checked");
+                    if (selected) bands.push(selected.value);
+                }
+            });
+
+            // Find the multiplier column by checking for 'Multiplier' in the header
+            const multiplierColumn = Array.from(digitColumns).find(column => {
+                const header = column.querySelector("h3");
+                return header && header.textContent.includes("Multiplier");
+            });
+
+            const multiplier = multiplierColumn?.querySelector("input[type='checkbox']:checked")?.value || 1;
+            bands.push(multiplier);
+
+            // Handle tolerance column if it's toggled
+            const toleranceColumn = Array.from(digitColumns).find(column => {
+                const header = column.querySelector("h3");
+                return header && header.textContent.includes("Tolerance");
+            });
+
+            if (toggleTolerance.checked && toleranceColumn) {
+                const tolerance = toleranceColumn.querySelector("input[type='checkbox']:checked")?.value || 20;
+                bands.push(tolerance);
+            }
+
+            // Handle voltage column if it's toggled
+            const voltageColumn = Array.from(digitColumns).find(column => {
+                const header = column.querySelector("h3");
+                return header && header.textContent.includes("Voltage");
+            });
+
+            if (toggleVoltage.checked && voltageColumn) {
+                const voltage = voltageColumn.querySelector("input[type='checkbox']:checked")?.value || 100;
+                bands.push(voltage);
+            }
+
+            // Handle characteristic column if it's toggled
+            const characteristicColumn = Array.from(digitColumns).find(column => {
+                const header = column.querySelector("h3");
+                return header && header.textContent.includes("Characteristic");
+            });
+
+            if (toggleCharacteristic.checked && characteristicColumn) {
+                const characteristic = characteristicColumn.querySelector("input[type='checkbox']:checked")?.value || "B";
+                bands.push(characteristic);
+            }
+
+            // Handle operating temperature column if it's toggled
+            const tempColumn = Array.from(digitColumns).find(column => {
+                const header = column.querySelector("h3");
+                return header && header.textContent.includes("Operating Temperature");
+            });
+
+            if (toggleTemp.checked && tempColumn) {
+                const temp = tempColumn.querySelector("input[type='checkbox']:checked")?.value || "-55 to +70";
+                bands.push(temp);
+            }
+
+            // Handle EIA/vibration column if it's toggled
+            const eiaColumn = Array.from(digitColumns).find(column => {
+                const header = column.querySelector("h3");
+                return header && header.textContent.includes("EIA/Vibration");
+            });
+
+            if (toggleEIA.checked && eiaColumn) {
+                const eia = eiaColumn.querySelector("input[type='checkbox']:checked")?.value || "10 to 55";
+                bands.push(eia);
+            }
+
+            // Draw bands on the capacitor
+            const bandWidth = Math.max(250 / (bands.length + 0.5), 10); // Make bands thinner
+            bands.forEach((band, index) => {
+                const color = getBandColor(band);
+                ctx.fillStyle = color;
+                ctx.fillRect(25 + ((index + 0.5) * bandWidth), 30, bandWidth / 2, 40);
+            });
+        }
+
+        // Get the color for a band based on its value
+        function getBandColor(value) {
+            const allBands = [...colorData.digits, ...colorData.multiplier, ...colorData.tolerance, ...colorData.voltage, ...colorData.characteristic, ...colorData.temp, ...colorData.eia];
+            const band = allBands.find(b => b.value == value);
+            return band ? band.color : "black";
+        }
+
+        // Initial generation
+        generateSelectors(2);
+        drawCapacitor();
+    </script>
+</body>
+</html>

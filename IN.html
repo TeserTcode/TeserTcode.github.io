@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inductor Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: url('inductorbg.png') center center fixed;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .color-box {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #000;
+        }
+        .slider {
+            width: 100%;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+        .hidden {
+            display: none;
+        }
+        .inductor-visualizer {
+            margin-top: 20px;
+        }
+        canvas {
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Inductor Calculator</h1>
+
+    <!-- Toggle between Inductor Types -->
+    <div>
+        <label>
+            <input type="radio" name="inductorType" value="eia" checked> EIA 4-Band
+        </label>
+        <label>
+            <input type="radio" name="inductorType" value="mil"> Military 5-Band
+        </label>
+    </div>
+
+    <!-- Container for all selectors -->
+    <div class="container" id="selectorContainer"></div>
+
+    <!-- Display Inductor Value Button -->
+    <button onclick="displayInductorValue()">Display Inductor Value</button>
+
+    <!-- Result display -->
+    <div class="result" id="result"></div>
+
+    <!-- Inductor Visualizer -->
+    <div class="inductor-visualizer">
+        <h2>Inductor Bands</h2>
+        <canvas id="inductorCanvas" width="300" height="100"></canvas>
+    </div>
+
+    <script>
+        const colorData = {
+            eia: {
+                digits: [
+                    { value: 0, color: "black", label: "Black (0)" },
+                    { value: 1, color: "brown", label: "Brown (1)" },
+                    { value: 2, color: "red", label: "Red (2)" },
+                    { value: 3, color: "orange", label: "Orange (3)" },
+                    { value: 4, color: "yellow", label: "Yellow (4)" },
+                    { value: 5, color: "green", label: "Green (5)" },
+                    { value: 6, color: "blue", label: "Blue (6)" },
+                    { value: 7, color: "purple", label: "Violet (7)" },
+                    { value: 8, color: "gray", label: "Gray (8)" },
+                    { value: 9, color: "white", label: "White (9)" }
+                ],
+                multiplier: [
+                    { value: 0.01, color: "silver", label: "Silver (x0.01)" },
+                    { value: 0.1, color: "gold", label: "Gold (x0.1)" },
+                    { value: 1, color: "black", label: "Black (x1)" },
+                    { value: 10, color: "brown", label: "Brown (x10)" },
+                    { value: 100, color: "red", label: "Red (x100)" },
+                    { value: 1000, color: "orange", label: "Orange (x1000)" },
+                    { value: 10000, color: "yellow", label: "Yellow (x10000)" }
+                ],
+                tolerance: [
+                    { value: 5, color: "gold", label: "Gold (±5%)" },
+                    { value: 10, color: "silver", label: "Silver (±10%)" },
+                    { value: 20, color: "black", label: "Black (±20%)" }
+                ]
+            },
+            mil: {
+                military: [
+                    { value: "mil", color: "silver", label: "Silver (Military)" }
+                ],
+                digits: [
+                    { value: 0, color: "black", label: "Black (0)" },
+                    { value: 1, color: "brown", label: "Brown (1)" },
+                    { value: 2, color: "red", label: "Red (2)" },
+                    { value: 3, color: "orange", label: "Orange (3)" },
+                    { value: 4, color: "yellow", label: "Yellow (4)" },
+                    { value: 5, color: "green", label: "Green (5)" },
+                    { value: 6, color: "blue", label: "Blue (6)" },
+                    { value: 7, color: "purple", label: "Violet (7)" },
+                    { value: 8, color: "gray", label: "Gray (8)" },
+                    { value: 9, color: "white", label: "White (9)" }
+                ],
+                decimal: [
+                    { value: "decimal", color: "gold", label: "Gold (Decimal)" }
+                ],
+                tolerance: [
+                    { value: 1, color: "brown", label: "Brown (±1%)" },
+                    { value: 2, color: "red", label: "Red (±2%)" },
+                    { value: 3, color: "orange", label: "Orange (±3%)" },
+                    { value: 4, color: "yellow", label: "Yellow (±4%)" },
+                    { value: 5, color: "gold", label: "Gold (±5%)" },
+                    { value: 10, color: "silver", label: "Silver (±10%)" },
+                    { value: 20, color: "black", label: "Black (±20%)" }
+                ]
+            }
+        };
+
+        const inductorTypeRadios = document.querySelectorAll('input[name="inductorType"]');
+        const selectorContainer = document.getElementById("selectorContainer");
+        const resultDiv = document.getElementById("result");
+        const inductorCanvas = document.getElementById("inductorCanvas");
+
+        // Toggle between Inductor Types
+        inductorTypeRadios.forEach(radio => {
+            radio.addEventListener("change", () => {
+                generateSelectors(radio.value);
+                drawInductor();
+            });
+        });
+
+        // Generate selectors based on inductor type
+        function generateSelectors(type) {
+            selectorContainer.innerHTML = "";
+
+            if (type === "eia") {
+                // EIA 4-Band
+                for (let i = 1; i <= 4; i++) {
+                    const column = document.createElement("div");
+                    column.className = "column";
+                    if (i <= 2) {
+                        column.innerHTML = `<h3>Digit ${i}</h3>`;
+                        column.appendChild(createCheckboxGroup(colorData.eia.digits, "label"));
+                    } else if (i === 3) {
+                        column.innerHTML = `<h3>Multiplier</h3>`;
+                        column.appendChild(createCheckboxGroup(colorData.eia.multiplier, "label"));
+                    } else if (i === 4) {
+                        column.innerHTML = `<h3>Tolerance</h3>`;
+                        column.appendChild(createCheckboxGroup(colorData.eia.tolerance, "label"));
+                    }
+                    selectorContainer.appendChild(column);
+                }
+            } else if (type === "mil") {
+                // Military 5-Band
+                for (let i = 1; i <= 5; i++) {
+                    const column = document.createElement("div");
+                    column.className = "column";
+                    if (i === 1) {
+                        column.innerHTML = `<h3>Military</h3>`;
+                        column.appendChild(createCheckboxGroup(colorData.mil.military, "label"));
+                    } else if (i >= 2 && i <= 4) {
+                        column.innerHTML = `<h3>Band ${i}</h3>`;
+                        column.appendChild(createCheckboxGroup([...colorData.mil.digits, ...colorData.mil.decimal], "label"));
+                    } else if (i === 5) {
+                        column.innerHTML = `<h3>Tolerance</h3>`;
+                        column.appendChild(createCheckboxGroup(colorData.mil.tolerance, "label"));
+                    }
+                    selectorContainer.appendChild(column);
+                }
+            }
+
+            // Add event listeners for exclusive selection
+            addExclusiveSelectionListeners();
+        }
+
+        // Create a checkbox group for a given data set
+        function createCheckboxGroup(data, displayKey = "label") {
+            const group = document.createElement("div");
+            data.forEach(item => {
+                const checkboxDiv = document.createElement("div");
+                checkboxDiv.className = "checkbox-group";
+                checkboxDiv.innerHTML = `
+                    <input type="checkbox" name="${item.label}" value="${item.value}">
+                    <div class="color-box" style="background-color: ${item.color};"></div>
+                    <label>${item.label}</label>
+                `;
+                group.appendChild(checkboxDiv);
+            });
+            return group;
+        }
+
+        // Add event listeners for exclusive selection within each column
+        function addExclusiveSelectionListeners() {
+            const columns = document.querySelectorAll(".column");
+            columns.forEach(column => {
+                const checkboxes = column.querySelectorAll("input[type='checkbox']");
+                checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener("change", () => {
+                        if (checkbox.checked) {
+                            checkboxes.forEach(cb => {
+                                if (cb !== checkbox) cb.checked = false;
+                            });
+                        }
+                        drawInductor();
+                    });
+                });
+            });
+        }
+
+        // Display Inductor Value
+        function displayInductorValue() {
+            const inductorType = document.querySelector('input[name="inductorType"]:checked').value;
+            if (inductorType === "eia") {
+                const digit1 = selectorContainer.querySelector(".column:nth-child(1) input[type='checkbox']:checked")?.value || "0";
+                const digit2 = selectorContainer.querySelector(".column:nth-child(2) input[type='checkbox']:checked")?.value || "0";
+                const multiplier = selectorContainer.querySelector(".column:nth-child(3) input[type='checkbox']:checked")?.value || "1";
+                const tolerance = selectorContainer.querySelector(".column:nth-child(4) input[type='checkbox']:checked")?.value || "20";
+                const value = (parseInt(digit1 + digit2) * parseFloat(multiplier)).toFixed(2);
+                resultDiv.textContent = `Inductor Value: ${value} µH ±${tolerance}%`;
+            } else if (inductorType === "mil") {
+                const military = selectorContainer.querySelector(".column:nth-child(1) input[type='checkbox']:checked")?.value || "Unknown";
+                const band2 = selectorContainer.querySelector(".column:nth-child(2) input[type='checkbox']:checked")?.value || "0";
+                const band3 = selectorContainer.querySelector(".column:nth-child(3) input[type='checkbox']:checked")?.value || "0";
+                const band4 = selectorContainer.querySelector(".column:nth-child(4) input[type='checkbox']:checked")?.value || "0";
+                const tolerance = selectorContainer.querySelector(".column:nth-child(5) input[type='checkbox']:checked")?.value || "20";
+                let value;
+                if (band2 === "decimal" || band3 === "decimal") {
+                    value = `${band2 === "decimal" ? "0." : ""}${band3 === "decimal" ? band2 + band4 : band2 + "." + band4}`;
+                } else {
+                    value = parseInt(band2 + band3) * Math.pow(10, parseInt(band4));
+                }
+                resultDiv.textContent = `Inductor Value: ${value} µH ±${tolerance}%`;
+            }
+        }
+
+        // Draw Inductor
+        function drawInductor() {
+            const ctx = inductorCanvas.getContext("2d");
+            ctx.clearRect(0, 0, inductorCanvas.width, inductorCanvas.height);
+
+            // Draw grey lines (inductor leads)
+            ctx.fillStyle = "grey";
+            ctx.fillRect(0, 40, 40, 20); // Left lead
+            ctx.fillRect(240, 40, 150, 20); // Right lead
+
+            // Draw beige rectangle (inductor body)
+            ctx.fillStyle = "lightgreen";
+            ctx.fillRect(25, 30, 250, 40);
+
+            // Draw bands
+            const inductorType = document.querySelector('input[name="inductorType"]:checked').value;
+            const bands = [];
+
+            if (inductorType === "eia") {
+                for (let i = 1; i <= 4; i++) {
+                    const selected = selectorContainer.querySelector(`.column:nth-child(${i}) input[type='checkbox']:checked`)?.value || "black";
+                    bands.push(selected);
+                }
+            } else if (inductorType === "mil") {
+                for (let i = 1; i <= 5; i++) {
+                    const selected = selectorContainer.querySelector(`.column:nth-child(${i}) input[type='checkbox']:checked`)?.value || "black";
+                    bands.push(selected);
+                }
+            }
+
+            // Draw bands on the inductor
+            const bandWidth = Math.max(250 / (bands.length + 0.5), 10); // Make bands thinner
+            bands.forEach((band, index) => {
+                const color = getBandColor(band);
+                ctx.fillStyle = color;
+                ctx.fillRect(25 + ((index + 0.5) * bandWidth), 30, bandWidth / 2, 40);
+            });
+        }
+
+        // Get the color for a band based on its value
+        function getBandColor(value) {
+            const allBands = [...colorData.eia.digits, ...colorData.eia.multiplier, ...colorData.eia.tolerance, ...colorData.mil.military, ...colorData.mil.digits, ...colorData.mil.decimal, ...colorData.mil.tolerance];
+            const band = allBands.find(b => b.value == value);
+            return band ? band.color : "black";
+        }
+
+        // Initial generation
+        generateSelectors("eia");
+        drawInductor();
+    </script>
+</body>
+</html>

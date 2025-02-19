@@ -1,0 +1,475 @@
+class Veb {
+    constructor(val = -1, top = [], bot = [], aux = [], dim = false) {
+        this.val = val;
+        this.add = null;
+        this.top = top;
+        this.bot = bot;
+        this.aux = aux;
+        this.dim = dim;
+    }
+
+    toString() {
+        let output = "";
+        if (this.add && this.add.val !== 0) output += "(";
+
+        if (this.val > -1) {
+            output += this.val;
+        } else if (this.aux.length > 0) {
+            if (this.aux[0] === 0 && this.aux.length > 1) this.aux.shift();
+            if (!this.dim && this.aux.length === 1) {
+                output += this.aux[0] === 0 ? "1" : this.aux[0] === 1 ? "w" : `w^${this.aux[0]}`;
+            } else {
+                output += this.aux.length === 2 && this.aux[0] === 0 ? `w^${this.aux[1]}` :
+                          this.aux.length === 2 && this.aux[0] === 1 ? `e_${this.aux[1]}` :
+                          this.aux.length === 2 && this.aux[0] === 2 ? `z_${this.aux[1]}` :
+                          this.aux.length === 2 && this.aux[0] === 3 ? `n_${this.aux[1]}` :
+                          this.aux.length === 3 && this.aux[0] === 1 && this.aux[1] === 0 ? `G_${this.aux[2]}` :
+                          `phi(${this.aux.join(",")})`;
+            }
+        } else {
+            if (this.top.length === 0) {
+                output += "1";
+            } else {
+                output += this.dim ? "(" : "phi(";
+                output += this.top.map((t, i) => `${t}@${this.bot[i]}`).join(",");
+                output += ")";
+            }
+        }
+
+        if (this.add && this.add.val !== 0) output += `+${this.add})`;
+        return output;
+    }
+
+    dimen() {
+        this.dim = true;
+    }
+
+    ad(a) {
+        this.add = new Veb(a.val, a.top, a.bot, a.aux, a.dim);
+    }
+
+    auxlen() {
+        return this.aux.length;
+    }
+
+    unaux() {
+        this.aux.forEach(auxItem => {
+            auxItem.unaux();
+            this.top.push(auxItem);
+        });
+        this.bot = this.aux.map((_, i) => new Veb(i));
+        this.norma();
+        this.aux = [];
+    }
+
+    norma() {
+        for (let i = 0; i < this.bot.length; i++) {
+            for (let j = i + 1; j < this.bot.length; j++) {
+                if (this.bot[j].val < this.bot[i].val) {
+                    [this.bot[i], this.bot[j]] = [this.bot[j], this.bot[i]];
+                    [this.top[i], this.top[j]] = [this.top[j], this.top[i]];
+                } else if (this.bot[j].val === this.bot[i].val) {
+                    this.bot[j].val++;
+                }
+            }
+        }
+    }
+}
+
+// Example usage:
+const v = new Veb(5);
+console.log(v.toString());
+
+
+class Ord {
+    constructor(value = 0, add = null, mul = null, pow = null) {
+        if (value instanceof Ord) {
+            this.val = value.val;
+            this.add = value.add;
+            this.mul = value.mul;
+            this.pow = value.pow;
+        } else {
+            this.val = value;
+            this.add = add;
+            this.mul = mul;
+            this.pow = pow;
+        }
+    }
+
+    static fromTriple(add, mul, pow) {
+        return new Ord(0, new Ord(add), new Ord(mul), new Ord(pow));
+    }
+
+    toString() {
+        if (this.mul === null) {
+            return this.val.toString();
+        } else {
+            let result = "";
+
+            if (this.add && this.add.val !== 0) {
+                result += this.pow?.add ? `(${this.add})+` : `${this.add}+`;
+            }
+
+            if (this.pow && this.pow.val !== 1 && this.pow.val !== 0) {
+                if (this.pow.add && !(this.pow.add.val === 0 && this.pow.mul.val === 1)) {
+                    result += `Ω^(${this.pow})`;
+                } else {
+                    result += `Ω^${this.pow}`;
+                }
+            } else if (this.pow?.val === 1) {
+                result += "Ω";
+            } else if (this.pow?.val === 0) {
+                result += "1";
+            }
+
+            if (this.mul && this.mul.val !== 1) {
+                result += this.mul.mul ? `*(${this.mul})` : `*${this.mul}`;
+            }
+
+            return result;
+        }
+    }
+
+    soup() {
+        console.log(this.toUnicodeString());
+    }
+
+    toUnicodeString() {
+        let result = "";
+
+        if (this.mul === null) {
+            return this.val.toString();
+        } else {
+            if (this.add && this.add.val !== 0) {
+                result += this.pow?.add ? `(${this.add.toUnicodeString()})+` : `${this.add.toUnicodeString()}+`;
+            }
+
+            if (this.pow && this.pow.val !== 1 && this.pow.val !== 0) {
+                if (this.pow.add && !(this.pow.add.val === 0 && this.pow.mul.val === 1)) {
+                    result += `Ω^(${this.pow.toUnicodeString()})`;
+                } else {
+                    result += `Ω^${this.pow.toUnicodeString()}`;
+                }
+            } else if (this.pow?.val === 1) {
+                result += "Ω";
+            } else if (this.pow?.val === 0) {
+                result += "1";
+            }
+
+            if (this.mul && this.mul.val !== 1) {
+                result += this.mul.mul ? `*(${this.mul.toUnicodeString()})` : `*${this.mul.toUnicodeString()}`;
+            }
+
+            return result;
+        }
+    }
+}
+
+ord fix(ord fakea,bool uner=0){
+ord a = fakea;
+
+if(a==ord(0)){
+	return ord(0);
+}
+
+if(a.mul==nullptr){
+	return a;
+}
+
+if(*a.mul==ord(0)){
+	a = *(a.add);
+	return fix(a);
+}
+
+if(*a.pow==ord(0)){
+	return a;
+}
+
+if(*a.pow==ord(0) || 0){
+	a.mul=new ord(*a.add + *a.mul);
+	a.add=new ord(0);
+	return fix(a);
+}
+
+if(a.mul!=nullptr){
+	a.add=new ord(fix(*a.add));
+	a.mul=new ord(fix(*a.mul));
+	a.pow=new ord(fix(*a.pow));
+}
+
+if(a.mul!=nullptr){
+	ord mm = *(a.mul);
+	ord aa = a;
+	if(mm.mul!=nullptr){
+		if(!(mm.mul->val==-1)){
+			a.pow= new ord(*aa.pow + *mm.pow);
+			a.add= new ord(*aa.add, *mm.add,*aa.pow);
+			if(*mm.add == ord(0)) a.add= new ord(aa.add);
+			a.mul= new ord(*mm.mul);
+			a = fix(a,uner);
+		}
+	}
+}
+
+if(a.mul!=nullptr && *a.mul==ord(0) && *a.add==ord(0)){
+	a.add=nullptr;
+	a.mul=nullptr;
+	a.pow=nullptr;
+	fix(a,uner);
+}
+
+if(a.mul!=nullptr && *a.mul==ord(0) && a.val.val==0 && (*a.add).mul!=nullptr){
+	a.add=new ord(a.add->add);
+	a.mul=new ord(a.add->mul);
+	a.pow=new ord(a.add->pow);
+	fix(a,uner);
+}
+
+if(a.mul!=nullptr && *a.mul==ord(0)){
+	a.pow=new ord(0);
+	fix(a,uner);
+}
+
+if(uner){
+	if(a.add!=nullptr && (*(a.add)).pow!=nullptr && a.pow!=nullptr){
+		if(fin(t((ord(0,1,a.pow)))) > fin(t((ord(0,1,(*(a.add)).pow))))){
+			a.add = new ord(0);
+			a = fix(a);
+		}else if(fin(t((ord(0,1,a.pow)))) == fin(t((ord(0,1,(*(a.add)).pow))))){
+			a.mul = new ord(a.add->mul + *a.mul);
+			a.add = new ord(a.add->add);
+			a = fix(a);
+		}
+	}else if(!(*a.add==ord(0)) && a.pow!=nullptr){
+		a.add = new ord(0);
+		a = fix(a);
+	}
+}
+
+while(!(*(a.mul)==ord(1)))
+	if(a.mul!=nullptr && a.mul->pow!=nullptr && a.mul->pow->val>0){
+		ord b = a.mul;
+		a.mul=new ord(1);
+		a=a*b;
+		break;
+	}
+
+if(a.mul!=nullptr){
+	a.add=new ord(fix(*a.add));
+	a.mul=new ord(fix(*a.mul));
+	a.pow=new ord(fix(*a.pow));
+}
+
+return a;
+}
+
+ord operator+(const ord a, const ord b) {
+    if (a.mul == nullptr && b.mul != nullptr) {
+        return b;
+    }
+
+    if (a.mul == nullptr && b.mul == nullptr) {
+        if(a.val.val!=-1 and b.val.val!=-1)
+            return ord(a.val.val + b.val.val);
+        if(a.val<b.val) return b;
+        return a;
+    }
+
+    return ord(*a.add+b,*a.mul,*a.pow);
+}
+
+ord operator-(const ord a, const ord b) {
+    if (a.mul != nullptr && b.mul == nullptr) {
+        return ord(0);
+    }
+    
+    if (a.mul == nullptr && b.mul != nullptr) {
+        return a;
+    }
+
+    if (a.mul == nullptr && b.mul == nullptr) {
+        if(a.val.val!=-1 and b.val.val!=-1)
+            return ord(a.val.val - b.val.val);
+        return a;
+    }
+    
+    ord c = a;
+    ord d = b;
+
+    if (c.add != nullptr && d.add != nullptr) {
+        c.add = new ord(*(c.add) - *(d.add));
+    }
+
+    return c;
+}
+
+ord operator/(const ord a, const ord b) {
+    ord c = a;
+    ord d = b;
+
+    if(c.mul==nullptr and d.mul==nullptr)
+        return c.val / d.val; 
+    if(c.mul!=nullptr and d.mul==nullptr)
+        return c;
+    if(c.mul==nullptr and d.mul!=nullptr)
+        return ord(0);
+    return ord(*c.add/ d,c.mul,*c.pow-*d.pow);
+}
+
+ord operator*(const ord a, const ord b) {
+    if (a.mul == nullptr && b.mul != nullptr) {
+        return b;
+    }
+
+    if (a.mul == nullptr && b.mul == nullptr) {
+        return ord(a.val.val * b.val.val);
+    }
+    
+    return ord((*a.add**b.mul) + (*a.mul**b.add),*a.mul * *b.mul,*a.pow+*b.pow);
+}
+
+bool operator==(const ord a, const ord b) {
+    if ((a.mul == nullptr || b.mul == nullptr) && !(a.mul == nullptr && b.mul == nullptr)) {
+        return false;
+    }
+    if (a.mul == nullptr && b.mul == nullptr) {
+        return a.val == b.val;
+    }
+    return *a.add == *b.add && *a.mul == *b.mul && *a.pow == *b.pow;
+}
+
+bool operator==(const ord a, const int b) {
+    return a == ord(b);
+}
+
+
+function ord(a) {
+    this.val = a;
+    this.mul = null;
+    this.pow = null;
+    this.add = null;
+}
+
+function veb(a) {
+    return a; // Placeholder for veb logic
+}
+
+function wup(a) {
+    if (!a.mul) {
+        if (a.val === 0) {
+            return new ord(1);
+        } else {
+            return veb([0, a.val]);
+        }
+    }
+    if (a.pow.val === 0) {
+        return wup(a.add + a.mul);
+    }
+    if (a.pow.val > veb([0, 1]) || a.pow.val === 0) {
+        return new ord(0, wup(a.add), new ord(0, a.mul, a.pow));
+    } else {
+        return new ord(0, wup(a.add), new ord(0, a.mul, a.pow - new ord(1)));
+    }
+}
+
+function s(a) {
+    if (!a.mul) {
+        if (a.val === -1 || a.val === 0) return [];
+        return [new ord(1), a.val];
+    } else {
+        let o = [a.mul, a.pow];
+        return o.concat(s(a.add));
+    }
+}
+
+function k(a, b) {
+    if (!a.mul) {
+        let al = veb(a.val);
+        let bl = veb(b.val);
+        if (b.mul !== null && b.mul !== new ord(0) || b.val === -1) return -1;
+        if (al === bl) return 0;
+        if (al < bl) return -1;
+        return 1;
+    }
+    let al = true;
+    for (let p of s(a)) {
+        al &= k(p, b) === -1;
+    }
+    if (al) return -1;
+    al = true;
+    for (let p of s(a.add)) {
+        al &= k(p, b) === -1;
+    }
+    if (al && ((a.pow === b && a.mul === 1) || (k(a.pow, b) === -1 && a.mul === b))) {
+        return 0;
+    }
+    return 1;
+}
+
+function psi(la) {
+    let a = la;
+    if (!a.mul && a.val === 0) return new ord(1);
+    if (!a.mul && a.val !== 0 && a.val < veb([1, 0])) return new ord(veb([0, a.val]));
+    if (!a.mul && a.val !== 0) return veb([1, 0]);
+    if (a.val !== 0 && a.val < veb([1, 0])) return new ord(veb([0, a.val]));
+    if (a.val !== 0) return veb([1, 0]);
+    return new ord(reaux(fin(t(a))));
+}
+
+function t(a) {
+    if (a === 0) return new ord(0);
+    let fakea = a;
+    if (!fakea.mul) {
+        fakea.mul = new ord(fakea.val);
+        fakea.pow = new ord(0);
+        fakea.add = new ord(0);
+    }
+    let l = psi(fakea.add) - new ord(1);
+    let p = new ord(0);
+    let u = k(fakea.pow, l);
+    if (u === -1) p = l;
+    if (u === 0) p = new ord(1);
+    if (u === 1) p = new ord(0);
+    if (p.val.aux || p.val.top) {
+        p.val.add = new veb(fakea.mul.val.val);
+    }
+    return new ord(p + fakea.mul - new ord(1), fakea.pow, new ord(1));
+}
+
+function fin(a) {
+    let topa = [];
+    let bota = [];
+    let fakea = fix(a, 0);
+    while (fakea.add !== null) {
+        if (!fakea.mul.pow) {
+            topa.push(fakea.mul.val);
+        } else if (fakea.mul.pow === new ord(0)) {
+            topa.push(fakea.mul.val);
+        } else {
+            topa.push(fin(fakea.mul));
+        }
+        if (!fakea.pow.pow) {
+            bota.push(fakea.pow.val);
+        } else if (fakea.pow.pow === new ord(0)) {
+            bota.push(fakea.pow.val);
+        } else {
+            let dimm = fin(fakea.pow);
+            dimm.dimen();
+            bota.push(dimm);
+        }
+        fakea = fakea.add;
+    }
+    topa.push(fakea.val);
+    bota.push(0);
+    return veb(topa, bota);
+}
+
+function aord(i = 10) {
+    if (i > 1 && Math.random() * 15 < 10) {
+        return new ord(aord(i), psi(aord(i - 1)), aord(i - 1));
+    }
+    if (i < 2 && i > -1 && Math.random() * 15 < 16) {
+        return new ord(0, aord(i - 1), aord(i - 1));
+    }
+    return new ord(Math.floor(Math.random() * 10 + 1));
+}

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diode Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: url('diodebg.png') center center fixed;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .color-box {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #000;
+        }
+        .slider {
+            width: 100%;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+        .hidden {
+            display: none;
+        }
+        .converter {
+            margin-top: 20px;
+        }
+        .diode-visualizer {
+            margin-top: 20px;
+        }
+        canvas {
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Diode Calculator</h1>
+
+    <!-- Toggle between Diode Types -->
+    <div>
+        <label>
+            <input type="radio" name="diodeType" value="1band" checked> 1-Band Diode
+        </label>
+        <label>
+            <input type="radio" name="diodeType" value="plastic"> Plastic Diodes (2 Bands)
+        </label>
+        <label>
+            <input type="radio" name="diodeType" value="1nxxxx"> 1NXXXX Series (3-5 Bands)
+        </label>
+    </div>
+
+    <!-- Slider for number of bands (for 1NXXXX Series) -->
+    <div id="bandSliderContainer" class="hidden">
+        <label for="bandSlider">Number of Bands:</label>
+        <input type="range" id="bandSlider" min="3" max="5" value="3" class="slider">
+        <span id="bandCount">3</span>
+    </div>
+
+    <!-- Container for all selectors -->
+    <div class="container" id="selectorContainer"></div>
+
+    <!-- Display Diode Value Button -->
+    <button onclick="displayDiodeValue()">Display Diode Value</button>
+
+    <!-- Result display -->
+    <div class="result" id="result"></div>
+
+    <!-- Diode Visualizer -->
+    <div class="diode-visualizer">
+        <h2>Diode Bands</h2>
+        <canvas id="diodeCanvas" width="300" height="100"></canvas>
+    </div>
+
+    <script>
+        const colorData = {
+            oneBand: [
+                { value: "general purpose", color: "black", label: "Black (General Purpose)" },
+                { value: "schottky", color: "green", label: "Green (Schottky)" },
+                { value: "switching", color: "yellow", label: "Yellow (Switching)" },
+                { value: "zener", color: "blue", label: "Blue (Zener)" }
+            ],
+            plastic: {
+                productFamily: [
+                    { value: "BYM10", color: "white", label: "White (BYM10)" },
+                    { value: "GL41", color: "white", label: "White (GL41)" },
+                    { value: "BYM11", color: "red", label: "Red (BYM11)" },
+                    { value: "RGL41", color: "red", label: "Red (RGL41)" },
+                    { value: "BYM12", color: "green", label: "Green (BYM12)" },
+                    { value: "EGL41", color: "green", label: "Green (EGL41)" },
+                    { value: "BYM13", color: "orange", label: "Orange (BYM13)" },
+                    { value: "SGL41", color: "orange", label: "Orange (SGL41)" },
+                    { value: "TGL41-xx", color: "blue", label: "Blue (TGL41-xx)" },
+                    { value: "ZGL41-xx", color: "red", label: "Red (ZGL41-xx)" }
+                ],
+                peakVoltage: [
+                    { value: 50, color: "gray", label: "Gray (50 V)" },
+                    { value: 100, color: "red", label: "Red (100 V)" },
+                    { value: 200, color: "orange", label: "Orange (200 V)" },
+                    { value: 400, color: "yellow", label: "Yellow (400 V)" },
+                    { value: 600, color: "green", label: "Green (600 V)" },
+                    { value: 800, color: "blue", label: "Blue (800 V)" }
+                ]
+            },
+            inxxxx: {
+                digits: [
+                    { value: 0, color: "black", label: "Black (0)" },
+                    { value: 1, color: "brown", label: "Brown (1)" },
+                    { value: 2, color: "red", label: "Red (2)" },
+                    { value: 3, color: "orange", label: "Orange (3)" },
+                    { value: 4, color: "yellow", label: "Yellow (4)" },
+                    { value: 5, color: "green", label: "Green (5)" },
+                    { value: 6, color: "blue", label: "Blue (6)" },
+                    { value: 7, color: "purple", label: "Violet (7)" },
+                    { value: 8, color: "gray", label: "Gray (8)" },
+                    { value: 9, color: "white", label: "White (9)" }
+                ],
+                suffix: [
+                    { value: "A", color: "brown", label: "Brown (A)" },
+                    { value: "B", color: "red", label: "Red (B)" },
+                    { value: "C", color: "orange", label: "Orange (C)" },
+                    { value: "D", color: "yellow", label: "Yellow (D)" },
+                    { value: "E", color: "green", label: "Green (E)" },
+                    { value: "F", color: "blue", label: "Blue (F)" },
+                    { value: "G", color: "purple", label: "Violet (G)" },
+                    { value: "H", color: "gray", label: "Gray (H)" },
+                    { value: "J", color: "white", label: "White (J)" }
+                ]
+            }
+        };
+
+        const diodeTypeRadios = document.querySelectorAll('input[name="diodeType"]');
+        const bandSliderContainer = document.getElementById("bandSliderContainer");
+        const bandSlider = document.getElementById("bandSlider");
+        const bandCount = document.getElementById("bandCount");
+        const selectorContainer = document.getElementById("selectorContainer");
+        const resultDiv = document.getElementById("result");
+        const diodeCanvas = document.getElementById("diodeCanvas");
+
+        // Toggle between Diode Types
+        diodeTypeRadios.forEach(radio => {
+            radio.addEventListener("change", () => {
+                if (radio.value === "1band") {
+                    bandSliderContainer.classList.add("hidden");
+                    generateSelectors("1band");
+                } else if (radio.value === "plastic") {
+                    bandSliderContainer.classList.add("hidden");
+                    generateSelectors("plastic");
+                } else {
+                    bandSliderContainer.classList.remove("hidden");
+                    generateSelectors("1nxxxx");
+                }
+                drawDiode();
+            });
+        });
+
+        // Update the number of bands for 1NXXXX Series
+        bandSlider.addEventListener("input", () => {
+            const count = bandSlider.value;
+            bandCount.textContent = count;
+            generateSelectors("1nxxxx");
+            drawDiode();
+        });
+
+        // Generate selectors based on diode type
+        function generateSelectors(type) {
+            selectorContainer.innerHTML = "";
+
+            if (type === "1band") {
+                const oneBandColumn = document.createElement("div");
+                oneBandColumn.className = "column";
+                oneBandColumn.innerHTML = `<h3>Diode Type</h3>`;
+                oneBandColumn.appendChild(createCheckboxGroup(colorData.oneBand, "label"));
+                selectorContainer.appendChild(oneBandColumn);
+            } else if (type === "plastic") {
+                // Product Family
+                const productFamilyColumn = document.createElement("div");
+                productFamilyColumn.className = "column";
+                productFamilyColumn.innerHTML = `<h3>Product Family</h3>`;
+                productFamilyColumn.appendChild(createCheckboxGroup(colorData.plastic.productFamily, "label"));
+                selectorContainer.appendChild(productFamilyColumn);
+
+                // Peak Reverse Voltage
+                const peakVoltageColumn = document.createElement("div");
+                peakVoltageColumn.className = "column";
+                peakVoltageColumn.innerHTML = `<h3>Peak Reverse Voltage</h3>`;
+                peakVoltageColumn.appendChild(createCheckboxGroup(colorData.plastic.peakVoltage, "label"));
+                selectorContainer.appendChild(peakVoltageColumn);
+            } else if (type === "1nxxxx") {
+                const bandCountValue = parseInt(bandSlider.value);
+                for (let i = 1; i <= bandCountValue; i++) {
+                    const column = document.createElement("div");
+                    column.className = "column";
+                    column.innerHTML = `<h3>Band ${i}</h3>`;
+                    if (i <= 4) {
+                        column.appendChild(createCheckboxGroup(colorData.inxxxx.digits, "label"));
+                    } else if (i === 5) {
+                        column.appendChild(createCheckboxGroup(colorData.inxxxx.suffix, "label"));
+                    }
+                    selectorContainer.appendChild(column);
+                }
+            }
+
+            // Add event listeners for exclusive selection
+            addExclusiveSelectionListeners();
+        }
+
+        // Create a checkbox group for a given data set
+        function createCheckboxGroup(data, displayKey = "label") {
+            const group = document.createElement("div");
+            data.forEach(item => {
+                const checkboxDiv = document.createElement("div");
+                checkboxDiv.className = "checkbox-group";
+                checkboxDiv.innerHTML = `
+                    <input type="checkbox" name="${item.label}" value="${item.value}">
+                    <div class="color-box" style="background-color: ${item.color};"></div>
+                    <label>${item.label}</label>
+                `;
+                group.appendChild(checkboxDiv);
+            });
+            return group;
+        }
+
+        // Add event listeners for exclusive selection within each column
+        function addExclusiveSelectionListeners() {
+            const columns = document.querySelectorAll(".column");
+            columns.forEach(column => {
+                const checkboxes = column.querySelectorAll("input[type='checkbox']");
+                checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener("change", () => {
+                        if (checkbox.checked) {
+                            checkboxes.forEach(cb => {
+                                if (cb !== checkbox) cb.checked = false;
+                            });
+                        }
+                        drawDiode();
+                    });
+                });
+            });
+        }
+
+        // Display Diode Value
+        function displayDiodeValue() {
+            const diodeType = document.querySelector('input[name="diodeType"]:checked').value;
+            if (diodeType === "1band") {
+                const diodeTypeValue = selectorContainer.querySelector(".column:nth-child(1) input[type='checkbox']:checked")?.value || "Unknown";
+                resultDiv.textContent = `Diode Type: ${diodeTypeValue}`;
+            } else if (diodeType === "plastic") {
+                const productFamily = selectorContainer.querySelector(".column:nth-child(1) input[type='checkbox']:checked")?.value || "Unknown";
+                const peakVoltage = selectorContainer.querySelector(".column:nth-child(2) input[type='checkbox']:checked")?.value || "Unknown";
+                resultDiv.textContent = `Product Family: ${productFamily}, Peak Reverse Voltage: ${peakVoltage} V`;
+            } else if (diodeType === "1nxxxx") {
+                const bandCountValue = parseInt(bandSlider.value);
+                let diodeValue = "1N";
+                for (let i = 1; i <= bandCountValue; i++) {
+                    const selected = selectorContainer.querySelector(`.column:nth-child(${i}) input[type='checkbox']:checked`)?.value || "0";
+                    diodeValue += selected;
+                }
+                resultDiv.textContent = `Diode Value: ${diodeValue}`;
+            }
+        }
+
+        // Draw Diode
+        function drawDiode() {
+            const ctx = diodeCanvas.getContext("2d");
+            ctx.clearRect(0, 0, diodeCanvas.width, diodeCanvas.height);
+
+            // Draw grey lines (diode leads)
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 40, 40, 20); // Left lead
+            ctx.fillRect(240, 40, 150, 20); // Right lead
+
+            // Draw beige rectangle (diode body)
+            ctx.fillStyle = "darkgrey";
+            ctx.fillRect(25, 30, 250, 40);
+
+            // Draw bands
+            const diodeType = document.querySelector('input[name="diodeType"]:checked').value;
+            const bands = [];
+
+            if (diodeType === "1band") {
+                const selected = selectorContainer.querySelector(".column:nth-child(1) input[type='checkbox']:checked")?.value || "black";
+                bands.push(selected);
+            } else if (diodeType === "plastic") {
+                const productFamily = selectorContainer.querySelector(".column:nth-child(1) input[type='checkbox']:checked")?.value || "white";
+                const peakVoltage = selectorContainer.querySelector(".column:nth-child(2) input[type='checkbox']:checked")?.value || "gray";
+                bands.push(productFamily, peakVoltage);
+            } else if (diodeType === "1nxxxx") {
+                const bandCountValue = parseInt(bandSlider.value);
+                for (let i = 1; i <= bandCountValue; i++) {
+                    const selected = selectorContainer.querySelector(`.column:nth-child(${i}) input[type='checkbox']:checked`)?.value || "black";
+                    bands.push(selected);
+                }
+            }
+
+            // Draw bands on the diode
+            const bandWidth = Math.max(250 / (bands.length + 0.5), 10); // Make bands thinner
+            bands.forEach((band, index) => {
+                const color = getBandColor(band);
+                ctx.fillStyle = color;
+                ctx.fillRect(25 + ((index + 0.5) * bandWidth), 30, bandWidth / 2, 40);
+            });
+        }
+
+        // Get the color for a band based on its value
+        function getBandColor(value) {
+            const allBands = [...colorData.oneBand, ...colorData.plastic.productFamily, ...colorData.plastic.peakVoltage, ...colorData.inxxxx.digits, ...colorData.inxxxx.suffix];
+            const band = allBands.find(b => b.value == value);
+            return band ? band.color : "black";
+        }
+
+        // Initial generation
+        generateSelectors("1band");
+        drawDiode();
+    </script>
+</body>
+</html>

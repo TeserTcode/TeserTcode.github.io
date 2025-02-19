@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Busy Beaver Simulator</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+        }
+        .histogram-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            max-width: 800px;
+            overflow-x: scroll;
+            position: relative;
+        }
+        .histogram-row {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .box {
+            width: 20px;
+            height: 20px;
+            margin: 1px;
+            border: 1px solid #000;
+        }
+        .box-0 {
+            background-color: white;
+        }
+        .box-1 {
+            background-color: black;
+        }
+		
+		.box-0-head {
+            background-color: white;
+	border: 5px solid red; 
+    box-sizing: border-box;
+	
+
+        }
+        .box-1-head {
+            background-color: black;
+					border: 5px solid red; 
+    box-sizing: border-box;
+
+        }
+        .head-line {
+            position: absolute;
+            height: 2px;
+            background-color: red;
+            top: 18px; /* Align it with the boxes */
+        }
+        .histogram {
+            font-family: monospace;
+        }
+        .invisible {
+            visibility: hidden;
+        }
+    </style>
+</head>
+<body>
+    <h1>Busy Beaver Simulator</h1>
+
+    <!-- Input for transitions -->
+    <label for="transitionInput">Enter Transitions:</label>
+    <textarea id="transitionInput" rows="4" cols="50">2;R;1|3;L;1|1;L;1|2;R;1|2;L;1|0;L;1</textarea><br>
+	<!--	2;R;1|0;L;0|2;L;1|3;R;0|3;L;1|1;L;1    </textarea><br> --->
+
+    <button onclick="runSimulation()">Run Simulation</button>
+
+    <h2>Simulation Result</h2>
+    <p id="stepsOutput"></p>
+    <p id="shiftsOutput"></p>
+
+    <h3>Histogram:</h3>
+    <div id="histogram" class="histogram-container"></div>
+
+    <script>
+ const Move = {
+            LEFT: 'L',
+            RIGHT: 'R',
+            LLEFT: 'LL',
+            RRIGHT: 'RR',
+            WAIT: 'W',
+            JUMP: 'J'
+        };
+
+
+        function parseTransitions(input) {
+            return input.split('|').map(transitionStr => {
+                const parts = transitionStr.split(';');
+                return {
+                    nextState: parseInt(parts[0]),
+                    move: parts[1],
+                    write: parseInt(parts[2])
+                };
+            });
+        }
+        function runSimulation() {
+            const input = document.getElementById('transitionInput').value;
+            const transitions = parseTransitions(input);
+let oldtapeHead=0;
+            let positiveTape = [0];
+            let negativeTape = [0];
+            let tapeHead = 0;
+            let currentState = 1;
+            let stepCount = 0;
+            let totalShifts = 0;
+            let maxDistFromOrigin = 0;
+            let totalOn = 0;
+
+            // Clear the previous histogram
+            document.getElementById('histogram').innerHTML = '';
+
+            while (currentState !== 0 && stepCount < 1000) {
+                let currentTape = tapeHead >= 0 ? positiveTape : negativeTape;
+                let index = Math.abs(tapeHead);
+
+                // Ensure the tape is long enough
+                while (index >= currentTape.length) {
+                    currentTape.length = index + 1;
+                    currentTape.fill(0, currentTape.length - 1);
+                }
+
+				currentTape[index] = currentTape[index] || 0;
+                let currentValue = currentTape[index];
+                let t = transitions[(currentState - 1) * 2 + currentValue];
+
+                // Write the value
+				console.log(currentValue)
+                currentTape[index] = t.write;
+                if (t.write === 1) totalOn++;
+
+                // Move the tape head
+                if (t.move === Move.LEFT) {
+                    tapeHead--;
+                } else if (t.move === Move.RIGHT) {
+                    tapeHead++;
+                } else if (t.move === Move.LLEFT) {
+				
+                    tapeHead -= 2;
+				currentTape[Math.abs(tapeHead+1)]=currentTape[Math.abs(tapeHead+1)]|0;
+                } else if (t.move === Move.RRIGHT) {
+                    tapeHead += 2;
+				currentTape[Math.abs(tapeHead-1)]=currentTape[Math.abs(tapeHead-1)]|0;
+                }
+
+                // Update the state
+                currentState = t.nextState;
+                stepCount++;
+                totalShifts++;
+
+                // Update max distance from origin
+                maxDistFromOrigin = Math.max(maxDistFromOrigin, Math.abs(tapeHead));
+
+                // Draw the histogram row for this step
+                drawHistogramRow(positiveTape, negativeTape, oldtapeHead);
+				oldtapeHead=tapeHead;
+            }
+			
+
+            // Output the result
+            if (currentState === 0) {
+                document.getElementById('stepsOutput').textContent = `Total Steps: ${stepCount}`;
+                document.getElementById('shiftsOutput').textContent = `Total Shifts: ${totalShifts}`;
+            } else {
+                document.getElementById('stepsOutput').textContent = `Simulation did not halt in time.`;
+                document.getElementById('shiftsOutput').textContent = `Total Shifts: ${totalShifts}`;
+            }
+
+            // Display the total number of "on" bits
+            document.getElementById('shiftsOutput').textContent += ` | Total "on" bits: ${totalOn}`;
+
+            // Display max distance from origin
+            document.getElementById('shiftsOutput').textContent += ` | Max Distance from Origin: ${maxDistFromOrigin}`;
+        }
+
+function drawHistogramRow(positiveTape, negativeTape, tapeHead) {
+    const histogramContainer = document.getElementById('histogram');
+
+    // Find the maximum length of both tapes
+    const maxLength = Math.max(positiveTape.length, negativeTape.length);
+
+    let histogramRow = '';
+
+    // Draw the negative tape part (left side), pad with invisible boxes if needed
+    for (let i = 0; i < maxLength - negativeTape.length; i++) {
+        histogramRow += `<div class="box invisible"></div>`; // Invisible boxes for padding
+    }
+
+    negativeTape.forEach((value, index) => {
+        let boxClass = value === 1 ? 'box-1' : 'box-0';
+console.log(negativeTape.length-tapeHead)
+        // Check if this is the tape head position
+        if (tapeHead < 0 && index === negativeTape.length+tapeHead) {
+            boxClass += '-head';
+        }
+		if(index!=0)
+        histogramRow += `<div class="box ${boxClass}"></div>`;
+    });
+histogramRow += '<div style="width: 1px;"></div>';
+   
+    positiveTape.forEach((value, index) => {
+        let boxClass = value === 1 ? 'box-1' : 'box-0';
+
+        // Check if this is the tape head position
+        if (tapeHead >= 0 && index === tapeHead) {
+            boxClass += '-head';
+        }
+
+        histogramRow += `<div class="box ${boxClass}"></div>`;
+    });
+
+    for (let i = 0; i < maxLength - positiveTape.length; i++) {
+        histogramRow += `<div class="box invisible"></div>`;
+    }
+
+    // Display the histogram row
+    const newRow = document.createElement('div');
+    newRow.className = 'histogram-row';
+    newRow.innerHTML = histogramRow;
+    histogramContainer.appendChild(newRow);
+}
+    </script>
+</body>
+</html>

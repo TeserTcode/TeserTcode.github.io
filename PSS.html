@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PSS: Pair System Sequence</title>
+    <style>
+        /* Styles remain the same */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .table-container {
+            margin: 20px auto;
+            position: relative;
+            width: 80%;
+            max-width: 500px;
+        }
+
+        .table-row {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+            position: relative;
+            height: 40px;
+        }
+
+        .cell {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: background-color 1s;
+            box-sizing: border-box;
+        }
+
+        .arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            transition: left 1s, transform 1s, opacity 0.5s;
+            opacity: 1;
+        }
+
+        .arrow-up {
+            border-width: 0 10px 20px 10px;
+            border-color: transparent transparent black transparent;
+            top: -20px;
+            transform: rotate(180deg);
+        }
+
+        .arrow-down {
+            border-width: 20px 10px 0 10px;
+            border-color: black transparent transparent transparent;
+            bottom: -20px;
+            transform: rotate(180deg);
+        }
+
+        .highlight-red {
+            background-color: red !important;
+        }
+
+        .highlight-green {
+            background-color: green !important;
+        }
+
+        .highlight-grey {
+            background-color: grey !important;
+            transition: background-color 2s;
+        }
+
+        .highlight-white {
+            background-color: white !important;
+        }
+
+        .copy {
+            animation: insertAnimation 0.5s forwards;
+        }
+
+        @keyframes insertAnimation {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>PSS: Pair System Sequence</h1>
+    <input type="text" id="inputNumbers" value="(0,0)(1,1)(2,1)(3,1)(2,0)(1,1)(2,1)(3,1)">
+    <input type="number" id="inputW" value="2" min="1">
+    <label for="speedSlider">Animation Speed:</label>
+    <input type="range" id="speedSlider" min="0.1" max="5" value="1" step="0.1">
+    <span id="speedValue">1x</span>
+    <br><br>
+    <button onclick="createTable()">Expand</button>
+    <button onclick="reExpand()">Re-Expand</button>
+    <button onclick="startSGH()">SGH</button>
+    <button onclick="stopSGH()">Stop SGH</button>
+    <div class="table-container">
+        <div id="row1" class="table-row"></div>
+        <div id="row2" class="table-row"></div>
+        <div id="arrowUp" class="arrow arrow-up"></div>
+        <div id="arrowDown" class="arrow arrow-down"></div>
+    </div>
+
+    <script>
+        let animationInterval;
+        let speed = 1;
+        let ddelta=9;
+        let globalpair=0;
+        let sghActive = false;
+        const clonedUpper = [];
+        const clonedLower = [];
+        document.getElementById('speedSlider').addEventListener('input', function() {
+            speed = parseFloat(this.value);
+            document.getElementById('speedValue').textContent = speed + 'x';
+        });
+
+        const arrowUp = document.getElementById('arrowUp');
+        const arrowDown = document.getElementById('arrowDown');
+
+        arrowUp.style.opacity = 0;
+        arrowDown.style.opacity = 0;
+
+        function createTable() {
+            const input = document.getElementById('inputNumbers').value;
+            if (input.length < 1) { sghActive = false; return; }
+            const w = parseInt(document.getElementById('inputW').value, 10);
+            const parsedData = parseInput(input);
+            const row1 = document.getElementById('row1');
+            const row2 = document.getElementById('row2');
+            row1.innerHTML = '';
+            row2.innerHTML = '';
+
+            clonedUpper.length = 0;
+            clonedLower.length = 0;
+
+            parsedData.row1.forEach(num => {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.textContent = num;
+                row1.appendChild(cell);
+                clonedUpper.push(false); // Initialize as not cloned
+            });
+
+            parsedData.row2.forEach(num => {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.textContent = num;
+                row2.appendChild(cell);
+                clonedLower.push(false); // Initialize as not cloned
+            });
+
+            animate(parsedData, w);
+        }
+
+        function parseInput(input) {
+            const pairs = input.match(/\((\d+),(\d+)\)/g) || [];
+            const row1 = [];
+            const row2 = [];
+            pairs.forEach(pair => {
+                const [a, b] = pair.replace(/[()]/g, '').split(',').map(Number);
+                row1.push(a);
+                row2.push(b);
+            });
+            return { row1, row2 };
+        }
+
+        function animate(parsedData, w) {
+            const row1Cells = document.querySelectorAll('#row1 .cell');
+            const row2Cells = document.querySelectorAll('#row2 .cell');
+            const lastIndex = row1Cells.length - 1;
+
+            let currentMin = parsedData.row1[lastIndex];
+
+            arrowUp.style.opacity = 1;
+            arrowUp.style.left = `${row1Cells[lastIndex].offsetLeft + row1Cells[lastIndex].offsetWidth / 2}px`;
+
+            for (let i = lastIndex; i >= 0; i--) {
+                setTimeout(() => {
+                    arrowUp.style.left = `${row1Cells[i].offsetLeft + row1Cells[i].offsetWidth / 2}px`;
+
+                    // Create clone only when a strictly smaller minimum is found
+                    if (parsedData.row1[i] < currentMin) {
+                        currentMin = parsedData.row1[i];
+                        createArrowClone(row1Cells[i]);
+                        row1Cells[i].classList.add('highlight-grey');
+                        clonedUpper[i] = true; // Mark as cloned
+                    }
+
+                    // Highlight cells based on current position
+                    for (let j = i + 1; j <= lastIndex; j++) {
+                        row1Cells[j].classList.add('highlight-red');
+                    }
+                    for (let j = 0; j < i; j++) {
+                        row1Cells[j].classList.add('highlight-green');
+                    }
+
+                    // Start processing the bottom row after completing the top row
+                    if (i === 0) {
+                        processBottomRow(row1Cells,parsedData, row2Cells,w);
+                            
+                            
+
+                    }
+           
+
+                }, (lastIndex - i) * 1000 * (1 / speed));
+            }
+
+
+
+            
+
+
+
+        }
+function copyAndRepeat(row1Cells, row2Cells, w, delta) {
+    const row1 = document.getElementById('row1');
+    const row2 = document.getElementById('row2');
+
+    // Select elements to copy (from globalpair onward)
+    const row1Copy = Array.from(row1Cells).slice(globalpair);
+    const row2Copy = Array.from(row2Cells).slice(globalpair);
+
+    // Repeat w-1 times with animation
+    for (let i = 0; i < w - 1; i++) {
+        setTimeout(() => {
+            row1Copy.forEach((cell, index) => {
+                if(index!==row1Copy.length-1){setTimeout(() => {
+                    const clone = cell.cloneNode(true);
+
+                    // Extract numeric value and update it
+                    let currentValue = parseFloat(clone.textContent) || 0;
+                    clone.textContent = currentValue + delta * (i + 1);
+
+                    // Apply fade-in animation
+                    clone.style.opacity = 0;
+                    row1.appendChild(clone);
+                    requestAnimationFrame(() => {
+                        clone.style.transition = `opacity 0.5s ease-in-out`;
+                        clone.style.opacity = 1;
+                    });
+                }, index * 300);}
+            });
+
+            row2Copy.forEach((cell, index) => {
+                if(index!==row1Copy.length-1){setTimeout(() => {
+                    const clone = cell.cloneNode(true);
+
+                    // Apply fade-in animation
+                    clone.style.opacity = 0;
+                    row2.appendChild(clone);
+                    requestAnimationFrame(() => {
+                        clone.style.transition = `opacity 0.5s ease-in-out`;
+                        clone.style.opacity = 1;
+                    });
+                }, index * 300);} // Delay each number within a cycle
+            });
+
+        }, i * 1000 * (1 / speed)); // Delay each cycle
+    }
+}
+
+
+        function deleteLastIndex(row1Cells, row2Cells) {
+    if (row1Cells.length > 0) {
+        row1Cells[row1Cells.length - 1].remove();
+    }
+    if (row2Cells.length > 0) {
+        row2Cells[row2Cells.length - 1].remove();
+    }
+}
+function animateDeltaMovement(delta) {
+    const deltaAnimation = document.createElement('div');
+    deltaAnimation.className = 'delta-animation';
+    deltaAnimation.style.position = 'absolute';
+    deltaAnimation.style.left = `${arrowUp.offsetLeft}px`; // Start from the current position of the arrow
+    deltaAnimation.style.transition = 'left 1s ease'; // Smooth transition
+    document.body.appendChild(deltaAnimation);
+
+    setTimeout(() => {
+        // Animate the delta movement by adjusting the left position
+        deltaAnimation.style.left = `${arrowUp.offsetLeft + delta}px`;
+    }, 100); // Start the movement after a slight delay
+}
+        function createArrowClone(targetCell) {
+            const clone = document.createElement('div');
+            clone.className = 'arrow arrow-up';
+            clone.style.opacity = 1;
+            clone.style.left = `${targetCell.offsetLeft + targetCell.offsetWidth / 2}px`;
+            clone.style.top = '-20px';
+            document.querySelector('.table-container').appendChild(clone);
+        }
+
+        function processBottomRow(row1Cells,parsedData, row2Cells,w) {
+        const lastIndex = row1Cells.length - 1;
+            let lastTerm = parsedData.row2[parsedData.row2.length - 1];
+            let rightmostPair = null;
+
+            arrowDown.style.opacity = 1;
+            arrowDown.style.left = `${row2Cells[row2Cells.length - 1].offsetLeft + row2Cells[row2Cells.length - 1].offsetWidth / 2}px`;
+
+            for (let i = row2Cells.length - 1; i >= 0; i--) {
+                setTimeout(() => {
+                    arrowDown.style.left = `${row2Cells[i].offsetLeft + row2Cells[i].offsetWidth / 2}px`;
+
+                    // Clone the bottom arrow for terms smaller than the last term
+                    if (parsedData.row2[i] < lastTerm) {
+                        cloneArrowDown(row2Cells[i]);
+                        row2Cells[i].classList.add('highlight-grey');
+                        clonedLower[i] = true; // Mark as cloned
+                    }
+
+                    // Check for pairs where both rows are cloned
+                    if ( i>rightmostPair &&((clonedUpper[i] && clonedLower[i])||(clonedUpper[i] && parseFloat(row2Cells[row2Cells.length - 1].textContent) === 0))) {
+                        rightmostPair = i;
+                        if(parseFloat(row2Cells[row2Cells.length - 1].textContent) === 0)ddelta=0;
+                    }
+
+                    // Highlight logic for red
+                    if (rightmostPair !== null) {
+                        paintWhiteExceptLastAndHighlight(row1Cells, row2Cells, rightmostPair);
+                        globalpair=rightmostPair;
+                        
+                    }
+                    
+                    if(i==0){
+
+
+    const lastValue = parseFloat(row1Cells[row1Cells.length - 1].textContent) || 0;
+    const globalValue = parseFloat(row1Cells[globalpair].textContent) || 0;
+
+    // Calculate delta as the absolute numeric difference
+   let delta = Math.abs(lastValue - globalValue)
+   if(ddelta==0)delta=0;
+         console.log(delta)
+                animateDeltaMovement(delta);
+                  deleteLastIndex(row1Cells, row2Cells);
+                  copyAndRepeat(row1Cells, row2Cells, w,delta);
+                    }
+                    
+                }, (row2Cells.length - 1 - i) * 1000 * (1 / speed));
+            }
+            
+            
+            
+            
+            
+        }
+
+        function cloneArrowDown(targetCell) {
+            const clone = document.createElement('div');
+            clone.className = 'arrow arrow-down';
+            clone.style.opacity = 1;
+            clone.style.left = `${targetCell.offsetLeft + targetCell.offsetWidth / 2}px`;
+            clone.style.bottom = '-20px';
+            document.querySelector('.table-container').appendChild(clone);
+        }
+
+        function paintWhiteExceptLastAndHighlight(row1Cells, row2Cells, rightmostPair) {
+            row1Cells.forEach((cell, index) => {
+            if(index!=row1Cells.length-1)
+                cell.classList.add('highlight-white');
+            });
+
+            row2Cells.forEach((cell, index) => {
+                cell.classList.add('highlight-white');
+            });
+
+            row1Cells[rightmostPair].classList.remove('highlight-white');
+            row1Cells[rightmostPair].classList.add('highlight-red');
+            
+            row2Cells[rightmostPair].classList.remove('highlight-white');
+            row2Cells[rightmostPair].classList.add('highlight-red');
+        }
+
+        function reExpand() {
+            sghActive = false;
+            createTable();
+        }
+
+        function startSGH() {
+            sghActive = true;
+            clearInterval(animationInterval);
+            animationInterval = setInterval(createTable, 1000 * (1 / speed));
+        }
+
+        function stopSGH() {
+            sghActive = false;
+            clearInterval(animationInterval);
+        }
+    </script>
+</body>
+</html>

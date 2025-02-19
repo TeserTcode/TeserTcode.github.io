@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chaos Game</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+        canvas { border: 1px solid black; display: block; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="controls">
+    <label>Colour:
+        <select id="color">
+            <option value="red">Red</option>
+            <option value="green">Green</option>
+            <option value="blue">Blue</option>
+			<option value="cyan">Cyan</option>
+            <option value="yellow">Yellow</option>
+            <option value="magenta">Magenta</option>
+			<option value="black">Black</option>
+			<option value="white">White</option>
+			<option value="grey">Grey</option>
+			<option value="pink">Pink</option>
+			<option value="purple">Purple</option>
+			<option value="orange">Orange</option>
+            <option value="rainbow">Rainbow</option>
+			<option value="dynamic">Dynamic</option>
+        </select>
+    </label>
+    <label>BG Colour:
+        <select id="bgcolor">
+            <option value="black">Black</option>
+            <option value="white">White</option>
+            <option value="red">Red</option>
+            <option value="green">Green</option>
+            <option value="blue">Blue</option>
+            <option value="cyan">Cyan</option>
+            <option value="yellow">Yellow</option>
+            <option value="magenta">Magenta</option>
+			<option value="grey">Grey</option>
+			<option value="pink">Pink</option>
+			<option value="purple">Purple</option>
+			<option value="orange">Orange</option>
+        </select>
+    </label>
+    <label>Screen Min:
+        <input type="number" id="screenMin" value="-1.2">
+    </label>
+    <label>Screen Max:
+        <input type="number" id="screenMax" value="1.2">
+    </label>
+    <label>Distance (p):
+        <input type="number" id="distance" value="0.5" step="0.05" min="-2" max="2">
+    </label>
+    <label>Brush Size:
+        <input type="number" id="brushSize" value="2" min="1">
+    </label>
+    <label>Delay (ms):
+        <input type="number" id="delay" value="1" min="1">
+    </label>
+	<label>Do N Calculations:
+        <input type="number" id="iterations" value="100" min="1">
+	</label>
+    <button id="start">Start</button>
+    <button id="stop">Stop</button>
+</div>
+
+<div id="rules">
+    <label><input type="checkbox" id="rule1"> Can't choose same</label>
+    <label><input type="checkbox" id="rule2"> Can't choose previous</label>
+    <label><input type="checkbox" id="rule3"> Can't choose nth previous</label>
+	
+    <label>N: <input type="number" id="ruleN" value="3" min="1"></label>
+	<label><input type="checkbox" id="rule33"><-- 1st to nth</label>
+</div>
+
+<div id="prules">
+    <label><input type="checkbox" id="rule4"> Can't choose period</label>
+    <label><input type="checkbox" id="rule5"> Only choose period</label>
+    <label>Period P: <input type="number" id="ruleP" value="2" min="1"></label>
+	
+	<label><input type="checkbox" id="ruleOpposite"> Can't Choose Opposite</label>
+	<label><input type="checkbox" id="ruleNextTo"> Can't Choose Adjacent</label>
+</div>
+
+<div id="corners">
+    <label>Shape:
+        <select id="shape">
+            <option value="triangle">Triangle</option>
+            <option value="square">Square</option>
+            <option value="pentagon">Pentagon</option>
+            <option value="hexagon">Hexagon</option>
+            <option value="septagon">Septagon</option>
+            <option value="octagon">Octagon</option>
+            <option value="3x3square">3×3 Square</option>
+            <option value="4cornertriangle">4-Corner Triangle</option>
+            <option value="7cornerhexagon">7-Corner Hexagon</option>
+            <option value="5cornersquare">5-Corner Square</option>
+            <option value="middless3x3">Middle-less 3x3 Square</option>
+			<option value="cross">Cross</option>
+			<option value="figure8">Figure8</option>
+            <option value="rightTriangle">Right Triangle</option>
+            <option value="spiral">Spiral</option>
+            <option value="custom">Custom</option>
+        </select>
+    </label>
+    <label>Custom Corners:
+        <textarea id="customCorners" placeholder="Enter coordinates as [[x1,y1],[x2,y2],...]"></textarea>
+    </label>
+</div>
+
+<label><input type="checkbox" id="trail"> Enable Trail</label>
+<label>Trail Width: <input type="number" id="trailWidth" value="5" min="1"></label>
+
+<canvas id="chaosCanvas" width="1000" height="1000"></canvas>
+
+<script>
+const canvas = document.getElementById("chaosCanvas");
+const ctx = canvas.getContext("2d");
+let running = false;
+let corners = [];
+let currentPos = [0, 0];
+let prevCorners = [];
+let lastTime = 0;
+let time=0;
+
+const shapePresets = {
+    triangle: [[-1, -0.86602540378], [1, -0.86602540378], [0, 0.86602540378]],
+    square: [[-1, -1], [1, -1], [1, 1], [-1, 1]],
+    pentagon: Array.from({length: 5}, (_, i) => [Math.cos(2 * Math.PI * i / 5), Math.sin(2 * Math.PI * i / 5)]),
+    hexagon: Array.from({length: 6}, (_, i) => [Math.cos(2 * Math.PI * i / 6), Math.sin(2 * Math.PI * i / 6)]),
+    septagon: Array.from({length: 7}, (_, i) => [Math.cos(2 * Math.PI * i / 7), Math.sin(2 * Math.PI * i / 7)]),
+    octagon: Array.from({length: 8}, (_, i) => [Math.cos(2 * Math.PI * i / 8), Math.sin(2 * Math.PI * i / 8)]),
+    "3x3square": [[-1,-1], [0,-1], [1,-1], [-1,0], [0,0], [1,0], [-1,1], [0,1], [1,1]],
+    "4cornertriangle": [[-1, -0.86602540378], [1, -0.86602540378], [0, 0.86602540378],[0,-0.28867513459]],
+	"7cornerhexagon": Array.from({length: 7}, (_, i) => [Math.cos(2 * Math.PI * i / 7), Math.sin(2 * Math.PI * i / 7)]).concat([[0, 0]]), 
+    "5cornersquare": [[-1, -1], [1, -1], [1, 1], [-1, 1], [0, 0]],
+    "middless3x3": [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]], 
+	figure8: [[-2,0], [-1,1], [-1,-1], [0,0], [1,-1], [1,1], [2,0]],
+	cross: [[-1, 0], [1, 0], [0, -1], [0, 1], [0,0]],
+	rightTriangle: [[-1, -1], [-1, 1], [1, -1]],
+	  Spiral: function(t) {
+		let a = 0.1; 
+        let b = 0.02;
+        return [a * t * Math.cos(b * t), a * t * Math.sin(b * t)]; 
+    }
+};
+
+function getColorMethod(name, x, y) {
+return name === "rainbow" 
+    ? `hsl(${(x + 1) * 180}, 100%, 50%)` 
+    : (name === "dynamic" 
+        ? `hsl(${time / 100}, 100%, 50%)` 
+        : name);
+}
+
+function resetCanvas() {
+    ctx.fillStyle = document.getElementById("bgcolor").value;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function transformToCanvas(x, y) {
+    const min = Number(document.getElementById("screenMin").value);
+    const max = Number(document.getElementById("screenMax").value);
+    const px = ((x - min) / (max - min)) * canvas.width;
+    const py = ((1 - (y - min) / (max - min))) * canvas.height;
+    return [px, py];
+}
+
+function drawDot(x, y) {
+	time++;
+    const brushSize = Number(document.getElementById("brushSize").value);
+    ctx.fillStyle = getColorMethod(document.getElementById("color").value, x, y);
+    const [px, py] = transformToCanvas(x, y);
+    ctx.beginPath();
+    ctx.arc(px, py, brushSize, 0, 2 * Math.PI);
+    ctx.fill();
+}
+
+function getRandomCorner() {
+    let available = corners.map((_, i) => i);
+    const rule1 = document.getElementById("rule1").checked;
+    const rule2 = document.getElementById("rule2").checked;
+    const rule3 = document.getElementById("rule3").checked;
+	const rule33 = document.getElementById("rule33").checked;
+	const rule4 = document.getElementById("rule4").checked;
+	const rule5 = document.getElementById("rule5").checked;
+    const n = Number(document.getElementById("ruleN").value);
+	const pn = Number(document.getElementById("ruleP").value);
+	
+	const ruleNextTo = document.getElementById("ruleNextTo").checked;
+	const ruleOpposite = document.getElementById("ruleOpposite").checked;
+
+    if (rule1 && prevCorners.length > 0) available = available.filter(i => i !== prevCorners[0]);
+    if (rule2 && prevCorners.length > 1) available = available.filter(i => i !== prevCorners[1]);
+    if (rule3 && prevCorners.length >= n) available = available.filter(i => i !== prevCorners[n - 1]);
+
+	if (rule33 && prevCorners.length >= n){for(let d=0;d<n;d++) available = available.filter(i => i !== prevCorners[d - 1]);}
+
+
+	if (prevCorners.length>= n && rule4 ) {
+	
+        available = available.filter(i => i % pn === time % pn);
+    }else if (prevCorners.length>= n && rule5) {
+	
+        available = available.filter(i => i % pn !== time % pn);
+    }
+
+		if (ruleNextTo && prevCorners.length > 0) {
+			let last = prevCorners[0];
+    let left = (last - 1 + corners.length) % corners.length; // Previous in cyclic order
+    let right = (last + 1) % corners.length; // Next in cyclic order
+    available = available.filter(i => i !== left && i !== right);
+}
+
+if (ruleOpposite && prevCorners.length > 0) {
+    let last = prevCorners[0];
+    let opposite = (last + Math.floor(corners.length / 2)) % corners.length; // Opposite in cyclic order
+    available = available.filter(i => i !== opposite);
+}
+
+    if (available.length === 0) available = corners.map((_, i) => i);
+
+    const index = available[Math.floor(Math.random() * available.length)];
+    prevCorners.unshift(index);
+    if (prevCorners.length > n) prevCorners.pop();
+    return corners[index];
+}
+
+function startGame() {
+    corners = shapePresets[document.getElementById("shape").value] || JSON.parse(document.getElementById("customCorners").value);
+    running = true;
+    resetCanvas();
+    requestAnimationFrame(gameLoop);
+}
+
+function gameLoop() {
+    if (!running) return;
+	    let iterations = Number(document.getElementById("iterations").value);
+    for (let i = 0; i < iterations; i++) {
+    const [cx, cy] = getRandomCorner();
+    const p = Number(document.getElementById("distance").value);
+    currentPos = [(1 - p) * currentPos[0] + p * cx, (1 - p) * currentPos[1] + p * cy];
+    drawDot(currentPos[0], currentPos[1]);}
+    requestAnimationFrame(gameLoop);
+}
+
+document.getElementById("start").addEventListener("click", startGame);
+document.getElementById("stop").addEventListener("click", () => running = false);
+resetCanvas();
+</script>
+
+</body>
+</html>

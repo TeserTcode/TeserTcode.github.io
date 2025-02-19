@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rhythm Game</title>
+    
+    <style>
+#progress-bar {
+    width: 100%;
+    height: 5px;
+    background: #444;
+}
+@keyframes gradientShift {
+    0% { background-position: 0% 0%; }
+    50% { background-position: 100% 100%; }
+    100% { background-position: 0% 0%; }
+}
+
+.column {
+    background: var(--gradientColors);
+    background-size: 200% 200%;
+    animation: gradientShift 4s infinite alternate ease-in-out;
+}
+#progress {
+    height: 100%;
+    width: 0%;
+    background: cyan;
+    transition: width 0.1s linear;
+}
+        body { 
+            text-align: center; 
+            font-family: Arial, sans-serif; 
+            background: black; 
+            color: white;
+        }
+        .game-container { display: flex; justify-content: center; gap: 20px; }
+        .column { width: 60px; height: 300px; border: 2px solid white; position: relative; }
+        .note {
+            width: 50px; height: 20px; background: black; position: absolute;
+            top: 0; left: 5px;
+            animation: fall 1s linear forwards;
+        }
+        @keyframes fall {
+            to { top: 280px; }
+        }
+        .perfect-line {
+            position: absolute; width: 100%; height: 2px; background: blue;
+            bottom: 70px;
+        }
+        .score-feedback {
+            position: absolute; 
+            font-weight: bold;
+            font-size: 20px;
+            animation: fade 1s ease-out forwards;
+        }
+        @keyframes fade {
+            to { opacity: 0; transform: translateY(-20px); }
+        }
+        #score {
+            background: linear-gradient(to right, cyan, white, #888);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            padding: 5px 15px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+		  #playButton {
+    background: linear-gradient(to right, #00bcd4, #007bff, #1a1a1a);
+    border: 2px solid #00bcd4;
+    color: white;
+    font-size: 20px;
+    padding: 15px 30px;
+    cursor: pointer;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 188, 212, 0.3);
+    transition: all 0.3s ease;
+  }
+
+  #playButton:hover {
+    background: linear-gradient(to right, #007bff, #00bcd4, #1a1a1a);
+    box-shadow: 0 6px 15px rgba(0, 188, 212, 0.5);
+    transform: scale(1.05);
+  }
+
+  #playButton:active {
+    background: #00bcd4;
+    box-shadow: 0 2px 5px rgba(0, 188, 212, 0.7);
+    transform: scale(1);
+  }
+          #countdown {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 100px;
+            text-shadow: 0 0 20px cyan;
+            animation: pulse 1s infinite;
+            display: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+       .particle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: cyan;
+    border-radius: 50%;
+    box-shadow: 0 0 8px cyan, 0 0 16px rgba(0, 255, 255, 0.8);
+    opacity: 1;
+    animation: moveParticle 1s ease-out, fadeOut 1s ease-out;
+}
+
+@keyframes moveParticle {
+    to {
+        transform: translate(var(--dx), var(--dy)) scale(0);
+    }
+}
+
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+ }   }
+
+        @keyframes explode {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
+        }
+
+        #settings-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border: 2px solid cyan;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .settings-item {
+            margin: 10px 0;
+        }
+
+        /* Modified progress bar */
+        #progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px;
+            background: rgba(0,0,0,0.8);
+        }
+
+        #progress-bar {
+            height: 10px;
+            background: #222;
+            border-radius: 5px;
+            overflow: hidden;
+            border: 1px solid cyan;
+        }
+
+        #progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, cyan, #00bcd4);
+            transition: width 0.1s linear;
+            box-shadow: 0 0 10px cyan;
+        }
+    </style>
+</head>
+<body>
+    <h1>Rhythm Game</h1>
+    <div class="game-container">
+        <div class="column" id="col-S"><div class="perfect-line"></div>S</div>
+        <div class="column" id="col-D"><div class="perfect-line"></div>D</div>
+        <div class="column" id="col-F"><div class="perfect-line"></div>F</div>
+        <div class="column" id="col-J"><div class="perfect-line"></div>J</div>
+        <div class="column" id="col-K"><div class="perfect-line"></div>K</div>
+        <div class="column" id="col-L"><div class="perfect-line"></div>L</div>
+    </div>
+    <br><br><br>
+        <div class="level-display">Current Level: <span id="currentLevel">1</span></div>
+    <div id="countdown"></div>
+    <div id="settings-panel">
+        <h3>Settings</h3>
+        <div class="settings-item">
+            <label>Volume: <input type="range" id="volume" min="0" max="1" step="0.1" value="1"></label>
+        </div>
+        <div class="settings-item">
+            <label>Note Speed: <input type="range" id="note-speed" min="0.5" max="2" step="0.1" value="1"></label>
+        </div>
+    </div>
+
+    <div id="progress-container">
+        <div id="progress-bar">
+            <div id="progress"></div>
+        </div>
+    </div>
+
+</div>
+    <h2>Score: <span id="score">0</span></h2>
+    
+    <button id="decreaseBtn">Decrease Level</button>
+	<button id="playButton">Play Sound</button>
+      <button id="increaseBtn">Increase Level</button>
+    <h3>Last 10 Hits:</h3>
+    <ul id="score-list" class="score-list"></ul>
+	
+    <script>
+
+
+
+const levelnames=["Awaitment","Blightning","Rapidfire","Shadowed"];
+const levels=[
+
+    // Level 1: Awaitment
+    [   
+        ['J', 1.0], ['F', 1.2], ['S', 1.3], ['D', 1.5],
+        ['J', 1.7], ['K', 1.9], ['L', 2.0], ['S', 2.1], ['D', 2.3], ['F', 2.5], ['J', 2.7], ['L', 2.9],
+        ['K', 3.0], ['S', 3.1], ['D', 3.3], ['J', 3.5], ['K', 3.7], ['L', 3.9], ['F', 4.0], ['S', 4.1],
+        ['D', 4.3], ['F', 4.5], ['K', 4.7], ['L', 4.9], ['S', 5.0], ['D', 5.1], ['J', 5.3], ['K', 5.5],
+        ['L', 5.7], ['F', 5.9], ['S', 6.0], ['D', 6.1], ['J', 6.3], ['K', 6.5], ['L', 6.7], ['F', 6.9],
+        ['S', 7.0], ['D', 7.1], ['J', 7.3], ['L', 7.5], ['K', 7.7], ['F', 7.9], ['S', 8.0], ['D', 8.1],
+        ['J', 8.3], ['K', 8.5], ['L', 8.7], ['F', 8.9], ['S', 9.0], ['D', 9.1], ['J', 9.3], ['L', 9.5],
+        ['K', 9.7], ['F', 9.9], ['S', 10.0], ['D', 10.1], ['J', 10.3], ['K', 10.5], ['L', 10.7], ['F', 10.9],
+        ['S', 11.0], ['D', 11.1], ['J', 11.3], ['K', 11.5], ['L', 11.7], ['F', 11.9], ['S', 12.0], ['D', 12.1],
+        ['J', 12.3], ['L', 12.5], ['K', 12.7], ['F', 12.9], ['S', 13.0], ['D', 13.1], ['J', 13.3], ['K', 13.5],
+        ['L', 13.7], ['F', 13.9], ['S', 14.0], ['D', 14.1], ['J', 14.3], ['L', 14.5], ['K', 14.7], ['F', 14.9],
+        ['S', 15.0], ['D', 15.1], ['J', 15.3], ['K', 15.5], ['L', 15.7], ['F', 15.9], ['S', 16.0], ['D', 16.1],
+        ['J', 16.3], ['L', 16.5], ['K', 16.7], ['F', 16.9], ['S', 17.0], ['D', 17.1], ['J', 17.3], ['K', 17.5],
+        ['L', 17.7], ['F', 17.9], ['S', 18.0], ['D', 18.1], ['J', 18.3], ['L', 18.5], ['K', 18.7], ['F', 18.9],
+        ['S', 19.0], ['D', 19.1], ['J', 19.3], ['K', 19.5]
+    ],
+    // Level 2: Blightning
+    [
+        ['J', 1.0], ['L', 1.0], ['F', 1.2], ['K', 1.2], ['S', 1.3], ['D', 1.3],
+        ['J', 1.5], ['K', 1.5], ['L', 1.7], ['F', 1.7], ['S', 1.9], ['D', 1.9],
+        ['J', 2.1], ['L', 2.1], ['K', 2.3], ['F', 2.3], ['S', 2.5], ['D', 2.5],
+        ['J', 2.7], ['K', 2.7], ['L', 2.9], ['F', 2.9], ['S', 3.0], ['D', 3.0],
+        ['J', 3.2], ['L', 3.2], ['F', 3.3], ['K', 3.3], ['S', 3.5], ['D', 3.5],
+        ['J', 3.7], ['K', 3.7], ['L', 3.9], ['F', 3.9], ['S', 4.0], ['D', 4.0],
+        ['J', 4.2], ['L', 4.2], ['K', 4.3], ['F', 4.3], ['S', 4.5], ['D', 4.5],
+        ['J', 4.7], ['K', 4.7], ['L', 4.9], ['F', 4.9], ['S', 5.0], ['D', 5.0],
+        ['J', 5.2], ['L', 5.2], ['F', 5.3], ['K', 5.3], ['S', 5.5], ['D', 5.5],
+        ['J', 5.7], ['K', 5.7], ['L', 5.9], ['F', 5.9], ['S', 6.0], ['D', 6.0],
+        ['J', 6.2], ['L', 6.2], ['K', 6.3], ['F', 6.3], ['S', 6.5], ['D', 6.5],
+        ['J', 6.7], ['K', 6.7], ['L', 6.9], ['F', 6.9], ['S', 7.0], ['D', 7.0],
+        ['J', 7.2], ['L', 7.2], ['F', 7.3], ['K', 7.3], ['S', 7.5], ['D', 7.5],
+        ['J', 7.7], ['K', 7.7], ['L', 7.9], ['F', 7.9], ['S', 8.0], ['D', 8.0],
+        ['J', 8.2], ['L', 8.2], ['K', 8.3], ['F', 8.3], ['S', 8.5], ['D', 8.5],
+        ['J', 8.7], ['K', 8.7], ['L', 8.9], ['F', 8.9], ['S', 9.0], ['D', 9.0],
+        ['J', 9.2], ['L', 9.2], ['F', 9.3], ['K', 9.3], ['S', 9.5], ['D', 9.5],
+        ['J', 9.7], ['K', 9.7], ['L', 9.9], ['F', 9.9], ['S', 10.0], ['D', 10.0],
+        ['J', 10.2], ['L', 10.2], ['K', 10.3], ['F', 10.3], ['S', 10.5], ['D', 10.5],
+        ['J', 10.7], ['K', 10.7], ['L', 10.9], ['F', 10.9], ['S', 11.0], ['D', 11.0],
+    ['J', 12.0], ['S', 12.15], ['J', 12.3], ['K', 12.45], ['D', 12.6], ['L', 12.75],
+    ['F', 12.9], ['K', 13.05], ['D', 13.2], ['J', 13.35], ['S', 13.5], ['K', 13.65],
+    ['L', 13.8], ['F', 13.95], ['D', 14.1], ['J', 14.25], ['S', 14.4], ['K', 14.55],
+    ['D', 14.7], ['L', 14.85], ['F', 15.0], ['J', 15.15], ['S', 15.3], ['K', 15.45],
+    ['D', 15.6], ['L', 15.75], ['F', 15.9], ['K', 16.05], ['D', 16.2], ['J', 16.35],
+    ['S', 16.5], ['K', 16.65], ['D', 16.8], ['L', 16.95], ['F', 17.1], ['J', 17.25],
+    ['S', 17.4], ['K', 17.55], ['D', 17.7], ['L', 17.85], ['F', 18.0], ['J', 18.15],
+    ['S', 18.3], ['K', 18.45], ['D', 18.6], ['L', 18.75], ['F', 18.9], ['K', 19.05],
+    ['D', 19.2], ['J', 19.35], ['S', 19.5], ['K', 19.65], ['D', 19.8], ['L', 19.95],
+    ['S', 20.1], ['D', 20.2], ['J', 20.3], ['K', 20.4], ['L', 20.5], ['F', 20.6],
+    ['K', 20.7], ['D', 20.8], ['J', 20.9], ['S', 21.0], ['F', 21.1], ['L', 21.2],
+    ['K', 21.3], ['S', 21.4], ['D', 21.5], ['J', 21.6], ['K', 21.7], ['F', 21.8],
+    ['L', 21.9], ['D', 22.0], ['K', 22.1], ['S', 22.2], ['J', 22.3], ['L', 22.4],
+    ['F', 22.5], ['K', 22.6], ['S', 22.7], ['D', 22.8], ['J', 22.9], ['L', 23.0],
+    ['K', 23.1], ['D', 23.2], ['J', 23.3], ['S', 23.4], ['F', 23.5], ['L', 23.6],
+    ['K', 23.7], ['D', 23.8], ['S', 23.9], ['J', 24.0]
+    ],
+    // Level 3: Rapidfire
+    [
+       
+        ['J', 1.0], ['K', 1.05], ['L', 1.1], ['F', 1.15], ['S', 1.2], ['D', 1.25],
+        ['J', 1.3], ['L', 1.35], ['F', 1.4], ['K', 1.45], ['S', 1.5], ['D', 1.55],
+        ['J', 1.6], ['K', 1.65], ['L', 1.7], ['F', 1.75], ['S', 1.8], ['D', 1.85],
+        ['J', 1.9], ['L', 1.95], ['F', 2.0], ['K', 2.05], ['S', 2.1], ['D', 2.15],
+        ['J', 2.2], ['L', 2.25], ['F', 2.3], ['K', 2.35], ['S', 2.4], ['D', 2.45],
+        ['J', 2.5], ['K', 2.55], ['L', 2.6], ['F', 2.65], ['S', 2.7], ['D', 2.75],
+        ['J', 2.8], ['L', 2.85], ['F', 2.9], ['K', 2.95], ['S', 3.0], ['D', 3.05],
+        ['J', 3.1], ['L', 3.15], ['F', 3.2], ['K', 3.25], ['S', 3.3], ['D', 3.35],
+        ['J', 3.4], ['L', 3.45], ['F', 3.5], ['K', 3.55], ['S', 3.6], ['D', 3.65],
+        ['J', 3.7], ['L', 3.75], ['F', 3.8], ['K', 3.85], ['S', 3.9], ['D', 3.95],
+        ['J', 4.0], ['L', 4.05], ['F', 4.1], ['K', 4.15], ['S', 4.2], ['D', 4.25],
+         ['J', 4.1], ['L', 4.15], ['F',4.2], ['K', 4.25], ['S', 4.3], ['D', 4.35],
+        ['J', 4.4], ['K', 4.45], ['L', 4.5], ['F', 4.55], ['S', 4.6], ['D', 4.65],
+        ['J', 4.7], ['L', 4.75], ['F', 4.8], ['K', 4.85], ['S', 4.9], ['D', 4.95],
+        ['F', 5.0], ['K', 5.05], ['S', 5.1], ['D', 5.15],
+        ['J', 5.2], ['L', 5.25], ['F', 5.3], ['K', 5.35], ['S', 5.4], ['D', 5.45],
+        ['J', 5.5], ['L', 5.55], ['F', 5.6], ['K', 5.65], ['S', 5.7], ['D', 5.75],
+        ['J', 5.8], ['L', 5.85], ['F', 5.9], ['K', 5.95], ['S', 6.0], ['D', 6.05],
+        ['J', 6.1], ['L', 6.15], ['F', 6.2], ['K', 6.25], ['S', 6.3], ['D', 6.35],
+        ['J', 6.4], ['L', 6.45], ['F', 6.5], ['K', 6.55], ['S', 6.6], ['D', 6.65],
+        ['J', 6.7], ['L', 6.75], ['F', 6.8], ['K', 6.85], ['S', 6.9], ['D', 6.95],
+        ['J', 7.0], ['L', 7.05], ['F', 7.1], ['K', 7.15], ['S', 7.2], ['D', 7.25],
+        ['J', 7.3], ['L', 7.35], ['F', 7.4], ['K', 7.45], ['S', 7.5], ['D', 7.55],
+        ['J', 7.6], ['L', 7.65], ['F', 7.7], ['K', 7.75], ['S', 7.8], ['D', 7.85],
+        ['J', 7.9], ['L', 7.95], ['F', 8.0],
+        ['J', 8.0], ['K', 8.2], ['L', 8.4], ['F', 8.6], ['S', 8.8], ['D', 9.0],
+        ['J', 9.2], ['K', 9.4], ['L', 9.6], ['F', 9.8], ['S', 10.0], ['D', 10.2],
+        ['J', 10.4], ['K', 10.6], ['L', 10.8], ['F', 11.0], ['S', 11.2], ['D', 11.4],
+        ['J', 11.6], ['K', 11.8], ['L', 12.0], ['F', 12.2], ['S', 12.4], ['D', 12.6],
+        ['S', 13.0], ['D', 13.2], ['S', 13.4], ['F', 13.6], ['J', 13.8], ['F', 14.0],
+        ['K', 14.2], ['L', 14.4], ['K', 14.6], ['L', 14.8], ['S', 15.0], ['L', 15.2],
+        ['D', 15.4], ['K', 15.6], ['F', 15.8], ['K', 16.0], ['D', 16.2], ['K', 16.4],
+        ['S', 16.6], ['L', 16.8], ['F', 17.0], ['K', 17.2], ['L', 17.4], ['S', 17.6],
+        ['D', 17.8], ['K', 18.0], ['F', 18.2], ['K', 18.4], ['D', 18.6], ['K', 18.8],
+        ['D', 19.0], ['K', 19.05], ['D', 19.1], ['K', 19.15], ['D', 19.2], ['K', 19.25],
+        ['D', 19.3], ['K', 19.35], ['D', 19.4], ['K', 19.45], ['D', 19.5], ['K', 19.55],
+        ['D', 19.6], ['K', 19.65], ['D', 19.7], ['K', 19.75], ['D', 19.8], ['K', 19.85],
+        ['D', 19.9], ['K', 19.95], ['D', 20.0], ['K', 20.05], ['D', 20.1], ['K', 20.15],
+        ['D', 20.2], ['K', 20.25], ['D', 20.3], ['K', 20.35], ['D', 20.4], ['K', 20.45],
+        ['D', 20.5], ['K', 20.55], ['D', 20.6], ['K', 20.65], ['D', 20.7], ['K', 20.75],
+        ['D', 20.8], ['K', 20.85], ['D', 20.9], ['K', 20.95], ['D', 21.0], ['K', 21.05],
+        ['D', 21.1], ['K', 21.15], ['D', 21.2], ['K', 21.25], ['D', 21.3], ['K', 21.35],
+        ['D', 21.4], ['K', 21.45], ['D', 21.5], ['K', 21.55], ['D', 21.6], ['K', 21.65],
+        ['D', 21.7], ['K', 21.75], ['D', 21.8], ['K', 21.85], ['D', 21.9], ['K', 21.95],
+        ['D', 22.0], ['K', 22.05],
+        ['S', 22.1], ['L', 22.15], ['S', 22.2], ['L', 22.25], ['S', 22.3], ['L', 22.35],
+        ['S', 22.4], ['L', 22.45], ['S', 22.5], ['L', 22.55], ['S', 22.6], ['L', 22.65],
+        ['S', 22.7], ['L', 22.75], ['S', 22.8], ['L', 22.85], ['S', 22.9], ['L', 22.95],
+        ['S', 23.0], ['L', 23.05], ['S', 23.1], ['L', 23.15], ['S', 23.2], ['L', 23.25],
+        ['S', 23.3], ['L', 23.35], ['S', 23.4], ['L', 23.45], ['S', 23.5], ['L', 23.55],
+        ['S', 23.6], ['L', 23.65], ['S', 23.7], ['L', 23.75], ['S', 23.8], ['L', 23.85],
+        ['S', 23.9], ['L', 23.95], ['S', 24.0], ['L', 24.05], ['S', 24.1], ['L', 24.15],
+        ['S', 24.2], ['L', 24.25], ['S', 24.3], ['L', 24.35], ['S', 24.4], ['L', 24.45],
+        ['S', 24.5], ['L', 24.55], ['S', 24.6], ['L', 24.65], ['S', 24.7], ['L', 24.75],
+        ['S', 24.8], ['L', 24.85], ['S', 24.9], ['L', 24.95], ['S', 25.0], ['L', 25.05],
+        ['D', 25.1], ['K', 25.15], ['D', 25.2], ['K', 25.25], ['D', 25.3], ['K', 25.35],
+        ['D', 25.4], ['K', 25.45], ['D', 25.5], ['K', 25.55], ['D', 25.6], ['K', 25.65],
+        ['D', 25.7], ['K', 25.75], ['D', 25.8], ['K', 25.85], ['D', 25.9], ['K', 25.95],
+        ['D', 26.0], ['K', 26.05], ['D', 26.1], ['K', 26.15], ['D', 26.2], ['K', 26.25],
+        ['D', 26.3], ['K', 26.35], ['D', 26.4], ['K', 26.45], ['D', 26.5], ['K', 26.55],
+        ['D', 26.6], ['K', 26.65], ['D', 26.7], ['K', 26.75], ['D', 26.8], ['K', 26.85],
+            ['J', 27.0], ['L', 27.0], ['F', 27.0], ['K', 27.0], ['S', 27.0], ['D', 27.0],
+    ['L', 27.1], ['F', 27.1], ['K', 27.1], ['S', 27.1], ['D', 27.1],
+   // ['J', 27.2], ['L', 27.2], ['F', 27.2], ['K', 27.2], ['S', 27.2], ['D', 27.2],
+    ['F', 27.3], ['K', 27.3], ['S', 27.3], ['D', 27.3],
+  //  ['J', 27.4], ['L', 27.4], ['F', 27.4], ['K', 27.4], ['S', 27.4], ['D', 27.4],
+    ['K', 27.5], ['S', 27.5], ['D', 27.5],
+  //  ['J', 27.6], ['L', 27.6], ['F', 27.6], ['K', 27.6], ['S', 27.6], ['D', 27.6],
+    ['S', 27.7], ['D', 27.7],
+   // ['J', 27.8], ['L', 27.8], ['F', 27.8], ['K', 27.8], ['S', 27.8], ['D', 27.8],
+    ['D', 27.9],
+   // ['J', 28.0], ['L', 28.0], ['F', 28.0], ['K', 28.0], ['S', 28.0], ['D', 28.0],
+    ['J', 28.1], ['L', 28.1], ['F', 28.1], ['K', 28.1], ['S', 28.1],
+  //  ['J', 28.2], ['L', 28.2], ['F', 28.2], ['K', 28.2], ['S', 28.2],
+    ['L', 28.3], ['F', 28.3], ['K', 28.3], ['S', 28.3],
+ //   ['J', 28.4], ['L', 28.4], ['F', 28.4], ['K', 28.4], ['S', 28.4],
+    ['F', 28.5], ['K', 28.5], ['S', 28.5],
+ //   ['J', 28.6], ['L', 28.6], ['F', 28.6], ['K', 28.6], ['S', 28.6],
+    ['K', 28.7], ['S', 28.7],
+  //  ['J', 28.8], ['L', 28.8], ['F', 28.8], ['K', 28.8], ['S', 28.8],
+    ['S', 28.9],
+  //  ['J', 29.0], ['L', 29.0], ['F', 29.0], ['K', 29.0], ['S', 29.0],
+    ['J', 29.1], ['L', 29.1], ['F', 29.1], ['K', 29.1],
+    ['J', 29.2], ['L', 29.2], ['F', 29.2], ['K', 29.2],
+    ['L', 29.3], ['F', 29.3], ['K', 29.3],
+    ['J', 29.4], ['L', 29.4], ['F', 29.4],
+    ['F', 29.5], ['K', 29.5],
+    ['J', 29.6], ['L', 29.6],
+    ['K', 29.7],
+    ['J', 29.8],
+    ['L', 29.9],
+    ['F', 30.0],
+    ['K', 30.1],
+    ['S', 30.2],
+    ['D', 30.3],
+    ['J', 30.4],
+    ['L', 30.5],
+    ['F', 30.6],
+    ['K', 30.7],
+    ['S', 30.8],
+    ['D', 30.9],
+    ['J', 31.0],
+    ['L', 31.1],
+    ['F', 31.2],
+    ['K', 31.3],
+    ['S', 31.4],
+    ['D', 31.5],
+    ['J', 31.6],
+    ['L', 31.7],
+    ['F', 31.8],
+    ['K', 31.9],
+    ['S', 32.0],
+    ['D', 32.1],
+    ['J', 32.2],
+    ['L', 32.3],
+    ['F', 32.4],
+    ['K', 32.5],
+    ['S', 32.6],
+    ['D', 32.7],
+    ['J', 32.8],
+    ['L', 32.9],
+    ['F', 33.0],
+    ],
+    [    ['F', 1.1], 
+    ['K', 1.2], ['S', 1.3], 
+    ['J', 1.4], ['L', 1.5], 
+    ['J', 1.6], ['K', 1.7], 
+    ['S', 1.8], ['F', 1.9], 
+    ['J', 2.0], ['L', 2.1], 
+    ['D', 2.2], ['F', 2.3], 
+    ['D', 2.4], ['S', 2.5], 
+    ['L', 2.6], ['K', 2.7], 
+    ['F', 2.8], ['J', 2.9], 
+    ['S', 3.0], ['D', 3.1], 
+    ['K', 3.2], ['F', 3.3], 
+    ['J', 3.4], ['K', 3.5], 
+    ['L', 3.6], ['F', 3.7], 
+    ['S', 3.8], ['D', 3.9], 
+    ['J', 4.0], ['K', 4.1], 
+    ['L', 4.2], ['S', 4.3], 
+    ['D', 4.4], ['J', 4.5], 
+    ['S', 4.6], ['K', 4.7], 
+    ['L', 4.8], ['F', 4.9], 
+    ['J', 5.0], ['D', 5.1], 
+    ['K', 5.2], ['S', 5.3], 
+    ['J', 5.4], ['L', 5.5], 
+    ['D', 5.6], ['F', 5.7], 
+    ['J', 5.8], ['S', 5.9], 
+    ['K', 6.0], ['L', 6.1], 
+    ['S', 6.2], ['D', 6.3], 
+    ['F', 6.4], ['J', 6.5], 
+    ['K', 6.6], ['L', 6.7], 
+    ['S', 6.8], ['D', 6.9], 
+    ['J', 7.0], ['F', 7.1], 
+    ['S', 7.2], ['D', 7.3], 
+    ['J', 7.4], ['K', 7.5], 
+    ['F', 7.6], ['L', 7.7], 
+    ['K', 7.8], ['S', 7.9], 
+    ['J', 8.0], ['L', 8.1], 
+    ['D', 8.2], ['F', 8.3], 
+    ['S', 8.4], ['K', 8.5], 
+    ['D', 8.6], ['L', 8.7], 
+    ['J', 8.8], ['S', 8.9], 
+    ['F', 9.0], ['D', 9.1], 
+    ['J', 9.2], ['L', 9.3], 
+    ['S', 9.4], ['D', 9.5], 
+    ['K', 9.6], ['F', 9.7], 
+    ['J', 9.8], ['L', 9.9], 
+    ['S', 10.0], ['D', 10.1], 
+    ['K', 10.2], ['F', 10.3], 
+    ['J', 10.4], ['K', 10.5], 
+    ['L', 10.6], ['S', 10.7], 
+    ['F', 10.8], ['D', 10.9], 
+    ['J', 11.0], ['S', 11.1], 
+    ['K', 11.2], ['D', 11.3], 
+    ['L', 11.4], ['J', 11.5], 
+    ['F', 11.6], ['S', 11.7], 
+    ['K', 11.8], ['L', 11.9], 
+    ['S', 12.0], ['D', 12.1], 
+    ['J', 12.2], ['F', 12.3], 
+    ['K', 12.4], ['S', 12.5], 
+    ['J', 12.6], ['L', 12.7], 
+    ['D', 12.8], ['F', 12.9], 
+    ['S', 13.0], ['K', 13.1], 
+    ['J', 13.2], ['D', 13.3], 
+    ['L', 13.4], ['F', 13.5], 
+    ['K', 13.6], ['S', 13.7], 
+    ['J', 13.8], ['L', 13.9],
+        ['S', 14.0], ['S', 14.1], 
+    ['J', 14.2], ['D', 14.3], 
+    ['D', 14.4], ['K', 14.5], 
+    ['S', 14.6], ['S', 14.7], 
+    ['S', 14.8], ['L', 14.9], 
+    ['F', 15.0], ['F', 15.1], 
+    ['F', 15.2], ['K', 15.3], 
+    ['J', 15.4], ['S', 15.5], 
+    ['S', 15.6], ['S', 15.7], 
+    ['J', 15.8], ['J', 15.9], 
+    ['D', 16.0], ['K', 16.1], 
+    ['D', 16.2], ['K', 16.3], 
+    ['D', 16.4], ['S', 16.5], 
+    ['F', 16.6], ['F', 16.7], 
+    ['K', 16.8], ['S', 16.9], 
+    ['J', 17.0], ['J', 17.1], 
+    ['K', 17.2], ['D', 17.3], 
+    ['D', 17.4], ['K', 17.5], 
+    ['D', 17.6], ['S', 17.7], 
+    ['S', 17.8], ['F', 17.9], 
+    ['J', 18.0], ['F', 18.1], 
+    ['K', 18.2], ['S', 18.3], 
+    ['J', 18.4], ['D', 18.5], 
+    ['K', 18.6], ['S', 18.7], 
+    ['S', 18.8], ['D', 18.9], 
+    ['J', 19.0], ['F', 19.1], 
+    ['K', 19.2], ['J', 19.3], 
+    ['S', 19.4], ['K', 19.5], 
+    ['S', 19.6], ['D', 19.7], 
+    ['D', 19.8], ['J', 19.9], 
+    ['L', 20.0], ['K', 20.1], 
+    ['S', 20.2], ['S', 20.3], 
+    ['D', 20.4], ['J', 20.5], 
+    ['F', 20.6], ['K', 20.7], 
+    ['S', 20.8], ['J', 20.9], 
+    ['L', 21.0], ['S', 21.1], 
+    ['J', 21.2], ['K', 21.3], 
+    ['S', 21.4], ['D', 21.5],
+        ['D', 22.0], ['F', 22.1], 
+    ['J', 22.2], ['K', 22.3],  ['S', 22.0], ['J', 22.1], 
+    ['D', 22.4], ['F', 22.5], 
+    ['J', 22.6], ['K', 22.7], 
+    ['D', 22.8], ['F', 22.9], 
+    ['J', 23.0], ['K', 23.1],  ['F', 22.6], ['K', 22.7],
+    ['D', 23.2], ['F', 23.3], 
+    ['J', 23.4], ['K', 23.5], 
+    ['D', 23.6], ['F', 23.7], 
+    ['J', 23.8], ['K', 23.9],     ['S', 23.4], ['K', 23.5], 
+    ['D', 24.0], ['F', 24.1], 
+    ['J', 24.2], ['K', 24.3], 
+    ['D', 24.4], ['F', 24.5], 
+    ['J', 24.6], ['K', 24.7], 
+    ['D', 24.8], ['F', 24.9],     ['S', 24.0], ['F', 24.1], 
+    ['J', 25.0], ['K', 25.1], 
+    ['D', 25.2], ['F', 25.3], 
+    ['J', 25.4], ['K', 25.5], 
+    ['D', 25.6], ['F', 25.7],   ['S', 25.0], ['J', 25.1], 
+    ['J', 25.8], ['K', 25.9], 
+    ['D', 26.0], ['F', 26.1], 
+    ['J', 26.2], ['K', 26.3],     ['K', 26.4], ['S', 26.5], 
+    ['D', 26.4], ['F', 26.5], 
+    ['J', 26.6], ['K', 26.7], 
+    ['D', 26.8], ['F', 26.9], 
+    ['J', 27.0], ['K', 27.1], 
+    ['D', 27.2], ['F', 27.3], 
+    ['J', 27.4], ['K', 27.5], 
+    ['D', 27.6], ['F', 27.7], 
+    ['J', 27.8], ['K', 27.9], 
+    ['D', 28.0], ['F', 28.1], 
+    ['J', 28.2], ['K', 28.3],   ['J', 27.0], ['L', 27.1], 
+    ['D', 27.2], ['F', 27.3], 
+    ['S', 27.4], ['K', 27.5], 
+    ['F', 27.6], ['J', 27.7], 
+    ['K', 27.8], ['S', 27.9], 
+    ['L', 28.0], 
+    ['D', 28.4], ['F', 28.5], 
+    ['J', 28.6], ['K', 28.7], 
+    ['D', 28.8], ['F', 28.9], 
+    ['J', 29.0], ['K', 29.1], 
+    ['D', 29.2], ['F', 29.3], 
+    ['J', 29.4], ['K', 29.5], 
+    ['D', 29.6], ['F', 29.7], 
+    ['J', 29.8], ['K', 29.9], 
+    ['D', 30.0], ['F', 30.1], 
+    ['J', 30.2], ['K', 30.3], 
+    ['D', 30.4], ['F', 30.5], 
+    ['J', 30.6], ['K', 30.7], 
+    ['D', 30.8], ['F', 30.9], 
+    ['J', 31.0], ['K', 31.1], 
+    ['D', 31.2], ['F', 31.3], 
+    ['J', 31.4], ['K', 31.5], 
+    ['D', 31.6], ['F', 31.7], 
+    ['J', 31.8], ['K', 31.9], 
+    ['D', 32.0],    ['S', 33.0], ['S', 33.075], 
+    ['D', 33.15], ['F', 33.225], 
+    ['J', 33.3], ['K', 33.375], 
+    ['L', 33.45], ['K', 33.525], 
+    ['J', 33.6], ['F', 33.675], 
+    ['D', 33.75], ['S', 33.825], 
+    ['D', 33.9], ['F', 33.975], 
+    ['J', 34.05], ['J', 34.125], 
+    ['K', 34.2], ['F', 34.275], 
+    ['L', 34.35], ['K', 34.425], 
+    ['J', 34.5], ['K', 34.575], 
+    ['L', 34.65], ['F', 34.725], 
+    ['S', 34.8], ['D', 34.875], 
+    ['K', 34.95], ['L', 35.025], 
+    ['J', 35.1], ['K', 35.175], 
+    ['L', 35.25], ['D', 35.325], 
+    ['S', 35.4], ['K', 35.475], 
+    ['J', 35.55], ['K', 35.625], 
+    ['L', 35.7], ['S', 35.775], 
+    ['D', 35.85], ['S', 35.925], 
+    ['J', 36.0], ['K', 36.075], 
+    ['L', 36.15], ['F', 36.225], 
+    ['D', 36.3], ['S', 36.375], 
+    ['D', 36.45], ['J', 36.525], 
+    ['K', 36.6], ['L', 36.675], 
+    ['J', 36.75], ['F', 36.825], 
+    ['K', 36.9], ['L', 36.975],  ['S', 37.0], ['S', 37.075], ['L', 37.15], ['L', 37.225],
+    ['S', 37.3], ['S', 37.375], ['L', 37.45], ['L', 37.525],
+    ['S', 37.6], ['S', 37.675], ['L', 37.75], ['L', 37.825],
+    ['S', 37.9], ['S', 37.975], ['L', 38.05], ['L', 38.125],
+    ['S', 38.2], ['S', 38.275], ['L', 38.35], ['L', 38.425],
+    ['S', 38.5], ['S', 38.575], ['L', 38.65], ['L', 38.725],
+    ['S', 38.8], ['S', 38.875], ['L', 38.95], ['L', 39.025],
+    ['S', 39.1], ['S', 39.175], ['L', 39.25], ['L', 39.325],
+    ['S', 39.4], ['S', 39.475], ['L', 39.55], ['L', 39.625],
+    ['S', 39.7], ['S', 39.775], ['L', 39.85], ['L', 39.925],
+    ['S', 40.0], ['S', 40.075]]
+];
+
+        function updateLevelDisplay() {
+            document.getElementById('currentLevel').textContent = levelnames[ currentlevel];
+        }
+        
+        document.getElementById('increaseBtn').addEventListener('click', function() {
+             if (currentlevel < 3) {
+                 currentlevel++;
+             updateLevelDisplay();
+             applyScoreGradient();}
+        });
+
+        // Decrease level
+        document.getElementById('decreaseBtn').addEventListener('click', function() {
+            if (currentlevel > 0) {
+                currentlevel--;
+                updateLevelDisplay();
+                applyScoreGradient();
+            }
+        });
+
+
+let currentlevel=0;
+    updateLevelDisplay();
+
+
+
+        class RhythmGame {
+             totalDuration = 0;
+        gameActive = false;
+            constructor() {
+this.gamedata = levels[currentlevel];
+
+                this.shown = new Set();
+                this.clicked = new Set();
+                this.lastHits = [];
+                this.score = 0;
+                this.gameStart = Date.now() / 1000;
+                this.lastNoteTime = Math.max(...this.gamedata.map(g => g[1]));
+                this.init();
+            }
+              startGame() {
+            this.gameStart = Date.now() / 1000;
+            this.totalDuration = this.lastNoteTime + 2;
+            this.gameActive = true;
+            
+            setInterval(() => {
+                if (this.gameActive) {
+                    const currentTime = (Date.now() / 1000) - this.gameStart;
+                    const progress = (currentTime / this.totalDuration) * 100;
+                    document.getElementById('progress').style.width = `${Math.min(progress, 100)}%`;
+                }
+            }, 100);
+            
+            setInterval(() => this.spawnNotes(), 100);
+            setTimeout(() => this.endGame(), (this.totalDuration) * 1000);
+          //  new Audio('awaitment.mp3').play();
+        }
+        showCountdown() {
+            const countdown = document.getElementById('countdown');
+            countdown.style.display = 'block';
+            
+            const count = [3, 2, 1, 'GO!'];
+            count.forEach((num, i) => {
+                setTimeout(() => {
+                    countdown.textContent = num;
+                    if (i === count.length - 1) {
+                        setTimeout(() => countdown.style.display = 'none', 500);
+                        this.startGame();
+                    }
+                }, i * 1000);
+            });
+        }
+                init() {
+            document.addEventListener('keydown', (e) => this.checkKeyPress(e));
+            this.showCountdown();
+        }
+
+
+            spawnNotes() {
+                const currentTime = (Date.now() / 1000) - this.gameStart;
+                this.gamedata.forEach(([key, time], index) => {
+                    if (!this.shown.has(index) && time - currentTime <= 1) {
+                        const col = document.getElementById(`col-${key}`);
+                        if (!col) return;
+
+                        const note = document.createElement('div');
+                        note.classList.add('note');
+                        col.appendChild(note);
+
+                        note.addEventListener('animationend', () => {
+                            col.removeChild(note);
+                            if (!this.clicked.has(index)) this.clicked.add(index);
+                        });
+
+                        this.shown.add(index);
+                    }
+                });
+            }
+
+            checkKeyPress(event) {
+                const key = event.key.toUpperCase();
+                const col = document.getElementById(`col-${key}`);
+                if (!col) return;
+
+                const currentTime = (Date.now() / 1000) - this.gameStart;
+                const closest = this.gamedata.reduce((closest, [gkey, time], index) => {
+                    if (gkey === key && !this.clicked.has(index)) {
+                        const diff = Math.abs(currentTime - (time - 0.2));
+                        if (diff < closest.diff) return { index, diff };
+                    }
+                    return closest;
+                }, { index: null, diff: Infinity });
+
+                if (closest.index !== null) {
+                    this.clicked.add(closest.index);
+                    const note = col.querySelector('.note');
+                    if (note) col.removeChild(note);
+
+                    const points = Math.round(100 / (1 + closest.diff * 4));
+                    this.score += points;
+                    document.getElementById('score').innerText = Math.round(this.score);
+
+                    this.showScoreFeedback(col, points);
+                    this.updateLastHits(points);
+                }
+                
+                            if (closest.index !== null) {
+                // Add particle effect
+                this.createParticles(col.getBoundingClientRect());
+ 
+            }
+            }
+createParticles(rect) {
+    for (let i = 0; i < 15; i++) { // More particles for a better effect
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        
+        // Initial position at center of rect
+        particle.style.left = `${rect.left + rect.width / 2}px`;
+        particle.style.top = `${rect.top + rect.height / 0.9}px`;
+        
+        // Random velocity
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = 3 + Math.random() * 17;
+        const dx = Math.cos(angle) * velocity;
+        const dy = Math.sin(angle) * velocity;
+        
+        // Set CSS variables for animation
+        particle.style.setProperty('--dx', `${dx}px`);
+        particle.style.setProperty('--dy', `${dy}px`);
+
+        document.body.appendChild(particle);
+
+        setTimeout(() => particle.remove(), 1000); // Remove after animation
+    }
+}
+
+
+             showScoreFeedback(col, points) {
+                const feedback = document.createElement('div');
+                feedback.classList.add('score-feedback');
+                
+                // Determine color and symbol based on points
+                let color, symbol;
+                if (points >= 90) {
+                    color = '#00ffff'; // Cyan
+                    symbol = '!!';
+                } else if (points >= 80) {
+                    color = '#0000ff'; // Blue
+                    symbol = '!';
+                } else if (points >= 70) {
+                    color = '#00ff00'; // Green
+                    symbol = '';
+                } else if (points >= 60) {
+                    color = '#ffff00'; // Yellow
+                    symbol = '';
+                } else if (points >= 40) {
+                    color = '#ff0000'; // Red
+                    symbol = '?';
+                } else {
+                    color = '#804000'; // Brown
+                    symbol = '??';
+                }
+
+                feedback.style.color = color;
+                feedback.innerText = `+${points}${symbol}`;
+                col.appendChild(feedback);
+                setTimeout(() => feedback.remove(), 1000);
+            }
+
+            updateLastHits(points) {
+                this.lastHits.unshift(points);
+                if (this.lastHits.length > 10) this.lastHits.pop();
+                this.updateScoreList();
+            }
+
+            updateScoreList() {
+                const scoreList = document.getElementById('score-list');
+                if (!scoreList) return;
+                scoreList.innerHTML = this.lastHits.map(points => `<li>+${points}</li>`).join('');
+            }
+
+            endGame() {
+                alert(`Game Over! Your Score: ${Math.round(this.score)}`);
+            }
+        }
+function applyScoreGradient() {
+    document.querySelectorAll('.column').forEach(column => {
+        const height = column.clientHeight;
+        const perfectZone = 300 - 70; // Perfect-line position
+        const perfectRatio = perfectZone / height;
+
+        let gradientColors;
+
+        switch (currentlevel) {
+            case 0:
+                gradientColors = `linear-gradient(
+                    to bottom, 
+                    black 0%, 
+                    blue ${perfectRatio * 50}%, 
+                    cyan ${perfectRatio * 100}%, 
+                    blue ${perfectRatio * 150}%, 
+                    black 100%
+                )`;
+                break;
+            case 1:
+                gradientColors = `linear-gradient(
+                    to bottom, 
+                    black 0%, 
+                    grey ${perfectRatio * 50}%, 
+                    yellow ${perfectRatio * 100}%, 
+                    grey ${perfectRatio * 150}%, 
+                    black 100%
+                )`;
+                break;
+            case 2:
+                gradientColors = `linear-gradient(
+                    to bottom, 
+                    black 0%, 
+                    red ${perfectRatio * 50}%, 
+                    black ${perfectRatio * 100}%, 
+                    red ${perfectRatio * 150}%, 
+                    black 100%
+                )`;
+                break;
+              case 3:
+                gradientColors = `linear-gradient(
+                    to bottom, 
+                    black 0%, 
+                    #708090 ${perfectRatio * 50}%, 
+                    black ${perfectRatio * 100}%, 
+                    darkgray ${perfectRatio * 150}%, 
+                    black 100%
+                )`;
+                break;
+            default:
+                gradientColors = "black"; // Fallback for undefined levels
+        }
+
+        column.style.background = gradientColors;
+    });
+}
+
+applyScoreGradient();
+  document.getElementById('playButton').addEventListener('click', () => {
+  //  new Audio('awaitment.mp3').play();
+	    new RhythmGame();
+		
+  });
+    
+    </script>
+</body>
+</html>

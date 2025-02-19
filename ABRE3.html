@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBF</title>
+</head>
+<body>
+    <div class="container">
+        <div id="inputContainer">
+            <input type="number" id="headInput" value="10">
+            <input type="number" id="exponentInput" value="30003">
+            <input type="number" id="expoexponentInput" value="1">
+        </div>
+        <br>
+        <button onclick="addInput()">+</button>
+        <button onclick="removeInput()">-</button>
+
+    <label for="abbreviationSelect">Choose an abbreviation set:</label>
+    <select id="abbreviationSelect">
+        <option value="nbf">nbf</option>
+        <option value="levia">Levia</option>
+        <option value="tesert">Tesert</option>
+        <option value="taco">Taco</option>
+        <option value="sc">SC</option>
+    </select>
+
+    <br>
+        <button onclick="calculate()">Calculate</button>
+        <h1 id="result">Result</h1>
+        <h1 id="formattedResult" class="result"></h1>
+    </div>
+
+    <script>
+        const Abbrevs = {
+          nbf :  {
+    minor: {
+        i1: "M", i2: "B", i3: "T", i4: "q", i5: "Q", i6: "s", i7: "S", i8: "O", i9: "N", i0: ""
+    },
+    ones: {
+        i1: "U", i2: "D", i3: "T", i4: "q", i5: "Q", i6: "s", i7: "S", i8: "O", i9: "N", i0: ""
+    },
+    tens: {
+        i1: "De", i2: "V", i3: "TR", i4: "QU", i5: "QI", i6: "Sx", i7: "Sp", i8: "Oc", i9: "No", i0: ""
+    },
+    hundreds: {
+        i1: "Ce", i2: "Du", i3: "Te", i4: "Qr", i5: "Qn", i6: "Se", i7: "St", i8: "Ot", i9: "Nn", i0: ""
+    },
+    major: {
+        i0: "", i1: "il", i2: "cr", i3: "Nan", i4: "Pic", i5: "Fmt", i6: "Att", i7: "Zpt", i8: "Yoc", i9: "Xon",
+        i10: "Vec", i11: "Mec", i12: "Dec", i13: "Trc", i14: "Ttc", i15: "Ptc", i16: "Hxc", i17: "Hpc", i18: "Otc", i19: "Enc",
+        i20: "Ico", i21: "Meico", i22: "Duico", i23: "Trico", i24: "Ttico", i25: "Ptico", i26: "Hxico", i27: "Hpico", i28: "Ocico", i29: "Enico",
+        i30: "Trcon", i31: "Metrcon", i32: "Dutrcon", i33: "Trtrcon", i34: "Tttrcon", i35: "Pttrcon", i36: "Hxtrcon", i37: "Hptrcon", i38: "Octrcon", i39: "Entrcon",
+        i40: "Ttcon", i41: "Mettcon", i42: "Duttcon", i43: "Trttcon", i44: "Ttttcon", i45: "Ptttcon", i46: "Hxttcon", i47: "Hpttcon", i48: "Octtcon", i49: "Enttcon",
+        i50: "Ptcon", i51: "Meptcon", i52: "Duptcon", i53: "Trptcon", i54: "Ttptcon", i55: "Ptptcon", i56: "Hxptcon", i57: "Hpptcon", i58: "Ocptcon", i59: "Enptcon",
+        i60: "Hxcon", i61: "Mehxcon", i62: "Duhxcon", i63: "Trhxcon", i64: "Tthxcon", i65: "Pthxcon", i66: "Hxhxcon", i67: "Hphxcon", i68: "Ochxcon", i69: "Enhxcon",
+        i70: "Hpcon", i71: "Mehpcon", i72: "Duhpcon", i73: "Trhpcon", i74: "Tthpcon", i75: "Pthpcon", i76: "Hxhpcon", i77: "Hphpcon", i78: "Ochpcon", i79: "Enhpcon",
+        i80: "Occon", i81: "Meoccon", i82: "Duoccon", i83: "Troccon", i84: "Ttoccon", i85: "Ptoccon", i86: "Hxoccon", i87: "Hpoccon", i88: "Ococcon", i89: "Enoccon",
+        i90: "Encon", i91: "Meencon", i92: "Duencon", i93: "Trencon", i94: "Ttencon", i95: "Ptencon", i96: "Hxencon", i97: "Hpencon", i98: "Ocencon", i99: "Enencon",
+        i100: "Hect"
+    }}
+,
+		levia :  {
+            minor: { i0: '', i1: 'K', i2: 'M', i3: 'B', i4: 'T', i5: 'Qa', i6: 'Qt', i7: 'Sx', i8: 'Sp', i9: 'Oc', i10: 'No' },
+    ones: { i0: '', i1: 'U', i2: 'D', i3: 'T', i4: 'Qa', i5: 'Qt', i6: 'Sx', i7: 'Sp', i8: 'O', i9: 'N' },
+    tens: { i0: '', i1: 'Dc', i2: 'Vg', i3: 'Tg', i4: 'Qd', i5: 'Qi', i6: 'Se', i7: 'St', i8: 'Og', i9: 'Nn' },
+    tensabovehundred: { i0: '', i1: 'Dc', i2: 'Vg', i3: 'Tg', i4: 'Qd', i5: 'Qi', i6: 'Se', i7: 'St', i8: 'Og', i9: 'Nn' },
+    hundreds: { i0: '', i1: 'Ce', i2: 'Dn', i3: 'Tc', i4: 'Qe', i5: 'Qu', i6: 'Sc', i7: 'Si', i8: 'Oe', i9: 'Ne' },
+    major: { i0: '', i1: 'MI-', i2: 'MC-', i3: 'NA-', i4: 'PC-', i5: 'FM-', i6: 'AT-', i7: 'ZP-', i8: 'YC-', i9: 'XN-', i10: 'VC-', i11: 'MeC-' },
+        },
+		tesert: {
+   minor: { i0: '', i1: 'K', i2: 'M', i3: 'B', i4: 'T', i5: 'Q', i6: 'K', i7: 'S', i8: 'H', i9: 'O', i10: 'N' },
+    ones: { i0: '', i1: 'u', i2: 'd', i3: 't', i4: 'q', i5: 'k', i6: 's', i7: 'h', i8: 'o', i9: 'n' },
+    tens: { i0: '', i1: 'D', i2: 'Vg', i3: 'Tg', i4: 'Qg', i5: 'Kg', i6: 'Sg', i7: 'Hg', i8: 'Og', i9: 'Ng' },
+    hundreds: { i0: '', i1: 'Ce', i2: 'De', i3: 'Te', i4: 'Qe', i5: 'Ke', i6: 'Se', i7: 'He', i8: 'Oe', i9: 'Ne' },
+    major: { i0: '', i1: 'Mi', i2: 'Bi', i3: 'Ti', i4: 'Qi', i5: 'Ki', i6: 'Si', i7: 'Hi', i8: 'Oi', i9: 'Ni',
+            i10: "Vc", i11: "Mc", i12: "Dc", i13: "Tc", i14: "Qc", i15: "Kc", i16: "Sc", i17: "Hc", i18: "Oc", i19: "Nc",
+      //  i20: "Io", i21: "Mo", i22: "Do", i23: "To", i24: "To", i25: "Po", i26: "Ho", i27: "Ho", i28: "Oo", i29: "Eo",
+        },
+ 
+		},
+		taco :  {
+      minor: { i0: '', i1: 'K', i2: 'M', i3: 'B', i4: 'T', i5: 'q', i6: 'Q', i7: 's', i8: 'S', i9: 'O', i10: 'N' },
+    ones: { i0: '', i1: 'U', i2: 'D', i3: 'T', i4: 'q', i5: 'Q', i6: 's', i7: 'S', i8: 'O', i9: 'N' },
+    tens: { i0: '', i1: 'De', i2: 'Vg', i3: 'Tg', i4: 'Qu', i5: 'Qi', i6: 'Se', i7: 'Sp', i8: 'Oc', i9: 'No' },
+    tensabovehundred: { i0: '', i1: 'De', i2: 'Vg', i3: 'Tg', i4: 'Qu', i5: 'Qi', i6: 'Se', i7: 'Sp', i8: 'Oc', i9: 'No' },
+    hundreds: { i0: '', i1: 'Ce', i2: 'Du', i3: 'Te', i4: 'Qr', i5: 'Qn', i6: 'Sc', i7: 'St', i8: 'Ot', i9: 'Nn' },
+   major: { i0: '', i1: 'Mil', i2: 'Mcr', i3: 'Nan', i4: 'Pic', i5: 'Fmt', i6: 'Att', i7: 'Zpt', i8: 'Yct', i9: 'Xon', i10: 'Vec' },
+        },
+		sc :  {
+                  minor: { i0: '', i1: 'K', i2: 'M', i3: 'B', i4: 'T', i5: 'q', i6: 'Q', i7: 's', i8: 'S', i9: 'O', i10: 'N' },
+    ones: { i0: '', i1: 'U', i2: 'D', i3: 'T', i4: 'q', i5: 'Q', i6: 's', i7: 'S', i8: 'O', i9: 'N' },
+    tens: { i0: '', i1: 'Dc', i2: 'Vg', i3: 'Tg', i4: 'Qu', i5: 'Qi', i6: 'Sx', i7: 'Sp', i8: 'Oc', i9: 'No' },
+    tensabovehundred: { i0: '', i1: 'Dc', i2: 'Vg', i3: 'Tg', i4: 'Qu', i5: 'Qi', i6: 'Sx', i7: 'Sp', i8: 'Oc', i9: 'No' },
+    hundreds: { i0: '', i1: 'Ce', i2: 'Du', i3: 'Tc', i4: 'Qr', i5: 'Qg', i6: 'Sc', i7: 'St', i8: 'Ot', i9: 'Ng' },
+    major: { i0: '', i1: 'Mil', i2: 'Mcr', i3: 'Nan', i4: 'Pic', i5: 'Fmt', i6: 'Att', i7: 'Zpt', i8: 'Yct', i9: 'Rnt', i10: 'Vec', i11: 'Mec' },
+        }
+        };
+
+function name(x, layer) {
+    const Abbreviations=Abbrevs[document.getElementById('abbreviationSelect').value]
+    let data = [0, 0, 0, 0];
+    let abbrev = '';
+    if (x === 1 && layer === 0) return 'k';
+    if (x === 0) return '';
+    if (layer !== 0) x++;
+    data[0] = Math.floor((x - 1) / 1000);
+    data[1] = Math.floor((x - 1) / 100) % 10;
+    data[2] = Math.floor((x - 1) / 10) % 10;
+    data[3] = (x - 1) % 10;
+    if ((x - 1) % 1000 < 10) {
+		if (data[3] !== 1 || layer < 3) {
+			abbrev = data[3] !== 0 ? Abbreviations.minor[`i${data[3]}`] + Abbreviations.major[`i${layer}`] : '';
+		} else {
+			abbrev = Abbreviations.major[`i${layer}`]
+		}
+    } else if (data[2] === 1 && data[1] === 0) {
+		abbrev = Abbreviations.ones[`i${data[3]}`] + "D" + Abbreviations.major[`i${layer}`];
+	} else {
+        abbrev = Abbreviations.ones[`i${data[3]}`] + Abbreviations.tens[`i${data[2]}`] + Abbreviations.hundreds[`i${data[1]}`] + Abbreviations.major[`i${layer}`];
+    }
+    return data[0] === 0 ? abbrev : name(data[0], layer + 1) + abbrev;
+}
+
+function power(a, b) {
+    try {
+        let lognumber = b * Math.log10(a);
+        let mod3 = Math.floor((3 - (lognumber % 3)));
+        let illion = Math.floor(lognumber / 3);
+        let number = Math.pow(10, lognumber % 3);
+        number = Math.floor(number * Math.pow(10, mod3)) / Math.pow(10, mod3);
+        if (illion < 0) {
+            return number + name(-illion, 0) + "th";
+        } else {
+            return number + name(illion, 0);
+        }
+    } catch (error) {
+        return "err";
+    }
+}
+
+        function calculate() {
+            let base = parseFloat(document.getElementById('headInput').value);
+            let exponent = parseFloat(document.getElementById('exponentInput').value);
+            let expoexponent = parseFloat(document.getElementById('expoexponentInput').value);
+            document.getElementById('result').textContent = power(base, Math.pow(exponent,expoexponent));
+        }
+    </script>
+</body>
+</html>

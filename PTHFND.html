@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>MinerGunBuilderPathFinder</title>
+  <style>
+    /* For demonstration, we use a fixed-width preformatted output area */
+    #output {
+      white-space: pre;
+      background: #eee;
+      padding: 1em;
+      border: 1px solid #ccc;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <h1>MinerGunBuilderPathFinder (JS version)</h1>
+  <div id="output"></div>
+
+  <script>
+  function cts(indx, indy) {
+  let op;
+  let arr = [];
+
+  switch (indx) {
+    case 0:
+      arr = [
+        [1, 1, 1],
+        [1, 1, 1],
+        [1, 1, 1]
+      ];
+      break;
+    case 1:
+      arr = [
+        [1, 1, 1],
+        [1, 9, 1],
+        [1, 0, 0]
+      ];
+      break;
+    case 2:
+      arr = [
+        [1, 0, 0],
+        [1, 1, 0],
+        [1, 0, 0]
+      ];
+      break;
+    case 3:
+      arr = [
+        [1, 0, 0],
+        [1, 0, 1],
+        [0, 0, 1]
+      ];
+      break;
+    case 4:
+      arr = [
+        [1, 0, 1],
+        [0, 0, 0],
+        [1, 0, 1]
+      ];
+      break;
+    case 5:
+      arr = [
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0]
+      ];
+      break;
+    case 6:
+      arr = [
+        [0, 0, 1],
+        [0, 0, 1],
+        [0, 0, 1]
+      ];
+      break;
+    case 7:
+      arr = [
+        [0, 0, 0],
+        [0, 0, 0],
+        [1, 1, 1]
+      ];
+      break;
+    case 8:
+      arr = [
+        [0, 1, 1],
+        [0, 0, 0],
+        [1, 1, 0]
+      ];
+      break;
+    case 9:
+      arr = [
+        [1, 1, 0],
+        [1, 0, 0],
+        [0, 0, 0]
+      ];
+      break;
+    case 10:
+      arr = [
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]
+      ];
+      break;
+    case 11:
+      arr = [
+        [1, 1, 1],
+        [0, 9, 0],
+        [1, 1, 1]
+      ];
+      break;
+    case 12:
+      arr = [
+        [1, 0, 1],
+        [1, 0, 1],
+        [0, 0, 0]
+      ];
+      break;
+    case 13:
+      arr = [
+        [1, 0, 1],
+        [0, 0, 0],
+        [1, 0, 0]
+      ];
+      break;
+    case 14:
+      arr = [
+        [1, 0, 0],
+        [1, 0, 0],
+        [1, 0, 0]
+      ];
+      break;
+    case 15:
+      arr = [
+        [1, 1, 1],
+        [0, 0, 0],
+        [0, 0, 0]
+      ];
+      break;
+    case 16:
+      arr = [
+        [0, 0, 1],
+        [0, 0, 0],
+        [1, 0, 0]
+      ];
+      break;
+    case 17:
+      arr = [
+        [1, 0, 0],
+        [0, 0, 1],
+        [1, 0, 0]
+      ];
+      break;
+    case 18:
+      arr = [
+        [9, 9, 9],
+        [9, 1, 9],
+        [9, 9, 9]
+      ];
+      break;
+    case 19:
+      arr = [
+        [1, 9, 1],
+        [9, 1, 9],
+        [1, 9, 1]
+      ];
+      break;
+    case 20:
+      arr = [
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 1]
+      ];
+      break;
+    case 21:
+      arr = [
+        [0, 0, 0],
+        [0, 1, 0],
+        [0, 0, 0]
+      ];
+      break;
+    // Optionally, add a default case if needed.
+  }
+
+  // Select the element from the 3x3 grid based on indy (1-indexed)
+  switch (indy) {
+    case 1: op = arr[0][0]; break;
+    case 2: op = arr[0][1]; break;
+    case 3: op = arr[0][2]; break;
+    case 4: op = arr[1][0]; break;
+    case 5: op = arr[1][1]; break;
+    case 6: op = arr[1][2]; break;
+    case 7: op = arr[2][0]; break;
+    case 8: op = arr[2][1]; break;
+    case 9: op = arr[2][2]; break;
+    // Optionally, add a default case if needed.
+  }
+
+  return op;
+}
+// Function: ogdircng
+function ogdircng(ogdir, dir, x, y) {
+  if (ogdir === 1) {
+    switch (dir) {
+      case 1:
+        dir = 4;
+        break;
+      case 4:
+        dir = 2;
+        break;
+      case 2:
+        y--;
+        break;
+    }
+  }
+  if (ogdir === 2) {
+    switch (dir) {
+      case 2:
+        dir = 1;
+        break;
+      case 1:
+        dir = 3;
+        break;
+      case 3:
+        x--;
+        break;
+    }
+  }
+  if (ogdir === 3) {
+    switch (dir) {
+      case 3:
+        dir = 2;
+        break;
+      case 2:
+        dir = 4;
+        break;
+      case 4:
+        y++;
+        break;
+    }
+  }
+  if (ogdir === 4) {
+    switch (dir) {
+      case 4:
+        dir = 3;
+        break;
+      case 3:
+        dir = 1;
+        break;
+      case 1:
+        x++;
+        break;
+    }
+  }
+  return { dir, x, y };
+}
+
+// Function: ogdircngl
+function ogdircngl(ogdir, dir, x, y) {
+  if (ogdir === 3) {
+    switch (dir) {
+      case 3:
+        dir = 4;
+        break;
+      case 4:
+        dir = 2;
+        break;
+      case 2:
+        y++;
+        break;
+    }
+  }
+  if (ogdir === 4) {
+    switch (dir) {
+      case 4:
+        dir = 1;
+        break;
+      case 1:
+        dir = 3;
+        break;
+      case 3:
+        x++;
+        break;
+    }
+  }
+  if (ogdir === 1) {
+    switch (dir) {
+      case 1:
+        dir = 2;
+        break;
+      case 2:
+        dir = 4;
+        break;
+      case 4:
+        y--;
+        break;
+    }
+  }
+  if (ogdir === 2) {
+    switch (dir) {
+      case 2:
+        dir = 3;
+        break;
+      case 3:
+        dir = 1;
+        break;
+      case 1:
+        x--;
+        break;
+    }
+  }
+  return { dir, x, y };
+}
+
+// Function: turnaa
+function turnaa(ogdir, dir, x, y) {
+  switch (ogdir) {
+    case 1:
+      switch (dir) {
+        case 1:
+          dir = 4;
+          break;
+        case 4:
+          dir = 2;
+          break;
+        case 2:
+          y--;
+          break;
+      }
+      break;
+    case 2:
+      switch (dir) {
+        case 2:
+          dir = 1;
+          break;
+        case 1:
+          dir = 3;
+          break;
+        case 3:
+          x--;
+          break;
+      }
+      break;
+    case 3:
+      switch (dir) {
+        case 3:
+          dir = 2;
+          break;
+        case 2:
+          dir = 4;
+          break;
+        case 4:
+          y++;
+          break;
+      }
+      break;
+    case 4:
+      switch (dir) {
+        case 4:
+          dir = 3;
+          break;
+        case 3:
+          dir = 1;
+          break;
+        case 1:
+          x++;
+          break;
+      }
+      break;
+  }
+  return { dir, x, y };
+}
+
+    // === Global Strings (converted from C++ const std::string) ===
+    const introi = "";  // originally: "\n           Welcome to the MinerGunBuilderPathFinder MGBpf \n\n"
+    const intro = " 0-custom ship input  \n 1-named custom ship / bruteforce   \n 4-lite bruteforce  \n 5-ultra lite bruteforce \n 6-hefty bruteforce \n 7-classic ships (mayhaps be broken)\n";
+    const intro1 = " \n 0 -sanil  \n 1 -beast  \n 2 -fat trident  \n 3 -thunder  \n 4 -staricase \n 5 -piano  \n-1 -ultrabeast  \n-2 -one of captivates ship  \n-3 -stealth bomber  \n-4 -hyperbeast  \n  \n 6-random(reccomend)  \n 7-extreme random(no reccomend) \n 8-perfect bruteforce(long time)  \n 9-wave bruteforce  \n 10-optimised random (reccomend)\n";
+
+    const mania = 1;
+    // Using a Set to mimic the unordered_set<long long>
+    const idset = new Set();
+
+    // Add an id into the set.
+    function appindx(x) {
+      idset.add(x);
+    }
+    // Check if an id is already present.
+    function isapp(x) {
+      return idset.has(x);
+    }
+    function isapp2(x) {
+      return idset.has(x);
+    }
+    // A simple max function.
+    function max(a, b) {
+      return (a < b) ? b : a;
+    }
+
+    // === Example conversion of the "cts" function ===
+    function cts(indx, indy) {
+      let arr;
+      switch (indx) {
+        case 0:
+          arr = [
+            [1, 1, 1],
+            [1, 1, 1],
+            [1, 1, 1]
+          ];
+          break;
+        case 1:
+          arr = [
+            [1, 1, 1],
+            [1, 9, 1],
+            [1, 0, 0]
+          ];
+          break;
+        case 2:
+          arr = [
+            [1, 0, 0],
+            [1, 1, 0],
+            [1, 0, 0]
+          ];
+          break;
+        case 3:
+          arr = [
+            [1, 0, 0],
+            [1, 0, 1],
+            [0, 0, 1]
+          ];
+          break;
+        case 4:
+          arr = [
+            [1, 0, 1],
+            [0, 0, 0],
+            [1, 0, 1]
+          ];
+          break;
+        case 5:
+          arr = [
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ];
+          break;
+        case 6:
+          arr = [
+            [0, 0, 1],
+            [0, 0, 1],
+            [0, 0, 1]
+          ];
+          break;
+        case 7:
+          arr = [
+            [0, 0, 0],
+            [0, 0, 0],
+            [1, 1, 1]
+          ];
+          break;
+        case 8:
+          arr = [
+            [0, 1, 1],
+            [0, 0, 0],
+            [1, 1, 0]
+          ];
+          break;
+        case 9:
+          arr = [
+            [1, 1, 0],
+            [1, 0, 0],
+            [0, 0, 0]
+          ];
+          break;
+        case 10:
+          arr = [
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1]
+          ];
+          break;
+        case 11:
+          arr = [
+            [1, 1, 1],
+            [0, 9, 0],
+            [1, 1, 1]
+          ];
+          break;
+        case 12:
+          arr = [
+            [1, 0, 1],
+            [1, 0, 1],
+            [0, 0, 0]
+          ];
+          break;
+        case 13:
+          arr = [
+            [1, 0, 1],
+            [0, 0, 0],
+            [1, 0, 0]
+          ];
+          break;
+        case 14:
+          arr = [
+            [1, 0, 0],
+            [1, 0, 0],
+            [1, 0, 0]
+          ];
+          break;
+        case 15:
+          arr = [
+            [1, 1, 1],
+            [0, 0, 0],
+            [0, 0, 0]
+          ];
+          break;
+        case 16:
+          arr = [
+            [0, 0, 1],
+            [0, 0, 0],
+            [1, 0, 0]
+          ];
+          break;
+        case 17:
+          arr = [
+            [1, 0, 0],
+            [0, 0, 1],
+            [1, 0, 0]
+          ];
+          break;
+        case 18:
+          arr = [
+            [9, 9, 9],
+            [9, 1, 9],
+            [9, 9, 9]
+          ];
+          break;
+        case 19:
+          arr = [
+            [1, 9, 1],
+            [9, 1, 9],
+            [1, 9, 1]
+          ];
+          break;
+        case 20:
+          arr = [
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 1]
+          ];
+          break;
+        case 21:
+          arr = [
+            [0, 0, 0],
+            [0, 1, 0],
+            [0, 0, 0]
+          ];
+          break;
+        default:
+          arr = [
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ];
+          break;
+      }
+      let op;
+      switch (indy) {
+        case 1: op = arr[0][0]; break;
+        case 2: op = arr[0][1]; break;
+        case 3: op = arr[0][2]; break;
+        case 4: op = arr[1][0]; break;
+        case 5: op = arr[1][1]; break;
+        case 6: op = arr[1][2]; break;
+        case 7: op = arr[2][0]; break;
+        case 8: op = arr[2][1]; break;
+        case 9: op = arr[2][2]; break;
+        default: op = 0; break;
+      }
+      return op;
+    }
+
+    // === The "main" function (conversion of main() in C++) ===
+    function main() {
+      const outputElem = document.getElementById("output");
+      function println(str) {
+        outputElem.textContent += str + "\n";
+      }
+
+      // Print introduction messages
+      println(introi);
+      
+      // settings and defaults (many values are taken directly from the C++ code)
+      let raytr = 3;         // ray tracing (1-3; 3 should be good)
+      let telo = 5;          // tolerance for showing the best (1=show same performance, 0=dont show until better)
+      let strr = 1;          // extra quality for tile bruteforce
+      let minemp = -1;       // number of empty tiles (-1 means “not set”)
+      let klma = 500;        // retry count for fail
+      let wem = [0,0,0,0,-3,0,0,0,0,0,0,0,0];  // weights of tiles
+      let maxit = 50000;     // maximum iterations for pathfinding
+      let rndrta = 30;       // random turn adjustment factor
+      let rndrt = 30;
+      let isprt = 1;         // use portals (1 = yes)
+      let isoutput = true;
+
+      // Create 12x12 arrays (boll, arr, sarr, farr)
+      let boll = Array.from({length: 12}, () => Array(12).fill(0));
+      let arr = Array.from({length: 12}, () => Array(12).fill(0));
+      let sarr = Array.from({length: 12}, () => Array(12).fill(0));
+      let farr = Array.from({length: 12}, () => Array(12).fill(0));
+
+      let doneport = 0;
+      let code = 0;
+      let ptile = Array(20).fill(0);
+      let brtf = 1;
+      let srtf = 1;
+      let lite = 0;
+      let site = 0;
+      let prtin = [-5, -5];
+      let prtot = [-5, -5];
+      // 12x12 array "arr" was already defined above.
+      let kilo = 0;
+      let shipid = 0;
+      // "inp" is a 4x4 ship design array.
+      let inp = [
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0]
+      ];
+      let mod = 0;
+
+      // (Skipping config file reading. In a browser you might use fetch/File APIs if desired.)
+
+      // Print the main menu and get the mode from the user (using prompt)
+      println("\n" + intro);
+      mod = parseInt(prompt("Enter mode (mod):"), 10);
+      if (mod === 4 || mod === 5) {
+        println("\nHow long?");
+        brtf = parseInt(document.getElementById("brtf").value, 10);
+                mod = parseInt(document.getElementById("mod4or5").value, 10)
+        if (mod === 5) {
+          lite = 1;
+        }
+      }
+      if (mod === 6) {
+        println("\nHow long?");
+        srtf = parseInt(prompt("Enter a value for 'srtf':"), 10);
+        println("\nChoose mod: 0-custom or 1-named custom");
+        mod = parseInt(prompt("Enter mod (0 or 1):"), 10);
+        site = 1;
+      }
+
+      let modd = 0;
+      if (mod === 0) {
+        println("\nGive 16 tiles (numbers 1–12) in order (left to right, top to bottom)");
+        let inputStr = prompt("Enter 16 numbers separated by spaces:");
+        let numbers = inputStr.split(/\s+/).map(Number);
+        if (numbers.length >= 16) {
+          inp = [
+            numbers.slice(0, 4),
+            numbers.slice(4, 8),
+            numbers.slice(8, 12),
+            numbers.slice(12, 16)
+          ];
+        }
+      }
+      if (mod === 1) {
+        println("\n" + intro1);
+        modd = parseInt(prompt("Enter ship design (modd):"), 10);
+        // Set up the ship design based on modd:
+        switch (modd) {
+          case 0:
+            inp = [
+              [5, 7, 7, 6],
+              [6, 7, 6, 6],
+              [6, 1, 6, 6],
+              [7, 7, 7, 6]
+            ];
+            break;
+          case 1:
+            inp = [
+              [5, 5, 5, 6],
+              [5, 7, 5, 6],
+              [5, 1, 5, 6],
+              [5, 5, 5, 6]
+            ];
+            break;
+          case 2:
+            inp = [
+              [6, 6, 1, 6],
+              [6, 6, 5, 6],
+              [6, 6, 5, 6],
+              [7, 7, 7, 6]
+            ];
+            break;
+          case 3:
+            inp = [
+              [1, 6, 6, 6],
+              [12, 6, 6, 6],
+              [6, 12, 6, 6],
+              [6, 6, 12, 6]
+            ];
+            break;
+          case 4:
+            inp = [
+              [1, 5, 5, 6],
+              [5, 5, 5, 6],
+              [5, 5, 5, 6],
+              [5, 5, 5, 6]
+            ];
+            break;
+          case 5:
+            inp = [
+              [6, 6, 6, 1],
+              [6, 6, 6, 6],
+              [6, 6, 6, 6],
+              [7, 7, 7, 6]
+            ];
+            break;
+          case -1:
+            inp = [
+              [5, 5, 5, 5],
+              [5, 5, 5, 5],
+              [5, 1, 5, 5],
+              [5, 5, 5, 5]
+            ];
+            break;
+          case -2:
+            inp = [
+              [9, 6, 6, 6],
+              [6, 6, 6, 6],
+              [6, 6, 6, 6],
+              [1, 5, 6, 6]
+            ];
+            break;
+          case -3:
+            inp = [
+              [1, 9, 6, 6],
+              [9, 6, 6, 6],
+              [6, 6, 6, 6],
+              [6, 6, 6, 6]
+            ];
+            break;
+          case -4:
+            inp = [
+              [5, 5, 5, 5],
+              [5, 7, 5, 5],
+              [5, 1, 5, 5],
+              [5, 5, 5, 5]
+            ];
+            break;
+          case 6:
+            brtf = 2147483645;
+            break;
+          case 7:
+            brtf = 2147483645;
+            break;
+          case 8:
+            brtf = 2147483645;
+            break;
+          case 9:
+            brtf = 177147 * 8 * 8 * 8;
+            break;
+          // (Additional modd cases can be added as needed)
+        }
+        println("\n");
+      }
+      if (mod === 7) {
+        let shipi = parseInt(prompt("Enter ship id (0 for rider used, 1 for rider, etc.):"), 10);
+        shipid = shipi;
+      }
+
+      // Reset the 12x12 "boll" array
+      for (let gf = 0; gf < 144; gf++) {
+        boll[Math.floor(gf / 12)][gf % 12] = 0;
+      }
+
+      // Begin the main simulation loop.
+      // (In this demo we perform only one iteration.)
+      for (let bst = 0; bst < brtf; bst++) {
+        // Adjust rndrt as in the C++ code (using JavaScript arithmetic)
+        rndrt = rndrta * ((strr + 0.1) / ((bst % strr) + 0.1)) / 5.0 - 2;
+
+        // (Key-checks such as GetKeyState are not available in JS,
+        // so we omit those parts.)
+
+        // If mod is 1 (named custom ship) then update inp based on modd.
+        // (Only a sample branch is shown; you can add the other cases.)
+        if (mod === 1 && modd === 6 && bst % 5 === 0) {
+          inp = [
+            [5 + Math.floor(Math.random() * 3), 5 + Math.floor(Math.random() * 3), 5 + Math.floor(Math.random() * 3), 6],
+            [5 + Math.floor(Math.random() * 3), 5 + Math.floor(Math.random() * 3), 5 + Math.floor(Math.random() * 3), 6],
+            [5 + Math.floor(Math.random() * 3), 5 + Math.floor(Math.random() * 3), 5 + Math.floor(Math.random() * 3), 6],
+            [5 + Math.floor(Math.random() * 3), 5 + Math.floor(Math.random() * 3), 5 + Math.floor(Math.random() * 3), 6]
+          ];
+          inp[2][1] = mania;
+          brtf = 2147483645;
+        }
+        // (Other modd cases such as modd==7, 8, 9 etc. can be added similarly.)
+
+        // Build the final "arr" (a 12x12 grid) from the 4x4 ship design "inp" using cts()
+        // Also build a numeric id by concatenating the 4-bit values.
+        let id = 0n;  // using BigInt for a large integer
+        for (let intar = 0; intar < 4; intar++) {
+          for (let intak = 0; intak < 4; intak++) {
+            let inpw = inp[intar][intak];
+            arr[intar * 3][intak * 3]       = cts(inpw, 1);
+            arr[intar * 3][intak * 3 + 1]   = cts(inpw, 2);
+            arr[intar * 3][intak * 3 + 2]   = cts(inpw, 3);
+            arr[intar * 3 + 1][intak * 3]   = cts(inpw, 4);
+            arr[intar * 3 + 1][intak * 3 + 1] = cts(inpw, 5);
+            arr[intar * 3 + 1][intak * 3 + 2] = cts(inpw, 6);
+            arr[intar * 3 + 2][intak * 3]   = cts(inpw, 7);
+            arr[intar * 3 + 2][intak * 3 + 1] = cts(inpw, 8);
+            arr[intar * 3 + 2][intak * 3 + 2] = cts(inpw, 9);
+            // Concatenate the value into id (shift left 4 bits, then add)
+            id = (id << 4n) + BigInt(inpw);
+          }
+        }
+        if (!isapp(id)) {
+          appindx(id);
+        }
+        // (For this demo we break out of the loop after one iteration.)
+        break;
+      }
+
+            let xt = 10, yt = 11; // starting coordinates
+      let x = xt, y = yt;
+      let dir = 1, ogdir = 1;
+      let it = 0, dx = 0, dy = 0;
+      let prt = 0, pth = 0, trn = 0, prtdir = 2;
+      
+      // (Some conditions may set portals or modify the grid.)
+      if (inp[3][2] === 7) { arr[11][9] = 1; }
+      // For example, if a particular tile count is not met:
+      // (Assuming buff is an array tracking tile counts – not fully shown here.)
+      // if (buff[6] !== minemp && minemp !== -1) { it = maxit; }
+      
+      let strtcrs = false;
+      
+      // Main simulation loop – continue until a target is reached (arr[y][x]===9)
+      // or the iteration count reaches maxit.
+      while (arr[y][x] !== 9 && it < maxit) {
+        it++;
+        let rnd;
+        if (/* modd !== 8 */ true) {  // if not using one branch, use:
+          rnd = Math.floor(Math.random() * brtf);
+        } else {
+          rnd = Math.floor(Math.random() * srtf);
+        }
+        if (brtf - it < 10 || brtf < 10) { rnd = -69; }
+        
+        // If the current cell is “open” (0, 9, or 6) and within bounds…
+        if (((arr[y][x] === 0 || arr[y][x] === 9 || arr[y][x] === 6) &&
+             (x < 12 && x > -1 && y < 12 && y > -1))) {
+          // Reset any portal–related tiles from the ship design.
+          for (let cros = 0; cros < 4; cros++) {
+            for (let croc = 0; croc < 4; croc++) {
+              if (inp[cros][croc] === 9) {
+                sarr[3*cros+2][3*croc+1] = arr[3*cros+2][3*croc+1];
+                arr[3*cros+2][3*croc+1] = 0;
+                sarr[3*cros+1][3*croc+2] = arr[3*cros+1][3*croc+2];
+                arr[3*cros+1][3*croc+2] = 0;
+              }
+              if (inp[cros][croc] === 12) {
+                if (arr[3*cros+2][3*croc+1] !== 0) {
+                  sarr[3*cros+2][3*croc+1] = arr[3*cros+2][3*croc+1];
+                  arr[3*cros+2][3*croc+1] = 0;
+                }
+              }
+            }
+          }
+          // (Additional adjustments may be done here as in the original.)
+          // Example: if a neighbor tile meets a condition, mark it.
+          if (arr[yt-1][xt] < 6 && arr[yt-1][xt] > 1) {
+            if (sarr[yt-1][xt] !== 0) { strtcrs = true; }
+            sarr[yt-1][xt] = arr[yt-1][xt];
+            arr[yt-1][xt] = 0;
+          }
+          
+          // Check “front” of movement in the current direction:
+          let nofront = 0;
+		  console.log(y);
+		  console.log(arr);
+          switch (dir) {
+  case 1:
+    if (y + 1 < arr.length && arr[y+1][x] !== 0) { 
+      nofront = 1; 
+    }
+    break;
+  case 2:
+    if (x + 1 < arr[y].length && arr[y][x+1] !== 0) { 
+      nofront = 1; 
+    }
+    break;
+  case 3:
+    if (y - 1 >= 0 && arr[y-1][x] !== 0) { 
+      nofront = 1; 
+    }
+    break;
+  case 4:
+    if (x - 1 >= 0 && arr[y][x-1] !== 0) { 
+      nofront = 1; 
+    }
+    break;
+}
+          nofront = 0; // (Resetting as in the original code.)
+          
+          // Decide whether to change direction based on various conditions.
+          if ((/* (modd != 9 and modd != 8) and */ (rnd > it || (mod === 4 && nofront)) ||
+               (mod === 7 && rnd*2 > it) ||
+               (/* modd === 8 and */ strr !== 1 && (1 + Math.floor(Math.random()*strr) > strr/2)) ||
+               (inp[Math.floor(y/3)][Math.floor(x/3-1)] === 9 && rnd > it))) {
+            // Use different turning strategies based on the raytr setting.
+            switch (raytr) {
+              case 3:
+                switch (dir) {
+                  case 1:
+                    if (x > 2 && arr[y][x-1]===0 && arr[y][x-2]===0 && arr[y][x-3]===0) { dir = 4; trn++; }
+                    if (x < 9 && arr[y][x+1]===0 && arr[y][x+2]===0 && arr[y][x+3]===0) { dir = 2; trn++; }
+                    break;
+                  case 2:
+                    if (y > 2 && arr[y-1][x]===0 && arr[y-2][x]===0 && arr[y-3][x]===0) { dir = 1; trn++; }
+                    if (y < 9 && arr[y+1][x]===0 && arr[y+2][x]===0 && arr[y+3][x]===0) { dir = 3; trn++; }
+                    break;
+                  case 3:
+                    if (x > 2 && arr[y][x-1]===0 && arr[y][x-2]===0 && arr[y][x-3]===0) { dir = 2; trn++; }
+                    if (x < 9 && arr[y][x+1]===0 && arr[y][x+2]===0 && arr[y][x+3]===0) { dir = 4; trn++; }
+                    break;
+                  case 4:
+                    if (y > 2 && arr[y-1][x]===0 && arr[y-2][x]===0 && arr[y-3][x]===0) { dir = 3; trn++; }
+                    if (y < 9 && arr[y+1][x]===0 && arr[y+2][x]===0 && arr[y+3][x]===0) { dir = 1; trn++; }
+                    break;
+                }
+                break;
+              case 2:
+                switch (dir) {
+                  case 1:
+                    if (x > 2 && arr[y][x-1]===0 && arr[y][x-2]===0) { dir = 4; trn++; }
+                    if (x < 9 && arr[y][x+1]===0 && arr[y][x+2]===0) { dir = 2; trn++; }
+                    break;
+                  case 2:
+                    if (y > 2 && arr[y-1][x]===0 && arr[y-2][x]===0) { dir = 1; trn++; }
+                    if (y < 9 && arr[y+1][x]===0 && arr[y+2][x]===0) { dir = 3; trn++; }
+                    break;
+                  case 3:
+                    if (x > 2 && arr[y][x-1]===0 && arr[y][x-2]===0) { dir = 2; trn++; }
+                    if (x < 9 && arr[y][x+1]===0 && arr[y][x+2]===0) { dir = 4; trn++; }
+                    break;
+                  case 4:
+                    if (y > 2 && arr[y-1][x]===0 && arr[y-2][x]===0) { dir = 3; trn++; }
+                    if (y < 9 && arr[y+1][x]===0 && arr[y+2][x]===0) { dir = 1; trn++; }
+                    break;
+                }
+                break;
+              case 1:
+                switch (dir) {
+                  case 1:
+                    if (x > 2 && arr[y][x-1]===0) { dir = 4; trn++; }
+                    if (x < 9 && arr[y][x+1]===0) { dir = 2; trn++; }
+                    break;
+                  case 2:
+                    if (y > 2 && arr[y-1][x]===0) { dir = 1; trn++; }
+                    if (y < 9 && arr[y+1][x]===0) { dir = 3; trn++; }
+                    break;
+                  case 3:
+                    if (x > 2 && arr[y][x-1]===0) { dir = 2; trn++; }
+                    if (x < 9 && arr[y][x+1]===0) { dir = 4; trn++; }
+                    break;
+                  case 4:
+                    if (y > 2 && arr[y-1][x]===0) { dir = 3; trn++; }
+                    if (y < 9 && arr[y+1][x]===0) { dir = 1; trn++; }
+                    break;
+                }
+                break;
+            } // end of turning switch
+            
+            // Move in the chosen direction
+            switch (dir) {
+              case 1: arr[y][x] = 2; y--; break;
+              case 2: arr[y][x] = 3; x++; break;
+              case 3: arr[y][x] = 4; y++; break;
+              case 4: arr[y][x] = 5; x--; break;
+            }
+            // If the new cell isn’t “open” (for example, not 0, 9, 6, etc.)
+            if (!((arr[y][x] === 0 || arr[y][x] === 9 || arr[y][x] === 12345 || arr[y][x] === 6) &&
+                  (x < 12 && x > -1 && y < 12 && y > -1))) {
+              if (mod === 7 && (arr[y][x] !== 1) &&
+                  (arr[y][x] === dir-2 || arr[y][x] === dir+2 || arr[y][x] === dir) &&
+                  ((dir === 1 && arr[y-1][x] === 0) ||
+                   (dir === 2 && arr[y][x+1] === 0) ||
+                   (dir === 3 && arr[y+1][x] === 0) ||
+                   (dir === 4 && arr[y][x-1] === 0))) {
+                switch (dir) {
+                  case 1: sarr[y][x] = 6; arr[y][x] = 6; y--; break;
+                  case 2: sarr[y][x] = 6; arr[y][x] = 6; x++; break;
+                  case 3: sarr[y][x] = 6; arr[y][x] = 6; y++; break;
+                  case 4: sarr[y][x] = 6; arr[y][x] = 6; x--; break;
+                }
+              } else {
+                switch (dir) {
+                  case 1: y++; break;
+                  case 2: x--; break;
+                  case 3: y--; break;
+                  case 4: x++; break;
+                }
+              }
+            } else {
+              if (dir !== ogdir) { trn++; }
+              ogdir = dir;
+              pth--;
+              dx = x; dy = y;
+            }
+          } 
+          // Else if the current cell is a portal indicator (11) or matches prtin:
+          else if (arr[y][x] === 11 || (x === prtin[1] && y === prtin[0])) {
+            isprt = 1;
+          } else {
+            let nofront = 0;
+            switch (dir) {
+
+  case 1:
+    if (y + 1 < arr.length && arr[y+1][x] !== 0) { 
+      nofront = 1; 
+    }
+    break;
+  case 2:
+    if (x + 1 < arr[y].length && arr[y][x+1] !== 0) { 
+      nofront = 1; 
+    }
+    break;
+  case 3:
+    if (y - 1 >= 0 && arr[y-1][x] !== 0) { 
+      nofront = 1; 
+    }
+    break;
+  case 4:
+    if (x - 1 >= 0 && arr[y][x-1] !== 0) { 
+      nofront = 1; 
+    }
+    break;
+			
+            }
+            isprt = 1;
+            if (/* modd===1 */ false) isprt = 0;
+            if (((it % 5 !== 0 && arr[y][x] !== 1 && (doneport === 1 || isprt === 0 && (Math.floor(Math.random()*(rndrt*20)) > 20)) || it < 5)
+                || (y === 0 && Math.floor(Math.random()*2) === 0 && Math.floor(Math.random()*100) > 50)) ) {
+              arr[y][x] = 0;
+            } else {
+              let prtit = 0;
+              if (doneport === 0 && isprt === 1) {
+                doneport = 1;
+                if (arr[y][x] === 1) { it = maxit; }
+                prtin[0] = y; prtin[1] = x;
+                if (strr === 1024) {
+                  x = (Math.floor(it/2)) % 12;
+                  y = (Math.floor(it/12/2)) % 12;
+                  if (arr[y][x] === 0) {
+                    prtot[0] = y; prtot[1] = x;
+                  } else {
+                    prtin[0] = -1; prtin[1] = -1;
+                  }
+                  prtdir = (Math.floor(it/144/2)) % 4 + 1;
+                  if (prtot[0] === 0 && prtdir === 4) { prtdir = 2; }
+                  if (prtot[0] === 1 && prtdir === 2) { prtdir = 4; }
+                  if (prtot[1] === 0 && prtdir === 1) { prtdir = 3; }
+                  if (prtot[1] === 1 && prtdir === 3) { prtdir = 1; }
+                  dir = prtdir; ogdir = dir;
+                  switch (dir) {
+                    case 1: y--; break;
+                    case 2: x++; break;
+                    case 3: y++; break;
+                    case 4: x--; break;
+                  }
+                } else {
+                  while (arr[y][x] !== 0 && prtit < 144) {
+                    prtit++;
+                    if (mod === 7) {
+                      x = Math.floor(Math.random()*11);
+                      y = 1 + Math.floor(Math.random()*11);
+                    } else {
+                      // Attempt to pick a new cell
+                      while (boll[x][y] !== 0 && Math.floor(Math.random()*5) !== 1) {
+                        x = Math.floor(Math.random()*12);
+                        y = Math.floor(Math.random()*12);
+                        if (boll[x][y] === 1 && x > 1) { x--; }
+                        if (it < 144*144*4) {
+                          x = it % 12;
+                          y = Math.floor(it/12) % 12;
+                        }
+                      }
+                    }
+                    if (arr[y][x] !== 0) {
+                      prtot[0] = y; prtot[1] = x;
+                      boll[x][y] = 1;
+                    }
+                  }
+                  if (prtit === 144) {
+                    it = maxit; doneport = 0;
+                    for (let gf = 0; gf < 144; gf++) {
+                      boll[Math.floor(gf/12)][gf % 12] = 0;
+                    }
+                  } else {
+                    prtot[0] = y; prtot[1] = x;
+                    prtdir = 1 + Math.floor(Math.random()*4);
+                    if (prtot[0] === 0 && prtdir === 4) { prtdir = 2; }
+                    if (prtot[0] === 1 && prtdir === 2) { prtdir = 4; }
+                    if (prtot[1] === 0 && prtdir === 1) { prtdir = 3; }
+                    if (prtot[1] === 1 && prtdir === 3) { prtdir = 1; }
+                    dir = prtdir; ogdir = dir;
+                    switch (dir) {
+                      case 1: y--; break;
+                      case 2: x++; break;
+                      case 3: y++; break;
+                      case 4: x--; break;
+                    }
+                  }
+                }
+              } else {
+                it = maxit;
+              }
+            }
+          }
+        }
+        if (doneport) { arr[prtot[0]][prtot[1]] = 1; }
+        
+        // If turning conditions are met (simulate: if (dir - ogdir == 1 or -3) and prt==0)
+        if (((dir - ogdir === 1) || (dir - ogdir === -3)) && prt === 0) {
+          prt = 1;
+          if (arr[y][x] !== 1) { arr[y][x] = 0; }
+          x = dx; y = dy;
+          switch (ogdir) {
+            case 1:
+              if (arr[y][x] === 5) { arr[y][x] = 6; }
+              y++;
+              if (arr[y][x] === 5) { arr[y][x] = 6; }
+              break;
+            case 2: x--; break;
+            case 3: y--; break;
+            case 4: x++; break;
+          }
+          dir = ((dir + 2) % 4) || 4; // add 2 (wraparound)
+          ogdir = dir;
+          if (arr[y][x] !== 1) { arr[y][x] = 0; }
+        } else {
+          let dirch = kilo;
+          if (xt < 6 || inp[Math.floor(y/4)][Math.floor(x/4)] === 9) {
+            dirch = klma - kilo;
+          }
+          if ( (Math.floor(Math.random() * klma) > dirch) || (Math.floor(Math.random() * rndrt) === 2) ) {
+            // Change direction according to one switch (using ogdir)
+            switch (ogdir) {
+              case 1:
+                switch (dir) {
+                  case 1: dir = 4; break;
+                  case 4: dir = 2; break;
+                  case 2: y--; break;
+                }
+                break;
+              case 2:
+                switch (dir) {
+                  case 2: dir = 1; break;
+                  case 1: dir = 3; break;
+                  case 3: x--; break;
+                }
+                break;
+              case 3:
+                switch (dir) {
+                  case 3: dir = 2; break;
+                  case 2: dir = 4; break;
+                  case 4: y++; break;
+                }
+                break;
+              case 4:
+                switch (dir) {
+                  case 4: dir = 3; break;
+                  case 3: dir = 1; break;
+                  case 1: x++; break;
+                }
+                break;
+            }
+          } else {
+            switch (ogdir) {
+              case 1:
+                switch (dir) {
+                  case 1: dir = 2; break;
+                  case 2: dir = 4; break;
+                  case 4: y--; break;
+                }
+                break;
+              case 2:
+                switch (dir) {
+                  case 2: dir = 3; break;
+                  case 3: dir = 1; break;
+                  case 1: x--; break;
+                }
+                break;
+              case 3:
+                switch (dir) {
+                  case 3: dir = 4; break;
+                  case 4: dir = 2; break;
+                  case 2: y++; break;
+                }
+                break;
+              case 4:
+                switch (dir) {
+                  case 4: dir = 1; break;
+                  case 1: dir = 3; break;
+                  case 3: x++; break;
+                }
+                break;
+            }
+          }
+        } // end else
+        
+        // (Further code to update the grid based on movement:)
+        if (doneport) { arr[prtot[0]][prtot[1]] = 1; }
+        
+        // For the “secondary” part:
+        let sit = 1, sdir = 1;
+        // (The commented section regarding following a path is omitted.)
+        if (doneport === 0) {
+          // Do nothing.
+        } else {
+          // In your code you set portal cells to 0:
+          arr[prtot[0]][prtot[1]] = 0;
+          arr[prtin[0]][prtin[1]] = 0;
+        }
+        
+        // Process a 1–cell border of the grid:
+        for (let cros = 1; cros < 11; cros++) {
+          for (let croc = 1; croc < 11; croc++) {
+            if (inp[Math.floor(cros/3)][Math.floor(croc/3)] === 12 ||
+                inp[Math.floor(cros/3)][Math.floor(croc/3)] === 9) {
+              let ea = arr[cros][croc-1],
+                  es = arr[cros-1][croc],
+                  ed = arr[cros][croc+1],
+                  ew = arr[cros+1][croc];
+              if ((ea > 1 && ea < 6 && es > 1 && es < 6 &&
+                   ew > 1 && ew < 6 && ed > 1 && ed < 6) &&
+                  (ea === 3 || es === 2 || ed === 5 || ew === 4)) {
+                arr[cros][croc] = 6;
+              }
+            }
+          }
+        }
+        if (/*strtcrs*/ false) { sarr[yt-1][xt] = 6; }
+        if (inp[3][3] === 6 && arr[11][9] === 1) { arr[11][9] = 0; }
+        
+        // Reset for the second “path” simulation:
+
+        let ptrn = 0;
+        for (let hj = 0; hj < 12; hj++) {
+          for (let hjs = 0; hjs < 12; hjs++) {
+            farr[hj][hjs] = sarr[hj][hjs];
+            if (((arr[hj][hjs-1] === 3 && (arr[hj-1][hjs] === 4 || arr[hj+1][hjs] === 2)) ||
+                 (arr[hj][hjs+1] === 5 && (arr[hj-1][hjs] === 4 || arr[hj+1][hjs] === 2)))) {
+              arr[hj][hjs] = 6;
+              farr[hj][hjs] = 6;
+            }
+          }
+        }
+        while (farr[y][x] !== 9 && it < maxit) {
+          it++;
+          let movedir = dir;
+          if (movedir !== farr[y][x] - 1) { ptrn++; }
+          if (farr[y][x] === 0) { farr[y][x] = dir + 1; }
+          switch (dir) {
+            case 1: y--; break;
+            case 2: x++; break;
+            case 3: y++; break;
+            case 4: x--; break;
+          }
+
+          if (sarr[y][x] !== 0 && arr[y][x] !== 6) { arr[y][x] = sarr[y][x]; }
+          if (sarr[x] && sarr[x][y] === 6) { farr[x][y] = 6; arr[x][y] = 6; }
+          switch (arr[y][x]) {
+            case 0: break;
+            case 1: it = maxit; farr[y][x] = 9; break;
+            case 2: if (dir !== 1) { dir = 1; farr[y][x] = 100 + dir + movedir * 10; } break;
+            case 3: if (dir !== 2) { dir = 2; farr[y][x] = 100 + dir + movedir * 10; } break;
+            case 4: if (dir !== 3) { dir = 3; farr[y][x] = 100 + dir + movedir * 10; } break;
+            case 5: if (dir !== 4) { dir = 4; farr[y][x] = 100 + dir + movedir * 10; } break;
+            case 6: farr[y][x] = 6; break;
+            case 8: it = maxit; farr[y][x] = 9; break;
+          }
+          if ((x === prtin[1] && y === prtin[0] && prtin[0] > -1)) {
+            x = prtot[1]; y = prtot[0]; dir = prtdir;
+          }
+          if (x < 0 || x > 11 || y < 0 || y > 11) { it = maxit; }
+        }
+        // End of secondary simulation
+        
+        // If portals are active, restore portal markers:
+        if (doneport) {
+          sarr[prtin[0]][prtin[1]] = 11;
+          sarr[prtot[0]][prtot[1]] = 12;
+          arr[prtin[0]][prtin[1]] = 11;
+          arr[prtot[0]][prtot[1]] = 12;
+          farr[prtin[0]][prtin[1]] = 11;
+          farr[prtot[0]][prtot[1]] = 12;
+        }
+       // console.log(arr)
+        // Now loop through each cell to output using our simulated console routines.
+        // (Here we simply build an HTML string.)
+        let best = 0, bst = 0; // Assume best and bst are set as in your code.
+        // For each cell, call our (simulated) color and draw functions:
+        for (let ggar = 0; ggar < 12; ggar++) {
+          for (let ggak = 0; ggak < 12; ggak++) {
+            // In your code, search = arr[ggar][ggak] (or sarr if available)
+            let search = arr[ggar][ggak];
+            if (sarr[ggar][ggak] !== 0 && search !== 6) {
+              search = sarr[ggar][ggak];
+              arr[ggar][ggak] = sarr[ggar][ggak];
+            }
+            // Call a simulated color function (you must define your own mapping)
+            // Here we simply use the search value as our color code.
+            let colCode = search;  // In your code, color(mod,ggar,ggak,inp,search) returns a number.
+            // Simulate drawing by appending a character (here we simply output search)
+         //   printHTML(setTextWithColor(search, colCode));
+          }
+          println("");
+        }
+        
+        // Finally, compute and print rankings.
+        // (We compute some dummy rank values based on your code.)
+        let pth3 = 0;  // path length from counted moves
+        for (let ggar = 0; ggar < 12; ggar++) {
+          for (let ggak = 0; ggak < 12; ggak++) {
+            if ([2,3,4,5].includes(arr[ggar][ggak])) { pth3++; }
+          }
+        }
+        let trn_val = trn;
+        let pth4 = pth3 - trn_val;
+        if (it === maxit) { pth4 -= 100; }
+        // (Add weighted contributions from buff array if defined; here we assume buff is an array.)
+        let buff = Array(20).fill(0);  // dummy buff values
+        for (let buffc = 0; buffc < 12; buffc++) {
+          pth4 += (buff[buffc] || 0) * (wem[buffc - 1] || 0);
+        }
+        if (pth4 > 254) { pth4 = 0; }
+        if (pth4 > best - telo || brtf < 10) {
+          if (pth4 > best) { best = pth4; }
+        }
+        println("\nPath length: " + (pth3 - trn_val));
+        println("Turns: " + trn_val);
+        // Compute dummy damage, dps, and rank values:
+        let bsdmg = (500 * 1.3 * 6 * 5) * (1 + ptrn / 10.0 + ptrn / 10.0 + 0.6);
+        let dps = bsdmg * (Math.pow(1.4, (pth3 - 12))) * (3.2 - (0.2 * (buff[5] || 0))) * (Math.pow(0.333, (buff[5] || 0)));
+        println("Base damage: " + bsdmg.toFixed(2));
+        println("DPS (not so accurate): " + dps.toFixed(2));
+        // Compute rank values (dummy values based on your switches)
+        let ranka = Math.floor(Math.log10(dps));
+        let rankb = max(0, ((pth3 - (buff[5] || 0) * 3) / 2.5) - 19);
+        let rankc = max(0, (((pth3 - (buff[5] || 0) * 2.5)) / 75 * 5) * 2 - 6);
+        let rankd = Math.floor(2.0 * best / 37.0);
+        let ranke = ((best) * (pth3 - (buff[5] || 0) * 2.5) / 300);
+        let rankf = ranke + rankd - 30 + 19;
+        // Output rank using our simulated color output:
+        println("TIER RANK - " + ranka + " - " + rankb + " - " + rankc + " - " + rankd + " - " + ranke.toFixed(2) + " - " + rankf);
+        // (Similarly, compute wave rank and output.)
+        
+        // (Optionally, if isoutput is true, call a function outfileput() to further output data.)
+        if (isoutput) {
+          // outfileput(farr, inp, sarr, [ranka, rankb, rankc, rankd, ranke, rankf]);
+          println("\n[Data output function called]");
+        }
+        
+        // For demonstration, break out of the simulation loop:
+        break;
+      } // end main simulation loop
+      
+      // Add the final id to the idset.
+      // (Assuming id is computed earlier; here we simulate with a dummy id.)
+      let id = "dummyID";
+      appindx(id);
+      
+      println("\nSimulation complete.");
+    }
+    
+    // Run main() when the window loads.
+    window.onload = main;
+  </script>
+</body>
+</html>

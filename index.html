@@ -14,8 +14,8 @@
             height: 100vh;
             align-items: center;
             justify-content: center;
-             background-image: url('epic1.png');
-			 background-position: center;
+            background-image: url('epic1.png');
+            background-position: center;
         }
         .container {
             display: flex;
@@ -30,13 +30,19 @@
             background-color: #222;
             padding: 20px;
             box-shadow: 5px 0 25px rgba(0, 0, 0, 1);
+            overflow-y: auto; /* Enable vertical scrolling */
+            height: 95vh; /* Make the sidebar take the full height of the viewport */
+            direction: rtl; /* Reverse the direction of the content */
+        }
+        .sidebar-content {
+            direction: ltr; /* Reset the direction for the links */
         }
         .sidebar a {
             display: block;
             margin: 10px 0;
             text-decoration: none;
             color: #ddd;
-			text-shadow:1px 1px 5px #022, 1px 1px 5px #033;
+            text-shadow: 1px 1px 5px #022, 1px 1px 5px #033;
             font-weight: bold;
         }
         .content {
@@ -46,19 +52,21 @@
         .title {
             font-size: 4em;
             font-weight: bold;
-			color: #fff;
-
-			text-shadow:1px 1px 10px #000, 1px 1px 10px #7dd;
+            color: #fff;
+            text-shadow: 1px 1px 10px #000, 1px 1px 10px #7dd;
             margin: 20px 0;
         }
         .small-text {
             font-size: 1.2em;
-			text-shadow:1px 1px 5px #a99, 1px 1px 5px #a99;
+            text-shadow: 1px 1px 5px #a99, 1px 1px 5px #a99;
             color: #fff;
             margin-top: 20px;
         }
         .gallery-button {
-            margin-left: 20px;
+                    position: relative;
+    top: -20px;
+     left: 48px;
+            margin-left: 0px;
             padding: 10px 20px;
             font-size: 1em;
             background-color: #007BFF;
@@ -70,57 +78,81 @@
         .gallery-button:hover {
             background-color: #0056b3;
         }
-#esd {
+		.h-button {
+            position: relative;
+    top: 20px;
 
-  padding: -5px;
-  box-shadow: 5px 10px 5px #888888;
- max-width: fit-content;
-margin: 0px auto;
-  margin-left: auto;
-  border: 5px solid;
-  margin-right: auto;
-visibility: hidden;
-
-}
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .h-button:hover {
+            background-color: #0056b3;
+        }
+        #esd {
+            padding: -5px;
+            box-shadow: 5px 10px 5px #888888;
+            max-width: fit-content;
+            margin: 0px auto;
+            margin-left: auto;
+            border: 5px solid;
+            margin-right: auto;
+            visibility: hidden;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="sidebar">
-            <a href="TTBPN.html">TTBPN</a>
-            <a href="TTOBPN.html">TTOBPN</a>
-      
-         <a href="TTFfq.html">TTFfq</a>
-	    <a href="TTWWS.html">TTWws</a>
-		
-		
-        <a href="CSC.html">Complex Superfunction Calculator</a>
-	    <a href="AFKA.html">Generalized Abel Solver</a>
-        <a href="GF.html">Generalized Filog Solver</a>
-	     <a id="domainLink" href="DC.html">Complex Domain Coloring</a>
- 	    <a href="ESCTF.html">Escapetime Fractal Renderer</a>
-		<a href="funclib.html">Complex Function Library</a>
-	    <a href="NEWF.html">Newton Fractal Renderer</a>
-	    <a href="BTBC.html">Number Base Comverter</a>
-		<a href="ABRE.html">Number -illion Abbreviator</a>
-		<a href="SUD.html">Sudoku Annihilator (SANT)</a>
-		<a href="2048.html">2048</a>
-		<a href="732048.html">{7,3} hyperbolic 2048</a>
-		<a href="PT.html">Periodic Table</a>
-		<a href="PCALC.html">Fictional Element Calculator</a>
-		<a href="SA3.html">3-Dimensional Attractor Similator</a>
-		<a href="SA.html">N-Dimensional Attractor Similator</a>
-		<a href="EC.html">Eternal Calendar</a>
-		<a href="MZ.html">Maze Generator</a>
-		<a href="BOCF.html">Bucholz Ordinal Collapsing Function</a>
-		<a href="PrSS.html">Primitive Sequence System</a>
-		<a href="BB.html">Busy Beaver Variants</a>
-		<a href="ColP.html">Colour Space Picker</a>
+            <div class="sidebar-content">
+			<br><br><br><br>
+                <a href="TTBPN.html">TTBPN</a>
+                <a href="TTOBPN.html">TTOBPN</a>
+                <a href="TTFfq.html">TTFfq</a>
+                <a href="TTWWS.html">TTWws</a>
+                <a href="CSC.html">Complex Superfunction Calculator</a>
+                <a href="AFKA.html">Generalized Abel Solver</a>
+                <a href="GF.html">Generalized Filog Solver</a>
+                <a id="domainLink" href="DC.html">Complex Domain Coloring</a>
+                <a href="ESCTF.html">Escapetime Fractal Renderer</a>
+                <a href="funclib.html">Complex Function Library</a>
+                <a href="NEWF.html">Newton Fractal Renderer</a>
+                <a href="BTBC.html">Number Base Comverter</a>
+                <a href="ABRE.html">Number -illion Abbreviator</a>
+                <a href="SUD.html">Sudoku Annihilator (SANT)</a>
+                <a href="2048.html">2048</a>
+                <a href="732048.html">{7,3} hyperbolic 2048</a>
+                <a href="PT.html">Periodic Table</a>
+                <a href="PCALC.html">Fictional Element Calculator</a>
+                <a href="SA3.html">3-Dimensional Attractor Similator</a>
+                <a href="SA.html">N-Dimensional Attractor Similator</a>
+                <a href="EC.html">Eternal Calendar</a>
+                <a href="MZ.html">Maze Generator</a>
+                <a href="BOCF.html">Bucholz Ordinal Collapsing Function</a>
+                <a href="PrSS.html">Primitive Sequence System</a>
+                <a href="BB.html">Busy Beaver Variants</a>
+                <a href="ColP.html">Colour Space Picker</a>
+                <a href="CG.html">Chaos Game</a>
+                <a href="PTHFND.html">Miner Gun Builder Pathfinder</a>
+                <a href="CM.html">Circular Membrane Visualizer</a>
+                <a href="BBJ.html">Busy Beaver Simulator</a>
+                <a href="TRR.html">Text Effects</a>
+                <a href="CP.html">Capacitor Colour Code</a>
+                <a href="IN.html">Inductor Colour Code</a>
+                <a href="DD.html">Diode Colour Code</a>
+                <a href="RS.html">Resistor Colour Code</a>
+                <a href="PN.html">Rythm Game</a>
+				<br><br><br><br><br><br><br><br>
+            </div>
         </div>
-<div id="esd" >
-<img src="logo.png"></div>
+        <div id="esd">
+            <img src="logo.png">
+        </div>
         <div class="content">
-
             <div class="title">TESERT</div>
             <div class="small-text">
                 now in hatred of my future<br>
@@ -129,9 +161,12 @@ visibility: hidden;
                 was my own wrath
             </div>
         </div>
-        <button class="gallery-button">G</button>
+   <div>     <button class="gallery-button" onclick="window.location.href='gallery.html'">Gallery</button>
+	</div>
+		<br>
+<div><button class="h-button">h</button></div>
     </div>
-	    <script>
+    <script>
         // 1% chance to change "Complex Domain Coloring" to "Complex Domain Expansion" and redirect to kaju.html
         function randomizeDomainLink() {
             const chance = Math.random(); // Generate a random number between 0 and 1

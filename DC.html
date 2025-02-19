@@ -1142,55 +1142,127 @@ let thick = parseFloat(document.getElementById('thick').value);
 		
 		
 		
-		
-   const textarea = document.getElementById("function");
-      textarea.addEventListener("input", (e) => {
-      const cursorPosition = textarea.selectionStart;
-      const text = textarea.value;
+		const textarea = document.getElementById("function");
+let selectedIndex = -1;
 
-      const prefixMatch = /[a-zA-Z0-9]+$/;
-      const match = text.slice(0, cursorPosition).match(prefixMatch);
-      const prefix = match ? match[0] : "";
+textarea.addEventListener("input", (e) => {
+  const cursorPosition = textarea.selectionStart;
+  const text = textarea.value;
 
-      autocompleteList.innerHTML = "";
-      if (!prefix) {
-        autocompleteList.style.display = "none";
-        return;
-      }
+  const prefixMatch = /[a-zA-Z0-9_#]+$/;
+  const match = text.slice(0, cursorPosition).match(prefixMatch);
+  let prefix = match ? match[0] : "";
 
-      const suggestions = allFunctionsNames
-        .filter((name) => name.startsWith(prefix))
-        .sort((a, b) => a.length - b.length);
+  autocompleteList.innerHTML = "";
+  selectedIndex = -1;
 
-      if (suggestions.length === 0) {
-        autocompleteList.style.display = "none";
-        return;
-      }
+  if (!prefix) {
+    autocompleteList.style.display = "none";
+    return;
+  }
 
-      autocompleteList.style.display = "block";
-      autocompleteList.style.left = `${textarea.offsetLeft}px`;
-      autocompleteList.style.top = `${textarea.offsetTop + textarea.offsetHeight}px`;
-      autocompleteList.style.width = `${textarea.offsetWidth}px`;
+  let suggestions = [];
 
-      suggestions.forEach((suggestion) => {
-        const params = getParamNames(allFunctions[suggestion]) || [];
-        const paramsText = params.length > 0 ? `(${params.join(", ")})` : "()";
+  if (prefix === "_") {
+    suggestions = allFunctionsNames;
+  //}else if (prefix === "@") {
+   // suggestions = recentFunctions;
+  //} else if (prefix === ":") {
+   // suggestions = allFunctionsNames.sort(() => Math.random() - 0.5).slice(0, 10);
+  } else if (prefix === "#") {
+    const suggestionDiv = document.createElement("div");
+    suggestionDiv.textContent = `Total Functions: ${allFunctionsNames.length}`;
+    autocompleteList.appendChild(suggestionDiv);
+    autocompleteList.style.display = "block";
+    return;
+  } else {
+    let searchTerms = [prefix];
+    if (prefix.includes("arc") || prefix.includes("inv")) {
+      searchTerms.push(prefix.replace(/arc/g, "inv"), prefix.replace(/inv/g, "arc"));
+    }
 
-        const suggestionDiv = document.createElement("div");
-        suggestionDiv.textContent = `${suggestion} ${paramsText}`;
-
-        suggestionDiv.addEventListener("click", () => {
-          const beforeCursor = text.slice(0, cursorPosition);
-          const afterCursor = text.slice(cursorPosition);
-          const updatedBeforeCursor = beforeCursor.replace(prefixMatch, suggestion);
-          textarea.value = updatedBeforeCursor + afterCursor;
-          textarea.selectionStart = textarea.selectionEnd = updatedBeforeCursor.length;
-          autocompleteList.style.display = "none";
-        });
-
-        autocompleteList.appendChild(suggestionDiv);
+    suggestions = allFunctionsNames
+      .filter((name) => searchTerms.some(term => name.includes(term)))
+      .sort((a, b) => {
+        const aStarts = searchTerms.some(term => a.startsWith(term));
+        const bStarts = searchTerms.some(term => b.startsWith(term));
+        if (aStarts && !bStarts) return -1;
+        if (!aStarts && bStarts) return 1;
+        return a.length - b.length;
       });
+  }
+
+  if (suggestions.length === 0) {
+    autocompleteList.style.display = "none";
+    return;
+  }
+
+  autocompleteList.style.display = "block";
+  autocompleteList.style.left = `${textarea.offsetLeft}px`;
+  autocompleteList.style.top = `${textarea.offsetTop + textarea.offsetHeight}px`;
+  autocompleteList.style.width = `${textarea.offsetWidth}px`;
+
+  suggestions.forEach((suggestion, index) => {
+    const params = getParamNames(allFunctions[suggestion]) || [];
+    const paramsText = params.length > 0 ? `(${params.join(", ")})` : "()";
+
+    const suggestionDiv = document.createElement("div");
+    suggestionDiv.textContent = `${suggestion} ${paramsText}`;
+    suggestionDiv.dataset.index = index;
+
+    suggestionDiv.addEventListener("click", () => {
+      insertSuggestion(suggestion);
     });
+
+    autocompleteList.appendChild(suggestionDiv);
+  });
+});
+
+textarea.addEventListener("keydown", (e) => {
+  const items = autocompleteList.children;
+  if (items.length === 0) return;
+
+  if (e.key === "ArrowDown") {
+    selectedIndex = (selectedIndex + 1) % items.length;
+    updateSelection();
+    e.preventDefault();
+  } else if (e.key === "ArrowUp") {
+    selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+    updateSelection();
+    e.preventDefault();
+  } else if (e.key === "Shift" && selectedIndex >= 0) {
+    insertSuggestion(items[selectedIndex].textContent.split(" ")[0]);
+    e.preventDefault();
+  }
+});
+
+function updateSelection() {
+  const items = autocompleteList.children;
+  Array.from(items).forEach((item, index) => {
+    item.style.background = index === selectedIndex ? "#ddd" : "white";
+  });
+}
+
+function insertSuggestion(suggestion) {
+  const cursorPosition = textarea.selectionStart;
+  const text = textarea.value;
+  const prefixMatch = /[a-zA-Z0-9_#]+$/;
+  const beforeCursor = text.slice(0, cursorPosition);
+  const afterCursor = text.slice(cursorPosition);
+  const updatedBeforeCursor = beforeCursor.replace(prefixMatch, suggestion);
+  textarea.value = updatedBeforeCursor + afterCursor;
+  textarea.selectionStart = textarea.selectionEnd = updatedBeforeCursor.length;
+  autocompleteList.style.display = "none";
+ //   if (!recentFunctions.includes(suggestion)) {
+  //  recentFunctions.unshift(suggestion);
+  //  if (recentFunctions.length > maxRecent) recentFunctions.pop();
+//}
+}
+
+
+
+
+
 
     textarea.addEventListener("blur", () => {
       setTimeout(() => (autocompleteList.style.display = "none"), 200);

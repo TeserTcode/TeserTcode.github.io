@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resistor Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+			background: url('resistbg1.png')  center center fixed;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .color-box {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #000;
+        }
+        .slider {
+            width: 100%;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+        .hidden {
+            display: none;
+        }
+        .converter {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Resistor Calculator</h1>
+
+    <!-- Slider for number of digits -->
+    <label for="digitSlider">Number of Digits:</label>
+    <input type="range" id="digitSlider" min="1" max="5" value="1" class="slider">
+    <span id="digitCount">1</span>
+
+    <!-- Tolerance and TCR toggles -->
+    <div>
+        <label>
+            <input type="checkbox" id="toggleTolerance" checked> Include Tolerance
+        </label>
+        <label>
+            <input type="checkbox" id="toggleTCR" checked> Include TCR
+        </label>
+    </div>
+
+    <!-- Container for all selectors -->
+    <div class="container" id="selectorContainer"></div>
+
+    <!-- Display Ohm Button -->
+    <button onclick="displayOhm()">Display Ohm</button>
+
+    <!-- Result display -->
+    <div class="result" id="result"></div>
+
+    <!-- Converter -->
+    <div class="converter">
+        <label for="unitConverter">Convert to:</label>
+        <select id="unitConverter">
+            <option value="1">Ohm</option>
+            <option value="1e-9">Abohm (10^−9)</option>
+            <option value="8.987551787e11">Statohm (8.987551787×10^11)</option>
+            <option value="57.44">German mile</option>
+            <option value="25.61">Varley</option>
+            <option value="13.59">Matthiessen</option>
+            <option value="0.9537">Siemens mercury</option>
+            <option value="0.9191">Weber absolute</option>
+            <option value="0.6367">Jacobi copper</option>
+            <option value="0.3202">Thomson</option>
+        </select>
+        <button onclick="convertResistor()">Convert</button>
+        <div id="conversionResult"></div>
+    </div>
+   <div class="resistor-visualizer">
+        <h2>Resistor Bands</h2>
+        <canvas id="resistorCanvas" width="300" height="100"></canvas>
+    </div>
+
+    <script>
+        const colorData = {
+            digits: [
+                { value: 0, color: "black", label: "Black (0)" },
+                { value: 1, color: "brown", label: "Brown (1)" },
+                { value: 2, color: "red", label: "Red (2)" },
+                { value: 3, color: "orange", label: "Orange (3)" },
+                { value: 4, color: "yellow", label: "Yellow (4)" },
+                { value: 5, color: "green", label: "Green (5)" },
+                { value: 6, color: "blue", label: "Blue (6)" },
+                { value: 7, color: "purple", label: "Violet (7)" },
+                { value: 8, color: "gray", label: "Gray (8)" },
+                { value: 9, color: "white", label: "White (9)" }
+            ],
+            multiplier: [
+                { value: -3, color: "pink", label: "Pink (PK)", display: "10^-3" },
+                { value: -2, color: "silver", label: "Silver (SR)", display: "10^-2" },
+                { value: -1, color: "gold", label: "Gold (GD)", display: "10^-1" },
+                { value: 0, color: "black", label: "Black (BK)", display: "10^0" },
+                { value: 1, color: "brown", label: "Brown (BN)", display: "10^1" },
+                { value: 2, color: "red", label: "Red (RD)", display: "10^2" },
+                { value: 3, color: "orange", label: "Orange (OG)", display: "10^3" },
+                { value: 4, color: "yellow", label: "Yellow (YE)", display: "10^4" },
+                { value: 5, color: "green", label: "Green (GN)", display: "10^5" },
+                { value: 6, color: "blue", label: "Blue (BU)", display: "10^6" },
+                { value: 7, color: "purple", label: "Violet (VT)", display: "10^7" },
+                { value: 8, color: "gray", label: "Gray (GY)", display: "10^8" },
+                { value: 9, color: "white", label: "White (WH)", display: "10^9" }
+            ],
+            tolerance: [
+          
+                { value: 10, color: "silver", label: "Silver (K)", display: "±10%" },
+                { value: 5, color: "gold", label: "Gold (J)", display: "±5%" },
+                { value: 1, color: "brown", label: "Brown (F)", display: "±1%" },
+                { value: 2, color: "red", label: "Red (G)", display: "±2%" },
+                { value: 0.05, color: "yellow", label: "Yellow (P)", display: "±0.05%" },
+                { value: 0.02, color: "green", label: "Green (D)", display: "±0.02%" },
+                { value: 0.5, color: "blue", label: "Blue (C)", display: "±0.5%" },
+                { value: 0.25, color: "purple", label: "Violet (B)", display: "±0.25%" },
+                { value: 0.01, color: "gray", label: "Gray (L(A))", display: "±0.01%" }
+            ],
+            tcr: [
+                { value: 250, color: "black", label: "Black (U)", display: "±250 ppm/°C" },
+                { value: 100, color: "brown", label: "Brown (S)", display: "±100 ppm/°C" },
+                { value: 50, color: "red", label: "Red (R)", display: "±50 ppm/°C" },
+                { value: 15, color: "orange", label: "Orange (P)", display: "±15 ppm/°C" },
+                { value: 25, color: "yellow", label: "Yellow (Q)", display: "±25 ppm/°C" },
+                { value: 20, color: "green", label: "Green (Z)", display: "±20 ppm/°C" },
+                { value: 10, color: "blue", label: "Blue (Z)", display: "±10 ppm/°C" },
+                { value: 5, color: "purple", label: "Violet (M)", display: "±5 ppm/°C" },
+                { value: 1, color: "gray", label: "Gray (K)", display: "±1 ppm/°C" }
+            ]
+        };
+
+        const digitSlider = document.getElementById("digitSlider");
+        const digitCount = document.getElementById("digitCount");
+        const selectorContainer = document.getElementById("selectorContainer");
+        const toggleTolerance = document.getElementById("toggleTolerance");
+        const toggleTCR = document.getElementById("toggleTCR");
+        const resultDiv = document.getElementById("result");
+        const conversionResultDiv = document.getElementById("conversionResult");
+
+        // Update the number of digits and regenerate selectors
+        digitSlider.addEventListener("input", () => {
+            const count = digitSlider.value;
+            digitCount.textContent = count;
+            generateSelectors(count);
+			
+        });
+
+        toggleTolerance.addEventListener("change", () => {
+		drawResistor();
+            toggleColumn("Tolerance", toggleTolerance.checked);
+        });
+
+        toggleTCR.addEventListener("change", () => {
+		drawResistor();
+            toggleColumn("TCR", toggleTCR.checked);
+        });
+
+        function toggleColumn(label, isVisible) {
+            const column = [...document.querySelectorAll(".column")].find(col => 
+                col.querySelector("h3")?.textContent.includes(label)
+            );
+            if (column) {
+                column.classList.toggle("hidden", !isVisible);
+            }
+        }
+
+ function generateSelectors(digitCount) {
+            selectorContainer.innerHTML = "";
+
+            // Generate digit selectors
+            for (let i = 1; i <= digitCount; i++) {
+                const column = document.createElement("div");
+                column.className = "column";
+                column.innerHTML = `<h3>Digit ${i}</h3>`;
+                column.appendChild(createCheckboxGroup(colorData.digits,0));
+                selectorContainer.appendChild(column);
+            }
+
+            // Add multiplier, tolerance, and TCR selectors
+            const multiplierColumn = document.createElement("div");
+            multiplierColumn.className = "column";
+            multiplierColumn.innerHTML = `<h3>Multiplier</h3>`;
+            multiplierColumn.appendChild(createCheckboxGroup(colorData.multiplier, "display"));
+            selectorContainer.appendChild(multiplierColumn);
+if(toggleTolerance.checked){
+            const toleranceColumn = document.createElement("div");
+            toleranceColumn.className = "column";
+            toleranceColumn.innerHTML = `<h3>Tolerance</h3>`;
+            toleranceColumn.appendChild(createCheckboxGroup(colorData.tolerance, "display"));
+            selectorContainer.appendChild(toleranceColumn);
+}if(toggleTCR.checked){
+            const tcrColumn = document.createElement("div");
+            tcrColumn.className = "column";
+            tcrColumn.innerHTML = `<h3>TCR</h3>`;
+            tcrColumn.appendChild(createCheckboxGroup(colorData.tcr, "display"));
+            selectorContainer.appendChild(tcrColumn);
+}
+            // Add event listeners for exclusive selection
+            addExclusiveSelectionListeners();
+
+            // Calculate resistor value initially
+			
+            calculateResistor();
+        }
+
+        // Create a checkbox group for a given data set
+        function createCheckboxGroup(data, displayKey = "label") {
+		if(displayKey==0){
+		            const group = document.createElement("div");
+            data.forEach(item => {
+                const checkboxDiv = document.createElement("div");
+                checkboxDiv.className = "checkbox-group";
+                checkboxDiv.innerHTML = `
+                    <input type="checkbox" name="${item.label}" value="${item.value}">
+                    <div class="color-box" style="background-color: ${item.color};"></div>
+                    <label>${item.label} </label>
+                `;
+                group.appendChild(checkboxDiv);
+            });
+            return group;
+		}
+            const group = document.createElement("div");
+            data.forEach(item => {
+                const checkboxDiv = document.createElement("div");
+                checkboxDiv.className = "checkbox-group";
+                checkboxDiv.innerHTML = `
+                    <input type="checkbox" name="${item.label}" value="${item.value}">
+                    <div class="color-box" style="background-color: ${item.color};"></div>
+                    <label>${item.label} (${item[displayKey]})</label>
+                `;
+                group.appendChild(checkboxDiv);
+            });
+            return group;
+        }
+
+        // Add event listeners for exclusive selection within each column
+        function addExclusiveSelectionListeners() {
+            const columns = document.querySelectorAll(".column");
+            columns.forEach(column => {
+                const checkboxes = column.querySelectorAll("input[type='checkbox']");
+                checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener("change", () => {
+                        if (checkbox.checked) {
+                            checkboxes.forEach(cb => {
+                                if (cb !== checkbox) cb.checked = false;
+                            });
+                        }
+                        calculateResistor();
+                    });
+                });
+            });
+        }
+
+        // Calculate and display the result
+function calculateResistor() {
+drawResistor();
+    const digits = [];
+    const columns = document.querySelectorAll(".column"); // Select all columns
+    columns.forEach(column => {
+        const header = column.querySelector("h3");
+        if (header && header.textContent.includes('Digit')) { // Check for 'Digit' in the header text
+            const selected = column.querySelector("input[type='checkbox']:checked");
+            if (selected) digits.push(parseInt(selected.value));
+        }
+    });
+
+    // Find the column with the multiplier
+    let multiplier = 0;
+    const multiplierColumn = Array.from(columns).find(column => column.querySelector("h3")?.textContent.includes('Multiplier'));
+    if (multiplierColumn) {
+        multiplier = multiplierColumn.querySelector("input[type='checkbox']:checked")?.value || 0;
+    }
+
+    // Find the column with the tolerance
+    let tolerance = "none";
+    if (toggleTolerance.checked) {
+        const toleranceColumn = Array.from(columns).find(column => column.querySelector("h3")?.textContent.includes('Tolerance'));
+        if (toleranceColumn) {
+            tolerance = toleranceColumn.querySelector("input[type='checkbox']:checked")?.value || 20;
+        }
+    }
+
+    // Find the column with the TCR
+    let tcr = "none";
+    if (toggleTCR.checked) {
+        const tcrColumn = Array.from(columns).find(column => column.querySelector("h3")?.textContent.includes('TCR'));
+        if (tcrColumn) {
+            tcr = tcrColumn.querySelector("input[type='checkbox']:checked")?.value || 250;
+        }
+    }
+
+    const resistorValue = parseInt(digits.join("")) * Math.pow(10, parseFloat(multiplier));
+    const resistor = {
+        ohm: resistorValue,
+        tol: tolerance,
+        tsl: tcr
+    };
+
+    resultDiv.textContent = JSON.stringify(resistor, null, 2);
+}
+
+        // Display Ohm, Tolerance, and TCR
+        function displayOhm() {
+            calculateResistor();
+            const resistor = JSON.parse(resultDiv.textContent);
+            alert(`Ohm: ${resistor.ohm}\nTolerance: ${resistor.tol}\nTCR: ${resistor.tsl}`);
+        }
+
+        // Convert resistor value to selected unit
+        function convertResistor() {
+            const resistor = JSON.parse(resultDiv.textContent);
+            const unit = parseFloat(document.getElementById("unitConverter").value);
+            const convertedValue = resistor.ohm * unit;
+            conversionResultDiv.textContent = `Converted Value: ${convertedValue}`;
+        }
+
+function drawResistor() {
+    const ctx = resistorCanvas.getContext("2d");
+    ctx.clearRect(0, 0, resistorCanvas.width, resistorCanvas.height);
+
+    // Draw grey lines (resistor leads)
+    ctx.fillStyle = "grey";
+    ctx.fillRect(0, 40, 40, 20); // Left lead
+    ctx.fillRect(240, 40, 150, 20); // Right lead
+
+    // Draw beige rectangle (resistor body)
+    ctx.fillStyle = "beige";
+    ctx.fillRect(25, 30, 250, 40);
+
+    // Draw bands
+    const digitColumns = document.querySelectorAll(".column");
+    const bands = [];
+
+    // Filter out the digit columns by looking for column headers containing 'Digit'
+    digitColumns.forEach(column => {
+        const header = column.querySelector("h3");
+        if (header && header.textContent.includes("Digit")) {
+            const selected = column.querySelector("input[type='checkbox']:checked");
+            if (selected) bands.push(selected.value);
+        }
+    });
+
+    // Find the multiplier column by checking for 'Multiplier' in the header
+    const multiplierColumn = Array.from(digitColumns).find(column => {
+        const header = column.querySelector("h3");
+        return header && header.textContent.includes("Multiplier");
+    });
+
+    const multiplier = multiplierColumn?.querySelector("input[type='checkbox']:checked")?.value || 0;
+    bands.push(multiplier);
+
+    // Handle tolerance column if it's toggled
+    const toleranceColumn = Array.from(digitColumns).find(column => {
+        const header = column.querySelector("h3");
+        return header && header.textContent.includes("Tolerance");
+    });
+
+    if (toggleTolerance.checked && toleranceColumn) {
+        const tolerance = toleranceColumn.querySelector("input[type='checkbox']:checked")?.value || 20;
+        bands.push(tolerance);
+    }
+
+    // Handle TCR column if it's toggled
+    const tcrColumn = Array.from(digitColumns).find(column => {
+        const header = column.querySelector("h3");
+        return header && header.textContent.includes("TCR");
+    });
+
+    if (toggleTCR.checked && tcrColumn) {
+        const tcr = tcrColumn.querySelector("input[type='checkbox']:checked")?.value || 250;
+	//	console.log("gay")
+        bands.push(tcr);
+    }
+
+    // Draw bands on the resistor
+    const bandWidth = Math.max(250 / (bands.length + 0.5 ), 10); // Make bands thinner, so there's space for the beige background to show
+    bands.forEach((band, index) => {
+        const color = getBandColor(band);
+        ctx.fillStyle = color;
+        ctx.fillRect(25 + ((index+0.5) * bandWidth), 30, bandWidth/2, 40); // Adjust the position of the bands to create spacing
+    });
+}
+
+// Get the color for a band based on its value
+function getBandColor(value) {
+    const allBands = [...colorData.digits, ...colorData.multiplier, ...colorData.tolerance, ...colorData.tcr];
+    const band = allBands.find(b => b.value == value);
+    return band ? band.color : "black";
+}
+
+
+        // Initial generation
+        generateSelectors(1);
+		drawResistor();
+    </script>
+</body>
+</html>
