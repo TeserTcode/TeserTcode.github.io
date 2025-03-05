@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L-System Drawer with Box Counting</title>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; }
+        canvas { border: 1px solid black; margin-top: 10px; }
+        input, button, select { margin: 5px; }
+        .rule-container { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h2>L-System Drawer</h2>
+
+    <label>Preset: 
+        <select id="presetSelect" onchange="loadPreset()">
+            <option value="">-- Choose a Preset --</option>
+            <option value="sierpinski">Sierpiński Triangle</option>
+            <option value="kochSnowflake">Koch Snowflake</option>
+            <option value="sierpinskiTriangle">Sierpiński Triangle (Alternate)</option>
+            <option value="dragonCurve">Dragon Curve</option>
+            <option value="hilbertCurve">Hilbert Curve</option>
+            <option value="gosperCurve">Gosper Curve</option>
+            <option value="pentaplexity">Pentaplexity</option>
+            <option value="quadraticKochIsland">Quadratic Koch Island</option>
+            <option value="cantorDust">Cantor Dust</option>
+			
+			         <option value="colorChange">Color Change (c)</option>
+            <option value="rainbowEffect">Rainbow Effect (ğ)</option>
+            <option value="thicknessChange">Thickness Change (t)</option>
+            <option value="branchingExample">Branching Example ([ ])</option>
+            <option value="angleChange">Angle Change (a, e, r)</option>
+            <option value="originReset">Origin Reset (o)</option>
+            <option value="haltExample">Halt Example (x)</option>
+            <option value="moveWithDrawing">Move with Drawing (f)</option>
+            <option value="moveWithoutDrawing">Move without Drawing (m)</option>
+        </select>
+    </label><br>
+
+    <label>Angle: <input type="number" id="angle" value="60"></label>
+    <label>Move Length: <input type="number" id="moveLength" value="5"></label>
+    <label>Iterations: <input type="number" id="iterations" value="6"></label><br>
+
+    <label>Line Color: <input type="color" id="lineColor" value="#000000"></label>
+    <label>Line Thickness: <input type="number" id="lineThickness" value="1"></label><br>
+
+    <label>Canvas Width: <input type="number" id="canvasWidth" value="400"></label>
+    <label>Canvas Height: <input type="number" id="canvasHeight" value="400"></label><br>
+
+    <label>Main: <input type="text" id="main"></label><br>
+
+    <div id="rules"></div>
+
+    <button onclick="addRule()">Add Rule</button>
+    <button onclick="generateLSystem()">Generate & Draw</button>
+    <button onclick="animateDrawing()">Animate</button><br>
+
+    <label>Animation Speed: <input type="range" id="speed" min="0" max="1" value="0.1" step='0.001'></label><br>
+
+    <label>Box Size: <input type="number" id="boxSize" value="10"></label>
+    <label>Box Spacing: <input type="number" id="boxSpacing" value="10"></label>
+    <button onclick="calculateFractalDimension()">Calculate Fractal Dimension</button>
+    <button onclick="calculateLacunarity()">Calculate Lacunarity</button><br>
+    <button onclick="calculateGraphicalLacunarity()">Calculate Graphical Lacunarity</button><br> 
+    <button onclick="calculateInformationDimension()">Calculate Information Dimension</button><br>
+
+    <canvas id="canvas" width="400" height="400"></canvas>
+
+    <script>
+        let rules = {};
+        let moveBehavior = {};
+        
+        const presets = {
+            sierpinski: { angle: 60, main: "X", rules: { "X": "Y-X-Y", "Y": "X+Y+X" } },
+            kochSnowflake: { angle: 60, main: "F--F--F", rules: { "F": "F+F--F+F" } },
+            sierpinskiTriangle: { angle: 60, main: "F-G-G", rules: { "F": "F-G+F+G-F", "G": "GG" } },
+            dragonCurve: { angle: 90, main: "FX", rules: { "X": "X+YF+", "Y": "-FX-Y" } },
+            hilbertCurve: { angle: 90, main: "X", rules: { "X": "0-Yf+XfX+fY-", "Y": "0+Xf-YfY-fX+" } },
+            gosperCurve: { angle: 60, main: "XF", rules: { "X": "X+YF++YF-FX--FXFX-YF+", "Y": "-FX+YFYF++YF+FX--FX-Y" } },
+            pentaplexity: { angle: 36, main: "F++F++F++F++F", rules: { "F": "F++F++F+++++F-F++F" } },
+            quadraticKochIsland: { angle: 90, main: "F+F+F+F", rules: { "F": "F+F-F-FF+F+F-F" } },
+            cantorDust: { angle: 0, main: "A", rules: { "A": "t60ABA", "B": "t1BBB" } },
+			
+			            colorChange: { angle: 90, main: "Fc#FF0000Fc#00FF00Fc#0000FF", rules: { "F": "F" } }, // Change color
+            rainbowEffect: { angle: 90, main: "FğFğFğFğFğFğ", rules: { "F": "F" } }, // Rainbow effect
+            thicknessChange: { angle: 90, main: "Ft1Ft2Ft3Ft4Ft5", rules: { "F": "F" } }, // Change thickness
+            branchingExample: { angle: 25, main: "F[+F][-F]", rules: { "F": "FF" } }, // Branching
+            angleChange: { angle: 90, main: "Fa45Fe10Fr20", rules: { "F": "F+F" } }, // Change angle
+            originReset: { angle: 90, main: "FoF", rules: { "F": "F" } }, // Reset to origin
+            haltExample: { angle: 90, main: "FxF", rules: { "F": "F" } }, // Halt example
+            moveWithDrawing: { angle: 90, main: "FfFfFfFf", rules: { "F": "F" } }, // Move with drawing
+            moveWithoutDrawing: { angle: 90, main: "FmFmFmFm", rules: { "F": "F" } }, // Move without drawing
+
+ tflowers: { angle: 0, main: "F", rules: { "F": "F+[F]k1Fe1F" } },
+
+};
+
+   
+
+function loadPreset() {
+    const presetName = document.getElementById("presetSelect").value;
+    if (!presetName) return;
+
+    const preset = presets[presetName];
+    document.getElementById("angle").value = preset.angle;
+    document.getElementById("main").value = preset.main;
+
+    rules = {};
+    moveBehavior = {};
+
+    for (let key in preset.rules) {
+        let value = preset.rules[key];
+
+        if (value.startsWith("0")) {
+            value = value.slice(1); // Remove leading zero
+            moveBehavior[key] = false;
+        } else {
+            moveBehavior[key] = true;
+        }
+
+        rules[key] = value;
+    }
+
+    updateRuleUI();
+}
+
+        function addRule() {
+            const letter = prompt("Enter a new rule letter (A-Z):").toUpperCase();
+            if (!letter.match(/^[A-Z]$/) || rules[letter]) return;
+            rules[letter] = letter;
+            moveBehavior[letter] = true;
+            updateRuleUI();
+        }
+
+        function updateRuleBindings() {
+            document.querySelectorAll(".rule-input").forEach(input => {
+                input.oninput = () => rules[input.dataset.letter] = input.value;
+            });
+            document.querySelectorAll(".move-checkbox").forEach(checkbox => {
+                checkbox.onchange = () => moveBehavior[checkbox.dataset.letter] = checkbox.checked;
+            });
+        }
+
+        function generateLSystem() {
+            const iterations = parseInt(document.getElementById('iterations').value);
+            let result = document.getElementById('main').value;
+
+            for (let i = 0; i < iterations; i++) {
+                result = result.split("").map(ch => rules[ch] || ch).join("");
+            }
+
+            drawLSystem(result);
+            return result;
+        }
+
+function drawLSystem(instructions) {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let angle = parseFloat(document.getElementById('angle').value) * (Math.PI / 180);
+    let moveLength = parseFloat(document.getElementById('moveLength').value);
+    const lineColor = document.getElementById('lineColor').value;
+    const lineThickness = parseFloat(document.getElementById('lineThickness').value);
+    const canvasWidth = parseInt(document.getElementById('canvasWidth').value);
+    const canvasHeight = parseInt(document.getElementById('canvasHeight').value);
+
+    // Set canvas size
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+
+    // Initialize drawing state
+    let x = 0, y = 0;
+    let direction = 0;
+    let stack = [];
+    let currentColor = lineColor;
+    let currentThickness = lineThickness;
+
+    // Track bounding box
+    let minX = 0, minY = 0, maxX = 0, maxY = 0;
+
+    // First pass: Calculate bounding box
+   for (let i = 0; i < instructions.length; i++) {
+    const cmd = instructions[i];
+        if (cmd === '+') direction += angle;
+        else if (cmd === '-') direction -= angle;
+        else if (cmd === 'f' || (rules[cmd] && moveBehavior[cmd])) {
+            x += moveLength * Math.cos(direction);
+            y += moveLength * Math.sin(direction);
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+        } else if (cmd === 'm') {
+            x += moveLength * Math.cos(direction);
+            y += moveLength * Math.sin(direction);
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+        } else if (cmd === '[') {
+            stack.push({ x, y, direction });
+        } else if (cmd === ']') {
+            const state = stack.pop();
+            if (state) {
+                x = state.x;
+                y = state.y;
+                direction = state.direction;
+            }
+        }else if (cmd === 'l') {
+            // Parse thickness command: t(number)
+            let numStr = '';
+            while (i + 1 < instructions.length && /\d/.test(instructions[i + 1])) {
+                numStr += instructions[++i];
+            }
+            if (numStr) {
+                moveLength=parseFloat(numStr);
+            }
+        } else if (cmd === 'k') {
+            // Parse thickness command: t(number)
+            let numStr = '';
+            while (i + 1 < instructions.length && /\d/.test(instructions[i + 1])) {
+                numStr += instructions[++i];
+            }
+            if (numStr) {
+                moveLength +=parseFloat(numStr);
+            }
+        }else if (cmd === 'a') {
+            // Parse angle command: a(number)
+            let numStr = '';
+            while (i + 1 < instructions.length && /\d/.test(instructions[i + 1])) {
+                numStr += instructions[++i];
+            }
+            if (numStr) {
+               angle = parseFloat(numStr) * (Math.PI / 180);
+            }
+        } else if (cmd === 'e') {
+            // Parse angle change command: e(number)
+            let numStr = '';
+            while (i + 1 < instructions.length && /\d/.test(instructions[i + 1])) {
+                numStr += instructions[++i];
+            }
+            if (numStr) {
+                angle += parseFloat(numStr) * (Math.PI / 180);
+            }
+        }else if (cmd === 'j') {
+            // Parse thickness command: t(number)
+            let numStr = '';
+            while (i + 1 < instructions.length && /\d/.test(instructions[i + 1])) {
+                numStr += instructions[++i];
+            }
+            if (numStr) {
+                x += (numStr) * Math.cos(direction);
+            y += (numStr) * Math.sin(direction) ;
+            ctx.lineTo(x, y);
+            }
+        }else if (cmd === 'n') {
+            // Parse thickness command: t(number)
+            let numStr = '';
+            while (i + 1 < instructions.length && /\d/.test(instructions[i + 1])) {
+                numStr += instructions[++i];
+            }
+            if (numStr) {
+                x += (numStr) * Math.cos(direction) ;
+            y += (numStr) * Math.sin(direction);
+            ctx.moveTo(x, y);
+            }
+        }else if (cmd === 'r') {
+            // Parse rotate command: r(number)
+            let numStr = '';
+            while (i + 1 < instructions.length && /\d/.test(instructions[i + 1])) {
+                numStr += instructions[++i];
+            }
+            if (numStr) {
+                direction += parseFloat(numStr) * (Math.PI / 180);
+            }
+        }else if (cmd === 'g') {
+            // Parse rotate command: r(number)
+            let numStr = '';
+            while (i + 1 < instructions.length && /\d/.test(instructions[i + 1])) {
+                numStr += instructions[++i];
+            }
+            if (numStr) {
+                direction = parseFloat(numStr) * (Math.PI / 180);
+            }
+        } else if (cmd === 'o') {
+            // Go to origin
+            x = canvas.width / 2;
+            y = canvas.height / 2;
+            ctx.moveTo(x, y);
+        }
+    }
+
+
+
+    // Calculate scaling and translation
+    const width = maxX - minX;
+    const height = maxY - minY;
+    const margin = 0.1; // 10% negative space
+    const scale = Math.min(
+        (canvas.width * (1 - 2 * margin)) / width,
+        (canvas.height * (1 - 2 * margin)) / height
+    );
+    const offsetX = (canvas.width - width * scale) / 2 - minX * scale;
+    const offsetY = (canvas.height - height * scale) / 2 - minY * scale;
+
+    // Clear canvas
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = currentColor;
+    ctx.lineWidth = currentThickness;
+    ctx.beginPath();
+
+    // Reset drawing state
+    x = offsetX;
+    y = offsetY;
+    direction = 0;
+    stack = [];
+    ctx.moveTo(x, y);
+ moveLength = parseFloat(document.getElementById('moveLength').value);
+ angle = parseFloat(document.getElementById('angle').value) * (Math.PI / 180);
+    // Second pass: Draw with scaling and translation
+    for (let i = 0; i < instructions.length; i++) {
+        const cmd = instructions[i];
+
+        if (cmd === '+') direction += angle;
+        else if (cmd === '-') direction -= angle;
+        else if (cmd === 'f' || (rules[cmd] && moveBehavior[cmd])) {
+            x += moveLength * Math.cos(direction) * scale;
+            y += moveLength * Math.sin(direction) * scale;
+            ctx.lineTo(x, y);
+        } else if (cmd === 'm') {
+            x += moveLength * Math.cos(direction) * scale;
+            y += moveLength * Math.sin(direction) * scale;
+            ctx.moveTo(x, y);
+        } else if (cmd === '[') {
+            stack.push({ x, y, direction });
+        } else if (cmd === ']') {
+            const state = stack.pop();
+            if (state) {
+                x = state.x;
+                y = state.y;
+                direction = state.direction;
+                ctx.moveTo(x, y);
+            }
+        } else if (cmd === 'c') {
+            // Parse color command: c(#hex)
+            const hex = instructions.substring(i + 1, i + 7);
+            if (/^[0-9A-Fa-f]{6}$/.test(hex)) {
+                // Stroke the current path before changing color
+                ctx.stroke();
+                currentColor = `#${hex}`;
+                ctx.strokeStyle = currentColor;
+                ctx.beginPath(); // Start a new path
+                ctx.moveTo(x, y); // Move to the current position
+                i += 6; // Skip the hex part
+            }
+        } else if (cmd === 't') {
+            // Parse thickness command: t(number)
+            let numStr = '';
+            while (i + 1 < instructions.length && /\d/.test(instructions[i + 1])) {
+                numStr += instructions[++i];
+            }
+            if (numStr) {
+                // Stroke the current path before changing thickness
+                ctx.stroke();
+                currentThickness = parseFloat(numStr);
+                ctx.lineWidth = currentThickness;
+                ctx.beginPath(); // Start a new path
+                ctx.moveTo(x, y); // Move to the current position
+            }
+        } else if (cmd === 'l') {
+            // Parse thickness command: t(number)
+            let numStr = '';
+            while (i + 1 < instructions.length && /\d/.test(instructions[i + 1])) {
+                numStr += instructions[++i];
+            }
+            if (numStr) {
+                moveLength=parseFloat(numStr);
+            }
+        } else if (cmd === 'k') {
+            // Parse thickness command: t(number)
+            let numStr = '';
+            while (i + 1 < instructions.length && /\d/.test(instructions[i + 1])) {
+                numStr += instructions[++i];
+            }
+            if (numStr) {
+                moveLength +=parseFloat(numStr);
+            }
+        }else if (cmd === 'j') {
+            // Parse thickness command: t(number)
+            let numStr = '';
+            while (i + 1 < instructions.length && /\d/.test(instructions[i + 1])) {
+                numStr += instructions[++i];
+            }
+            if (numStr) {
+                x += (numStr) * Math.cos(direction) * scale;
+            y += (numStr) * Math.sin(direction) * scale;
+            ctx.lineTo(x, y);
+            }
+        }else if (cmd === 'n') {
+            // Parse thickness command: t(number)
+            let numStr = '';
+            while (i + 1 < instructions.length && /\d/.test(instructions[i + 1])) {
+                numStr += instructions[++i];
+            }
+            if (numStr) {
+                x += (numStr) * Math.cos(direction) * scale;
+            y += (numStr) * Math.sin(direction) * scale;
+            ctx.moveTo(x, y);
+            }
+        }else if (cmd === 'a') {
+            // Parse angle command: a(number)
+            let numStr = '';
+            while (i + 1 < instructions.length && /\d/.test(instructions[i + 1])) {
+                numStr += instructions[++i];
+            }
+            if (numStr) {
+               angle = parseFloat(numStr) * (Math.PI / 180);
+            }
+        } else if (cmd === 'e') {
+            // Parse angle change command: e(number)
+            let numStr = '';
+            while (i + 1 < instructions.length && /\d/.test(instructions[i + 1])) {
+                numStr += instructions[++i];
+            }
+            if (numStr) {
+                angle += parseFloat(numStr) * (Math.PI / 180);
+            }
+        } else if (cmd === 'r') {
+            // Parse rotate command: r(number)
+            let numStr = '';
+            while (i + 1 < instructions.length && /\d/.test(instructions[i + 1])) {
+                numStr += instructions[++i];
+            }
+            if (numStr) {
+                direction += parseFloat(numStr) * (Math.PI / 180);
+            }
+        }else if (cmd === 'g') {
+            // Parse rotate command: r(number)
+            let numStr = '';
+            while (i + 1 < instructions.length && /\d/.test(instructions[i + 1])) {
+                numStr += instructions[++i];
+            }
+            if (numStr) {
+                direction = parseFloat(numStr) * (Math.PI / 180);
+            }
+        } else if (cmd === 'o') {
+            // Go to origin
+            x = canvas.width / 2;
+            y = canvas.height / 2;
+            ctx.moveTo(x, y);
+        } else if (cmd === 'ğ') {
+            // Rainbow color
+            // Stroke the current path before changing color
+            ctx.stroke();
+            currentColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            ctx.strokeStyle = currentColor;
+            ctx.beginPath(); // Start a new path
+            ctx.moveTo(x, y); // Move to the current position
+        } else if (cmd === 'h') {
+            // Show help dialog
+            alert(`Special Commands:\n
+f: Move with drawing\n
+m: Move without drawing\n
+j(number): Move set length with drawing\n
+n(number): Move set lengt without drawing\n
+a(number): Set angle\n
+l(number): Set length\n
+k(number): Change length\n
+e(number): Change angle by number\n
+r(number): Rotate by number\n
+g(number): set rotation\n
+c(#hex): Change color\n
+t(number): Change thickness\n
+o: Go to origin\n
+ğ: Rainbow color\n
+h: Show this help\n
+x: Halt
+[]: Branch
+
+`);
+        } else if (cmd === 'x') {
+            // Halt drawing
+            break;
+        }
+    }
+
+    // Stroke the final path
+    ctx.stroke();
+}
+        function animateDrawing() {
+            let instructions = generateLSystem().split("");
+            let speed = parseInt(document.getElementById('speed').value);
+            let i = 0;
+
+            function step() {
+                if (i >= instructions.length) return;
+                drawLSystem(instructions.slice(0, i).join(""));
+                i++;
+                setTimeout(step, speed);
+            }
+
+            step();
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function calculateFractalDimension() {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const boxSize = parseInt(document.getElementById('boxSize').value);
+    const boxSpacing = parseInt(document.getElementById('boxSpacing').value);
+
+    let boxCount = 0;
+
+    // Iterate over the canvas in steps of boxSpacing
+    for (let y = 0; y < canvas.height; y += boxSpacing) {
+        for (let x = 0; x < canvas.width; x += boxSpacing) {
+            // Get the image data for the current box
+            const imageData = ctx.getImageData(x, y, boxSize, boxSize).data;
+            let hasFilled = false;
+            let hasEmpty = false;
+
+            // Iterate over each pixel in the box
+            for (let i = 0; i < imageData.length; i += 4) {
+                const r = imageData[i];
+                const g = imageData[i + 1];
+                const b = imageData[i + 2];
+                const a = imageData[i + 3];
+
+                // Check if the pixel is not white (assuming black is the drawn color)
+                if (r !==0 && r!==255 && g !==0 && g!==255 && b !==0 && b!==255 )
+                 {   boxCount++;
+                    break;
+				}
+            }
+        }
+    }
+console.log(boxCount)
+    // Calculate the fractal dimension
+    const fractalDimension = Math.log(boxCount) / Math.log( canvas.height / boxSize);
+    alert(`Fractal Dimension: ${fractalDimension}`);
+}
+
+        function calculateLacunarity() {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const boxSize = parseInt(document.getElementById('boxSize').value);
+    const boxSpacing = parseInt(document.getElementById('boxSpacing').value);
+
+    let boxCounts = []; // Store counts of filled pixels for each box
+    let boxSizes = []; // Store box sizes for regression
+    let boxCountsLog = []; // Log of box counts
+    let boxSizesLog = []; // Log of box sizes
+
+    // Iterate over the canvas in steps of boxSpacing
+    for (let y = 0; y < canvas.height; y += boxSpacing) {
+        for (let x = 0; x < canvas.width; x += boxSpacing) {
+            // Get the image data for the current box
+            const imageData = ctx.getImageData(x, y, boxSize, boxSize).data;
+            let filledPixels = 0;
+
+            // Iterate over each pixel in the box
+            for (let i = 0; i < imageData.length; i += 4) {
+                const r = imageData[i];
+                const g = imageData[i + 1];
+                const b = imageData[i + 2];
+                const a = imageData[i + 3];
+
+                // Check if the pixel is not white (assuming black is the drawn color)
+                if ( r!==255  && g!==255 && b!==255 ) {
+                    filledPixels++;
+                }
+            }
+
+            boxCounts.push(filledPixels);
+        }
+    }
+
+    // Calculate lacunarity
+    const mean = boxCounts.reduce((sum, count) => sum + count, 0) / boxCounts.length;
+    const variance = boxCounts.reduce((sum, count) => sum + Math.pow(count - mean, 2), 0) / boxCounts.length;
+    const lacunarity = variance / Math.pow(mean, 2);
+            alert(`Lacunarity: ${lacunarity}`);
+        }
+		function linearRegression(x, y) {
+			const n = x.length;
+    const xMean = x.reduce((sum, val) => sum + val, 0) / n;
+    const yMean = y.reduce((sum, val) => sum + val, 0) / n;
+
+    const numerator = x.reduce((sum, val, i) => sum + (val - xMean) * (y[i] - yMean), 0);
+    const denominator = x.reduce((sum, val) => sum + Math.pow(val - xMean, 2), 0);
+
+    const slope = numerator / denominator;
+    const intercept = yMean - slope * xMean;
+
+    return { slope, intercept };
+}
+		        function calculatePrefactorLacunarity() {
+       const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const boxSize = parseInt(document.getElementById('boxSize').value);
+    const boxSpacing = parseInt(document.getElementById('boxSpacing').value);
+
+    let boxCounts = []; // Store counts of filled pixels for each box
+    let boxSizes = []; // Store box sizes for regression
+    let boxCountsLog = []; // Log of box counts
+    let boxSizesLog = []; // Log of box sizes
+
+    // Iterate over the canvas in steps of boxSpacing
+    for (let y = 0; y < canvas.height; y += boxSpacing) {
+        for (let x = 0; x < canvas.width; x += boxSpacing) {
+            // Get the image data for the current box
+            const imageData = ctx.getImageData(x, y, boxSize, boxSize).data;
+            let filledPixels = 0;
+
+            // Iterate over each pixel in the box
+            for (let i = 0; i < imageData.length; i += 4) {
+                const r = imageData[i];
+                const g = imageData[i + 1];
+                const b = imageData[i + 2];
+                const a = imageData[i + 3];
+
+                // Check if the pixel is not white (assuming black is the drawn color)
+                if (r !== 255 || g !== 255 || b !== 255 || a !== 255) {
+                    filledPixels++;
+                }
+            }
+
+            boxCounts.push(filledPixels);
+        }
+    }
+
+    // Calculate lacunarity
+    const mean = boxCounts.reduce((sum, count) => sum + count, 0) / boxCounts.length;
+    const variance = boxCounts.reduce((sum, count) => sum + Math.pow(count - mean, 2), 0) / boxCounts.length;
+    const lacunarity = variance / Math.pow(mean, 2);
+
+    console.log(`Lacunarity: ${lacunarity}`);
+
+    // Calculate prefactor lacunarity
+    for (let size = 1; size <= canvas.height; size *= 2) {
+        const count = boxCounts.filter((c) => c > 0).length;
+        boxSizes.push(size);
+        boxCounts.push(count);
+        boxSizesLog.push(Math.log(size));
+        boxCountsLog.push(Math.log(count));
+    }
+
+    // Perform linear regression on log(boxSize) vs log(boxCount)
+    const regression = linearRegression(boxSizesLog, boxCountsLog);
+    const yIntercept = regression.intercept;
+    const prefactor = 1 / Math.exp(yIntercept);
+
+    // Calculate prefactor lacunarity
+    const AgValues = boxCounts.map((count) => 1 / Math.exp(yIntercept));
+    const Abar = AgValues.reduce((sum, Ag) => sum + Ag, 0) / AgValues.length;
+    const prefactorLacunarity = AgValues.reduce((sum, Ag) => sum + Math.pow(Ag / Abar - 1, 2), 0) / AgValues.length;
+
+    alert(`Prefactor Lacunarity: ${prefactorLacunarity}`);
+         
+        }
+		
+		
+		
+		function calculateGraphicalLacunarity() {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const boxSize = parseInt(document.getElementById('boxSize').value);
+    const boxSpacing = parseInt(document.getElementById('boxSpacing').value);
+
+    let boxCounts = []; // Store counts of filled pixels for each box
+    let boxSizes = []; // Store box sizes for regression
+    let boxCountsLog = []; // Log of box counts
+    let boxSizesLog = []; // Log of box sizes
+
+    // Iterate over the canvas in steps of boxSpacing
+    for (let y = 0; y < canvas.height; y += boxSpacing) {
+        for (let x = 0; x < canvas.width; x += boxSpacing) {
+            // Get the image data for the current box
+            const imageData = ctx.getImageData(x, y, boxSize, boxSize).data;
+            let filledPixels = 0;
+
+            // Iterate over each pixel in the box
+            for (let i = 0; i < imageData.length; i += 4) {
+                const r = imageData[i];
+                const g = imageData[i + 1];
+                const b = imageData[i + 2];
+                const a = imageData[i + 3];
+
+                // Check if the pixel is not white (assuming black is the drawn color)
+                if (r !== 255 || g !== 255 || b !== 255 || a !== 255) {
+                    filledPixels++;
+                }
+            }
+
+            boxCounts.push(filledPixels);
+        }
+    }
+
+    // Calculate graphical lacunarity
+    const adjustedCounts = boxCounts.map((count) => count + 1); // Add 1 to each count
+    const meanAdjusted = adjustedCounts.reduce((sum, count) => sum + count, 0) / adjustedCounts.length;
+    const varianceAdjusted = adjustedCounts.reduce((sum, count) => sum + Math.pow(count - meanAdjusted, 2), 0) / adjustedCounts.length;
+    const graphicalLacunarity = varianceAdjusted / Math.pow(meanAdjusted, 2);
+
+    alert(`Graphical Lacunarity: ${graphicalLacunarity}`);
+		}
+		
+		
+		function calculatePrefactor() {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const boxSize = parseInt(document.getElementById('boxSize').value);
+    const boxSpacing = parseInt(document.getElementById('boxSpacing').value);
+
+    let boxCounts = []; // Store counts of filled pixels for each box
+    let boxSizes = []; // Store box sizes for regression
+    let boxCountsLog = []; // Log of box counts
+    let boxSizesLog = []; // Log of box sizes
+
+    // Iterate over the canvas in steps of boxSpacing
+    for (let y = 0; y < canvas.height; y += boxSpacing) {
+        for (let x = 0; x < canvas.width; x += boxSpacing) {
+            // Get the image data for the current box
+            const imageData = ctx.getImageData(x, y, boxSize, boxSize).data;
+            let filledPixels = 0;
+
+            // Iterate over each pixel in the box
+            for (let i = 0; i < imageData.length; i += 4) {
+                const r = imageData[i];
+                const g = imageData[i + 1];
+                const b = imageData[i + 2];
+                const a = imageData[i + 3];
+
+                // Check if the pixel is not white (assuming black is the drawn color)
+                if (r !== 255 || g !== 255 || b !== 255 || a !== 255) {
+                    filledPixels++;
+                }
+            }
+
+            boxCounts.push(filledPixels);
+        }
+    }
+
+    // Calculate graphical lacunarity
+    const adjustedCounts = boxCounts.map((count) => count + 1); // Add 1 to each count
+    const meanAdjusted = adjustedCounts.reduce((sum, count) => sum + count, 0) / adjustedCounts.length;
+    const varianceAdjusted = adjustedCounts.reduce((sum, count) => sum + Math.pow(count - meanAdjusted, 2), 0) / adjustedCounts.length;
+    const graphicalLacunarity = varianceAdjusted / Math.pow(meanAdjusted, 2);
+
+   
+
+    // Calculate prefactor
+    for (let size = 1; size <= canvas.height; size *= 2) {
+        const count = boxCounts.filter((c) => c > 0).length;
+        boxSizes.push(size);
+        boxCounts.push(count);
+        boxSizesLog.push(Math.log(size));
+        boxCountsLog.push(Math.log(count));
+    }
+
+    // Perform linear regression on log(boxSize) vs log(boxCount)
+    const regression = linearRegression(boxSizesLog, boxCountsLog);
+    const yIntercept = regression.intercept;
+    const prefactor = 1 / Math.exp(yIntercept);
+
+    alert(`Prefactor (A): ${prefactor}`);
+}
+
+
+		function calculateGeneralizedDimension() {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const boxSize = parseInt(document.getElementById('boxSize').value);
+    const boxSpacing = parseInt(document.getElementById('boxSpacing').value);
+    const q = parseFloat(document.getElementById('qValue').value); // Read q from a textbox
+
+    let boxCounts = []; // Store counts of filled pixels for each box
+
+    // Iterate over the canvas in steps of boxSpacing
+    for (let y = 0; y < canvas.height; y += boxSpacing) {
+        for (let x = 0; x < canvas.width; x += boxSpacing) {
+            // Get the image data for the current box
+            const imageData = ctx.getImageData(x, y, boxSize, boxSize).data;
+            let filledPixels = 0;
+
+            // Iterate over each pixel in the box
+            for (let i = 0; i < imageData.length; i += 4) {
+                const r = imageData[i];
+                const g = imageData[i + 1];
+                const b = imageData[i + 2];
+                const a = imageData[i + 3];
+
+                // Check if the pixel is not white
+                if (r !== 255 || g !== 255 || b !== 255 || a !== 255) {
+                    filledPixels++;
+                }
+            }
+
+            boxCounts.push(filledPixels);
+        }
+    }
+
+    // Calculate partition function
+    const partitionFunction = boxCounts.reduce((sum, count) => sum + Math.pow(count, q), 0);
+
+    // Calculate generalized dimension
+    const generalizedDimension = (1 / (q - 1)) * (Math.log(partitionFunction) / Math.log(canvas.height / boxSize));
+    alert(`Generalized Dimension (q = ${q}): ${generalizedDimension}`);
+}
+		function calculateHurstExponent() {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const boxSize = parseInt(document.getElementById('boxSize').value);
+    const boxSpacing = parseInt(document.getElementById('boxSpacing').value);
+
+    let data = []; // Store pixel values
+
+    // Iterate over the canvas to collect pixel values
+    for (let y = 0; y < canvas.height; y += boxSpacing) {
+        for (let x = 0; x < canvas.width; x += boxSpacing) {
+            const imageData = ctx.getImageData(x, y, 1, 1).data;
+            const r = imageData[0];
+            const g = imageData[1];
+            const b = imageData[2];
+            const a = imageData[3];
+
+            // Check if the pixel is not white
+            if (r !== 255 || g !== 255 || b !== 255 || a !== 255) {
+                data.push(1); // Filled pixel
+            } else {
+                data.push(0); // Empty pixel
+            }
+        }
+    }
+
+    // Calculate rescaled range
+    const n = data.length;
+    const mean = data.reduce((sum, val) => sum + val, 0) / n;
+    let cumulativeDeviation = 0;
+    let range = 0;
+    let stdDev = 0;
+
+    for (let i = 0; i < n; i++) {
+        cumulativeDeviation += data[i] - mean;
+        if (cumulativeDeviation > range) range = cumulativeDeviation;
+        if (cumulativeDeviation < -range) range = -cumulativeDeviation;
+        stdDev += Math.pow(data[i] - mean, 2);
+    }
+
+    stdDev = Math.sqrt(stdDev / n);
+
+    // Calculate Hurst exponent
+    const hurstExponent = Math.log(range / stdDev) / Math.log(n);
+    alert(`Hurst Exponent: ${hurstExponent}`);
+}
+		
+		
+		function calculateCorrelationDimension() {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const boxSize = parseInt(document.getElementById('boxSize').value);
+    const boxSpacing = parseInt(document.getElementById('boxSpacing').value);
+
+    let points = []; // Store coordinates of non-white pixels
+
+    // Iterate over the canvas to find non-white pixels
+    for (let y = 0; y < canvas.height; y += boxSpacing) {
+        for (let x = 0; x < canvas.width; x += boxSpacing) {
+            const imageData = ctx.getImageData(x, y, 1, 1).data;
+            const r = imageData[0];
+            const g = imageData[1];
+            const b = imageData[2];
+            const a = imageData[3];
+
+            // Check if the pixel is not white
+            if (r !== 255 || g !== 255 || b !== 255 || a !== 255) {
+                points.push({ x, y });
+            }
+        }
+    }
+
+    // Calculate correlation sum
+    let correlationSum = 0;
+    const r = boxSize/canvas.height; // Distance threshold
+    for (let i = 0; i < points.length; i++) {
+        for (let j = i + 1; j < points.length; j++) {
+            const dx = points[i].x - points[j].x;
+            const dy = points[i].y - points[j].y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < r) {
+                correlationSum++;
+            }
+        }
+    }
+
+    // Calculate correlation dimension
+    const correlationDimension = Math.log(correlationSum) / Math.log(r);
+    alert(`Correlation Dimension: ${correlationDimension}`);
+}
+		
+		function calculateInformationDimension() {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const boxSize = parseInt(document.getElementById('boxSize').value);
+    const boxSpacing = parseInt(document.getElementById('boxSpacing').value);
+
+    let boxCounts = []; // Store counts of filled pixels for each box
+    let totalPixels = 0;
+
+    // Iterate over the canvas in steps of boxSpacing
+    for (let y = 0; y < canvas.height; y += boxSpacing) {
+        for (let x = 0; x < canvas.width; x += boxSpacing) {
+            // Get the image data for the current box
+            const imageData = ctx.getImageData(x, y, boxSize, boxSize).data;
+            let filledPixels = 0;
+
+            // Iterate over each pixel in the box
+            for (let i = 0; i < imageData.length; i += 4) {
+                const r = imageData[i];
+                const g = imageData[i + 1];
+                const b = imageData[i + 2];
+                const a = imageData[i + 3];
+
+                // Check if the pixel is not white (assuming black is the drawn color)
+                if (r !== 255 || g !== 255 || b !== 255 || a !== 255) {
+                    filledPixels++;
+                }
+            }
+
+            boxCounts.push(filledPixels);
+            totalPixels += filledPixels;
+        }
+    }
+
+    // Calculate Shannon entropy
+    let entropy = 0;
+    for (const count of boxCounts) {
+        if (count > 0) {
+            const probability = count / totalPixels;
+            entropy -= probability * Math.log(probability);
+        }
+    }
+
+    // Calculate information dimension
+    const informationDimension = entropy / Math.log(canvas.height / boxSize);
+    alert(`Information Dimension: ${informationDimension}`);
+}
+		
+		
+		
+		
+
+        function updateRuleUI() {
+            const rulesDiv = document.getElementById("rules");
+            rulesDiv.innerHTML = "";
+
+            for (let key in rules) {
+                const div = document.createElement("div");
+                div.classList.add("rule-container");
+                div.innerHTML = `
+                    <label>${key}: <input type="text" class="rule-input" data-letter="${key}" value="${rules[key]}"></label>
+                    <input type="checkbox" class="move-checkbox" data-letter="${key}" checked> Draw Move
+                `;
+                rulesDiv.appendChild(div);
+            }
+
+            updateRuleBindings();
+        }
+        loadPreset();
+    </script>
+</body>
+</html>
