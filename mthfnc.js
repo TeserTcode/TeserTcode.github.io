@@ -1072,7 +1072,7 @@ function inverseLaguerreTransform(Fn, a, x, N = bign) {
         return mul(div(h, math.complex(Math.sqrt(2 * Math.PI), 0)), sum); // Apply the normalization factor 1/sqrt(2pi)
     }
 
-    return simpsonsRule(math.complex(-bign, 0), math.complex(bign, 0), N);
+    return simpsonsRule(math.complex(-sqrt(bign), 0), math.complex(sqrt(bign), 0), N*5);
 }
 function hankelTransform(f, v, k, N = bign) {
     function simpsonsRule(a, b, nn) {
@@ -1163,7 +1163,7 @@ function inverseMellinTransform(F, x, c=1, N = bign, sMax = sqrt(bign * 8)) {
         return mul(div(h, math.complex(3, 0)), sum);
     }
 
-    let integral = simpsonsRule(math.complex(-sMax, 0), math.complex(sMax, 0), N);
+    let integral = simpsonsRule(mul(-1,sMax), mul(sMax), N);
     return div(integral, mul(math.complex(2, Math.PI), math.complex(0, 1))); // Divide by 2πi
 }
 
@@ -3403,6 +3403,13 @@ function generalizedasin(b,p=2,q=p){return mul(b,hypg21(div(1,p),div(1,q),add(1,
 function generalizedasinn(b,N){const p=g(N,0);const q=g(N,1);return mul(b,hypg21(div(1,p),div(1,q),add(1,div(1,q)),pow(b,q)))}//return integral(generalizedpida,0,b,[a,c])}
 function generalizedsin(x,p=2,q=p){return newtoninvfp(generalizedasinn,x,x,[p,q])}
     //return math.evaluate("newtoninv('generalizedasin(x,"+p+","+q+")',x,x)",{x:b});}
+
+function whyregeneralizedsin(n,z){
+    let fi=z;
+    for(let k=1;k<bign;k++)
+fi=mul(fi,sub(1,pow(div(z,k,pi()),n)))
+    return fi;
+}
 
 
 function cosmquintic(x,phi){return add(mul(3,pow(x,5)),mul(5,x),-8,mul(5,phi))}
@@ -6080,6 +6087,8 @@ function incpolylogarithmd(t,X){
 	let s=g(X,0);let z=g(X,1);
 	return div(pow(t,sub(s,1)),sub(div(exp(t),z),1))
 }
+
+
 function fermidiracd(t,X){
 	let x=g(X,0);let j=g(X,1);
 	return div(pow(t,j),add(1,exp(sub(t,x))))
@@ -15281,6 +15290,8 @@ function isIntegerComplex(c) {
 function lt(a, b){ return re(a) < re(b); }
 function neg(a){ return sub(0,a); }
 
+
+function kernelhartley(u){return cas(u)}
 
 function kerneluniform(u){return 0.5}
 function kerneltriangular(u){return sub(1,sabs(u))}

@@ -9,63 +9,91 @@
         canvas { border: 1px solid black; margin-top: 10px; }
         input, button, select { margin: 5px; }
         .rule-container { margin: 10px 0; }
+        textarea { width: 50%; height: 100px; resize: both; }
+        input[type="text"] { width: 50%; resize: both; }
+        .control-group { margin: 10px 0; border: 1px solid #ccc; padding: 10px; border-radius: 5px; }
+        .control-group h3 { margin: 0 0 10px; }
     </style>
 </head>
 <body>
     <h2>L-System Drawer</h2>
 
-    <label>Preset: 
-        <select id="presetSelect" onchange="loadPreset()">
-            <option value="">-- Choose a Preset --</option>
-            <option value="sierpinski">Sierpiński Triangle</option>
-            <option value="kochSnowflake">Koch Snowflake</option>
-            <option value="sierpinskiTriangle">Sierpiński Triangle (Alternate)</option>
-            <option value="dragonCurve">Dragon Curve</option>
-            <option value="hilbertCurve">Hilbert Curve</option>
-            <option value="gosperCurve">Gosper Curve</option>
-            <option value="pentaplexity">Pentaplexity</option>
-            <option value="quadraticKochIsland">Quadratic Koch Island</option>
-            <option value="cantorDust">Cantor Dust</option>
-			
-			         <option value="colorChange">Color Change (c)</option>
-            <option value="rainbowEffect">Rainbow Effect (ğ)</option>
-            <option value="thicknessChange">Thickness Change (t)</option>
-            <option value="branchingExample">Branching Example ([ ])</option>
-            <option value="angleChange">Angle Change (a, e, r)</option>
-            <option value="originReset">Origin Reset (o)</option>
-            <option value="haltExample">Halt Example (x)</option>
-            <option value="moveWithDrawing">Move with Drawing (f)</option>
-            <option value="moveWithoutDrawing">Move without Drawing (m)</option>
-        </select>
-    </label><br>
+    <!-- Preset Selection -->
+    <div class="control-group">
+        <h3>Preset</h3>
+        <label>Preset: 
+            <select id="presetSelect" onchange="loadPreset()">
+                <option value="">-- Choose a Preset --</option>
+                <option value="sierpinski">Sierpiński Triangle</option>
+                <option value="kochSnowflake">Koch Snowflake</option>
+                
+                <option value="dragonCurve">Dragon Curve</option>
+                <option value="hilbertCurve">Hilbert Curve</option>
+                <option value="gosperCurve">Gosper Curve</option>
+                <option value="pentaplexity">Pentaplexity</option>
+                <option value="quadraticKochIsland">Quadratic Koch Island</option>
+                <option value="cantorDust">Cantor Dust</option>
+<option value="tflowers">T-Flowers</option>
+                <option value="binaryTree">Binary Tree</option>
+                <option value="fractalPlant">Fractal Plant</option>
+                <option value="levyCCurve">Lévy C Curve</option>
+               
+                <option value="kochCurve">Koch Curve</option>
+                <option value="minkowskiSausage">Minkowski Sausage</option>
+                <option value="peanoCurve">Peano Curve</option>
+                <option value="mooreCurve">Moore Curve</option>
+                <option value="tree3D">Tree</option>
+                <option value="fractalCanopy">Fractal Canopy</option>
 
-    <label>Angle: <input type="number" id="angle" value="60"></label>
-    <label>Move Length: <input type="number" id="moveLength" value="5"></label>
-    <label>Iterations: <input type="number" id="iterations" value="6"></label><br>
+				                <option value="colorChange">Color Change (c)</option>
+                <option value="rainbowEffect">Rainbow Effect (ğ)</option>
+                <option value="thicknessChange">Thickness Change (t)</option>
+                <option value="branchingExample">Branching Example ([ ])</option>
+                <option value="angleChange">Angle Change (a, e, r)</option>
+                <option value="originReset">Origin Reset (o)</option>
+                <option value="haltExample">Halt Example (x)</option>
+                <option value="moveWithDrawing">Move with Drawing (f)</option>
+                <option value="moveWithoutDrawing">Move without Drawing (m)</option>
+                
+            </select>
+        </label>
+    </div>
 
-    <label>Line Color: <input type="color" id="lineColor" value="#000000"></label>
-    <label>Line Thickness: <input type="number" id="lineThickness" value="1"></label><br>
+    <!-- L-System Parameters -->
+    <div class="control-group">
+        <h3>L-System Parameters</h3>
+        <label>Angle: <input type="number" id="angle" value="60"></label>
+        <label>Move Length: <input type="number" id="moveLength" value="5"></label>
+        <label>Iterations: <input type="number" id="iterations" value="6"></label><br>
+        <label>Main: <input type="text" id="main"></label><br>
+        <div id="rules"></div>
+        <button onclick="addRule()">Add Rule</button>
+    </div>
 
-    <label>Canvas Width: <input type="number" id="canvasWidth" value="400"></label>
-    <label>Canvas Height: <input type="number" id="canvasHeight" value="400"></label><br>
+    <!-- Drawing Controls -->
+    <div class="control-group">
+        <h3>Drawing Controls</h3>
+        <label>Line Color: <input type="color" id="lineColor" value="#000000"></label>
+        <label>Line Thickness: <input type="number" id="lineThickness" value="1"></label><br>
+        <label>Canvas Width: <input type="number" id="canvasWidth" value="400"></label>
+        <label>Canvas Height: <input type="number" id="canvasHeight" value="400"></label><br>
+        <button onclick="generateLSystem()">Generate & Draw</button>
+        <button onclick="animateDrawing()">Animate</button><br>
+        <label>Animation Speed: <input type="range" id="speed" min="0" max="1" value="0.1" step='0.001'></label>
+    </div>
 
-    <label>Main: <input type="text" id="main"></label><br>
+    <!-- Fractal Analysis -->
+    <div class="control-group">
+        <h3>Fractal Analysis</h3>
+        <label>Box Size: <input type="number" id="boxSize" value="10"></label>
+        <label>Box Spacing: <input type="number" id="boxSpacing" value="10"></label><br>
+        <button onclick="calculateFractalDimension()">Calculate Fractal Dimension</button>
+        <button onclick="calculateLacunarity()">Calculate Lacunarity</button>
+        <button onclick="calculateGraphicalLacunarity()">Calculate Graphical Lacunarity</button>
+        <button onclick="calculateInformationDimension()">Calculate Information Dimension</button>
+    </div>
 
-    <div id="rules"></div>
-
-    <button onclick="addRule()">Add Rule</button>
-    <button onclick="generateLSystem()">Generate & Draw</button>
-    <button onclick="animateDrawing()">Animate</button><br>
-
-    <label>Animation Speed: <input type="range" id="speed" min="0" max="1" value="0.1" step='0.001'></label><br>
-
-    <label>Box Size: <input type="number" id="boxSize" value="10"></label>
-    <label>Box Spacing: <input type="number" id="boxSpacing" value="10"></label>
-    <button onclick="calculateFractalDimension()">Calculate Fractal Dimension</button>
-    <button onclick="calculateLacunarity()">Calculate Lacunarity</button><br>
-    <button onclick="calculateGraphicalLacunarity()">Calculate Graphical Lacunarity</button><br> 
-    <button onclick="calculateInformationDimension()">Calculate Information Dimension</button><br>
-
+    <!-- Canvas -->
     <canvas id="canvas" width="400" height="400"></canvas>
 
     <script>
@@ -82,22 +110,28 @@
             pentaplexity: { angle: 36, main: "F++F++F++F++F", rules: { "F": "F++F++F+++++F-F++F" } },
             quadraticKochIsland: { angle: 90, main: "F+F+F+F", rules: { "F": "F+F-F-FF+F+F-F" } },
             cantorDust: { angle: 0, main: "A", rules: { "A": "t60ABA", "B": "t1BBB" } },
-			
-			            colorChange: { angle: 90, main: "Fc#FF0000Fc#00FF00Fc#0000FF", rules: { "F": "F" } }, // Change color
-            rainbowEffect: { angle: 90, main: "FğFğFğFğFğFğ", rules: { "F": "F" } }, // Rainbow effect
-            thicknessChange: { angle: 90, main: "Ft1Ft2Ft3Ft4Ft5", rules: { "F": "F" } }, // Change thickness
-            branchingExample: { angle: 25, main: "F[+F][-F]", rules: { "F": "FF" } }, // Branching
-            angleChange: { angle: 90, main: "Fa45Fe10Fr20", rules: { "F": "F+F" } }, // Change angle
-            originReset: { angle: 90, main: "FoF", rules: { "F": "F" } }, // Reset to origin
-            haltExample: { angle: 90, main: "FxF", rules: { "F": "F" } }, // Halt example
-            moveWithDrawing: { angle: 90, main: "FfFfFfFf", rules: { "F": "F" } }, // Move with drawing
-            moveWithoutDrawing: { angle: 90, main: "FmFmFmFm", rules: { "F": "F" } }, // Move without drawing
-
- tflowers: { angle: 0, main: "F", rules: { "F": "F+[F]k1Fe1F" } },
-
-};
-
-   
+            colorChange: { angle: 90, main: "Fc#FF0000Fc#00FF00Fc#0000FF", rules: { "F": "F" } },
+            rainbowEffect: { angle: 90, main: "FğFğFğFğFğFğ", rules: { "F": "F" } },
+            thicknessChange: { angle: 90, main: "Ft1Ft2Ft3Ft4Ft5", rules: { "F": "F" } },
+            branchingExample: { angle: 25, main: "F[+F][-F]", rules: { "F": "FF" } },
+            angleChange: { angle: 90, main: "Fa45Fe10Fr20", rules: { "F": "F+F" } },
+            originReset: { angle: 90, main: "FoF", rules: { "F": "F" } },
+            haltExample: { angle: 90, main: "FxF", rules: { "F": "F" } },
+            moveWithDrawing: { angle: 90, main: "FfFfFfFf", rules: { "F": "F" } },
+            moveWithoutDrawing: { angle: 90, main: "FmFmFmFm", rules: { "F": "F" } },
+            tflowers: { angle: 0, main: "F", rules: { "F": "F+[F]k1Fe1F" } },
+            binaryTree: { angle: 45, main: "0", rules: { "0": "1[0]0", "1": "11" } },
+            fractalPlant: { angle: 25, main: "X", rules: { "X": "F+[[X]-X]-F[-FX]+X", "F": "FF" } },
+            levyCCurve: { angle: 45, main: "F", rules: { "F": "+F--F+" } },
+            sierpinskiArrowhead: { angle: 60, main: "A", rules: { "A": "B-A-B", "B": "A+B+A" } },
+            kochCurve: { angle: 90, main: "F", rules: { "F": "F+F-F-F+F" } },
+            minkowskiSausage: { angle: 90, main: "F", rules: { "F": "F+F-F-FF+F+F-F" } },
+            peanoCurve: { angle: 90, main: "X", rules: { "X": "0XfYfX+f+YfXfY-f-XfYfX", "Y": "0YfXfY-f-XfYfX+f+YfXfY" } },
+            mooreCurve: { angle: 90, main: "LfL+F+LfL", rules: { "L": "0-Rf+LfL+fR-", "R": "0+Lf-RfR-fL+" } },
+            tree3D: { angle: 22.5, main: "F", rules: { "F": "FF+[+F-F-F]-[-F+F+F]" } },
+            fractalCanopy: { angle: 20, main: "F", rules: { "F": "F[+F]F[-F]F" } },
+            spiral: { angle: 90, main: "F", rules: { "F": "F+F-F-F+F" } }
+        };
 
 function loadPreset() {
     const presetName = document.getElementById("presetSelect").value;
