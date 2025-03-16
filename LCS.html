@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Population Data Visualization</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    #chart-container {
+      width: 80%;
+      margin: 20px auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Population Data Visualization</h1>
+  <label for="entity-select">Select Entity:</label>
+  <select id="entity-select">
+    <option value="ALL">ALL</option>
+  </select>
+  <div id="chart-container">
+    <canvas id="population-chart"></canvas>
+  </div>
+
+  <script>
+    let csvData = [];
+    let chart = null;
+
+    // Fetch and parse CSV data
+    async function loadCSV() {
+      const response = await fetch('population-long-run-with-projections.csv');
+      const text = await response.text();
+      const rows = text.split('\n').slice(1); // Skip header row
+      csvData = rows.map(row => {
+        const [Entity, Code, Year, PopulationProjections, PopulationHistorical] = row.split(',');
+        return {
+          Entity: Entity.trim(),
+          Code: Code.trim(),
+          Year: parseInt(Year.trim()),
+          PopulationProjections: PopulationProjections ? parseInt(PopulationProjections.trim()) : null,
+          PopulationHistorical: PopulationHistorical ? parseInt(PopulationHistorical.trim()) : null,
+        };
+      });
+      populateDropdown();
+    }
+
+    // Populate dropdown with entities
+    function populateDropdown() {
+      const entitySelect = document.getElementById('entity-select');
+      const entities = [...new Set(csvData.map(item => item.Entity))]; // Get unique entities
+      entities.forEach(entity => {
+        const option = document.createElement('option');
+        option.value = entity;
+        option.textContent = entity;
+        entitySelect.appendChild(option);
+      });
+    }
+
+    // Draw chart based on selected entity
+    function drawChart(selectedEntity) {
+      const ctx = document.getElementById('population-chart').getContext('2d');
+      const filteredData = selectedEntity === 'ALL' ? csvData : csvData.filter(item => item.Entity === selectedEntity);
+
+      const labels = [...new Set(filteredData.map(item => item.Year))].sort((a, b) => a - b);
+      const datasets = [];
+
+      if (selectedEntity === 'ALL') {
+        const entities = [...new Set(filteredData.map(item => item.Entity))];
+        entities.forEach(entity => {
+          const entityData = filteredData.filter(item => item.Entity === entity);
+          datasets.push({
+            label: entity,
+            data: labels.map(year => {
+              const entry = entityData.find(item => item.Year === year);
+              return entry ? (entry.PopulationProjections || entry.PopulationHistorical) : null;
+            }),
+            borderColor: `#${Math.floor(Math.random() * 16777215).toString(16)}`, // Random color
+            fill: false,
+          });
+        });
+      } else {
+        datasets.push({
+          label: selectedEntity,
+          data: labels.map(year => {
+            const entry = filteredData.find(item => item.Year === year);
+            return entry ? (entry.PopulationProjections || entry.PopulationHistorical) : null;
+          }),
+          borderColor: '#007bff',
+          fill: false,
+        });
+      }
+
+      if (chart) {
+        chart.destroy(); // Destroy existing chart
+      }
+
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: datasets,
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Year',
+              },
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Population',
+              },
+            },
+          },
+        },
+      });
+    }
+
+    // Event listener for dropdown change
+    document.getElementById('entity-select').addEventListener('change', (event) => {
+      drawChart(event.target.value);
+    });
+
+    // Load CSV and initialize
+    loadCSV();
+  </script>
+</body>
+</html>
