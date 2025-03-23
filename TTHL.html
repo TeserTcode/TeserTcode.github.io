@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>TTHL H₄ Operation Table</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    table, th, td { border: 1px solid #333; border-collapse: collapse; padding: 5px; text-align: center; }
+    th { background-color: #f0f0f0; }
+    select { margin-bottom: 15px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h2>TTHL H₄ Operation Table</h2>
+  <label for="operator">Select Operator:</label>
+  <select id="operator">
+    <option value="and">AND</option>
+    <option value="or">OR</option>
+    <option value="xor">XOR</option>
+    <option value="nand">NAND</option>
+    <option value="xnor">XNOR</option>
+    <option value="implies">IMPLIES</option>
+    <option value="nimplies">NIMPLIES</option>
+    <option value="converse">CONVERSE</option>
+    <option value="nconverse">NCONVERSE</option>
+    <option value="mod-and">MODAND</option>
+    <option value="mod-or">MODOR</option>
+    <option value="mod-xor">MODXOR</option>
+    <option value="mod-nand">MODNAND</option>
+    <option value="mod-nor">MODNOR</option>
+    <option value="mod-xnor">MODXNOR</option>
+    <option value="mod-implies">MODINPLIES</option>
+    <option value="mod-nimplies">MODNINPLIES</option>
+    <option value="mod-converse">MODCONVERSE</option>
+    <option value="mod-nconverse">MODNCONVERSE</option>
+    <option value="sand">SAND</option>
+    <option value="sor">SOR</option>
+    <option value="sxor">SXOR</option>
+    <option value="snor">SNOR</option>
+    <option value="sxnor">SXNOR</option>
+    <option value="snand">SNAND</option>
+    <option value="sand">SIMPLIES</option>
+    <option value="siimplies">SNIMPLIES</option>
+    <option value="sconverse">SCONVERSE</option>
+    <option value="snconverse">SNCONVERSE</option>
+    <option value="diff">DIFF</option>
+    <option value="sym-diff">SYMDIFF</option>
+    <option value="intersect">INTERSECT</option>
+  </select>
+<label for="shorthand">Shorthand Mode:</label>
+<select id="shorthand">
+  <option value="off">Shorthand Off</option>
+  <option value="T">Just T</option>
+  <option selected value="TPNA">TPNA</option>
+  <option value="hardcore">Hardcore</option>
+</select>
+  <div id="tableContainer"></div>
+
+  <script>
+  // ---- Helper functions for deep equality and uniqueness ----
+  function deepEqual(a, b) {
+    if (typeof a === "number" && typeof b === "number") return a === b;
+    if (Array.isArray(a) && Array.isArray(b)) {
+      if (a.length !== b.length) return false;
+      return a.every(el => b.some(el2 => deepEqual(el, el2)));
+    }
+    return false;
+  }
+
+  function addUnique(arr, elem) {
+    for (let item of arr) {
+      if (deepEqual(item, elem)) return;
+    }
+    arr.push(elem);
+  }
+
+  // ---- Simplification and Display ----
+  // Simplify a set (represented as an array) recursively.
+  // By convention: [] becomes 0; a singleton [1] or [0] is shown as the atomic.
+  function simplify(x) {
+    if (typeof x === "number") return x;
+    if (Array.isArray(x)) {
+if(x.length == 1)return x[0];
+      let simplified = x.map(el => simplify(el));
+      let result = [];
+      simplified.forEach(el => addUnique(result, el));
+      if (result.length === 0) return 0;
+      if (result.length === 1 && typeof result[0] === "number") return result[0];
+      result.sort((a,b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
+      return result;
+    }
+    return x;
+  }function displayElement(x) {
+    let mode = document.getElementById("shorthand").value;
+    
+    if (mode === "hardcore") {
+      if (x === 0) return "{}";
+      if (x === 1) return "{{}}";
+    }
+    
+    if (typeof x === "number") return x.toString();
+    if (Array.isArray(x)) {
+      let sim = simplify(x);
+      if (typeof sim === "number") return sim.toString();
+
+      let elems = sim.map(el => displayElement(el));
+      let unique = [...new Set(elems)].sort(); // Remove duplicates and sort
+
+      if (mode !== "off") {
+        if (unique.length === 2 && unique.includes("1") && unique.includes("0")) return "T"; // {1,0}
+        if (mode === "TPNA") {
+          if (unique.length === 2 && unique.includes("1") && unique.includes("T")) return "P"; // {1, T}
+          if (unique.length === 2 && unique.includes("0") && unique.includes("T")) return "N"; // {0, T}
+          if (unique.length === 3 && unique.includes("1") && unique.includes("0") && unique.includes("T")) return "A"; // {0,1,T}
+        }
+      }
+
+      return `{${unique.join(",")}}`;
+    }
+    return x.toString();
+  }
+
+  // Wrap a value as a set if needed.
+  function toSet(x) {
+    return Array.isArray(x) ? x : [x];
+  }
+
+  // ---- Color generator: produces a background color mixed 50-50 with white ----
+  function generateColor(str) {
+if(str==="0")return 'rgb(125,125,125)'
+if(str==="1")return 'rgb(235,235,235)'
+if(str==="T")return 'rgb(0,255,0)'
+if(str==="N")return 'rgb(0,255,255)'
+if(str==="P")return 'rgb(255,0,0)'
+if(str==="A")return 'rgb(255,0,255)'
+
+    // Simple hash function.
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    // Extract RGB components.
+    let r = (hash >> 0) & 0xFF;
+    let g = (hash >> 8) & 0xFF;
+    let b = (hash >> 16) & 0xFF;
+    // Mix each component with white (255) 50-50.
+    r = Math.floor((r + 255) / 2);
+    g = Math.floor((g + 255) / 2);
+    b = Math.floor((b + 255) / 2);
+    return `rgb(${r},${g},${b})`;
+  }
+
+
+
+
+
+
+
+
+
+
+
+  // ---- Operator Definitions ----
+
+
+
+function diffOp(P, Q) {
+  let setP = toSet(P), setQ = toSet(Q);
+  return simplify(setP.filter(x => !setQ.includes(x)));
+}
+
+function symDiffOp(P, Q) {
+  let setP = toSet(P), setQ = toSet(Q);
+  let diffPQ = setP.filter(x => !setQ.some(y => deepEqual(x, y))); // A - B
+  let diffQP = setQ.filter(x => !setP.some(y => deepEqual(x, y))); // B - A
+  return simplify([...diffPQ, ...diffQP]);
+}
+
+// ---- Fixed Intersection (A ∩ B) ----
+function intersectOp(P, Q) {
+  let setP = toSet(P), setQ = toSet(Q);
+  let intersection = setP.filter(x => setQ.some(y => deepEqual(x, y)));
+  return simplify(intersection);
+}
+
+
+
+
+
+  // Atomic operations: 1 and 0 behave as usual.
+  function andOp(P, Q) {
+    if (typeof P === "number" && typeof Q === "number") {
+      return (P === 1 && Q === 1) ? 1 : 0;
+    }
+    let setP = toSet(P), setQ = toSet(Q);
+    let result = [];
+    for (let x of setP) {
+      for (let y of setQ) {
+        let r = andOp(x, y);
+        addUnique(result, r);
+      }
+    }
+    return simplify(result);
+  }
+
+  function orOp(P, Q) {
+    if (typeof P === "number" && typeof Q === "number") {
+      return (P === 1 || Q === 1) ? 1 : 0;
+    }
+    let setP = toSet(P), setQ = toSet(Q);
+    let result = [];
+    for (let x of setP) {
+      for (let y of setQ) {
+        let r = orOp(x, y);
+        addUnique(result, r);
+      }
+    }
+    return simplify(result);
+  }
+
+  function xorOp(P, Q) {
+    if (typeof P === "number" && typeof Q === "number") {
+      return (P === Q) ? 0 : 1;
+    }
+    let setP = toSet(P), setQ = toSet(Q);
+    let result = [];
+    for (let x of setP) {
+      for (let y of setQ) {
+        let r = xorOp(x, y);
+        addUnique(result, r);
+      }
+    }
+    return simplify(result);
+  }
+
+  function notOp(P) {
+    if (typeof P === "number") return (P === 1 ? 0 : 1);
+    let setP = toSet(P);
+    let result = [];
+    for (let x of setP) {
+      let r = notOp(x);
+      addUnique(result, r);
+    }
+    return simplify(result);
+  }
+
+  function nandOp(P, Q) {
+    return notOp(andOp(P, Q));
+  }
+
+  function xnorOp(P, Q) {
+    return notOp(xorOp(P, Q));
+  }
+
+  // IFF is defined the same as XNOR.
+  function iffOp(P, Q) {
+    return xnorOp(P, Q);
+  }
+
+  // IMPLIES: A → B is defined as (not A) or B.
+  function impliesOp(P, Q) {
+    return orOp(notOp(P), Q);
+  }
+
+
+function norOp(P, Q) {
+  return andOp(notOp(P), notOp(Q));
+}
+
+// NOT-IMPLIES: negation of "A → B"
+function nimpliesOp(P, Q) {
+  return notOp(impliesOp(P, Q));
+}
+
+// Converse Implication: B → A
+function converseOp(P, Q) {
+  return impliesOp(Q, P);
+}
+
+// NOT Converse Implication: negation of "B → A"
+function nconverseOp(P, Q) {
+  return notOp(converseOp(P, Q));
+}
+
+// Special OR (sor): OR each element of P with each element of Q (excluding identical elements)
+function sandOp(P, Q) {
+  let setP = toSet(P), setQ = toSet(Q);
+  let result = [];
+  for (let x of setP) {
+    for (let y of setQ) {
+      if (!deepEqual(x, y)) {
+        addUnique(result, andOp(x, y));
+      }
+    }
+  }
+  return simplify(result);
+}
+// Special OR (sor): OR each element of P with each element of Q (excluding identical elements)
+function sorOp(P, Q) {
+  let setP = toSet(P), setQ = toSet(Q);
+  let result = [];
+  for (let x of setP) {
+    for (let y of setQ) {
+      if (!deepEqual(x, y)) {
+        addUnique(result, orOp(x, y));
+      }
+    }
+  }
+  return simplify(result);
+}
+
+// Special XOR (sxor): XOR each element of P with each element of Q (excluding identical elements)
+function sxorOp(P, Q) {
+  let setP = toSet(P), setQ = toSet(Q);
+  let result = [];
+  for (let x of setP) {
+    for (let y of setQ) {
+      if (!deepEqual(x, y)) {
+        addUnique(result, xorOp(x, y));
+      }
+    }
+  }
+  return simplify(result);
+}
+
+// Special NOR (snor): NOR each element of P with each element of Q (excluding identical elements)
+function snorOp(P, Q) {
+  let setP = toSet(P), setQ = toSet(Q);
+  let result = [];
+  for (let x of setP) {
+    for (let y of setQ) {
+      if (!deepEqual(x, y)) {
+        addUnique(result, norOp(x, y));
+      }
+    }
+  }
+  return simplify(result);
+}
+
+// Special XNOR (sxnor): XNOR each element of P with each element of Q (excluding identical elements)
+function sxnorOp(P, Q) {
+  let setP = toSet(P), setQ = toSet(Q);
+  let result = [];
+  for (let x of setP) {
+    for (let y of setQ) {
+      if (!deepEqual(x, y)) {
+        addUnique(result, xnorOp(x, y));
+      }
+    }
+  }
+  return simplify(result);
+}
+
+// Special NAND (snand): NAND each element of P with each element of Q (excluding identical elements)
+function snandOp(P, Q) {
+  let setP = toSet(P), setQ = toSet(Q);
+  let result = [];
+  for (let x of setP) {
+    for (let y of setQ) {
+      if (!deepEqual(x, y)) {
+        addUnique(result, nandOp(x, y));
+      }
+    }
+  }
+  return simplify(result);
+}
+
+// Special Implication (simplies): A → B for each element of P and Q (excluding identical elements)
+function simpliesOp(P, Q) {
+  let setP = toSet(P), setQ = toSet(Q);
+  let result = [];
+  for (let x of setP) {
+    for (let y of setQ) {
+      if (!deepEqual(x, y)) {
+        addUnique(result, impliesOp(x, y));
+      }
+    }
+  }
+  return simplify(result);
+}
+
+// Special Non-Implication (snimplies): ¬(A → B) for each element of P and Q (excluding identical elements)
+function snimpliesOp(P, Q) {
+  let setP = toSet(P), setQ = toSet(Q);
+  let result = [];
+  for (let x of setP) {
+    for (let y of setQ) {
+      if (!deepEqual(x, y)) {
+        addUnique(result, nimpliesOp(x, y));
+      }
+    }
+  }
+  return simplify(result);
+}
+
+// Special Converse Implication (sconverse): B → A for each element of P and Q (excluding identical elements)
+function sconverseOp(P, Q) {
+  let setP = toSet(P), setQ = toSet(Q);
+  let result = [];
+  for (let x of setP) {
+    for (let y of setQ) {
+      if (!deepEqual(x, y)) {
+        addUnique(result, converseOp(x, y));
+      }
+    }
+  }
+  return simplify(result);
+}
+
+// Special Converse Non-Implication (snconverse): ¬(B → A) for each element of P and Q (excluding identical elements)
+function snconverseOp(P, Q) {
+  let setP = toSet(P), setQ = toSet(Q);
+  let result = [];
+  for (let x of setP) {
+    for (let y of setQ) {
+      if (!deepEqual(x, y)) {
+        addUnique(result, nconverseOp(x, y));
+      }
+    }
+  }
+  return simplify(result);
+}
+
+
+
+
+
+
+
+function stOrOp(P, Q) {
+  let setP = toSet(P), setQ = toSet(Q);
+  let result = [];
+  for (let x of setP) {
+    let strictSet = [];
+    for (let y of setQ) {
+      let r = orOp(x, y);
+      if (!strictSet.includes(r)) strictSet.push(r);
+    }
+    if (strictSet.length === 1) addUnique(result, strictSet[0]);
+  }
+  return simplify(result);
+}
+
+function modOp(P, Q, baseOp) {
+  let setP = toSet(P), setQ = toSet(Q);
+  let countMap = {};
+  
+  for (let x of setP) {
+    for (let y of setQ) {
+      let r = baseOp(x, y);
+      let key = JSON.stringify(r);
+      countMap[key] = (countMap[key] || 0) + 1;
+    }
+  }
+
+  let maxCount = Math.max(...Object.values(countMap));
+  let mostFrequent = Object.entries(countMap)
+    .filter(([_, count]) => count === maxCount)
+    .map(([key]) => JSON.parse(key));
+
+  return simplify(mostFrequent);
+}
+
+// ---- Add operators to selection ----
+const operators = {
+  "and": andOp,
+  "or": orOp,
+  "xor": xorOp,
+  "nand": nandOp,
+  "nor": norOp,
+  "xnor": xnorOp,
+  "iff": iffOp,
+  "implies": impliesOp,
+  "nimplies": nimpliesOp,
+  "converse": converseOp,
+  "nconverse": nconverseOp,
+  "diff": diffOp,
+  "sym-diff": symDiffOp,
+  "intersect": intersectOp,
+  "sand": sandOp,
+  "sor": sorOp,
+  "sxor": sxorOp,
+"sxor": sxorOp,
+"sxnor": sxnorOp,
+"snor": snorOp,
+"snand": snandOp,
+"simplies": simpliesOp,
+"sconverse": sconverseOp,
+"snimplies": snimpliesOp,
+"snconverse": snconverseOp,
+  "mod-and": (P, Q) => modOp(P, Q, andOp),
+  "mod-or": (P, Q) => modOp(P, Q, orOp),
+  "mod-xor": (P, Q) => modOp(P, Q, xorOp),
+  "mod-nand": (P, Q) => modOp(P, Q, nandOp),
+  "mod-nor": (P, Q) => modOp(P, Q, norOp),
+  "mod-xnor": (P, Q) => modOp(P, Q, xnorOp),
+  "mod-iff": (P, Q) => modOp(P, Q, iffOp),
+  "mod-implies": (P, Q) => modOp(P, Q, impliesOp),
+  "mod-nimplies": (P, Q) => modOp(P, Q, nimpliesOp),
+  "mod-converse": (P, Q) => modOp(P, Q, converseOp),
+  "mod-nconverse": (P, Q) => modOp(P, Q, nconverseOp),
+};
+
+  // ---- H₃ Definition (as before) ----
+  const H3 = [
+    1,
+    0,
+    [1,0],         // T shorthand for {1,0}
+    [1, [1,0]],    // {1, T}
+    [0, [1,0]],    // {0, T}
+    [1,0,[1,0]]    // {1,0,T}
+  ];
+
+  // ---- Generate H₄ by "joining" all nonempty subsets of H₃ ----
+  // Given an array (set) X, joinSubset returns the union (combination) of its elements.
+  function joinSubset(subset) {
+    let result = [];
+    subset.forEach(el => addUnique(result, el));
+    return simplify(result);
+  }
+
+  // Generate all nonempty subsets of an array.
+  function generateSubsets(arr) {
+    let subsets = [];
+    let total = 1 << arr.length; // 2^(n)
+    for (let mask = 1; mask < total; mask++) {
+      let subset = [];
+      for (let i = 0; i < arr.length; i++) {
+        if (mask & (1 << i)) subset.push(arr[i]);
+      }
+      subsets.push(subset);
+    }
+    return subsets;
+  }
+
+  // Generate Hₙ₊₁ from Hₙ: union of Hₙ and all joined (union) subsets of Hₙ.
+  function generateHn(Hn) {
+    let newSet = [];
+    // Start by including all Hn elements.
+    Hn.forEach(el => addUnique(newSet, el));
+    let subs = generateSubsets(Hn);
+    subs.forEach(subset => {
+      let joined = joinSubset(subset);
+      addUnique(newSet, joined);
+    });
+    return newSet;
+  }
+
+  // Compute H4 from H3.
+  const H4 = generateHn(H3);
+  
+  // ---- Table Generation for H₄ ----
+  function generateTable(opFunc) {
+    let html = "<table><thead><tr><th>OP</th>";
+    // header row using H4 elements
+    H4.forEach(e => {
+      let disp = displayElement(e);
+      html += "<th style='background:" + generateColor(disp) + "'>" + disp + "</th>";
+    });
+    html += "</tr></thead><tbody>";
+    // rows: for each element P in H4
+    H4.forEach(P => {
+      let dispP = displayElement(P);
+      html += "<tr><th style='background:" + generateColor(dispP) + "'>" + dispP + "</th>";
+      H4.forEach(Q => {
+        let res = opFunc(P, Q);
+        let dispRes = displayElement(res);
+        html += "<td style='background:" + generateColor(dispRes) + "'>" + dispRes + "</td>";
+      });
+      html += "</tr>";
+    });
+    html += "</tbody></table>";
+    return html;
+  }
+
+  function updateTable() {
+    const opName = document.getElementById("operator").value;
+    const opFunc = operators[opName];
+    document.getElementById("tableContainer").innerHTML = generateTable(opFunc);
+  }
+
+  document.getElementById("operator").addEventListener("change", updateTable);
+  document.getElementById("shorthand").addEventListener("change", updateTable);
+  updateTable();
+  </script>
+</body>
+</html>
