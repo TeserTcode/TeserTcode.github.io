@@ -1,0 +1,3294 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitki</title>
+    <style>
+       body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 10px;
+    color: #333;
+    background: url('BIT.PNG') no-repeat center;
+   background-size: auto;
+background-attachment: scroll ;
+    background-size: cover;
+}        u {
+   
+            cursor: pointer;
+            text-decoration: underline;
+        }
+#menu {
+    position: absolute;
+    background: #ffddffcc;;
+    border: 1px solid black;
+    padding: 0;
+    margin: 0;
+    line-height: normal;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+}
+#menu-table td {
+    padding: 5px;
+    cursor: pointer;
+}
+        .menu td {
+            padding: 1px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+        }
+        .menu td:hover {
+            background: #f0f0f0;
+        }
+h1 {
+    color: #2c3e50;
+    text-align: center;
+}
+
+h2 {
+    color: #2980b9;
+}
+
+p {
+    font-size: 1em;
+    margin-bottom: 10px;
+
+}
+
+large {
+font-size:  3em;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+}
+
+table, th, td {
+    border: 1px solid #ccc;
+}
+
+li, th, td, p {
+color: #333333;
+
+text-shadow: 2px 2px 2px #FFFFFF, 1px 1px 0px rgba(0,0,0,0.15);
+color: #333333;
+
+
+    padding: 12px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+.note {
+    background-color: #f9f9f9;
+    padding: 10px;
+    border: 1px dashed #ccc;
+    margin-top: 10px;
+}
+
+.section-title {
+    font-size: 1.5em;
+    color: #34495e;
+}
+
+.sub-section {
+    margin-left: 10px;
+    font-size: 1.1em;
+}
+
+/* İçindekiler Menüsü */
+#table-of-contents {
+    position: fixed;
+    left: -560px;
+    top: 50px;
+    width: 550px;
+    height: 80vh;
+    background: #333;
+    color: white;
+    padding: 10px;
+    border-radius: 0 8px 8px 0;
+    transition: left 0.3s ease;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+}
+
+#table-of-contents:hover {
+    left: 0;
+}
+
+#table-of-contents h2 {
+    font-size: 16px;
+    text-align: center;
+    margin: 0;
+    padding: 5px 0;
+}
+#table-of-contents h3 {
+    font-size: 16px;
+    text-align: center;
+    margin: 0;
+    padding: 5px 0;
+}
+#table-of-contents large {
+    font-size: 26px;
+    text-align: center;
+    margin: 0;
+    padding: 5px 0;
+}
+
+.toc-content {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 1px;
+}
+
+#table-of-contents ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#table-of-contents li {
+    margin: 0;
+    padding: 0;
+}
+
+/* İç İçe Listeler */
+#table-of-contents li ul {
+    margin-left: 10px;
+    padding-left: 5px;
+margin-right: 5px;
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    overflow: hidden;
+}
+
+#table-of-contents a {
+    text-decoration: none !important;
+    color: #fff;
+    font-size: 12px;
+    display: block;
+    padding: 3px 5px;
+    transition: background 0.2s;
+}
+
+#table-of-contents a:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+}
+
+/* Scrollbar Özelleştirme */
+.toc-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.toc-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 4px;
+}
+
+.toc-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+    </style>
+</head>
+<body>
+
+
+
+ <large>BİTKİLER</large>
+
+
+
+
+
+  <h1>Bitkiler (Plantae)</h1>
+  <p>
+    Bitkiler, <strong>Plantae</strong> alemini temsil eden çok hücreli ökaryot canlılardır. 
+    Fotosentez yapabilmek için <em>kloroplast</em> bulundururlar ve bu organeller, klorofil a ve b pigmentlerini içerir. 
+    Hücre duvarları <strong>selüloz</strong>dan oluşur, depo karbonhidratları ise genellikle <strong>nişasta</strong>'dır.
+  </p>
+  <ul>
+    <li>Çok hücreli ve ökaryot organizmalar.</li>
+    <li>Fotosentez yaparak kendi besinlerini üretirler (hem ototrofik hem de, nadiren tam parazit formda olanlar hariç).</li>
+    <li>Eşeysiz (sporla) ve eşeyli (gametlerle) üreme yeteneğine sahiptirler.</li>
+    <li>Selüloz içerikli hücre duvarları mevcuttur.</li>
+    <li>Nişasta depo karbonhidratı olarak bulunur.</li>
+    <li>Sınırsız büyüme ve gelişme kapasitesine sahiptirler.</li>
+    <li>Hareket kabiliyetleri yoktur; fakat ışığa (fototropizm), yerçekimine (geotropizm) ve diğer uyaranlara (ırganım hareketleri) tepki verirler.</li>
+  </ul>
+  <p>
+    Yaprak yüzeylerinde, <em>mumsu kütikula</em> adı verilen kalın bir tabaka bulunur. Bu tabaka, özellikle kurak iklimlerde su kaybını önlemek amacıyla kalınlaşırken, nemli bölgelere özgü türlerde daha ince olabilir. Ayrıca, yapraklardaki <strong>stoma</strong> (gözenekler) gaz alışverişi ve terlemeyi sağlayarak bitkinin homeostazını destekler.
+  </p>
+
+  <h2>Bitki Sınıflandırması</h2>
+  <p>
+    Bitkiler, morfolojik ve yapısal özellikleri temel alınarak, damar sistemi, üreme organları, kök, gövde ve yaprak gibi yapıların varlığı ve düzenlenişine göre sınıflandırılır. Bu sınıflandırmada iki ana grup öne çıkar: <strong>Tohumsuz Bitkiler</strong> ve <strong>Tohumlu Bitkiler</strong>.
+  </p>
+
+  <h3>1. Tohumsuz Bitkiler</h3>
+  
+  <h4>a) Damarsız Tohumsuz Bitkiler</h4>
+  <p>
+    Bu gruptaki bitkilerde damarsal iletim sistemi (ksilem ve floem) bulunmaz. Üreme, sporların oluşumu yoluyla gerçekleşir ve gametofit aşaması baskındır. 
+    Örneğin, <em>Bryophyta</em> (yosunlar) ve <em>Hepaticophyta</em> (ciğerotları) bu kategoriye girer. 
+    <strong>Örnek:</strong> <em>Marchantia polymorpha</em> (ciğerotu) ve <em>Sphagnum</em> türleri (yosunlar).
+  </p>
+
+  <h4>b) Damarlı Tohumsuz Bitkiler</h4>
+  <p>
+    Damarlı ancak tohum üretmeyen bitkiler; gelişmiş vasküler dokuya sahip olup, üreme sporlarla gerçekleşir. 
+    Bu grupta <em>Pteridophyta</em> (eğrelti otları) ve <em>Sphenopsida</em> (at kuyruğu gibi bitkiler) yer alır. 
+    Gametofit evresi oldukça küçülmüş olup, sporofit aşaması baskındır. 
+    <strong>Örnek:</strong> <em>Pteridium aquilinum</em> (yaygın eğrelti otu) ve <em>Equisetum arvense</em> (at kuyruğu).
+  </p>
+
+  <h3>2. Tohumlu Bitkiler (Spermatophyta)</h3>
+  <p>
+    Tohumlu bitkiler, gelişmiş vasküler dokuya sahip olup, üreme organları olarak tohumları kullanır. 
+    Gerçek kök, gövde ve yaprakları bulunur. Tohumlu bitkiler iki ana gruba ayrılır:
+  </p>
+
+  <h4>a) Açık Tohumlular (Gymnospermae)</h4>
+  <p>
+    Açık tohumlular, üreme organlarında tohumları doğrudan açığa veren bitkilerdir. 
+    Genellikle yaprakları iğne şeklinde olup, yıl boyunca yeşil kalırlar. 
+    Tohumları meyve ile örtülü değildir. Bu grup, <em>Coniferophyta</em> (kozalaklı bitkiler) olarak da adlandırılır. 
+    <strong>Örnek:</strong> <em>Pinus</em> (çam), <em>Cedrus</em> (sedir) ve <em>Abies</em> (köknar).
+  </p>
+
+  <h4>b) Kapalı Tohumlular (Angiospermae)</h4>
+  <p>
+    Kapalı tohumlular, tohumları meyve içinde koruyan bitkilerdir. 
+    Çiçek, üreme sürecinde ana rol oynar ve tohum oluşumunu destekler. 
+    Bu bitkiler, tek çenekliler (monokotiller) ve çift çenekliler (dikotiller) olarak iki alt gruba ayrılır. 
+    Angiospermler, dünya üzerindeki bitki türlerinin en çeşitli ve yaygın grubunu oluşturur.
+  </p>
+
+  <h2>Karşılaştırma Tablosu</h2>
+  <table>
+    <tr>
+      <th>Özellik</th>
+      <th>Damarsız Tohumsuz</th>
+      <th>Damarlı Tohumsuz</th>
+      <th>Tohumlu Bitkiler (Gymnospermae)</th>
+      <th>Tohumlu Bitkiler (Angiospermae)</th>
+    </tr>
+    <tr>
+      <td>Vasküler Doku</td>
+      <td>Yok (Bryophyta, Hepaticophyta)</td>
+      <td>Var (Pteridophyta, Sphenopsida)</td>
+      <td>Var</td>
+      <td>Var</td>
+    </tr>
+    <tr>
+      <td>Üreme Yöntemi</td>
+      <td>Sporla</td>
+      <td>Sporla</td>
+      <td>Tohumla (ama açıkta)</td>
+      <td>Tohumla (meyve içinde)</td>
+    </tr>
+    <tr>
+      <td>Gametofit Aşaması</td>
+      <td>Baskın</td>
+      <td>Küçülmüş</td>
+      <td>Çok küçülmüş</td>
+      <td>Çok küçülmüş</td>
+    </tr>
+    <tr>
+      <td>Yapısal Organizasyon</td>
+      <td>Basit, sınırlı doku</td>
+      <td>Gelişmiş damar sistemi</td>
+      <td>Odunsu doku; iğne yapraklı</td>
+      <td>Çeşitli yaprak, çiçek ve meyve yapılarına sahip</td>
+    </tr>
+    <tr>
+      <td>Örnek Türler</td>
+      <td><em>Marchantia</em>, <em>Sphagnum</em></td>
+      <td><em>Pteridium</em>, <em>Equisetum</em></td>
+      <td><em>Pinus</em>, <em>Cedrus</em></td>
+      <td>Rosa, Quercus, Solanum vb.</td>
+    </tr>
+    <tr>
+      <td>Yaşam Alanı</td>
+      <td>Nemli, karasal</td>
+      <td>Geniş karasal alanlar, nemli topraklar</td>
+      <td>Soğuk ve dağlık bölgeler</td>
+      <td>Hemen her ekosistem</td>
+    </tr>
+  </table>
+
+ <h1>Bitki Taksonomisi</h1>
+
+
+
+  <h1>Bitki Krallığının 12 Filumu ve Cladistik Ayrımları</h1>
+  
+  <!-- 1. Glaucophyta -->
+  <h2>1. Glaucophyta (Mavi-Yeşil Algler)</h2>
+  <p>
+    Glaucophyta, en ilkel alg gruplarından biri olup, kloroplastlarında bakteriyel özellikler barındıran peptidoglikan kalıntılarına sahiptir. Bu filum, tipik olarak damarsızdır ve üreme sporlarla gerçekleşir. Cladistik açıdan, bitkiler ile diğer alg grupları arasındaki evrimsel ilişkiyi anlamada önemli ipuçları sunar.
+  </p>
+  
+  <!-- 2. Chlorophyta -->
+  <h2>2. Chlorophyta (Yeşil Algler)</h2>
+  <p>
+    Chlorophyta, klorofil a ve b pigmentlerine sahip olan, çoğunlukla damarsız ve tek hücreli veya koloniler halinde yaşayan algleri içerir. Bu gruptaki organizmalar, evrimsel olarak kara bitkileri ile ortak ataları paylaşır ve kloroplast yapıları bakımından tipik yeşil alg özelliklerini taşır. Üreme, sporlar vasıtasıyla gerçekleşir.
+  </p>
+  
+  <!-- 3. Charophyta -->
+  <h2>3. Charophyta (Charofitler)</h2>
+  <p>
+    Charophyta, kara bitkilerine en yakın alg grubu olarak kabul edilir. Damarsız olmalarına rağmen, hücre duvarlarındaki ve sitoplazmalarındaki düzenlemeler kara bitkileri ile benzerlikler gösterir. Üreme, sporlar ve cinsel birleşme ile gerçekleşirken, evrimsel olarak kara bitkilerinin kökenini aydınlatan önemli özellikler taşır.
+  </p>
+  
+  <!-- 4. Anthocerotophyta -->
+  <h2>4. Anthocerotophyta (Boynuz Otlari / Hornworts)</h2>
+  <p>
+    Anthocerotophyta, kara bitkileri arasında yer alan damarsız gruplardan olup, sporofitleri boynuz şeklinde uzanır. Gametofit aşaması baskın olup, basit yapılı doku düzenleri gözlemlenir. Cladistik açıdan, erken evrimleşmiş kara bitkileri arasında yer alır ve diğer damarsız bitkilerle belirgin farklılıklar gösterir.
+  </p>
+  
+  <!-- 5. Bryophyta -->
+  <h2>5. Bryophyta (Yosunlar / Mosses)</h2>
+  <p>
+    Bryophyta, gametofit aşamasının baskın olduğu ve damarsız yapılarıyla bilinen kara bitkileridir. Rizoidler aracılığıyla su ve mineralleri alırken, dallanmış sporofitler gametofite tutunur. Cladistik olarak, suya bağımlı üreme stratejileri ve basit dokuları ile diğer kara bitkilerinden ayrılır.
+  </p>
+  
+  <!-- 6. Hepaticophyta -->
+  <h2>6. Hepaticophyta (Ciğer Otlari / Liverworts)</h2>
+  <p>
+    Hepaticophyta, genellikle thalloid veya yapraklı formlarda görülen, damarsız ve nemli ortamlarda yetişen bitkilerdir. Gametofit evresi baskın olup, sporofitler oldukça basit ve kısa ömürlüdür. Cladistik olarak, kara bitkileri evriminin erken dönemlerine işaret eden özellikleriyle diğer gruplardan ayrılır.
+  </p>
+  
+  <!-- 7. Lycophyta -->
+  <h2>7. Lycophyta (Kurt Otlari / Club Mosses & Scale Trees)</h2>
+  <p>
+    Lycophyta, mikrofil yapraklara (küçük yaprak benzeri yapılar) ve basit vasküler dokuya sahip ilk vasküler bitki grubudur. Gametofit evresi ciddi oranda küçülmüş olup, sporofit yaşam formu baskındır. Cladistik açıdan, eğrelti otlarından erken ayrılmış ve kara bitkilerinin evriminde ayrı bir yol izlemişlerdir.
+  </p>
+  
+  <!-- 8. Pteridopsida -->
+  <h2>8. Pteridopsida (Eğrelti Otlari / Ferns)</h2>
+  <p>
+    Pteridopsida, geniş ve karmaşık yaprak yapıları (megafil) ile tipik bir vasküler bitki grubudur. Sporlarla üreyen bu bitkilerde, sporofit evresi tamamen baskındır ve gametofit aşaması nispeten küçüktür. Cladistik olarak, tohumlu bitkilerden evrimsel olarak ayrılan fakat gelişmiş vasküler dokuya sahip önemli bir gruptur.
+  </p>
+  
+  <!-- 9. Sphenopsida -->
+  <h2>9. Sphenopsida (At Kuyruğu Bitkileri / Horsetails)</h2>
+  <p>
+    Sphenopsida, eklemli ve silika ile güçlendirilmiş gövdeleri ile karakterize edilen, vasküler bitkiler grubudur. Sporlarla üreyen bu bitkilerde gametofit evresi çok küçüktür ve sporofit yapısı baskındır. Cladistik olarak, eğrelti otları ile yakın ilişki gösterir ve benzersiz yapısal özellikleriyle ayrılır.
+  </p>
+  
+  <!-- 10. Cycadophyta -->
+  <h2>10. Cycadophyta (Sedir Otlari / Cycads)</h2>
+  <p>
+    Cycadophyta, palm benzeri görünümü, iri konileri ve odunsu dokuları ile bilinen, tohumla üreyen eski gymnosperm grubudur. Gametofit aşaması çok küçülmüş olup, sporofit evresi baskındır. Cladistik olarak, modern tohumlu bitkilerin atası sayılabilecek özellikleri barındırır ve tropikal ile subtropikal bölgelerde yaygındır.
+  </p>
+  
+  <!-- 11. Ginkgophyta -->
+  <h2>11. Ginkgophyta (Ginkgo / Maidenhair Tree)</h2>
+  <p>
+    Ginkgophyta, benzersiz yaprak formu ve ikili damar sistemiyle öne çıkan, neredeyse tek örneği yaşayan (Ginkgo biloba) gymnosperm grubudur. Gametofit evresi çok küçüktür ve sporofit evresi tamamen baskındır. Cladistik açıdan, modern bitki evriminin kritik bir halkasını temsil eder.
+  </p>
+  
+  <!-- 12. Spermatophyta -->
+  <h2>12. Spermatophyta (Tohumlu Bitkiler / Seed Plants)</h2>
+  <p>
+    Spermatophyta, angiospermler (çiçekli bitkiler) ve gymnospermler (tohumlu ama çiçeksiz bitkiler) dahil olmak üzere tohum üretimiyle üreyen, en gelişmiş vasküler bitki grubudur. Gametofit aşaması aşırı küçülmüş olup, sporofit evresi baskındır. Cladistik olarak, bitki evriminde en ileri düzeyde karmaşıklaşmayı temsil eder ve dünya üzerinde yaklaşık 300.000 türle en çeşitli gruptur.
+  </p>
+  
+  <h2>Karşılaştırma Tablosu</h2>
+  <table>
+    <tr>
+      <th>Filum</th>
+      <th>Vasküler Sistem</th>
+      <th>Üreme Yöntemi</th>
+      <th>Cladistik Ayırım</th>
+      <th>Gametofit Baskınlığı</th>
+      <th>Sporofit Baskınlığı</th>
+      <th>Örnek Tür/Genus</th>
+      <th>Yaşam Alanı</th>
+      <th>Özel Hücresel Özellik</th>
+      <th>Yaklaşık Tür Sayısı</th>
+    </tr>
+    <tr>
+      <td>Glaucophyta</td>
+      <td>Yok</td>
+      <td>Sporlar</td>
+      <td>Peptidoglikan kalıntıları</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Cyanophora</td>
+      <td>Aquatik</td>
+      <td>Kloroplastta bakteriyel özellikler</td>
+      <td>Az sayıda</td>
+    </tr>
+    <tr>
+      <td>Chlorophyta</td>
+      <td>Yok</td>
+      <td>Sporlar</td>
+      <td>Klorofil a ve b</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Chlamydomonas, Volvox</td>
+      <td>Aquatik (tatlı &amp; tuzlu)</td>
+      <td>Tipik yeşil alg özellikleri</td>
+      <td>Binlerce</td>
+    </tr>
+    <tr>
+      <td>Charophyta</td>
+      <td>Yok</td>
+      <td>Sporlar</td>
+      <td>Kara bitkilerine yakınlık</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Chara</td>
+      <td>Tatlı su</td>
+      <td>Özel hücre duvarı yapısı</td>
+      <td>600 civarı</td>
+    </tr>
+    <tr>
+      <td>Anthocerotophyta</td>
+      <td>Yok</td>
+      <td>Sporlar</td>
+      <td>Boynuz şeklinde sporofit</td>
+      <td>Hükümdar</td>
+      <td>Sınırlı</td>
+      <td>Anthoceros</td>
+      <td>Nemli karasal</td>
+      <td>Basit doku organizasyonu</td>
+      <td>100–300</td>
+    </tr>
+    <tr>
+      <td>Bryophyta</td>
+      <td>Yok</td>
+      <td>Sporlar</td>
+      <td>Dallanmış sporofitler</td>
+      <td>Hükümdar</td>
+      <td>Bağımlı</td>
+      <td>Sphagnum</td>
+      <td>Karasal</td>
+      <td>Suya bağımlı üreme</td>
+      <td>12,000 civarı</td>
+    </tr>
+    <tr>
+      <td>Hepaticophyta</td>
+      <td>Yok</td>
+      <td>Sporlar</td>
+      <td>Thalloid/yapraklı gametofit</td>
+      <td>Hükümdar</td>
+      <td>Çok basit</td>
+      <td>Marchantia</td>
+      <td>Nemli karasal</td>
+      <td>Keskin dokusal sadelik</td>
+      <td>9,000 civarı</td>
+    </tr>
+    <tr>
+      <td>Lycophyta</td>
+      <td>Var</td>
+      <td>Sporlar</td>
+      <td>Mikrofil yapraklar</td>
+      <td>Azalmış</td>
+      <td>Hükümdar</td>
+      <td>Lycopodium</td>
+      <td>Karasal</td>
+      <td>Erken vasküler doku</td>
+      <td>~1,290</td>
+    </tr>
+    <tr>
+      <td>Pteridopsida</td>
+      <td>Var</td>
+      <td>Sporlar</td>
+      <td>Megafil ve kompleks damar</td>
+      <td>Azalmış</td>
+      <td>Hükümdar</td>
+      <td>Pteris (Eğrelti)</td>
+      <td>Karasal</td>
+      <td>Klasik vasküler doku</td>
+      <td>~9,000</td>
+    </tr>
+    <tr>
+      <td>Sphenopsida</td>
+      <td>Var</td>
+      <td>Sporlar</td>
+      <td>Eklemli gövde, silika</td>
+      <td>Azalmış</td>
+      <td>Hükümdar</td>
+      <td>Equisetum</td>
+      <td>Nemli karasal</td>
+      <td>Silika birikimi</td>
+      <td>10-15 civarı</td>
+    </tr>
+    <tr>
+      <td>Cycadophyta</td>
+      <td>Var</td>
+      <td>Tohumlar</td>
+      <td>İri koniler, palm benzeri</td>
+      <td>Çok küçülmüş</td>
+      <td>Hükümdar</td>
+      <td>Cycas</td>
+      <td>Tropikal/subtropikal</td>
+      <td>Odunsu doku</td>
+      <td>Yaklaşık 300</td>
+    </tr>
+    <tr>
+      <td>Ginkgophyta</td>
+      <td>Var</td>
+      <td>Tohumlar</td>
+      <td>Fan şeklinde yaprak, ikili damar</td>
+      <td>Çok küçülmüş</td>
+      <td>Hükümdar</td>
+      <td>Ginkgo biloba</td>
+      <td>Karasal</td>
+      <td>Benzersiz venasyon</td>
+      <td>1 (canlı)</td>
+    </tr>
+    <tr>
+      <td>Spermatophyta</td>
+      <td>Var</td>
+      <td>Tohumlar</td>
+      <td>Gelişmiş üreme organları</td>
+      <td>Aşırı küçülmüş</td>
+      <td>Hükümdar</td>
+      <td>Magnolia, Pinus, &amp; diğerleri</td>
+      <td>Karasal</td>
+      <td>Karmaşık doku organizasyonu</td>
+      <td>Yaklaşık 300,000</td>
+    </tr>
+  </table>
+
+
+<!---
+
+
+
+
+
+ <h1>Alternatif Bitki Taksonomisi</h1>
+
+
+    
+    <h2>1. Anthocerotophyta (Boynuz Otları, Ciğer Otları)</h2>
+    <p><strong>Ayırt Edici Özellikler:</strong> Boynuz şeklindeki sporofitler, damarsız yapı.</p>
+    <p><strong>Örnek Türler:</strong> Anthoceros punctatus</p>
+
+    <h2>!2. Bryophyta (Karayosunları)</h2>
+    <p><strong>Ayırt Edici Özellikler:</strong> Kalıcı dallanmış sporofitler, damarsız yapı.</p>
+    <p><strong>Örnek Türler:</strong> Sphagnum sp., Polytrichum sp.</p>
+
+    <h2>3. Charophyta (Charofitler)</h2>
+    <p><strong>Ayırt Edici Özellikler:</strong> Tatlı suda yaşarlar, streptofit algler grubunda yer alır.</p>
+    <p><strong>Örnek Türler:</strong> Chara vulgaris</p>
+
+    <h2>4. Chlorophyta (Yeşil Algler)</h2>
+    <p><strong>Ayırt Edici Özellikler:</strong> Klorofil a ve b pigmentlerine sahiptir, ototrofik organizmalardır.</p>
+    <p><strong>Örnek Türler:</strong> Chlamydomonas sp., Volvox sp.</p>
+
+    <h2>5. Cycadophyta (Sikaslar, Gymnosperm)</h2>
+    <p><strong>Ayırt Edici Özellikler:</strong> Tohumlu bitkiler, bileşik yapraklı taç.</p>
+    <p><strong>Örnek Türler:</strong> Cycas revoluta</p>
+
+    <h2>6. Ginkgophyta (Mabet Ağacı, Ginkgo)</h2>
+    <p><strong>Ayırt Edici Özellikler:</strong> Açık tohumlu, meyvesiz üreme.</p>
+    <p><strong>Örnek Türler:</strong> Ginkgo biloba</p>
+
+    <h2>7. Glaucophyta (Glaukofitler, Glaucocystophytes, Glaucocystids)</h2>
+    <p><strong>Ayırt Edici Özellikler:</strong> Mavi-yeşil kloroplastlar.</p>
+    <p><strong>Örnek Türler:</strong> Glaucocystis nostochinearum</p>
+
+    <h2>8. Gnetophyta (Gnetofitler, Gnetales, Gymnosperm)</h2>
+    <p><strong>Ayırt Edici Özellikler:</strong> Odunsu damarsal yapı, tohumlu.</p>
+    <p><strong>Örnek Türler:</strong> Ephedra sinica</p>
+
+    <h2>9. Lycopodiophyta (Kurtpençesi Bitkileri, Damarlu bitkiler)</h2>
+    <p><strong>Ayırt Edici Özellikler:</strong> Mikrofil yapraklar, damarsal yapı.</p>
+    <p><strong>Örnek Türler:</strong> Lycopodium clavatum</p>
+
+    <h2>!10. Magnoliophyta (Çiçekli Bitkiler, Angiospermea, Kapalı Tohumlular)</h2>
+    <p><strong>Ayırt Edici Özellikler:</strong> Çiçekler ve meyveler.</p>
+    <p><strong>Örnek Türler:</strong> Magnolia grandiflora</p>
+
+    <h2>Bitki Filumlarının Karşılaştırılması</h2>
+    <table>
+        <tr>
+            <th>Filum</th>
+            <th>Vasküler Sistem</th>
+            <th>Tohum</th>
+            <th>Çiçek</th>
+            <th>Sporofit</th>
+            <th>Örnek Türler</th>
+        </tr>
+        <tr>
+            <td>Bryophyta</td>
+            <td>Yok</td>
+            <td>Yok</td>
+            <td>Yok</td>
+            <td>Kalıcı değil</td>
+            <td>Polytrichum sp.</td>
+        </tr>
+        <tr>
+            <td>Lycopodiophyta</td>
+            <td>Var</td>
+            <td>Yok</td>
+            <td>Yok</td>
+            <td>Kalıcı</td>
+            <td>Lycopodium clavatum</td>
+        </tr>
+        <tr>
+            <td>Magnoliophyta</td>
+            <td>Var</td>
+            <td>Var</td>
+            <td>Var</td>
+            <td>Kalıcı</td>
+            <td>Magnolia grandiflora</td>
+        </tr>
+        <tr>
+            <td>Pinophyta</td>
+            <td>Var</td>
+            <td>Var</td>
+            <td>Yok</td>
+            <td>Kalıcı</td>
+            <td>Pinus sylvestris</td>
+        </tr>
+        <tr>
+            <td>Ginkgophyta</td>
+            <td>Var</td>
+            <td>Var</td>
+            <td>Yok</td>
+            <td>Kalıcı</td>
+            <td>Ginkgo biloba</td>
+        </tr>
+    </table>
+
+
+-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<large>DOKULAR</large>
+
+
+
+
+<h1>Meristem Doku</h1>
+
+<p>Meristem dokusu, bitkilerde büyüme ve gelişme sağlayan, bölünme kapasitesine sahip hücrelerden oluşan özel dokulardır. Bitkilerde iki temel meristem türü vardır: apikal (tepe) meristem ve lateral (yan) meristem. Meristemler, bitkinin sürekli büyümesini ve yeni organlar üretmesini sağlar. Meristem dokusu, bitkilerin form ve yapısını düzenler. Aşağıda meristem doku türleri ve özellikleri hakkında daha fazla bilgi bulabilirsiniz.</p>
+
+<h2>1. Meristem Doku Türleri</h2>
+<p>Meristem dokuları, yerlerine ve kökenlerine göre çeşitli alt gruplara ayrılabilir.</p>
+
+<h3>1.1. Yere Göre Meristemler</h3>
+<ul>
+    <li><strong>Apikal Meristem (Tepe Meristemi):</strong> Apikal meristem, bitkilerin uçlarında bulunan büyüme merkezleridir. Bu meristemler, bitkilerin dikey büyümesini sağlar ve organların (yapraklar, çiçekler, kökler) oluşumunu başlatır. Apikal meristemler, kök ve sürgün uçlarında bulunur ve büyüme genellikle ilk başta dikey olarak gerçekleşir.</li>
+    <li><strong>Lateral Meristem (Yan Meristem):</strong> Lateral meristemler, bitkinin yanlarında bulunan büyüme merkezleridir. Bu meristemler, bitkinin kalınlaşmasını sağlar. Örneğin, odun (ksilem) ve soğan dokusunu (floem) oluşturan kambium gibi yapılar, lateral meristemlere örnek olarak verilebilir. Bu tip meristemler, bitkinin ikincil büyümesini sağlar.</li>
+</ul>
+
+
+<h3>1.2. Kökenlerine Göre Meristemler</h3>
+<ul>
+    <li><strong>Birincil Meristem (Primer Meristem):</strong> Birincil meristem, bitkilerde embriyonik gelişim sırasında oluşan ve bitkilerin ilk büyümesini sağlayan meristem türüdür. Birincil meristemler, kök ve sürgün uçlarında bulunan apikal meristemlerde bulunur ve bu bölge bitkinin uzunluk olarak büyümesini sağlar.</li>
+    <li><strong>İkincil Meristem (Sekonder Meristem):</strong> Sekonder meristemler, birincil meristemlerin işlevini tamamladıktan sonra oluşan meristem türleridir. Lateral meristemler bu grupta yer alır. Kambium ve kork (felogen) gibi yapıların bulunduğu bu bölgelerde bitkinin kalınlaşması sağlanır.</li>
+</ul>
+
+
+<p><strong>Apikal Meristem (Tepe Meristemi) Detay:</strong> Apikal meristem, bitkilerin uçlarında bulunan büyüme merkezleridir. Bu meristemler, bitkilerin dikey büyümesini sağlar ve organların (yapraklar, çiçekler, kökler) oluşumunu başlatır. Apikal meristemler, kök ve sürgün uçlarında bulunur ve büyüme genellikle ilk başta dikey olarak gerçekleşir.</p>
+
+<p><strong>Ne Zaman APIKAL Büyüme Gerçekleşir?</strong></p>
+<ul>
+    <li>Apikal meristemin etkinliği, genellikle genç bitkilerde daha belirgindir ve bitkinin yaşamının başlarında aktif olur.</li>
+    <li>İlkbahar ve yaz mevsimlerinde, su ve ışık koşullarının uygun olmasıyla birlikte, apikal meristem büyümesi hızlanır. Bu dönemde bitki daha hızlı büyür.</li>
+    <li>Apikal meristem, özellikle sıcaklık ve suyun bol olduğu koşullarda, yüksek fotosentez etkinliği ile de desteklenen büyüme sağlar.</li>
+</ul>
+
+<p><strong>Hangi Bitkilerde Görülür?</strong></p>
+<ul>
+    <li>Apikal meristem, tüm bitkilerde bulunur, ancak en belirgin şekilde çiçekli bitkilerde ve odunsu bitkilerde (ağaçlar ve çalılar) gözlemlenir.</li>
+    <li>Bitkilerin uç bölgelerindeki apikal meristem hücreleri sürekli bölünerek, yeni organların (yaprak, çiçek vb.) gelişimini başlatır.</li>
+</ul>
+
+<p><strong>Hormonal Kontrol:</strong></p>
+<ul>
+    <li>Apikal meristem büyümesi, özellikle auxin (IAA) hormonu tarafından kontrol edilir. Auxin, hücre bölünmesini ve elongasyonunu teşvik eder.</li>
+    <li>Ayrıca gibberellin gibi diğer büyüme hormonları da apikal meristemde büyümeyi artırabilir.</li>
+    <li>Auxin, apikal meristemde sentezlenir ve bitkinin uç kısmında yoğunlaşarak büyüme işlemlerini başlatır.</li>
+</ul>
+
+<p><strong>Fotosentez ile İlişkisi:</strong></p>
+<ul>
+    <li>Fotosentez, apikal meristemlerin büyümesini destekleyen bir süreçtir. Apikal meristem büyüdükçe yeni yapraklar üretilir ve bu yapraklar fotosentez için kullanılır.</li>
+    <li>Yeterli ışık ve su sağlandığında, apikal meristemlerin büyümesi hızlanır, bu da bitkinin daha fazla yaprak üretmesi anlamına gelir ve fotosentez etkinliği artar.</li>
+</ul>
+
+<p><strong>Lateral Meristem (Yan Meristem) Detay:</strong> Lateral meristemler, bitkinin yanlarında bulunan büyüme merkezleridir. Bu meristemler, bitkinin kalınlaşmasını sağlar. Örneğin, odun (ksilem) ve soğan dokusunu (floem) oluşturan kambium gibi yapılar, lateral meristemlere örnek olarak verilebilir. Bu tip meristemler, bitkinin ikincil büyümesini sağlar.</p>
+
+<p><strong>Ne Zaman LATERAL Büyüme Gerçekleşir?</strong></p>
+<ul>
+    <li>Lateral meristemler, genellikle bitki büyüdükten ve kök ve sürgün uzunluğu arttıktan sonra devreye girer.</li>
+    <li>Odunsu bitkilerde, lateral meristemlerin etkisiyle, bitkinin çapı artar ve bu süreç genellikle bitkinin ikincil büyümesi olarak tanımlanır.</li>
+</ul>
+
+<p><strong>Hangi Bitkilerde Görülür?</strong></p>
+<ul>
+    <li>Lateral meristemler, genellikle -odunsu bitkilerde görülür. Bu bitkilerde, kambium ve felogen gibi lateral meristemler bitkinin büyüme ve kalınlaşmasında önemli rol oynar.</li>
+    <li>Odunsuz bitkilerde (örneğin, bazı otlar) lateral meristemler çok az gelişmiştir veya yoktur.</li>
+</ul>
+
+<p><strong>Hormonal Kontrol:</strong></p>
+<ul>
+    <li>Lateral meristemler genellikle auxin ve cytokinin gibi hormonlarla kontrol edilir. Bu hormonlar, bitkilerin lateral büyümesini ve hücre bölünmesini teşvik eder.</li>
+    <li>Auxin, bitkinin uç kısmından daha düşük bir yoğunlukta bulunarak, kambium ve diğer lateral meristemlerde büyümeyi teşvik eder.</li>
+</ul>
+
+<p><strong>Fotosentez ile İlişkisi:</strong></p>
+<ul>
+    <li>Lateral meristemlerin büyümesi doğrudan fotosentezle ilişkilidir. Yapraklardan alınan su ve karbondioksit ile fotosentez sonucu üretilen glikoz, bitkinin kalınlaşmasını ve büyümesini destekler.</li>
+    <li>Bitkilerde fotosentez ile sağlanan enerji, lateral meristemlerdeki hücrelerin aktif bölünmesini sağlar.</li>
+</ul>
+
+
+<p><strong>Birincil Meristem (Primer Meristem) Detay:</strong> Birincil meristem, bitkilerde embriyonik gelişim sırasında oluşan ve bitkilerin ilk büyümesini sağlayan meristem türüdür. Birincil meristemler, kök ve sürgün uçlarında bulunan apikal meristemlerde bulunur ve bu bölge bitkinin uzunluk olarak büyümesini sağlar.</p>
+
+<p><strong>Ne Zaman PRIMER Büyüme Gerçekleşir?</strong></p>
+<ul>
+    <li>Birincil meristemler, embriyonik gelişim sırasında aktif olarak çalışır ve bitkinin ilk büyümesini başlatır.</li>
+    <li>Bu büyüme, genellikle ilkbaharda ve yazda hızlanır, çünkü su ve ışık koşulları bu dönemlerde bitkilerin büyümesi için en uygun olanıdır.</li>
+</ul>
+
+<p><strong>Hangi Bitkilerde Görülür?</strong></p>
+<ul>
+    <li>Birincil meristemler tüm bitkilerde bulunur. Ancak özellikle çiçekli bitkilerde ve genç odunsu bitkilerde bu büyüme çok belirgindir.</li>
+</ul>
+
+<p><strong>Hormonal Kontrol:</strong></p>
+<ul>
+    <li>Birincil meristem büyümesi, özellikle auxin ve gibberellin hormonları tarafından kontrol edilir. Bu hormonlar, hücre bölünmesini ve uzamasını teşvik eder.</li>
+    <li>Auxin, özellikle apikal meristemde yoğunlaşır ve büyümeyi başlatır.</li>
+</ul>
+
+<p><strong>İkincil Meristem (Sekonder Meristem) Detay:</strong> Sekonder meristemler, birincil meristemlerin işlevini tamamladıktan sonra oluşan meristem türleridir. Lateral meristemler bu grupta yer alır. Kambium ve kork (felogen) gibi yapıların bulunduğu bu bölgelerde bitkinin kalınlaşması sağlanır.</p>
+
+<p><strong>Ne Zaman SEKONDER Büyüme Gerçekleşir?</strong></p>
+<ul>
+    <li>İkincil büyüme, bitkinin ilk uzunluk artışından sonra başlar ve bitkinin kalınlaşmasını sağlar.</li>
+    <li>Bu büyüme, genellikle odunsu bitkilerde belirgindir ve bitkinin yaşlandıkça gerçekleşir.</li>
+</ul>
+
+<p><strong>Hangi Bitkilerde Görülür?</strong></p>
+<ul>
+    <li>İkincil meristemler genellikle odunsu bitkilerde (ağaçlar, çalılar) görülür. Bu bitkilerde kambium meristemi, odun ve soğan dokusunun üretiminden sorumludur.</li>
+</ul>
+
+<p><strong>Hormonal Kontrol:</strong></p>
+<ul>
+    <li>İkincil büyüme, genellikle cytokinin ve auxin hormonları tarafından düzenlenir. Bu hormonlar, kambium ve felogen gibi lateral meristemlerin bölünmesini ve büyümesini teşvik eder.</li>
+</ul>
+
+<p><strong>Fotosentez ile İlişkisi:</strong></p>
+<ul>
+    <li>İkincil büyüme, fotosentez tarafından üretilen enerjiyle beslenir. Yapraklar ve diğer organlar, fotosentez sayesinde sağlanan şekerleri ikincil büyüme için kullanır.</li>
+</ul>
+
+
+
+<h2>2. Birincil ve İkincil Büyüme</h2>
+<p>Meristemler, bitkilerin büyümesini sağlamakla birlikte bu büyüme türleri birincil ve ikincil olmak üzere iki ana kategoride incelenebilir.</p>
+
+<ul>
+    <li><strong>Birincil Büyüme:</strong> Birincil büyüme, apikal meristemlerin etkisiyle başlar ve bitkinin uzunluğunun artmasına neden olur. Bu büyüme, sürgün uçlarında ve kök uçlarında gerçekleşir. Birincil büyüme, bitkilerin yeni organlar (yaprak, çiçek vb.) üretmesini sağlar.</li>
+    <li><strong>İkincil Büyüme:</strong> İkincil büyüme, lateral meristemlerin (kambium ve felogen) etkisiyle gerçekleşir. Bu büyüme, bitkinin çapının artmasına neden olur ve genellikle odunsu bitkilerde görülür. Odun dokusunun ve soğan dokusunun (floem) artması ikincil büyüme sonucu olur.</li>
+</ul>
+<h3>Sekonder Büyüme Detay</h3>
+
+<ul>
+    <li><strong>Bitkinin lateral meristem aktivitesi sayesinde kalınlaşma yapmasına sekonder büyüme denir.</strong></li>
+    <li>Sekonder büyümede <strong>damar kambiyumu</strong> ve <strong>mantar kambiyumu</strong> görev alır.</li>
+    <li>Odunsu ve bazı otsu bitkilerde görülür.</li>
+    <li>Monokotil bitkilerde görülmez.</li>
+    <li>Kök ve gövdede benzer şekilde gerçekleşir.</li>
+    <li><strong>Uç meristemin farklılaşması ile oluşan primer ksilem ve primer floem arasında damar kambiyumu bulunur.</strong></li>
+    <li>Damar kambiyumu yılda iki kere aktif olur. İçe doğru sekonder ksilemi dışa doğru sekonder floemi oluşturur.</li>
+    <li><strong>Çevre şartlarının daha elverişli olduğu büyüme zamanlarında oluşturulan hücreler</strong> bol sitoplazmalı, ince çeperli ve açık renkliyken, daha az elverişli olduğu zamanlardaki hücreler ise az sitoplazmalı, kalın çeperli ve koyu renklidir.</li>
+    <li>Damar kambiyumunun aktivitesi sonucunda gövde kalınlaşır. Dıştaki epidermis dokusu parçalanır.</li>
+    <li>Mantar kambiyumunun aktivitesi ile peridermis dokusu oluşturulur.</li>
+    <li><strong>Çift yıllık otsu bitkilerde mantar kambiyumu bulunmaz.</strong> Bu bitkilerde sadece damar kambiyumu bulunur. Peridermis oluşturamadıklarından 2. yılın sonunda ölürler.</li>
+    <li>Meristem dokularının farklılaşarak bölünme özelliklerini kaybetmeleri sonucunda oluşmuş dokulardır. Görev ve yapılarına göre çeşitlenirler.</li>
+</ul>
+
+<h2>3. Odunsuluk ve Sürgen</h2>
+<p>Bitkilerin odunsu yapıları ve sürgün büyümesi, ikincil büyüme ile ilişkilidir.</p>
+
+<ul>
+    <li><strong>Odunsuluk:</strong> Odunsu bitkilerde, kambium meristemi ile ikinci büyüme ile odun dokusunun (ksilem) ve soğan dokusunun (floem) üretimi gerçekleşir. Bu odunsuluk, bitkinin kalınlaşmasına ve sertleşmesine yol açar. Odunsu bitkiler, kambium tarafından üretilen hücrelerle büyürler.</li>
+    <li><strong>Sürgen:</strong> Sürgen, yeni filizlerin veya yan sürgünlerin üretildiği bölgelere verilen isimdir. Bu sürgünler apikal meristemlerden başlayarak hızlı bir şekilde büyür ve yeni organlar üretirler. Sürgenlerin büyümesi, bitkinin daha fazla yaprak, çiçek ve dallar üretmesini sağlar.</li>
+</ul>
+
+<h2>4. Özelleşme</h2>
+<p>Meristem hücreleri, büyüme ve gelişim sırasında farklı organlar ve dokular oluşturacak şekilde özelleşirler.</p>
+
+<ul>
+    <li><strong>Özelleşme:</strong> Meristem hücreleri, zamanla farklı işlevlere sahip hücrelere dönüşürler. Örneğin, bazı hücreler ksilem ve floem hücrelerine, bazıları ise yaprak hücrelerine dönüşebilir. Bu özelleşme, bitkinin farklı organlarının ve dokularının işlevsel olmasını sağlar.</li>
+</ul>
+
+<h2>5. Organ Oluşumu ve Hücre Arası Boşluklar</h2>
+<p>Meristem dokusunun büyümesi, organların oluşumuna yol açar ve organlar arasındaki boşlukları da etkiler.</p>
+
+<ul>
+    <li><strong>Organ Oluşumu:</strong> Apikal meristemler, yeni organların (yapraklar, çiçekler, sürgünler) üretiminde rol oynar. Organ oluşumu sırasında, meristem hücreleri sürekli bölünür ve sonrasında özelleşir. İkincil büyüme de organların kalınlaşmasına yardımcı olur.</li>
+    <li><strong>Hücre Arası Boşluklar:</strong> Organların gelişimi sırasında, hücreler arasında boşluklar meydana gelir. Bu boşluklar, su ve besin maddelerinin taşınması için önemlidir. Ayrıca, bitkinin yapısal dayanıklılığını artıran özelliklere de sahiptir.</li>
+</ul>
+
+<h2>6. Metabolizmaları</h2>
+<p>Meristem dokularının metabolizmaları, büyüme ve gelişme süreçlerinin temelini oluşturur. Bu süreçler, enerji üretimi ve hücresel aktiviteleri içerir.</p>
+
+<ul>
+    <li><strong>Metabolizmaları:</strong> Meristem hücreleri, sürekli bölünme ve büyüme yaptığı için, enerji ve besin maddeleri açısından yüksek talepleri vardır. Fotosentez ve solunum gibi metabolik süreçler, meristemlerin enerjik faaliyetlerini sürdürebilmesi için gereklidir. Ayrıca, hormonlar (özellikle auksin ve gibberellin) meristem büyümesini düzenler.</li>
+</ul>
+
+<h2>7. Kambium ve Mantor Kambiyum</h2>
+<p>Kambium meristem, odunsu bitkilerin ikincil büyümesini sağlayan meristem türüdür.</p>
+
+<ul>
+    <li><strong>Kambium:</strong> Kambium, bitkilerin yanlarında bulunan ve ikincil büyüme sağlayan meristem türüdür. Kambium meristemi, odun dokusunu (ksilem) ve soğan dokusunu (floem) üretir. Kambiumun bölünmesi, bitkinin çapını artırarak odunsu yapıyı oluşturur.</li>
+    <li><strong>Mantor Kambiyum (Felogen):</strong> Mantor kambiyum, bitkinin epidermisini (dış örtüsünü) oluşturan bir meristemdür. Bu doku, bitkinin koruyucu kabuğunu (periderm) oluşturan hücreleri üretir.</li>
+</ul>
+
+<h2>8. Diğer Meristem Türleri</h2>
+
+<ul>
+    <li><strong>Shoot Apical Meristem (SAM - Sürgün Apikal Meristemi):</strong> Bu meristem, bitkinin sürgün uçlarında bulunur ve yeni yapraklar, dallar ve çiçekler üretir.</li>
+    <li><strong>Root Apical Meristem (RAM - Kök Apikal Meristemi):</strong> Kök uçlarında bulunan bu meristem, köklerin büyümesini sağlar ve köklerdeki organların (kök saçları, yan kökler) gelişimini başlatır.</li>
+    <li><strong>Intercalary Meristem:</strong> Bu meristem, bitkilerin gövde kısmında yer alır ve büyüme genellikle genç sürgünlerde görülür. Bu tür meristemler, bazı bitkilerde (örneğin graminler) hızlı büyüme sağlar.</li>
+    <li><strong>Floral Meristem:</strong> Çiçeklerin gelişiminden sorumlu olan meristemdir. Çiçek organlarını (petal, stamen, pistil vb.) oluşturur.</li>
+    <li><strong>Tallus:</strong> Yaprakları olmayan ve genellikle su bitkilerinde bulunan meristemdir. Sürgünlerin ve köklerin gelişimi için görev alır.</li>
+    <li><strong>Klonlama:</strong> Bitkilerin aynı genetik yapıya sahip yeni bireyler oluşturmak amacıyla yapılan üreme yöntemidir. Meristem hücreleri, klonlama işleminde yeni bitkiler elde etmek için kullanılır.</li>
+</ul>
+
+
+    <h1>Bitki Parankiması</h1>
+
+    <p>Bitki parankiması, bitkilerin temel yapı taşlarından biri olup, vücutlarında çeşitli önemli işlevleri yerine getiren bir doku türüdür. Parankima hücreleri genellikle ince duvarlara sahip, büyük bir vakuola ve canlı bir çekirdeğe sahiptir. Bu hücreler, bitkilerin hayatta kalmasına yardımcı olan birçok metabolik işlevi gerçekleştirir. Parankima, bitki doku sistemlerinin çoğunda yer alır ve fotosentez, besin depo etme, gaz alışverişi, su ve besin maddelerinin taşınması gibi çok sayıda temel görevi yerine getirir.</p>
+
+    <h2 class="section-title">Parankima Çeşitleri ve İşlevleri</h2>
+    <p>Bitki parankiması, işlevlerine göre farklı türlere ayrılabilir. Her bir parankima türü, bitkinin farklı bölümlerinde bulunur ve belirli işlevleri yerine getirir. İşte parankima çeşitleri ve bu çeşitlerin işlevlerine dair detaylı açıklamalar:</p>
+
+    <h3 class="sub-section">1. Fotosentez [Özümleme (Asimilasyon)] Parankiması</h3>
+    <p>Fotosentez parankiması, bitkilerin ışık enerjisini kimyasal enerjiye dönüştürdüğü temel hücrelerdir. Bu parankima türü, özellikle yapraklarda bulunan ve kloroplastları içeren hücrelerden oluşur. Kloroplastlar, güneş ışığındaki enerjiyi kullanarak su ve karbondioksitten glikoz üretir. Bu süreç, bitkinin yaşamını sürdürebilmesi için gerekli olan enerji üretimini sağlar.</p>
+<h4 class="sub-sub-section">1.1. Palizat Parankiması</h4>
+<p>Palizat parankiması, yaprağın üst epidermisinin hemen altında yer alan, silindirik hücrelerden oluşan bir doku türüdür. Hücreleri sıkı dizilmiş olup, yüksek kloroplast yoğunluğuna sahiptir. Fotosentez sürecinin büyük bir kısmı burada gerçekleşir.</p>
+
+<h4 class="sub-sub-section">1.2. Sünger Parankiması</h4>
+<p>Sünger parankiması, yaprağın alt kısmında yer alan, daha gevşek yapılı hücrelerden oluşan bir dokudur. Bu doku, gaz değişimini kolaylaştıran hava boşlukları içerir. Aynı zamanda, fotosentez yapabilen kloroplastlı hücreler barındırır ve gaz alışverişine yardımcı olur.</p>
+    <h3 class="sub-section">2. Depo Parankiması</h3>
+    <p>Depo parankiması, bitkilerin besin maddelerini depoladığı hücrelerden oluşur. Bu hücreler, nişasta, yağ ve su gibi maddeleri depolayabilirler. Depo parankiması, genellikle köklerde, gövdelerde ve meyvelerde bulunur. Bu dokular, bitkinin enerji ihtiyacı olduğu zamanlarda depo edilen maddeleri serbest bırakır. Örneğin, patates gibi bazı bitkilerde depo parankiması nişasta depolar.</p>
+
+    <h3 class="sub-section">3. Havalandırma Parankiması</h3>
+    <p>Havalandırma parankiması, bitkilerin su altında veya bataklık gibi nemli ortamlarda gaz alışverişini gerçekleştirmesine yardımcı olan dokulardır. Bu parankima hücreleri geniş boşluklar içerir ve bu sayede oksijenin bitki dokularına girmesine ve karbondioksidin dışarıya atılmasına olanak tanır. Havalandırma parankiması, özellikle su bitkilerinde yaygındır.</p>
+
+    <h3 class="sub-section">4. İletim Parankiması</h3>
+    <p>İletim parankiması, bitkilerde su ve besin maddelerinin taşınmasına yardımcı olan dokulardır. Bu parankima türü, odun dokusunda (xylem) ve floem dokusunda bulunur. Xylem, su ve mineralleri köklerden yapraklara taşırken, floem ise organik besin maddelerini (özellikle şekerleri) bitkinin çeşitli bölgelerine iletir.</p>
+
+    <div class="note">
+        <p><strong>Not:</strong> Parankima hücreleri esnek ve çoğalma yeteneğine sahiptir. Bu özellikleri sayesinde bitkilerde hasar gördüklerinde yeniden büyüyebilir ve onarılabilirler.</p>
+    </div>
+
+    <h2 class="section-title">Bitki Parankimasındaki Bileşenler</h2>
+    <p>Bitki parankiması, belirli bileşenlerden oluşur. Bu bileşenler farklı işlevlere sahiptir ve bitkinin hayatta kalmasına yardımcı olur. Aşağıda, bitki parankimasında bulunan temel bileşenler ve bunların işlevleri açıklanmıştır:</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Parankima Türü</th>
+                <th>Bulunduğu Yer</th>
+                <th>İşlevi</th>
+                <th>Örnekler</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Fotosentez Parankiması</td>
+                <td>Yapraklar</td>
+                <td>Güneş ışığından enerji üretir, fotosentez yapar, oksijen üretir</td>
+                <td>Yapraklar, yeşil gövdeler</td>
+            </tr>
+            <tr>
+                <td>Depo Parankiması</td>
+                <td>Kökler, gövdeler, meyveler</td>
+                <td>Besin maddelerini (nişasta, yağ, su) depolar, enerji rezervi sağlar</td>
+                <td>Patates, havuç, soğan</td>
+            </tr>
+            <tr>
+                <td>Havalandırma Parankiması</td>
+                <td>Su bitkileri, bataklık bitkileri</td>
+                <td>Gaz alışverişi sağlar, oksijen ve karbondioksit değişimini düzenler</td>
+                <td>Sazlık bitkileri, lotus</td>
+            </tr>
+            <tr>
+                <td>İletim Parankiması</td>
+                <td>Odun dokusu, floem</td>
+                <td>Su, mineraller ve besin maddelerini taşır, bitkinin hayatta kalmasını sağlar</td>
+                <td>Ağaçlar, çalılar</td>
+            </tr>
+        </tbody>
+    </table>
+
+
+
+
+
+
+<h2>Kollenkima (Pek Doku)</h2>
+<p>
+Kollenkima, özellikle büyümekte ve gelişmekte olan bitkilerde bulunan bir doku türüdür. Genellikle genç gövdelerde, yaprak orta damarlarında, çiçek saplarında ve yaprak saplarında yer alır. Bu doku, bitkiye mekanik destek sağlar ve bitkinin esneklik ve gerilme özelliklerini geliştirir. Kollenkima hücrelerinin duvarları, selüloz ve pektin maddelerinin birikmesiyle kalınlaşır. Bu kalınlaşma, bitkilerin bükülme ve eğilme gibi fiziksel baskılara karşı daha dayanıklı hale gelmesini sağlar. Kollenkima hücrelerinde sitoplazma ve çekirdekler bulunur, bu nedenle bu doku canlı hücrelerden oluşur.
+</p>
+<p>  
+Kollenkima hücrelerinin iki ana tipi vardır:
+</p>
+<ul>
+  <li><strong>Köşe Kollenkiması:</strong> Hücrelerin köşelerinde kalınlaşma gözlemlenir. Bu tip kalınlaşma, hücrelerin dayanıklılığını artırır ve bitkinin yapısal bütünlüğünü sağlar.</li>
+  <li><strong>Levha Kollenkiması:</strong> Hücre çeperindeki kalınlaşma, hücre duvarının paralel olarak genişler. Bu tip kalınlaşma, özellikle yaprak ve dal gibi uzun uzuvlarda bitkiye esneklik kazandırır.</li>
+</ul>
+
+<h2>Sklerankima (Sert Doku)</h2>
+<p>
+Sklerankima, bitkilerin büyümesi tamamlanmış kısımlarında bulunan bir doku türüdür. Başlangıçta canlı olan hücreler, zamanla çeperlerinde lignin ve selüloz birikimi sonucu ölür ve madde alışverişi yapamaz hale gelir. Bu dokunun hücreleri, sert ve dayanıklı yapılarıyla bitkiye mekanik destek sağlar. Sklerankima hücreleri, bitkinin çeperlerinin kalınlaşması ve ölmesiyle cansız hale gelir, bu da onları daha dayanıklı ve sağlam kılar. Ancak, bazı sklerankima lifleri esneklik gösterebilir.
+</p>
+<p>
+Sklerankima, iki ana hücre türünden oluşur:
+</p>
+<ul>
+  <li><strong>Sklerankima Lifleri:</strong> Bu uzun ve dar hücreler, özellikle sarımsak, keten ve kenevir gibi bitkilerde bulunur. Bu lifler bitkiye destek sağlar ve esnek olmalarına rağmen oldukça dayanıklıdır. Sklerankima lifleri, halat yapımı, kumaş üretimi gibi alanlarda insan kullanımı için önemlidir.</li>
+  <li><strong>Taş Hücreleri:</strong> Bu hücreler armut, ayva, ceviz ve fındık gibi sert kabuklu meyvelerin dış kısmında veya tohum kabuklarında bulunur. Taş hücrelerinin boyutları genellikle eşittir ve köşeli veya yıldız şeklinde olabilirler. Bu hücreler, meyvelerin dış yapısına sertlik ve dayanıklılık kazandırır.</li>
+</ul>
+
+<h2>Karşılaştırma: Kollenkima ve Sklerankima</h2>
+<table border="1">
+  <thead>
+    <tr>
+      <th>Özellik</th>
+      <th>Kollenkima</th>
+      <th>Sklerankima</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Hücre Durumu</strong></td>
+      <td>Canlı hücrelerden oluşur.</td>
+      <td>Cansız hücrelerden oluşur.</td>
+    </tr>
+    <tr>
+      <td><strong>Bulunduğu Yer</strong></td>
+      <td>Genç bitkilerde, büyüme ve gelişme aşamasında bulunan kısımlar (gövde, dal, yaprak sapı, meyve sapı).</td>
+      <td>Büyümesi tamamlanmış kısımlar (ceviz kabuğu, meyve çekirdekleri, sert meyve kabukları).</td>
+    </tr>
+    <tr>
+      <td><strong>Esneklik</strong></td>
+      <td>Esnek olup bükülme ve gerilmeye karşı dayanıklıdır.</td>
+      <td>Esnek değil, serttir (sklerankima lifleri hariç).</td>
+    </tr>
+    <tr>
+      <td><strong>Hücre Çeperi</strong></td>
+      <td>Selüloz ve pektin ile kalınlaşmıştır.</td>
+      <td>Selüloz ve lignin ile kalınlaşmıştır.</td>
+    </tr>
+    <tr>
+      <td><strong>Çekirdek ve Sitoplazma</strong></td>
+      <td>Sitoplazma ve çekirdekleri bulunur.</td>
+      <td>Sitoplazma ve çekirdekleri yoktur.</td>
+    </tr>
+    <tr>
+      <td><strong>Çeşitleri</strong></td>
+      <td>Köşe kollenkiması, levha kollenkiması.</td>
+      <td>Sklerankima lifleri, taş hücreleri.</td>
+    </tr>
+  </tbody>
+</table>
+
+-
+
+
+
+
+   <h1>3. ÖRTÜ DOKU (KORUYUCU DOKU)</h1>
+    <p>Bitki organlarının dış yüzeyini örten dokudur.</p>
+    <p><strong>Örtü doku;</strong> kök, gövde, yaprak ve meyvelerin üzerini örten dokudur. Epidermis ve peridermisten oluşur.</p>
+
+    <h2>A- Epidermis</h2>
+    <p>Tek sıra hücrelerden oluşan bitkinin yaprak, genç gövde ve kök gibi yapıların üzerini örten en dış tabakadır.</p>
+    <h3>Özellikleri:</h3>
+    <ul>
+        <li>Hücreleri büyük kofullu, az sitoplazmalıdır.</li>
+        <li>Kloroplast bulunmaz, fotosentez yapmaz. (Tütün bitkisi, şeker otu, bazı eğrelti türleri ve bazı gölge ve su bitkileri hariç.)</li>
+        <li>Hücrelerinin arasında boşluk bulunmaz.</li>
+        <li>Genellikle tek sıra halinde dizilir.</li>
+    </ul>
+
+    <h3>Şekil: Epidermis Hücreleri ve Kütikula</h3>
+    <p>Epidermis hücrelerinin dışarıya bakan yüzeyinde su kaybını önleyen mumsu yapıda kutin denilen madde birikimi ile oluşan kutikula tabakası bulunur.</p>
+    <ul>
+        <li>Kütükula tabakası bitkiyi su kaybından ve mekanik etkilerden korur.</li>
+        <li>Nemli ortam bitkilerinin kutikulası ince, kurak ortam bitkilerinin ise kalındır.</li>
+    </ul>
+
+    <h3>Özellikler:</h3>
+    <ul>
+        <li>Otsu bitkilerin her yeri, odunsu bitkilerin ise genç gövde ve kökleri ve yaprakları örten genellikle tek katlı olan dokudur.</li>
+        <li>Hücreleri klorofil taşımaz ve aralarında boşluk yoktur.</li>
+        <li>Dış tarafa doğru kütin salgılarlar. Bu salgı kütikula tabakasını oluşturur. Bu tabaka su kaybını engeller. Işığa karşı geçirgendir ancak kalın olması durumunda ışık geçirgenliğini azaltarak fotosenteze olumsuz etki yapar. Kökte bulunmaz.</li>
+        <li>Kurak bölge bitkilerinde kütikula kalınken nemli bölge bitkilerinde incedir.</li>
+        <li>Kutikula tabakası epidermisin farklılaşması sonucu oluşmamıştır.</li>
+        <li>Bitkinin toprak altı organlarında (kök sisteminde) kütikula tabakası bulunmaz. Stoma oluşturmaz.</li>
+    </ul>
+
+    <h3>Not:</h3>
+    <p>Bitkinin toprak altı organlarında (kök sisteminde) kütikula tabakası bulunmaz. Stoma oluşturmaz.</p>
+
+    <h2>1. Epidermis Hücrelerinin Farklılaşması</h2>
+    <p>Epidermis hücrelerinin farklılaşmasıyla oluşan yapılar:</p>
+    <ul>
+        <li>Stoma</li>
+        <li>Hidatot</li>
+        <li>Tüy</li>
+        <li>Emergens (Diken)</li>
+    </ul>
+
+    <h3>a. Stoma</h3>
+    <ul>
+        <li>Genellikle bitkilerin yeşil kısımlarında, özellikle yaprak ve gövde.</li> 
+        <li>Çok yıllık bir bitkinin kökünde STOMA kesinlikle bulunmaz</li>
+        <li>Klorofil içeren iki bekçi (stoma = kilit) hücrelerinden oluşmuş yapıdır.</li>
+        <li>Stoma hücreleri arasında boşluk vardır. Bu boşluğa stoma açıklığı denir. Stoma hücrelerinin stoma açıklığına bakan çeperleri daha kalın olduğundan turgor basıncı değişimine bağlı olarak açılıp kapanabilirler.</li>
+        <li>Çevre şartlarına ve bitkinin ihtiyacına göre açılıp kapanarak bitkinin gerekli gaz alışverişi ve terlemesini (transpirasyon) düzenler. (Su alımı yapamazlar.)</li>
+        <li>Bitki türüne ve yaşadığı ortama göre stomaların epidermis tabakasındaki yeri, konumu ve sayısı farklı olabilir.</li>
+        <li>Kurak bölge bitkilerinde stoma sayısı az ve yaprağın alt yüzeyinde alt konumlu olarak bulunurlar.</li>
+        <li>Nemli bölge bitkilerinde ise stoma sayısı çok ve yaprağın her iki yüzünde bulunabilir ve üst konumludur.</li>
+        <li>Kök epidermisinde ve su içinde yaşayan bitkilerde ise stoma bulunmaz. epidermisinde bulunur.</li>
+    </ul>
+
+    <h3>b. Hidatot (Su savağı)</h3>
+    <ul>
+        <li>Sıvı halde su ve suda çözünmüş mineralleri atan yapıdır. Stoma gibi açılıp kapanma özelliği yoktur. Ksilemlerin dışarı açıldığı bölgelerdir. Su alımı yapmazlar.</li>
+        <li>Yaprak uçlarında nadiren de yaprak yüzeylerinde bulunur.</li>
+        <li>Havadaki nemin fazla, kök basıncının yüksek ve terlemenin yapılamadığı durumlarda suyun fazlası hidatotlarla dışarı atılır. Bu olaya gutasyon (damlama) denir.</li>
+        <li>Genellikle nemli bölge bitkilerinde görülür.</li>
+    </ul>
+
+    <h3>c. Tüyler</h3>
+    <ul>
+        <li>Epidermis hücrelerinin dışa doğru uzayarak oluşturduğu canlı ya da ölü olabilen yapıdır.</li>
+        <li>Bitkinin türüne ve yaşadığı ortama göre yapı ve görev bakımından farklılıklar gösterir. Su kaybını azaltır.</li>
+        <li>Bitkinin aşırı ısınmasını önler.</li>
+        <li>Stomaların rüzgar almasını engeller.</li>
+        <li>Hayvanlara karşı savunma sağlar.</li>
+        <li>Bazı tüyler içerisinde aromatik bileşikler bulunur. Kokulu bitkilerin gövde yaprak ve çiçeklerinde bulunur. Bu şekilde tozlaşmaya yardımcı olur.</li>
+        <li>Köklerde bulunan emici tüyler topraktan su ve suda çözünmüş minerallerin emilmesini sağlar.</li>
+        <li>Bir tane epidermis hücresinde oluşmuşsa basit tüy; birden fazla epidermis hücresinden oluşmuşsa bileşik tüy denir.</li>
+    </ul>
+
+    <h3>Bitkide Tüylerin Görevleri:</h3>
+    <ul>
+        <li><strong>Koruma:</strong> Bitkiyi aşırı ısınma ve su kaybından korur.</li>
+        <li><strong>Savunma:</strong> Tüylerin uç kısımlarında silis ve kalker birikmesi ile sert ve batıcı bir özellik kazanırlar. Hayvanlar bu bitkileri yemekten çekinir. Isırgan otunda ise kofullarında asidik hücre özsuyu bulunur, hayvanlara zarar verir.</li>
+        <li><strong>Tutunma:</strong> Sarmaşık gibi bazı sarılıcı ve tırmanıcı bitkilerde tutunmayı sağlar.</li>
+        <li><strong>Emme:</strong> Kök emici tüyleri topraktaki su ve suda çözünmüş mineralleri emer.</li>
+        <li><strong>Salgı yapma:</strong> Farklı kimyasal özellikte salgı üretebilen tüylerdir.</li>
+    </ul>
+
+    <h3>d. Emergensler (Dikenler)</h3>
+    <ul>
+        <li>Epidermisin parankima hücreleri ile beraber oluşturduğu çıkıntıdır.</li>
+        <li>Tüylere göre daha serttir.</li>
+        <li>Hayvanlara karşı savunma yapmada kullanılır.</li>
+        <li>Tohumların hayvanlara tutunarak geniş alanlara yayılmasını sağlayan emergensler de vardır. Bitkinin hayvanlara karşı korunmasında etkili olan yapılardır.</li>
+    </ul>
+
+
+
+
+    <h1>Peridermis</h1>
+    <ul>
+        <li>Bitkinin odunlaşmış gövdelerinin dışını saran koruyucu dokudur.</li>
+        <li>Hücre çeperleri süberin ile dolduğundan hücre madde alışverişini yapamaz ve ölür. Bu nedenle ölü hücrelerden oluşmuştur.</li>
+        <li>Kambiyumun gövdeyi kalınlaştırması sonucunda parçalanan epidermis yerine mantar kambiyumu tarafından oluşturulur.</li>
+        <li>Parçalanmış epidermis hücrelerinin arasında bulunan stomaların yerini peridermis içerisinde lentisel (kovucuk) alır.</li>
+        <li>Çok yıllık bitkilerin kök ve gövdelerinde bulunur.</li>
+        <li>Epidermisin parçalanmasıyla oluşur.</li>
+        <li>Dış yüzeyde mantar kambiyumundan oluşan mantar hücreler vardır. Mantar hücreleri ölüdür.</li>
+        <li>Periderm = Mantar + Mantar kambiyumu</li>
+        <li>Kabuk = Periderm + Sekonder floem</li>
+        <li>Hücre çeperi suberin biriktirmiştir. İçleri hava ile doludur.</li>
+        <li>Bitkiyi sıcak, soğuk, su kaybı ve mekanik etkilerden korur.</li>
+ <li> <br></li>
+        <li>Peridermis üzerinde lentisel (kovucuk) denilen açıklıklar bulunur.</li>
+  	<li>Stoma gibi gaz alışverişinde görev alır ancak ölü hücrelerden oluştuğundan açılıp kapanma özelliği yoktur.</li>
+        <li>Lentiseller, gövde içinde bulunan canlı hücreler ile dış ortam arasındaki gaz alışverişini sağlar.</li>
+        <li>Lentiseller, epidermiste bulunan stomalara karşılık gelirler.</li>
+    </ul>
+
+    <h2>Stoma ve Lentisel Karşılaştırması</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Stoma</th>
+                <th>Lentisel</th>
+                <th>Hidatot</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Epidermis kökenlidir</td>
+                <td>Evet</td>
+                <td>Hayır</td>
+                <td>Evet</td>
+            </tr>
+            <tr>
+                <td>Canlıdır</td>
+                <td>Evet</td>
+                <td>Hayır</td>
+                <td>Evet</td>
+            </tr>
+            <tr>
+                <td>Fotosentez yapar</td>
+                <td>Evet</td>
+                <td>Hayır</td>
+                <td>Hayır</td>
+            </tr>
+            <tr>
+                <td>Açılıp kapanabilir</td>
+                <td>Evet</td>
+                <td>Hayır</td>
+                <td>Hayır</td>
+            </tr>
+            <tr>
+                <td>Sadece su atar</td>
+                <td>Evet</td>
+                <td>Hayır</td>
+                <td>Evet</td>
+            </tr>
+            <tr>
+                <td>Suyu buhar halinde atar (Terleme = Transpirasyon)</td>
+                <td>Evet</td>
+                <td>Evet</td>
+                <td>Hayır</td>
+            </tr>
+            <tr>
+                <td>Suyu damlalar halinde atar (Damlama = Gutasyon)</td>
+                <td>Hayır</td>
+                <td>Hayır</td>
+                <td>Evet</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h1>Bitkilerde Salgı Elemanları ve Salgı Maddeleri</h1>
+    <ul>
+        <li>Bitkinin metabolizma ürünlerini bitkiye zarar vermeyecek şekilde kimyasal dönüşüme uğratıp depolar ve dışarı verir.</li>
+        <li>Hücre toplulukları, tüyler, cepler ve kanallar salgı elemanlarını oluşturur.</li>
+        <li>Salgı hücreleri; canlı, bol sitoplazmalı, büyük çekirdekli ve golgi organeli bakımından zengindir.</li>
+    </ul>
+
+    <h2>Bitkilerde Salgı Maddelerinin Görevleri</h2>
+    <ul>
+        <li>Bitkilerde belirli hücreler tarafından salgılanan hormonlar büyüme, gelişme, çiçek açma, tohumun çimlenmesi gibi olayları düzenler.</li>
+        <li>Reçine ve tanenli salgılar bitkileri zararlı mikroorganizmalar ve hayvanlardan korur.</li>
+        <li>Isırgan otunda salgı üreten yakıcı tüyler bitkinin korunmasını sağlar.</li>
+        <li>Çiçeklerde bulunan koku ve bal özü salgısı böcekleri çekerek bitkinin tozlaşmasına yardımcı olur.</li>
+        <li>Böcekçil bitkilerin yaprakları tarafından salgılanan sıvılar böceklerin sindirilmesinde etkilidir.</li>
+    </ul>
+
+    <h1>Botanik Tanımı</h1>
+    <p>Bark sadece odunsu bitkilerde bulunur - otsu bitkiler ve genç gövdelerde Periderm bulunur.</p>
+    <p>Bir kiraz ağacının hasar görmüş kabuğu, küçük odunsu gövdelerde ve birçok otsu bitkide genellikle ikinci bir örtü olan peridermin oluştuğu yerdir. Periderm, phellogen tarafından oluşturulur ve epidermisin yerini alır, epidermis gibi koruyucu bir kaplama görevi görür. Olgun phellem hücrelerinde su kaybı ve patojen saldırılarından korunmak için suberin bulunur. Daha eski phellem hücreleri ölüdür, bu da odunsu gövdelerde olduğu gibidir. Patates yumrusunun (yer altı gövde) üzerindeki deri peridermin kabuğunu oluşturur; bitkiler kabuğa sahip değildir.</p>
+
+    <h1>Ağaç Kesit Diyagramı</h1>
+    <p>Bir olgun odunsu gövdenin dıştan içe doğru katmanları şunlardır:</p>
+    <ul>
+        <li>Kabuk</li>
+        <li>Periderm</li>
+        <li>Kabuk (phellem veya suber), rhytidome içerir</li>
+        <li>Kabuk kambiyumu (phellogen)</li>
+        <li>Phelloderm</li>
+        <li>Korteks</li>
+        <li>Floem</li>
+        <li>Vasküler kambiyum</li>
+        <li>Odun (xylem)</li>
+        <li>Yaş odunu (alburnum)</li>
+        <li>Kalp odunu (duramen)</li>
+        <li>Merkez (medulla)</li>
+    </ul>
+
+    <p>Genç gövdelerde, kabuk olarak adlandırılan şey olmayan dokular dıştan içe doğru şunlardır:</p>
+    <ul>
+        <li>Epidermis, periderm tarafından yer değiştirebilir</li>
+        <li>Korteks</li>
+        <li>Birincil ve ikincil floem</li>
+        <li>Vasküler kambiyum</li>
+        <li>İkincil ve birincil xylem</li>
+    </ul>
+
+    <h1>Rhytidome</h1>
+    <p>Rhytidome, kabuğun en tanıdık kısmıdır, ağaçların gövdelerini kaplayan dış katmandır. Çoğunlukla ölü hücrelerden oluşur ve suberize periderm, korteks ve floem dokularının çok katmanlı oluşumu ile üretilir. Rhytidome, özellikle ağaçların daha eski gövde ve köklerinde iyi gelişmiştir. Çalılarda ise daha eski kabuk hızla dökülür ve kalın rhytidome birikir. Genellikle ağaç gövdesinin en kalın ve belirgin kısmıdır.</p>
+
+
+
+
+
+
+    <h1>4. İLETİM DOKU</h1>
+
+    <p>Bitkilerde organik ve inorganik maddelerin bitkinin farklı organ ve dokularına taşınmasını sağlayan dokudur.</p>
+    <p>Damarsız tohumsuz bitkiler hariç (kara yosunu) tüm bitkilerde vardır.</p>
+<h3>Ksilem ve Floem Genel Özellikleri</h3>
+
+<ul>
+    <li>Bitkilerde köklerle alınan su ve mineralleri, yaprak ve diğer organlara, fotosentezle üretilen organik maddeleri de yapraklardan bitkinin diğer organlarına taşıyan dokudur.</li>
+    <li>Ksilem (odun boruları) ve floem (soymuk boruları) olmak üzere iki çeşittir.</li>
+</ul>
+
+    <h2>1) Ksilem (Xylem, Odun Borusu)</h2>
+ <p>Bilgiler 3 kere farklı kaynaklardan verilmiştir</p>
+<ul>
+    <li>Bitkilerin emici tüylerle topraktan aldığı su ve minerali yapraklara ve diğer organlara taşınmasını sağlayan ölü dokudur.</li>
+    <li>Trake ve trakeit hücrelerinden oluşmuştur. Trakeler büyük, trakeitler küçük borulardır. Hücreler arasındaki çeperler erimiştir. Yan çeperler kalınlaşarak boru şeklini almıştır.</li>
+    <li>Gövdede içte, yaprakta dışta bulunur.</li>
+    <li>Tek yönlü olarak (kökten gövdeye) madde taşınması yapar.</li>
+    <li>Madde taşıması floeme göre hızlıdır.</li>
+</ul>
+///
+<ul>
+    <li><strong>Görevleri:</strong> Kökten emici tüylerle alınan su ve suda çözünmüş minerallerin bitkinin gövde ve yapraklarına taşınmasını sağlar. Ayrıca bitkiye mekanik destek de sağlar.</li>
+    <li><strong>Oluşması:</strong> Ksilem, meristem doku hücrelerinin üst üste gelerek zamanla çekirdek ve sitoplazmalarını kaybetmesi sonucu oluşur. Daha sonra hücre duvarı, üzerinde lignin birikimi sonucu kalınlaşır. Hücrelerin uc uca geldiği bölümdeki çeper eriyerek kaybolur ve hücre ölür. Böylece ince kılcal borular halini alır.</li>
+    <li>Ksilemi oluşturan hücreler kısa ve geniş ise trake, ince ve uzun ise trakeit olarak isimlendirilir. Bitkinin odun kısmını meydana getirir.</li>
+</ul>
+///
+<ul>
+    <li>Su ve suda erimiş mineralleri taşır.</li>
+    <li>Madde taşınması kökten yapraklara doğru, tek yönlüdür.</li>
+    <li>Ölü hücrelerden oluşur.</li>
+    <li>Taşıma hızlıdır. (Pasif taşıma kuralları etkilidir)</li>
+    <li>Bitki gövdesinde kambiyumun iç kısmında bulunur.</li>
+    <li><strong>Not:</strong> Odun borularının hücreleri cansız olduğu için madde alışverişi gerçekleşmez. Bu yüzden taşıma hızlıdır.</li>
+    <li>İletimin hızlı olmasında ayrıca; iletimin tek yönlü olması, iletim sırasında ATP harcanmaması, enine çeperlerin tamamen erimiş olması da rol oynar.</li>
+</ul>
+
+    <h2>2) Floem (Soymuk Borusu)</h2>
+ <p>Bilgiler 3 kere farklı kaynaklardan verilmiştir</p>
+<ul>
+    <li>Fotosentez sonucunda üretilmiş olan organik maddelerin gerekli dokulara iletilmesini sağlayan canlı bir iletim dokusudur.</li>
+    <li>Kalburlu boru ve arkadaş hücrelerinden oluşmuştur. Hücreler arası çeperler tamamen erimemiştir. Kalburlu hücreler arasında kalburlu plaklar oturur.</li>
+    <li>Gövdede dışta, yaprakta içte bulunmaktadır.</li>
+    <li>Çift yönlü taşıma gerçekleştirir.</li>
+    <li>Taşıma aktif taşıma ve pasif taşıma ile gerçekleşir. Madde hareketlerinin gerçekleşmesinde sıvı basıncı farklılığından kaynaklanır.</li>
+</ul>
+///
+<ul>
+    <li><strong>Görevi:</strong> Yapraklarda fotosentez ile üretilen ve köklerden alınan organik maddeleri bitkinin diğer kısımlarına iletmektir.</li>
+    <li><strong>Oluşması:</strong> Tek sıra halinde uc uca dizilmiş canlı hücrelerden oluşan bu doku, kalburlu hücre ve arkadaş hücresi olmak üzere iki tip hücreden oluşmuştur.</li>
+    <li>Kalburlu hücrelerin sitoplazmaları ve mitokondrileri vardır fakat çekirdek, merkezi koful ve ribozomlarını kaybederler.</li>
+    <li>Kalburlu hücrelerin birbirlerine komşu çeperlerinin yer yer erimesi ile delikli bir yapı oluşur. Bu yapıya kalburlu plak denir. Kalburlu plağa sahip hücrelerin üst üste dizilmesi ile oluşan boru şeklindeki yapıya da kalburlu borular denir.</li>
+    <li>Arkadaş hücreleri yoğun sitoplazmalı ve çekirdeklidir. Çekirdeğe sahip arkadaş hücreleri fotosentez ürünlerinin depolanması ve iletilmesi işlemlerinde kalburlu hücrelerle birlikte çalışır.</li>
+</ul>
+///
+ <ul>
+    <li>Fotosentez ürününü olan organik maddeleri köke, kökte üretilen aminoasitleri yaprak ve diğer organlara taşır.</li>
+    <li>Madde taşınması çift yönlüdür.</li>
+    <li>Canlı hücrelerden oluşur.</li>
+    <li>Hücreleri canlı olduğu için madde alışverişi gerçekleşir. Bu yüzden taşıma hızı odun borularından daha yavaştır.</li>
+    <li>İletimde hem aktif taşıma hem de pasif taşıma etkilidir.</li>
+    <li>Bitki gövdesinde kambiyumun dış kısmında bulunur.</li>
+    <li><strong>Not:</strong> Bir kalburlu boruda madde taşınması aynı anda çift yönlü olarak gerçekleşmez.</li>
+</ul>
+
+    <h2>Ksilem ve Floem Karşılaştırması</h2>
+    <table border="1" cellpadding="10">
+        <thead>
+            <tr>
+                <th>Özellik</th>
+                <th>Ksilem (Odun Boruları)</th>
+                <th>Floem (Soymuk Boruları)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Çekirdek ve Sitoplazma</td>
+                <td>Yok</td>
+                <td>Çekirdek yok, sitoplazma var</td>
+            </tr>
+            <tr>
+                <td>Çeperler</td>
+                <td>Lignin birikimi ile kalınlaşır</td>
+                <td>Kalınlaşmamıştır</td>
+            </tr>
+            <tr>
+                <td>Bitkiye Sağladığı Destek</td>
+                <td>Mekanik destek sağlar</td>
+                <td>Mekanik destek sağlar</td>
+            </tr>
+            <tr>
+                <td>Konum</td>
+                <td>Bitki gövdesinde kambiyumun iç kısmında bulunur. (Merkeze yakın)</td>
+                <td>Bitki gövdesinde kambiyumun dış kısmında bulunur. (Kabuğun iç yüzeyine yakın)</td>
+            </tr>
+            <tr>
+                <td>Taşıma Yönü</td>
+                <td>Tek yönlü (kökten yapraklara doğru)</td>
+                <td>Çift yönlü (yukarı ve aşağıya doğru)</td>
+            </tr>
+            <tr>
+                <td>Taşıma Hızı</td>
+                <td>Hızlıdır</td>
+                <td>Yavaştır</td>
+            </tr>
+            <tr>
+                <td>Madde Taşınması</td>
+                <td>Kılcallık, kök basıncı ve terleme-kohezyon etkileriyle gerçekleşir</td>
+                <td>Difüzyon ve aktif taşıma ile gerçekleşir</td>
+            </tr>
+            <tr>
+                <td>Hücre Yapısı</td>
+                <td>Cansız hücrelerin üst üste dizilmesiyle oluşur, hücre duvarları tamamen erimiştir</td>
+                <td>Canlı hücrelerin üst üste gelmesiyle oluşur, hücre duvarları erimemiştir ve kalburlu (delikli) görünür</td>
+            </tr>
+            <tr>
+                <td>Örnek Hücreler</td>
+                <td>Trake, trakeit</td>
+                <td>Arkadaş hücreleri</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Özetle</h2>
+    <ul>
+        <li>Bitkilerde köklerle alınan su ve mineraller, yaprak ve diğer organlara taşınırken, fotosentezle üretilen organik maddeler de yapraklardan bitkinin diğer organlarına taşınır.</li>
+        <li>Ksilem ve floem, bitkilerde madde taşınmasını sağlayan iki ana iletim dokusudur.</li>
+        <li>Ksilem su ve mineralleri taşırken, floem organik maddeleri taşır.</li>
+        <li>Her ikisi de bitkiler için yaşamı sürdürebilir kılacak hayati öneme sahiptir.</li>
+    </ul>
+
+    <h2>Ekstra Bilgiler</h2>
+    <p><strong>Trake:</strong> Uzunluğuna çeperlerinde lignin bulunan ve enine çeperleri kaybolmuş ölü hücrelerin üst üste gelmesinden oluşan silindir veya tüpler şeklindedir. Topraktan alınan suyu organlara taşır.</p>
+    <p><strong>Trakeid:</strong> Trakeler gibi su iletimini sağlar, ancak çapları daha dar olup enine çeperleri vardır. Çoğunlukla gymnosperm'lerde (açıktohumlular) bulunur.</p>
+    <p><strong>Ksilem Parankiması:</strong> Canlı hücrelerde meydana gelir, besin maddesi depolamak ve kısa mesafelere iletim yapmak için kullanılır.</p>
+    <p><strong>Ksilem Sklerankiması:</strong> Çeperleri tamamen odunlaşmış uzun hücrelerden oluşur ve destek dokusu olarak işlev görür.</p>
+    
+
+
+    <h1>Kurak ve Nemli Bölge Bitkilerinin Karşılaştırılması</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Özellik</th>
+                <th>Kurak Bölge</th>
+                <th>Nemli Bölge</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Yaprak Yüzeyi</td>
+                <td>Dar</td>
+                <td>Geniş</td>
+            </tr>
+            <tr>
+                <td>Kutikula Kalınlığı</td>
+                <td>Kalın</td>
+                <td>İnce</td>
+            </tr>
+            <tr>
+                <td>Yapraktaki Tüy Miktarı</td>
+                <td>Çok</td>
+                <td>Az</td>
+            </tr>
+            <tr>
+                <td>Yaprak Damarı</td>
+                <td>Az</td>
+                <td>Çok</td>
+            </tr>
+            <tr>
+                <td>Kök Çeşidi</td>
+                <td>Kazık Kök</td>
+                <td>Genellikle Saçak Kök</td>
+            </tr>
+            <tr>
+                <td>Kök Ozmotik Basıncı</td>
+                <td>Yüksek</td>
+                <td>Düşük</td>
+            </tr>
+            <tr>
+                <td>Kök Emici Tüy Sayısı</td>
+                <td>Çok</td>
+                <td>Az</td>
+            </tr>
+            <tr>
+                <td>Stoma Sayısı</td>
+                <td>Az</td>
+                <td>Çok</td>
+            </tr>
+            <tr>
+                <td>Stoma Yeri</td>
+                <td>Genellikle Yaprağın Altında</td>
+                <td>Yaprağın Her İki Yüzünde</td>
+            </tr>
+            <tr>
+                <td>Stoma Yerleşme Durumu</td>
+                <td>Epidermis Çukurunda</td>
+                <td>Epidermis Çıkıntısında</td>
+            </tr>
+            <tr>
+                <td>Stoma Büyüklüğü</td>
+                <td>Küçük</td>
+                <td>Büyük</td>
+            </tr>
+        </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h1>Bitki Dokusu Tüm</h1>
+
+    <h2>Dermosel Doku (Dermal Tissue)</h2>
+
+    <p><strong>Epidermis (Epidermis)</strong>: Bitkinin dış yüzeyini örten dokudur. Genellikle tek katlıdır ve su kaybını engellemeye, bitkiyi mekanik etkilerden korumaya yardımcı olur. Ayrıca, stomaların (gözeneğin) açılıp kapanmasına aracılık eder.</p>
+
+    <p><strong>Bulliform Cell (Bulliform Hücre)</strong>: Bu hücreler genellikle yapraklarda bulunur ve su kaybı sırasında kapanarak bitkinin su dengesinin korunmasına yardımcı olur.</p>
+
+    <p><strong>Cuticle (Kütikula)</strong>: Epidermis hücrelerinin üst kısmında bulunan, suyun buharlaşmasını engelleyen koruyucu bir tabakadır. Bitkileri su kaybından korur ve dış etkenlere karşı dayanıklılığını artırır.</p>
+
+    <p><strong>Guard Cell (Koruyucu Hücre)</strong>: Stoma (gözeneğin) çevresinde bulunan hücrelerdir. Gaz alışverişini kontrol ederler ve açılıp kapanarak bitkinin su kaybını yönetirler.</p>
+
+    <p><strong>Pavement Cell (Zemin Hücresi)</strong>: Epidermiste bulunan düzgün ve düz hücrelerdir. Diğer hücrelerle sıkıca yerleşerek bitkinin dış yüzeyini korur ve destekler.</p>
+
+    <p><strong>Subsidiary Cell (Yan Hücre)</strong>: Stomaların etrafındaki yardımcı hücrelerdir. Stomaların işlevlerini düzenler, özellikle açılıp kapanmalarına yardımcı olur.</p>
+
+    <p><strong>Periderm (Peridermis)</strong>: Odunsu bitkilerde epidermisin yerini alan koruyucu bir dokudur. Ölü hücrelerden oluşur ve bitkiyi dış etkenlere karşı korur.</p>
+
+    <p><strong>Phellem (Phellem)</strong>: Peridermis dokusunun bir kısmıdır. Suberin içerir ve bitkilerin su kaybını engellemek için koruyucu bir tabaka oluşturur.</p>
+
+    <p><strong>Phelloderm (Phelloderm)</strong>: Peridermisin iç kısmında yer alan canlı hücrelerden oluşan dokudur. Genellikle bitkileri koruyarak dış etkenlere karşı dayanıklılığını artırır.</p>
+
+    <h2>Bitki Formu ve İşlevi</h2>
+
+    <p><strong>Epidermis Çiçeksiz (Epidermis)</strong>: Çiçekli olmayan bitkilerin epidermis tabakası, su kaybını engeller ve bitkilerin dış yüzeyini korur.</p>
+
+    <p><strong>Cork (Kavkı)</strong>: Mantar kambiyumundan gelişen ve odunsu bitkilerde bulunan koruyucu dokudur. Suberin maddesi ile sertleşir ve bitkiyi korur.</p>
+
+    <h2>Bitki Organları</h2>
+
+    <p><strong>Bulb (Soğan)</strong>: Yer altında bulunan, besin depolayan bir bitki organıdır. Bu organ, bitkinin çoğalmasını sağlar.</p>
+
+    <p><strong>Root (Kök)</strong>: Bitkilerin toprağa tutunmasını ve su ile minerallerin alınmasını sağlayan organıdır. Kök, bitkilerin hayatta kalabilmesi için çok önemlidir.</p>
+
+    <p><strong>Rhizoid (Kök Benzeri Yapı)</strong>: Bitkilerde gerçek kökler bulunmadığında, su ve besin alımını sağlayan, köke benzer yapılar gelişir.</p>
+
+    <p><strong>Rhizome (Sürüncü Kök)</strong>: Yer altında yatay büyüyen ve yeni bitki bireyleri üreten kısımdır. Bu yapı, bitkilerin çoğalmasını sağlar.</p>
+
+    <p><strong>Shoot (Sürgün)</strong>: Bitkinin gövdesi ve dallarından oluşur. Yaprakları taşıyarak fotosentez yapmaya olanak tanır.</p>
+
+    <p><strong>Bud (Tomurcuk)</strong>: Yeni bir dal veya yaprak oluşumunu başlatan küçük, gelişmeye başlayan yapıdır.</p>
+
+    <p><strong>Leaf (Yaprak)</strong>: Fotosentez işlemini gerçekleştiren organlardır. Bitkilerin enerji üretmesini sağlarlar.</p>
+
+    <h2>Üreme Organları</h2>
+
+    <p><strong>Archegonium (Arkegonium)</strong>: Dişi gametofitlerde bulunan, yumurtalık hücrelerini barındıran yapıdır.</p>
+
+    <p><strong>Antheridium (Anteridyum)</strong>: Erkek gametofitte bulunan, sperm hücrelerinin üretildiği yapıdır.</p>
+
+    <p><strong>Androecium (Erkek Organ)</strong>: Çiçeklerde erkek üreme organlarının tümünü ifade eder. Stamen (erdiş) burada yer alır.</p>
+
+    <p><strong>Pollen (Polen)</strong>: Erkek üreme hücresini taşıyan tozdur. Çiçeklenme sırasında dişi organı dölleme işlemi için polen kabul eder.</p>
+
+    <p><strong>Stamen (Erdiş)</strong>: Erkek üreme organıdır ve polen üretir. Anter ve filament kısımlarından oluşur.</p>
+
+    <h2>Yüzey Yapıları</h2>
+
+    <p><strong>Cuticle (Kütikula)</strong>: Bitkilerde epidermisin üst yüzeyinde bulunan ve su kaybını engelleyen ince koruyucu tabakadır.</p>
+
+    <p><strong>Epicuticular Wax (Epi-kütiküler Mum)</strong>: Kütikula üzerinde bulunan ve suyun buharlaşmasını engelleyen mumlu bir bileşiktir.</p>
+
+    <p><strong>Nectar (Nektar)</strong>: Çiçeklerde bulunan ve böcekleri cezbeden tatlı bir sıvıdır. Tozlaşma sürecine yardımcı olur.</p>
+
+    <p><strong>Stoma (Stoma)</strong>: Bitkilerin gaz alışverişini sağlayan açıklıklardır. Stomalar, bitkilerin su kaybını kontrol eder.</p>
+
+    <h2>Bitki Fizyolojisi</h2>
+
+    <p><strong>Aleurone (Aleuron)</strong>: Bitkilerdeki hücrelerde bulunan proteinli bir tabakadır ve bitkinin enerji depolama sürecine yardımcı olur.</p>
+
+    <p><strong>Apical Dominance (Apikal Dominans)</strong>: Bitkilerde ana gövdenin üst kısmındaki büyüme noktası, yan sürgünlerin büyümesini engeller.</p>
+
+    <p><strong>Bulk Flow (Toplu Akış)</strong>: Bitkilerde su ve besin maddelerinin, yüksek basınç farkları nedeniyle bir noktadan diğerine hareketidir.</p>
+
+    <p><strong>Cellulose (Selüloz)</strong>: Bitki hücrelerinin duvarlarını oluşturan organik bileşiktir. Hücrelerin sertliğini sağlar.</p>
+
+    <p><strong>Photosynthesis (Fotosentez)</strong>: Bitkilerin güneş ışığını enerjiye dönüştürdüğü kimyasal bir süreçtir. Karbondioksit ve su kullanarak glikoz üretirler.</p>
+
+    <h2>Vasküler Doku (Vascular Tissue)</h2>
+
+    <p><strong>Phloem (Floem)</strong>: Bitkilerde besin taşıyan dokudur. Özellikle fotosentezle üretilen şekerleri bitkinin her yerine taşır.</p>
+
+    <p><strong>Xylem (Ksilem)</strong>: Bitkilerde su ve mineralleri kökten yukarıya taşıyan dokudur.</p>
+
+    <h2>Zemin Doku (Ground Tissue)</h2>
+
+    <p><strong>Parenchyma (Parankima)</strong>: Bitkilerde en yaygın doku türüdür. Genellikle besin depolar ve fotosentez yapar.</p>
+
+    <p><strong>Aerenchyma (Aerenkima)</strong>: Hava boşlukları içeren, özellikle su bitkilerinde bulunan doku türüdür. Suda oksijenin taşınmasına yardımcı olur.</p>
+
+    <p><strong>Mesophyll (Mesofıl)</strong>: Yapraklarda bulunan ve fotosentez yapan hücrelerdir. Genellikle palizat ve sünger dokusuna ayrılır.</p>
+
+    <h2>Meristematik Doku (Meristematic Tissue)</h2>
+
+    <p><strong>Primary Ground Meristem (Birincil Yer Doku Meristemi)</strong>: Bitkilerin büyümesini sağlayan ve farklı doku türlerine dönüşen hücrelerin bulunduğu doku türüdür.</p>
+
+    <p><strong>Procambium (Prokambiyum)</strong>: Bitkilerde vasküler dokuya dönüşen meristematik hücrelerden oluşan doku türüdür.</p>
+
+    <p><strong>Protoderm (Protodermis)</strong>: Epidermis dokusunu oluşturan meristematik doku türüdür.</p>
+
+    <h2>Karışık Doku (Mixed Tissue)</h2>
+
+    <p><strong>Cortex (Köprücük)</strong>: Kök ve gövdede yer alan, genellikle parankima hücrelerinden oluşan doku türüdür.</p>
+
+    <p><strong>Endodermis (Endodermis)</strong>: Köklerin iç kısmında yer alan ve su ile mineral maddelerin geçişini kontrol eden hücre tabakasına denir.</p>
+
+    <p><strong>Exodermis (Eksodermis)</strong>: Köklerin dış kısmında bulunan koruyucu dokudur ve genellikle su kaybını engeller.</p>
+
+    <p><strong>Stele (Stele)</strong>: Kök ve gövde merkezinde yer alan, ksilem ve floemi içeren yapıdır. Bitkinin besin ile su taşıyan ana yollarıdır.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+    <h1>Tohumlu Bitkilerin Temel Kısımları</h1>
+    
+    <h2>A. Bitki Organ Sistemleri</h2>
+    <p>Bitkilerin toprak üstü organ sistemine <strong>sürgün sistemi</strong>, toprak altı organ sistemine ise <strong>kök sistemi</strong> denir.</p>
+    
+    <h2>1. Kök Sistemi</h2>
+    <p>Kök sistemi, bitkiyi toprağa bağlayan, su ve mineral alımını sağlayan kısımdır. Kökler ayrıca bazı hormonların üretimini gerçekleştirir ve bitkiyi destekler.</p>
+    
+    <h3>Kök Sisteminin Temel Görevleri</h3>
+    <ul>
+        <li><strong>Bitkiyi toprağa bağlama:</strong> Bitkinin sağlam durmasını sağlar.</li>
+        <li><strong>Su ve mineral emme:</strong> Kökler, su ve mineralleri alarak bitkinin gelişimini destekler.</li>
+        <li><strong>Taşıma:</strong> Su ve mineralleri gövdeye iletir.</li>
+        <li><strong>Büyüme:</strong> Kök hücreleri bölünerek kökün uzamasını sağlar.</li>
+        <li><strong>Hormon üretme:</strong> Bitkinin gelişimi için bazı hormonları üretir.</li>
+    </ul>
+    
+    <h3>Köklerin Emdiği Önemli Mineraller</h3>
+    <ul>
+        <li><strong>Azot (N):</strong> Klorofil sentezi, yaprak gelişimi.</li>
+        <li><strong>Fosfor (P):</strong> ATP sentezi, kök gelişimi, çiçeklenme.</li>
+        <li><strong>Potasyum (K):</strong> Su dengesi, hastalıklara karşı direnç.</li>
+        <li><strong>Kalsiyum (Ca):</strong> Hücre duvarlarını güçlendirme.</li>
+        <li><strong>Magnezyum (Mg):</strong> Klorofil üretimi, enzim aktivasyonu.</li>
+    </ul>
+    
+    <h3>Köklerin Ürettiği Hormonlar</h3>
+    <ul>
+        <li><strong>Oksin:</strong> Kök büyümesini teşvik eder.</li>
+        <li><strong>Sitokinin:</strong> Hücre bölünmesini destekler.</li>
+        <li><strong>Giberellin:</strong> Kök ve gövde uzamasını sağlar.</li>
+        <li><strong>Abcisik Asit:</strong> Su kaybını önler, tohum dormansisini destekler.</li>
+    </ul>
+    
+    <h2>2. Sürgün Sistemi</h2>
+    <p>Sürgün sistemi, toprak üstü organlardan oluşur. Gövde ve dallar, yapraklar, çiçekler, tomurcuklar ve meyveleri taşır.</p>
+    
+    <h3>Sürgün Sisteminin Temel Görevleri</h3>
+    <ul>
+        <li><strong>Büyüme:</strong> Yeni dallar, yapraklar ve çiçekler oluşturur.</li>
+        <li><strong>Depolama:</strong> Nişasta ve diğer besin maddelerini depolar.</li>
+        <li><strong>Üreme:</strong> Çiçekler ve meyveler aracılığıyla çoğalmayı sağlar.</li>
+        <li><strong>Fotosentez:</strong> Yapraklar klorofil aracılığıyla fotosentez yapar.</li>
+        <li><strong>Taşıma:</strong> Su, mineral ve besinleri iletir.</li>
+        <li><strong>Hormon üretme:</strong> Bitkinin büyümesini düzenleyen hormonlar üretir.</li>
+    </ul>
+    
+    <h3>Sürgün Sisteminin Ürettiği Hormonlar</h3>
+    <ul>
+        <li><strong>Oksin:</strong> Dal ve yaprak büyümesini destekler.</li>
+        <li><strong>Giberellin:</strong> Çiçeklenme ve meyve oluşumunu teşvik eder.</li>
+        <li><strong>Etilen:</strong> Meyve olgunlaşmasını sağlar.</li>
+    </ul>
+
+
+ <h2>1. Kök</h2>
+    <p>Kök, bitkinin toprağa tutunmasını sağlayan, su ve mineral alımında görevli temel organdır. Karasal bitkilerde yaygın olarak bulunur.</p>
+    
+    <h3>Kökün Temel Görevleri</h3>
+    <ul>
+        <li><strong>Bitkiyi toprağa bağlama:</strong> Kök, bitkinin dik durmasını sağlar ve dış etkenlere karşı direnç kazandırır.</li>
+        <li><strong>Su ve mineral emme:</strong> Kökler, topraktaki suyu ve mineralleri aktif taşıma ve osmoz yoluyla emerek bitkiye iletir.</li>
+        <li><strong>Taşıma:</strong> Alınan su ve mineraller ksilem ile gövdeye, fotosentez ürünleri ise floem ile köklere taşınır.</li>
+        <li><strong>Hormon üretimi:</strong> Sitokinin ve giberellin gibi büyümeyi teşvik eden hormonları üretir.</li>
+        <li><strong>Besin depolama:</strong> Birçok bitkide nişasta, inülin ve diğer organik besinlerin depolanmasını sağlar.</li>
+    </ul>
+    
+    <h3>Kök Tipleri</h3>
+    <ul>
+        <li><strong>Saçak kök:</strong> Ana kökün gelişmediği, çok sayıda yan kökün oluşturduğu yapı. (Örn: Buğday, çilek, mısır) Su ve besin maddelerinin daha geniş bir alandan alınmasını sağlar.</li>
+        <li><strong>Kazık kök:</strong> Ana kökün iyi geliştiği, toprağa doğru derinleştiği yapı. (Örn: Havuç, bakla, lahana) Bitkiyi toprağa sıkıca bağlar ve suyun derin katmanlardan alınmasına yardımcı olur.</li>
+    </ul>
+    
+    <h3>Kökün Anatomik Yapısı</h3>
+<p>Boyuna Kök; kaliptra, hücre bölünme bölgesi, uzama bölgesi ve olgunlaşma bölgesi olmak üzere dört bölümde incelenir.</p>
+    <ul>
+        <li><strong>Kaliptra (Kök başlığı):</strong> Kök ucunu korur, sürtünmeyi azaltır ve büyüme yönünü belirlemede rol oynar.</li>
+        <li><strong>Hücre bölünme bölgesi:</strong> Kök büyümesini sağlayan meristematik hücrelerden oluşur. Bu bölgenin ucuna Büyüme Konisi denir</li>
+        <li><strong>Uzama bölgesi:</strong> Hücrelerin boyuna büyümesini sağlayarak kökün toprak içinde ilerlemesini mümkün kılar.</li>
+        <li><strong>Olgunlaşma bölgesi:</strong> Emici tüylerin oluştuğu bölgedir, su ve minerallerin büyük kısmı burada emilir.</li>
+    </ul>
+    
+    <h3>Kökün İç Yapısı</h3>
+    <ul>
+        <li><strong>Epidermis:</strong> Kökün en dış tabakasıdır, kütikula içermez, suyun kolayca emilmesine yardımcı olur.</li>
+        <li><strong>Korteks:</strong> Nişasta ve diğer besinleri depolayan klorofilsiz parankima hücrelerinden oluşur.</li>
+        <li><strong>Endodermis:</strong> Su ve minerallerin geçişini düzenleyen, Caspary şeritleri içeren özel hücre tabakasıdır.</li>
+        <li><strong>Merkezi silindir:</strong> Ksilem (su iletimi) ve floem (besin iletimi) dokularını içerir, iletimi ve mekanik desteği sağlar.</li>
+    </ul>
+    
+    <h3>Tek ve Çift Çenekli Bitki Kökleri Arasındaki Farklar</h3>
+    <ul>
+        <li><strong>Tek çenekliler:</strong> Kambiyum içermez, iletim demetleri düzensiz yerleşmiştir, genellikle saçak köklüdür.</li>
+        <li><strong>Çift çenekliler:</strong> Kambiyum içerir, iletim demetleri düzenli bir halka şeklinde yerleşmiştir, genellikle kazık köklüdür.</li>
+    </ul>
+
+    <h2>2. Gövde</h2>
+    <p>Gövde, yaprak ve üreme organlarını taşıyan, genellikle toprak üstünde bulunan bitki eksenidir. Bitkinin taşıma, destekleme ve büyüme fonksiyonlarını yerine getirir.</p>
+    
+    <h3>Gövdenin Temel Görevleri</h3>
+    <ul>
+        <li><strong>Büyüme:</strong> Boy, yüzey alanı ve kütle artışına imkan tanır.</li>
+        <li><strong>Madde iletimi:</strong> Su, mineral ve organik bileşikleri taşır.</li>
+        <li><strong>Depolama:</strong> Bazı gövdeler besin depo eder ve fotosentez yapabilir.</li>
+        <li><strong>Destekleme:</strong> Bitkiye diklik ve mekanik destek sağlar.</li>
+        <li><strong>Vejetatif üreme:</strong> Gövde, bitkisel üremede rol oynar.</li>
+    </ul>
+    
+    <h3>Gövde Tipleri</h3>
+    <ul>
+        <li><strong>Otsu Gövdeler:</strong> Narin, yeşil, odun ve kabuk içermeyen gövdelerdir. Genellikle tek yıllık bitkilerde görülür.</li>
+        <li><strong>Odunsu Gövdeler:</strong> Kalın, kabuklu ve dayanıklı yapıdadır. Çok yıllık bitkilerde bulunur.</li>
+    </ul>
+    
+    <h3>Tek ve Çift Çenekli Bitki Gövdeleri</h3>
+    <ul>
+        <li><strong>Tek çenekli bitkiler:</strong> Genellikle otsu yapıya sahiptir. Kambiyum bulunmaz, iletim demetleri düzensizdir.</li>
+        <li><strong>Çift çenekli bitkiler:</strong> Otsu ve odunsu olabilir. Kambiyum içerir, iletim demetleri halka şeklinde sıralanmıştır.</li>
+    </ul>
+    
+    <h3>Gövde Büyüme Tipleri</h3>
+    <ul>
+        <li><strong>Primer Büyüme:</strong> Bitkinin boyca uzamasıdır. Kök ve gövde ucundaki uç meristem tarafından sağlanır.</li>
+Primer büyüme, bitkinin boyca uzamasıdır. Genç sürgünleri oluşturur. Kök ve gövde ucunda bulunan uç meristem tarafından sağlanır. Açık ve kapalı tohumlu bitkilerin tümünde görülür. Bitkilerde sınırsız büyümeyi sağlar.        
+<li><strong>Sekonder Büyüme:</strong> Bitkinin enine kalınlaşmasını sağlar. Yanal meristem (kambiyum) tarafından gerçekleştirilir.</li>
+    </ul>
+    
+    <h3>Sekonder Büyüme Süreci</h3>
+    <ol>
+<li>Sekonder büyüme yalnız dikotil çiçekli bitkilerde değil açık tohumlu (kozalaklı) bitkilerle bazı otsu çift çenekli bitkilerde de görülür.</li>
+        <li>Hormonların etkisiyle parankima hücreleri demet kambiyumunu oluşturur.</li>
+        <li>Demet kambiyumu bölünerek içe doğru sekonder ksilem, dışa doğru sekonder floem üretir.</li>
+        <li>Bu büyüme epidermis ve korteksi gererek parçalanmasına neden olur.</li>
+        <li>Parçalanan bölgelerde mantar kambiyumu gelişerek koruyucu mantar dokusunu oluşturur.</li>
+        <li>Mantar hücreleri süberin adı verilen mumsu madde üretir, ölü hücreler koruyucu bir tabaka oluşturur.</li>
+        <li>Mantar tabakası ve mantar kambiyumu birlikte peridermi oluşturur. Periderm ve sekonder floem, bitkinin kabuğunu meydana getirir.</li>
+    </ol>
+    
+    <p>Gövde, bitkinin su ve mineral iletimini sağlarken aynı zamanda dayanıklılık ve üreme fonksiyonlarını yerine getirir. Özellikle odunsu bitkilerde sekonder büyüme sayesinde yıllık halkalar oluşur, bu da bitkinin yaşının belirlenmesini sağlar.</p>
+
+    <h3>Bitkilerde Büyüme Halkaları (Yaş Halkaları)</h3>
+    <p>Ilıman bölgelerde yaşayan ağaçların gövdesinden enine kesit alındığında iç içe halkalar görülür. Bu halkalar yıllık ksilem dokularıdır ve büyüme halkaları olarak adlandırılır.</p>
+    <ul>
+        <li>Gövdenin merkezine yakın halkalar yaşlı, kabuğa yakın olanlar gençtir.</li>
+        <li>İlkbahar odunu açık renkli, sonbahar odunu koyu renkli olur. Bunun nedeni, ilkbaharda hücrelerin büyük ve ince çeperli, sonbaharda ise küçük ve kalın çeperli olmasıdır.</li>
+        <li>Ağaçların yaş halkaları, geçmiş yıllardaki iklim değişiklikleri hakkında bilgi sağlar.</li>
+    </ul>
+    <h2>3. Yaprak</h2>
+
+<h3>Yaprağın Temel Görevleri</h3>
+<ul>
+  <li>
+    <strong>Fotosentez ile Besin Üretme:</strong> Yapraklarda bulunan kloroplastlar sayesinde, güneş ışığının enerjisi kimyasal enerjiye dönüştürülür. Bu süreçte, su ve karbondioksit kullanılarak glikoz üretilir; yan ürün olarak ise oksijen ortaya çıkar. Fotosentez, bitkinin yaşamını sürdürmesi ve büyümesi için temel enerji kaynağıdır.
+  </li>
+  <li>
+    <strong>Stomalardan Gaz Değişimini Sağlama:</strong> Yaprak yüzeyinde yer alan stomalar, karbondioksitin içeri alınması ve oksijenin dışarı verilmesinde kritik rol oynar. Bu düzenleme, bitkinin solunum ve metabolik işlemlerinin sağlıklı bir şekilde devam etmesini sağlar. Ayrıca, stomalar sayesinde su buharı da yapraktan salınır.
+  </li>
+  <li>
+    <strong>Terleme ve Damlama Yoluyla Su ve Minerallerin Atılması:</strong> Transpirasyon adı verilen bu süreç, yapraklardan suyun buharlaşmasını sağlayarak bitki içindeki su ve mineral dağılımını düzenler. Bu mekanizma, bitkinin sıcaklık kontrolüne de yardımcı olur; özellikle sıcak havalarda yaprağın soğumasını sağlar.
+  </li>
+  <li>
+    <strong>Yaprak Dökümü ile Zararlı Maddelerin Uzaklaştırılması:</strong> Mevsimsel olarak gerçekleşen yaprak dökümü, eskiyen veya hasar görmüş yaprakların bitkiden atılmasını sağlar. Böylece, bitki zararlı maddelerden arınarak yeni ve sağlıklı yaprakların gelişimine olanak tanır.
+  </li>
+</ul>
+
+<h3>Yaprak Tipleri</h3>
+<ul>
+  <li>
+    <strong>Basit Yaprak:</strong> Tek bir yaprak ayasından oluşur. Bu tür yapraklar genellikle tek parça ve kesintisiz bir yapıya sahiptir. Basit yapraklar, çevresel streslere karşı dayanıklılık gösterebilmek için evrimsel olarak optimize edilmiştir.
+  </li>
+  <li>
+    <strong>Bileşik Yaprak:</strong> Küçük yaprakçıklardan meydana gelir. Her bir yaprakçık, bağımsız birim gibi işlev görürken, tüm yaprak birleşik bir yapı oluşturur. Bu durum, yaprağın esnekliğini artırarak, farklı çevresel koşullara adaptasyon sağlamasında avantajlıdır.
+  </li>
+</ul>
+
+<h3>Damarlanma Tipleri</h3>
+<ul>
+  <li>
+    <strong>Paralel Damarlanma:</strong> Ana damar belirgin olup, yan damarlar neredeyse paralel olarak uzanır. Bu yapı, özellikle tek çenekli bitkilerde (monokotiler) görülür. Paralel damarlanma, yaprak içindeki su ve besin maddelerinin hızlı ve verimli bir şekilde dağıtılmasına yardımcı olur.
+  </li>
+  <li>
+    <strong>Ağsı Damarlanma:</strong> Ana damar belirgin olup, yan damarlar dallanarak ağ şeklinde bir yapı oluşturur. Çift çenekli bitkilerde (dikotiler) yaygın olan bu tip damarlanma, yaprak dokusunun dayanıklılığını ve içsel madde alışverişini optimize eder.
+  </li>
+</ul>
+
+<h3>Yaprak Enine Kesiti</h3>
+<ul>
+  <li>
+    <strong>Üst ve Alt Epidermis:</strong> Yaprağın dış yüzeyinde yer alan bu koruyucu tabaka, bitkiyi zararlı mikroorganizmalardan, UV ışınlarından ve su kaybından korur. Üst epidermis genellikle kalın bir kutikula ile kaplanmış olup, bu yapı yaprağın nem dengesinin korunmasına katkıda bulunur.
+  </li>
+  <li>
+    <strong>Stomalar:</strong> Yaprak epidermisinde bulunan küçük, ayarlanabilir gözeneklerdir. Stomaların çevresinde yer alan guard hücreler, bu gözeneklerin açılıp kapanmasını kontrol eder. Bu mekanizma, gaz alışverişini düzenlerken suyun gereksiz buharlaşmasını önler.
+  </li>
+  <li>
+    <strong>Mezofil Tabakası:</strong> Fotosentezin gerçekleştiği hücreleri içerir ve iki ana bölüme ayrılır:
+    <ul>
+      <li>
+        <strong>Palisad Parankim:</strong> Yoğun, düzenli ve dikdörtgen hücrelerden oluşur. Yüksek miktarda kloroplast barındırır, bu nedenle ışık enerjisinin maksimum düzeyde emilmesini sağlar.
+      </li>
+      <li>
+        <strong>Spongy Parankim:</strong> Daha düzensiz ve geniş aralıklı hücrelerden meydana gelir. Bu yapı, havanın serbestçe dolaşmasını sağlayarak, stomalar aracılığıyla gerçekleşen gaz alışverişini destekler.
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<h3>Ek Bilgiler</h3>
+<ul>
+  <li>
+    <strong>Kutikula:</strong> Yaprakların üst yüzeyinde yer alan, su buharının kaybını azaltan ince, mum benzeri bir tabakadır. Bu yapı, özellikle kurak koşullarda bitkinin hayatta kalmasına yardımcı olur.
+  </li>
+  <li>
+    <strong>Vasküler Doku:</strong> Yaprak içerisinde su, mineral ve besin maddelerinin taşınmasını sağlayan damar sistemini oluşturur. Bu doku, damarlanma tiplerinin belirlenmesinde de önemli bir rol oynar.
+  </li>
+  <li>
+    <strong>Adaptasyonlar ve Ekolojik Rol:</strong> Bitkiler, farklı çevresel koşullara uyum sağlamak amacıyla yaprak morfolojilerinde çeşitli değişiklikler geliştirir. Örneğin:
+    <ul>
+      <li>Kurutma eğiliminde olan bölgelerde yaprakların küçülmesi ve kalınlaşması, su kaybını minimize eder.</li>
+      <li>Gölge alanlarda, daha geniş ve ince yapraklar güneş ışığını daha verimli emerek fotosentez oranını artırır.</li>
+    </ul>
+  </li>
+  <li>
+    <strong>Mevsimsel Değişiklikler:</strong> Yaprak pigmentlerinde mevsime bağlı değişiklikler görülebilir. Sonbaharda, klorofil azalırken karotenoid ve antosiyanin pigmentleri ön plana çıkarak yapraklara farklı renk tonları verir. Bu durum, yaprakların fotosentez verimliliği ve çevresel strese karşı adaptasyonunda önemli rol oynar.
+  </li>
+</ul>
+
+   <h2>Yaprak Enine Kesiti ve Ana Bölümler</h2>
+    <p>Yaprak enine kesitinde üç ana bölüm bulunur: epidermis, iletim dokusu ve mezofil tabakası. Her bir bölüm bitkinin yaşam fonksiyonlarında farklı roller üstlenir.</p>
+    
+    <h3>1. Epidermis</h3>
+    <ul>
+      <li><strong>Üst ve Alt Epidermis:</strong> Tek sıralı hücrelerden oluşan bu koruyucu tabaka, bitkiyi dış etkenlerden (mikroorganizmalar, UV ışınları ve su kaybı) korur. Epidermis hücreleri kloroplast içermez ve dolayısıyla fotosentez yapmazlar.</li>
+      <li><strong>Stomalar:</strong> Epidermis hücrelerinin farklılaşması sonucu oluşan stomalar, yaprak içinde yer alır. Bu küçük açıklıklar, gaz alışverişi (karbondioksit alımı ve oksijen salımı) ve terleme yoluyla fotosentez ve su düzenlemesinde önemli rol oynar. Stomaların etrafındaki hücrelerde kloroplast bulunur, böylece kısıtlı bir fotosentez de gerçekleşir.</li>
+    </ul>
+    
+    <h3>2. İletim Dokusu</h3>
+    <ul>
+      <li><strong>Görev:</strong> Bitkilerde su, mineral ve besin maddelerinin taşınmasını sağlar. Bu doku, yaprak damarlarıyla devam eder ve yaprak içi su-akış sisteminin temelini oluşturur.</li>
+      <li><strong>Damar Yapısı:</strong> İletim demetleri; damarların üst kısmında yer alan <em>ksilem</em> (su ve minerallerin yukarı taşınması) ve alt kısmında yer alan <em>floem</em> (besin maddelerinin dağıtımı) olmak üzere iki ana bölümden oluşur.</li>
+    </ul>
+    
+    <h3>3. Mezofil Tabakası</h3>
+    <ul>
+      <li><strong>Genel Özellik:</strong> Yaprağın iç kısmında bulunan ve kloroplast içeren hücrelerin yer aldığı tabakadır. Bu tabaka, fotosentezin en yoğun gerçekleştiği bölgedir.</li>
+      <li><strong>Alt Bölümleri:</strong>
+        <ul>
+          <li><strong>Palisad Parankima:</strong> Uzun, dikdörtgen hücrelerden oluşur; yoğun kloroplast içerir ve gelen ışığın maksimum düzeyde emilmesini sağlar.</li>
+          <li><strong>Sünger Parankima:</strong> Daha düzensiz ve geniş aralıklı hücrelerden meydana gelir; yaprak içindeki gaz alışverişine olanak tanır.</li>
+        </ul>
+      </li>
+    </ul>
+    <p><em>Şekil:</em> Yaprak enine kesiti; epidermis, iletim dokusu (ksilem ve floem) ve mezofil tabakasını göstermektedir.</p>
+
+
+  <!-- Kurak Bölge Bitkilerinin Yaprak Özellikleri -->
+
+    <h2>Kurak Bölge Bitkilerinin Yaprak Özellikleri</h2>
+    <ol>
+      <li><strong>Kutikula Tabakası:</strong> Kalınlaşmış kutikula, su kaybını azaltır ve bitkiyi aşırı güneş ışığından korur.</li>
+      <li><strong>Yaprak Ayası:</strong> Küçük ve kompakt olup, kaktüs gibi bitkilerde diken şeklini alarak su kaybını minimize eder.</li>
+      <li><strong>Koruyucu Tüyler:</strong> Güneşten korunmayı artırmak amacıyla yoğun tüy örtüsü bulunur.</li>
+      <li><strong>Stomalar:</strong> Küçük boyutlu ve az sayıdadır; genellikle epidermisin derinliklerine gömülüdür, bu da su kaybını azaltır.</li>
+      <li><strong>Mezofil Tabakası:</strong> Kalın olup, bitkinin fotosentez kapasitesini korurken aşırı ısıdan korunmasına yardımcı olur.</li>
+      <li><strong>Palizat Parankima:</strong> Sünger parankimasına göre daha gelişmiş olup, bazı kurak bitkilerde mezofil tabakası sadece palizat parankiması içerir.</li>
+      <li><strong>Hücreler Arası Boşluk:</strong> Küçüktür; damarlar belirgin olup, su ve besin taşınımı verimli bir şekilde gerçekleştirilir.</li>
+    </ol>
+
+
+  <!-- Tek ve Çift Çenekli Bitkilerin Karşılaştırılması -->
+
+    <h2>Tek ve Çift Çenekli Bitkilerin Karşılaştırılması</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Özellik</th>
+          <th>Tek Çenekli (Monokotiledon)</th>
+          <th>Çift Çenekli (Dikotiledon)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Gövde</strong></td>
+          <td>Genellikle otsu, ince gövdeli, kambiyum bulunmaz.</td>
+          <td>Genellikle odunsu, kalın gövdeli, halka şeklinde düzenlenmiş iletim demetleri ve kambiyum mevcuttur.</td>
+        </tr>
+        <tr>
+          <td><strong>Yaprak</strong></td>
+          <td>İnce, uzun, şerit şeklinde; paralel damarlanma; yaprak sapı genellikle yoktur.</td>
+          <td>Ağsı damarlanma; yaprak sapı bulunur; geniş ve çeşitli şekillerde olabilir.</td>
+        </tr>
+        <tr>
+          <td><strong>Kök</strong></td>
+          <td>Saçak kök sistemi; yan kökler belirgin.</td>
+          <td>Kazık kök sistemi; ana kök ve dallı yapıda.</td>
+        </tr>
+        <tr>
+          <td><strong>Çiçek</strong></td>
+          <td>Çiçek yapısında taç yaprak kısımları çoğunlukla üçer katlıdır.</td>
+          <td>Çiçek yapısında taç yaprak kısımları dört veya beş katlı olarak düzenlenir.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Kök, Gövde ve Yapraklarından Yararlanılan Bitkiler -->
+  <section class="section">
+    <h2>Kök, Gövde ve Yapraklarından Yararlanılan Bitkiler</h2>
+    
+    <h3>1. Kökünden Yararlanılan Bitkiler</h3>
+    <ul>
+      <li><strong>Örnekler:</strong> Havuç, turp, şalgam, kereviz, pancar.</li>
+      <li><strong>Kullanım Alanı:</strong> Sebze olarak tüketilen kökler; şeker pancarı ise şeker üretiminde kullanılır.</li>
+    </ul>
+    
+    <h3>2. Gövdesinden Yararlanılan Bitkiler</h3>
+    <ul>
+      <li><strong>Örnek:</strong> Patates.</li>
+      <li><strong>Açıklama:</strong> Bitkinin yaprakları veya sürgünleri zehirli olabilse de, toprak altındaki yumrular nişasta bakımından zengindir ve temel bir besin maddesi olarak kullanılır.</li>
+    </ul>
+    
+    <h3>3. Yapraklarından Yararlanılan Bitkiler</h3>
+    <ul>
+      <li><strong>Örnek Sebzeler:</strong> Lahana, ıspanak, kıvırcık salata, marul, semizotu, pazı, ebegümeci.</li>
+      <li><strong>Örnek Kokulu Bitkiler:</strong> Nane, dereotu, tere; bu bitkiler, yemeklere ve içeceklere aroma katmak amacıyla kullanılır.</li>
+      <li><strong>Kullanım:</strong> Yaprakları taze tüketilebildiği gibi, bazıları pişirilerek veya salata olarak servis edilebilir.</li>
+    </ul>
+
+
+
+
+    <large>Bitkisel Hormonlar</large>
+    <p>Bitkisel hormonlar, bitkilerin büyüme, gelişme ve çevresel koşullara uyum sağlamasını düzenleyen kimyasal bileşiklerdir. İşte temel bitkisel hormonlar ve görevleri:</p>
+    <h2>Oksin</h2>
+    <p>Oksin, bitkilerin büyüme ve gelişiminde kritik bir rol oynar. Sürgün uçlarında sentezlenen bu hormon, hücre uzamasını teşvik eder ve kök gelişimini destekler. Fototropizma ve jeotropizma gibi yönelim hareketlerinde etkilidir. Fazla salgılanması büyümeyi engelleyebilirken, az salgılanması yaprak dökülmesine neden olabilir. En yaygın ot öldürücü kimyasallardan biri sentetik oksindir. Bu sentetik oksin, bitkinin büyümesini düzenleyen hormon dengesini bozarak yabancı otları öldürmek için kullanılır.</p>
+    
+    <h2>Giberellin</h2>
+    <p>Giberellin hormonu, hücre bölünmesini ve hücre büyümesini uyararak bitkinin boyunun uzamasına katkı sağlar. Tohumların çimlenmesini destekler, çiçeklenmeyi teşvik eder ve bazı tarımsal uygulamalarda meyve büyüklüğünü artırmak için kullanılır. Özellikle üzüm gibi meyvelerde salkım seyreltmek, çekirdeksiz meyve oluşumunu sağlamak ve tane iriliğini artırmak için yaygın olarak uygulanır.</p>
+    
+    <h2>Sitokinin</h2>
+    <p>Sitokinin, hücre bölünmesini teşvik eden ve bitkinin yaşlanmasını geciktiren bir hormondur. Yanal tomurcuk gelişimini uyararak bitkinin dallanmasını sağlar. Ayrıca yaprakların daha uzun süre yeşil kalmasına katkıda bulunur. Sitokinin hormonu, kök uçlarında sentezlenir ve ksilem yoluyla meristem dokulara, tohumlara, yapraklara ve meyvelere taşınır. Bu bölgelerde aktif rol oynar.</p>
+    
+    <h2>Absisik Asit</h2>
+    <p>Absisik asit, büyüme ve gelişmeyi durduran bir hormondur. Bitkinin olumsuz çevresel koşullara dayanmasını sağlar. Kuraklık stresinde stomaların kapanmasına neden olarak su kaybını önler. Ayrıca tohumların uyku halinde kalmasını sağlayarak çimlenmeyi geciktirir. Absisik asit, tomurcuk ve tohumların dormansisini (durgunluk dönemi) korumasına yardımcı olur.</p>
+    
+    <h2>Etilen</h2>
+    <p>Etilen gaz formunda bulunan bir hormondur ve meyve olgunlaşmasında önemli bir rol oynar. Meyve olgunlaşmasını hızlandırırken, yaprak ve çiçek dökülmesini de teşvik eder. Bitki stres altında kaldığında etilen üretimi artarak uyum sağlamasına yardımcı olur. Etilen, hücre çeperi bileşenlerinin enzimatik olarak parçalanmasına ve nişasta ile asitlerin şekere dönüşmesine neden olur. Böylece meyve tatlanır ve olgunlaşır. Ancak olgunlaşma tamamlandıktan sonra etilen üretimi devam ederse meyve çürür. Bu yüzden "Çürük bir elma gerçekten bir kasa elmayı çürütür." sözü bilimsel olarak doğrudur. Soğuk hava depolarında bekletilen elmaların bozulmasını önlemek için genellikle etilen gazının etkisini engellemek amacıyla CO2 ile yıkanır.</p>
+    
+    <h2>Salisilik Asit</h2>
+    <p>Salisilik asit, bitkinin hastalıklara karşı savunma mekanizmalarını harekete geçiren bir hormondur. Özellikle patojenlere karşı bitkinin bağışıklık sistemini güçlendirmede önemli bir rol oynar. Ayrıca bitkinin stres koşullarına karşı direncini artırır.</p>
+    
+    <h2>Ek Notlar</h2>
+    <p>Bitkilerde hormon salgısı yapmaya özelleşmiş bir doku bulunmaz. Hormonlar belirli bitki dokularında sentezlenir ve ihtiyaç duyulan bölgelere taşınır. Hayvanlarda ise hormonlar genellikle özelleşmiş bezler tarafından salgılanır.</p>
+   
+
+    <h2>Diğer Hormonlar</h2>
+    <p>Bitkilerde az bilinen hormonlar arasında karrikinler ve poliaminler yer alır. Karrikinler, yangın sonrası tohum çimlenmesini uyarırken, poliaminler hücre büyümesi ve farklılaşmasını destekler.</p>
+    
+<h3>Brassinosteroidler</h3>
+    <p>Brassinosteroidler, hücre büyümesini teşvik eden ve bitkinin stres koşullarına dayanıklılığını artıran steroid yapılı hormonlardır.</p>
+    
+    <h3>Jasmonat</h3>
+    <p>Jasmonat, bitkinin savunma mekanizmalarını harekete geçiren ve yaralanmalara karşı tepki vermesini sağlayan bir hormondur.</p>
+    
+    <h3>Strigolaktonlar</h3>
+    <p>Strigolaktonlar, bitki köklerinden salgılanan ve kök gelişimini düzenleyen, ayrıca simbiyotik mantarlarla etkileşimi teşvik eden hormonlardır.</p>
+    
+
+   <table>
+        <tr>
+            <th>Hormon</th>
+            <th>Görevleri</th>
+            <th>Üretildiği Yer</th>
+        </tr>
+        <tr>
+            <td>Oksin</td>
+            <td>Hücre büyümesini teşvik eder, kök gelişimini destekler, fototropizma ve jeotropizma olaylarını düzenler.</td>
+            <td>Sürgün uçları, genç yapraklar, gelişmekte olan meyve ve tohumlar.</td>
+        </tr>
+        <tr>
+            <td>Giberellin</td>
+            <td>Tohum çimlenmesini destekler, gövde ve yaprak uzamasını teşvik eder.</td>
+            <td>Kökler, genç yapraklar, embriyolar.</td>
+        </tr>
+        <tr>
+            <td>Sitokinin</td>
+            <td>Hücre bölünmesini teşvik eder, yaşlanmayı geciktirir, yaprak dökülmesini önler.</td>
+            <td>Kök uçları, meristem dokular, yapraklar, meyveler.</td>
+        </tr>
+        <tr>
+            <td>Etilen</td>
+            <td>Meyve olgunlaşmasını sağlar, yaprak dökümünü hızlandırır.</td>
+            <td>Olgunlaşmış meyve dokuları, yaşlı yapraklar ve çiçekler.</td>
+        </tr>
+        <tr>
+            <td>Absisik Asit</td>
+            <td>Stomaların kapanmasını sağlar, tohumların uyku halinde kalmasını destekler.</td>
+            <td>Tüm bitki dokularında sentezlenebilir.</td>
+        </tr>
+        <tr>
+            <td>Brasinosteroidler</td>
+            <td>Hücre büyümesini ve farklılaşmasını teşvik eder, stres toleransını artırır.</td>
+            <td>Bitkilerin çeşitli dokularında.</td>
+        </tr>
+        <tr>
+            <td>Jasmonat</td>
+            <td>Bitkinin savunma mekanizmalarını uyarır, yaralanma tepkilerini düzenler.</td>
+            <td>Bitkisel hücre zarları.</td>
+        </tr>
+        <tr>
+            <td>Salicylate (Salisilik Asit)</td>
+            <td>Bitkinin hastalıklara karşı savunmasını artırır.</td>
+            <td>Bitkilerin çeşitli dokularında.</td>
+        </tr>
+        <tr>
+            <td>Strigolactonlar</td>
+            <td>Yan dalların büyümesini düzenler, kök simbiyozunu destekler.</td>
+            <td>Kök dokuları.</td>
+        </tr>
+    </table>
+
+
+   <large>Bitkilerde Hareket</large>
+    <p>Bitkiler toprağa bağlıdırlar. Bu nedenle bitkilerde yer değiştirme şeklinde bir hareket görülmez. Ancak bir uyarı olduğunda yönelme (<b>tropizma</b>) ve durum değiştirme (<b>nasti</b>) hareketi yapabilir.</p>
+    
+ <h1>1. Tropizma Hareketleri</h1>
+    <p>Bitkilerin çevreden gelen uyaranın yönüne bağlı olarak gerçekleştirdiği tepkidir.</p>
+    <ul>
+        <li>Tropizma hareketleri, bitkilerin sadece büyüyen ve uzayan kısımlarında meydana gelir.</li>
+        <li>Eğer hareket uyarana doğru ise <span class="highlight">pozitif</span>, zıt yönde ise <span class="highlight">negatif</span> tropizma olarak adlandırılır.</li>
+    </ul>
+    
+    <h1>Fototropizma</h1>
+    <p>Bitkinin ışığa karşı gösterdiği yönelme hareketidir. Örneğin, pencere önüne konan bir bitkinin güneşe doğru yönelmesi <span class="highlight">pozitif fototropizma</span>dır.</p>
+    <p>Bitkide büyümeyi sağlayan oksin hormonu ışık alan tarafta az, ışık almayan tarafta daha fazla bulunur. Bu nedenle ışık almayan taraftaki hücreler daha hızlı çoğalır ve büyüktür. Bu da bitki gövdesinin güneşe doğru yönelmesine neden olur.</p>
+    
+    <h2>Koleoptil Ucu Nedir?</h2>
+    <p>Koleoptil ucu, genç çimlenmiş bitkilerde filizlerin üst kısmında bulunan koruyucu bir yapıdır. Fototropizma deneylerinde ışık algılayıcı bölge olarak görev yapar ve oksin hormonunun dağılımını düzenler.</p>
+    
+
+    <h2>Deneyler ve Bulgular</h2>
+   <ul>
+        <li>Koleoptilin ucu kesildiğinde yönelme olmaz.</li>
+        <li>Işık geçirmeyen başlık takıldığında yönelme olmaz, ancak büyüme devam eder.</li>
+        <li>Jelatin blok ile ayrıldığında yönelme ve büyüme olur.</li>
+        <li>Mika ile ayrıldığında yönelme olmaz.</li>
+        <li>Karanlıkta oksin emdirilmiş agar blok kullanıldığında yönelme gözlemlenir.</li>
+    </ul>
+   <h2>Malzemelerin Özellikleri</h2>
+    <ul>
+        <li><h4>Agar:</h4> Jelatinimsi bir maddedir ve kimyasal geçişe izin verir. Bitkilerde hormon dağılımını test etmek için kullanılır.</li>
+        <li><h4>Jelatin:</h4> Su içinde çözünebilen ve kimyasalların geçişine izin veren bir madde olup, deneylerde kimyasal sinyal iletiminin engellenmediğini göstermek için kullanılır.</li>
+        <li><h4>Mika:</h4> Geçirimsiz bir malzemedir ve kimyasal maddelerin geçişini engeller. Deneylerde oksin hormonunun taşınmasını önlemek için kullanılır.</li>
+    </ul>
+    <h2>Fototropizma Deneyleri ve Sonuçları</h2>
+    <table>
+        <tr>
+            <th>Deney Koşulu</th>
+            <th>Yönelme</th>
+            <th>Büyüme</th>
+        </tr>
+        <tr>
+            <td>Işığa yönelme</td>
+            <td>Var</td>
+            <td>Var</td>
+        </tr>
+        <tr>
+            <td>Ucu kesilmiş</td>
+            <td>Yok</td>
+            <td>Yok</td>
+        </tr>
+        <tr>
+            <td>Işık geçirmeyen başlık</td>
+            <td>Yok</td>
+            <td>Var</td>
+        </tr>
+        <tr>
+            <td>Işık geçiren kılıf</td>
+            <td>Var</td>
+            <td>Var</td>
+        </tr>
+        <tr>
+            <td>Jelatin blok ile ayrılmış koleoptil ucu</td>
+            <td>Var</td>
+            <td>Var</td>
+        </tr>
+        <tr>
+            <td>Mika ile ayrılmış koleoptil ucu</td>
+            <td>Yok</td>
+            <td>Var</td>
+        </tr>
+        <tr>
+            <td>Karanlıkta oksin emdirilmiş agar blok merkeze konulmuş</td>
+            <td>Yok</td>
+            <td>Var</td>
+        </tr>
+        <tr>
+            <td>Karanlıkta oksin emdirilmiş agar blok merkezin sağına konulmuş</td>
+            <td>Sola</td>
+            <td>Var</td>
+        </tr>
+        <tr>
+            <td>Karanlıkta oksin emdirilmiş agar blok merkezin soluna konulmuş</td>
+            <td>Sağa</td>
+            <td>Var</td>
+        </tr>
+    </table>
+    <h1>Nasti Hareketleri</h1>
+    
+    <div class="definition-box">
+        <p><strong>Nasti Hareketleri:</strong> Bitkilerin uyaranın yönüne bağlı olmaksızın gerçekleştirdikleri harekete denir.</p>
+        <ul>
+            <li>Nasti hareketleri turgor basıncının değişimleri ile sağlanır.</li>
+            <li>Nastide, uyartı hangi yönden gelirse gelsin bitki bütün kısımları ile uyarana tepki gösterir. Bunun için nasitide (+), (-) durumları yoktur.</li>
+            <li>Nasti hareketlerine neden olan uyaranlar ısı, ışık, sarsılma, dokunma gibi dış çevre faktörleridir.</li>
+        </ul>
+    </div>
+
+    <h2>Nasti Hareketi Çeşitleri</h2>
+    
+    <h3>1. Fotonasti</h3>
+    <p>Çiçeklerin ortamdaki ışık şiddetine bağlı olarak açılıp kapanmasıdır.</p>
+    <div class="example">
+        <strong>Örnek:</strong> Akşamsefası (Mirabilis jalapa) çiçekleri gündüz ışık şiddetine bağlı olarak kapanıp karanlıkta açılır. Kadife çiçeği (Tagetes) de benzer şekilde ışığa tepki verir.
+    </div>
+    
+    <h3>2. Termonasti</h3>
+    <p>Bitkilerde sıcaklık değişmelerinin sebep olduğu nasti hareketidir. Bu hareketler çiçeklerde sık görülür.</p>
+    <div class="example">
+        <strong>Örnek:</strong> Henüz tam açılmamış olan bir lale bulunduğu ortamdan 10-15°C daha sıcak bir ortama konulursa birkaç dakika içinde çiçek tam açılır. Eğer aynı lale tekrar önceki ortamına alınırsa düşük sıcaklığın etkisiyle lalenin taç yaprakları kapanır. Kardelen çiçekleri de sıcaklık artışıyla açılma gösterir.
+    </div>
+    
+    <h3>3. Sismonasti</h3>
+    <p>Bitkide sarsıntı ve dokunma ile meydana gelen turgor değişimleri sonucu ortaya çıkan hareketlerdir.</p>
+    <div class="example">
+        <strong>Örnekler:</strong>
+        <ul>
+            <li>Küstüm otunun (Mimosa pudica) yapraklarının dokunmayla kapanması</li>
+            <li>Böcekçil bitkilerin (Dionaea muscipula - Venüs sinek kapanı) yapraklarının böceğin dokunmasıyla kapanması</li>
+            <li>Küstüm otunda yaprak kapanması saniyeler içinde gerçekleşirken, yeniden açılması 20-30 dakika alır</li>
+        </ul>
+    </div>
+    
+    <h3>4. Niktinasti (Uyku Hareketleri)</h3>
+    <p>Bitkilerin gece ve gündüz periyotlarına bağlı olarak yapraklarını açıp kapamalarıdır.</p>
+    <div class="example">
+        <strong>Örnekler:</strong>
+        <ul>
+            <li>Bakla (Phaseolus) bitkisinin yapraklarının gece katlanması</li>
+            <li>Yonca (Trifolium) yapraklarının gece aşağı doğru sarkması</li>
+            <li>Bazı bitkilerde bu hareketler içsel biyolojik saatle kontrol edilir</li>
+        </ul>
+    </div>
+    
+    <h3>5. Hidronasti</h3>
+    <p>Nem oranındaki değişikliklere bağlı olarak gerçekleşen nasti hareketleridir.</p>
+    <div class="example">
+        <strong>Örnek:</strong> Bazı çöl bitkilerinin kuru havalarda yapraklarını kıvırarak su kaybını azaltması. Stoma hücrelerinin turgor basıncına göre açılıp kapanması da bir çeşit hidronastidir.
+    </div>
+    
+    <h3>6. Kemionasti</h3>
+    <p>Kimyasal uyaranlara karşı gösterilen nasti hareketleridir.</p>
+    <div class="example">
+        <strong>Örnek:</strong> Böcekçil bitkilerin yapraklarında avın salgıladığı kimyasallara tepki olarak sindirim enzimleri salgılaması. Özellikle Drosera (sinekkapan) türlerinde görülür.
+    </div>
+    
+    <h3>7. Traumatonasti</h3>
+    <p>Yaralanma veya hasara karşı gösterilen nasti hareketleridir.</p>
+    <div class="example">
+        <strong>Örnek:</strong> Bazı bitkilerin yaralanan bölgelerinde yaprak kapanması veya savunma kimyasalları salgılaması. Örneğin, bazı Acacia türleri otçul hayvanlar tarafından yenildiğinde yapraklarında toksik maddeler üretir.
+    </div>
+
+    <h2>Tropizma ve Nasti Karşılaştırması</h2>
+    <table>
+        <tr>
+            <th>Karakteristik</th>
+            <th>Tropizma</th>
+            <th>Nasti</th>
+        </tr>
+        <tr>
+            <td>Hareketin Niteliği</td>
+            <td>Uyaranın yönüne bağlı yönelim hareketleri</td>
+            <td>Uyaranın yönüne bağlı olmayan durum değiştirme hareketleri</td>
+        </tr>
+        <tr>
+            <td>Mekanizma</td>
+            <td>Hormon (oksin) etkisi ile gerçekleşir</td>
+            <td>Turgor basıncı etkisi ile gerçekleşir (Bazılarında elektriksel uyarıların etkisi de vardır)</td>
+        </tr>
+        <tr>
+            <td>Hız</td>
+            <td>Yavaş gerçekleşir (saatler-günler)</td>
+            <td>Hızlı gerçekleşir (saniyeler-dakikalar)</td>
+        </tr>
+        <tr>
+            <td>Yön Bağımlılığı</td>
+            <td>Uyaranın yönüne göre pozitif, negatif tropizma vardır</td>
+            <td>Uyaranın yönüne bağlı olmadığı için negatif, pozitif çeşitleri yoktur</td>
+        </tr>
+        <tr>
+            <td>Örnekler</td>
+            <td>Fototropizma (ışığa yönelim), Geotropizma (yerçekimine yönelim)</td>
+            <td>Fotonasti, Termonasti, Sismonasti</td>
+        </tr>
+    </table>
+
+    <h2>Nasti Hareketlerinin Mekanizması</h2>
+    <p>Nasti hareketleri genellikle pulvinus adı verilen özelleşmiş yapılar tarafından kontrol edilir. Pulvinus, yaprak sapının tabanında bulunan şişkin bir dokudur. Bu dokudaki motor hücreler turgor basıncını hızla değiştirebilir:</p>
+    <ul>
+        <li><strong>Turgor artışı:</strong> Hücrelere su girişi → yaprak açılması</li>
+        <li><strong>Turgor azalışı:</strong> Hücrelerden su çıkışı → yaprak kapanması</li>
+    </ul>
+    <p>Bu süreç potasyum iyonlarının (K+) aktif taşınmasıyla sağlanır. Sismonasti gibi hızlı hareketlerde elektriksel sinyaller (aksiyon potansiyelleri) rol oynar.</p>
+<h2>Tropizmler</h2>
+<p>Bitkilerin yönlü uyaranlara karşı gösterdiği yönelim hareketleridir. Büyüme yönünü belirler.</p>
+
+<h3>Çeşitleri ve Özellikleri</h3>
+<ul>
+    <li><strong>Aerotropizm:</strong> Rüzgar yönüne doğru veya rüzgardan uzağa büyüme. Kökler genellikle rüzgar yönüne doğru büyür.</li>
+    
+    <li><strong>Kemotropizm:</strong> Kimyasal maddelere tepki. Kökler besin maddelerine doğru (pozitif), toksik maddelerden uzağa (negatif) büyür.</li>
+    
+    <li><strong>Elektrotropizm (Galvanotropizm):</strong> Elektrik alanına tepki. Kökler genellikle katoda doğru büyüme eğilimindedir.</li>
+    
+    <li><strong>Ekzotropizm:</strong> Genetik olarak belirlenmiş sabit büyüme yönü. Örneğin sarmaşık dallarının spiral büyümesi.</li>
+    
+    <li><strong>Gravitropizm (Geotropizm):</strong> Yerçekimine tepki. Kökler pozitif (aşağı), gövdeler negatif (yukarı) gravitropizm gösterir.</li>
+    
+    <li><strong>Apogeotropizm:</strong> Yerçekimine ters yönde büyüme. Bazı yan kökler bu şekilde büyür.</li>
+    
+    <li><strong>Heliotropizm:</strong> Güneş ışığına yönelim. Ayçiçeğinin güneşi takip etmesi tipik örnektir.</li>
+    
+    <li><strong>Apheliotropizm:</strong> Güneş ışığından kaçınma. Bazı bitki kökleri bu şekilde büyür.</li>
+    
+    <li><strong>Hidrotropizm:</strong> Suya doğru yönelim. Kökler su kaynağına doğru büyür.</li>
+    
+    <li><strong>Prohidrotropizm:</strong> Suya doğru pozitif yönelim. Çoğu kök sistemi bu şekilde davranır.</li>
+    
+    <li><strong>Higrotropizm:</strong> Neme yönelim. Havadaki nem gradientine tepki.</li>
+    
+    <li><strong>Fototropizm:</strong> Işığa yönelim. Gövdeler pozitif (ışığa doğru), bazı kökler negatif fototropizm gösterir.</li>
+    
+    <li><strong>Aphototropizm:</strong> Işıktan kaçınma. Bazı yeraltı kök sistemleri.</li>
+    
+    <li><strong>Skototropizm:</strong> Karanlığa yönelim. Bazı tropikal sarmaşıklar gölgeye doğru büyür.</li>
+    
+    <li><strong>Selenotropizm:</strong> Ay ışığına yönelim. Bazı bitkilerin çiçeklerinde görülür.</li>
+    
+    <li><strong>Termotropizm:</strong> Sıcaklık gradientine tepki. Bazı çiçekler ısı kaynaklarına yönelir.</li>
+    
+    <li><strong>Tigmotropizm:</strong> Temasa tepki. Sarmaşıkların desteklere sarılması.</li>
+    
+    <li><strong>Travmatotropizm:</strong> Yaralanmaya tepki. Kökler yaralı bölgeden uzaklaşır.</li>
+</ul>
+
+<h2>Diğer Hareket Türleri</h2>
+<p>Yönelimden bağımsız bitki hareket çeşitleridir.</p>
+
+<h3>Nutasyon (Nutation)</h3>
+<p>Bitki organlarının büyüme sırasındaki düzenli salınım hareketleri. Büyüme ucu spiral veya zigzag şeklinde hareket eder.</p>
+
+<h4>Özellikleri:</h4>
+<ul>
+    <li>İçsel ritimle kontrol edilir</li>
+    <li>Büyüme hızındaki asimetrik değişimlerden kaynaklanır</li>
+    <li>Fasulye sarmaşıklarının sarılma hareketinde görülür</li>
+</ul>
+
+<h3>Propriyoseptif Hareket</h3>
+<p>Bitkinin kendi yapısal durumuna göre ayarladığı hareketler. Örneğin ağırlık dağılımına göre gövde eğiminin ayarlanması.</p>
+
+<h3>Kemotaksi</h3>
+<p>Tek hücreli bitkilerin ve polen tüplerinin kimyasal gradientlere doğru hareketi. Örneğin polen tüplerinin yumurtalığa doğru büyümesi.</p>
+
+ <h2>Hızlı Bitki Hareketleri</h2> <p>Hızlı bitki hareketleri, tropizmalardan farklı olarak çok kısa sürede (saniyeler veya dakikalar içinde) gerçekleşen ve genellikle tersine çevrilebilen hareketlerdir. Bu hareketler, <strong>turgor basıncı değişimleri</strong> veya <strong>elektrokimyasal sinyaller</strong> ile tetiklenir. Uyaranın yönüne bağlı olup olmamasına göre sınıflandırılır.</p><h3>Hareket Mekanizması</h3> <ul> <li><strong>Turgor Basıncı Değişimi:</strong> Hücrelerde su alımı veya kaybına bağlı ani şişme/büzülme (Örnek: Küstümotu).</li> <li><strong>Aksiyon Potansiyelleri:</strong> Dokunma gibi uyaranlarla elektriksel sinyallerin iletilmesi (Örnek: Venüs sinek kapanı).</li> </ul><h3>Hareket Türleri ve Örnekler</h3> <table border="1"> <thead> <tr> <th>Bitki Türü</th> <th>Hareket Tipi</th> <th>Uyaran</th> <th>Yönlü/Yönsüz</th> <th>Mekanizma</th> </tr> </thead> <tbody> <tr> <td><strong>Küstümotu (Mimosa pudica)</strong></td> <td>Sismonasti</td> <td>Dokunma, sarsıntı</td> <td>Yönsüz (Nasti)</td> <td>Turgor kaybı ile yaprakların kapanması</td> </tr> <tr> <td><strong>Venüs Sinek Kapanı (Dionaea)</strong></td> <td>Tigmotropizm + Nasti</td> <td>Dokunma (kıl uyarısı)</td> <td>Yönlü (Tropizma) + Yönsüz (Hızlı kapanma)</td> <td>Aksiyon potansiyeli ile turgor değişimi</td> </tr> <tr> <td><strong>Su Piresi Kapanı (Utricularia)</strong></td> <td>Kemotropizma + Nasti</td> <td>Kimyasal uyaran</td> <td>Yönlü (Besine doğru) + Yönsüz (Ani kapanma)</td> <td>Vakum etkisi ile su emilimi</td> </tr> <tr> <td><strong>Aldrovanda (Su sinek kapanı)</strong></td> <td>Tigmotropizm</td> <td>Dokunma</td> <td>Yönlü</td> <td>Hücrelerin ani büzülmesi</td> </tr> </tbody> </table><h3>Yönlü ve Yönsüz Hareket Karşılaştırması</h3> <ul> <li><strong>Yönlü Hareket (Tropizma):</strong> <ul> <li>Uyaranın kaynağına göre sabit yönelim (Örn: Venüs kapanının böceğe doğru kıvrılması).</li> <li>Genellikle yavaş büyüme hareketleri.</li> </ul> </li> <li><strong>Yönsüz Hareket (Nasti):</strong> <ul> <li>Uyaranın yönünden bağımsız hızlı tepki (Örn: Küstümotunun herhangi bir dokunuşa kapanması).</li> <li>Turgor değişimleri veya elektriksel sinyallerle tetiklenir.</li> </ul> </li> </ul>
+<div> <h3>Turgor Artarsa:</h3> <ul> <li>Hücreler şişer ve gerginleşir</li> <li>Bitki dokuları dik durur</li> <li>Stomalar açılır</li> <li>Nasti hareketleri gerçekleşir (örn. küstümotu yapraklarının açılması)</li> </ul> </div><div> <h3>Turgor Azalırsa:</h3> <ul> <li>Hücreler büzüşür</li> <li>Bitkide solma görülür</li> <li>Stomalar kapanır</li> <li>Nasti hareketleri tersine döner (örn. küstümotu yapraklarının kapanması)</li> </ul> </div>
+<div> <h3>Ozmotik Basınç Artarsa:</h3> <ul> <li>Hücreye su girişi artar</li> <li>Turgor basıncı yükselir</li> <li>Kökler suya doğru yönelir (pozitif hidrotropizm)</li> </ul> </div><div> <h3>Ozmotik Basınç Azalırsa:</h3> <ul> <li>Hücreden su çıkışı olur</li> <li>Turgor basıncı düşer</li> <li>Bitki solmaya başlar</li> </ul> </div>
+<div"> <h2>Stoma Açılma ve Kapanma Mekanizması</h2> <div style="display:flex; justify-content:space-between; margin-top:15px;"> <div> <h3>Stoma Açılması</h3> <ol> <li>Işık varlığında fotosentez başlar</li> <li>Şeker üretimi artar → ozmotik basınç yükselir</li> <li>Komşu hücrelerden stoma hücrelerine su girer</li> <li>Turgor basıncı artar → stoma açılır</li> </ol> </div>
+<div">
+  <h3>Stoma Kapanması</h3>
+  <ol>
+    <li>Karanlıkta veya su stresinde ABA hormonu salgılanır</li>
+    <li>Potasyum iyonları dışarı atılır → ozmotik basınç düşer</li>
+    <li>Stoma hücrelerinden su çıkar</li>
+    <li>Turgor basıncı azalır → stoma kapanır</li>
+  </ol>
+</div>
+</div> </div>
+<div> <h2>Yapraklarda Turgor Değişimleri</h2> <table border="1" style="width:100%; margin-top:10px;"> <tr> <th>Durum</th> <th>Yaprak Görünümü</th> <th>Fizyolojik Sonuç</th> </tr> <tr> <td><strong>Yüksek Turgor</strong></td> <td>Dik, gergin yaprak</td> <td>Fotosentez verimliliği artar</td> </tr> <tr> <td><strong>Düşük Turgor</strong></td> <td>Sarkık, solgun yaprak</td> <td>Metabolik aktiviteler yavaşlar</td> </tr> </table> <h3 style="margin-top:15px;">Turgorun Yaprak Hareketlerine Etkisi</h3> <ul> <li><strong>Niktinasti:</strong> Yaprakların gece-gündüz pozisyon değişimi (turgor değişimi ile)</li> <li><strong>Sismonasti:</strong> Dokunmaya tepki (küstümotu)</li> <li><strong>Termonasti:</strong> Sıcaklık değişimlerine tepki</li> </ul> </div>
+<div> <h2>Turgor Basıncını Artırma Yöntemleri</h2> <ul> <li><strong>Su alımını artırmak:</strong> Köklerde ozmotik basıncı artırarak</li> <li><strong>K+ iyonu birikimi:</strong> Stoma hücrelerinde potasyum alımını artırmak</li> <li><strong>Organik çözünen üretimi:</strong> Fotosentezle şeker üretimini artırmak</li> </ul> <h2 style="margin-top:15px;">Turgor Basıncını Azaltma Yöntemleri</h2> <ul> <li><strong>Su kaybı:</strong> Terleme ile su atılımı</li> <li><strong>İyon atılımı:</strong> K+ iyonlarının hücre dışına verilmesi</li> <li><strong>ABA hormonu:</strong> Stres durumunda stomaları kapatma</li> </ul> </div>
+
+
+
+
+    <large>BİTKİLERDE MADDE TAŞINMASI</large>
+    
+    <strong>
+        <p>Bitkilerde madde taşınması, bitkilerin yaşamsal faaliyetlerini sürdürebilmeleri için hayati öneme sahip bir süreçtir. Bu süreçte su, mineraller ve organik bileşikler bitkinin farklı kısımları arasında taşınır.</p>
+    </strong>
+    
+    <h2>Su ve Minerallerin Bitkiler İçin Önemi</h2>
+    
+    <blockquote>
+        <p><strong>Bilgi:</strong> Bitkiler topraktan suyla birlikte mineralleri alır. Bu işlem genellikle kökler vasıtasıyla gerçekleşir ve bitkinin büyümesi için gerekli olan temel süreçlerden biridir.</p>
+    </blockquote>
+    
+    <p>Bitkiler, topraktan su ve gerekli mineralleri alarak beslenir. Mineraller topraktan genellikle inorganik iyonlar hâlinde alınır. Bitkinin yapısında bulunan mineraller, organik madde sentezinde görev aldıkları için oldukça önemlidir.</p>
+    
+    <h3>Bitkilerin Temel İhtiyaçları</h3>
+    <p>Bitkilere güneş ışığı ve gerekli mineraller verildiğinde, normal büyüme için gerekli tüm bileşikler sentezlenebilir. Organik bileşiklerin sentezlenebilmesi için bitkinin havadan CO<sub>2</sub> alması gerekir.</p>
+    
+    <h4>Gaz Alışverişi</h4>
+    <p>Bitkiler O<sub>2</sub> üreticisi olmakla birlikte hücre solunumu için O<sub>2</sub>'e gereksinim duyar. Bitki kökleri solunum için topraktan O<sub>2</sub> alırken solunum sonucu üretilen CO<sub>2</sub>'i toprağa verir.</p>
+    
+    <h3>Topraktaki Minerallerin Emilimi</h3>
+    <p>Toprakta bulunan minerallerin çok azı bitkiler tarafından kolayca alınabilir özelliktedir. Minerallerin bitkiler tarafından alınabilir hâle dönüşmesi:</p>
+    <ul>
+        <li>Topraktaki mikroorganizmaların faaliyetine</li>
+        <li>Toprağın havasına</li>
+        <li>Sıcaklığına</li>
+        <li>pH değerine</li>
+        <li>Nem oranına</li>
+    </ul>
+    <p>gibi birçok faktöre bağlıdır.</p>
+    
+    <h2>Bitkiler İçin Önemli Elementler</h2>
+    
+    <blockquote>
+        <p><strong>Bilgi:</strong> Bitkiler için gerekli elementler ihtiyaç duyulan miktarlara göre makro ve mikro elementler olarak ikiye ayrılır. Her elementin bitki fizyolojisinde farklı bir rolü vardır.</p>
+    </blockquote>
+    
+    <h3>Mutlak Gerekli (Elzem) Elementler</h3>
+    <p>Besin tuzları çeşitli elementlerden oluşur. Bitkilerin büyümesi için yaşamsal öneme sahip elementlere mutlak gerekli (elzem) element denir.</p>
+    
+    <p>Mutlak gerekli elementler:</p>
+    <ul>
+        <li>Enzimlerin faaliyetlerinde</li>
+        <li>Hücrelerin osmotik basıncının düzenlenmesinde</li>
+        <li>Bazı organik bileşiklerin yapısal elemanı olarak görev yapar.</li>
+    </ul>
+    
+    <h4>Makro Elementler</h4>
+    <p>Bitkilerin fazla miktarda ihtiyaç duyduğu elementlerdir:</p>
+    <ul>
+        <li>Karbon (C)</li>
+        <li>Hidrojen (H)</li>
+        <li>Oksijen (O)</li>
+        <li>Azot (N)</li>
+        <li>Kükürt (S)</li>
+        <li>Fosfor (P)</li>
+        <li>Potasyum (K)</li>
+        <li>Kalsiyum (Ca)</li>
+        <li>Magnezyum (Mg)</li>
+    </ul>
+    
+    <h4>Mikro Elementler</h4>
+    <p>Bitkilerin çok az gereksinim duyduğu elementlerdir:</p>
+    <ul>
+        <li>Klor (Cl)</li>
+        <li>Bakır (Cu)</li>
+        <li>Sodyum (Na)</li>
+        <li>Demir (Fe)</li>
+        <li>Çinko (Zn)</li>
+        <li>Mangan (Mn)</li>
+    </ul>
+    
+    <h2>Bitki Gelişiminde Elementlerin Rolü</h2>
+    <p>Bitkiler, besin elementlerinin <u>optimum düzeyde</u> bulunduğu ortamlarda en iyi şekilde büyür ve gelişir.</p>
+    
+    <h3>Minimum Kuralı (Liebig Yasası)</h3>
+    
+    <blockquote>
+        <p><strong>Bilgi:</strong> Minimum kuralı, Alman kimyager Justus von Liebig tarafından ortaya atılmıştır ve tarım biliminde önemli bir prensiptir.</p>
+    </blockquote>
+    
+    <p>Minimum kuralı: Ortamda bulunan elementlerden hangisi en az ise, o element sınırlayıcı etki gösterir. Yani diğer elementler ortamda yeterli olsa bile bitkinin bu elementlerden yararlanma ölçüsü, ortamda az bulunan elementten yararlandığı ölçüdedir.</p>
+    
+    <p>Bitkinin gelişimi en az oranda bulunan elemente göre olur. Buna <u>minimum yasası</u> denir.</p>
+    
+    <strong>
+        <p>Bu prensip, tarımda gübreleme stratejilerinin belirlenmesinde önemli rol oynar. Çiftçiler toprak analizi yaparak hangi elementlerin eksik olduğunu belirler ve buna göre gübreleme yapar.</p>
+    </strong>
+  </body>
+
+    <h1>Bitkilerde Madde Taşınması ve Gübreleme</h1>
+    
+    <h2>Gübre</h2>
+    <p>Bitki büyümesini arttırmak için toprağa uygulanan doğal veya yapay kimyasallara gübre denir.</p>
+    
+    <h3>Gübre Çeşitleri</h3>
+    <p>İki temel tip gübre bulunur:</p>
+    <ol>
+        <li>
+            <strong>İnorganik gübreler:</strong> Azot, fosfor, potasyum gibi inorganik mineralleri içeren gübrelerdir.
+            <p><em>Ek bilgi:</em> NPK gübreleri olarak bilinirler ve içerdikleri azot (N), fosfor (P) ve potasyum (K) oranlarına göre sınıflandırılırlar.</p>
+        </li>
+        <li>
+            <strong>Organik gübreler:</strong> Bitki veya hayvan kalıntılarından elde edilen gübrelerdir. Biyolojik kökenlidir.
+            <p><em>Ek bilgi:</em> Kompost, yeşil gübre, hayvan gübresi (ahır gübresi) ve kemik unu gibi çeşitleri vardır. Toprağın yapısını iyileştirir ve mikrobiyal aktiviteyi artırır.</p>
+        </li>
+    </ol>
+    
+    <h2>Topraktaki Su ve Minerallerin Bitkiye Geçiş Adaptasyonları</h2>
+    
+    <h3>1. Kök Emici Tüy Hücreleri</h3>
+    <p>Epidermis hücrelerinin toprak içine doğru uzantılarıdır. Toprak parçacıkları ile kökün temas yüzeyini arttırır.</p>
+    <p><em>Örnek:</em> Bir çavdar bitkisinde emici tüylerin sayısı 14 milyar civarındadır ve oluşturduğu toplam yüzey alanı 400 m²'den fazladır.</p>
+    <p><em>Ek bilgi:</em> Emici tüyler sadece birkaç gün yaşar ve sürekli yenilenir. Kök büyüdükçe yeni emici tüyler oluşur.</p>
+    
+    <h3>2. Nodül (Yumru)</h3>
+    <p>Yer fıstığı, fasulye, yonca gibi baklagillerin köklerinde azot bağlayıcı bakterileri bulunduran hücrelerden oluşmuş şişkinliklerdir.</p>
+    <p><em>Ek bilgi:</em> Rhizobium cinsi bakterilerle oluşan bu mutualist ilişki sayesinde baklagiller azotça fakir topraklarda bile yetişebilir.</p>
+    
+    <h3>3. Mikoriza</h3>
+    <p>Canlı bitki kökleri ile mantar hifleri arasındaki mutualist birliğe denir.</p>
+    <p><em>Ek bilgi:</em> İki tip mikoriza vardır:</p>
+    <ul>
+        <li><strong>Ektomikoriza:</strong> Mantar hifleri kökün epidermis hücreleri arasında yaşar</li>
+        <li><strong>Endomikoriza:</strong> Mantar hifleri kök hücrelerinin içine kadar girer</li>
+    </ul>
+    
+    <h2>Bitkilerde Su ve Mineral Taşınma Mekanizması</h2>
+    
+    <h3>Ksilem ile Taşınma</h3>
+    <p>Damarlı bitkilerde su ve mineraller iletim doku elemanları olan ksilem (odun boruları) ile taşınır.</p>
+    
+    <h4>Suyun Kök Emici Tüyleri ile Alınması</h4>
+    <p>Suyun alınabilmesi, kökteki ozmotik basıncın artışına bağlıdır.</p>
+    <p><em>Ek bilgi:</em> Kök basıncı denen bu olay, sabah saatlerinde bitkilerin yaprak kenarlarından su damlamasına (gutasyon) neden olabilir.</p>
+    
+    <h3>Taşınma Yolları</h3>
+    <p>Topraktan kök emici tüyleri ile alınan su ve minerallerin, kökten ksilem borularına kadar iletilmesi iki farklı yol ile gerçekleşir:</p>
+    
+    <h4>1. Apoplast Yol</h4>
+    <p>Hücre çeperlerinden oluşan, hücreler arası boşlukta ilerleyen bir yoldur.</p>
+    <p><em>Ek bilgi:</em> Bu yol boyunca su ve mineraller hücre sitoplazmasına girmeden ilerler, bu nedenle enerji gerektirmez.</p>
+    
+    <h4>2. Simplast Yol</h4>
+    <p>Birbiriyle komşu olan kök hücrelerinin oluşturduğu yoldur.</p>
+    <p><em>Ek bilgi:</em> Hücreler arasında plazmodezmata adı verilen bağlantılar bulunur ve maddeler bu bağlantılarla taşınır.</p>
+    
+    <h3>Kaspari Şeridi</h3>
+    <p>Endodermis hücreleri arasında bulunan, su geçirmeyen bir kuşaktır.</p>
+    <p><em>Ek bilgi:</em> Bu yapı, bitkinin su ve mineral alımını kontrol ederek zararlı maddelerin ksileme geçişini engeller.</p>
+    
+    <h2>Ek Bilgiler</h2>
+    <ul>
+        <li>Bitkilerde su taşınmasında kök basıncı, kılcallık ve terleme-çekim kuvveti etkilidir</li>
+        <li>Fotosentez ürünleri floem dokusuyla taşınırken, su ve mineraller ksilemle taşınır</li>
+        <li>Toprak pH'sı mineral alımını etkiler; çoğu bitki 6.0-7.0 pH aralığını tercih eder</li>
+        <li>Aşırı gübreleme toprak tuzluluğunu artırarak bitki gelişimini olumsuz etkileyebilir</li>
+    </ul>
+        <h1>Bitki Köklerinde Su ve Mineral Taşınımı: Adım Adım Süreç</h1>
+    
+    <h2>1. Kök Emici Tüy Hücreleri ile Başlangıç</h2>
+    <p><strong>Kök emici tüyleri</strong> epidermis hücrelerinin uzantılarıdır ve toprakla temas yüzeyini artırır.</p>
+    <ul>
+        <li>Topraktaki su, <u>osmoz</u> ile tüy hücrelerine girer</li>
+        <li>Mineraller ise <u>aktif taşıma</u> ile alınır (ATP harcanır)</li>
+        <li>Hücre zarı seçici geçirgendir, kontrolü sağlar</li>
+    </ul>
+    
+    <h2>2. Epidermis'ten Korteks'e Geçiş</h2>
+    <p>Su ve mineraller iki farklı yolla ilerler:</p>
+    
+    <h3>Apoplast Yolu:</h3>
+    <ul>
+        <li>Hücre <strong>çeperleri</strong> arasındaki boşluklardan ilerleme</li>
+        <li>Hızlı taşınım yolu</li>
+        <li>Hücre zarından geçme gerektirmez</li>
+    </ul>
+    
+    <h3>Simplast Yolu:</h3>
+    <ul>
+        <li><strong>Hücre zarı</strong> ve <strong>plazmodezmata</strong> bağlantılarıyla</li>
+        <li>Sitoplazmadan sitoplazmaya geçiş</li>
+        <li>Yavaş ama kontrollü taşınım</li>
+    </ul>
+    
+    <h2>3. Korteks Katmanında İlerleme</h2>
+    <p><strong>Korteks</strong> (kabuk bölgesi) parankima hücrelerinden oluşur:</p>
+    <ul>
+        <li>Su ve mineraller burada hem apoplast hem simplast yolla ilerler</li>
+        <li>Korteks hücreleri depo görevi de görür</li>
+    </ul>
+    
+    <h2>4. Endodermis ve Kaspari Şeridi Engelı</h2>
+    <p><strong>Endodermis</strong> tek sıra hücreden oluşan özel tabaka:</p>
+    <ul>
+        <li>Hücrelerinin yan çeperlerinde <strong>kaspari şeridi</strong> bulunur</li>
+        <li>Kaspari şeridi suberin (mantar maddesi) içerir, su geçirmez</li>
+        <li>Apoplast yolunu kesinlikle engeller</li>
+        <li>Zorunlu olarak tüm maddeler simplast yola girer</li>
+    </ul>
+    
+    <h2>5. Merkezi Silindir (Stele) Geçiş</h2>
+    <p>Endodermisi geçen maddeler <strong>merkezi silindire</strong> ulaşır:</p>
+    <ul>
+        <li><strong>Perisikl</strong>: Merkezi silindirin dış tabakası, yanal kök oluşumunu sağlar</li>
+        <li><strong>Ksilem</strong>: Su ve minerallerin taşındığı odun boruları</li>
+        <li><strong>Floem</strong>: Organik madde taşıyan soymuk boruları</li>
+    </ul>
+    
+    <h2>6. Ksileme Ulaşım ve Yukarı Taşınma</h2>
+    <p>Son aşamada:</p>
+    <ul>
+        <li>Su ve mineraller ksilem borularına aktif taşımayla geçer</li>
+        <li>Ksilemde <u>kılcallık</u>, <u>kök basıncı</u> ve <u>terleme-çekim kuvveti</u> ile yukarı taşınır</li>
+        <li>Yapraklara kadar ulaşan su terleme ile atılır, mineraller hücrelerde kullanılır</li>
+    </ul>
+    
+    <h2>Özet Tablo: Taşınım Yapıları ve Görevleri</h2>
+    <table border="1">
+        <tr>
+            <th>Yapı</th>
+            <th>Görev</th>
+            <th>Özellik</th>
+        </tr>
+        <tr>
+            <td>Kök emici tüy</td>
+            <td>Epidermis uzantısı</td>
+            <td>Yüzey artırımı</td>
+        </tr>
+        <tr>
+            <td>Epidermis</td>
+            <td>Dış koruyucu tabaka</td>
+            <td>Emici tüy kaynağı</td>
+        </tr>
+        <tr>
+            <td>Korteks</td>
+            <td>Kabuk dokusu</td>
+            <td>Depo ve taşıma</td>
+        </tr>
+        <tr>
+            <td>Endodermis</td>
+            <td>Seçici bariyer</td>
+            <td>Kaspari şeridi içerir</td>
+        </tr>
+        <tr>
+            <td>Perisikl</td>
+            <td>Merkezi silindir dışı</td>
+            <td>Yanal kök oluşturur</td>
+        </tr>
+        <tr>
+            <td>Ksilem</td>
+            <td>Odun boruları</td>
+            <td>Su/mineral taşınımı</td>
+        </tr>
+    </table>
+    
+    <h1>KSİLEMDE (ODUN BORULARINDA) SUYUN TAŞINMASI</h1>
+    
+    <p><strong>Uzun mesafeli taşıma:</strong> Maddelerin odun ve soymuk boruları ile taşınmasına denir.</p>
+    
+    <h2>Ksilemde Su Taşınma Mekanizmaları</h2>
+    <p>Bitkilerde suyun ksilemde taşınması 3 temel mekanizma ile açıklanır:</p>
+    
+    <h3>1. Kılcallık Olayı</h3>
+    <ul>
+        <li><strong>Adezyon kuvveti</strong> etkisiyle gerçekleşir</li>
+        <li>Adezyon: Farklı moleküllerin birbirine yapışması (su-selüloz)</li>
+        <li>Su molekülleri ksilem çeperlerindeki selüloza tutunur</li>
+        <li>İnce kılcal borular suyu yukarı çeker</li>
+        <li><em>Ek bilgi:</em> Ksilem çapı daraldıkça kılcallık etkisi artar</li>
+        <li><strong>Etki:</strong> En zayıf mekanizma (max 1m yükseltebilir)</li>
+    </ul>
+    
+    <h3>2. Kök Basıncı</h3>
+    <ul>
+        <li>Kök ozmotik basıncı > Toprak ozmotik basıncı olmalıdır</li>
+        <li>Ozmotik basınç farkı suyu ksileme iter</li>
+        <li><strong>Guttasyon:</strong> Yaprak kenarlarından su damlaması</li>
+        <li><em>Ek bilgi:</em> Gece terleme azken kök basıncı belirginleşir</li>
+        <li><strong>Etki:</strong> Orta düzey mekanizma (2-3m'ye kadar etkili)</li>
+    </ul>
+    
+    <h3>3. Terleme-Çekim Teorisi</h3>
+    <ul>
+        <li><strong>Terleme (Transpirasyon):</strong> Yapraklardan su buharı kaybı</li>
+        <li>Su kaybı → Yaprak osmotik basıncı artar → Emme kuvveti oluşur</li>
+        <li><strong>Kohezyon:</strong> Su molekülleri arası hidrojen bağları</li>
+        <li>Kopmayan su sütunu oluşur (300 atm'ye kadar dayanır)</li>
+        <li><em>Ek bilgi:</em> 100m'ye kadar ağaçlarda etkilidir</li>
+        <li><strong>Etki:</strong> En güçlü mekanizma</li>
+    </ul>
+    
+    <h2>Mekanizmaların Karşılaştırılması</h2>
+    <table border="1">
+        <tr>
+            <th>Mekanizma</th>
+            <th>Etki Gücü</th>
+            <th>Canlılık Gereksinimi</th>
+            <th>Maksimum Etki</th>
+        </tr>
+        <tr>
+            <td>Kılcallık</td>
+            <td>Zayıf</td>
+            <td>Hayır</td>
+            <td>~1m</td>
+        </tr>
+        <tr>
+            <td>Kök Basıncı</td>
+            <td>Orta</td>
+            <td>Evet</td>
+            <td>~3m</td>
+        </tr>
+        <tr>
+            <td>Terleme-Çekim</td>
+            <td>Güçlü</td>
+            <td>Kısmen</td>
+            <td>100m+</td>
+        </tr>
+    </table>
+    
+    <h2>Suyun Taşınma Hızını Etkileyen Faktörler</h2>
+    <ul>
+        <li><strong>Işık şiddeti:</strong> Stomaları açar, terlemeyi artırır</li>
+        <li><strong>Rüzgar:</strong> Yaprak yüzeyindeki nemi uzaklaştırır</li>
+        <li><strong>Sıcaklık:</strong> Terleme hızını artırır (ancak 35°C üstü stomaları kapatabilir)</li>
+        <li><strong>Işık rengi:</strong> Mavi ışık stoma açılmasını uyarır</li>
+        <li><strong>Toprak suyu:</strong> Yeterli su olmazsa ksilemde hava kabarcığı (emboli) oluşur</li>
+        <li><strong>Bağıl nem:</strong> Havanın nemi azaldıkça terleme artar</li>
+        <li><em>Ek bilgi:</em> Kurak bölge bitkileri yaprak yüzeyini küçülterek su kaybını azaltır</li>
+    </ul>
+    
+    <h2>Ksilem Taşınımının Önemi</h2>
+    <ul>
+        <li>Su taşınımı aynı zamanda mineral taşınımını sağlar</li>
+        <li>Fotosentez için gerekli suyu yapraklara iletir</li>
+        <li>Bitki dokularının turgor basıncını korur</li>
+        <li>Terleme ile bitki sıcaklığını düzenler (serinletme etkisi)</li>
+        <li><em>Ek bilgi:</em> Bazı bitkilerde günde 250 litre su taşınabilir</li>
+    </ul>
+    
+    <h2>Ksilem Yapısına İlişkin Ek Bilgiler</h2>
+    <ul>
+        <li>Ksilem trake ve trakeit hücrelerinden oluşur</li>
+        <li>Olgun ksilem hücreleri ölüdür (sadece çeperleri kalır)</li>
+        <li>Çeperler lignin birikimiyle sertleşmiştir</li>
+        <li>Halkalı, sarmal, noktalı gibi farklı çeper kalınlaşma tipleri vardır</li>
+        <li><em>Ek bilgi:</em> Ağaç halkaları ksilem dokusunun yıllık büyümesiyle oluşur</li>
+    </ul>
+
+        <h1>SUYUN TAŞINMASINDA GUTASYON VE TERLEMENİN ETKİSİ</h1>
+
+    <h2>1. GUTASYON (DAMLAMA)</h2>
+    <h3>Tanım ve Mekanizma</h3>
+    <p>Gutasyon, bitkilerin yaprak kenarlarındaki <strong>hidatot</strong> adı verilen özel yapılardan sıvı su damlacıkları şeklinde su atmasıdır.</p>
+    
+    <h3>Gutasyonun Gerçekleşme Koşulları:</h3>
+    <ul>
+        <li>Toprakta bol su bulunması</li>
+        <li>Havanın nispi neminin yüksek olması (%90-100)</li>
+        <li>Terlemenin düşük olduğu durumlar (gece/sabah erken saatler)</li>
+        <li>Kök basıncının yüksek olması</li>
+    </ul>
+
+    <h3>Gutasyon Sürecinin Aşamaları:</h3>
+    <ol>
+        <li>Topraktaki suyun kök emici tüyleriyle alınması</li>
+        <li>Kök hücrelerinde ozmotik basınç oluşması</li>
+        <li>Ksilemde su sütununun yukarı itilmesi</li>
+        <li>Yaprak kenarlarındaki hidatotlardan su damlacıklarının çıkışı</li>
+    </ol>
+
+    <h3>Gutasyon ile Atılan Sıvının Özellikleri:</h3>
+    <ul>
+        <li>%98-99 su</li>
+        <li>%1-2 çözünmüş mineraller (Ca, K, Mg tuzları)</li>
+        <li>Az miktarda organik bileşikler</li>
+        <li>pH genellikle nötr veya hafif bazik</li>
+    </ul>
+
+    <h2>2. TERLEME (TRANSPİRASYON)</h2>
+    <h3>Tanım ve Mekanizma</h3>
+    <p>Terleme, bitkilerin stomalar, lentiseller ve kutikula yoluyla su buharı kaybetmesidir.</p>
+
+    <h3>Terleme Tipleri:</h3>
+    <table border="1">
+        <tr>
+            <th>Tip</th>
+            <th>Oran</th>
+            <th>Gerçekleştiği Yer</th>
+            <th>Kontrol Mekanizması</th>
+        </tr>
+        <tr>
+            <td>Stomal terleme</td>
+            <td>%90</td>
+            <td>Stomalar</td>
+            <td>Stoma açıklığı ile kontrol edilir</td>
+        </tr>
+        <tr>
+            <td>Kutikular terleme</td>
+            <td>%5-10</td>
+            <td>Kutikula</td>
+            <td>Kutikula kalınlığı ile sınırlıdır</td>
+        </tr>
+        <tr>
+            <td>Lentisel terleme</td>
+            <td>%0-5</td>
+            <td>Lentiseller</td>
+            <td>Mevsimsel olarak değişir</td>
+        </tr>
+    </table>
+
+    <h3>Stomaların Çalışma Mekanizması:</h3>
+    <p>Stomaların açılıp kapanması <strong>turgor basıncı</strong> ile kontrol edilir:</p>
+    <ol>
+        <li><strong>Açılma:</strong>
+            <ul>
+                <li>Fotosentez başlar → CO₂ azalır → pH yükselir</li>
+                <li>Nişasta → glikoza dönüşür</li>
+                <li>Ozmotik basınç artar → su girişi olur</li>
+                <li>Kilit hücreleri şişer → stoma açılır</li>
+            </ul>
+        </li>
+        <li><strong>Kapanma:</strong>
+            <ul>
+                <li>CO₂ artar → pH düşer</li>
+                <li>Glikoz → nişastaya dönüşür</li>
+                <li>Ozmotik basınç azalır → su çıkışı olur</li>
+                <li>Kilit hücreleri büzülür → stoma kapanır</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h2>GUTASYON ve TERLEME KARŞILAŞTIRMASI</h2>
+    <table border="1">
+        <tr>
+            <th>Özellik</th>
+            <th>Gutasyon</th>
+            <th>Terleme</th>
+        </tr>
+        <tr>
+            <td>Su formu</td>
+            <td>Sıvı</td>
+            <td>Buhar</td>
+        </tr>
+        <tr>
+            <td>Çıkış yapısı</td>
+            <td>Hidatotlar</td>
+            <td>Stomalar/lentiseller/kutikula</td>
+        </tr>
+        <tr>
+            <td>Zaman</td>
+            <td>Sabah erken saatler</td>
+            <td>Gün boyu (max öğle saatleri)</td>
+        </tr>
+        <tr>
+            <td>İtici güç</td>
+            <td>Kök basıncı</td>
+            <td>Terleme-çekim kuvveti</td>
+        </tr>
+        <tr>
+            <td>Atılan maddeler</td>
+            <td>Su + mineraller</td>
+            <td>Sadece su</td>
+        </tr>
+    </table>
+
+    <h2>OSMOTİK ve TURGOR BASINCI İLİŞKİSİ</h2>
+    <h3>Ozmotik Basınç:</h3>
+    <ul>
+        <li>Çözünen madde konsantrasyonuna bağlı</li>
+        <li>Hücrenin su çekme potansiyelini belirler</li>
+        <li>Birimi: atm veya bar</li>
+    </ul>
+
+    <h3>Turgor Basıncı:</h3>
+    <ul>
+        <li>Hücre çeperinin hücre içeriğine uyguladığı basınç</li>
+        <li>Hücrenin şişkinlik derecesini belirler</li>
+        <li>Stomaların açılıp kapanmasını kontrol eder</li>
+    </ul>
+
+    <h3>Su Potansiyeli Denklemi:</h3>
+    <p>Ψ<sub>hücre</sub> = Ψ<sub>π</sub> + Ψ<sub>p</sub></p>
+    <p>Ψ<sub>π</sub>: Ozmotik potansiyel (negatif değer)</p>
+    <p>Ψ<sub>p</sub>: Turgor basıncı (pozitif değer)</p>
+
+    <h2>TERLEMEYİ ETKİLEYEN FAKTÖRLER</h2>
+    <h3>A. Bitkiye Ait Faktörler</h3>
+    <ul>
+        <li><strong>Yaprak yüzey alanı:</strong> Geniş yapraklarda daha fazla</li>
+        <li><strong>Stoma sayısı ve dağılımı:</strong> Alt epidermiste daha çok</li>
+        <li><strong>Kutikula kalınlığı:</strong> Kalın kutikula terlemeyi azaltır</li>
+        <li><strong>Kök yapısı:</strong> Geniş kök sistemi daha fazla su alımı</li>
+    </ul>
+
+    <h3>B. Çevresel Faktörler</h3>
+    <p><strong>Beklenen Grafikler ve Açıklamaları:</strong></p>
+    <ol>
+        <li><strong>Işık Şiddeti-Terleme İlişkisi:</strong>
+            <p>Grafikte x-ekseninde ışık şiddeti, y-ekseninde terleme hızı olmalı. Başlangıçta dik bir artış, belirli bir noktadan sonra sabitlenme beklenir.</p>
+        </li>
+        <li><strong>Sıcaklık-Terleme İlişkisi:</strong>
+            <p>X-ekseninde sıcaklık, y-ekseninde terleme hızı. 0-30°C arasında artış, 35°C üzerinde düşüş beklenir (stoma kapanması nedeniyle).</p>
+        </li>
+        <li><strong>Bağıl Nem-Terleme İlişkisi:</strong>
+            <p>X-ekseninde nem %, y-ekseninde terleme hızı. Nem arttıkça ters orantılı azalma beklenir.</p>
+        </li>
+        <li><strong>Rüzgar Hızı-Terleme İlişkisi:</strong>
+            <p>X-ekseninde rüzgar hızı, y-ekseninde terleme hızı. Orta şiddete kadar artış, çok yüksek hızlarda hafif düşüş beklenir.</p>
+        </li>
+    </ol>
+
+    <h2>ÖNEMLİ NOTLAR</h2>
+    <ul>
+        <li>Gutasyon sadece otsu bitkilerde ve bazı ağaçlarda görülür</li>
+        <li>Gutasyon sıvısında üre ve organik asitler de bulunabilir</li>
+        <li>Stomaların açılma hızı ışığa duyarlıdır (mavi ışık en etkilisi)</li>
+        <li>Kurak bölge bitkilerinde CAM fotosentezi ile gece stoma açılımı görülür</li>
+    </ul>
+    
+        <h1>STOMALARIN YAPISI ve ÇALIŞMA MEKANİZMASI</h1>
+
+    <h2>A. STOMALARIN YAPISI</h2>
+    <ul>
+        <li>Bitkilerde gaz alışverişini (CO<sub>2</sub> alınımı, O<sub>2</sub> ve su buharı çıkışı) sağlayan yapılardır</li>
+        <li>Epidermis hücrelerinin farklılaşmasıyla oluşur</li>
+        <li>Her stoma iki <strong>bekçi hücresi</strong> (kilit hücresi) içerir</li>
+        <li>Bekçi hücreleri fasulye şeklinde ve kloroplastlıdır</li>
+        <li><em>Yapısal özellikler:</em>
+            <ul>
+                <li>İç çeperler (stoma tarafı) kalın</li>
+                <li>Dış çeperler (epidermis tarafı) ince</li>
+                <li>Hücre duvarında selüloz mikrofibrilleri radyal dizilimli</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h3>Stoma Tipleri</h3>
+    <table border="1">
+        <tr>
+            <th>Tip</th>
+            <th>Özellikler</th>
+            <th>Bitki Örnekleri</th>
+        </tr>
+        <tr>
+            <td>Anomositik</td>
+            <td>Çevresel hücreler belirgin değil</td>
+            <td>Çoğu dikotiledon</td>
+        </tr>
+        <tr>
+            <td>Anizositik</td>
+            <td>3 farklı boyda çevresel hücre</td>
+            <td>Brassica, Solanum</td>
+        </tr>
+        <tr>
+            <td>Parasitik</td>
+            <td>2 yanda paralel çevresel hücreler</td>
+            <td>Monokotiledonlar</td>
+        </tr>
+    </table>
+
+    <h2>B. STOMALARIN ÇALIŞMA MEKANİZMASI</h2>
+    <h3>1. STOMALARIN AÇILMASI</h3>
+    
+    <h4>a. Fotosentez Etkisi</h4>
+    <ol>
+        <li>Işık → Fotosentez başlar → CO<sub>2</sub> tüketilir</li>
+        <li>pH yükselir (7.5-8.0)</li>
+        <li>Fosforilaz enzimi aktifleşir</li>
+        <li>Nişasta → Glikoz (hidroliz)</li>
+        <li>Ozmotik basınç artar</li>
+        <li>Su girişi → Turgor basıncı artar</li>
+        <li>Stoma açılır</li>
+    </ol>
+
+    <h4>b. K<sup>+</sup> İyon Pompası</h4>
+    <ol>
+        <li>Mavi ışık reseptörleri uyarılır</li>
+        <li>H<sup>+</sup>-ATPaz pompası aktive olur</li>
+        <li>H<sup>+</sup> dışarı atılır</li>
+        <li>Membran potansiyeli oluşur (-180mV)</li>
+        <li>K<sup>+</sup> iyonları içeri girer</li>
+        <li>Cl<sup>-</sup> iyonları eşlik eder</li>
+        <li>Ozmotik basınç artar</li>
+        <li>Su girişi → Turgor → Açılma</li>
+    </ol>
+
+    <h3>2. STOMALARIN KAPANMASI</h3>
+    
+    <h4>a. Absisik Asit (ABA) Etkisi</h4>
+    <ol>
+        <li>Su stresi → ABA sentezi</li>
+        <li>Ca<sup>2+</sup> kanalları açılır</li>
+        <li>K<sup>+</sup> ve Cl<sup>-</sup> dışarı çıkar</li>
+        <li>Ozmotik basınç düşer</li>
+        <li>Su kaybı → Turgor azalır</li>
+        <li>Stoma kapanır</li>
+    </ol>
+
+    <h4>b. CO<sub>2</sub> Birikimi</h4>
+    <ol>
+        <li>Gece/karanlık → Solunum artar</li>
+        <li>CO<sub>2</sub> birikir → pH düşer (5.0-6.0)</li>
+        <li>Fosforilaz enzimi ters çalışır</li>
+        <li>Glikoz → Nişasta (sentez)</li>
+        <li>Ozmotik basınç düşer</li>
+        <li>Su kaybı → Kapanma</li>
+    </ol>
+
+    <h2>ORGANİK BESİNLERİN TAŞINMASI (FLOEM TRANSPORTU)</h2>
+    
+    <h3>Floem Yapısı</h3>
+    <ul>
+        <li><strong>Kalburlu borular:</strong> Taşımayı sağlayan ana elemanlar</li>
+        <li><strong>Arkadaş hücreleri:</strong> Kalburlu borulara metabolik destek sağlar</li>
+        <li><strong>Floem özsuyu:</strong> %10-25 sakkaroz, amino asitler, hormonlar, iyonlar</li>
+    </ul>
+
+    <h3>Basınç-Akış Teorisi</h3>
+    <ol>
+        <li><strong>Kaynak dokuda (yaprak):</strong>
+            <ul>
+                <li>Fotosentez ürünleri (şeker) aktif taşımayla floeme yüklenir</li>
+                <li>Trioz fosfat → Sakkaroz dönüşümü</li>
+            </ul>
+        </li>
+        <li><strong>Floemde:</strong>
+            <ul>
+                <li>Şeker konsantrasyonu artar</li>
+                <li>Ozmotik basınç artar → Su girişi (ksilemden)</li>
+                <li>Hidrostatik basınç oluşur (0.5-2.5 MPa)</li>
+            </ul>
+        </li>
+        <li><strong>Havuz dokuda (kök/meyve):</strong>
+            <ul>
+                <li>Şeker aktif/pasif taşımayla floemden çıkar</li>
+                <li>Sakkaroz → Depo polimerleri (nişasta vb.)</li>
+                <li>Ozmotik basınç düşer → Su ksileme döner</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h3>Taşınma Hızını Etkileyen Faktörler</h3>
+    <table border="1">
+        <tr>
+            <th>Faktör</th>
+            <th>Etkisi</th>
+            <th>Optimum Değer</th>
+        </tr>
+        <tr>
+            <td>Sıcaklık</td>
+            <td>Metabolik aktiviteyi etkiler</td>
+            <td>20-30°C</td>
+        </tr>
+        <tr>
+            <td>Işık şiddeti</td>
+            <td>Fotosentez oranını belirler</td>
+            <td>800-1200 μmol/m<sup>2</sup>/s</td>
+        </tr>
+        <tr>
+            <td>Su potansiyeli</td>
+            <td>Hidrostatik basıncı etkiler</td>
+            <td>Ψ = -0.5 ila -1.0 MPa</td>
+        </tr>
+    </table>
+
+    <h2>ÖZEL DURUMLAR</h2>
+    <ul>
+        <li><strong>Gece-gündüz ritmi:</strong> Stomalar günlük ritim gösterir (sirkadiyen)</li>
+        <li><strong>CAM bitkileri:</strong> Stomalar gece açık, gündüz kapalı (kurak adaptasyon)</li>
+        <li><strong>Apoplastik/simplastik yükleme:</strong> Bitki türüne göre floem yükleme mekanizması değişir</li>
+        <li><strong>Floem dinamiği:</strong> Taşınma hızı 30-150 cm/saat arası değişir</li>
+    </ul>
+    
+    
+        <h1>Bitkilerde Su ve Madde Taşınımının Temel Prensipleri</h1>
+
+    <h2>Su Taşınım Mekanizmaları</h2>
+    <h3>Ksilemde (Odun Borularında) Su Taşınımı</h3>
+    <ul>
+        <li><strong>Terleme-Kohezyon-Adhezyon Teorisi:</strong>
+            <ul>
+                <li>Kohezyon: Su molekülleri arasındaki hidrojen bağları</li>
+                <li>Adhezyon: Suyun ksilem çeperlerine yapışması</li>
+                <li>Terleme: Yapraklardan su kaybı ile oluşan çekim kuvveti</li>
+            </ul>
+        </li>
+        <li><strong>Kök Basıncı:</strong> Ozmotik basınç farkıyla oluşan itici kuvvet</li>
+        <li><strong>Kılcallık:</strong> Dar borularda suyun yükselmesi (en zayıf etki)</li>
+        <li><strong>Önemli:</strong> Ksilemde su taşınımı <u>pasif</u> olarak gerçekleşir (aktif taşıma yok)</li>
+    </ul>
+
+    <h3>Ksilem ve Floem Karşılaştırması</h3>
+    <table border="1">
+        <tr>
+            <th>Özellik</th>
+            <th>Ksilem</th>
+            <th>Floem</th>
+        </tr>
+        <tr>
+            <td>Taşınan Maddeler</td>
+            <td>Su ve mineraller</td>
+            <td>Organik bileşikler (şeker, amino asitler)</td>
+        </tr>
+        <tr>
+            <td>Taşıma Yönü</td>
+            <td>Tek yönlü (kökten yaprağa)</td>
+            <td>Çift yönlü</td>
+        </tr>
+        <tr>
+            <td>Hücre Durumu</td>
+            <td>Ölü hücreler</td>
+            <td>Canlı hücreler</td>
+        </tr>
+        <tr>
+            <td>Taşıma Mekanizması</td>
+            <td>Pasif (enerji harcanmaz)</td>
+            <td>Aktif (enerji harcanır)</td>
+        </tr>
+    </table>
+
+    <h2>Stomaların Çalışma Mekanizması</h2>
+    <h3>Stoma Açılma Süreci</h3>
+    <ol>
+        <li>Işık → Fotosentez başlar → CO<sub>2</sub> azalır → pH yükselir</li>
+        <li>Nişasta → Glikoz (hidroliz)</li>
+        <li>Glikoz artışı → Ozmotik basınç artar</li>
+        <li>Su girişi → Turgor basıncı artar</li>
+        <li>İnce dış çeperler genişler → Stoma açılır</li>
+    </ol>
+
+    <h3>Stoma Kapanma Süreci</h3>
+    <ol>
+        <li>Karanlık → Solunum → CO<sub>2</sub> artar → pH düşer</li>
+        <li>Glikoz → Nişasta (sentez)</li>
+        <li>Ozmotik basınç düşer</li>
+        <li>Su çıkışı → Turgor basıncı azalır</li>
+        <li>Stoma kapanır</li>
+    </ol>
+
+    <h3>Stoma Hareketlerini Etkileyen Faktörler</h3>
+    <ul>
+        <li><strong>Işık:</strong> Mavi ışık stoma açılmasını uyarır</li>
+        <li><strong>CO<sub>2</sub> konsantrasyonu:</strong> Düşük CO<sub>2</sub> açılmayı tetikler</li>
+        <li><strong>Su durumu:</strong> Su stresi → ABA hormonu → Kapanma</li>
+        <li><strong>Sıcaklık:</strong> Yüksek sıcaklık (35°C üstü) kapanmaya neden olur</li>
+    </ul>
+
+    <h2>Floemde Organik Madde Taşınımı</h2>
+    <h3>Basınç-Akış Teorisi</h3>
+    <ol>
+        <li><strong>Kaynak hücrelerde (yaprak):</strong>
+            <ul>
+                <li>Fotosentez ürünleri aktif taşımayla floeme yüklenir</li>
+                <li>Ozmotik basınç artar → Su girişi</li>
+            </ul>
+        </li>
+        <li><strong>Taşıma:</strong>
+            <ul>
+                <li>Hidrostatik basınç farkı oluşur</li>
+                <li>Floem özsuyu basınçla havuz dokulara akar</li>
+            </ul>
+        </li>
+        <li><strong>Havuz hücrelerde (kök/meyve):</strong>
+            <ul>
+                <li>Şekerler floemden boşaltılır</li>
+                <li>Ozmotik basınç düşer → Su ksileme döner</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h3>Floem Elemanları</h3>
+    <ul>
+        <li><strong>Kalburlu borular:</strong> Taşımayı sağlayan ana elemanlar</li>
+        <li><strong>Arkadaş hücreleri:</strong> Kalburlu borulara metabolik destek sağlar</li>
+        <li><strong>Kaynak-havuz ilişkisi:</strong> Dinamik ve değişkendir</li>
+    </ul>
+
+    <h2>Simbiyotik İlişkiler</h2>
+    <h3>Nodül Oluşumu</h3>
+    <ul>
+        <li><strong>Bakteri:</strong> Rhizobium cinsi (prokaryot)</li>
+        <li><strong>Fayda:</strong> Atmosferik N<sub>2</sub>'nin NH<sub>3</sub>'e dönüşümü</li>
+        <li><strong>Bitki:</strong> Baklagiller (fasulye, bezelye, yonca)</li>
+        <li><strong>Önem:</strong> Toprak azotunu artırır</li>
+    </ul>
+
+    <h3>Mikoriza</h3>
+    <ul>
+        <li><strong>Mantar:</strong> Glomeromycota (ökaryot)</li>
+        <li><strong>Fayda:</strong> Su ve mineral (özellikle fosfor) alımını artırır</li>
+        <li><strong>Bitki:</strong> Çoğu kara bitkisi (%80'inden fazlası)</li>
+        <li><strong>Önem:</strong> Toprak yüzey alanını 100 kat artırabilir</li>
+    </ul>
+
+    <h2>Önemli Fizyolojik Prensipler</h2>
+    <ul>
+        <li><strong>Ozmotik basınç:</strong> Hücrede çözünen madde miktarıyla doğru orantılı</li>
+        <li><strong>Turgor basıncı:</strong> Hücre çeperinin içeri uyguladığı basınç</li>
+        <li><strong>Su potansiyeli:</strong> Ψ = Ψ<sub>π</sub> + Ψ<sub>p</sub> (π: ozmotik, p: turgor)</li>
+        <li><strong>Minimum kuralı:</strong> En az bulunan element büyümeyi sınırlar</li>
+    </ul>
+
+    <h2>Terlemenin Bitkiye Faydaları</h2>
+    <ol>
+        <li><strong>Termoregülasyon:</strong> Yaprak sıcaklığını düzenler</li>
+        <li><strong>Su ve mineral alımı:</strong> Kök basıncını destekler</li>
+        <li><strong>Ksilem akışı:</strong> Taşımayı hızlandırır</li>
+        <li><strong>Boşaltım:</strong> Fazla suyun atılmasını sağlar</li>
+    </ol>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    <div class="menu" id="menu">
+        <table id="menu-table"></table>
+    </div>
+
+</body>
+<script>
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const headings = document.querySelectorAll("large, h1, h2, h3, h4");
+    if (headings.length === 0) return;
+
+    const tocContainer = document.createElement("div");
+    tocContainer.id = "table-of-contents";
+    tocContainer.innerHTML = `
+        <div class="toc-header">İçindekiler</div>
+        <div class="toc-content"><ul></ul></div>
+    `;
+
+    const list = tocContainer.querySelector("ul");
+    let lastLevels = { large: list, h1: null, h2: null, h3: null, h4: null };
+
+    headings.forEach((heading, index) => {
+        const anchorId = `heading-${index}`;
+        heading.id = anchorId;
+
+        const listItem = document.createElement("li");
+        const link = document.createElement("a");
+        link.href = `#${anchorId}`;
+        link.innerText = heading.innerText;
+        listItem.appendChild(link);
+
+        let currentList;
+        switch (heading.tagName.toLowerCase()) {
+            case "large":
+                listItem.classList.add("main-item");
+                list.appendChild(listItem);
+                lastLevels.large = document.createElement("ul");
+                listItem.appendChild(lastLevels.large);
+                lastLevels.h1 = lastLevels.h2 = lastLevels.h3 = lastLevels.h4 = null;
+                break;
+            case "h1":
+                listItem.classList.add("sub-item");
+                currentList = lastLevels.large || list;
+                currentList.appendChild(listItem);
+                lastLevels.h1 = document.createElement("ul");
+                listItem.appendChild(lastLevels.h1);
+                lastLevels.h2 = lastLevels.h3 = lastLevels.h4 = null;
+                break;
+            case "h2":
+                listItem.classList.add("sub-sub-item");
+                currentList = lastLevels.h1 || lastLevels.large || list;
+                currentList.appendChild(listItem);
+                lastLevels.h2 = document.createElement("ul");
+                listItem.appendChild(lastLevels.h2);
+                lastLevels.h3 = lastLevels.h4 = null;
+                break;
+            case "h3":
+                listItem.classList.add("sub-sub-sub-item");
+                currentList = lastLevels.h2 || lastLevels.h1 || lastLevels.large || list;
+                currentList.appendChild(listItem);
+                lastLevels.h3 = document.createElement("ul");
+                listItem.appendChild(lastLevels.h3);
+                lastLevels.h4 = null;
+                break;
+            case "h4":
+                listItem.classList.add("sub-sub-sub-sub-item");
+                currentList = lastLevels.h3 || lastLevels.h2 || lastLevels.h1 || lastLevels.large || list;
+                currentList.appendChild(listItem);
+                lastLevels.h4 = document.createElement("ul");
+                listItem.appendChild(lastLevels.h4);
+                break;
+        }
+    });
+
+    document.body.appendChild(tocContainer);
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    const headers = document.querySelectorAll("h1, h2, h3, large, h4, strong");
+    const paragraphs = document.querySelectorAll("p, li, th, td");
+    const menu = document.getElementById("menu");
+    const menuTable = document.getElementById("menu-table");
+    let selectedLinks = [];
+
+    let headerWords = new Map();
+
+    headers.forEach(header => {
+        if (!header.id) header.id = "header-" + Math.random().toString(36).substr(2, 9); // Ensure ID exists
+        header.textContent.split(/\s+/).forEach(word => {
+            let key = word.toLowerCase();
+            if (!headerWords.has(key)) {
+                headerWords.set(key, []);
+            }
+            headerWords.get(key).push({ id: header.id, text: header.textContent, element: header });
+        });
+    });
+
+    paragraphs.forEach(element => {
+        element.innerHTML = element.innerHTML.replace(/\b(\w+)\b/g, function (match) {
+            let lowerMatch = match.toLowerCase();
+            if (headerWords.has(lowerMatch) && lowerMatch !== "ve") {
+                return `<u data-word="${lowerMatch}">${match}</u>`;
+            }
+            return match;
+        });
+    });
+
+    document.body.addEventListener("mouseover", function (event) {
+        if (event.target.tagName === "U") {
+            let word = event.target.getAttribute("data-word");
+            selectedLinks = headerWords.get(word);
+
+            if (selectedLinks.length > 0) {
+                selectedLinks.sort((a, b) => a.element.getBoundingClientRect().top - b.element.getBoundingClientRect().top);
+                menuTable.innerHTML = "";
+
+                selectedLinks.forEach(item => {
+                    let row = document.createElement("tr");
+                    let cell = document.createElement("td");
+                    cell.textContent = item.text;
+                    cell.onclick = () => {
+                        location.href = `#${selectedLinks[0].id}`;
+                        menu.style.display = "none";
+                    };
+                    row.appendChild(cell);
+                    menuTable.appendChild(row);
+                });
+
+                menu.style.display = "block";
+                menu.style.left = event.pageX + "px";
+                menu.style.top = (event.pageY+15) + "px";
+            }
+        }
+    });
+
+    // Hide menu when the mouse leaves the highlight
+    document.body.addEventListener("mouseout", function (event) {
+        if (event.target.tagName === "U") {
+            setTimeout(() => {
+                if (!menu.matches(":hover")) {
+                    menu.style.display = "none";
+                }
+            }, 100);
+        }
+    });
+
+    // Hide menu on click anywhere else
+    document.body.addEventListener("click", function (event) {
+        if (!menu.contains(event.target) && event.target.tagName !== "U") {
+            menu.style.display = "none";
+        }
+    });
+});
+
+</script>
+
+</html>
