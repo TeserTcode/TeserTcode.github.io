@@ -162,7 +162,18 @@ background-color: #eeeeee;
     
     
     
-    
+    .code-bubble {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  font-family: monospace;
+  white-space: pre-wrap;
+  z-index: 1000;
+  max-width: 400px;
+  overflow: auto;
+}
     
     
     
@@ -353,15 +364,16 @@ background-color: #eeeeee;
         <input type="number" id="numericalxre" name="numericalxre" step="1" value="0" required>
         <label for="bmp-height"> + </label>
         <input type="numericalxim" id="numericalxim" name="numericalxim" step="1" value="0" required>
-		i	
+	
 	</div>
 	<button onclick="numerate()">Calculate</button>
 	</div>
 </div>
     <div id="graphContainer">
         <canvas id="graphCanvas" width="320" height="320"></canvas>
-		  <div><div id="coordinate-container"></div></div>
-
+		  <div><div id="coordinate-container"></div></div><br>
+    <input type="checkbox" id="parametricMode">
+    <br>
     </div>
 <button onclick="change()" style="position: fixed; top: 70%; right: 25%;">></button>
 <button onclick="change(1)" style="position: fixed; top: 75%; right: 20%;">Domain</button>
@@ -384,7 +396,6 @@ background-color: #eeeeee;
 "X.X...X.....X.....X.........X....X.....X.X...X.X..."
 "X.X...XXX...XXX...XXX.......X....XXX...X.X...X.X..."
 	*/
-	
         let paletteImageData = null;
 	const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
@@ -456,7 +467,7 @@ let thick = parseFloat(document.getElementById('thick').value);
             const y = positions[i * 3 + 1];
 
              let z = math.complex(x, y);
-z =  math.evaluate(document.getElementById('function').value, { x: z });
+z =  teth.evaluate(document.getElementById('function').value, { x: z });
             const zMagnitude = math.min(maxHeight,math.abs(z));
 			if(negmag==1)
 			{positions[i * 3 + 2] = -z.re;
@@ -527,7 +538,7 @@ function createAndAnimateMeshSPH() {
             const phi = Math.atan2(y, x);    // Phi is the azimuthal angle in the xy-plane
 
             let sphericalInput = math.complex(theta, phi);  // Construct complex number with theta and phi
-            sphericalInput = math.evaluate(funcStr, { x: sphericalInput });  // Evaluate user-provided function
+            sphericalInput = teth.evaluate(funcStr, { x: sphericalInput });  // Evaluate user-provided function
 
             const zMagnitude = math.min(maxHeight, math.abs(sphericalInput));
 
@@ -737,119 +748,212 @@ maximum = document.querySelectorAll('.end-input')[2];
             clickCount = 0;
         }
     });
-});
+}); 
+
+
+
+
+
+
 
 
 function plotGraph(point1, point2) {
- const bmpheight = parseFloat(document.getElementById('bmp-height').value);
+    const parametricMode = document.getElementById('parametricMode').checked;
+ //   const maximum = parseFloat(document.getElementById('maximum').value); // Assuming you have an input for maximum
+
+    if (!parametricMode) {
+        const bmpheight = parseFloat(document.getElementById('bmp-height').value);
         const bmpwidth = parseFloat(document.getElementById('bmp-width').value);
-    const canvas = document.getElementById('graphCanvas');
-    const ctx = canvas.getContext('2d');
-	canvas.width=bmpwidth*5;
-	canvas.height=bmpheight*5;
-    canvas.style.width = '300px';
-    canvas.style.height = '300px';
-    ctx.clearRect(0, 0, canvas.width, canvas.height); 
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = bmpwidth * 5;
+        canvas.height = bmpheight * 5;
+        canvas.style.width = '300px';
+        canvas.style.height = '300px';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const numSamples = 1000;
-    const realValues = [];
-    const imagValues = [];
-    
- 
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const numSamples = 1000;
+        const realValues = [];
+        const imagValues = [];
 
-    if (math.min(point1.imag,point2.imag) < 0 && math.max(point1.imag,point2.imag) > 0) {
-        const zeroY = (point1.imag)/(point2.imag - point1.imag)*canvas.height+canvas.height;
-	
-        ctx.strokeStyle = 'DimGray';
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        if (math.min(point1.imag, point2.imag) < 0 && math.max(point1.imag, point2.imag) > 0) {
+            const zeroY = (point1.imag) / (point2.imag - point1.imag) * canvas.height + canvas.height;
+            ctx.strokeStyle = 'DimGray';
+            ctx.beginPath();
+            ctx.moveTo(canvas.width - zeroY, 0);
+            ctx.lineTo(canvas.width - zeroY, canvas.height);
+            ctx.stroke();
+        }
+        if (math.min(point1.real, point2.real) < 0 && math.max(point1.real, point2.real) > 0) {
+            const zeroY = (point1.real) / (point2.real - point1.real) * canvas.height + canvas.height;
+            ctx.strokeStyle = 'black';
+            ctx.beginPath();
+            ctx.moveTo(canvas.width - zeroY, 0);
+            ctx.lineTo(canvas.width - zeroY, canvas.height);
+            ctx.stroke();
+        }
+
+        for (let i = 0; i <= numSamples; i++) {
+            const t = i / numSamples;
+            const real = point1.real + t * (point2.real - point1.real);
+            const imag = point1.imag + t * (point2.imag - point1.imag);
+            const z = math.complex(real, imag);
+            const fn = teth.evaluate(document.getElementById('function').value, { x: z });
+
+            if (!isNaN(fn.re) && !isNaN(fn.im) && isFinite(fn.re) && isFinite(fn.im)) {
+                realValues.push(fn.re);
+                imagValues.push(fn.im);
+            } else {
+                realValues.push(null);
+                imagValues.push(null);
+            }
+        }
+
+        ctx.lineWidth = Math.max(1, canvas.width / 100);
+        const graphWidth = canvas.width;
+        const graphHeight = canvas.height;
+
+        // Adjust min and max values based on the maximum variable
+        let maxValue, minValue;
+        if (maximum > 0) {
+            maxValue = Math.min(maximum, Math.max(...imagValues, ...realValues));
+            minValue = Math.max(-maximum, Math.min(...imagValues, ...realValues));
+        } else if (maximum < 0) {
+            maxValue = -maximum;
+            minValue = maximum;
+        } else {
+            maxValue = Math.max(...imagValues, ...realValues);
+            minValue = Math.min(...imagValues, ...realValues);
+        }
+
+        if (0 > minValue && 0 < maxValue) {
+            const zeroX = (-minValue) / (maxValue - minValue) * canvas.height;
+            ctx.strokeStyle = 'black';
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height - zeroX);
+            ctx.lineTo(canvas.width, canvas.height - zeroX);
+            ctx.stroke();
+        }
+
         ctx.beginPath();
-        ctx.moveTo(canvas.width-zeroY,0);
-        ctx.lineTo(canvas.width-zeroY,canvas.height);
+        ctx.strokeStyle = 'red';
+        for (let i = 0; i < realValues.length; i++) {
+            const x = (i / numSamples) * graphWidth;
+            const y = graphHeight - ((realValues[i] - minValue) / (maxValue - minValue)) * graphHeight;
+            if (i === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        }
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = 'blue';
+        for (let i = 0; i < imagValues.length; i++) {
+            const x = (i / numSamples) * graphWidth;
+            const y = graphHeight - ((imagValues[i] - minValue) / (maxValue - minValue)) * graphHeight;
+            if (i === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        }
+        ctx.stroke();
+    } else {
+        const bmpheight = parseFloat(document.getElementById('bmp-height').value);
+        const bmpwidth = parseFloat(document.getElementById('bmp-width').value);
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = bmpwidth * 5;
+        canvas.height = bmpheight * 5;
+        canvas.style.width = '300px';
+        canvas.style.height = '300px';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const numSamples = 1000;
+        const realValues = [];
+        const imagValues = [];
+
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        for (let i = 0; i <= numSamples; i++) {
+            const t = i / numSamples;
+            const real = point1.real + t * (point2.real - point1.real);
+            const imag = point1.imag + t * (point2.imag - point1.imag);
+            const z = math.complex(real, imag);
+            const fn = teth.evaluate(document.getElementById('function').value, { x: z });
+
+            if (!isNaN(fn.re) && !isNaN(fn.im) && isFinite(fn.re) && isFinite(fn.im)) {
+                realValues.push(fn.re);
+                imagValues.push(fn.im);
+            } else {
+                realValues.push(null);
+                imagValues.push(null);
+            }
+        }
+
+        // Determine min/max values for scaling
+        let maxValueX, minValueX, maxValueY, minValueY;
+        if (maximum > 0) {
+            maxValueX = Math.min(maximum, Math.max(...realValues.filter(v => v !== null)));
+            minValueX = Math.max(-maximum, Math.min(...realValues.filter(v => v !== null)));
+            maxValueY = Math.min(maximum, Math.max(...imagValues.filter(v => v !== null)));
+            minValueY = Math.max(-maximum, Math.min(...imagValues.filter(v => v !== null)));
+        } else if (maximum < 0) {
+            maxValueX = -maximum;
+            minValueX = maximum;
+            maxValueY = -maximum;
+            minValueY = maximum;
+        } else {
+            maxValueX = Math.max(...realValues.filter(v => v !== null));
+            minValueX = Math.min(...realValues.filter(v => v !== null));
+            maxValueY = Math.max(...imagValues.filter(v => v !== null));
+            minValueY = Math.min(...imagValues.filter(v => v !== null));
+        }
+
+        ctx.lineWidth = Math.max(1, canvas.width / 100);
+
+        // Draw axes
+        if (0 > minValueX && 0 < maxValueX) {
+            const zeroX = (-minValueX) / (maxValueX - minValueX) * canvas.width;
+            ctx.strokeStyle = 'black';
+            ctx.beginPath();
+            ctx.moveTo(zeroX, 0);
+            ctx.lineTo(zeroX, canvas.height);
+            ctx.stroke();
+        }
+
+        if (0 > minValueY && 0 < maxValueY) {
+            const zeroY = (-minValueY) / (maxValueY - minValueY) * canvas.height;
+            ctx.strokeStyle = 'black';
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height - zeroY);
+            ctx.lineTo(canvas.width, canvas.height - zeroY);
+            ctx.stroke();
+        }
+
+        // Draw parametric curve
+        ctx.beginPath();
+        ctx.strokeStyle = 'red';
+        for (let i = 0; i < realValues.length; i++) {
+            if (realValues[i] !== null && imagValues[i] !== null) {
+                const x = ((realValues[i] - minValueX) / (maxValueX - minValueX)) * canvas.width;
+                const y = canvas.height - ((imagValues[i] - minValueY) / (maxValueY - minValueY)) * canvas.height;
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+        }
         ctx.stroke();
     }
-    if (math.min(point1.real,point2.real) < 0 && math.max(point1.real,point2.real) > 0) {
-        const zeroY = (point1.real)/(point2.real - point1.real)*canvas.height+canvas.height;
-	
-        ctx.strokeStyle = 'black' ;
-        ctx.beginPath();
-        ctx.moveTo(canvas.width-zeroY,0);
-        ctx.lineTo(canvas.width-zeroY,canvas.height);
-        ctx.stroke();
-    }
-
-
-    for (let i = 0; i <= numSamples; i++) {
-        const t = i / numSamples;
-        const real = point1.real + t * (point2.real - point1.real);
-        const imag = point1.imag + t * (point2.imag - point1.imag);
-        
-        const z = math.complex(real, imag);
-        const fn = math.evaluate(document.getElementById('function').value, { x: z });
-        
-             if (!isNaN(fn.re) && !isNaN(fn.im) && isFinite(fn.re) && isFinite(fn.im)) {
-            realValues.push(fn.re);
-            imagValues.push(fn.im);
-        } else {
-            // Skip this value if it's invalid
-            realValues.push(null);
-            imagValues.push(null);
-        }
-    }
-    
-//console.log(maximum);
-ctx.lineWidth = Math.max(1,canvas.width/100);
-    const graphWidth = canvas.width;
-    const graphHeight = canvas.height;
-    const maxValue = Math.min(maximum,(Math.max(...imagValues, ...realValues)));
-    const minValue = Math.max(-maximum,(Math.min(...imagValues, ...realValues)));
-
-	if (0>minValue && 0<maxValue) {
-        const zeroX = (-minValue)/(maxValue - minValue)*canvas.height;
-	
-        ctx.strokeStyle = 'black';
-        ctx.beginPath();
-        ctx.moveTo(0,canvas.height-zeroX);
-        ctx.lineTo(canvas.width,canvas.height- zeroX);
-        ctx.stroke();
-    }
-
-    ctx.beginPath();
-    ctx.strokeStyle = 'red';
-    for (let i = 0; i < realValues.length; i++) {
-        const x = (i / numSamples) * graphWidth;
-        const y = graphHeight - ((realValues[i] - minValue) / (maxValue - minValue)) * graphHeight;
-        if (i === 0) {
-            ctx.moveTo(x, y);
-        } else {
-            ctx.lineTo(x, y);
-        }
-    }
-    ctx.stroke();
-
-
-    ctx.beginPath();
-    ctx.strokeStyle = 'blue';
-    for (let i = 0; i < imagValues.length; i++) {
-        const x = (i / numSamples) * graphWidth;
-        const y = graphHeight - ((imagValues[i] - minValue) / (maxValue - minValue)) * graphHeight;
-        if (i === 0) {
-            ctx.moveTo(x, y);
-        } else {
-            ctx.lineTo(x, y);
-        }
-    }
-    ctx.stroke();
 }
-
-
-
-
-
-
-
-
-
 
 
         document.getElementById('color-mode').addEventListener('change', function() {
@@ -864,7 +968,7 @@ ctx.lineWidth = Math.max(1,canvas.width/100);
                 document.getElementById('contour-group').style.display = 'none';
             }
         });
-
+        
         document.getElementById('palette-file').addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (file) {
@@ -1001,8 +1105,6 @@ const xxx = math.complex(xre,xim);
 
 
 
-
-
             for (let x = 0; x < width; x++) {
 			let memo = 0;
                 for (let y = 0; y < height; y++) {
@@ -1013,8 +1115,9 @@ const xxx = math.complex(xre,xim);
                     let color = [0, 0, 0];
                     try {
 					const complexValue = math.complex(re, im);
-                       const funcValue = math.evaluate(funcStr, { x: complexValue });
-                  //        const funcValue = math.evaluate(funcStr, { x: complexValue, q:exp(mul(I,pi(),complexValue)) });
+                    const funcValue = teth.evaluate(funcStr,  { x: complexValue });
+                     //  const funcValue = teth.evaluate(funcStr, { x: complexValue });
+                  //        const funcValue = teth.evaluate(funcStr, { x: complexValue, q:exp(mul(I,pi(),complexValue)) });
 				//console.log(funcValue);
 				
 						color = complexToColor(complexValue, funcValue, magnitudeToLightnessExpr, colorMode, saturationChroma, lightness, paletteImageData,thick, math.divide(math.subtract(funcValue,memo),imStep));
@@ -1073,7 +1176,7 @@ let thick = parseFloat(document.getElementById('thick').value);
             let color = [0, 0, 0];
             try {
                 const complexValue = math.complex(re, im);
-                const funcValue = math.evaluate(funcStr, { x: complexValue });
+                const funcValue = teth.evaluate(funcStr, { x: complexValue });
                 
                 // Use input values (complexValue) for coloring
                 // Use input values (complexValue) for coloring
@@ -1140,20 +1243,48 @@ let thick = parseFloat(document.getElementById('thick').value);
         }
 		
 		
-		
-		
 		const textarea = document.getElementById("function");
-let selectedIndex = -1;
 
+//const textarea = document.getElementById("function");
+//const autocompleteList = document.getElementById("autocomplete-list");
+//const textarea = document.getElementById("function");
+//const autocompleteList = document.getElementById("autocomplete-list");
+let selectedIndex = -1;
+let hoverTimer;
+const prefixHelp = {
+  "_": "All functions",
+  "#": "Total functions count",
+  "@": "Recently used functions",
+  ":": "Random functions",
+  "!": "Utility functions (e.g., log, debug, error)",
+  "?": "Show help for all prefixes",
+  "$": "DOM manipulation functions",
+  ">": "Async or promise-based functions",
+  "*": "Math or calculation functions",
+  "~": "String manipulation functions",
+  "&": "Event-related or callback functions",
+  "%": "Date or time-related functions",
+  "t": "Trigonometric functions (e.g., sin, cos, tan)",
+  "g": "Gamma and related functions",
+  "l": "Logarithmic and exponential functions",
+  "b": "Bessel and special functions",
+  "L": "Long functions (>100 characters)",
+  "LL": "Longer functions (>200 characters)"
+};
 textarea.addEventListener("input", (e) => {
   const cursorPosition = textarea.selectionStart;
   const text = textarea.value;
 
-  const prefixMatch = /[a-zA-Z0-9_#]+$/;
+  const prefixMatch = /[a-zA-Z0-9_#@:!?$>*~&%]+$/;
   const match = text.slice(0, cursorPosition).match(prefixMatch);
   let prefix = match ? match[0] : "";
-
-  autocompleteList.innerHTML = "";
+const trigFunctions = ["sin", "cos", "tan", "asin", "acos", "atan", "sinh", "cosh", "tanh", "asinh", "acosh", "atanh"];
+const gammaFunctions = ["gamma", "lambertw", "factorial", "sinc"];
+const logExpFunctions = ["log", "exp", "log10", "log2", "ln"];
+const besselFunctions = ["besselj", "bessely", "besseli", "besselk"];
+const specialFunctions = ["dedekindeta", "jinvariant", "sinc", "ncr", "npr", "npdf", "ncdf", "npsi"];
+ 
+ autocompleteList.innerHTML = "";
   selectedIndex = -1;
 
   if (!prefix) {
@@ -1165,17 +1296,54 @@ textarea.addEventListener("input", (e) => {
 
   if (prefix === "_") {
     suggestions = allFunctionsNames;
-  //}else if (prefix === "@") {
-   // suggestions = recentFunctions;
-  //} else if (prefix === ":") {
-   // suggestions = allFunctionsNames.sort(() => Math.random() - 0.5).slice(0, 10);
   } else if (prefix === "#") {
     const suggestionDiv = document.createElement("div");
     suggestionDiv.textContent = `Total Functions: ${allFunctionsNames.length}`;
     autocompleteList.appendChild(suggestionDiv);
     autocompleteList.style.display = "block";
     return;
-  } else {
+  } else if (prefix === "@") {
+    suggestions = recentFunctions; // Assuming `recentFunctions` is an array of recently used functions
+  } else if (prefix === ":") {
+    suggestions = allFunctionsNames.sort(() => Math.random() - 0.5).slice(0, 10); // Random functions
+  } else if (prefix === "!") {
+    suggestions = allFunctionsNames.filter(name => name.startsWith("log") || name.startsWith("debug") || name.startsWith("error"));
+  } else if (prefix === "?"){
+    // Show help for all prefixes
+    const helpDiv = document.createElement("div");
+    helpDiv.className = "help-text";
+    helpDiv.innerHTML = Object.entries(prefixHelp)
+      .map(([key, value]) => `<strong>${key}</strong>: ${value}`)
+      .join("<br>");
+    autocompleteList.appendChild(helpDiv);
+    autocompleteList.style.display = "block";
+    return;
+    
+  } else if (prefix === "$") {
+    suggestions = allFunctionsNames.filter(name => name.startsWith("$") || name.includes("DOM"));
+  } else if (prefix === ">") {
+    suggestions = allFunctionsNames.filter(name => name.endsWith("Async") || name.startsWith("fetch"));
+  } else if (prefix === "*") {
+    suggestions = allFunctionsNames.filter(name => name.startsWith("calc") || name.startsWith("math"));
+  } else if (prefix === "~") {
+    suggestions = allFunctionsNames.filter(name => name.startsWith("trim") || name.startsWith("substring") || name.startsWith("replace"));
+  } else if (prefix === "&") {
+    suggestions = allFunctionsNames.filter(name => name.startsWith("on") || name.startsWith("handle"));
+  } else if (prefix === "%") {
+    suggestions = allFunctionsNames.filter(name => name.startsWith("date") || name.startsWith("time"));
+  }else if (prefix === "t") {
+    suggestions = trigFunctions;
+  } else if (prefix === "g") {
+    suggestions = gammaFunctions;
+  } else if (prefix === "l") {
+    suggestions = logExpFunctions;
+  } else if (prefix === "b") {
+    suggestions = besselFunctions.concat(specialFunctions);
+  } else if (prefix === "L") {
+    suggestions = longFunctions;
+  } else if (prefix === "LL") {
+    suggestions = longerFunctions;
+  }  else {
     let searchTerms = [prefix];
     if (prefix.includes("arc") || prefix.includes("inv")) {
       searchTerms.push(prefix.replace(/arc/g, "inv"), prefix.replace(/inv/g, "arc"));
@@ -1214,11 +1382,23 @@ textarea.addEventListener("input", (e) => {
       insertSuggestion(suggestion);
     });
 
+    suggestionDiv.addEventListener("mouseenter", () => {
+      hoverTimer = setTimeout(() => {
+        showFunctionCode(suggestion, suggestionDiv);
+      }, 1000); // 1 second hover delay
+    });
+
+    suggestionDiv.addEventListener("mouseleave", () => {
+      clearTimeout(hoverTimer);
+      hideFunctionCode();
+    });
+
     autocompleteList.appendChild(suggestionDiv);
   });
 });
 
 textarea.addEventListener("keydown", (e) => {
+    hideFunctionCode();
   const items = autocompleteList.children;
   if (items.length === 0) return;
 
@@ -1237,6 +1417,7 @@ textarea.addEventListener("keydown", (e) => {
 });
 
 function updateSelection() {
+    hideFunctionCode();
   const items = autocompleteList.children;
   Array.from(items).forEach((item, index) => {
     item.style.background = index === selectedIndex ? "#ddd" : "white";
@@ -1246,22 +1427,42 @@ function updateSelection() {
 function insertSuggestion(suggestion) {
   const cursorPosition = textarea.selectionStart;
   const text = textarea.value;
-  const prefixMatch = /[a-zA-Z0-9_#]+$/;
+  const prefixMatch = /[a-zA-Z0-9_#@:!?$>*~&%]+$/;
   const beforeCursor = text.slice(0, cursorPosition);
   const afterCursor = text.slice(cursorPosition);
   const updatedBeforeCursor = beforeCursor.replace(prefixMatch, suggestion);
   textarea.value = updatedBeforeCursor + afterCursor;
   textarea.selectionStart = textarea.selectionEnd = updatedBeforeCursor.length;
   autocompleteList.style.display = "none";
- //   if (!recentFunctions.includes(suggestion)) {
-  //  recentFunctions.unshift(suggestion);
-  //  if (recentFunctions.length > maxRecent) recentFunctions.pop();
-//}
+
+  // Add to recent functions
+  if (!recentFunctions.includes(suggestion)) {
+    recentFunctions.unshift(suggestion);
+    if (recentFunctions.length > maxRecent) recentFunctions.pop();
+  }
 }
 
+function showFunctionCode(functionName, element) {
+  const functionCode = allFunctions[functionName];
+  if (functionCode) {
+    const codeBubble = document.createElement("div");
+    codeBubble.className = "code-bubble";
+    codeBubble.textContent = functionCode;
+    document.body.appendChild(codeBubble);
 
+    const rect = element.getBoundingClientRect();
+    codeBubble.style.position = "absolute";
+    codeBubble.style.left = `${rect.left}px`;
+    codeBubble.style.top = `${rect.bottom}px`;
+  }
+}
 
-
+function hideFunctionCode() {
+  const codeBubble = document.querySelector(".code-bubble");
+  if (codeBubble) {
+    codeBubble.remove();
+  }
+}
 
 
     textarea.addEventListener("blur", () => {

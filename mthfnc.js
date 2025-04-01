@@ -1,4 +1,4 @@
-0
+
 
 
 
@@ -1766,11 +1766,135 @@ function eulerc () { return math.complex(2.71828,0);
 }
 function log(x){return math.log(x);}
 function sinc(z) {
-            if (math.abs(z) === 0) {
+            if (mag(z) == 0) {
                 return math.complex(1, 0);
             }
             return div(math.sin(z), z);
         }
+        
+        
+        function polygonalschlaflian(x){return mul(4,sqr(sin(div(pi(),x))))}
+        
+function cosc(z) {
+    if (mag(z) == 0) {
+        return complex(1, 0);
+    }
+    return div(cos(z), z);
+}
+
+function tanc(z) {
+    if (mag(z) == 0) {
+        return complex(0, 0);
+    }
+    return div(tan(z), z);
+}
+
+function cscc(z) {
+    if (mag(z) == 0) {
+        return complex(1, 0);
+    }
+    return div(csc(z), z);
+}
+
+function secc(z) {
+    if (mag(z) == 0) {
+        return complex(1, 0);
+    }
+    return div(sec(z), z);
+}
+
+function cotc(z) {
+    if (mag(z) == 0) {
+        return complex(0, 0);
+    }
+    return div(cot(z), z);
+}
+
+function sinhc(z) {
+    if (mag(z) == 0) {
+        return complex(1, 0);
+    }
+    return div(sinh(z), z);
+}
+
+function tanhc(z) {
+    if (mag(z) == 0) {
+        return complex(0, 0);
+    }
+    return div(tanh(z), z);
+}
+
+function coshc(z) {
+    if (mag(z) == 0) {
+        return complex(1, 0);
+    }
+    return div(cosh(z), z);
+}
+
+function cschc(z) {
+    if (mag(z) == 0) {
+        return complex(1, 0);
+    }
+    return div(csch(z), z);
+}
+
+function cothc(z) {
+    if (mag(z) == 0) {
+        return complex(0, 0);
+    }
+    return div(coth(z), z);
+}
+
+function sechc(z) {
+    if (mag(z) == 0) {
+        return complex(1, 0);
+    }
+    return div(sech(z), z);
+}
+
+function asinhc(z) {
+    if (mag(z) == 0) {
+        return complex(1, 0);
+    }
+    return div(asinh(z), z);
+}
+
+function atanhc(z) {
+    if (mag(z) == 0) {
+        return complex(0, 0);
+    }
+    return div(atanh(z), z);
+}
+
+function acoshc(z) {
+    if (mag(z) == 0) {
+        return complex(1, 0);
+    }
+    return div(acosh(z), z);
+}
+
+function acschc(z) {
+    if (mag(z) == 0) {
+        return complex(1, 0);
+    }
+    return div(acsch(z), z);
+}
+
+function acothc(z) {
+    if (mag(z) == 0) {
+        return complex(0, 0);
+    }
+    return div(acoth(z), z);
+}
+
+function asechc(z) {
+    if (mag(z) == 0) {
+        return complex(1, 0);
+    }
+    return div(asech(z), z);
+}
+
+        
 		function mobius(n) {
     if (n === 1) return 1;
     let primeCount = 0;
@@ -3176,53 +3300,7 @@ function coshminus1(b) {
     return div(math.complex(1), math.cosh(b));
 }
 
-// Function for 'sinc'
-function sinc(b) {
-    return div(math.sin(b), add(b, math.complex(0.0001)));
-}
 
-// Function for 'cosc'
-function cosc(b) {
-    return div(math.cos(b), add(b, math.complex(0.0001)));
-}
-
-// Function for 'coshc'
-function coshc(b) {
-    return div(math.cosh(b), add(b, math.complex(0.0001)));
-}
-
-// Function for 'sinhc'
-function sinhc(b) {
-    return div(math.sinh(b), add(b, math.complex(0.0001)));
-}
-
-// Function for 'tanc'
-function tanc(b) {
-    return div(math.tan(b), add(b, math.complex(0.0001)));
-}
-
-// Function for 'tanhc'
-function tanhc(b) {
-    return div(math.tanh(b), add(b, math.complex(0.0001)));
-}
-
-// Function for 'asinc'
-
-
-// Function for 'acoshc'
-function acoshc(b) {
-    return div(math.cosh(b), add(b, math.complex(0.0001)));
-}
-
-// Function for 'asinhc'
-function asinhc(b) {
-    return div(math.sinh(b), add(b, math.complex(0.0001)));
-}
-
-// Function for 'atanhc'
-function atanhc(b) {
-    return div(math.tanh(b), add(b, math.complex(0.0001)));
-}
 function complex(value) {
     return math.complex(value, 0);
 }
@@ -3410,6 +3488,41 @@ function whyregeneralizedsin(n,z){
 fi=mul(fi,sub(1,pow(div(z,k,pi()),n)))
     return fi;
 }
+function generalizedpisind(z){
+    let fi=z;
+    for(let k=2;k<bign/2;k++)
+        for(let g=2;g<bign/2;g++)
+fi=mul(fi,sub(1,pow(div(z,k,g),2)))
+    return log(fi);
+}
+function generalizedpitan(z){
+return div(1,derv(generalizedpisind,z));
+}
+
+function generalizedpicot(z){
+return div(derv(generalizedpisind,z));
+}
+function generalizedpisin(z){
+return div(generalizedpitan(z),0.5,add(1,sqr(generalizedpitan(z))));
+}
+
+function whyregeneralizedpisind(z,n){
+    let fi=z;
+    for(let k=2;k<bign/2;k++)
+        for(let g=2;g<bign/2;g++)
+fi=mul(fi,sub(1,pow(div(z,k,g),n)))
+    return log(fi);
+}
+function whyregeneralizedpitan(n,z){
+return div(1,derv2(whyregeneralizedpisind,z,n));
+}
+
+function whyregeneralizedpicot(n,z){
+return div(derv2(whyregeneralizedpisind,z,n));
+}
+function whyregeneralizedpisin(n,z){
+return div(whyregeneralizedpitan(n,z),0.5,add(1,sqr(whyregeneralizedpitan(n,z))));
+}
 
 
 function cosmquintic(x,phi){return add(mul(3,pow(x,5)),mul(5,x),-8,mul(5,phi))}
@@ -3474,7 +3587,7 @@ function cotquartic(x,a=-1,b=0,c=0,d=0,e=1,parity=0){return div(cosquartic(x,a,b
 
 
 
-function squarerolling(x){return sub(sqrt(2),cosh(div(mul(2,0.881377,asin(sin(div(mul(pi(),x),2,g)))),pi())))}
+function squarerolling(x,g=1){return sub(sqrt(2),cosh(div(mul(2,0.881377,asin(sin(div(mul(pi(),x),2,g)))),pi())))}
 
 
 function rollingfunctionx(func,x){
@@ -4120,6 +4233,39 @@ function repeate(func,x,n){
 	return fi;
 }
 
+
+
+
+
+//functions for mandelbrot like STUFF from my old project in  2016
+function ilog(x){return add(re(x),mul(I,log(im(x))))}
+function rlog(x){return add(log(re(x)),mul(I,im(x)))}
+
+function iexp(x){return add(re(x),mul(I,exp(im(x))))}
+function rexp(x){return add(exp(re(x)),mul(I,im(x)))}
+
+function isin(x){return add(re(x),mul(I,sin(im(x))))}
+function rsin(x){return add(sin(re(x)),mul(I,im(x)))}
+
+function icos(x){return add(re(x),mul(I,cos(im(x))))}
+function rcos(x){return add(cos(re(x)),mul(I,im(x)))}
+
+function itan(x){return add(re(x),mul(I,tan(im(x))))}
+function rtan(x){return add(tan(re(x)),mul(I,im(x)))}
+
+function isec(x){return add(re(x),mul(I,sec(im(x))))}
+function rsec(x){return add(sec(re(x)),mul(I,im(x)))}
+
+function icot(x){return add(re(x),mul(I,cot(im(x))))}
+function rcot(x){return add(cot(re(x)),mul(I,im(x)))}
+
+function icsc(x){return add(re(x),mul(I,csc(im(x))))}
+function rcsc(x){return add(csc(re(x)),mul(I,im(x)))}
+
+
+
+
+
 function mandelbrot(a, b=a,n=1) {
     let c = math.complex(b);
     let z = math.complex(a);
@@ -4483,6 +4629,9 @@ function step(a, b) {
 
 function hstep(a, b) {
     return toDouble(b) < toDouble(a) ? 0 : 1;
+}
+function ihstep(a, b) {
+    return toDouble(b) > toDouble(a) ? 0 : 1;
 }
 
 function boxcar(x,b,a,aa){return mul(aa,sub(hstep(sub(x,a)),hstep(sub(x,b))))}
@@ -5853,22 +6002,14 @@ function asinc(b) {
     return fi;
 }
 
-function dedekindeta(t) {
-    const q =exp(mul(2, pi(),I,t));
- return mul(pow(q,div(1,24)),infqpochhammer(q,q))
-   /* const eulerConstant = eulerc();
-    const exponent = mul(math.complex(2.0), z, pi(), math.complex(0,1));
-    const q = pow(eulerConstant, exponent);
-    let p = pow(q, div(math.complex(1.0), math.complex(24.0)));
-    
-
-
-    for (let id = 1; id < bign; id++) {
-        const qi = pow(q, math.complex(id));
-        p = mul(p, sub(math.complex(1.0), qi));
+function dedekindeta(z) {
+//const z=add(modc(re(zz),24),mul(I,im(zz)))
+let fi=0
+    for (let id = -bign; id <= bign; id++) {
+    fi=add(fi,exp(add(mul(pi(),I,id),mul(3,pi(),I,z,sqr(add(id,div(1,6)))))))
     }
 
-   return p;*/
+   return fi;
 }
 
 function dedekindpsi(k,s){
@@ -6011,6 +6152,9 @@ function mufuncalt(x,a=0){
 // Define zeta function based on your actual implementation
 function zeta(x) {
         return mul(div(math.complex(1.0), sub(math.complex(1.0), pow(math.complex(2.0), sub(math.complex(1.0), x)))),dirichleteta(x));
+}
+function zetap(x) {
+        return derv(zeta,x);
 }
 function completezeta(x){return mul(gammar(x),zeta(x))}
 function fastzeta(x,jj=bign){
@@ -7453,9 +7597,26 @@ function kfunc(x) {
 
     return div(pow(gamma(b), sub(b, 1.0)), mul(aggs, aggt));
 }
-function subfactorial(x){
-	return div(incgamma(add(x,1),-1),eulerc());
+function subfactorial(x) {
+    if(x==0)return 1;
+    if (re(x) <    3) {
+        return div(add(subfactorial(add(x, 1)), pow(-1, x)), add(x, 1));
+    }
+    
+    // Use the generalized formula for subfactorial for non-integer x
+    return div(incgamma(add(x, 1), -1), eulerc());
 }
+
+    
+    /*    //if(im(n)<0)return conj(subfactorial(conj(n)));
+let fi=0;
+for(let i=bign;i>0;i--){
+    fi=div(bign,add(n,bign,2,mul(-1,fi)))
+}
+    
+    return add(div(factorial(n),eulerc()),div(pow(-1,n),fi))
+}*/
+
 function  touchardpolyd(t,X){
 	const n=g(X,0);const x=g(X,1);
 	return div(exp(mul(x,sub(exp(t),1))),pow(t,add(n,1)));
@@ -7633,9 +7794,9 @@ function weierstrassutilityew(e1,e2,e3){
    
     const w1=div(compellint1(k),sqrt(sub(e1,e3)));
     const w3=div(mul(compellint1(sqrt(sub(1,sqr(k)))),I),sqrt(sub(e1,e3)));
-    return [w1,w3]
+    return [w1,add(w3,w1)]
 }
-function weierstrassutilitygew(g2, g3){
+function weierstrassutilitygw(g2, g3){
     const A=weierstrassutilityge(g2,g3);
     const e1=g(A,0);const e2=g(A,2);const e3=g(A,1);
     const B=weierstrassutilityew(e1,e2,e3);
@@ -7644,37 +7805,32 @@ function weierstrassutilitygew(g2, g3){
 
  //   return add(e3,div(sub(e1,e3),sqr(sn(w,k))))
 }
-function weierstrassellipticgew(z,g2, g3,automod=0){
+function weierstrassellipticg(z,g2, g3,automod=0){
     const A=weierstrassutilityge(g2,g3);
     const e1=g(A,0);const e2=g(A,2);const e3=g(A,1);
     const B=weierstrassutilityew(e1,e2,e3);
     const w1=g(B,0);const w3=g(B,1);
-    return weierstrasselliptic(z,w1,w3,automod);
+    return weierstrasselliptic(z,mul(2,w1),mul(2,w3),automod);
 
  //   return add(e3,div(sub(e1,e3),sqr(sn(w,k))))
 }
-function weierstrassellipticdgew(z,g2, g3,automod=0){
+function weierstrassellipticdg(z,g2, g3,automod=0){
     const A=weierstrassutilityge(g2,g3);
     const e1=g(A,0);const e2=g(A,2);const e3=g(A,1);
     const B=weierstrassutilityew(e1,e2,e3);
     const w1=g(B,0);const w3=g(B,1);
-    return weierstrassellipticd(z,w1,w3,automod);
+    return weierstrassellipticd(z,mul(2,w1),mul(2,w3),automod);
 
  //   return add(e3,div(sub(e1,e3),sqr(sn(w,k))))
 }
-function weierstrassellipticge(z,g2, g3, parity=0){
-const A=weierstrassutilityge(g2,g3,parity);
-    const e1=g(A,0);const e2=g(A,2);const e3=g(A,1);
-    const k=sqrt(div(sub(e2,e3),sub(e1,e3)));
-    const w=mul(z,sqrt(sub(e1,e3)));
-    return add(e3,mul(sub(e1,e3),ns(mul(z,sqrt(sub(e1,e3))),sqrt(div(sub(e2,e3),sub(e1,e3))))))
- //   return add(e3,div(sub(e1,e3),sqr(sn(w,k))))
-}
+
 function weierstrassellipticeee(z,e1,e2,e3){
     const k=sqrt(div(sub(e2,e3),sub(e1,e3)));
     const w=mul(z,sqrt(sub(e1,e3)));
 
 return add(e3,div(sub(e1,e3),sqr(sn(w,k))))}
+
+/*
     let wgwcache = weierstrassutilitygw.cache || (weierstrassutilitygw.cache = new Map());
 function weierstrassutilitygw(g2, g3, guess=0) {
 
@@ -7703,7 +7859,7 @@ function weierstrassutilitygw(g2, g3, guess=0) {
     
     wgwcache.set(key, result);
     return result;
-}
+}*/
 
 function blaschkefactor(a,z){
     if(a==0)return z;
@@ -7725,11 +7881,11 @@ function wallisintegrald(t,n){return pow(sin(t),n)}
 function wallisintegral(n){return integral(wallisintegrald,0,div(pi(),2))}
 function wallisintegrali(n){return integral(wallisintegrald,0,pi())}
 function wallisproduct(n){return div(mul(pow(2,mul(4,n)),tesseract(factorial(n))),sqr(factorial(mul(2,n))),add(n,n,1))}
-
+/*
 function weierstrassellipticg(x,g2,g3,parity2=0){
     const R=weierstrassutilitygw(g2,g3);
     return weierstrasselliptic(x,g(R,0),g(R,1),parity2);
-}
+}*/
 
 
 function picardfuchsj(b) {
@@ -8385,22 +8541,29 @@ function cmm(x){
 
 
 function generalequianharmonicdixonelliptic(z,a){
-    return weierstrassellipticgew(z,div(mul(a,sub(cum(a),8)),12),div(sub(8,pow(a,6),mul(20,cum(a))),216))
+    //console.log(22);
+    //weierstrassellipticg(x,0,1/27)
+   // console.log(div(mul(a,sub(cum(a),8)),12));
+  //  console.log(div(sub(8,pow(a,6),mul(20,cum(a))),216));
+    return weierstrassellipticg(z,div(mul(a,sub(cum(a),8)),12),div(sub(8,pow(a,6),mul(20,cum(a))),216),1)
 // return  weierstrasselliptic(z,g(A,0),g(A,1)); 
 }
 
 
 function generalequianharmonicdixonellipticd(z,a){
-     return weierstrassellipticdgew(z,div(mul(a,sub(cum(a),8)),12),div(sub(8,pow(a,6),mul(20,cum(a))),216))
+     return weierstrassellipticdg(z,div(mul(a,sub(cum(a),8)),12),div(sub(8,pow(a,6),mul(20,cum(a))),216),1)
 // return  weierstrasselliptic(z,g(A,0),g(A,1)); 
+//(6*weierstrassellipticg(x,0,1/27,1))/(1-3*weierstrassellipticdg(x,0,1/27,1))
 }
 	
-    function generalsm(z,a){
+    function generalsm(z,aa){
+    const a = add(aa,div(I,bign,bign))
     const p=generalequianharmonicdixonelliptic(z,a);
     const pd=generalequianharmonicdixonellipticd(z,a);   
     return div(add(mul(2,p),div(sqr(a),2)),add(pd,mul(a,p),div(add(cum(a),4),-12)),-1)
     }
-    function generalcm(z,a){
+    function generalcm(z,aa){
+    const a = add(aa,div(I,bign,bign))
     const p=generalequianharmonicdixonelliptic(z,a);
     const pd=generalequianharmonicdixonellipticd(z,a);   
     return div(sub(pd,mul(a,p),div(add(cum(a),4),-12)),add(pd,mul(a,p),div(add(cum(a),4),-12)))
@@ -8413,10 +8576,10 @@ function asm(x) {
 function acm(x){
     return sub(5.29991625/3,asm(x))
 }
-
+//(3*weierstrassellipticdg(x,0,1/27,1)+1)/(3*weierstrassellipticdg(x,0,1/27,1)-1)
 
 function equianharmonicdixonelliptic(z){
- return  weierstrasselliptic(z,mul(5.29991625,exp(div(mul(2,pi(),I),3))),5.29991625) 
+ return  weierstrasselliptic(z,mul(5.29991625,exp(div(mul(2,pi(),I),3))),5.29991625,1) 
 }
 function equianharmonicdixonellipticd(z){
  return  weierstrassellipticd(z,mul(5.29991625,exp(div(mul(2,pi(),I),3))),5.29991625) 
@@ -8424,6 +8587,7 @@ function equianharmonicdixonellipticd(z){
 
 function cm(z){const wpp=equianharmonicdixonellipticd(z);return div(add(mul(3,wpp),1),sub(mul(3,wpp),1))}
 function sm(z){return cm(sub(5.29991625/3,z))}//return div(mul(-6,equianharmonicdixonelliptic(z)),sub(mul(3,equianharmonicdixonellipticd(z)),1))}
+function dixonq(x){return div(sm(x),3,sub(1,cm(x)))} 
 function cmh(z){return cm(sub(0,z));}
 function smh(z){return sub(0,sm(sub(0,z)));}
 
@@ -8443,6 +8607,20 @@ function dixonwinf(z){return div(dixonw(div(1,z)),z)}
 
 function sp(u){return div(sqr(sm(u)),-1,cm(u))}
 function cp(u){return div(sqr(cm(u)),sm(u))}
+
+//function dixonr(x){return div(1,cm(mul(I,x)))}
+//function dixonb(x){return div(1,sm(mul(I,x)))}
+
+function trihyperbola(x){return div(1,sm(mul(I,x)))}
+function trihyperbolaneg(x){return div(1,sm(mul(-1,I,x)))}
+function trihyperbolasm(x){return add(trihyperbola(x),trihyperbolaneg(x))}
+function trihyperbolacm(x){return mul(I,-1,sub(trihyperbola(x),trihyperbolaneg(x)))}
+function trihyperbolasl(x){return add(sqr(trihyperbola(x)),sqr(trihyperbolaneg(x)))}
+function trihyperbolacl(x){return sub(sqr(trihyperbola(x)),sqr(trihyperbolaneg(x)))}
+
+function trefoilsl(ss){const s=sm(div(ss,sqrt(3)));const x=cm(div(ss,sqrt(3)));return div(mul(sqrt(3),x,s,add(1,cum(x))),2,sub(1,mul(x,x,x,s,s,s)))}
+function trefoilcl(ss){const s=sm(div(ss,sqrt(3)));const x=cm(div(ss,sqrt(3)));return div(mul(3,x,s,s,s,s),-2,sub(1,mul(x,x,x,s,s,s)))}
+
 
 //ADD MORE
 
@@ -11130,6 +11308,15 @@ function gettaylorseries(func, z0=0 ) {
     for (let i=0;i<9;i++) res[i]=nthderiv(func, z0, i);
         return  res ;
 }
+function evaltaylorseries(x, A) {
+    let result = 0;
+    for (let n = 0; n < A.length; n++) {
+        let term = div(g(A, n), factorial(n));
+        term = mul(term, pow(x, n));
+        result = add(result, term);
+    }
+    return result;
+}
 function getcoefseries(func, z0=0 ) {
 	let res = [0,0,0,0,0,0,0,0,0]
     for (let i=0;i<9;i++) res[i]=div(nthderiv(func, z0, i),factorial(i));
@@ -11498,9 +11685,11 @@ function chebyshevtstar(n,b){return chebyshevt(n,sub(add(b,b),1));}
 	function aid(x){return(derv(ai,x))};
 	function bid(x){return(derv(bi,x))};
 	function ai(x){
+    if(x.im>0)return ai(conj(x));
 	if(x.re>0) return mul(1/pi(),math.sqrt(div(x,3)),besselk(0.333333333,mul(0.666666666,pow(x,1.5))));
 	return mul(math.sqrt(div(sub(0,x),9)),add(besselj(0.33333333,mul(pow(sub(0,x),1.5),0.666666666)),besselj(-0.33333333,mul(pow(sub(0,x),1.5),0.666666666))));}
 	function bi(x){
+    if(x.im>0)return bi(conj(x));
 	if(x.re>0) return mul(math.sqrt(div(x,3)),add(besseli(-0.33333333,mul(pow(x,1.5),0.666666666)),besseli(0.33333333,mul(pow(x,1.5),0.666666666))));
 	return mul(math.sqrt(div(sub(0,x),3)),sub(besselj(-0.33333333,mul(pow(sub(0,x),1.5),0.666666666)),besselj(0.33333333,mul(pow(sub(0,x),1.5),0.666666666))));}
 
@@ -12376,6 +12565,7 @@ function doublegammad(t,A){
 function doubleloggamma(b,w){
 	return integral(doublegammad,0.01/bign,sqrt(bign)*1.5,[b,w]);
 }
+function loggamma(x){return log(gamma(x))}
 
 /*function doublegammamove(b,w,a){
 	let m = div(a,b);
@@ -13675,7 +13865,8 @@ function bei(v,z){
 }
 function ber(v,z){
 	const term = mul(pow(-1,0.25),z);
-	return mul(0.5,math.complex(0,1),math.exp(mul(-0.75,math.complex(0,1),pi(),v)),pow(z,v),pow(term,sub(0,v)),add(mul(math.exp(mul(math.complex(0,1.5),pi(),v)),besseli(v,term)),besselj(v,term)));
+    return div(add(besseli(0,term),besselj(0,term)),2)
+	//return mul(0.5,math.complex(0,1),math.exp(mul(-0.75,math.complex(0,1),pi(),v)),pow(z,v),pow(term,sub(0,v)),add(mul(math.exp(mul(math.complex(0,1.5),pi(),v)),besseli(v,term)),besselj(v,term)));
 }
 function ker(v,z){
 	v = math.add(0.00000002,v);
@@ -14169,6 +14360,69 @@ function ode2rk4ortho(func, e, s = 0, sp = 0, p = 0, off = 0) {let bignu=ceil(bi
 
     return y;
 }
+
+
+
+
+
+
+// RK4 step helper function (same as before)
+function rk4Step(func, x, y, yp, dx, p) {
+    const k1_ypp = func(x, y, yp, p);
+    const k1_yp = math.multiply(k1_ypp, dx);
+    const k1_y = math.multiply(yp, dx);
+
+    const mid_x1 = math.add(x, math.divide(dx, 2));
+    const mid_yp1 = math.add(yp, math.divide(k1_yp, 2));
+    const mid_y1 = math.add(y, math.divide(k1_y, 2));
+    const k2_ypp = func(mid_x1, mid_y1, mid_yp1, p);
+    const k2_yp = math.multiply(k2_ypp, dx);
+    const k2_y = math.multiply(mid_yp1, dx);
+
+    const mid_x2 = math.add(x, math.divide(dx, 2));
+    const mid_yp2 = math.add(yp, math.divide(k2_yp, 2));
+    const mid_y2 = math.add(y, math.divide(k2_y, 2));
+    const k3_ypp = func(mid_x2, mid_y2, mid_yp2, p);
+    const k3_yp = math.multiply(k3_ypp, dx);
+    const k3_y = math.multiply(mid_yp2, dx);
+
+    const end_x = math.add(x, dx);
+    const end_yp = math.add(yp, k3_yp);
+    const end_y = math.add(y, k3_y);
+    const k4_ypp = func(end_x, end_y, end_yp, p);
+    const k4_yp = math.multiply(k4_ypp, dx);
+    const k4_y = math.multiply(end_yp, dx);
+
+    const yp_new = math.add(
+        yp,
+        math.divide(
+            math.add(
+                math.add(k1_yp, math.multiply(2, k2_yp)),
+                math.add(math.multiply(2, k3_yp), k4_yp)
+            ),
+            6
+        )
+    );
+
+    const y_new = math.add(
+        y,
+        math.divide(
+            math.add(
+                math.add(k1_y, math.multiply(2, k2_y)),
+                math.add(math.multiply(2, k3_y), k4_y)
+            ),
+            6
+        )
+    );
+
+    return [y_new, yp_new];
+}
+
+
+
+
+
+
 function ode3rk4(func, e, s = 0, sp = 0, spp = 0, p = 0, off = 0, N = bign) {
     
     let dx = div(sub(e, s), N);
@@ -14225,9 +14479,11 @@ function painleve1diff(x,y,yp){
 function painleve1(x,s=0,sp=0,off=1){
 	return ode2rk4(painleve1diff,x,s,sp,0,off);
 }
+
 function painleve1ortho(x,s=0,sp=0,off=1){
 	return ode2rk4ortho(painleve1diff,x,s,sp,0,off);
 }
+
 function painleve2diff(x,y,yp,a){
 	return add(mul(y,y,y,2),mul(y,x),a);
 }
@@ -15027,16 +15283,85 @@ return ode2rk4(laguerrediff, x, 1, -1, n, 0.01);
 
 
 
+function noise() {
+    return sub(mul(Math.random(), 2), 1);
+}
+
+function pinknoise() {
+    let b0 = 0.0, b1 = 0.0, b2 = 0.0;
+    let white = sub(mul(Math.random(), 2), 1);
+    b0 = add(mul(0.99765, b0), mul(white, 0.0990460));
+    b1 = add(mul(0.96300, b1), mul(white, 0.2965164));
+    b2 = add(mul(0.57000, b2), mul(white, 1.0526913));
+    return add(add(add(b0, b1), b2), mul(white, 0.1848));
+}
+
+function brownnoise() {
+     let lastOut = 0.0;
+    let white = sub(mul(Math.random(), 2), 1);
+    lastOut = mul(add(lastOut, white), 0.5);
+    return lastOut;
+}
+
+// More Noise Functions
+function violetnoise() {
+    let white = sub(mul(Math.random(), 2), 1);
+let lastOut = 0.0;
+    let output = sub(white, lastOut);
+    lastOut = white;
+    return output;
+}
+
+function bluenoise() {
+    let white = sub(mul(Math.random(), 2), 1);
+   let lastOut = 0.0;
+    let output = sub(white, mul(lastOut, 0.5));
+    lastOut = white;
+    return output;
+}
+
+function greynoise() {
+    let white = sub(mul(Math.random(), 2), 1);
+     let lastOut = 0.0;
+    let output = mul(add(white, lastOut), 0.5);
+    lastOut = white;
+    return output;
+}
 
 
+// Complex Waveforms
+function fmynth(t, carrierFreq, modulatorFreq, modulationIndex) {
+return sin(add(mul(carrierFreq, t), mul(modulationIndex, sin(mul(modulatorFreq, t)))));
+}
 
+function amsynth(t, carrierFreq, modulatorFreq, modulationDepth) {
+return mul(sin(mul(carrierFreq, t)), add(1, mul(modulationDepth, sin(mul(modulatorFreq, t)))));
+}
 
+// Specialized Waveforms
+function chirp(t, f0, f1) {
+    let phase = add(mul(2 * Math.PI * f0, t), mul(Math.PI * sub(f1, f0), mul(t, t)));
+    return sin(phase);
+}
 
+function blit(t, frequency) {
+    let period = div(1, frequency);
+    let phase = modc(t, period);
+    return st(phase, 0) ? 1 : div(sin(mul(Math.PI, phase)), mul(Math.PI, phase));
+}
 
-
-
-
-
+// Envelopes
+function adsr(t, attack, decay, sustain, release) {
+    if (st(t, attack)) {
+        return div(t, attack);
+    } else if (st(t, add(attack, decay))) {
+        return sub(1, mul(sub(1, sustain), div(sub(t, attack), decay)));
+    } else if (st(t, add(add(attack, decay), release))) {
+        return mul(sustain, sub(1, div(sub(t, add(attack, decay)), release)));
+    } else {
+        return 0;
+    }
+}
 
 
 
@@ -16634,8 +16959,855 @@ function importAllFunctionsToMath() {
 //	if(a)console.log(allFunctions);
 }
 
+
+
+
+
+    const importedFunctions = {
+        factorial: factorial,
+        factoriel: factorial,
+        superlog: slog,
+        perpendicularmandel: perpendicularmandelbrot,
+        mandel: mandelbrot,
+        thomae: thomea,
+        ln: log,
+        tg: tan,
+        lb: log2,
+
+        expm: expm,
+
+        vcs: vercosin,
+        vercos: vercosin,
+        cvs: covercos,
+        hvc: havercos,
+        hcv: hacoversin,
+        hcc: hacovercos,
+        cvc: covercos,
+        ver: versin,
+
+        wp: weierstrasselliptic,
+        wpd: weierstrassellipticd,
+        wpdel: weierstrassellipticdelta,
+        wpz: weierstrassellipticzeta,
+        wpe: weierstrassellipticeta,
+
+        erf: erf,
+
+        kummerm: confluenthypergeometricm,
+        kummeru: confluenthypergeometricu,
+
+        blanc: takagi,
+
+        arcsine: asin,
+        arsinh: asinh,
+        arcsec: asec,
+        arccos: acos,
+        arctan: atan,
+        arccot: acot,
+        arcasin: asin,
+
+        arcsinh: asinh,
+        arcosh: acosh,
+        artanh: atanh,
+        arcoth: acoth,
+        arsech: asech,
+        arcsch: acsch,
+
+        poch: pochhammer,
+
+        polylog: polylogarithm,
+    };
+
+    const specialConstants = {
+        "true": 1, 
+        "false": 0, 
+        "HIGH": 1, 
+        "LOW": 0, 
+        "high": 1, 
+        "low": 0, 
+         "i": I,
+         "e":eulerc(),
+        "pi": Math.PI,
+        "p": Math.PI,
+        "tau": 2 * Math.PI,
+        "phi": (1.0 + Math.sqrt(5.0)) / 2.0,
+        "goldenratio": (1.0 + Math.sqrt(5.0)) / 2.0,
+        "silverratio": Math.sqrt(2.0) + 1.0,
+        "golden": (1.0 + Math.sqrt(5.0)) / 2.0,
+        "silver": Math.sqrt(2.0) + 1.0,
+        "L": math.complex(0.318132, 1.33724),
+
+    "L2": math.complex(2.062277729598, 7.588631178473),
+    "L3": math.complex(2.653191974039, 13.949208334533),
+    "L4": math.complex(3.020239708165, 20.272457641615),
+    "L5": math.complex(3.287768611544, 26.580471499359),
+    "C2": math.complex(1.942833, 1.44437805),
+    "C3": math.complex(0.908675, 0.6762448),
+    "C4": math.complex(0.159, 0.615),
+    "C5": math.complex(-0.5185305, 1.3435625),
+    "C6": math.complex(0.3868245, -1.9160425), // Fixed syntax
+    "C7": math.complex(0.6613640, 1.3746685),
+    "C8": math.complex(0.42618, 1.124536),
+    "C9": math.complex(0.1832395, 1.205809),
+    "S": math.complex(1.5259833, 0.0178411),
+    "Lp": math.complex(0.318132, -1.33724),
+    "w3": math.complex(-0.5, Math.sqrt(3) / 2),
+    "w4": math.complex(Math.cos((2 * Math.PI) / 4), Math.sin((2 * Math.PI) / 4)),
+    "w5": math.complex(Math.cos((2 * Math.PI) / 5), Math.sin((2 * Math.PI) / 5)),
+    "w6": math.complex(Math.cos(Math.PI / 3), Math.sin(Math.PI / 3)),
+    "w7": math.complex(Math.cos((2 * Math.PI) / 7), Math.sin((2 * Math.PI) / 7)),
+    "w8": math.complex(0.70710678118, 0.70710678118),
+    "w9": math.complex(Math.cos((2 * Math.PI) / 9), Math.sin((2 * Math.PI) / 9)),
+        
+            "supergolden": 0.46557123187676802665,
+    "hexagonalcc": Math.sqrt(2.0 + Math.sqrt(2.0)),
+    "triangularcc": 4.15079,
+    "squarecc": 2.6381585303279,
+    "kagomecc": 2.56062,
+    "manhattancc": 1.733535,
+    "llaticecc": 1.5657,
+    "keplerbouwkamp": 0.11494204485329620070,
+    "wallis": 2.09455148154232659148,
+    "lemniscate": 2.62205755429211981046,
+    "eulermascheroni": 0.57721566490153286060,
+    "erdosborwein": 1.60669515241529176378,
+    "omega": 0.56714329040978387299,
+    "apery": 1.20205690315959428539,
+    "laplacelimit": 0.66274341934918158097,
+    "ramanujansoldner": 1.45136923488338105028,
+    "gauss": 0.83462684167407318628,
+    "hermite2": 1.15470053837925152901,
+    "louville": 0.110001000000000000000001,
+    "C1": 0.69777465796400798201,
+    "ramanujan": 262537412640768743.999999999999250073,
+    "glaisherkinkelin": 1.28242712910062263687,
+    "meisselmertens": 0.26149721284764278375,
+    "universalparabolic": 2.29558714939263807403,
+    "cahen": 0.64341054628833802618,
+    "gelfond": 23.1406926327792690057,
+    "catalan": 0.91596559417721901505,
+    "dottie": 0.73908513321516064165,
+    "gelfondschneider": Math.pow(2.0, Math.sqrt(2.0)),
+    "favard2": 1.23370055013616982735,
+    "goldenangle": 2.39996322972865332223,
+    "sierpinski": 2.58498175957925321706,
+    "landauramanujan": 0.76422365358922066299,
+    "nielsenramanujan1": 0.82246703342411321823,
+    "gieseking": 1.01494160640965362502,
+    "bernstein": 0.28016949902386913303,
+    "tribonacci": 1.83928675521416113255,
+    "brun": 1.902160583104,
+    "twinprime": 0.66016181584686957392,
+    "plastic": 1.32471795724474602596,
+    "bloch": 0.4719,
+    "z975": 1.95996398454005423552,
+    "landau": 0.543258965342,
+    "landau3": 0.7853,
+    "prouhetthuemorse": 0.41245403364010759778,
+    "golombdickman": 0.62432998854355087099,
+    "lebesgue": 0.98943127383114695174,
+    "fellertornier": 0.66131704946962233528,
+    "champernowne": 0.12345678910111213141,
+    "salem": 1.17628081825991750654,
+    "kinchin": 2.68545200106530644530,
+    "levy": 1.18656911041562545282,
+    "levy2": 3.27582291872181115978,
+    "copelanderdos": 0.23571113171923293137,
+    "mills": 1.30637788386308069046,
+    "gompertz": 0.59634736232319407434,
+    "vanderpauw": 4.53236014182719380962,
+    "magicangle": 0.955316618124509278163,
+    "artin": 0.37395581361920228805,
+    "porter": 1.46707807943397547289,
+    "lochs": 0.97027011439203392574,
+    "devicci": 1.00743475688427937609,
+    "squareice": 1.53960071783900203869,
+    "niven": 1.70521114010536776428,
+    "stephens": 0.57595996889294543964,
+    "paperfolding": 0.85073618820186726036,
+    "rfib": 3.35988566624317755317,
+    "feigenbaum": 4.66920160910299067185,
+    "chaitin": 0.0078749969978123844,
+    "robbins": 0.66170718226717623515,
+    "weierstrass": 0.47494937998792065033,
+    "fransenrobinson": 2.80777024202851936522,
+    "feigenbauma": 2.50290787509589282228,
+    "erdostenenbaumford": 0.08607133205593420688,
+    "conway": 1.30357726903429639125,
+    "hafnersarnakmccurley": 0.35323637185499598454,
+    "backhouse": 1.45607494858268967139,
+    "viswanath": 1.1319882487943,
+    "komornikloreti": 1.78723165018296593301,
+    "embreetrefethen": 0.70258,
+    "heathbrownmoroz": 0.00131764115485317810,
+    "mrb": 0.18785964246206712024,
+    "primeconst": 0.41468250985111166024,
+    "somosquad": 1.66168794963359412129,
+    "foias": 1.18745235112650105459,
+    "logcapacity": 0.59017029950804811302,
+    "taniguchi": 0.67823449191739197803,
+
+    // Additional constants
+    "henryketa": Math.exp(Math.E),
+    "katsuo": -0.21723362821122164,
+    "namihei": 4.493409457909062,
+    "fune": 1.199678640257734,
+    "wakame": 1.50887956153832,
+    "tarao": -0.33650841691839534,
+    "sazae": 2.798386045783887,
+
+    // Physical constants
+    "cosmological": 1.089e-52,
+    "h": 6.62607015e-34,
+    "g": 9.80665,
+    "hbar": 1.054571817e-34,
+    "thomsoncross": 6.6524587321e-29,
+    "u": 1.66053906660e-27,
+    "muN": 5.0507837461e-27,
+    "c12": 1.99264687992e-26,
+    "muB": 9.2740100783e-24,
+    "k": 1.380649e-23,
+    "echarge": 1.602176634e-19,
+    "Ry": 2.1798723611035e-18,
+    "Eh": 4.3597447222071e-18,
+    "c1L": 1.191042972e-16,
+    "c1": 3.741771852e-16,
+    "magneticfluxquantum": 2.067833848e-15,
+    "re": 2.8179403262e-15,
+    "e0": 8.8541878128e-12,
+    "a0": 5.29177210903e-11,
+    "G": 6.67430e-11,
+    "sigma": 5.670374419e-8,
+    "Nah": 3.9903127128934314e-10,
+    "mu0": 1.25663706212e-6,
+    "fermicc": 1.1663787e-5,
+    "qcirculation": 3.6369475516e-4,
+    "Mu": 0.99999999965e-3,
+    "b": 2.897771955e-3,
+    "bentropy": 3.002916077e-3,
+    "a": 7.2973525693e-3,
+    "c2": 1.438776877e-2,
+    "weakmixing": 0.22290,
+    "mWmZ": 0.88153,
+    "gp": 5.5856946893,
+    "R": 8.31446261815324,
+    "Z0": 376.730313668,
+    "mpme": 1836.15267343,
+    "RK": 25812.80745,
+    "F": 96485.3321233100184,
+    "Rinf": 10973731.568160,
+    "c": 299792458,
+    "ke": 8.9875517923e9,
+    "b'": 5.878925757e10,
+    "KJ": 483597.8484e9,
+    "NA": 6.02214076e23,
+
+    // More constants
+    "eta": Math.exp(1.0 / Math.E),
+    "eta4": 1.63532449671,
+    "e4": 3.08853227189,
+    "hcmu": 1.88393887473,
+    "glaisher": 1.28242712910,
+    "hdottie": 0.7650095455,
+
+    // G-factors
+    "g_e": -2.0023193043625,
+    "g_mu": -2.0023318418,
+    "g_p": +5.5856946893,
+    "g_n": -3.8260854,
+
+        
+            "semitone": math.pow(2.0, 1.0 / 12.0),
+    "wholetone": math.pow(2.0, 2.0 / 12.0),
+    "minorthird": math.pow(2.0, 3.0 / 12.0),
+    "majorthird": math.pow(2.0, 4.0 / 12.0),
+    "perfectfourth": math.pow(2.0, 5.0 / 12.0),
+    "tritone": math.pow(2.0, 6.0 / 12.0),
+    "perfectfifth": math.pow(2.0, 7.0 / 12.0),
+    "minorsixth": math.pow(2.0, 8.0 / 12.0),
+    "majorsixth": math.pow(2.0, 9.0 / 12.0),
+    "minorseventh": math.pow(2.0, 10.0 / 12.0),
+    "majorseventh": math.pow(2.0, 11.0 / 12.0),
+    "unison": 1.0,
+    "sixtyfivethousandthirtyseventhharm": 65537.0 / 65536.0,
+    "ragisma": 4375.0 / 4374.0,
+    "breedsma": 2401.0 / 2400.0,
+    "millioctave": math.pow(2.0, 21.0 / 1000.0),
+    "schisma": 32805.0 / 32768.0,
+    "gradwerckmeister": math.pow(2.0, 3.0 / 219.0),
+    "savart": 21.0 / 1000.0,
+    "septimalkleisma": 225.0 / 224.0,
+    "kleisma": 15625.0 / 15552.0,
+    "semicomma": 2109375.0 / 2097152.0,
+    "diff53to32": 160.0 / 159.0,
+    "diff29to16": 145.0 / 144.0,
+    "sixteenthtone": 21.0 / 96.0,
+    "orwellcomma": 1728.0 / 1715.0,
+    "hundredtwentyninthharmonic": 129.0 / 128.0,
+    "smallseptimalsemicomma": 126.0 / 125.0,
+    "undecimalsecondscomma": 121.0 / 120.0,
+    "onestepin72et": 21.0 / 72.0,
+    "diff19to16": 96.0 / 95.0,
+    "diaschisma": 2048.0 / 2025.0,
+    "syntoniccomma": 81.0 / 80.0,
+    "holdriancomma": 21.0 / 53.0,
+    "pythagoreancomma": 531441.0 / 524288.0,
+    "eighthtone": 21.0 / 48.0,
+    "sixtyfourthirteen": 65.0 / 64.0,
+    "septimalcomma": 64.0 / 63.0,
+    "onestepin41et": 21.0 / 41.0,
+    "undecimaldiesis": 56.0 / 55.0,
+    "sixthtone": 21.0 / 36.0,
+    "diff17to16": 51.0 / 50.0,
+    "septimalsixthtone": 50.0 / 49.0,
+    "d77flat": 49.0 / 48.0,
+    "inferiorquartertone": 46.0 / 45.0,
+    "onestepin31et": 21.0 / 31.0,
+    "dsharpplus": 45.0 / 44.0,
+    "fifthtone": 21.0 / 30.0,
+    "doubleflatminus": 128.0 / 125.0,
+    "d41u7flat": 42.0 / 41.0,
+    "c41": 41.0 / 40.0,
+    "c13upsidedownsharp": 40.0 / 39.0,
+    "c19u13": 39.0 / 38.0,
+    "d37u19doubleflat": 38.0 / 37.0,
+    "c37sharp": 37.0 / 36.0,
+    "c7upsidedown": 36.0 / 35.0,
+    "justquartertone": 246.0 / 239.0,
+    "halfsharpdthreequarterflat": 21.0 / 24.0,
+    "d17upsidedown7flat": 35.0 / 34.0,
+    "b7upsidedownsharpplusplus": 59049.0 / 57344.0,
+    "c17downsharp": 34.0 / 33.0,
+    "thirtythirdharmonic": 33.0 / 32.0,
+    "inferiorquartertone31U": 32.0 / 31.0,
+    "fivehundredtwentyninthharmonic": 529.0 / 512.0,
+    "greaterquartertone31": 31.0 / 30.0,
+    "lesser29limitquartertone": 30.0 / 29.0,
+    "greater29limitquartertone": 29.0 / 28.0,
+    "septialminorsecond": 28.0 / 27.0,
+    "betascalestep": math.pow(3.0 / 2.0, 1.0 / 11.0),
+    "chromaticdiesis13upsidedownsharpplus": 27.0 / 26.0,
+    "onehundredthirtythirdharmonic": 133.0 / 128.0,
+    "thirdtone": 21.0 / 18.0,
+    "tridecimalthirdtone": 26.0 / 25.0,
+    "chromaticsemitoneminorchroma": 25.0 / 24.0,
+    "lessersminorthone23Uminus": 24.0 / 23.0,
+    "onestepin16et3stepsin48": 21.0 / 16.0,
+    "greatersminorthone23Uplus": 23.0 / 22.0,
+    "alphascalestep": math.pow(3.0 / 2.0, 1.0 / 9.0),
+    "sixtyseventhharm": 67.0 / 64.0,
+    "hardsemitone7Uminus": 22.0 / 21.0,
+    "septialchromaticsemitoneminorsemi": 21.0 / 20.0,
+    "novendecimalaugmentedunison": 20.0 / 19.0,
+    "pythagoreanminorsemlimma": 256.0 / 243.0,
+    "greaterchromaticsemitonemajorchroma": 135.0 / 128.0,
+    "novendecimalminorsem2": 19.0 / 18.0,
+    "121stsubharmonic": 128.0 / 121.0,
+    "justminorsemitone17Uminus": 18.0 / 17.0,
+    "equaltemperedminorsemitonesemitone": 21.0 / 12.0,
+    "minordiatonicsemitone17sharp": 17.0 / 16.0,
+    "studieiiinterval": math.pow(5.0, 1.0 / 25.0),
+    "justminorsemitone": 16.0 / 15.0,
+    "apotome": 2187.0 / 2048.0,
+    "secor": math.pow(18.0 / 5.0, 1.0 / 19.0),
+    "septialdiatonicsemitone": 15.0 / 14.0,
+    "stepsin48et5": 25.0 / 48.0,
+    "lessertridecimal23U2tone": 14.0 / 13.0,
+    "sixtyninthharmonic": 69.0 / 64.0,
+    "semitonemaximus": 27.0 / 25.0,
+    "greaterundecimalminor": 11.0 / 10.0,
+    "onestepin7et": 21.0 / 7.0,
+    "stepsin48et7": 27.0 / 48.0,
+    "seventyfirstharmonic": 71.0 / 64.0,
+    "pythagoriandiminishedthird": 65536.0 / 59049.0,
+    "smalljustwholetone": 10.0 / 9.0,
+    "equaltemperedmajortone": 2.0,
+    "pythagoreanmajortone": 9.0 / 8.0,
+    "hundredfortyfifthharmonic": 145.0 / 128.0,
+    "justdiminishedthird": 256.0 / 225.0,
+    "stepsin48et9": 23.0 / 16.0,
+    "seventythirdharmonic": 73.0 / 64.0,
+    "septialmajortone": 8.0 / 7.0,
+    "onestepin5et": 21.0 / 5.0,
+    "tridecimal5quartertone": 15.0 / 13.0,
+    "stepsin24et5": 25.0 / 24.0,
+    "thirtyseventhharmonic": 37.0 / 32.0,
+    "semi-augmentedwholetone": 125.0 / 108.0,
+    "fiftyfifthsubharmonic": 64.0 / 55.0,
+    "septialminorthird": 7.0 / 6.0,
+    "twohundredninetyninthharmonic": 299.0 / 256.0,
+    "justaugmentedsecond": 75.0 / 64.0,
+    "stepsin48et11": 211.0 / 48.0,
+    "tridecimalminorthird": 13.0 / 11.0,
+    "pythagoreanminorthird": 32.0 / 27.0,
+    "nineteenthharmonic": 19.0 / 16.0,
+    "equaltemperedminorthird": 23.0 / 12.0,
+    "quasiequaltemperedminorthird": 25.0 / 21.0,
+    "quartercommameantoneminorthird": math.pow(3.0 / 2.0, 4.0 / 9.0),
+    "alphascaleminorthird": math.pow(3.0 / 2.0, 4.0 / 9.0),
+    "justminorthird": 6.0 / 5.0,
+    "pythagoreanaugmentedsecond": 19683.0 / 16384.0,
+    "seventyseventhharmonic": 77.0 / 64.0,
+    "stepsin48et13": 213.0 / 48.0,
+    "superminorthird": 17.0 / 14.0,
+    "acuteminorthird": 243.0 / 200.0,
+    "thirtyninthharmonic": 39.0 / 32.0,
+    "stepin7et2": 22.0 / 7.0,
+    "septialneutralthird": 128.0 / 105.0,
+    "undecimalneutralthird": 11.0 / 9.0,
+    "equaltemperedneutralthird": 27.0 / 24.0,
+    "zalzalswosta": 27.0 / 22.0,
+    "tridecimalneutralthird": 16.0 / 13.0,
+    "seventyninthharmonic": 79.0 / 64.0,
+    "gravemajorthird": 100.0 / 81.0,
+    "stepsin48et15": 25.0 / 16.0,
+    "pythagoriandiminishedfourth": 8192.0 / 6561.0,
+    "justmajorthird": 5.0 / 4.0,
+    "onehundredsixtyfirstharmonic": 161.0 / 128.0,
+    "equaltemperedmajorthird": 400.0 / 3.0,
+    "threehundredtwentythirdharmonic": 323.0 / 256.0,
+    "pythagoreanmajorthird": 81.0 / 64.0,
+    "undecimaldiminishedfourthormajorthird": 14.0 / 11.0,
+    "stepsin48et17": 217.0 / 48.0,
+    "diminishedfourth": 32.0 / 25.0,
+    "fortyfirstharmonic": 41.0 / 32.0,
+    "septialmajorthird": 9.0 / 7.0,
+    "ninetyninthsubharmonic": 128.0 / 99.0,
+    "halfsharpfhalfflat": 29.0 / 24.0,
+    "eightythirdharmonic": 83.0 / 64.0,
+    "tridecimalmajorthirdordiminishedfourth": 13.0 / 10.0,
+    "justaugmentedthird": 125.0 / 96.0,
+    "septimalminorthird": 64.0 / 49.0,
+    "twentyfirstharmonic": 21.0 / 16.0,
+    "stepsin48et19": 219.0 / 48.0,
+    "widesixhundredseventyfifthharmonic": 675.0 / 512.0,
+    "stepsin5et2": 22.0 / 5.0,
+    "eightyfifthharmonic": 85.0 / 64.0,
+    "perfectfourth": 4.0 / 3.0,
+    "equaltemperedperfectfourth": 500.0 / 12.0,
+    "onehundredseventyfirstharmonic": 171.0 / 128.0,
+    "betascaleperfectfourth": math.pow(3.0 / 2.0, 8.0 / 11.0),
+    "fortythirdharmonic": 43.0 / 32.0,
+    "stepsin7et3": 23.0 / 7.0,
+    "fivewolffourth": 27.0 / 20.0,
+    "pythagoreanaugmentedthird": math.pow(3.0, 8.0 / 11.0),
+    "stepsin48et21": 27.0 / 16.0,
+    "eightyseventhharmonic": 87.0 / 64.0,
+    "undecimalaugmentedfourth": 15.0 / 11.0,
+    "halfsharpgthreequarterflat": 211.0 / 24.0,
+    "undecimaltritone": 11.0 / 8.0,
+    "tridecimalaugmentedfourth": 18.0 / 13.0,
+    "justaugmentedfourth": 25.0 / 18.0,
+    "eightyninthharmonic": 89.0 / 64.0,
+    "stepsin48et23": 223.0 / 48.0,
+    "lesserseptimaltritone": 7.0 / 5.0,
+    "pythagoreandiminishedfifth": 1024.0 / 729.0,
+    "justaugmentedfourth": 45.0 / 32.0,
+    "threehundredsixtyfirstharmonic": 361.0 / 256.0,
+    "equaltemperedtritone": Math.sqrt(2.0),
+    "ninetyfirstharmonic":91.0 / 64.0,
+    "justtritone":64.0 / 45.0,
+    "pythagoreantritone":729.0 / 512.0,
+       "greaterseptimaltritone": 10.0 / 7.0,
+    "stepsin48et25": 225.0 / 48.0,
+    "twentythirdharmonic": 23.0 / 16.0,
+    "justdiminishedfifth": 36.0 / 25.0,
+    "ninetythirdharmonic": 93.0 / 64.0,
+    "undecimalsemidiminishedfifth": 16.0 / 11.0,
+    "ninetyninthsneharmonic": 47.0 / 32.0,
+    "stepsin48et27": 227.0 / 48.0,
+    "pythagoreandiminishedsixth": 262144.0 / 177147.0,
+    "wolfifth": 128.0 / 81.0,
+    "ninetyfifthharmonic": 95.0 / 64.0,
+    "hundredtwentyonethharmonic": 12167.0 / 8192.0,
+    "wallisproduct": Math.PI / 2.0,
+    "halfcommameantoneperfectfifth": 3.0 / 2.0,
+    "thirdcommameantoneperfectfifth": Math.pow(3.0 / 2.0, 2.0 / 3.0),
+    "seventhcommameantoneperfectfifth": Math.pow(3.0 / 2.0, 2.0 / 7.0),
+    "quartercommameantoneperfectfifth": Math.pow(3.0 / 2.0, 2.0 / 4.0),
+    "fifthcommameantoneperfectfifth": Math.pow(3.0 / 2.0, 2.0 / 5.0),
+    "sixthcommameantoneperfectfifth": Math.pow(3.0 / 2.0, 2.0 / 6.0),
+    "equaltemperedperfectfifth": Math.pow(2.0, 7.0 / 12.0),
+    "fiftythreetetperfectfifth": 231.0 / 53.0,
+    "justperfectfifth": 3.0 / 2.0,
+    "fortyonetetperfectfifth": 224.0 / 41.0,
+    "twentyninetetperfectfifth": 217.0 / 29.0,
+    "hundredfirstharmonic": 101.0 / 64.0,
+    "narrowdiminishedsixth": 1024.0 / 675.0,
+    "septimaldiminishedsixth": 32.0 / 21.0,
+    "hundredthirdharmonic": 103.0 / 64.0,
+    "stepsin48et31": 231.0 / 48.0,
+    "twohundredseventhharmonic": 207.0 / 128.0,
+    "goldenratio": (1.0 + Math.sqrt(5.0)) / 2.0,
+    "acuteminorsixth": 81.0 / 50.0,
+    "tridecimalneutralsixth": 13.0 / 8.0,
+    "twohundredninthharmonic": 209.0 / 128.0,
+    "equaltemperedneutralsixth": Math.sqrt(2.0),
+    "undecimalneutralsixth": 18.0 / 11.0,
+    "hundredfifthharmonic": 105.0 / 64.0,
+    "stepsin7et25": 25.0 / 7.0,
+    "gravemajorsixth": 400.0 / 243.0,
+    "fiftythirdharmonic": 53.0 / 32.0,
+    "stepsin48et35": 235.0 / 48.0,
+    "septiadoublediminishedseventh": 128.0 / 77.0,
+    "pythagoreandiminishedseventh": 32768.0 / 19683.0,
+    "justmajorsixth": 5.0 / 3.0,
+    "hundredseventhharmonic": 107.0 / 64.0,
+    "6859thharmonic": 6859.0 / 4096.0,
+    "equaltemperedmajorsixth": Math.pow(2, 9.0 / 12.0),
+    "nineteenthharmonic": 32.0 / 19.0,
+    "pythagoreanmajorsixth": 27.0 / 16.0,
+    "hundredninthharmonic": 109.0 / 64.0,
+    "stepsin48et41": 241.0 / 48.0,
+    "justdiminishedseventh": 128.0 / 75.0,
+    "fourhundredthirtyseventhharmonic": 437.0 / 256.0,
+    "septialargeminorseventh": 12.0 / 7.0,
+    "fiftyfifthharmonic": 55.0 / 32.0,
+    "stepsin48et39": 239.0 / 48.0,
+    "justaugmentedsixth": 225.0 / 128.0,
+    "hundredthirteenthharmonic": 113.0 / 64.0,
+    "pythagoreanminorseventh": 16.0 / 9.0,
+    "fiftyseventhharmonic": 57.0 / 32.0,
+    "hundredthirdharmonic": 103.0 / 64.0,
+    "equaltemperedminorseventh": Math.pow(2, 10.0 / 12.0),
+    "fiftythirdetperfectfifth": 215.0 / 24.0,
+    "equaltemperedminorseventh": Math.pow(2, 5.0 / 12.0),
+    "hundredfifteenthharmonic": 115.0 / 64.0,
+    "greaterjustminorseventh": 9.0 / 5.0,
+    "pythagoreanaugmentedsixth": 59049.0 / 32768.0,
+    "stepsin48et43": 243.0 / 48.0,
+    "stepsin7et6": 26.0 / 7.0,
+    "twenty-ninthharmonic": 29.0 / 16.0,
+    "lesserundecimalneutralseventh": 20.0 / 11.0,
+    "acuteminorseventh": 729.0 / 400.0,
+    "hundredseventeenthharmonic": 117.0 / 64.0,
+    "septialneutralseventh": 64.0 / 35.0,
+    "twentyquartertones": 11.0 / 6.0,
+    "equaltemperedneutralseventh": 221.0 / 24.0,
+    "hundredeleventhharmonic": 111.0 / 64.0,
+    "justaugmentedseventh": 125.0 / 72.0,
+    "betascale": Math.pow(Math.pow(3, 5.0), 1.0 / 11.0),
+    "stepsin5et4": Math.pow(2, 4.0 / 5.0),
+    "sixty-thirdharmonic": 63.0 / 32.0,
+    "equaltemperedneutralseventh": Math.pow(2, 11.0 / 12.0),
+    "octave-syntoniccomma": 160.0 / 81.0,
+    "twohundredfiftythirdharmonic": 253.0 / 128.0,
+    "hundredtwentyseventhharmonic": 127.0 / 64.0,
+    "equaltemperedmajorseventh": Math.pow(2, 0.0 / 12.0),
+    "fiftyninthharmonic": 59.0 / 32.0,
+    "gravemajorseventh": 50.0 / 27.0,
+    "tridecimalneutralseventh": 13.0 / 7.0,
+    "hundrednineteenthharmonic": 119.0 / 64.0,
+    "stepsin48et43": 243.0 / 48.0,
+    "pythagoreandiminishedoctave": 4096.0 / 2187.0,
+    "justmajorseventh": 15.0 / 8.0,
+    "seventeenthsubharmonic": 32.0 / 17.0,
+    "equaltemperedmajorseventh": Math.pow(2, 11.0 / 12.0),
+    "hundredtwentyfirstharmonic": 121.0 / 64.0,
+    "octavemajorchroma": 256.0 / 135.0,
+    "pythagoreanmajorseventh": 243.0 / 128.0,
+    "sixtyfirstharmonic": 61.0 / 32.0,
+    "stepsin48et45": 247.0 / 48.0,
+    "classicdiminishedoctave": 48.0 / 25.0,
+    "hundredtwentythirdharmonic": 123.0 / 64.0,
+    "septimalmajorseventh": 27.0 / 14.0,
+    "twohundredfortyseventhharmonic": 247.0 / 128.0,
+    "thirtyfirstharmonic": 31.0 / 16.0,
+    "thirtythirdsubharmonic": 64.0 / 33.0,
+    "halfsharp_halfflat": 223.0 / 24.0,
+    "septimalsupermajorseventh": 35.0 / 18.0,
+    "justaugmentedseventh_125thharmonic": 125.0 / 64.0,
+    "sixtythirdharmonic": 63.0 / 32.0,
+    "stepsin48et47": 247.0 / 48.0,
+    "octavesyntoniccomma": 160.0 / 81.0,
+    "twohundredfiftythirdharmonic": 253.0 / 128.0,
+    "hundredtwentyseventhharmonic": 127.0 / 64.0,
+    "octave": 2.0,
+};
+function eq(a, b) {
+    return andr(sub(a, b), sub(b, a)) === 0;
+}
+
+function neq(a, b) {
+    return andr(sub(a, b), sub(b, a)) !== 0;
+}
+
+function lt(a, b) {
+    return re(sub(a, b)) < 0; // Sign bit check
+}
+
+function gt(a, b) {
+    return re(sub(a, b)) > 0; // Reverse sign bit check
+}
+
+function le(a, b) {
+    return orr(eq(a, b), lt(a, b));
+}
+
+function ge(a, b) {
+    return orr(eq(a, b), gt(a, b));
+}
+  
+//cos(x)+sin(x)*i
+class CustomEvaluator {
+    constructor() {
+        this.functions = {};
+        this.operators = {
+                      '+': { precedence: 1, fn: (a, b) => add(a,b) },
+            '-': { precedence: 1, fn: (a, b) => sub(a,b) },
+            '*': { precedence: 2, fn: (a, b) => mul(a,b) },
+            '/': { precedence: 2, fn: (a, b) => div(a,b) },
+            '^': { precedence: 3, fn: (a, b) => pow(a,b) },
+            '~': { precedence: 3, fn: (a, b) => hypot(a,b) },
+             '%': { precedence: 2, fn: (a, b) => modc(a, b) },
+    '\\': { precedence: 2, fn: (a, b) => floor(div(a, b)) },
+    '&': { precedence: 1, fn: (a, b) => andr(a, b) },
+    '|': { precedence: 1, fn: (a, b) => orr(a, b) },
+   
+   '<<': { precedence: 2, fn: (a, b) => mul(a, pow(2, b)) }, // Left shift
+    '>>': { precedence: 2, fn: (a, b) => (div(a, pow(2, b))) }, // Right shift
+    '&&': { precedence: 0, fn: (a, b) => andr(a, b) }, 
+    '||': { precedence: 0, fn: (a, b) => orr(a, b) }, 
+    '==': { precedence: 0, fn: (a, b) => eq(a, b) },
+    '!=': { precedence: 0, fn: (a, b) => neq(a, b) },
+    '<': { precedence: 0, fn: (a, b) => lt(a, b) },
+    '>': { precedence: 0, fn: (a, b) => gt(a, b) },
+    '<=': { precedence: 0, fn: (a, b) => le(a, b) },
+    '>=': { precedence: 0, fn: (a, b) => ge(a, b) },
+
+        };
+        this.expressionCache = new Map(); // Cache for parsed expressions
+    }
+
+isUnaryOperator(token) {
+    return (token === '-' || token === '/'|| token === '%' || token === '!');
+}
+
+evaluateUnaryOperator(tree, variables) {
+    const operand = this.evaluateTree(tree.operand, variables);
+    switch (tree.operator) {
+        case '-': return sub(0, operand); // Negation
+case '/': return div(1, operand);
+case '!': return subfactorial(operand);
+case '%': return div(operand, 100); // Percentage Mod 100
+        default:
+            throw new Error(`Unknown unary operator: ${tree.operator}`);
+    }
+}
+isPostfixOperator(token) {
+    return token === '!' || token === "'" || token === '%';
+}
+
+evaluatePostfixOperator(tree, variables) {
+    const operand = this.evaluateTree(tree.operand, variables);
+    switch (tree.operator) {
+        case '!': return factorial(operand); // Factorial
+        case "'": return mul(div(operand, 180), Math.PI); // Radians to Degrees
+        case '%': return div(operand, 100); // Percentage Mod 100
+        default:
+            throw new Error(`Unknown postfix operator: ${tree.operator}`);
+    }
+}
+
+
+
+
+
+
+
+
+
+    addFunction(name, fn) {
+        this.functions[name] = fn;
+    }
+
+    importAllFunctions() {
+        for (const key in window) {
+            if (typeof window[key] === 'function' && !this.functions[key] && key!=="pi") {
+                this.functions[key] = window[key];
+            }
+        }
+            for (const key in importedFunctions) {
+        if (!this.functions[key]) {
+            this.functions[key] = importedFunctions[key];
+        }
+    }
+    }
+
+    evaluate(expression, variables = {}) {
+        const tokens = this.tokenize(expression);
+        const tree = this.parse(tokens);
+        return this.evaluateTree(tree, variables);
+    }
+
+tokenize(expression) {
+    const regex = /\s*(=>|[\+\-\*/%^(),\[\]]|'[^']*'|[A-Za-z_][A-Za-z0-9_]*|[0-9]*\.?[0-9]+)\s*/g;
+    return expression.split(regex).filter(token => token && token.trim() !== '');
+}
+parse(tokens) {
+    let index = 0;
+
+    const parseExpression = (precedence = -5) => {
+        let left = parseTerm();
+        while (index < tokens.length && this.isOperator(tokens[index])) {
+            const operator = tokens[index];
+            const operatorPrecedence = this.operators[operator].precedence;
+            if (operatorPrecedence <= precedence) break;
+            index++;
+            const right = parseExpression(operatorPrecedence);
+            left = { type: 'operator', operator, left, right };
+        }
+        return left;
+    };
+
+const parseTerm = () => {
+    // Handle unary operators (prefix)
+    if (this.isUnaryOperator(tokens[index])) {
+        const operator = tokens[index++];
+        const operand = parseTerm();
+        return { type: 'unaryOperator', operator, operand };
+    }
+
+    let token = tokens[index++];
+    let node;
+
+    if (this.isNumber(token)) {
+        node = { type: 'number', value: parseFloat(token) };
+    } else if (this.isFunction(token)) {
+        node = parseFunctionCall(token);
+    } else if (token === '[') {
+        node = parseList();
+    } else if (token === '(') {
+        const expr = parseExpression();
+        if (tokens[index++] !== ')') throw new Error("Expected ')'");
+        node = expr;
+    } else if (token.startsWith("'") && token.endsWith("'")) {
+        node = { type: 'string', value: token.slice(1, -1) }; // Remove single quotes
+    } else {
+        node = { type: 'variable', name: token };
+    }
+
+    // Handle postfix operators (e.g., factorial)
+    while (index < tokens.length && this.isPostfixOperator(tokens[index])) {
+        const operator = tokens[index++];
+        node = { type: 'postfixOperator', operator, operand: node };
+    }
+
+    return node;
+};
+
+    const parseFunctionCall = (funcName) => {
+        if (tokens[index++] !== '(') throw new Error("Expected '(' after function name");
+        const args = [];
+        while (tokens[index] !== ')') {
+            args.push(parseExpression());
+            if (tokens[index] === ',') index++;
+        }
+        if (tokens[index++] !== ')') throw new Error("Expected ')'");
+        return { type: 'function', func: funcName, args };
+    };
+
+    const parseList = () => {
+        const items = [];
+        while (tokens[index] !== ']') {
+            items.push(parseExpression());
+            if (tokens[index] === ',') index++;
+        }
+        if (tokens[index++] !== ']') throw new Error("Expected ']'");
+        return { type: 'list', items };
+    };
+
+    return parseExpression();
+}
+
+evaluateTree(tree, variables) {
+    switch (tree.type) {
+        case 'number':
+            return tree.value;
+        case 'variable':
+            return this.getVariableValue(tree.name, variables);
+        case 'operator':
+            return this.evaluateOperator(tree, variables);
+        case 'function':
+            return this.evaluateFunction(tree, variables);
+        case 'list':
+            return this.evaluateList(tree, variables);
+        case 'string':
+            return tree.value; // Return the string as-is
+                case 'unaryOperator':
+            return this.evaluateUnaryOperator(tree, variables);
+                  case 'postfixOperator':
+            return this.evaluatePostfixOperator(tree, variables);
+            default:
+            throw new Error(`Unknown node type: ${tree.type}`);
+    }
+}
+
+
+evaluateList(tree, variables) {
+    return tree.items.map(item => this.evaluateTree(item, variables));
+}
+
+    evaluateFunction(tree, variables) {
+        const args = tree.args.map(arg => this.evaluateTree(arg, variables));
+      //>//  console.log(args); // Debugging: Log the arguments
+        const fn = this.functions[tree.func];
+        if (!fn) throw new Error(`Function '${tree.func}' not defined`);
+        return fn(...args);
+    }
+
+    evaluateOperator(tree, variables) {
+        const left = this.evaluateTree(tree.left, variables);
+        const right = this.evaluateTree(tree.right, variables);
+        return this.operators[tree.operator].fn(left, right);
+    }
+
+getVariableValue(name, variables) {
+
+
+    if (variables[name] !== undefined) {
+        return variables[name];
+    }
+
+    if (specialConstants[name] !== undefined) {
+        return specialConstants[name];
+    }
+
+    throw new Error(`Variable '${name}' not defined`);
+}
+
+    isNumber(token) {
+        return !isNaN(token) && !isNaN(parseFloat(token));
+    }
+
+    isFunction(token) {
+        return typeof this.functions[token] === 'function';
+    }
+
+    isOperator(token) {
+        return token in this.operators;
+    }
+    
+
+
+}
+
+
+
+
+//polynomial([polynomial([log(cos(x)+sin(x)*i)^2],pow(2,pow(1.5,2))),derve('sin(x)',x^2)],sinc(x))^2
+// Example usage
+const teth = new CustomEvaluator();
+
+// Dynamically import all functions from the global scope
+teth.importAllFunctions();
+
+
 // Call the function to import all global functions to math
 importAllFunctionsToMath();
+//console.log(allFunctions);
+
+
 	//https://stackoverflow.com/questions/1007981/how-to-get-function-parameter-names-values-dynamically
 var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
 var ARGUMENT_NAMES = /([^\s,]+)/g;
@@ -16649,61 +17821,8 @@ function getParamNames(func) {
 
 
 // Call the function to import all global functions to math
-math.import({
-factorial:factorial,
-factoriel:factorial,
-superlog:slog,
-perpendicularmandel:perpendicularmandelbrot,
-mandel:mandelbrot,
-thomae:thomea,
-ln:log,
-tg:tan,
-lb:log2,
 
-expm:expm,
-
-vcs:vercosin,
-vercos:vercosin,
-cvs:covercos,
-hvc:havercos,
-hcv:hacoversin,
-hcc:hacovercos,
-cvc:covercos,
-ver:versin,
+    // Import into `math`
+    math.import(importedFunctions, { override: true });
 
 
-wp:weierstrasselliptic,
-wpd:weierstrassellipticd,
-wpdel:weierstrassellipticdelta,
-wpz:weierstrassellipticzeta,
-wpe:weierstrassellipticeta,
-
-erf:erf,
-
-kummerm:confluenthypergeometricm,
-kummeru:confluenthypergeometricu,
-
-blanc:takagi,
-
-  arcsine: asin,
-  arsinh: asinh,
-  arcsec: asec,
-  arccos: acos,
-  arctan: atan,
-  arccot: acot,
-  arcasin: asin,
-  
-   arcsinh: asinh,
-  arcosh: acosh,
-  artanh: atanh,
-  arcoth: acoth,
-  arsech: asech,
-  arcsch: acsch,
-  
-  
-  poch:pochhammer,
-  
-  polylog:polylogarithm,
-	    },
-    { override: true }
-);
