@@ -190,6 +190,7 @@ input[type="range"]::-moz-range-thumb {
    <button onclick="showContainer('lct')">LCT</button>
    
       <button onclick="showContainer('ypo')">YPO</button>
+         <button onclick="showContainer('yrl')">YRL</button>
    </div>
 </div>
 <script src="clrspc.js"></script>
@@ -243,11 +244,12 @@ const sliders = {
 		lct: ['lSlider', 'cSlider', 'tSlider'],
 		
 		ypo: ['ySlider', 'pSlider', 'oSlider'],
+        yrl: ['ySlider', 'rSlider', 'lSlider'],
 };
 const colorSpaces = [
     'rgb', 'hsv', 'hsl', 'hwb', 'hcl', 'lch', 'ycbcr', 'xyz', 'hsi','hsm','hsh','hsg',
     'yjk', 'lab', 'cmyk', 'cmy', 'uvw', 'lms', 'ydbdr', 'yiq', 'lcw','lct',
-     'ycocg', 'ycocgr', 'yuv', 'ypbpr', 'tsl', 'luv', 'srgb','scrgb','ecirgb','rxy','oklab','ypo'
+     'ycocg', 'ycocgr', 'yuv', 'ypbpr', 'tsl', 'luv', 'srgb','scrgb','ecirgb','rxy','oklab','ypo','yrl'
 ];
 // Initialize sliders to null
 Object.keys(sliders).forEach(space => {
@@ -588,6 +590,7 @@ function initializeSliders() {
 
 
 createSliders('ypo', ['y', 'p', 'o'], colorConversions.ypo);
+createSliders('yrl', ['y', 'r', 'l'], colorConversions.yrl);
 }
         function toggleContainer(id) {
             const container = document.getElementById(id);
@@ -786,6 +789,8 @@ sliderInit('lch', 'l', 'c', 'h', 0, 0, 0, 255, 255, 255, 255, 255, 360);
 sliderInit('lct', 'l', 'c', 't', 0, 0, 4000, 255, 255, 7000, 255, 255, 5000);
 sliderInit('ypo', 'y', 'p', 'o', 0, -160, -165, 100, 361, 155, 0, 1, 1);
  
+ 
+ sliderInit('yrl', 'y', 'r', 'l', -255, -255, -255, 255, 255, 255, 255, 255, 255);
  
  // sliderInit('cmyk', 'c', 'm', 'y', 'k', 0, 0, 0, 0, 100, 100, 100, 100, 100, 100, 100, 100);
 

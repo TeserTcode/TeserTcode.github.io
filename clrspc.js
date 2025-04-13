@@ -1198,6 +1198,175 @@ function rgbToHsh(r, g, b) {
     return [Math.round(hue * 360), Math.round(saturation * 100), Math.round(H)];
 }
 
+function rgbToYpo (rr, gg, bb) {
+    const r=rr/255;const g=gg/255;const b=bb/255;
+    let psi = 0.6521 * r*g*b - 0.7357 * r*g - 0.7213 * r*b - 0.6716 * g*b + 0.7483 * r + 0.7500 * g + 0.7247 * b;
+    let y = psi * psi * 1.5501;                                    // 0 <= y <= 1
+
+    let v_r = (r - y + 1)      * 0.7764;
+    let v_g = (g - y + 0.8759) * 0.8606;
+    let v_b = (b - y + 0.9014) * 0.8275;
+
+    let p = -2.0129 * v_r - 1.9366 * v_g + 1.1076 * v_b + 2.5071; // -1.6018 <= p <= 3.6147
+    let o = 0.7162  * v_r + 2.4964 * v_g - 1.6594;                // -1.6594 <= o <= 1.5532
+
+    return [y*100, p*100, o*100];
+}
+
+function ypoToRgb(yy, pp, oo, maxIterations = 10, tolerance = 1e-6) {
+     const y=yy/100;const p=pp/100;const o=oo/100;
+    let r = y, g = y, b = y; // Initial guess: Assume RGB starts at Y
+
+    for (let i = 0; i < maxIterations; i++) {
+        let psi = 0.6521 * r * g * b - 0.7357 * r * g - 0.7213 * r * b - 0.6716 * g * b + 0.7483 * r + 0.7500 * g + 0.7247 * b;
+        let y_est = psi * psi * 1.5501;
+
+        let v_r = (r - y_est + 1) * 0.7764;
+        let v_g = (g - y_est + 0.8759) * 0.8606;
+        let v_b = (b - y_est + 0.9014) * 0.8275;
+
+        let p_est = -2.0129 * v_r - 1.9366 * v_g + 1.1076 * v_b + 2.5071;
+        let o_est = 0.7162 * v_r + 2.4964 * v_g - 1.6594;
+
+        // Compute errors
+        let err_y = y_est - y;
+        let err_p = p_est - p;
+        let err_o = o_est - o;
+
+        // Check convergence
+        if (Math.abs(err_y) < tolerance && Math.abs(err_p) < tolerance && Math.abs(err_o) < tolerance) {
+            break;
+        }
+
+        // Jacobian matrix (partial derivatives)
+        let J = [
+            [1.5501 * 2 * psi * (0.6521 * g * b - 0.7357 * g - 0.7213 * b + 0.7483), 
+             1.5501 * 2 * psi * (0.6521 * r * b - 0.7357 * r - 0.6716 * b + 0.7500), 
+             1.5501 * 2 * psi * (0.6521 * r * g - 0.7213 * r - 0.6716 * g + 0.7247)],
+            
+            [-2.0129 * 0.7764, -1.9366 * 0.8606, 1.1076 * 0.8275],
+            
+            [0.7162 * 0.7764, 2.4964 * 0.8606, 0]
+        ];
+
+        // Solve linear system J * Δ = -Error using a simple inverse approximation
+        let detJ = J[0][0] * (J[1][1] * J[2][2] - J[1][2] * J[2][1]) -
+                   J[0][1] * (J[1][0] * J[2][2] - J[1][2] * J[2][0]) +
+                   J[0][2] * (J[1][0] * J[2][1] - J[1][1] * J[2][0]);
+
+        if (Math.abs(detJ) < 1e-9) break; // Avoid division by near-zero determinant
+
+        let J_inv = [
+            [(J[1][1] * J[2][2] - J[1][2] * J[2][1]) / detJ,
+             (J[0][2] * J[2][1] - J[0][1] * J[2][2]) / detJ,
+             (J[0][1] * J[1][2] - J[0][2] * J[1][1]) / detJ],
+
+            [(J[1][2] * J[2][0] - J[1][0] * J[2][2]) / detJ,
+             (J[0][0] * J[2][2] - J[0][2] * J[2][0]) / detJ,
+             (J[0][2] * J[1][0] - J[0][0] * J[1][2]) / detJ],
+
+            [(J[1][0] * J[2][1] - J[1][1] * J[2][0]) / detJ,
+             (J[0][1] * J[2][0] - J[0][0] * J[2][1]) / detJ,
+             (J[0][0] * J[1][1] - J[0][1] * J[1][0]) / detJ]
+        ];
+
+        let delta_r = -(J_inv[0][0] * err_y + J_inv[0][1] * err_p + J_inv[0][2] * err_o);
+        let delta_g = -(J_inv[1][0] * err_y + J_inv[1][1] * err_p + J_inv[1][2] * err_o);
+        let delta_b = -(J_inv[2][0] * err_y + J_inv[2][1] * err_p + J_inv[2][2] * err_o);
+
+        // Update estimates
+        r += delta_r;
+        g += delta_g;
+        b += delta_b;
+
+        // Clamp to valid range
+        r = Math.max(0, Math.min(1, r));
+        g = Math.max(0, Math.min(1, g));
+        b = Math.max(0, Math.min(1, b));
+    }
+
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+}
+
+
+function yrlToRgb(y, r, l) {
+  function fade(a, b, i) {
+    return i < 0 ? a : i > 1 ? b : a + (b - a) * i;
+  }
+
+  function R(r) {
+    return [
+      fade(0, 256, r / 255),
+      fade(0, 256, -r / 255),
+      fade(0, 256, -r / 255)
+    ];
+  }
+
+  function L(l) {
+    return [
+      fade(0, 128, Math.abs(l) / 255),
+      fade(0, 256, l / 255),
+      fade(0, 256, -l / 255)
+    ];
+  }
+
+  const combined = R(r).map((val, i) => val + L(l)[i]);
+  return combined.map(val => fade(val, 256, y / 510 + 0.5)); // y ∈ [-255,255]
+}
+
+function rgbToYrl(Rin, Gin, Bin) {
+  function yrlToRgb(y, r, l) {
+    function fade(a, b, i) {
+      return i < 0 ? a : i > 1 ? b : a + (b - a) * i;
+    }
+
+    function R(r) {
+      return [
+        fade(0, 256, r / 255),
+        fade(0, 256, -r / 255),
+        fade(0, 256, -r / 255)
+      ];
+    }
+
+    function L(l) {
+      return [
+        fade(0, 128, Math.abs(l) / 255),
+        fade(0, 256, l / 255),
+        fade(0, 256, -l / 255)
+      ];
+    }
+
+    const combined = R(r).map((val, i) => val + L(l)[i]);
+    return combined.map(val => fade(val, 256, y / 510 + 0.5));
+  }
+
+  let best = { error: Infinity, y: 0, r: 0, l: 0 };
+
+  for (let y = -255; y <= 255; y += 32) {
+    for (let r = -255; r <= 255; r += 32) {
+      for (let l = -255; l <= 255; l += 32) {
+        const [rOut, gOut, bOut] = yrlToRgb(y, r, l);
+        const error = Math.pow(rOut - Rin, 2) + Math.pow(gOut - Gin, 2) + Math.pow(bOut - Bin, 2);
+        if (error < best.error) {
+          best = { error, y, r, l };
+        }
+      }
+    }
+  }
+
+  return [  best.y,  best.r,  best.l ];
+}
+
+
+
+
+
+
+
+
+
+
+
 function labToLch(L, a, b) {
     const C = Math.sqrt(a * a + b * b);
     const H = Math.atan2(b, a) * (180 / Math.PI); // in degrees
@@ -1360,24 +1529,91 @@ function lctToRgb(L, C, T) {
     // Convert adjusted Lms back to RGB
     return lmsToRgb(adjustedL, adjustedM, adjustedS);
 }
-function rgbToLct(r, g, b) {
-    // Step 1: Convert RGB to CIELAB
-    const [L, a, b_lab] = rgbToLab(r, g, b);
-    
-    // Step 2: Convert CIELAB to Lms
-    const [L_lms, M_lms, S_lms] = labToLms(L, a, b_lab);
-
-    // Step 3: Calculate wavelength from Lms
-    const wavelength = lmsToWavelength(L_lms, M_lms, S_lms);
-
-    // Step 4: Calculate temperature from wavelength
-    const temperature = wavelengthToTemperature(wavelength);
-
-    // Step 5: Calculate Chroma (C)
-    const C = Math.sqrt(L_lms ** 2 + M_lms ** 2 + S_lms ** 2);
-
-    return { L, C, T: temperature };
+function lchToLms(l,c,h){
+    return rgbToLms(lchToRgb(l,c,h));
 }
+/*function rgbToLcw(r, g, b) {
+    const [L, a, b_lab] = rgbToLab(r, g, b);
+    const [L_chroma, C, H] = labToLch(L, a, b_lab);
+    const [L_lms, M_lms, S_lms] = rgbToLms(r, g, b);
+
+    // Wavelength calculation using Lms
+    const W = lmsToWavelength(L_lms, M_lms, S_lms);
+    return [L_chroma, C, W];
+    
+    function lcwToRgb(L, C, W) {
+    // Step 1: Convert wavelength to LMS
+    const [L_lms, M_lms, S_lms] = wavelengthToLms(W);
+
+    // Step 2: Scale LMS values based on Luma
+    const scale = L / Math.sqrt(L_lms ** 2 + M_lms ** 2 + S_lms ** 2);
+    const scaledLMS = [L_lms * scale, M_lms * scale, S_lms * scale];
+
+    // Step 3: Convert LMS to LCH
+    const [L_lab, newC, newH] = lmsToLch(scaledLMS[0], scaledLMS[1], scaledLMS[2]);
+
+    return lchToRgb(L,C,newH);
+}
+}*/function rgbToLct(r, g, b) {
+    // Step 1: Estimate initial values
+    let T = estimateTemperature(r, g, b);
+    let L = estimateLuma(r, g, b);
+    let C = estimateChroma(r, g, b);
+const eee=2;
+    // Step 2: Iteratively refine (L, C, T) using Halley's Method
+    for (let i = 0; i < 20; i++) {  // Max 10 iterations for convergence
+        const rgb_est = lctToRgb(L, C, T);
+        const error = colorDifference(rgb_est, [r, g, b]);
+console.log(T)
+        if (error < eee) break; // Converged
+
+        // Compute first derivatives
+        const dL = (colorDifference(lctToRgb(L + eee, C, T), [r, g, b]) - error) / eee;
+        const dC = (colorDifference(lctToRgb(L, C + eee, T), [r, g, b]) - error) / eee;
+        const dT = (colorDifference(lctToRgb(L, C, T + eee), [r, g, b]) - error) / eee;
+
+        // Compute second derivatives
+        const dL2 = (colorDifference(lctToRgb(L + 2e-5, C, T), [r, g, b]) - 2 * colorDifference(lctToRgb(L + eee, C, T), [r, g, b]) + error) / (eee ** 2);
+        const dC2 = (colorDifference(lctToRgb(L, C + 2e-5, T), [r, g, b]) - 2 * colorDifference(lctToRgb(L, C + eee, T), [r, g, b]) + error) / (eee ** 2);
+        const dT2 = (colorDifference(lctToRgb(L, C, T + 2e-5), [r, g, b]) - 2 * colorDifference(lctToRgb(L, C, T + eee), [r, g, b]) + error) / (eee ** 2);
+
+        // Apply Halley's method update
+        L -= (0.5 * error * dL) / (2 * dL ** 2 - error * dL2);
+        C -= (0.5 * error * dC) / (2 * dC ** 2 - error * dC2);
+        T -= (0.5 * error * dT) / (2 * dT ** 2 - error * dT2);
+    }
+
+    return [L, C, T];
+}
+// **Helper Functions**
+
+// Estimate initial temperature (T) from RGB
+function estimateTemperature(r, g, b) {
+    return 1000 + ((r + g + b) / 3) * 20; // Roughly scale from 1000K to 7000K
+}
+
+// Estimate Luma (L) from RGB
+function estimateLuma(r, g, b) {
+    return rgbToLch(r,g,b)[0] // Standard luminance formula
+}
+
+// Estimate Chroma (C) from RGB
+function estimateChroma(r, g, b) {
+return rgbToLch(r,g,b)[1] // Chroma is the color intensity range
+}
+
+// Compute Euclidean Color Difference
+function colorDifference(rgb1, rgb2) {
+    return Math.sqrt(
+        (rgb1[0] - rgb2[0]) ** 2 +
+        (rgb1[1] - rgb2[1]) ** 2 +
+        (rgb1[2] - rgb2[2]) ** 2
+    );
+}
+
+
+
+
 
 
 
@@ -1651,7 +1887,77 @@ function iCYL(r, g, b) {
 
 
 
+function getSectorColor(complexOutput, sectorMode) {
+ // if (colorMode !== sectorMode) return [0, 0, 0];
 
+  const angle = Math.atan2(complexOutput.im, complexOutput.re); // -π to π
+  const twoPi = Math.PI * 2;
+
+  let normalized = angle;
+  if (normalized < 0) normalized += twoPi;
+
+  const sectors = {
+    'sector3': 3,
+    'sector6': 6,
+    'sector8': 8,
+    'sector12': 12
+  };
+
+  const numSectors = sectors[sectorMode];
+  const sectorSize = twoPi / numSectors;
+  const sectorIndex = Math.floor(normalized / sectorSize);
+if(!(sectorIndex<14))return [255,255,255]
+  // Define colors for each sector mode
+  const palettes = {
+    sector3: [
+      [255, 0, 0],   // Red
+      [0, 255, 0],   // Green
+      [0, 0, 255]    // Blue
+      
+      ,[0,0,0]
+    ],
+    sector6: [
+      [255, 0, 0],
+      [255, 128, 0],
+      [255, 255, 0],
+      [0, 255, 0],
+      [0, 255, 255],
+      [0, 0, 255]
+            
+      ,[0,0,0]
+    ],
+    sector8: [
+      [255, 0, 0],
+      [255, 128, 0],
+      [255, 255, 0],
+      [128, 255, 0],
+      [0, 255, 0],
+      [0, 255, 128],
+      [0, 255, 255],
+      [0, 128, 255]
+            
+      ,[0,0,0]
+    ],
+    sector12: [
+      [255, 0, 0],
+      [255, 64, 0],
+      [255, 128, 0],
+      [255, 192, 0],
+      [255, 255, 0],
+      [192, 255, 0],
+      [128, 255, 0],
+      [64, 255, 0],
+      [0, 255, 0],
+      [0, 255, 128],
+      [0, 255, 255],
+      [0, 128, 255]
+            
+      ,[0,0,0]
+    ]
+  };
+
+  return palettes[sectorMode][sectorIndex];
+}
 
 
 
@@ -1705,7 +2011,7 @@ return [
 
 if (colorMode === 'acontour') {
 	const dd=1;
-    const lightnessValue = math.evaluate(magnitudeToLightnessExpr, { x: magnitude });
+    const lightnessValue = teth.evaluate(magnitudeToLightnessExpr, { x: magnitude });
         const chroma = saturationChroma;
     const lightnessAdjusted = lightnessValue * lightness;
  const ccomplexOutput=div(complexOutput,(lightnessAdjusted / mag(complexOutput)))
@@ -1757,7 +2063,7 @@ if(imDiff<doubleThreshold)return [ 0,255, 0];
 }
 
 
- const lightnessValue = math.evaluate(magnitudeToLightnessExpr, { x: magnitude });
+ const lightnessValue = teth.evaluate(magnitudeToLightnessExpr, { x: magnitude });
     const chroma = saturationChroma;
     const lightnessAdjusted = lightnessValue * lightness;
 
@@ -1867,7 +2173,7 @@ if (colorMode === 'magnitude') {
 }
 if (colorMode === 'magnitudecolour') {
    // const normMagnitude = Math.min(magnitude / 10, 1); // Normalize magnitude
-    const lightnessValue = math.evaluate(magnitudeToLightnessExpr, { x: magnitude });
+    const lightnessValue = teth.evaluate(magnitudeToLightnessExpr, { x: magnitude });
     return hsvToRgb(lightnessValue*100,100,Math.max(lightnessValue,50))
 }
 
@@ -1939,6 +2245,46 @@ if (colorMode === 'quadrant') {
    if (complexOutput.re ==0 && complexOutput.im ==0 ) return [128,128,128];
 return [0,0,0];
 }
+
+
+if (colorMode === 'trisect') {return getSectorColor(complexOutput, 'sector3');}
+if (colorMode === 'hexasect') {return getSectorColor(complexOutput, 'sector6');}
+if (colorMode === 'octant') {return getSectorColor(complexOutput, 'sector8');}
+if (colorMode === 'dodecasect') {return getSectorColor(complexOutput, 'sector12');}
+
+
+
+
+if (colorMode === 'griddistort') {
+   return [128+128*mul(signum(complexOutput.re),signum(complexOutput.im)),255*modc(complexOutput.im,1),255*modc(complexOutput.re,1)]
+
+}
+if (colorMode === 'griddistorts') {
+   return [128+128*mul(signum(complexOutput.re),signum(complexOutput.im)),255*round(modc(complexOutput.im,1)),255*round(modc(complexOutput.re,1))]
+
+}
+if (colorMode === 'griddistortbw') {
+   q=255*signum((modc(complexOutput.im,2)-1)*(modc(complexOutput.re,2)-1))
+   return [q,q,q]
+
+}if (colorMode === 'realimagheat') {
+    return [
+        127 + 127 * mag((complexOutput.im)*(complexOutput.im)/(complexOutput.re)),
+        127 + 127 * mag((complexOutput.re)*(complexOutput.re)/(complexOutput.im)),
+    10*mag(complexOutput) 
+    ];
+}
+
+if (colorMode === 'mag4') {
+    let m = mag(complexOutput);
+    return [255 * Math.sin(5 * m), 255 * Math.sin(3 * m), 255 * Math.sin(7 * m)];
+}
+
+
+
+
+
+
 
 
     return [0, 0, 0]; // Default return if no color mode matches

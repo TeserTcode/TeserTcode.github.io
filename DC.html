@@ -234,6 +234,26 @@ background-color: #eeeeee;
     <label for="function">Function (e.g., '2^x'):</label>
      <textarea id="function" rows="1" cols="40" name="function">2^x</textarea>
   <div id="autocomplete-list" style="display: none;"></div>
+  
+      <select id="function-presets" class="preset-button">
+        <option value="">.....Presets</option>
+        <option value="sin(x)">Sinus: sin(x)</option>
+        <option value="zeta(x)">Riemann zeta: zeta(x)</option>
+        <option value="gamma(x)">Gamma: gamma(x)</option>
+        <option value="barnesg(x)">Barnes G: barnesg(x)</option>
+        <option value="superfactorial(x)">Superfactorial: superfactorial(x)</option>
+        <option value="tetr(x)">Tetration: tetr(x)</option>
+        <option value="pemt(x)">Pentation: pent(x)</option>
+        
+        
+        
+        
+        <option value="stereopicosahedron(x)">Stereographic projection of icosahedron: stereopicosahedron(x)</option>
+        <option value="polynomial([polynomial([log(cos(x)+sin(x)*i)^2],pow(2,pow(1.5,2))),derve('sin(x)',x^2)],sinc(x))^2">Very long test function</option>
+    </select>
+  
+  
+  
 </div>
     <div class="form-group">
         <label for="min-real">Min Real:</label>
@@ -261,6 +281,8 @@ background-color: #eeeeee;
         <option value="">.....Presets</option>
         <option value="log(1+x)">Logarithmic: log(1+x)</option>
         <option value="sqrt(x)">Square Root: sqrt(x)</option>
+        <option value="cbrt(x)">Cube Root: cbrt(x)</option>
+        <option value="x^0.1">Tenth Root: x^0.1</option>
         <option value="x / (1 + x)">Fractional: x / (1 + x)</option>
         <option value="tanh(x)">Hyperbolic Tangent: tanh(x)</option>
         <option value="2*sigm(x)-1">Sigmoid: sigm(x)</option>
@@ -273,6 +295,28 @@ background-color: #eeeeee;
         <option value="cantor(x)">Cantor: cantor(x)</option>
         <option value="exp(x) - 1">Exponential: exp(x) - 1</option>
         <option value="(x^0.5) / (1 + x^0.5)">Smooth Root: (x^0.5)/(1+x^0.5)</option>
+        
+        <option value="x / (1 + sqrt(x))">Root Fraction: x / (1 + sqrt(x))</option>
+        <option value="x / (1 + x^2)">Inverse Quadratic: x / (1 + x²)</option>
+<option value="x / sqrt(1 + x^2)">Relativistic: x / sqrt(1 + x²)</option>
+<option value="log(1 + x^2)">Log Squared: log(1 + x²)</option>
+<option value="1 - exp(-x)">Exp Falloff: 1 - exp(-x)</option>
+<option value="1 / (1 + x)">Reciprocal: 1 / (1 + x)</option>
+<option value="1 / (1 + x^2)">Inverse Square: 1 / (1 + x²)</option>
+<option value="sin(x)">Sine: sin(x)</option
+<option value="cos(x)">Cosine: cos(x)</option>
+<option value="sin(x^0.5)">Sine Root: sin(sqrt(x))</option>
+<option value="x * sigm(x)">Swish: x * sigm(x)</option>
+<option value="ln(1 + e^x)">Softplus: ln(1 + exp(x))</option>
+<option value="gamma(x)">Gamma: gamma(x)</option>
+<option value="lambertw(x)">Lambert W: lambertw(x)</option>
+<option value="dilog(x)">Dilog Li₂: dilog(x))</option>
+<option value="zeta(1 + x)">Riemann Zeta: ζ(1+x)</option>
+<option value="floor(x*10)/10">Floor: floor(x*10)/10</option>
+<option value="modc(x,1)">Fractional Part: modc(x,1)</option>
+
+
+
     </select>
 </div>
     <div class="form-group">
@@ -299,7 +343,19 @@ background-color: #eeeeee;
 		   <option value="magnitude">Magnitude</option>
 		   <option value="magnitudeold">Magnitude 2</option>
 		   <option value="magnitudecolour">Magnitude 3</option>
-		   <option value="quadrant">Quadrant</option>
+		  		   <option value="mag4">Magnitude 4</option>
+                   		   <option value="realimagheat">Real Imag Map</option>
+                           
+                           
+                           <option value="trisect">Trisection</option>
+                           <option value="quadrant">Quadrant</option>
+                           <option value="hexasect">Hexasection</option>
+                           <option value="octant">Octant</option>
+                           <option value="dodecasect">Dodecasection</option>
+                           
+           <option value="griddistort">Grid Distort</option>
+           <option value="griddistorts">Grid Distort Solid</option>
+           <option value="griddistortbw">Grid Distort BW</option>
             <option value="palette">Palette</option>
         </select>
     </div>
@@ -1488,6 +1544,14 @@ document.addEventListener("keydown", function(event) {
         if (localStorage.getItem('darkMode') === 'enabled') {
             document.body.classList.add('dark-mode');
         }
+        
+        
+         document.getElementById('function-presets').addEventListener('change', function() {
+        if (this.value) {
+            document.getElementById('function').value = this.value;
+        }
+    });
+    
     </script>
 </body>
 </html>

@@ -104,8 +104,845 @@ function setrandunitdisclist(n) {
     );
 }
 
+/*
+const polyhedraVertices = new Map();
+
+function normalize(vertices) {
+    return vertices.map(v => {
+        let magnitude = Math.sqrt(v[0]**2 + v[1]**2 + v[2]**2);
+        return v.map(coord => coord / magnitude);
+    });
+}
+
+polyhedraVertices.set("octahedron", normalize([
+    [Math.SQRT2 / 2, 0, 0], [-Math.SQRT2 / 2, 0, 0],
+    [0, Math.SQRT2 / 2, 0], [0, -Math.SQRT2 / 2, 0],
+    [0, 0, Math.SQRT2 / 2], [0, 0, -Math.SQRT2 / 2]
+]));
+
+polyhedraVertices.set("cube", normalize([
+    [0.5, 0.5, 0.5], [0.5, 0.5, -0.5], [0.5, -0.5, 0.5], [0.5, -0.5, -0.5],
+    [-0.5, 0.5, 0.5], [-0.5, 0.5, -0.5], [-0.5, -0.5, 0.5], [-0.5, -0.5, -0.5]
+]));
+
+polyhedraVertices.set("tetrahedron", normalize([
+    [Math.SQRT2 / 4, Math.SQRT2 / 4, Math.SQRT2 / 4],
+    [Math.SQRT2 / 4, -Math.SQRT2 / 4, -Math.SQRT2 / 4],
+    [-Math.SQRT2 / 4, Math.SQRT2 / 4, -Math.SQRT2 / 4],
+    [-Math.SQRT2 / 4, -Math.SQRT2 / 4, Math.SQRT2 / 4]
+]));
+
+const phic = (1 + Math.sqrt(5)) / 4;
+polyhedraVertices.set("icosahedron", normalize([
+    [0, 0.5, phic], [0, 0.5, -phic], [0, -0.5, phic], [0, -0.5, -phic],
+    [0.5, phic, 0], [0.5, -phic, 0], [-0.5, phic, 0], [-0.5, -phic, 0],
+    [phic, 0, 0.5], [phic, 0, -0.5], [-phic, 0, 0.5], [-phic, 0, -0.5]
+]));
+
+polyhedraVertices.set("dodecahedron", normalize([
+    [phic, phic, phic], [phic, phic, -phic], [phic, -phic, phic], [phic, -phic, -phic],
+    [-phic, phic, phic], [-phic, phic, -phic], [-phic, -phic, phic], [-phic, -phic, -phic],
+    [ (3 + Math.sqrt(5)) / 4, 0.5, 0], [ (3 + Math.sqrt(5)) / 4, -0.5, 0],
+    [- (3 + Math.sqrt(5)) / 4, 0.5, 0], [- (3 + Math.sqrt(5)) / 4, -0.5, 0],
+    [0.5, (3 + Math.sqrt(5)) / 4, 0], [-0.5, (3 + Math.sqrt(5)) / 4, 0],
+    [0.5, -(3 + Math.sqrt(5)) / 4, 0], [-0.5, -(3 + Math.sqrt(5)) / 4, 0],
+    [0, 0.5, (3 + Math.sqrt(5)) / 4], [0, 0.5, -(3 + Math.sqrt(5)) / 4],
+    [0, -0.5, (3 + Math.sqrt(5)) / 4], [0, -0.5, -(3 + Math.sqrt(5)) / 4]
+]));
+*/
 
 
+const dualsMap = new Map([
+    // Regular polyhedra
+    ["tetrahedron", {
+        dual: "dtetrahedron",
+        vertices: [
+            [Math.sqrt(2)/4, Math.sqrt(2)/4, Math.sqrt(2)/4],
+            [-Math.sqrt(2)/4, -Math.sqrt(2)/4, Math.sqrt(2)/4],
+            [-Math.sqrt(2)/4, Math.sqrt(2)/4, -Math.sqrt(2)/4],
+            [Math.sqrt(2)/4, -Math.sqrt(2)/4, -Math.sqrt(2)/4]
+        ]
+    }],
+        // Regular polyhedra
+    ["dtetrahedron", {
+        dual: "tetrahedron",
+        vertices:[
+    [(Math.sqrt(2)/4 + -Math.sqrt(2)/4 + -Math.sqrt(2)/4) / 3, 
+     (Math.sqrt(2)/4 + -Math.sqrt(2)/4 + Math.sqrt(2)/4) / 3, 
+     (Math.sqrt(2)/4 + Math.sqrt(2)/4 + -Math.sqrt(2)/4) / 3],
+    
+    [(Math.sqrt(2)/4 + -Math.sqrt(2)/4 + Math.sqrt(2)/4) / 3, 
+     (Math.sqrt(2)/4 + -Math.sqrt(2)/4 + -Math.sqrt(2)/4) / 3, 
+     (Math.sqrt(2)/4 + Math.sqrt(2)/4 + -Math.sqrt(2)/4) / 3],
+    
+    [(Math.sqrt(2)/4 + -Math.sqrt(2)/4 + Math.sqrt(2)/4) / 3, 
+     (Math.sqrt(2)/4 + Math.sqrt(2)/4 + -Math.sqrt(2)/4) / 3, 
+     (Math.sqrt(2)/4 + -Math.sqrt(2)/4 + -Math.sqrt(2)/4) / 3],
+    
+    [(-Math.sqrt(2)/4 + -Math.sqrt(2)/4 + Math.sqrt(2)/4) / 3, 
+     (-Math.sqrt(2)/4 + Math.sqrt(2)/4 + -Math.sqrt(2)/4) / 3, 
+     (Math.sqrt(2)/4 + -Math.sqrt(2)/4 + -Math.sqrt(2)/4) / 3]
+        ]
+    }],
+    
+    ["octahedron", {
+        dual: "cube",
+        vertices: [
+            [Math.sqrt(2)/2, 0, 0], [-Math.sqrt(2)/2, 0, 0],
+            [0, Math.sqrt(2)/2, 0], [0, -Math.sqrt(2)/2, 0],
+            [0, 0, Math.sqrt(2)/2], [0, 0, -Math.sqrt(2)/2]
+        ]
+    }],
+    
+    ["cube", {
+        dual: "octahedron",
+        vertices: (() => {
+            const s = 0.5;
+            const vertices = [];
+            for (const x of [-s, s]) {
+                for (const y of [-s, s]) {
+                    for (const z of [-s, s]) {
+                        vertices.push([x, y, z]);
+                    }
+                }
+            }
+            return vertices;
+        })()
+    }],
+    
+    ["icosahedron", {
+        dual: "dodecahedron",
+        vertices: (() => {
+            const phi = (1 + Math.sqrt(5))/4;
+            const vertices = [];
+            // All cyclic permutations of (0, ±1/2, ±phi)
+            for (let i = 0; i < 3; i++) {
+                const signs = [[1,1], [1,-1], [-1,1], [-1,-1]];
+                for (const [s1, s2] of signs) {
+                    const coords = [0, 0.5*s1, phi*s2];
+                    // Rotate coordinates for all cyclic permutations
+                    vertices.push([...coords]);
+                    vertices.push([coords[2], coords[0], coords[1]]);
+                    vertices.push([coords[1], coords[2], coords[0]]);
+                }
+            }
+            return vertices;
+        })()
+    }],
+    
+    ["dodecahedron", {
+        dual: "icosahedron",
+        vertices: (() => {
+            const phi = (1 + Math.sqrt(5))/4;
+            const vertices = [];
+            
+            // All sign changes of (±phi, ±phi, ±phi)
+            for (const x of [-phi, phi]) {
+                for (const y of [-phi, phi]) {
+                    for (const z of [-phi, phi]) {
+                        vertices.push([x, y, z]);
+                    }
+                }
+            }
+            
+            // All even permutations of (±(3+√5)/4, ±1/2, 0)
+            const t = (3 + Math.sqrt(5))/4;
+            const s = 0.5;
+            const evenPerms = [
+                [t, s, 0],[s, 0, t],[0, t, s],
+                [-t, s, 0],[-s, 0, t],[0, t, -s],
+                [t, -s, 0],[s, 0, -t],[0, -t, s],
+                [-t, -s, 0],[-s, 0, -t],[0, -t, -s],
+            ];
+            
+            return vertices.concat(evenPerms);
+        })()
+    }],
+    
+    // Kepler-Poinsot polyhedra
+    ["small stellated dodecahedron", {
+        dual: "great dodecahedron",
+        vertices: (() => {
+                       const t = 0.5;
+            const s = (Math.sqrt(5)-1)/4;
+            const evenPerms = [
+                           [t, s, 0],[s, 0, t],[0, t, s],
+                [-t, s, 0],[-s, 0, t],[0, t, -s],
+                [t, -s, 0],[s, 0, -t],[0, -t, s],
+                [-t, -s, 0],[-s, 0, -t],[0, -t, -s],
+            ];
+            return evenPerms
+        })()
+    }],
+    
+    ["great stellated dodecahedron", {
+        dual: "great icosahedron",
+        vertices: (() => {
+            const phi = (Math.sqrt(5)-1)/4;
+            const vertices = [];
+            for (const x of [-phi, phi]) {
+                for (const y of [-phi, phi]) {
+                    for (const z of [-phi, phi]) {
+                        vertices.push([x, y, z]);
+                    }
+                }
+            }
+            const t = (3 - Math.sqrt(5))/4;
+            const s = 0.5;
+            const evenPerms = [
+                [t, s, 0],[s, 0, t],[0, t, s],
+                [-t, s, 0],[-s, 0, t],[0, t, -s],
+                [t, -s, 0],[s, 0, -t],[0, -t, s],
+                [-t, -s, 0],[-s, 0, -t],[0, -t, -s],
+            ];
+            
+            return vertices.concat(evenPerms);
+        })()
+    }],
+    
+    
+    
+    
+    
+  ["mucube", {
+    dual: "muoctahedron",
+    vertices: (n) => {
+      const vertices = [];
+      for (let i = -n; i < n; i++) {
+        for (let j = -n; j < n; j++) {
+          for (let k = -n; k < n; k++) {
+            vertices.push([i+0.50001, j+0.50001, k+0.50001]);
+          }
+        }
+      }
+      return vertices;
+    }
+  }],
+  
+  ["muoctahedron", {
+    dual: "mucube",
+    vertices: (n) => {
+      const vertices = [];
+      const sqrt2 = Math.sqrt(2);
+      for (let i = -n; i <= n; i++) {
+        for (let j = -n; j <= n; j++) {
+          for (let k = -n; k <= n; k++) {
+            const x = 2 * sqrt2 * i;
+            const yBase = 2 * sqrt2 * j;
+            const z = sqrt2 + 2 * sqrt2 * k;
+            const yOffsets = [+sqrt2 / 2, -sqrt2 / 2];
+            for (const yOffset of yOffsets) {
+              vertices.push([x-0.00001, yBase + yOffset-0.00001, z-0.00001]);
+            }
+          }
+        }
+      }
+      return vertices;
+    }
+  }]
+,
+    //stereomucube(x/6,6)^2/stereomuoctahedron(x/6i,6)
+  ["mutetrahedron", {
+  dual: "dmutetrahedron", 
+  vertices: (n) => {
+    const vertices = [];
+    const base = [
+      [0, 0, 0],
+      [1, 1, 0],
+      [1, 0, 1],
+      [0, 1, 1],
+    ];
+    for (let i = -n; i <= n; i++) {
+      for (let j = -n; j <= n; j++) {
+        for (let k = -n; k <= n; k++) {
+          const offset = [2 * i, 2 * j, 2 * k];
+          for (const [x, y, z] of base) {
+            vertices.push([
+              x + offset[0],
+              y + offset[1],
+              z + offset[2]
+            ]);
+          }
+        }
+      }
+    }
+    return vertices;
+  }
+}],
+  ["dmutetrahedron", {
+  dual: "mutetrahedron",
+  vertices: (n) => {
+    const vertices = [];
+    const base = [
+      [1, 1, 1],
+      [0, 0, 1],
+      [0, 1, 0],
+      [1, 0, 0],
+    ];
+    for (let i = -n; i <= n; i++) {
+      for (let j = -n; j <= n; j++) {
+        for (let k = -n; k <= n; k++) {
+          const offset = [2 * i, 2 * j, 2 * k];
+          for (const [x, y, z] of base) {
+            vertices.push([
+              x + offset[0],
+              y + offset[1],
+              z + offset[2]
+            ]);
+          }
+        }
+      }
+    }
+    return vertices;
+  }
+}],
+    
+    
+    
+    
+      ["mucubeup", {
+    dual: "muoctahedronup",
+    vertices: (n) => {
+      const vertices = [];
+      for (let i = -n; i <= n; i++) {
+        for (let j = -n; j <= n; j++) {
+          for (let k = -n; k <= n; k++) {
+            vertices.push([i-0.00001, j-0.00001, k-0.00001]);
+            }
+        }
+      }
+      return vertices;
+    }
+  }],
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    ["stella octangula", {
+        dual: "stella octangula",
+        vertices: (() => {
+            const s = Math.sqrt(2)/4;
+            const vertices = [];
+            for (const x of [-s, s]) {
+                for (const y of [-s, s]) {
+                    for (const z of [-s, s]) {
+                        vertices.push([x, y, z]);
+                    }
+                }
+            }
+            return vertices;
+        })()
+    }],
+    
+    // Archimedean and Catalan solids
+    ["truncated octahedron", {
+        dual: "tetrakis hexahedron",
+        vertices: (() => {
+            const a = Math.sqrt(2);
+            const b = Math.sqrt(2)/2;
+            const vertices = [];
+            // All permutations of (±√2, ±√2/2, 0)
+            const values = [
+                [a, b, 0], [a, -b, 0], [-a, b, 0], [-a, -b, 0],
+                [a, 0, b], [a, 0, -b], [-a, 0, b], [-a, 0, -b],
+                [b, a, 0], [b, -a, 0], [-b, a, 0], [-b, -a, 0],
+                [b, 0, a], [b, 0, -a], [-b, 0, a], [-b, 0, -a],
+                [0, a, b], [0, a, -b], [0, -a, b], [0, -a, -b],
+                [0, b, a], [0, b, -a], [0, -b, a], [0, -b, -a]
+            ];
+            return values;
+        })()
+    }],
+    
+   ["tetrakis hexahedron", {
+    dual: "truncated octahedron",
+    vertices: (() => {
+        const a = 3 * Math.sqrt(2) / 4;
+        const b = 9 * Math.sqrt(2) / 8;
+        const vertices = [];
+        
+        // All sign changes of (±3√2/4, ±3√2/4, ±3√2/4) — degree 6 (cube vertices)
+        for (const x of [-a, a]) {
+            for (const y of [-a, a]) {
+                for (const z of [-a, a]) {
+                    vertices.push([x, y, z]);
+                }
+            }
+        }
+        
+        // All permutations of (±9√2/8, 0, 0) — degree 4 (octahedron vertices)
+        const values = [
+            [b, 0, 0], [-b, 0, 0],
+            [0, b, 0], [0, -b, 0],
+            [0, 0, b], [0, 0, -b]
+        ];
+        
+        return vertices.concat(values);
+    })(),
+    vertexDegree: [
+        // First 8 vertices (cube-like): degree 6
+        6, 6, 6, 6, 6, 6, 6, 6,
+        // Next 6 vertices (octahedron-like): degree 4
+        4, 4, 4, 4, 4, 4
+    ]
+}],
+    
+    ["cuboctahedron", {
+        dual: "rhombic dodecahedron",
+        vertices: (() => {
+            const s = Math.sqrt(2)/2;
+            const vertices = [];
+            // All permutations of (±√2/2, ±√2/2, 0)
+            const values = [
+                [s, s, 0], [s, -s, 0], [-s, s, 0], [-s, -s, 0],
+                [s, 0, s], [s, 0, -s], [-s, 0, s], [-s, 0, -s],
+                [0, s, s], [0, s, -s], [0, -s, s], [0, -s, -s]
+            ];
+            return values;
+        })()
+    }],
+    
+    ["rhombic dodecahedron", {
+        dual: "cuboctahedron",
+        vertices: (() => {
+            const a = Math.sqrt(3)/3;
+            const b = 2*Math.sqrt(3)/3;
+            const vertices = [];
+            
+            // All sign changes of (±√3/3, ±√3/3, ±√3/3)
+            for (const x of [-a, a]) {
+                for (const y of [-a, a]) {
+                    for (const z of [-a, a]) {
+                        vertices.push([x, y, z]);
+                    }
+                }
+            }
+            
+            // All permutations of (±2√3/3, 0, 0)
+            const values = [
+                [b, 0, 0], [-b, 0, 0],
+                [0, b, 0], [0, -b, 0],
+                [0, 0, b], [0, 0, -b]
+            ];
+            
+            return vertices.concat(values);
+        })()
+    }],
+    
+    ["truncated tetrahedron", {
+        dual: "triakis tetrahedron",
+        vertices: (() => {
+            const a = 3*Math.sqrt(2)/4;
+            const b = Math.sqrt(2)/4;
+            const vertices = [];
+            
+            // All even sign changes and permutations of (3√2/4, √2/4, √2/4)
+            const base = [a, b, b];
+            for (let i = 0; i < 3; i++) {
+                for (const xSign of [1, -1]) {
+                    for (const ySign of [1, -1]) {
+                        for (const zSign of [1, -1]) {
+                            // Only even number of sign changes
+                            if (xSign * ySign * zSign === 1) {
+                                const rotated = [
+                                    base[i % 3] * xSign,
+                                    base[(i + 1) % 3] * ySign,
+                                    base[(i + 2) % 3] * zSign
+                                ];
+                                vertices.push(rotated);
+                            }
+                        }
+                    }
+                }
+            }
+            return vertices;
+        })()
+    }],
+        ["triakis tetrahedron", {
+        dual: "truncated tetrahedron",
+        vertices: (() => {
+            const a = 3 * Math.sqrt(2) / 4;  // Larger tetrahedron vertices
+            const b = 9 * Math.sqrt(2) / 20; // Smaller tetrahedron vertices
+            const vertices = [];
+
+            // All even sign changes of (3√2/4, 3√2/4, 3√2/4)
+            // (even number of minus signs)
+            const evenSigns = [
+                [1, 1, 1], 
+                [-1, -1, 1],
+                [-1, 1, -1],
+                [1, -1, -1]
+            ];
+            for (const [xSign, ySign, zSign] of evenSigns) {
+                vertices.push([a * xSign, a * ySign, a * zSign]);
+            }
+
+            // All odd sign changes of (9√2/20, 9√2/20, 9√2/20)
+            // (odd number of minus signs)
+            const oddSigns = [
+                [-1, -1, -1],
+                [1, 1, -1],
+                [1, -1, 1],
+                [-1, 1, 1]
+            ];
+            for (const [xSign, ySign, zSign] of oddSigns) {
+                vertices.push([b * xSign, b * ySign, b * zSign]);
+            }
+
+            return vertices;
+        })()
+    }],
+    // Special cases
+    ["hosohogon", {
+        dual: "dihedron",
+        vertices: [
+            [0, 0, 1],
+            [0, 0, -1]
+        ]
+    }],
+    
+    ["dihedron", {
+        dual: "hosohogon",
+        vertices: (n) => {
+            // Generate n vertices in a circle
+            const vertices = [];
+            for (let i = 0; i < n; i++) {
+                const angle = (2 * Math.PI * i) / n;
+                vertices.push([Math.cos(angle), Math.sin(angle), 0]);
+            }
+            return vertices;
+        }
+    }],
+    
+    ["great cube", {
+        dual: "stellated cube",
+        vertices: (() => {
+            const s = Math.sqrt(2)/2;
+            const vertices = [
+                [s, 0, 0], [-s, 0, 0],
+                [0, s, 0], [0, -s, 0],
+                [0, 0, s], [0, 0, -s]
+            ];
+            return vertices;
+        })()
+    }],
+    
+    ["stellated cube", {
+        dual: "great cube",
+        vertices: (() => {
+            const s = 0.5;
+            const vertices = [
+                [s, 0, 0], [-s, 0, 0],
+                [0, s, 0], [0, -s, 0],
+                [0, 0, s], [0, 0, -s]
+            ];
+            return vertices;
+        })()
+    }]
+]);
+
+// Make the map bidirectional
+for (const [shape, data] of dualsMap) {
+    if (!dualsMap.has(data.dual)) {
+        dualsMap.set(data.dual, { 
+            dual: shape, 
+            vertices: typeof data.vertices === 'function' ? 
+                data.vertices : 
+                JSON.parse(JSON.stringify(data.vertices))
+        });
+    }
+}
+
+
+
+
+
+function rotationmobius(z,a){
+return div(add(z,a),sub(1,mul(z,conj(a))))
+}
+
+// Global cache for precomputed polynomials
+const stereoprojectPolyCache = new Map();
+
+function stereoproject(C, S = "cube", h = 0, a = 2) {
+    // Generate cache key
+    const cacheKey = `${S}|${a}|${h}`;
+    
+    // If not in cache, compute and store the function
+    if (!stereoprojectPolyCache.has(cacheKey)) {
+        function normalizeCoordinates(vertices) {
+            return vertices.map(v => {
+                const length = Math.sqrt(v[0] ** 2 + v[1] ** 2 + v[2] ** 2);
+                return v.map(coord => coord / length);
+            });
+        }
+
+        function projectStereographically(x, y, z, h) {
+            const denominator = sub(h, z);
+            if (denominator == 0) return 928374;
+            return rotationmobius(add(div(x, denominator), mul(div(y, denominator), I)), a);
+        }
+
+        // Get and normalize shape vertices
+        const rawVertices = dualsMap.get(S).vertices;
+        const cubeVertices = normalizeCoordinates(rawVertices);
+
+        // Project each normalized vertex stereographically
+        const projectedPoints = cubeVertices
+            .map(v => projectStereographically(v[0], v[1], v[2] + 1, h))
+            .filter(p => p !== 928374); // remove bad projections
+
+        // Create a closure function of C that multiplies the differences
+        const polyFunc = (C) => {
+            let result = 1;
+            for (const z of projectedPoints) {
+                result = mul(result, sub(C, z));
+            }
+            return result;
+        };
+
+        // Store in cache
+        stereoprojectPolyCache.set(cacheKey, polyFunc);
+    }
+
+    // Use the cached polynomial function
+    return stereoprojectPolyCache.get(cacheKey)(C);
+}
+const stereoprojectPdolyCache = new Map();
+
+function stereoprojectd(C, S = "cube", h = 0, a = 2) {
+    // Generate cache key
+    const cacheKey = `${S}|${a}|${h}`;
+    
+    // If not in cache, compute and store the function
+    if (!stereoprojectPdolyCache.has(cacheKey)) {
+        function normalizeCoordinates(vertices) {
+            return vertices.map(v => {
+                const length = Math.sqrt(v[0] ** 2 + v[1] ** 2 + v[2] ** 2);
+                return v.map(coord => coord / length);
+            });
+        }
+
+        function projectStereographically(x, y, z, h) {
+            const denominator = sub(h, z);
+            if (denominator == 0) return 928374;
+            return rotationmobius(add(div(x, denominator), mul(div(y, denominator), I)), a);
+        }
+
+        // Get shape data (vertices and vertex degrees if available)
+        const shapeData = dualsMap.get(S);
+        const rawVertices = shapeData.vertices;
+        const cubeVertices = normalizeCoordinates(rawVertices);
+
+        // Determine vertex degrees:
+        // - If `vertexDegree` is defined, use it.
+        // - Otherwise, assume uniform degree (e.g., truncated octahedron has degree 4).
+        const degrees = shapeData.vertexDegree || Array(rawVertices.length).fill(4); // Default degree 4
+
+        // Project each normalized vertex stereographically
+        const projectedPoints = cubeVertices
+            .map((v, i) => ({
+                point: projectStereographically(v[0], v[1], v[2] + 1, h),
+                degree: degrees[i]
+            }))
+            .filter(p => p.point !== 928374); // Remove bad projections
+
+        // Create a closure function of C that multiplies the differences
+        const polyFunc = (C) => {
+            let result = 1;
+            for (const { point: z, degree } of projectedPoints) {
+                result = mul(result, pow(sub(C, z), degree));
+            }
+            return result;
+        };
+
+        // Store in cache
+        stereoprojectPdolyCache.set(cacheKey, polyFunc);
+    }
+
+    // Use the cached polynomial function
+    return stereoprojectPdolyCache.get(cacheKey)(C);
+}
+
+// Global cache for precomputed polynomials
+const stereoproject2PolyCache = new Map();
+
+function stereoproject2(C, S = "cube", n = 5, h = 0, a = 2) {
+    const cacheKey = `${S}|${n}|${a}|${h}`;
+
+    // If not cached, compute and store
+    if (!stereoproject2PolyCache.has(cacheKey)) {
+        function normalizeCoordinates(vertices) {
+            return vertices.map(v => {
+                const length = Math.sqrt(v[0] ** 2 + v[1] ** 2 + v[2] ** 2);
+                return v.map(coord => coord / length);
+            });
+        }
+
+        function projectStereographically(x, y, z, h) {
+            const denominator = sub(h, z);
+            if (denominator == 0) return 928374;
+            return rotationmobius(
+                add(div(x, denominator), mul(div(y, denominator), I)),
+                a
+            );
+        }
+
+        // Get and normalize vertices
+        const rawVertices = dualsMap.get(S).vertices(n);
+        const cubeVertices = normalizeCoordinates(rawVertices);
+
+        // Project and filter
+        const projected = cubeVertices
+            .map(v => projectStereographically(v[0], v[1], v[2] + 1, h))
+            .filter(p => p !== 928374);
+
+        // Build and cache the polynomial as a function of C
+        const polyFunc = (C) => {
+            let result = 1;
+            for (const z of projected) {
+                result = mul(result, sub(C, z));
+            }
+            return result;
+        };
+
+        stereoproject2PolyCache.set(cacheKey, polyFunc);
+    }
+
+    // Evaluate cached polynomial at given C
+    return stereoproject2PolyCache.get(cacheKey)(C);
+}
+
+
+
+
+
+function stereotetrahedron(x,a=0,h=2){return stereoproject(x,"tetrahedron", h,a)}
+function stereocube(x,a=0,h=2){return stereoproject(x,"cube", h,a)}
+function stereooctahedron(x,a=0,h=2){return stereoproject(x,"octahedron", h,a)}
+function stereododecahedron(x,a=0,h=2){return stereoproject(x,"dodecahedron", h,a)}
+function stereoicosahedron(x,a=0,h=2){return stereoproject(x,"icosahedron", h,a)}
+function stereorhombicdodecahedron(x, a=0,h=2) {return stereoproject(x, "rhombic dodecahedron", h, a);}
+function stereocuboctahedron(x, a=0,h=2) {return stereoproject(x, "cuboctahedron", h, a);}
+function stereotruncatedoctahedron(x, a=0,h=2) {return stereoproject(x, "truncated octahedron", h, a);}
+function stereotruncatedtetrahedron(x, a=0,h=2) {return stereoproject(x, "truncated tetrahedron", h, a);}
+function stereostellaoctangula(x, a=0,h=2) {return stereoproject(x, "stella octangula", h, a);}
+function stereosmallstellateddodecahedron(x, a=0,h=2) {return stereoproject(x, "small stellated dodecahedron", h, a);}
+function stereogreatstellateddodecahedron(x, a=0,h=2) {return stereoproject(x, "great stellated dodecahedron", h, a);}
+function stereogreatcube(x, a=0,h=2) {return stereoproject(x, "great cube", h, a);}
+function stereostellatedcube(x, a=0,h=2) {return stereoproject(x, "stellated cube", h, a);}
+function stereotetrakishexahedron(x, a=0,h=2) {return stereoproject(x, "tetrakis hexahedron", h, a);}
+function stereotriakistetrahedron(x, a=0,h=2) {return stereoproject(x, "triakis tetrahedron", h, a);}
+function stereohosohedron(x, a=0,h=2) {return stereoproject(x, "hosohogon", h, a);}
+function stereodihedron(x, n = 5, a=0,h=2) {return stereoproject2(x, "dihedron",n, h, a);}
+
+function stereogreaticosahedron(x, a=0,h=2) {return stereoproject(x, "small stellated dodecahedron", h, a);}
+function stereogreatdodecahedron(x, a=0,h=2) {return stereoproject(x, "icosahedron", h, a);}
+function stereodtetrahedron(x,a=0,h=2){return stereoproject(x,"dtetrahedron", h,a)}
+
+
+
+
+function stereomucube(x, n = 5, a=0,h=2) {return stereoproject2(x, "mucube",n, h, a);}
+function stereomuoctahedron(x, n = 5, a=0,h=2) {return stereoproject2(x, "muoctahedron",n, h, a);}
+
+function stereomucubeup(x, n = 5, a=0,h=2) {return stereoproject2(x, "mucubeup",n, h, a);}
+
+
+function stereotruncatedoctahedron(x,a=0,h=2){return stereoproject(x,"truncated octahedron", h,a)}
+
+
+
+function stereoqtetrakishexahedron(x,a=0,h=2){return stereoprojectd(x,"tetrakis hexahedron", h,a)}
+
+
+
+
+
+
+
+
+function stereoptetrahedron(x, a=0,h=2) {return div(pow(stereotetrahedron(x,a,h),3),pow(stereodtetrahedron(x,a,h),3));}
+function stereopcube(x,a=0,h=2){return div(pow(stereocube(x,a,h),3),pow(stereooctahedron(x,a,h),4))}
+function stereopoctahedron(x,a=0,h=2){return div(1,div(pow(stereocube(x,a,h),3),pow(stereooctahedron(x,a,h),4)))}
+//function stereopoctahedron(x,a=0,h=2){return div(1,div(pow(stereocube(x,a,h),3),pow(stereooctahedron(x,a,h),4)))}
+function stereopdodecahedron(x,a=0,h=2){return div(pow(stereododecahedron(x,a,h),5),pow(stereoicosahedron(x,a,h),3))}
+function stereopicosahedron(x,a=0,h=2){return div(1,div(pow(stereododecahedron(x,a,h),5),pow(stereoicosahedron(x,a,h),3)))}
+
+
+function stereopgreatcube(x, a=0,h=2) {return div(pow(stereogreatcube(x,a,h),4),pow(stereostellatedcube(x,a,h),2));}
+function stereopstellatedcube(x, a=0,h=2) {return div(1,div(pow(stereogreatcube(x,a,h),4),pow(stereostellatedcube(x,a,h),2)));}
+
+function stereopgreatstellateddodecahedron(x,a=0,h=2,parity=0){//-1 for the square 0 for ^1.5 1 for -^1.5 2 for sqrt() 3 for -sqrt()  4 for 3/2.5 5 for -3/2.5
+    if(parity==-1)  return div(div(pow(stereogreatstellateddodecahedron(x,a,h),3),pow(stereogreaticosahedron(x,a,h),5)))
+    if(parity==0)   return div(div(pow(stereogreatstellateddodecahedron(x,a,h),1.5),pow(stereogreaticosahedron(x,a,h),2.5)))
+    if(parity==1)   return div(div(pow(stereogreatstellateddodecahedron(x,a,h),1.5),pow(stereogreaticosahedron(x,a,h),2.5)),-1)
+    if(parity==2)   return div(sqrt(div(pow(stereogreatstellateddodecahedron(x,a,h),1.5),pow(stereogreaticosahedron(x,a,h),2.5))))
+    if(parity==3)   return div(sqrt(div(pow(stereogreatstellateddodecahedron(x,a,h),1.5),pow(stereogreaticosahedron(x,a,h),2.5))),-1)
+     if(parity==4)   return div(div(pow(stereogreatstellateddodecahedron(x,a,h),3),pow(stereogreaticosahedron(x,a,h),2.5)))
+    if(parity==5)   return div(div(pow(stereogreatstellateddodecahedron(x,a,h),3),pow(stereogreaticosahedron(x,a,h),2.5)),-1)
+    
+    }
+function stereopgreaticosahedron(x,a=0,h=2,parity=0){//-1 for the square 0 for ^1.5 1 for -^1.5 2 for sqrt() 3 for -sqrt()  4 for 3/2.5 5 for -3/2.5
+    if(parity==-1)  return div(1,div(pow(stereogreatstellateddodecahedron(x,a,h),3),pow(stereogreaticosahedron(x,a,h),5)))
+    if(parity==0)   return div(1,div(pow(stereogreatstellateddodecahedron(x,a,h),1.5),pow(stereogreaticosahedron(x,a,h),2.5)))
+    if(parity==1)   return div(1,div(pow(stereogreatstellateddodecahedron(x,a,h),1.5),pow(stereogreaticosahedron(x,a,h),2.5)),-1)
+    if(parity==2)   return div(1,sqrt(div(pow(stereogreatstellateddodecahedron(x,a,h),3),pow(stereogreaticosahedron(x,a,h),5))))
+    if(parity==3)   return div(1,sqrt(div(pow(stereogreatstellateddodecahedron(x,a,h),3),pow(stereogreaticosahedron(x,a,h),5))),-1)
+    if(parity==4)   return div(1,div(pow(stereogreatstellateddodecahedron(x,a,h),3),pow(stereogreaticosahedron(x,a,h),2.5)))
+    if(parity==5)   return div(1,div(pow(stereogreatstellateddodecahedron(x,a,h),3),pow(stereogreaticosahedron(x,a,h),2.5)),-1)
+    
+    }
+    
+    function stereopsmallstellateddodecahedron(x,a=0,h=2,parity=0){//-1 for the square 0 for ^1.5 1 for -^1.5 2 for sqrt() 3 for -sqrt()  4 for 3/2.5 5 for -3/2.5
+    if(parity==-1)  return div(div(pow(stereosmallstellateddodecahedron(x,a,h),5),pow(stereogreatdodecahedron(x,a,h),3)))
+    if(parity==0)  return div(div(pow(stereosmallstellateddodecahedron(x,a,h),2.5),pow(stereogreatdodecahedron(x,a,h),1.5)))
+    if(parity==1)  return div(div(pow(stereosmallstellateddodecahedron(x,a,h),2.5),pow(stereogreatdodecahedron(x,a,h),1.5)),-1)
+    if(parity==2)  return div(sqrt(div(pow(stereosmallstellateddodecahedron(x,a,h),5),pow(stereogreatdodecahedron(x,a,h),3))))
+    if(parity==3)  return div(sqrt(div(pow(stereosmallstellateddodecahedron(x,a,h),5),pow(stereogreatdodecahedron(x,a,h),3))),-1)
+    if(parity==4)  return div(div(pow(stereosmallstellateddodecahedron(x,a,h),2.5),pow(stereogreatdodecahedron(x,a,h),3)))
+    if(parity==5)  return div(div(pow(stereosmallstellateddodecahedron(x,a,h),2.5),pow(stereogreatdodecahedron(x,a,h),3)),-1)
+    }
+    
+    function stereopgreatdodecahedron(x,a=0,h=2,parity=0){//-1 for the square 0 for ^1.5 1 for -^1.5 2 for sqrt() 3 for -sqrt()  4 for 3/2.5 5 for -3/2.5
+    if(parity==-1)  return div(div(pow(stereosmallstellateddodecahedron(x,a,h),5),pow(stereogreatdodecahedron(x,a,h),3)))
+    if(parity==0)  return div(div(pow(stereosmallstellateddodecahedron(x,a,h),2.5),pow(stereogreatdodecahedron(x,a,h),1.5)))
+    if(parity==1)  return div(div(pow(stereosmallstellateddodecahedron(x,a,h),2.5),pow(stereogreatdodecahedron(x,a,h),1.5)),-1)
+    if(parity==2)  return div(sqrt(div(pow(stereosmallstellateddodecahedron(x,a,h),5),pow(stereogreatdodecahedron(x,a,h),3))))
+    if(parity==3)  return div(sqrt(div(pow(stereosmallstellateddodecahedron(x,a,h),5),pow(stereogreatdodecahedron(x,a,h),3))),-1)
+    if(parity==4)  return div(div(pow(stereosmallstellateddodecahedron(x,a,h),2.5),pow(stereogreatdodecahedron(x,a,h),3)))
+    if(parity==5)  return div(div(pow(stereosmallstellateddodecahedron(x,a,h),2.5),pow(stereogreatdodecahedron(x,a,h),3)),-1)
+    }
+    
+function stereophosohedron(x,n=5,a=0,h=2){return div(pow(stereohosohedron(x,a,h),n),pow(stereodihedron(x,n,a,h),2))}
+function stereopdihedron(x,n=5,a=0,h=2){return div(1,div(pow(stereohosohedron(x,a,h),n),pow(stereodihedron(x,n,a,h),2)))}
+
+
+
+
+function stereoptruncatedoctahedron(x,a=0,h=2){return div(1,div(stereoqtetrakishexahedron(x,a,h),pow(stereotruncatedoctahedron(x,a,h),3)))}
+
+function stereoptetrakishexahedron(x,a=0,h=2){return div(stereoqtetrakishexahedron(x,a,h),pow(stereotruncatedoctahedron(x,a,h),3))}
+
+
+
+
+
+
+function stereopstellaoctangula(x,a=0,h=2){return 1}
+//stereorhombicdodecahedron(x)/stereocuboctahedron(x)
 
 
 function ordlist(n) {
@@ -397,6 +1234,8 @@ function applybinop(a, b, op) {
     return result
 }
 
+
+
 function orr(a, b) {
     let [ab, bb] = padbin(tobinary(a), tobinary(b))
     return frombinary(applybinop(ab, bb, (x, y) => x | y))
@@ -436,12 +1275,58 @@ function nimpliesr(a, b) {
     let [ab, bb] = padbin(tobinary(a), tobinary(b))
     return frombinary(applybinop(ab, bb, (x, y) => (x & !y) & 1))
 }
+function converse(a, b) {
+    let [ab, bb] = padbin(tobinary(a), tobinary(b))
+    return frombinary(applybinop(ab, bb, (x, y) => (!y | x) & 1))
+}
+
+function nconverse(a, b) {
+    let [ab, bb] = padbin(tobinary(a), tobinary(b))
+    return frombinary(applybinop(ab, bb, (x, y) => (y & !x) & 1))
+}
+
+
+function orc(a,b){return add(orr(re(a),re(b)),mul(I,orr(im(a),im(b))))}
+function andc(a,b){return add(andr(re(a),re(b)),mul(I,andr(im(a),im(b))))}
+function norc(a,b){return add(norr(re(a),re(b)),mul(I,norr(im(a),im(b))))}
+function nandc(a,b){return add(nandr(re(a),re(b)),mul(I,nandr(im(a),im(b))))}
+function xorc(a,b){return add(xorr(re(a),re(b)),mul(I,xorr(im(a),im(b))))}
+function xnorc(a,b){return add(xnorr(re(a),re(b)),mul(I,xnorr(im(a),im(b))))}
+function impliesc(a,b){return add(impliesr(re(a),re(b)),mul(I,impliesr(im(a),im(b))))}
+function nimpliesc(a,b){return add(nimpliesr(re(a),re(b)),mul(I,nimpliesr(im(a),im(b))))}
+function conversec(a,b){return add(converser(re(a),re(b)),mul(I,converser(im(a),im(b))))}
+function nconversec(a,b){return add(nconverser(re(a),re(b)),mul(I,nconverser(im(a),im(b))))}
+
+
+
+
+
+
+
+
+
+
 function bifunc(func,func2,x){
 	return math.complex(func(re(x)),func2(im(x)));
 }
 function bifunction(func,func2,x){
 	return math.complex(math.evaluate(func,{x:re(math.complex(x))}),math.evaluate(func2,{x:im(math.complex(x))}))
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function complexf(func,args,A=[1,0,0,1],B=[0,-1,1,0]) {
     function apply_func_to_diag(diag, func) {
@@ -3482,6 +4367,28 @@ function generalizedasinn(b,N){const p=g(N,0);const q=g(N,1);return mul(b,hypg21
 function generalizedsin(x,p=2,q=p){return newtoninvfp(generalizedasinn,x,x,[p,q])}
     //return math.evaluate("newtoninv('generalizedasin(x,"+p+","+q+")',x,x)",{x:b});}
 
+
+
+function sqlatticetan(x,d=0.5){
+    let big = sqrt(bign)
+    let fi=1
+    for(let m=-big;m<=big;m++)
+    for(let n=-big;n<=big;n++)
+    {let c=add(m,mul(I,n))
+    fi=div(mul(fi,sub(mul(pi(),add(c,d)),x)),sub(mul(pi(),c),x))  }
+    return mul(fi,exp(div(x,2)));
+}
+function sqqlatticetan(x,d=0.5,dd=0.5){
+    let big = sqrt(bign)
+    let fi=1
+    for(let m=-big;m<=big;m++)
+    for(let n=-big;n<=big;n++)
+    {let c=add(m,mul(I,n))
+    fi=div(mul(fi,sqr(sub(mul(pi(),c))),x)),sub(mul(pi(),add(c,d),x)),sub(mul(pi(),add(c,mul(I,dd)),x))  }
+    return mul(fi,exp(div(x,2)));
+}
+
+
 function whyregeneralizedsin(n,z){
     let fi=z;
     for(let k=1;k<bign;k++)
@@ -3532,6 +4439,11 @@ function tanm(x){return div(sinm(x),cosm(x))}
 function secm(x){return div(1,cosm(x))}
 function cscm(x){return div(1,sinm(x))}
 function cotm(x){return div(cosm(x),sinm(x))}
+
+
+
+// 3/4,4
+
 
 function coslinear(x,a=-1,b=1,parity=0){
 	return inverselinear(sub(a,tan(x)),b,0,parity);}
@@ -4240,29 +5152,38 @@ function repeate(func,x,n){
 //functions for mandelbrot like STUFF from my old project in  2016
 function ilog(x){return add(re(x),mul(I,log(im(x))))}
 function rlog(x){return add(log(re(x)),mul(I,im(x)))}
+function clog(x){return add(log(re(x)),mul(I,log(im(x))))}
 
 function iexp(x){return add(re(x),mul(I,exp(im(x))))}
 function rexp(x){return add(exp(re(x)),mul(I,im(x)))}
+function cexp(x){return add(exp(re(x)),mul(I,exp(im(x))))}
 
 function isin(x){return add(re(x),mul(I,sin(im(x))))}
 function rsin(x){return add(sin(re(x)),mul(I,im(x)))}
+function rsin(x){return add(sin(re(x)),mul(I,sin(im(x))))}
+
 
 function icos(x){return add(re(x),mul(I,cos(im(x))))}
 function rcos(x){return add(cos(re(x)),mul(I,im(x)))}
+function rcos(x){return add(cos(re(x)),mul(I,cos(im(x))))}
 
 function itan(x){return add(re(x),mul(I,tan(im(x))))}
 function rtan(x){return add(tan(re(x)),mul(I,im(x)))}
 
 function isec(x){return add(re(x),mul(I,sec(im(x))))}
 function rsec(x){return add(sec(re(x)),mul(I,im(x)))}
+function rsec(x){return add(sec(re(x)),mul(I,sec(im(x))))}
 
 function icot(x){return add(re(x),mul(I,cot(im(x))))}
 function rcot(x){return add(cot(re(x)),mul(I,im(x)))}
+function rcot(x){return add(cot(re(x)),mul(I,cot(im(x))))}
 
 function icsc(x){return add(re(x),mul(I,csc(im(x))))}
 function rcsc(x){return add(csc(re(x)),mul(I,im(x)))}
+function rcsc(x){return add(csc(re(x)),mul(I,csc(im(x))))}
 
 
+function inv(x){return add(im(x),mul(I,re(x)))}
 
 
 
@@ -4272,10 +5193,22 @@ function mandelbrot(a, b=a,n=1) {
     for(let i=0;i<=n;i++){ z=add(mul(z, z), c);}
 	return z;
 }
+function alphamandel(a, b=a,n=1) {/////////////https://www.reddit.com/r/fractals/comments/16xgx3z/ive_created_a_new_kind_of_fractal_variant_called/
+    let c = math.complex(b);
+    let z = math.complex(a);
+    for(let i=0;i<=n;i++){ z=add(sqr(z),sqr(add(sqr(z),c)),c);}
+	return z;
+}
 function multibrot(a, b=a,m=2,n=1) {
     let c = math.complex(b);
     let z = math.complex(a);
     for(let i=0;i<=n;i++){ z=add(pow(z,m), c);}
+	return z;
+}
+function alphamultibrot(a, b=a,m=2,n=1) {/////////////https://www.reddit.com/r/fractals/comments/16xgx3z/ive_created_a_new_kind_of_fractal_variant_called/
+    let c = math.complex(b);
+    let z = math.complex(a);
+    for(let i=0;i<=n;i++){ z=add(pow(z,m),pow(add(pow(z,m),c),m),c);}
 	return z;
 }
 function perpendicularmandelbrot(a, b=a,n=1) {
@@ -4284,10 +5217,10 @@ function perpendicularmandelbrot(a, b=a,n=1) {
     for(let i=0;i<=n;i++){ z=add(pow(conj(rabs(z)),2), c);}
 	return z;
 }
-function alphamandel(a, b=a,n=1) {/////////////
+function alphaperpendicularmandelbrot(a, b=a,n=1) {/////////////
     let c = math.complex(b);
     let z = math.complex(a);
-    for(let i=0;i<=n;i++){ z=add(pow(add(pow(z,2), c),2), c);}
+for(let i=0;i<=n;i++){ z=add(pow(conj(rabs(z)),2),pow(conj(rabs((add(pow(conj(rabs(z)),2),c)))),2),c);}
 	return z;
 }
 function tricorn(a, b=a,n=1) {
@@ -4296,10 +5229,22 @@ function tricorn(a, b=a,n=1) {
     for(let i=0;i<=n;i++){ z=add(rconj(mul(z, z)), c);}
 	return z;
 }
+function alphatricorn(a, b=a,n=1) {/////////////
+    let c = math.complex(b);
+    let z = math.complex(a);
+    for(let i=0;i<=n;i++){ z=add(conj(sqr(z)),conj(sqr(add(conj(sqr(z)),c))),c);}
+	return z;
+}
 function celtic(a, b=a,n=1) {
     let c = math.complex(b);
     let z = math.complex(a);
     for(let i=0;i<=n;i++){ z=add(rabs(mul(z, z)), c);}
+	return z;
+}
+function alphaceltic(a, b=a,n=1) {/////////////
+    let c = math.complex(b);
+    let z = math.complex(a);
+    for(let i=0;i<=n;i++){ z=add(rabs(sqr(z)),rabs(sqr(add(rabs(sqr(z)),c))),c);}
 	return z;
 }
 function perpendicularceltic(a, b=a,n=1) {
@@ -4308,10 +5253,22 @@ function perpendicularceltic(a, b=a,n=1) {
     for(let i=0;i<=n;i++){ z=add(conj(rabs(mul(z, z))), c);}
 	return z;
 }
+function alphaceltic(a, b=a,n=1) {/////////////
+    let c = math.complex(b);
+    let z = math.complex(a);
+for(let i=0;i<=n;i++){ z=add(conj(rabs(sqr(z))),conj(rabs(sqr(add(conj(rabs(sqr(z))),c)))),c);}
+	return z;
+}
 function burningship(a, b=a,n=1) {
     let c = math.complex(b);
     let z = math.complex(a);
     for(let i=0;i<=n;i++){ z=add(iabs(mul(z, z)), c);}
+	return z;
+}
+function alphaburningship(a, b=a,n=1) {/////////////
+    let c = math.complex(b);
+    let z = math.complex(a);
+    for(let i=0;i<=n;i++){ z=add(iabs(sqr(z)),iabs(sqr(add(iabs(sqr(z)),c))),c);}
 	return z;
 }
 function perpendicularburningship(a, b=a,n=1) {
@@ -4320,10 +5277,22 @@ function perpendicularburningship(a, b=a,n=1) {
     for(let i=0;i<=n;i++){ z=add(sqr(iabs(z)), c);}
 	return z;
 }
+function alphaperpendicularburningship(a, b=a,n=1) {/////////////
+    let c = math.complex(b);
+    let z = math.complex(a);
+    for(let i=0;i<=n;i++){ z=add(sqr(iabs(z)),sqr(iabs(add(sqr(iabs(z)),c))),c);}
+	return z;
+}
 function buffalo(a, b=a,n=1) {
     let c = math.complex(b);
     let z = math.complex(a);
     for(let i=0;i<=n;i++){ z=add(cabs(mul(z, z)), c);}
+	return z;
+}
+function alphabuffalo(a, b=a,n=1) {/////////////
+    let c = math.complex(b);
+    let z = math.complex(a);
+    for(let i=0;i<=n;i++){ z=add(cabs(sqr(z)),cabs(sqr(add(cabs(sqr(z)),c))),c);}
 	return z;
 }
 function perpendicularbuffalo(a, b=a,n=1) {
@@ -4332,16 +5301,45 @@ function perpendicularbuffalo(a, b=a,n=1) {
     for(let i=0;i<=n;i++){ z=add(rabs(sqr(iabs(z))), c);}
 	return z;
 }
+function alphaperpendicularbuffalo(a, b=a,n=1) {/////////////
+    let c = math.complex(b);
+    let z = math.complex(a);
+for(let i=0;i<=n;i++){ z=add(rabs(sqr(iabs(z))),rabs(sqr(iabs(add(rabs(sqr(iabs(z))),c)))),c);}
+	return z;
+}
+
+
+
+
+
+
+
+
+function perpendicularsimonship(a, b=a,n=1) {
+    let c = math.complex(b);
+    let z = math.complex(a);
+    for(let i=0;i<=n;i++){ z=add(mul(sqr(z),mag(sqr(z))),c);}
+	return z;
+}
+
+
+
+
+
+
+
 function simonbrot(a, b=a,n=1) {
     let c = math.complex(b);
     let z = math.complex(a);
-    for(let i=0;i<=n;i++){ z=add(sqr(mul(z,mag(z))),c);}
+  //  for(let i=0;i<=n;i++){ z=add(sqr(mul(z,mag(z))),c);}
+  for(let i=0;i<=n;i++){ z=add(sqr(mul(z,cabs(z))),c);}
 	return z;
 }
 function perpendicularsimonbrot(a, b=a,n=1) {
     let c = math.complex(b);
     let z = math.complex(a);
-    for(let i=0;i<=n;i++){ z=add(mul(sqr(z),mag(sqr(z))),c);}
+   // for(let i=0;i<=n;i++){ z=add(mul(sqr(z),mag(sqr(z))),c);}
+   for(let i=0;i<=n;i++){ z=add(mul(sqr(z),cabs(sqr(z))),c);}
 	return z;
 }
 function duckfractal(a, b=a,n=1) {
@@ -4352,7 +5350,7 @@ function duckfractal(a, b=a,n=1) {
 }
 function lambdafractal(a, b=a,n=1) {
     let c = math.complex(b);
-    let z = math.complex(a);
+    let z = (math.complex(a));
     for(let i=0;i<=n;i++){ z=mul(c,z,sub(1,z));}
 	return z;
 }
@@ -4377,6 +5375,181 @@ function zliteral(a, b=a , as=1,n=1) {
 	return z;
 }
 
+
+
+function barnsleyj1(a, b=a,n=1) {
+    let c = math.complex(b);
+    let z = math.complex(a);
+    for(let i=0;i<=n;i++){if(re(z)>=0) z=mul(add(z,-1),c);else z=mul(c,add(z,1));}
+	return z;
+}
+function barnsleyj2(a, b=a,n=1) {
+    let c = math.complex(b);
+    let z = math.complex(a);
+    for(let i=0;i<=n;i++){if(re(z)*im(c)+re(c)*im(z)>=0) z=mul(add(z,-1),c);else z=mul(c,add(z,1));}
+	return z;
+}
+function barnsleyj3(a, b=a,n=1) {
+    let c = math.complex(b);
+    let z = math.complex(a);
+    for(let i=0;i<=n;i++){if(re(z)>0) z=sub(sqr(z),1);else z=add(sqr(z),-1,mul(c,re(z)));}
+	return z;
+}
+
+
+function powerbrot(a, b=a,n=1) {
+    let c = math.complex(b);
+    let z = math.complex(a);
+    for(let i=0;i<=n;i++){z=add(pow(z,z),c);}
+	return z;
+}
+function multipowerbrot(a, b=a,m=2,n=1) {
+    let c = math.complex(b);
+    let z = math.complex(a);
+     for(let i=0;i<=n;i++){z=add(pow(z,z),pow(z,m),c);}
+	return z;
+}
+
+
+
+
+function magnetj1(a, b=a,n=1) {
+    let c = math.complex(b);
+    let z = math.complex(a);
+    for(let i=0;i<=n;i++){z=sqr(div(add(sqr(z),c,-1),add(z,z,c,-2)))}
+	return z;
+}
+function magnetj2(a, b=a,n=1) {
+    let c = math.complex(b);
+    let z = math.complex(a);
+for(let i=0;i<=n;i++){z=sqr(div(add(cum(z),mul(3,z,sub(c,1)),mul(sub(c,1),sub(c,2))),add(mul(3,z,z),mul(3,sub(c,2),z),sub(c,1),sub(c,2),1)))}
+	return z;
+}
+
+
+function phoenix(a, b=a,n=1) {
+    let c = math.complex(b);
+    let z = math.complex(a);
+    let y=z;
+for(let i=0;i<=n;i++){
+    z=add(sqr(z),re(c),mul(im(c),y))
+    y=z;
+}
+	return z;
+}
+
+
+function phoenixc(a, b=a,d=a,n=1) {
+    let c = math.complex(b);
+    let z = math.complex(a);
+    let y=z;
+for(let i=0;i<=n;i++){
+    z=add(sqr(z),c,mul(d,y))
+    y=z;
+}
+	return z;
+}
+function manowar(a, b=a,n=1) {
+    let c = math.complex(b);
+    let z = math.complex(a);
+    let y=z;
+for(let i=0;i<=n;i++){
+    z=add(sqr(z),y,c)
+    y=z;
+}
+	return z;
+}
+
+function spider(a, b=a,n=1) {
+    let c = math.complex(b);
+    let z = math.complex(a);
+for(let i=0;i<=n;i++){
+    z=add(sqr(z),c)
+    c=add(z,div(c,2));
+}
+	return z;
+}
+function tetrate(a, b=a,n=1) {
+    let c = math.complex(b);
+    let z = math.complex(a);
+for(let i=0;i<=n;i++){
+z=pow(z,z)
+}
+	return z;
+}
+function sierpinskiescape(a, b=a,n=1) {
+    let c = math.complex(b);
+    let z = math.complex(a);
+for(let i=0;i<=n;i++){
+if(im(z)>0.5)z=add(2,re(z),inv(sub(mul(im(z)),1)))
+else if(re(z)<0.5)z=add(sub(mul(2,re(z)),1),inv(mul(2,im(z))))
+else z=add(mul(2,re(z)),inv(mul(2,im(z))))
+}
+	return z;
+}
+function unity(a, b=a,n=1) {
+    let c = math.complex(b);
+    let z = math.complex(a);
+    let x=0;let y=0;
+for(let i=0;i<=n;i++){
+x=re(x);y=im(x)
+y=mul(sub(2,mag(z)),x);
+x=mul(sub(2,mag(z)),y);
+z=add(x,inv(y));
+
+}
+	return z;
+}
+function volterralotka(a, b=a,n=1) {
+    let c = math.complex(b);
+    let z = math.complex(a);
+    let x=re(z);let y=re(y);
+let f=0;let g=0;let x2=0;let y2=0;let h=0.739;let p=0.739;
+for(let i=0;i<=n;i++){
+f=sub(x,mul(x,y));
+g=sub(mul(x,y),y)
+x2=add(x,mul(f,p))
+y2=add(y,mul(p,g))
+x=add(x,div(mul(h,add(f,sub(x2,mul(x2,y2)))),2))
+y=add(y,div(mul(h,sub(g,sub(y2,mul(x2,y2)))),2))
+z=add(x,inv(y))
+}
+	return z;
+}
+function timserror(a, b=pow(z,sub(z,1)),n=1) {
+    let c = math.complex(b);
+    let z = math.complex(a);
+    let tmp=1;
+for(let i=0;i<=n;i++){
+tmp=sqr(z);
+tmp=add(mul(re(tmp),re(c)),mul(-1,im(tmp),im(c)),inv(sub(mul(re(tmp),im(c)),mul(im(tmp),re(c)))))
+z=add(tmp,c)
+}
+	return z;
+}
+function popcorn(a, b=a,h=0.1,n=1) {
+    /* Written by Luke Plant
+; Modified by Frederik Slijkerman 
+ from uf6*/
+    let c = math.complex(b);
+    let z = math.complex(a);
+    let y=im(c);
+    let x=re(c);
+    let temp=x;
+    for(let i=0;i<=n;i++){
+    temp=x;
+    x=sub(x,mul(h,sin(add(y,tan(mul(3,y))))))
+    y=sub(y,mul(h,sin(add(temp,tan(mul(3,temp))))))
+    z=add(x,inv(y))
+}
+	return z;
+}
+
+
+
+
+
+
 function escapetime(func,z,p=z,limit=10,itlim=5){
 	let x=z;
 	for(let i=0;i<itlim;i++)
@@ -4399,6 +5572,14 @@ function escapetimee(func,z,p=z,limit=10,itlim=5){
 		return sub(itlim,-1,div(log(log(mag(x))),log(2)))
 		return 0;
 }
+
+
+
+
+
+
+
+
 
 function im(b) {
     return math.complex(b).im;
@@ -6834,7 +8015,7 @@ function gammad(t, z) {
     return mul(pow(t, sub(z,math.complex(1)) ),math.exp(-t));
 }
 function gamma(z) {
-	
+
 	return math.gamma(z);
 	/*	if(math.complex(z).re<0)return div(sub(0,pi()),mul(z,math.sin(mul(pi(),z)), integral(gammad,0,bign/4,sub(0,z))));
 
@@ -6901,6 +8082,7 @@ function jacobitheta2(z, q) {
     }  	return fi;
 }
 
+
 // Define the jacobitheta3 function
 function jacobitheta3(z, q) {
     let fi = math.complex(0, 0);  
@@ -6916,6 +8098,21 @@ function jacobitheta4(z, q) {
     fi=add(fi,mul(pow(-1,n),pow(q,sqr(n)),exp(mul(2,I,z,n))))
     } 	return fi;
 }
+
+/*
+function jacobitheta2adisc(z, qq) {let q=qq//let q=sqrt(qq);
+return sqrt(mul(0.5,sub(sqr(jacobitheta3(z, q)),sqr(jacobitheta4(z, q)))))
+}function jacobitheta3adisc(z, qq) {let q=qq//let q=sqrt(qq);
+return sqrt(mul(0.5,add(sqr(jacobitheta3(z, q)),sqr(jacobitheta4(z, q)))))
+}function jacobitheta4adisc(z, qq) {let q=qq//let q=sqrt(qq);
+return sqrt(mul(jacobitheta4(z, q),jacobitheta3(z, q)))
+}*/
+
+
+
+
+
+
 
 function qtheta(z,q){
 	let fi = math.complex(1, 0);
@@ -7739,9 +8936,50 @@ function ellipticlambda(a, b) {
     return pow(div(jacobitheta2(a, b) , jacobitheta3(a, b)), math.complex(4));
 }
 
-function ellipticlambda1(q) {
+function ellipticlambdaq(q) {
     return pow(div(jacobitheta2(0,q) , jacobitheta3(0,q)), math.complex(4));
 }
+function ellipticlambdat(t) {let q = modulartransformqt(t);
+    return pow(div(jacobitheta2(0,q) , jacobitheta3(0,q)), math.complex(4));
+}
+
+
+
+function ellipticlambdastar2(a, q) {let t=mul(I,sqrt(modulartransformtq(q)));
+    return pow(div(jacobitheta2(a, t), jacobitheta3(a, t )), math.complex(2));
+}
+
+function ellipticlambdastar(x){//FIX
+    
+    
+let q=mul(sqrt(x),I);
+return sqrt(ellipticlambdaq(modulartransformtq(mul(I,sqrt(x)))))
+ } /*
+    let t=(mul(I,sqrt(x)));
+   t=mul((exp(mul(pi(),I,t))));
+    return pow(div(jacobitheta2disc(0, t), jacobitheta3disc(0, t )), math.complex(2));
+  }*/
+    /*let gg=ramanujang(x); ggg=ramanujancapg(x);
+    
+    
+    return div(sub(sqrt(add(1,pow(ggg,-12))),sqrt(sub(1,pow(ggg,-12)))),2)
+    return sub(sqrt(add(pow(gg,24),1)),pow(gg,12))}*/
+/*
+function ellipticlambdastar1(qq) {let q=modulartransformtq(mul(sqrt(qq),I));
+//return sqrt(ellipticlambda1(modulartransformqt(mul(I,sqrt(modulartransformtq(q))))))
+    return pow(div(jacobitheta2(0, q), jacobitheta3(0, q )), math.complex(2));
+    }
+function ellipticlambdastarx(x) {//let q=mul(sqrt(qq),I);
+return sqrt(ellipticlambda1(modulartransformtq(mul(I,sqrt(x)))))
+    //return pow(div(jacobitheta2(0, q), jacobitheta3(0, q )), math.complex(2));
+}*/
+
+
+function ramanujang(n){let fi=1;for(let k=0;k<bign;k++)fi=mul(fi,add(1,exp(mul(-1,pi(),sqrt(n),add(k,k,1)))));return mul(pow(2,-0.25),exp(mul(pi(),div(sqrt(n),24))),fi)}
+function ramanujancapg(n){let fi=1;for(let k=0;k<bign;k++)fi=mul(fi,sub(1,exp(mul(-1,pi(),sqrt(n),add(k,k,1)))));return mul(pow(2,-0.25),exp(mul(pi(),div(sqrt(n),24))),fi)}
+
+
+
 function g2(b) {
     return mul(60.0, eisensteinseries(math.complex(4), b));
 }
@@ -7900,12 +9138,7 @@ function ellipticdiscriminant(b) {
     return sub(pow(g2Val, math.complex(3)), mul(27.0, pow(g3Val, math.complex(2))));
 }
 
-function ellipticlambdastar(a, b) {
-    return pow(div(jacobitheta2(a, b), jacobitheta3(a, b )), math.complex(2));
-}
-function ellipticlambdastar1(q) {
-    return pow(div(jacobitheta2(0, q), jacobitheta3(0, q )), math.complex(2));
-}
+
 
 function jacobixi(a, b) {
     return div(jacobitheta1(a, b), jacobitheta4(a, b ));
@@ -8218,6 +9451,26 @@ function compellint3(n,a) {
 function ellint3(n,p,a) {
  return integral(compellint3d, 0, p,[n,a]);
 }
+
+
+function ellabelad(t,D){const c=g(D,0);const e=g(D,1);return div(1,sqrt(mul(sub(1,mul(c,c,t,t)),add(1,mul(e,e,t,t)))))}
+function ellabela(x,c,e){return integral(ellabelad,0,x,[c,e])}
+function ellabelw(c,e){return mul(2,integral(ellabelad,0,div(1,c),[c,e]))}
+function ellabelbd(t,D){const c=g(D,0);const e=g(D,1);return div(1,sqrt(mul(add(1,mul(c,c,t,t)),add(1,sub(e,e,t,t)))))}
+function ellabelb(x,c,e){return integral(ellabelbd,0,x,[c,e])}
+function ellabelbw(c,e){return mul(2,integral(ellabelbd,0,div(1,e),[c,e]))}
+
+function ellabelacompact(x,D){const c=g(D,0);const e=g(D,1);return ellabela(x,c,e)}
+
+function ellabelphi(x,c,e){return div(sn(mul(c,x),div(mul(I,e),c)),c)}//return newtoninvfp(ellabelacompact,x,x,[c,e])}
+function ellabelf(x,c,e){return sn(x,div(mul(I,e),c))}//return newtoninvfp(ellabelacompact,x,x,[c,e])}
+function ellabelcf(x,c,e){return dn(x,div(mul(I,e),c))}//return newtoninvfp(ellabelacompact,x,x,[c,e])}
+function ellabelr(a,b,c,e){return add(1,sqr(mul(e,c,ellabelphi(b,c,e),ellabelphi(a,c,e))))}//return newtoninvfp(ellabelacompact,x,x,[c,e])}
+
+
+
+
+
 
 function htau(x){
 return	mul(math.complex(0,1),div(hypg21(0.5,0.5,1,sub(1,x)),hypg21(0.5,0.5,1,x)));
@@ -8593,7 +9846,7 @@ function smh(z){return sub(0,sm(sub(0,z)));}
 
 function dixoncapxi(a,b){return div(mul(-1,b,exp(sub(0,a)),sub(1,mul(b,sub(1,exp(sub(0,a)))))))}
 function dixoncaps(a,b){return mul(exp(sub(0,b)),pow(sub(1,exp(sub(0,b))),sub(a,1)))}
-
+//https://arxiv.org/pdf/math/0507268
 function dixoncapx(z){return mul(exp(sub(0,z)),smh(sub(1,exp(sub(0,z)))))}
 function dixoncapy(z){return mul(exp(sub(0,z)),cmh(sub(1,exp(sub(0,z)))))}
 function dixoncapp(z){return mul(smh(z),cmh(z))} 
@@ -8604,6 +9857,30 @@ function dixonw(z){return hypg21(2/3,1,4/3,z)}
 function dixonw0(z){return dixonw(z)}
 function dixonw1(z){return sub(0,dixonw(sub(1,z)))}
 function dixonwinf(z){return div(dixonw(div(1,z)),z)}
+
+//J fractions
+function dixonsnd(u,X){const x=g(X,0);const n=g(X,1);return mul(pow(sm(n),n),exp(div(u,x,-1)))}
+function dixoncnd(u,X){const x=g(X,0);const n=g(X,1);return mul(pow(sm(n),n),cm(u),exp(div(u,x,-1)))}
+function dixondnd(u,X){const x=g(X,0);const n=g(X,1);return mul(pow(sm(n),n),sqr(cm(u)),exp(div(u,x,-1)))}
+
+function dixonsn(x,n){return integral(dixonsnd,0,sqrt(bign),[x,n]);}
+function dixoncn(x,n){return integral(dixoncnd,0,sqrt(bign),[x,n]);}
+function dixondn(x,n){return integral(dixondnd,0,sqrt(bign),[x,n]);}
+
+
+
+function hexasin(){}
+
+
+function sin434(z){const c=tesseract(cn(z,1/sqrt(2)));return div(sqrt(sub(1,c)),sqrt(add(1,c)))}//div(,add(1,mul(4,sqrt(weierstrassellipticg))))
+function sin656(z){const c=cn(mul(z,pow(3,1/4),pow(2,4/3)),sin(div(pi(),12)));return pow(sub(0.5,mul(0.5,sqrt(sub(1,pow(add(1,div(mul(sqrt(3),add(1,c)),sub(1,c))),-3))))),1/6)}//div(,add(1,mul(4,sqrt(weierstrassellipticg))))
+
+function cos434(z){return pow(sub(1,pow(sin434(z),4)),0.25)}
+function cos656(z){return pow(sub(1,pow(sin434(z),6)),1/6)}
+
+function sin4(z){const k=squaremod(z,7.416298709205484/2);const l=mul(2,weierstrassellipticdg(z,1,0));return div((mul(2,l)),(add(sqr(l),1)))}
+function cos4(z){const l=mul(2,weierstrassellipticdg(z,1,0));return div((sub(sqr(l),1)),(add(sqr(l),1)))}
+
 
 function sp(u){return div(sqr(sm(u)),-1,cm(u))}
 function cp(u){return div(sqr(cm(u)),sm(u))}
@@ -8620,6 +9897,7 @@ function trihyperbolacl(x){return sub(sqr(trihyperbola(x)),sqr(trihyperbolaneg(x
 
 function trefoilsl(ss){const s=sm(div(ss,sqrt(3)));const x=cm(div(ss,sqrt(3)));return div(mul(sqrt(3),x,s,add(1,cum(x))),2,sub(1,mul(x,x,x,s,s,s)))}
 function trefoilcl(ss){const s=sm(div(ss,sqrt(3)));const x=cm(div(ss,sqrt(3)));return div(mul(3,x,s,s,s,s),-2,sub(1,mul(x,x,x,s,s,s)))}
+function trefoiltl(ss){return div(trefoilsl(ss),trefoilcl(ss))}
 
 
 //ADD MORE
@@ -8670,12 +9948,19 @@ function weberf2(b) {
     );
 }
 
-function weberr(a,b) {//n,e
+function weberr(a,b) {//n,e https://arxiv.org/pdf/0905.3250
     return div(
         mul(pow(math.complex(2.0), div(sub(a,math.complex(1.0)), math.complex(4.0))), qpocinf(pow(b, math.complex(a)), pow(b, mul(math.complex(a), math.complex(2.0))), bign)),
         pow(qpocinf(b, pow(b, 2), bign), math.complex(a))
     );
 }
+
+function weberw(n,b) {//n,e https://arxiv.org/pdf/0905.3250
+    return div(
+       dedekindeta(div(b,n)),dedekindeta(b)
+    );
+}
+
 
 function weberr5(a,b) {
     return div(
@@ -9501,7 +10786,17 @@ function ramanujanphi(a,n){
 	 return sub(1, div(sub(add(harmonicnum(div(-1, a)), harmonicnum(div(1, a))), add(harmonicnum(div(sub(n, 1), a)), harmonicnum(div(add(n, 1), a)))), a));
 }
 	
-function ramanujantau(n){
+function ramanujantau(x){
+    return pow(dedekindeta(x),24)
+    if(n==0)return 1;
+    let fi=0;
+    for(let k=1;k<re(n);k++)fi=add(fi,mul(sumofdivisorsk(k,5),sumofdivisorsk(sub(n,k),5)))
+    return add(mul(div(65,756),sumofdivisorsk(n,11)),mul(div(691,756),sumofdivisorsk(n,5)),mul(div(691,-3),fi));
+    
+//	return pow(dedekindeta(x),24);
+}
+function ramanujantauint(n){
+   
     if(n==0)return 1;
     let fi=0;
     for(let k=1;k<re(n);k++)fi=add(fi,mul(sumofdivisorsk(k,5),sumofdivisorsk(sub(n,k),5)))
@@ -9674,7 +10969,7 @@ return fi;
 
             return fi;
         }
-		
+
 		
 		   function tetrf(b) {
             const N = bign; // bign is set to 10000 for this example
@@ -9918,6 +11213,12 @@ function jacobitrippleproduct(x,y){
 	let fi=math.complex(0,0);
 	for(let i=-bign;i<=bign;i++)
 		fi=add(fi,mul(pow(x,mul(n,n)),pow(y,mul(2,i))))
+return fi;
+}
+function quintupleproduct(s,t){
+	let fi=math.complex(0,0);
+	for(let i=-bign;i<=bign;i++)
+		fi=add(fi,mul(pow(s,div(add(mul(i,i,3),i),2)),sub(pow(t,mul(3,i)),pow(t,sub(-1,i,i,i)))))
 return fi;
 }
 function durfeesquaregeneratingfuncdenom(x,k){
@@ -11883,6 +13184,12 @@ function gsum(A) {
 	fi = add(fi,g(A,i));}
 return fi;
 }
+function gmin(A) {
+   	let fi=10000000000000000000000000000000000;
+	for(let i=0;i<leng(A);i++){
+	fi = minc(fi,g(A,i));}
+return fi;
+}
 function glogfactorialsum(A) {
    	let fi=math.complex(0,0);
 	for(let i=0;i<leng(A);i++){
@@ -12144,6 +13451,18 @@ function rogersramanujang(q){return div(1,mul(infqpochhammer(q,pow(q,5)),infqpoc
 function rogersramanujanh(q){return div(1,mul(infqpochhammer(pow(q,2),pow(q,5)),infqpochhammer(pow(q,3),pow(q,5))))}
 function rogersramanujanr(q){return div(mul(pow(q,div(11,66)),rogersramanujanh(q)),pow(q,div(-1,60)),rogersramanujang(q))}
 function rogersramanujans(q){return div(rogersramanujanr(pow(q,4)),rogersramanujanr(pow(q,2)),rogersramanujanr(q))}
+
+function rogersramanujanp(q){return mul(rogersramanujanh(q),pow(q,div(11,60)))}
+function rogersramanujanq(q){return mul(rogersramanujang(q),pow(q,div(-1,60)))}
+
+function hubera(q){return mul(pow(dedekindeta(modulartransformqt(q)),2/5),rogersramanujanp(q))}
+function huberb(q){return mul(pow(dedekindeta(modulartransformqt(q)),2/5),rogersramanujanq(q))}
+function huberc(q){const t = modulartransformqt(q);return mul(pow(5,0.25),pow(1.6180339,0.5),pow(dedekindeta(mul(5,t)),0.4),rogersramanujanq(modulartransformtp(div(-1,5,t))));}//const a=hubera(q);const b=huberb(q);return div(pow(sub(pow(div(mul(a,1.6180339),b),5),1),0.2),b)}
+function huberd(q){const t = modulartransformqt(q);return mul(pow(5,0.25),pow(1.6180339,-0.5),pow(dedekindeta(mul(5,t)),0.4),rogersramanujanq(modulartransformtq(div(-1,5,t))));}//const a=hubera(q);const b=huberb(q);return div(pow(sub(pow(div(mul(a,1.6180339),b),5),1),0.2),b)}
+
+function rogersramanujanalpha(q){return rogersramanujanr(q)}
+function rogersramanujanbeta(q){const r = rogersramanujanr(pow(q,5));return div(sub(1,mul(1.6180339,r)),add(1.6180339,r))}
+
 
 function rogersramanujangm(q){return div(pow(q,-1/60),mul(infqpochhammer(q,pow(q,5)),infqpochhammer(pow(q,4),pow(q,5))))}
 function rogersramanujanhm(q){return div(pow(q,11/60),mul(infqpochhammer(pow(q,2),pow(q,5)),infqpochhammer(pow(q,3),pow(q,5))))}
@@ -15604,10 +16923,22 @@ function copuladnsfrank(t,u,v,p){return div(mul(t,exp(mul(-1,t,add(u,v))),sub(ex
 function copuladnsclayton(t,u,v,p){return mul(add(1,t),pow(mul(u,v),sub(-1,t)),pow(add(-1,pow(u,sub(0,t)),pow(v,sub(0,t))),sub(-2,div(1,t))))}
 function copuladnsfarliegumbelmorgenstern(t,u,v,p){return add(1,mul(t,sub(1,u,u),sub(1,v,v)))}
 function copuladnsgaussian(t,u,v,p){const a=mul(sqrt(2),inverf(add(u,u,-1)));const b=mul(sqrt(2),inverf(add(v,v,-1)));return div(exp(div(sub(mul(add(sqr(a),sqr(b)),sqr(p)),mul(2,a,b,p)),-2,sub(1,sqr(p)))),sqrt(sub(1,sqr(p))))}
-//ADD STUDEDNTS T https://en.wikipedia.org/wiki/Copula_(statistics)#Fr%C3%A9chet%E2%80%93Hoeffding_copula_bounds
 
+function copulafrechethoeffdingm(C){return gmin(C)}
+function copulafrechethoeffdingm(C){return maxc(0,add(sub(1,leng(C)),gsum(C)))}
 
+function auxtcopulastudentst(v,x){return integral(auxgcopulastudentst,-bign,x,v)}
+function auxpcopulastudentst(z){return div(integral(auxdcopulastudentst,-bign,z),sqrt(mul(2,pi())))}
+function auxdcopulastudentst(z){return exp(div(sqr(z),-2))}
+function auxgcopulastudentst(t,v){return div(gamma(div(add(v,1),2)),sqrt(mul(v,pi())),gamma(div(v,2)),pow(add(1,div(sqr(t),v)),div(add(v,1),2)))}
 
+function copulastudentst(b,u,v,p){return div(mul(gamma(div(v,2)),gamma(add(div(v,2),1)),add(1,pow(div(  add(pow(auxtcopulastudentst(b,v),-2),pow(auxtcopulastudentst(b,u),-2),mul(-2,div(p,auxtcopulastudentst(b,u),auxtcopulastudentst(b,v))))   ,v,sub(1,sqr(p))),div(add(v,2),-2)))  ),sqrt(sub(1,sqr(p))),sqr(gamma(div(add(v,1),2))),pow(add(1,div(pow(auxtcopulastudentst(b,u),-2),v)),div(add(v,1),-2)),pow(add(1,div(pow(auxtcopulastudentst(b,v),-2),v)),div(add(v,1),-2)) )}
+
+function copulaweibull(u,v,p){return mul(sub(1,p),integral(dcopulaweibull,0,div(log(sub(1,u)),-1,sub(1,p)),[u,v,p],sqrt(bign)))}
+function dcopulaweibull(z1,U){const u=g(U,0);const v=g(U,1);const p=g(U,2);return integral(ddcopulaweibull,0,div(log(sub(1,v)),-1,sub(1,p)),[u,v,p,z1],sqrt(bign))}
+function ddcopulaweibull(z2,U){const u=g(U,0);const v=g(U,1);const p=g(U,2);const z1=g(U,2);return mul(exp(sub(0,z1,z2)),besseli(0,mul(2,sqrt(mul(p,z1,z2)))))}
+
+//add https://strathprints.strath.ac.uk/48368/1/Copulas_Part1_v2_6.pdf
 
 function isIntegerComplex(c) {
     return Number.isInteger(c.re) && Number.isInteger(c.im);  // Check real and imaginary parts
@@ -17561,8 +18892,8 @@ class CustomEvaluator {
             '~': { precedence: 3, fn: (a, b) => hypot(a,b) },
              '%': { precedence: 2, fn: (a, b) => modc(a, b) },
     '\\': { precedence: 2, fn: (a, b) => floor(div(a, b)) },
-    '&': { precedence: 1, fn: (a, b) => andr(a, b) },
-    '|': { precedence: 1, fn: (a, b) => orr(a, b) },
+    '&': { precedence: 1, fn: (a, b) => andc(a, b) },
+    '|': { precedence: 1, fn: (a, b) => orc(a, b) },
    
    '<<': { precedence: 2, fn: (a, b) => mul(a, pow(2, b)) }, // Left shift
     '>>': { precedence: 2, fn: (a, b) => (div(a, pow(2, b))) }, // Right shift
@@ -17635,6 +18966,7 @@ evaluatePostfixOperator(tree, variables) {
     }
 
     evaluate(expression, variables = {}) {
+    if(expression.charAt(0)==";")return math.evaluate(expression.substring(1),variables)
         const tokens = this.tokenize(expression);
         const tree = this.parse(tokens);
         return this.evaluateTree(tree, variables);
