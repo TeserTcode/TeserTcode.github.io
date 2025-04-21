@@ -12,6 +12,7 @@
             flex-direction: column;
             height: 100vh;
             margin: 0;
+            font-family: Arial, sans-serif;
         }
         .histogram-container {
             display: flex;
@@ -40,31 +41,174 @@
         .box-1 {
             background-color: black;
         }
-		
-		.box-0-head {
+        .box-0-head {
             background-color: white;
-	border: 5px solid red; 
-    box-sizing: border-box;
-	
-
+            border: 5px solid red; 
+            box-sizing: border-box;
         }
         .box-1-head {
             background-color: black;
-					border: 5px solid red; 
-    box-sizing: border-box;
-
+            border: 5px solid red; 
+            box-sizing: border-box;
         }
         .head-line {
             position: absolute;
             height: 2px;
             background-color: red;
-            top: 18px; /* Align it with the boxes */
+            top: 18px;
         }
         .histogram {
             font-family: monospace;
         }
         .invisible {
             visibility: hidden;
+        }
+        /* Color Schemes */
+  /* RGB */
+  .rgb.state-1    { background-color: #cc9999; }
+.rgb.state-1-on { background-color: #990000; }
+.rgb.state-2    { background-color: #99cc99; }
+.rgb.state-2-on { background-color: #007700; }
+.rgb.state-3    { background-color: #9999cc; }
+.rgb.state-3-on { background-color: #000099; }
+.rgb.state-4    { background-color: #cccc99; }
+.rgb.state-4-on { background-color: #999900; }
+.rgb.state-5    { background-color: #cc99cc; }
+.rgb.state-5-on { background-color: #990099; }
+.rgb.state-6    { background-color: #99cccc; }
+.rgb.state-6-on { background-color: #009999; }
+
+
+
+.cmy.state-1    { background-color: #ffcccc; } /* pale red */
+.cmy.state-1-on { background-color: #cc3300; } /* +60° (dark orange-red) */
+.cmy.state-2    { background-color: #ccffcc; } /* pale green */
+.cmy.state-2-on { background-color: #006600; } /* +60° (dark yellow-green) */
+.cmy.state-3    { background-color: #ccccff; } /* pale blue */
+.cmy.state-3-on { background-color: #330099; } /* +60° (dark blue-violet) */
+.cmy.state-4    { background-color: #ffffcc; } /* pale yellow */
+.cmy.state-4-on { background-color: #996600; } /* +60° (dark orange) */
+.cmy.state-5    { background-color: #ffccff; } /* pale magenta */
+.cmy.state-5-on { background-color: #990066; } /* +60° (dark red-violet) */
+.cmy.state-6    { background-color: #ccffff; } /* pale cyan */
+.cmy.state-6-on { background-color: #006666; } /* +60° (dark teal) */
+
+/* Flame - Extreme Contrast */
+.flame.state-1    { background-color: #ffcc99; } /* light peach */
+.flame.state-1-on { background-color: #b34700; } /* +60° (dark burnt orange) */
+.flame.state-2    { background-color: #ff9966; } /* light orange */
+.flame.state-2-on { background-color: #992600; } /* +60° (dark rust) */
+.flame.state-3    { background-color: #ff6633; } /* bright orange */
+.flame.state-3-on { background-color: #800000; } /* +60° (dark maroon) */
+.flame.state-4    { background-color: #ffcc66; } /* light gold */
+.flame.state-4-on { background-color: #b36b00; } /* +60° (dark brown-orange) */
+.flame.state-5    { background-color: #ff6666; } /* light coral */
+.flame.state-5-on { background-color: #990000; } /* +60° (dark blood red) */
+.flame.state-6    { background-color: #ffaa66; } /* light apricot */
+.flame.state-6-on { background-color: #cc5500; } /* +60° (dark pumpkin) */
+
+/* Ocean - Extreme Contrast */
+.ocean.state-1    { background-color: #cce6ff; } /* light sky blue */
+.ocean.state-1-on { background-color: #003366; } /* +60° (dark navy) */
+.ocean.state-2    { background-color: #99ccff; } /* medium sky blue */
+.ocean.state-2-on { background-color: #004080; } /* +60° (dark royal blue) */
+.ocean.state-3    { background-color: #66b3ff; } /* bright azure */
+.ocean.state-3-on { background-color: #0055aa; } /* +60° (dark cobalt) */
+.ocean.state-4    { background-color: #99e6ff; } /* light cyan */
+.ocean.state-4-on { background-color: #006680; } /* +60° (dark teal) */
+.ocean.state-5    { background-color: #ccf2ff; } /* ice blue */
+.ocean.state-5-on { background-color: #0088aa; } /* +60° (dark peacock) */
+.ocean.state-6    { background-color: #e6f9ff; } /* pale ice */
+.ocean.state-6-on { background-color: #00aacc; } /* +60° (dark cyan) */
+
+/* Forest - Extreme Contrast */
+.forest.state-1    { background-color: #e6ffe6; } /* pale mint */
+.forest.state-1-on { background-color: #004d00; } /* +60° (dark hunter green) */
+.forest.state-2    { background-color: #ccffcc; } /* light mint */
+.forest.state-2-on { background-color: #006600; } /* +60° (dark emerald) */
+.forest.state-3    { background-color: #99ff99; } /* bright mint */
+.forest.state-3-on { background-color: #008000; } /* +60° (dark forest green) */
+.forest.state-4    { background-color: #ccffb3; } /* light lime */
+.forest.state-4-on { background-color: #336600; } /* +60° (dark olive) */
+.forest.state-5    { background-color: #e6ffcc; } /* pale lime */
+.forest.state-5-on { background-color: #4d6600; } /* +60° (dark moss) */
+.forest.state-6    { background-color: #f2ffe6; } /* barely green */
+.forest.state-6-on { background-color: #5c8c00; } /* +60° (dark chartreuse) */
+
+/* Sky - Extreme Contrast */
+.sky.state-1    { background-color: #f0f9ff; } /* white-blue */
+.sky.state-1-on { background-color: #005c99; } /* +60° (dark steel blue) */
+.sky.state-2    { background-color: #d9f2ff; } /* pale blue */
+.sky.state-2-on { background-color: #0073b3; } /* +60° (dark cerulean) */
+.sky.state-3    { background-color: #b3e6ff; } /* light blue */
+.sky.state-3-on { background-color: #0088cc; } /* +60° (dark azure) */
+.sky.state-4    { background-color: #8cd9ff; } /* medium blue */
+.sky.state-4-on { background-color: #0099e6; } /* +60° (dark sky blue) */
+.sky.state-5    { background-color: #66ccff; } /* bright blue */
+.sky.state-5-on { background-color: #00aaff; } /* +60° (dark electric blue) */
+.sky.state-6    { background-color: #4dc3ff; } /* vivid blue */
+.sky.state-6-on { background-color: #00bbff; } /* +60° (dark cyan-blue) */
+
+/* Gum - Extreme Contrast */
+.gum.state-1    { background-color: #ffe6ff; } /* pale pink */
+.gum.state-1-on { background-color: #990073; } /* +60° (dark magenta) */
+.gum.state-2    { background-color: #ffccff; } /* light pink */
+.gum.state-2-on { background-color: #b30086; } /* +60° (dark fuchsia) */
+.gum.state-3    { background-color: #ff99ff; } /* medium pink */
+.gum.state-3-on { background-color: #cc0099; } /* +60° (dark rose) */
+.gum.state-4    { background-color: #ffb3ff; } /* bright pink */
+.gum.state-4-on { background-color: #e600ac; } /* +60° (dark hot pink) */
+.gum.state-5    { background-color: #ff66ff; } /* vivid pink */
+.gum.state-5-on { background-color: #ff00bf; } /* +60° (dark deep pink) */
+.gum.state-6    { background-color: #ff80ff; } /* neon pink */
+.gum.state-6-on { background-color: #ff00d5; } /* +60° (dark purple-pink) */
+
+/* Stellar - Extreme Contrast */
+.stellar.state-1    { background-color: #f0ffff; } /* white-cyan */
+.stellar.state-1-on { background-color: #008080; } /* +60° (dark teal) */
+.stellar.state-2    { background-color: #e6ffe6; } /* white-green */
+.stellar.state-2-on { background-color: #006600; } /* +60° (dark emerald) */
+.stellar.state-3    { background-color: #ffffe6; } /* white-yellow */
+.stellar.state-3-on { background-color: #999900; } /* +60° (dark olive) */
+.stellar.state-4    { background-color: #fffff0; } /* white */
+.stellar.state-4-on { background-color: #666633; } /* +60° (dark khaki) */
+.stellar.state-5    { background-color: #f5f5f5; } /* light gray */
+.stellar.state-5-on { background-color: #4d4d4d; } /* +60° (dark gray) */
+.stellar.state-6    { background-color: #e6e6e6; } /* medium gray */
+.stellar.state-6-on { background-color: #333333; } /* +60° (charcoal) */
+
+        
+        /* Options panel */
+        .options-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0;
+            justify-content: center;
+        }
+        .option-group {
+            display: flex;
+            flex-direction: column;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .share-link {
+            margin-top: 10px;
+            display: flex;
+            gap: 5px;
+        }
+        #shareUrl {
+            width: 300px;
+        }
+        .color-schemes {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+        }
+        .color-scheme-option {
+            display: flex;
+            align-items: center;
         }
     </style>
 </head>
@@ -73,10 +217,42 @@
 
     <!-- Input for transitions -->
     <label for="transitionInput">Enter Transitions:</label>
-    <textarea id="transitionInput" rows="4" cols="50">2;R;1|3;L;1|1;L;1|2;R;1|2;L;1|0;L;1</textarea><br>
-	<!--	2;R;1|0;L;0|2;L;1|3;R;0|3;L;1|1;L;1    </textarea><br> --->
-
+    <textarea id="transitionInput" rows="4" cols="50">3;L;1|1;R;0|0;L;0|3;LL;0|1;RR;1|2;L;1</textarea><br>
+    <!--   3;L;1|1;R;0|0;L;0|3;LL;0|1;RR;1|2;L;1   2;R;1|3;L;1|1;L;1|2;R;1|2;L;1|0;L;1 -->
+    <div class="options-panel">
+        <div class="option-group">
+            <label><input type="checkbox" id="animateCheckbox"> Animate</label>
+            <label>Speed: <input type="range" id="speedSlider" min="10" max="500" value="400"></label>
+        </div>
+        <div class="option-group">
+            <label><input type="checkbox" id="colorStatesCheckbox"> Color States</label>
+            <div>
+                <label><input type="radio" name="colorMethod" value="current" checked> Current State</label>
+                <label><input type="radio" name="colorMethod" value="persistent"> Persistent</label>
+            </div>
+        </div>
+        <div class="option-group">
+            <label>Color Scheme:</label>
+            <div class="color-schemes">
+                <label class="color-scheme-option"><input type="radio" name="colorScheme" value="rgb" checked> RGB</label>
+                <label class="color-scheme-option"><input type="radio" name="colorScheme" value="cmy"> CMY</label>
+                <label class="color-scheme-option"><input type="radio" name="colorScheme" value="flame"> Flame</label>
+                <label class="color-scheme-option"><input type="radio" name="colorScheme" value="ocean"> Ocean</label>
+                <label class="color-scheme-option"><input type="radio" name="colorScheme" value="forest"> Forest</label>
+                <label class="color-scheme-option"><input type="radio" name="colorScheme" value="sky"> Sky</label>
+                <label class="color-scheme-option"><input type="radio" name="colorScheme" value="gum"> Gum</label>
+                <label class="color-scheme-option"><input type="radio" name="colorScheme" value="stellar"> Stellar</label>
+            </div>
+        </div>
+    </div>
+    
     <button onclick="runSimulation()">Run Simulation</button>
+    <button onclick="generateShareLink()">Generate Share Link</button>
+    
+    <div class="share-link">
+        <input type="text" id="shareUrl" readonly>
+        <button onclick="copyShareLink()">Copy</button>
+    </div>
 
     <h2>Simulation Result</h2>
     <p id="stepsOutput"></p>
@@ -86,7 +262,7 @@
     <div id="histogram" class="histogram-container"></div>
 
     <script>
- const Move = {
+        const Move = {
             LEFT: 'L',
             RIGHT: 'R',
             LLEFT: 'LL',
@@ -95,6 +271,10 @@
             JUMP: 'J'
         };
 
+        // Track visited states for persistent coloring
+        let stateHistory = [];
+        let cellStates = {}; // Track which state last modified each cell
+        let cellValues = {}; // Track cell values for on/off coloring
 
         function parseTransitions(input) {
             return input.split('|').map(transitionStr => {
@@ -106,10 +286,65 @@
                 };
             });
         }
-        function runSimulation() {
+
+        function loadBeaverFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const beaver = urlParams.get('beaver');
+            if (beaver) {
+                document.getElementById('transitionInput').value = decodeURIComponent(beaver);
+            }
+            
+            // Load other parameters
+            const animate = urlParams.get('animate');
+            if (animate) document.getElementById('animateCheckbox').checked = animate === 'true';
+            
+            const speed = urlParams.get('speed');
+            if (speed) document.getElementById('speedSlider').value = speed;
+            
+            const colorStates = urlParams.get('colorStates');
+            if (colorStates) document.getElementById('colorStatesCheckbox').checked = colorStates === 'true';
+            
+            const scheme = urlParams.get('scheme');
+            if (scheme) document.querySelector(`input[name="colorScheme"][value="${scheme}"]`).checked = true;
+            
+            const method = urlParams.get('method');
+            if (method) document.querySelector(`input[name="colorMethod"][value="${method}"]`).checked = true;
+        }
+
+        function generateShareLink() {
+            const baseUrl = window.location.href.split('?')[0];
+            const beaver = encodeURIComponent(document.getElementById('transitionInput').value);
+            const animate = document.getElementById('animateCheckbox').checked;
+            const speed = document.getElementById('speedSlider').value;
+            const colorStates = document.getElementById('colorStatesCheckbox').checked;
+            const scheme = document.querySelector('input[name="colorScheme"]:checked').value;
+            const method = document.querySelector('input[name="colorMethod"]:checked').value;
+         
+            const url = `${baseUrl}?beaver=${beaver}&animate=${animate}&speed=${speed}&colorStates=${colorStates}&scheme=${scheme}&method=${method}`;
+            document.getElementById('shareUrl').value = url;
+        }
+
+        function copyShareLink() {
+            const shareUrl = document.getElementById('shareUrl');
+            shareUrl.select();
+            document.execCommand('copy');
+            alert('Link copied to clipboard!');
+        }
+
+        async function runSimulation() {
+            // Reset state tracking
+            stateHistory = [];
+            cellStates = {};
+            cellValues = {};
+            
             const input = document.getElementById('transitionInput').value;
             const transitions = parseTransitions(input);
-let oldtapeHead=0;
+            const animate = document.getElementById('animateCheckbox').checked;
+            const speed = parseInt(document.getElementById('speedSlider').value);
+            const colorStates = document.getElementById('colorStatesCheckbox').checked;
+            const colorScheme = document.querySelector('input[name="colorScheme"]:checked').value;
+            const colorMethod = document.querySelector('input[name="colorMethod"]:checked').value;
+                 const histogramContainer = document.getElementById('histogram');
             let positiveTape = [0];
             let negativeTape = [0];
             let tapeHead = 0;
@@ -118,6 +353,7 @@ let oldtapeHead=0;
             let totalShifts = 0;
             let maxDistFromOrigin = 0;
             let totalOn = 0;
+            let oldtapeHead = 0;
 
             // Clear the previous histogram
             document.getElementById('histogram').innerHTML = '';
@@ -132,14 +368,20 @@ let oldtapeHead=0;
                     currentTape.fill(0, currentTape.length - 1);
                 }
 
-				currentTape[index] = currentTape[index] || 0;
+                currentTape[index] = currentTape[index] || 0;
                 let currentValue = currentTape[index];
                 let t = transitions[(currentState - 1) * 2 + currentValue];
 
                 // Write the value
-				console.log(currentValue)
                 currentTape[index] = t.write;
+                cellValues[`${tapeHead >= 0 ? 'p' : 'n'}${index}`] = t.write;
                 if (t.write === 1) totalOn++;
+                
+                // Track which state modified this cell
+                if (colorMethod === 'persistent') {
+                    const cellKey = `${tapeHead >= 0 ? 'p' : 'n'}${index}`;
+                    cellStates[cellKey] = currentState;
+                }
 
                 // Move the tape head
                 if (t.move === Move.LEFT) {
@@ -147,15 +389,39 @@ let oldtapeHead=0;
                 } else if (t.move === Move.RIGHT) {
                     tapeHead++;
                 } else if (t.move === Move.LLEFT) {
-				
                     tapeHead -= 2;
-				currentTape[Math.abs(tapeHead+1)]=currentTape[Math.abs(tapeHead+1)]|0;
+                    currentTape[Math.abs(tapeHead+1)] = currentTape[Math.abs(tapeHead+1)] | 0;
                 } else if (t.move === Move.RRIGHT) {
                     tapeHead += 2;
-				currentTape[Math.abs(tapeHead-1)]=currentTape[Math.abs(tapeHead-1)]|0;
+                    currentTape[Math.abs(tapeHead-1)] = currentTape[Math.abs(tapeHead-1)] | 0;
+                } else if (t.move === Move.JUMP) {
+                    let foundOne = false;
+                    // Search negative tape first (right to left)
+                    for (let i = negativeTape.length - 1; i >= 0; --i) {
+                        if (negativeTape[i] === 1) {
+                            tapeHead = -i;
+                            foundOne = true;
+                            break;
+                        }
+                    }
+                    if (!foundOne) {
+                        // Search positive tape (left to right)
+                        for (let i = 0; i < positiveTape.length; ++i) {
+                            if (positiveTape[i] === 1) {
+                                tapeHead = i;
+                                foundOne = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!foundOne) {
+                        // No 1 found anywhere, halt
+                        currentState = 0;
+                    }
                 }
 
                 // Update the state
+                stateHistory.push(currentState);
                 currentState = t.nextState;
                 stepCount++;
                 totalShifts++;
@@ -164,10 +430,22 @@ let oldtapeHead=0;
                 maxDistFromOrigin = Math.max(maxDistFromOrigin, Math.abs(tapeHead));
 
                 // Draw the histogram row for this step
-                drawHistogramRow(positiveTape, negativeTape, oldtapeHead);
-				oldtapeHead=tapeHead;
+                drawHistogramRow(
+                    positiveTape, 
+                    negativeTape, 
+                    oldtapeHead, 
+                    colorStates ? currentState : 0,
+                    colorScheme,
+                    colorMethod
+                );
+                oldtapeHead = tapeHead;
+
+                // If animation is enabled, add a delay
+                   if (animate && currentState !== 0) {
+            histogramContainer.scrollTop = histogramContainer.scrollHeight;
+            await new Promise(resolve => setTimeout(resolve, 510 - speed));
+        }
             }
-			
 
             // Output the result
             if (currentState === 0) {
@@ -185,52 +463,72 @@ let oldtapeHead=0;
             document.getElementById('shiftsOutput').textContent += ` | Max Distance from Origin: ${maxDistFromOrigin}`;
         }
 
-function drawHistogramRow(positiveTape, negativeTape, tapeHead) {
-    const histogramContainer = document.getElementById('histogram');
+        function drawHistogramRow(positiveTape, negativeTape, tapeHead, currentState, colorScheme, colorMethod) {
+            const histogramContainer = document.getElementById('histogram');
+            const maxLength = Math.max(positiveTape.length, negativeTape.length);
+            let histogramRow = '';
 
-    // Find the maximum length of both tapes
-    const maxLength = Math.max(positiveTape.length, negativeTape.length);
+            // Draw the negative tape part (left side), pad with invisible boxes if needed
+            for (let i = 0; i < maxLength - negativeTape.length; i++) {
+                histogramRow += `<div class="box invisible"></div>`;
+            }
 
-    let histogramRow = '';
+            negativeTape.forEach((value, index) => {
+                let boxClass = value === 1 ? 'box-1' : 'box-0';
+                if (tapeHead < 0 && index === negativeTape.length + tapeHead) {
+                    boxClass += '-head';
+                }
+                
+                // Determine state class
+                let stateClass = '';
+                if (currentState > 0) {
+                    const cellKey = `n${index}`;
+                    const stateForCell = colorMethod === 'persistent' ? (cellStates[cellKey] || 0) : currentState;
+                    if (stateForCell > 0) {
+                        const cellValue = cellValues[cellKey] || 0;
+                        stateClass = `${colorScheme} state-${stateForCell}${cellValue === 1 ? '-on' : ''}`;
+                    }
+                }
+                
+                if (index !== 0) {
+                    histogramRow += `<div class="box ${boxClass} ${stateClass}"></div>`;
+                }
+            });
 
-    // Draw the negative tape part (left side), pad with invisible boxes if needed
-    for (let i = 0; i < maxLength - negativeTape.length; i++) {
-        histogramRow += `<div class="box invisible"></div>`; // Invisible boxes for padding
-    }
+            histogramRow += '<div style="width: 1px;"></div>';
+           
+            positiveTape.forEach((value, index) => {
+                let boxClass = value === 1 ? 'box-1' : 'box-0';
+                if (tapeHead >= 0 && index === tapeHead) {
+                    boxClass += '-head';
+                }
+                
+                // Determine state class
+                let stateClass = '';
+                if (currentState > 0) {
+                    const cellKey = `p${index}`;
+                    const stateForCell = colorMethod === 'persistent' ? (cellStates[cellKey] || 0) : currentState;
+                    if (stateForCell > 0) {
+                        const cellValue = cellValues[cellKey] || 0;
+                        stateClass = `${colorScheme} state-${stateForCell}${cellValue === 1 ? '-on' : ''}`;
+                    }
+                }
+                
+                histogramRow += `<div class="box ${boxClass} ${stateClass}"></div>`;
+            });
 
-    negativeTape.forEach((value, index) => {
-        let boxClass = value === 1 ? 'box-1' : 'box-0';
-console.log(negativeTape.length-tapeHead)
-        // Check if this is the tape head position
-        if (tapeHead < 0 && index === negativeTape.length+tapeHead) {
-            boxClass += '-head';
+            for (let i = 0; i < maxLength - positiveTape.length; i++) {
+                histogramRow += `<div class="box invisible"></div>`;
+            }
+
+            const newRow = document.createElement('div');
+            newRow.className = 'histogram-row';
+            newRow.innerHTML = histogramRow;
+            histogramContainer.appendChild(newRow);
         }
-		if(index!=0)
-        histogramRow += `<div class="box ${boxClass}"></div>`;
-    });
-histogramRow += '<div style="width: 1px;"></div>';
-   
-    positiveTape.forEach((value, index) => {
-        let boxClass = value === 1 ? 'box-1' : 'box-0';
 
-        // Check if this is the tape head position
-        if (tapeHead >= 0 && index === tapeHead) {
-            boxClass += '-head';
-        }
-
-        histogramRow += `<div class="box ${boxClass}"></div>`;
-    });
-
-    for (let i = 0; i < maxLength - positiveTape.length; i++) {
-        histogramRow += `<div class="box invisible"></div>`;
-    }
-
-    // Display the histogram row
-    const newRow = document.createElement('div');
-    newRow.className = 'histogram-row';
-    newRow.innerHTML = histogramRow;
-    histogramContainer.appendChild(newRow);
-}
+        // Load beaver from URL on page load
+        window.onload = loadBeaverFromURL;
     </script>
 </body>
 </html>

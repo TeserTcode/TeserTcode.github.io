@@ -391,6 +391,10 @@ background-color: #eeeeee;
     <button id="btn-negative-positive">-+</button>
     <button id="btn-zero-positive">0+</button>
     <button id="btn-negative-one-positive-one">1</button>
+   <!--  <button id="btn-negative-one-positive-one3">3</button>-->
+   <!-- <button id="btn-negative-one-positive-one5">5</button>-->
+    <button id="btn-negative-one-positive-one7">7</button>
+   <!--  <button id="btn-negative-one-positive-one10">10</button> -->
 </div>
     <button id="createMeshButton">Create Mesh and Animate</button>
 	<button id="createMeshButtonsph">Create Spherical Mesh and Animate</button>
@@ -1287,6 +1291,31 @@ let thick = parseFloat(document.getElementById('thick').value);
         document.getElementById('min-imag').value = -1;
         document.getElementById('max-imag').value = 1;
     });
+    /*
+        document.getElementById('btn-negative-one-positive-one3').addEventListener('click', function() {
+        document.getElementById('min-real').value = -3;
+        document.getElementById('max-real').value = 3;
+        document.getElementById('min-imag').value = -3;
+        document.getElementById('max-imag').value = 3;
+    });
+        document.getElementById('btn-negative-one-positive-one5').addEventListener('click', function() {
+        document.getElementById('min-real').value = -5;
+        document.getElementById('max-real').value = 5;
+        document.getElementById('min-imag').value = -5;
+        document.getElementById('max-imag').value = 5;
+    });*/
+        document.getElementById('btn-negative-one-positive-one7').addEventListener('click', function() {
+        document.getElementById('min-real').value = -7;
+        document.getElementById('max-real').value = 7;
+        document.getElementById('min-imag').value = -7;
+        document.getElementById('max-imag').value = 7;
+    });/*
+        document.getElementById('btn-negative-one-positive-one10').addEventListener('click', function() {
+        document.getElementById('min-real').value = -10;
+        document.getElementById('max-real').value = 10;
+        document.getElementById('min-imag').value = -10;
+        document.getElementById('max-imag').value = 10;
+    });*/
  const canvas = document.getElementById('bmpCanvas');
 
         const container = document.getElementById('canvasContainer');
