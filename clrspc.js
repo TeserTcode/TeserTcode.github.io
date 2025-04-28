@@ -1,4 +1,12 @@
 
+function rgbToHex(r, g, b) {
+  function toHex(x) {
+    const hex = x.toString(16);
+    return hex.length === 1 ? "0" + hex : hex;
+  }
+
+  return "#" + toHex(r) + toHex(g) + toHex(b);
+}
 
 function cielabf(t) {
     const threshold = Math.pow(6.0 / 29.0, 3);
@@ -2009,9 +2017,35 @@ return [
 }
 
 
+
+
+
+
+ if (colorMode === 'pcontour') {
+	
+ 	const contourThreshold=contourThresholdd * mag(deriv);
+    const reDiff = Math.abs((arg(complexOutput)*8/3.14159265) % 1);
+    const imDiff = mag(complexOutput) % 1;
+ 
+    const doubleThreshold = contourThreshold * 1;
+    const halfThreshold = Math.min(Math.abs(complexInput.re % 1), Math.abs(complexInput.im % 1));
+
+if(reDiff*mag(complexOutput)<doubleThreshold)return [255, 0, 0];
+if(imDiff<doubleThreshold)return [ 0,255, 0];
+
+    if (halfThreshold < contourThresholdd/2) return [128, 128, 128];
+    return [255, 255, 255]; 
+}
+
+
+ const lightnessValue = teth.evaluate(magnitudeToLightnessExpr, { x: magnitude, z: complexOutput , c: complexInput , t: arg(complexOutput) , r: magnitude });
+    const chroma = saturationChroma;
+    const lightnessAdjusted = lightnessValue * lightness;
+
+
 if (colorMode === 'acontour') {
 	const dd=1;
-    const lightnessValue = teth.evaluate(magnitudeToLightnessExpr, { x: magnitude });
+
         const chroma = saturationChroma;
     const lightnessAdjusted = lightnessValue * lightness;
  const ccomplexOutput=div(complexOutput,(lightnessAdjusted / mag(complexOutput)))
@@ -2043,29 +2077,6 @@ return [
 
 
 
-
-
-
- if (colorMode === 'pcontour') {
-	
- 	const contourThreshold=contourThresholdd * mag(deriv);
-    const reDiff = Math.abs((arg(complexOutput)*8/3.14159265) % 1);
-    const imDiff = mag(complexOutput) % 1;
- 
-    const doubleThreshold = contourThreshold * 1;
-    const halfThreshold = Math.min(Math.abs(complexInput.re % 1), Math.abs(complexInput.im % 1));
-
-if(reDiff*mag(complexOutput)<doubleThreshold)return [255, 0, 0];
-if(imDiff<doubleThreshold)return [ 0,255, 0];
-
-    if (halfThreshold < contourThresholdd/2) return [128, 128, 128];
-    return [255, 255, 255]; 
-}
-
-
- const lightnessValue = teth.evaluate(magnitudeToLightnessExpr, { x: magnitude });
-    const chroma = saturationChroma;
-    const lightnessAdjusted = lightnessValue * lightness;
 
     if (colorMode === 'hsv' || colorMode === 'hsl') {
         return colorMode === 'hsv'
@@ -2122,10 +2133,19 @@ if (colorMode === 'imag') {
 
 
 
+if (colorMode === 'freergb') {
+return lightnessValue;
 
+}
 
+if (colorMode === 'freehsv') {
+return hsvToRgb(g(lightnessValue,0),g(lightnessValue,1),g(lightnessValue,2));
 
+}
+if (colorMode === 'freehsl') {
+return hslToRgb(g(lightnessValue,0),g(lightnessValue,1),g(lightnessValue,2));
 
+}
 
 if (colorMode === 'isolines') {
     const phaseDiff = Math.abs(phase % (2 * Math.PI) - Math.PI); // Difference from a reference phase
@@ -2173,7 +2193,7 @@ if (colorMode === 'magnitude') {
 }
 if (colorMode === 'magnitudecolour') {
    // const normMagnitude = Math.min(magnitude / 10, 1); // Normalize magnitude
-    const lightnessValue = teth.evaluate(magnitudeToLightnessExpr, { x: magnitude });
+    const lightnessValue =lightnessAdjusted //teth.evaluate(magnitudeToLightnessExpr, { x: magnitude, z: });
     return hsvToRgb(lightnessValue*100,100,Math.max(lightnessValue,50))
 }
 
@@ -2246,7 +2266,16 @@ if (colorMode === 'quadrant') {
 return [0,0,0];
 }
 
-
+if (colorMode === 'upperplanebw') {
+    if(complexOutput.im > 0)
+        return [255,255,255];
+return [0,0,0];
+}
+if (colorMode === 'unitcirclebw') {
+    if(mag(complexOutput) < 1)
+        return [255,255,255];
+return [0,0,0];
+}
 if (colorMode === 'trisect') {return getSectorColor(complexOutput, 'sector3');}
 if (colorMode === 'hexasect') {return getSectorColor(complexOutput, 'sector6');}
 if (colorMode === 'octant') {return getSectorColor(complexOutput, 'sector8');}

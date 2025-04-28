@@ -1,0 +1,1557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Paint App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f5f5f5;
+        }
+        
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            max-width: 1200px;
+        }
+        
+        #main-area {
+            display: flex;
+            gap: 10px;
+        }
+        
+        #left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 250px;
+        }
+        
+        #tools-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 10px;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        
+        .tool-section {
+            margin-bottom: 15px;
+        }
+        
+        .tool-section h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        
+        #canvas-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: white;
+            border: 2px solid #333;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 10px;
+        }
+        
+        #canvas {
+            background-color: white;
+            cursor: crosshair;
+            border: 1px solid #ddd;
+        }
+        
+        .tool-btn {
+            padding: 8px;
+            border: 1px solid #ccc;
+            background-color: white;
+            cursor: pointer;
+            border-radius: 4px;
+            margin: 2px;
+            font-size: 14px;
+        }
+        
+        .tool-btn.active {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        
+        .tool-btn:hover {
+            background-color: #e9e9e9;
+        }
+        
+        .tool-btn.active:hover {
+            background-color: #45a049;
+        }
+        
+        #color-picker {
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: white;
+            border-radius: 5px;
+        }
+        
+        #color-preview {
+            width: 100%;
+            height: 40px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        
+        .color-mode-selector {
+            margin-bottom: 10px;
+        }
+        
+        .color-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .color-input {
+            display: flex;
+            align-items: center;
+        }
+        
+        .color-input label {
+            width: 40px;
+            font-size: 14px;
+        }
+        
+        .color-input input {
+            flex-grow: 1;
+        }
+        
+        .color-input span {
+            width: 40px;
+            text-align: right;
+            font-size: 14px;
+        }
+        
+        #file-ops {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .file-btn {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .file-btn:hover {
+            background-color: #45a049;
+        }
+        
+        select, input[type="range"] {
+            width: 100%;
+        }
+        
+        #brush-settings {
+            margin-top: 10px;
+        }
+        
+        #palette {
+            display: grid;
+            grid-template-columns: repeat(16, 1fr);
+            grid-template-rows: repeat(4, 20px);
+            gap: 1px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+        }
+        
+        .palette-color {
+            cursor: pointer;
+        }
+        
+        #color-visualization {
+            margin-top: 15px;
+            position: relative;
+        }
+        
+        #color-square {
+            width: 200px;
+            height: 200px;
+            border: 1px solid #ccc;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #color-square-cursor {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border: 2px solid white;
+            border-radius: 50%;
+            pointer-events: none;
+            box-shadow: 0 0 2px rgba(0,0,0,0.5);
+        }
+        
+        #color-bar {
+            width: 200px;
+            height: 20px;
+            margin-top: 5px;
+            position: relative;
+            border: 1px solid #ccc;
+        }
+        
+        #color-bar-cursor {
+            position: absolute;
+            width: 8px;
+            height: 24px;
+            top: -2px;
+            border: 2px solid white;
+            pointer-events: none;
+            box-shadow: 0 0 2px rgba(0,0,0,0.5);
+        }
+        
+        #color-radial {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 1px solid #ccc;
+            position: relative;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        #color-radial-cursor {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border: 2px solid white;
+            border-radius: 50%;
+            pointer-events: none;
+            box-shadow: 0 0 2px rgba(0,0,0,0.5);
+        }
+        
+        #execution-panel {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        
+        #code-editor {
+            width: 100%;
+            height: 100px;
+            font-family: monospace;
+            margin-bottom: 5px;
+            resize: vertical;
+        }
+        
+        #execution-buttons {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+        
+        .page-btn {
+            padding: 5px 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        .page-btn.active {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        
+        #fill-settings {
+            margin-top: 10px;
+        }
+        
+        #canvas-size {
+            margin-top: 10px;
+        }
+        
+        #api-snippets {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .snippet-btn {
+            padding: 3px 6px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: monospace;
+        }
+        
+        .history-btn {
+            padding: 5px 10px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        .history-btn:hover {
+            background-color: #0b7dda;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <h1>Advanced Paint App</h1>
+        
+        <div id="main-area">
+            <div id="left-panel">
+                <div id="tools-panel">
+                    <div class="tool-section">
+                        <h3>Tools</h3>
+                        <button id="pen-tool" class="tool-btn active">Pen</button>
+                        <button id="brush-tool" class="tool-btn">Brush</button>
+                        <button id="paintbucket-tool" class="tool-btn">Paint Bucket</button>
+                        <button id="colorpicker-tool" class="tool-btn">Color Picker</button>
+                    </div>
+                    
+                    <div id="brush-settings" class="tool-section">
+                        <h3>Brush Settings</h3>
+                        <div class="color-input">
+                            <label>Size:</label>
+                            <input type="range" id="brush-size" min="1" max="50" value="5">
+                            <span id="brush-size-value">5</span>
+                        </div>
+                        <div class="color-input">
+                            <label>Hardness:</label>
+                            <input type="range" id="brush-hardness" min="1" max="100" value="100">
+                            <span id="brush-hardness-value">100%</span>
+                        </div>
+                    </div>
+                    
+                    <div id="fill-settings" class="tool-section">
+                        <h3>Fill Settings</h3>
+                        <div class="color-input">
+                            <label>Tolerance:</label>
+                            <input type="range" id="fill-tolerance" min="0" max="100" value="0">
+                            <span id="fill-tolerance-value">0</span>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="continuous-tolerance" checked>
+                            <label for="continuous-tolerance">Continuous Tolerance</label>
+                        </div>
+                    </div>
+                    
+                    <div id="canvas-size" class="tool-section">
+                        <h3>Canvas Size</h3>
+                        <div class="color-input">
+                            <label>Width:</label>
+                            <input type="number" id="canvas-width" min="100" max="2000" value="800">
+                        </div>
+                        <div class="color-input">
+                            <label>Height:</label>
+                            <input type="number" id="canvas-height" min="100" max="2000" value="600">
+                        </div>
+                        <button id="resize-btn" class="file-btn">Resize</button>
+                    </div>
+                    
+                    <div class="tool-section">
+                        <h3>History</h3>
+                        <button id="undo-btn" class="history-btn">Undo</button>
+                        <span id="undo-count">(0 steps)</span>
+                    </div>
+                </div>
+                
+                <div id="color-picker">
+                    <h3>Color Picker</h3>
+                    <div id="color-preview"></div>
+                    
+                    <div class="color-mode-selector">
+                        <label for="color-space">Color Space:</label>
+                        <select id="color-space">
+                            <option value="rgb">RGB</option>
+                            <option value="hsl">HSL</option>
+                            <option value="hsv">HSV</option>
+                            <option value="hsi">HSI</option>
+                            <option value="hsm">HSM</option>
+                            <option value="hsg">HSG</option>
+                            <option value="hsh">HSh</option>
+                            <option value="hwb">HWB</option>
+                            <option value="hcl">HCL</option>
+                            <option value="lch">LCh</option>
+                            <option value="xyz">XYZ</option>
+                            <option value="lab">LAB</option>
+                            <option value="lms">LMS</option>
+                            <option value="srgb">sRGB</option>
+                        </select>
+                    </div>
+                    
+                    <div class="color-mode-selector">
+                        <label for="picker-style">Picker Style:</label>
+                        <select id="picker-style">
+                            <option value="bars">3 Bars</option>
+                            <option value="p1-square">P1 + P2×P3</option>
+                            <option value="p2-square">P2 + P1×P3</option>
+                            <option value="p3-square">P3 + P1×P2</option>
+                            <option value="radial-sat">Radial (Sat)</option>
+                            <option value="radial-val">Radial (Val)</option>
+                        </select>
+                    </div>
+                    
+                    <div id="rgb-inputs" class="color-inputs">
+                        <div class="color-input">
+                            <label>R:</label>
+                            <input type="range" id="red" min="0" max="255" value="0">
+                            <span id="red-value">0</span>
+                        </div>
+                        <div class="color-input">
+                            <label>G:</label>
+                            <input type="range" id="green" min="0" max="255" value="0">
+                            <span id="green-value">0</span>
+                        </div>
+                        <div class="color-input">
+                            <label>B:</label>
+                            <input type="range" id="blue" min="0" max="255" value="0">
+                            <span id="blue-value">0</span>
+                        </div>
+                    </div>
+                    
+                    <div id="hsl-inputs" class="color-inputs" style="display: none;">
+                        <div class="color-input">
+                            <label>H:</label>
+                            <input type="range" id="hue" min="0" max="360" value="0">
+                            <span id="hue-value">0</span>
+                        </div>
+                        <div class="color-input">
+                            <label>S:</label>
+                            <input type="range" id="saturation" min="0" max="100" value="0">
+                            <span id="saturation-value">0%</span>
+                        </div>
+                        <div class="color-input">
+                            <label>L:</label>
+                            <input type="range" id="lightness" min="0" max="100" value="0">
+                            <span id="lightness-value">0%</span>
+                        </div>
+                    </div>
+                    
+                    <div id="hsv-inputs" class="color-inputs" style="display: none;">
+                        <div class="color-input">
+                            <label>H:</label>
+                            <input type="range" id="hue-hsv" min="0" max="360" value="0">
+                            <span id="hue-hsv-value">0</span>
+                        </div>
+                        <div class="color-input">
+                            <label>S:</label>
+                            <input type="range" id="saturation-hsv" min="0" max="100" value="0">
+                            <span id="saturation-hsv-value">0%</span>
+                        </div>
+                        <div class="color-input">
+                            <label>V:</label>
+                            <input type="range" id="value" min="0" max="100" value="0">
+                            <span id="value-value">0%</span>
+                        </div>
+                    </div>
+                    
+                    <div id="color-visualization">
+                        <div id="color-square" style="display: none;"></div>
+                        <div id="color-square-cursor"></div>
+                        <div id="color-bar" style="display: none;"></div>
+                        <div id="color-bar-cursor"></div>
+                        <div id="color-radial" style="display: none;"></div>
+                        <div id="color-radial-cursor"></div>
+                    </div>
+                    <div class="palette-options">
+    <label>Palette Style:</label>
+    <select id="palette-type">
+        <option value="default">Default</option>
+        <option value="pastel">Pastel</option>
+        <option value="vibrant">Vibrant</option>
+    </select>
+</div>
+                    <div id="palette"></div>
+                </div>
+                
+                <div id="execution-panel">
+                    <h3>Scripting</h3>
+                    <textarea id="code-editor"></textarea>
+                    <div id="api-snippets">
+                        <button class="snippet-btn" data-snippet="api.move(,,,)">move</button>
+                        <button class="snippet-btn" data-snippet="api.brush(,)">brush</button>
+                        <button class="snippet-btn" data-snippet="api.color(,,)">color</button>
+                        <button class="snippet-btn" data-snippet="api.fill(,)">fill</button>
+                        <button class="snippet-btn" data-snippet="api.goto(,)">goto</button>
+                    </div>
+                    <button id="execute-btn" class="file-btn">Draw</button>
+                    <div id="execution-buttons">
+                        <button class="page-btn active" data-page="0">Page 1</button>
+                        <button class="page-btn" data-page="1">Page 2</button>
+                        <button class="page-btn" data-page="2">Page 3</button>
+                        <button class="page-btn" data-page="3">Page 4</button>
+                        <button class="page-btn" data-page="4">Page 5</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="canvas-container">
+                <canvas id="canvas" width="800" height="600"></canvas>
+            </div>
+        </div>
+        
+        <div id="file-ops">
+            <button id="download-btn" class="file-btn">Download</button>
+            <button id="clear-btn" class="file-btn">Clear Canvas</button>
+            <input type="file" id="upload-input" accept="image/*" style="display: none;">
+            <button id="upload-btn" class="file-btn">Upload Image</button>
+        </div>
+    </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+      <script src="mthfnc.js"></script>
+    <script src="clrspc.js"></script>
+    <!-- Include math functions library -->
+ 
+
+    <script>
+    function rgbToHex3(r, g, b) {
+    // Ensure values are integers between 0-255
+    r = Math.max(0, Math.min(255, Math.round(r)));
+    g = Math.max(0, Math.min(255, Math.round(g)));
+    b = Math.max(0, Math.min(255, Math.round(b)));
+    
+    return '#' + [r, g, b].map(x => {
+        const hex = x.toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+    }).join('');
+}
+        // Canvas setup
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // State variables
+        let currentTool = 'pen';
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let currentColor = '#000000';
+        let brushSize = 5;
+        let brushHardness = 100;
+        let fillTolerance = 0;
+        let continuousTolerance = true;
+        let colorPickerMode = false;
+        
+        // History stack for undo functionality
+        let historyStack = [];
+        const MAX_HISTORY = 20;
+        
+        // Save current canvas state to history
+        function saveState() {
+            if (historyStack.length >= MAX_HISTORY) {
+                historyStack.shift();
+            }
+            historyStack.push(canvas.toDataURL());
+            updateUndoCount();
+        }
+        
+        // Undo last action
+        function undo() {
+            if (historyStack.length > 1) {
+                historyStack.pop(); // Remove current state
+                const lastState = historyStack[historyStack.length - 1];
+                const img = new Image();
+                img.onload = function() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = lastState;
+            }
+            updateUndoCount();
+        }
+        
+        function updateUndoCount() {
+            document.getElementById('undo-count').textContent = `(${historyStack.length - 1} steps)`;
+        }
+        
+        // Scripting pages
+        const scriptPages = ['', '', '', '', ''];
+        let currentPage = 0;
+        
+        // Tool buttons
+        const penToolBtn = document.getElementById('pen-tool');
+        const brushToolBtn = document.getElementById('brush-tool');
+        const paintBucketToolBtn = document.getElementById('paintbucket-tool');
+        const colorPickerToolBtn = document.getElementById('colorpicker-tool');
+        const undoBtn = document.getElementById('undo-btn');
+        
+        // Brush settings
+        const brushSizeInput = document.getElementById('brush-size');
+        const brushHardnessInput = document.getElementById('brush-hardness');
+        const brushSizeValue = document.getElementById('brush-size-value');
+        const brushHardnessValue = document.getElementById('brush-hardness-value');
+        
+        // Fill settings
+        const fillToleranceInput = document.getElementById('fill-tolerance');
+        const fillToleranceValue = document.getElementById('fill-tolerance-value');
+        const continuousToleranceInput = document.getElementById('continuous-tolerance');
+        
+        // Canvas size
+        const canvasWidthInput = document.getElementById('canvas-width');
+        const canvasHeightInput = document.getElementById('canvas-height');
+        const resizeBtn = document.getElementById('resize-btn');
+        
+        // Color picker elements
+        const colorPreview = document.getElementById('color-preview');
+        const colorSpaceSelect = document.getElementById('color-space');
+        const pickerStyleSelect = document.getElementById('picker-style');
+        
+        // RGB inputs
+        const redInput = document.getElementById('red');
+        const greenInput = document.getElementById('green');
+        const blueInput = document.getElementById('blue');
+        const redValue = document.getElementById('red-value');
+        const greenValue = document.getElementById('green-value');
+        const blueValue = document.getElementById('blue-value');
+
+        // Color visualization
+        const colorSquare = document.getElementById('color-square');
+        const colorSquareCursor = document.getElementById('color-square-cursor');
+        const colorBar = document.getElementById('color-bar');
+        const colorBarCursor = document.getElementById('color-bar-cursor');
+        const colorRadial = document.getElementById('color-radial');
+        const colorRadialCursor = document.getElementById('color-radial-cursor');
+        
+        // Palette
+        
+        const palette = document.getElementById('palette');
+        
+        // File operations
+        const downloadBtn = document.getElementById('download-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const uploadBtn = document.getElementById('upload-btn');
+        const uploadInput = document.getElementById('upload-input');
+        
+        // Execution panel
+        const codeEditor = document.getElementById('code-editor');
+        const executeBtn = document.getElementById('execute-btn');
+        const pageButtons = document.querySelectorAll('.page-btn');
+        const snippetButtons = document.querySelectorAll('.snippet-btn');
+        
+        // Initialize canvas with white background
+        function initCanvas() {
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            saveState();
+        }
+        
+        initCanvas();
+        
+        // Tool selection
+        function setActiveTool(tool) {
+            currentTool = tool;
+            colorPickerMode = tool === 'colorpicker';
+            
+            // Update button states
+            penToolBtn.classList.remove('active');
+            brushToolBtn.classList.remove('active');
+            paintBucketToolBtn.classList.remove('active');
+            colorPickerToolBtn.classList.remove('active');
+            
+            if (tool === 'pen') {
+                penToolBtn.classList.add('active');
+                canvas.style.cursor = 'crosshair';
+            } else if (tool === 'brush') {
+                brushToolBtn.classList.add('active');
+                canvas.style.cursor = 'crosshair';
+            } else if (tool === 'paintbucket') {
+                paintBucketToolBtn.classList.add('active');
+                canvas.style.cursor = 'pointer';
+            } else if (tool === 'colorpicker') {
+                colorPickerToolBtn.classList.add('active');
+                canvas.style.cursor = 'crosshair';
+            }
+        }
+        
+        // Event listeners for tools
+        penToolBtn.addEventListener('click', () => setActiveTool('pen'));
+        brushToolBtn.addEventListener('click', () => setActiveTool('brush'));
+        paintBucketToolBtn.addEventListener('click', () => setActiveTool('paintbucket'));
+        colorPickerToolBtn.addEventListener('click', () => setActiveTool('colorpicker'));
+        undoBtn.addEventListener('click', undo);
+        
+        // Brush settings
+        brushSizeInput.addEventListener('input', () => {
+            brushSize = parseInt(brushSizeInput.value);
+            brushSizeValue.textContent = brushSize;
+        });
+        
+        brushHardnessInput.addEventListener('input', () => {
+            brushHardness = parseInt(brushHardnessInput.value);
+            brushHardnessValue.textContent = brushHardness + '%';
+        });
+        
+        // Fill settings
+        fillToleranceInput.addEventListener('input', () => {
+            fillTolerance = parseInt(fillToleranceInput.value);
+            fillToleranceValue.textContent = fillTolerance;
+        });
+        
+        continuousToleranceInput.addEventListener('change', () => {
+            continuousTolerance = continuousToleranceInput.checked;
+        });
+        
+        // Canvas resize
+        resizeBtn.addEventListener('click', () => {
+            const width = parseInt(canvasWidthInput.value);
+            const height = parseInt(canvasHeightInput.value);
+            
+            if (width >= 100 && width <= 2000 && height >= 100 && height <= 2000) {
+                // Save current content
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.drawImage(canvas, 0, 0);
+                
+                // Resize canvas
+                canvas.width = width;
+                canvas.height = height;
+                
+                // Restore content
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, width, height);
+                ctx.drawImage(tempCanvas, 0, 0);
+                
+                saveState();
+            } else {
+                alert('Canvas size must be between 100 and 2000 pixels');
+            }
+        });
+        
+        // Color conversion functions now use the external clrspc.js library
+        
+        // Update color preview and current color
+function updateColor() {
+    let r, g, b;
+    const colorSpace = colorSpaceSelect.value;
+    
+    // Convert from current color space to RGB
+    if (colorSpace === 'rgb') {
+        r = parseInt(redInput.value);
+        g = parseInt(greenInput.value);
+        b = parseInt(blueInput.value);
+    } else {
+        // Get parameters based on color space name
+        const param1 = parseInt(redInput.value);   // First parameter (e.g., H in HSL)
+        const param2 = parseInt(greenInput.value); // Second parameter (e.g., S in HSL)
+        const param3 = parseInt(blueInput.value);  // Third parameter (e.g., L in HSL)
+        
+        // Convert to RGB using the appropriate function
+        const converter = window[`${colorSpace}ToRgb`];
+        if (converter) {
+            const rgb = converter(param1, param2, param3);
+            r = rgb[0];
+            g = rgb[1];
+            b = rgb[2];
+        } else {
+            // Fallback to RGB if converter doesn't exist
+            r = param1;
+            g = param2;
+            b = param3;
+        }
+    }
+    
+    // Update current color and preview
+    currentColor = rgbToHex3(r, g, b);
+    colorPreview.style.backgroundColor = currentColor;
+    ctx.fillStyle = currentColor;
+    ctx.strokeStyle = currentColor;
+    
+    // Update input labels based on color space
+    updateInputLabels();
+}
+
+function updateInputLabels() {
+    const colorSpace = colorSpaceSelect.value;
+    const labels = colorSpace.toUpperCase().split('');
+    
+    // Update the labels for the RGB inputs
+    document.querySelector('.color-input:nth-child(1) label').textContent = labels[0] + ':';
+    document.querySelector('.color-input:nth-child(2) label').textContent = labels[1] + ':';
+    document.querySelector('.color-input:nth-child(3) label').textContent = labels[2] + ':';
+    
+    // Update the value displays
+    redValue.textContent = redInput.value;
+    greenValue.textContent = greenInput.value;
+    blueValue.textContent = blueInput.value;
+    
+    // Add units if needed (like % for HSL)
+    if (['hsl', 'hsv', 'hsi'].includes(colorSpace)) {
+        greenValue.textContent += '%';
+        blueValue.textContent += '%';
+    }
+}
+        // Update all color space inputs based on RGB values
+      function updateAllColorSpaces(r, g, b) {
+    // Update RGB inputs (always exists)
+    redInput.value = r;
+    greenInput.value = g;
+    blueInput.value = b;
+    redValue.textContent = r;
+    greenValue.textContent = g;
+    blueValue.textContent = b;
+    
+    // Update other color spaces
+    const colorSpaces = ['hsl', 'hsv', 'hsi', 'hsm', 'hsg', 'hsh', 'hwb', 'hcl', 'lch', 'xyz', 'lab', 'lms', 'srgb'];
+    
+    for (const space of colorSpaces) {
+        try {
+            // Check if this color space has inputs in the HTML
+            const inputsContainer = document.getElementById(`${space}-inputs`);
+            if (!inputsContainer || inputsContainer.style.display === 'none') continue;
+            
+            // Convert color
+            const converterName = `rgbTo${space.charAt(0).toUpperCase() + space.slice(1)}`;
+            if (typeof window[converterName] !== 'function') continue;
+            
+            const converted = window[converterName](r, g, b);
+            if (!converted) continue;
+            
+            // Safely update inputs if they exist
+            const updateIfExists = (id, value) => {
+                const el = document.getElementById(id);
+                if (el) el.value = value;
+            };
+            
+            const updateDisplayIfExists = (id, value) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = value;
+            };
+            
+            // Update parameter inputs
+            updateIfExists(`${space}-p1`, converted.p1 || converted.h || converted.x || 0);
+            updateIfExists(`${space}-p2`, converted.p2 || converted.s || converted.y || 0);
+            updateIfExists(`${space}-p3`, converted.p3 || converted.v || converted.l || converted.z || 0);
+            
+            // Update display values with proper formatting
+            const p1Suffix = (space === 'hsl' || space === 'hsv' || space === 'hsi' || space === 'hsm' || 
+                             space === 'hsg' || space === 'hsh' || space === 'hwb' || space === 'hcl') ? '' : '';
+            const p2Suffix = (space === 'hsl' || space === 'hsv' || space === 'hsi' || space === 'hsm' || 
+                             space === 'hsg' || space === 'hsh' || space === 'hwb' || space === 'hcl') ? '%' : '';
+            const p3Suffix = (space === 'hsl' || space === 'hsv' || space === 'hsi' || space === 'hsm' || 
+                             space === 'hsg' || space === 'hsh' || space === 'hwb' || space === 'hcl') ? '%' : '';
+            
+            updateDisplayIfExists(`${space}-p1-value`, 
+                `${converted.p1 || converted.h || converted.x || 0}${p1Suffix}`);
+            updateDisplayIfExists(`${space}-p2-value`, 
+                `${converted.p2 || converted.s || converted.y || 0}${p2Suffix}`);
+            updateDisplayIfExists(`${space}-p3-value`, 
+                `${converted.p3 || converted.v || converted.l || converted.z || 0}${p3Suffix}`);
+            
+        } catch (e) {
+            console.error(`Error updating ${space} color space:`, e);
+        }
+    }
+}
+        
+        // Update color visualization based on picker style
+function updateColorVisualization() {
+    const pickerStyle = pickerStyleSelect.value;
+    const colorSpace = colorSpaceSelect.value;
+    
+    // Hide all visualizations first
+    colorSquare.style.display = 'none';
+    colorBar.style.display = 'none';
+    colorRadial.style.display = 'none';
+    
+    if (pickerStyle === 'bars') {
+        // Only show bars for RGB
+        if (colorSpace === 'rgb') {
+            document.getElementById('rgb-inputs').style.display = 'block';
+        }
+        return;
+    }
+
+    // Handle P1 + P2×P3 visualizations
+    if (pickerStyle.includes('square')) {
+        colorSquare.style.display = 'block';
+        colorBar.style.display = 'block';
+        
+        const squareCanvas = document.createElement('canvas');
+        squareCanvas.width = colorSquare.offsetWidth;
+        squareCanvas.height = colorSquare.offsetHeight;
+        const squareCtx = squareCanvas.getContext('2d');
+        
+        const barCanvas = document.createElement('canvas');
+        barCanvas.width = colorBar.offsetWidth;
+        barCanvas.height = colorBar.offsetHeight;
+        const barCtx = barCanvas.getContext('2d');
+        
+        // Get current values and ranges
+        let p1, p2, p3;
+        let p1Max, p2Max, p3Max;
+        
+        if (colorSpace === 'rgb') {
+            p1 = parseInt(redInput.value);
+            p2 = parseInt(greenInput.value);
+            p3 = parseInt(blueInput.value);
+            p1Max = p2Max = p3Max = 255;
+        } else {
+            p1 = parseInt(document.getElementById(`${colorSpace}-p1`).value);
+            p2 = parseInt(document.getElementById(`${colorSpace}-p2`).value);
+            p3 = parseInt(document.getElementById(`${colorSpace}-p3`).value);
+            p1Max = parseInt(document.getElementById(`${colorSpace}-p1`).max) || 360;
+            p2Max = parseInt(document.getElementById(`${colorSpace}-p2`).max) || 100;
+            p3Max = parseInt(document.getElementById(`${colorSpace}-p3`).max) || 100;
+        }
+        
+        // Draw square visualization
+        for (let y = 0; y < squareCanvas.height; y++) {
+            for (let x = 0; x < squareCanvas.width; x++) {
+                const p2Value = (x / squareCanvas.width) * p2Max;
+                const p3Value = ((squareCanvas.height - y) / squareCanvas.height) * p3Max;
+                
+                let rgb;
+                if (colorSpace === 'rgb') {
+                    if (pickerStyle === 'p1-square') rgb = {r: p1, g: p2Value, b: p3Value};
+                    else if (pickerStyle === 'p2-square') rgb = {r: p2Value, g: p1, b: p3Value};
+                    else if (pickerStyle === 'p3-square') rgb = {r: p2Value, g: p3Value, b: p1};
+                } else {
+                    const params = {};
+                    if (pickerStyle === 'p1-square') {
+                        params[`${colorSpace}-p1`] = p1;
+                        params[`${colorSpace}-p2`] = p2Value;
+                        params[`${colorSpace}-p3`] = p3Value;
+                    } else if (pickerStyle === 'p2-square') {
+                        params[`${colorSpace}-p1`] = p2Value;
+                        params[`${colorSpace}-p2`] = p1;
+                        params[`${colorSpace}-p3`] = p3Value;
+                    } else if (pickerStyle === 'p3-square') {
+                        params[`${colorSpace}-p1`] = p2Value;
+                        params[`${colorSpace}-p2`] = p3Value;
+                        params[`${colorSpace}-p3`] = p1;
+                    }
+                    rgb = convertColorSpaceToRGB(colorSpace, params);
+                }
+                
+                squareCtx.fillStyle = rgbToHex3(rgb.r, rgb.g, rgb.b);
+                squareCtx.fillRect(x, y, 1, 1);
+            }
+        }
+        
+        // Draw bar visualization
+        for (let x = 0; x < barCanvas.width; x++) {
+            const p1Value = (x / barCanvas.width) * p1Max;
+            
+            let rgb;
+            if (colorSpace === 'rgb') {
+                if (pickerStyle === 'p1-square') rgb = {r: p1Value, g: p2, b: p3};
+                else if (pickerStyle === 'p2-square') rgb = {r: p3, g: p1Value, b: p2};
+                else if (pickerStyle === 'p3-square') rgb = {r: p2, g: p3, b: p1Value};
+            } else {
+                const params = {};
+                if (pickerStyle === 'p1-square') {
+                    params[`${colorSpace}-p1`] = p1Value;
+                    params[`${colorSpace}-p2`] = p2;
+                    params[`${colorSpace}-p3`] = p3;
+                } else if (pickerStyle === 'p2-square') {
+                    params[`${colorSpace}-p1`] = p2;
+                    params[`${colorSpace}-p2`] = p1Value;
+                    params[`${colorSpace}-p3`] = p3;
+                } else if (pickerStyle === 'p3-square') {
+                    params[`${colorSpace}-p1`] = p2;
+                    params[`${colorSpace}-p2`] = p3;
+                    params[`${colorSpace}-p3`] = p1Value;
+                }
+                rgb = convertColorSpaceToRGB(colorSpace, params);
+            }
+            
+            barCtx.fillStyle = rgbToHex3(rgb.r, rgb.g, rgb.b);
+            barCtx.fillRect(x, 0, 1, barCanvas.height);
+        }
+        
+        colorSquare.innerHTML = '';
+        colorSquare.appendChild(squareCanvas);
+        colorBar.innerHTML = '';
+        colorBar.appendChild(barCanvas);
+        
+        // Update cursor positions
+        updateVisualizationCursors();
+        
+        // Add event listeners
+        addVisualizationEventListeners();
+    }
+    
+    // Handle radial visualizations
+    if (pickerStyle.includes('radial')) {
+        colorRadial.style.display = 'block';
+        colorBar.style.display = 'block';
+        
+        const radialCanvas = document.createElement('canvas');
+        radialCanvas.width = colorRadial.offsetWidth;
+        radialCanvas.height = colorRadial.offsetHeight;
+        const radialCtx = radialCanvas.getContext('2d');
+        
+        const barCanvas = document.createElement('canvas');
+        barCanvas.width = colorBar.offsetWidth;
+        barCanvas.height = colorBar.offsetHeight;
+        const barCtx = barCanvas.getContext('2d');
+        
+        // Get current values
+        const h = parseInt(document.getElementById(`${colorSpace}-p1`).value);
+        const s = parseInt(document.getElementById(`${colorSpace}-p2`).value);
+        const v = parseInt(document.getElementById(`${colorSpace}-p3`).value);
+        
+        // Draw radial visualization
+        const centerX = radialCanvas.width / 2;
+        const centerY = radialCanvas.height / 2;
+        const maxRadius = Math.min(centerX, centerY);
+        
+        for (let y = 0; y < radialCanvas.height; y++) {
+            for (let x = 0; x < radialCanvas.width; x++) {
+                const dx = x - centerX;
+                const dy = y - centerY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx);
+                
+                if (distance <= maxRadius) {
+                    const normDistance = distance / maxRadius;
+                    const normAngle = (angle + Math.PI) / (2 * Math.PI);
+                    
+                    let rgb;
+                    if (pickerStyle === 'radial-sat') {
+                        const params = {
+                            [`${colorSpace}-p1`]: normAngle * 360,
+                            [`${colorSpace}-p2`]: normDistance * 100,
+                            [`${colorSpace}-p3`]: v
+                        };
+                        rgb = convertColorSpaceToRGB(colorSpace, params);
+                    } else if (pickerStyle === 'radial-val') {
+                        const params = {
+                            [`${colorSpace}-p1`]: normAngle * 360,
+                            [`${colorSpace}-p2`]: s,
+                            [`${colorSpace}-p3`]: normDistance * 100
+                        };
+                        rgb = convertColorSpaceToRGB(colorSpace, params);
+                    }
+                    
+                    radialCtx.fillStyle = rgbToHex3(rgb.r, rgb.g, rgb.b);
+                    radialCtx.fillRect(x, y, 1, 1);
+                }
+            }
+        }
+        
+        // Draw bar visualization
+        for (let x = 0; x < barCanvas.width; x++) {
+            const barValue = (x / barCanvas.width) * 100;
+            
+            let rgb;
+            if (pickerStyle === 'radial-sat') {
+                const params = {
+                    [`${colorSpace}-p1`]: h,
+                    [`${colorSpace}-p2`]: s,
+                    [`${colorSpace}-p3`]: barValue
+                };
+                rgb = convertColorSpaceToRGB(colorSpace, params);
+            } else if (pickerStyle === 'radial-val') {
+                const params = {
+                    [`${colorSpace}-p1`]: h,
+                    [`${colorSpace}-p2`]: barValue,
+                    [`${colorSpace}-p3`]: v
+                };
+                rgb = convertColorSpaceToRGB(colorSpace, params);
+            }
+            
+            barCtx.fillStyle = rgbToHex3(rgb.r, rgb.g, rgb.b);
+            barCtx.fillRect(x, 0, 1, barCanvas.height);
+        }
+        
+        colorRadial.innerHTML = '';
+        colorRadial.appendChild(radialCanvas);
+        colorBar.innerHTML = '';
+        colorBar.appendChild(barCanvas);
+        
+        // Update cursor positions
+        updateVisualizationCursors();
+        
+        // Add event listeners
+        addVisualizationEventListeners();
+    }
+}
+        
+        // Show/hide color inputs based on selected color space
+function updateColorInputs() {
+    const colorSpace = colorSpaceSelect.value;
+    
+    // Get current RGB values
+    const rgb = hexToRgb(currentColor);
+    
+    // Convert to target color space
+    const converter = window[`rgbTo${colorSpace.charAt(0).toUpperCase() + colorSpace.slice(1)}`];
+    if (converter) {
+        const converted = converter(rgb.r, rgb.g, rgb.b);
+        
+        // Update slider values (but don't trigger event)
+        redInput.removeEventListener('input', updateColor);
+        greenInput.removeEventListener('input', updateColor);
+        blueInput.removeEventListener('input', updateColor);
+        
+        redInput.value = converted[colorSpace[0]];
+        greenInput.value = converted[colorSpace[1]];
+        blueInput.value = converted[colorSpace[2]];
+        
+        redInput.addEventListener('input', updateColor);
+        greenInput.addEventListener('input', updateColor);
+        blueInput.addEventListener('input', updateColor);
+    }
+    
+    updateInputLabels();
+    updateColor();
+}
+     function convertColorSpaceToRGB(colorSpace, params) {
+    const p1 = params[`${colorSpace}-p1`] || 0;
+    const p2 = params[`${colorSpace}-p2`] || 0;
+    const p3 = params[`${colorSpace}-p3`] || 0;
+    
+    const converterName = `${colorSpace}ToRgb`;
+    if (typeof window[converterName] === 'function') {
+        return window[converterName](p1, p2, p3);
+    }
+    return {r: 0, g: 0, b: 0}; // Fallback
+}   
+ function createPalette(type = 'default') {
+    palette.innerHTML = '';
+    
+    if (type === 'default') {
+        // Classic RGB grid
+        for (let section = 0; section < 4; section++) {
+            const baseValue = section * 64;
+            for (let g = 0; g < 4; g++) {
+                for (let r = 0; r < 4; r++) {
+                    const red = baseValue + r * 16;
+                    const green = baseValue + g * 16;
+                    const blue = baseValue + (3 - Math.abs(r - g)) * 16;
+                    addColorToPalette(red, green, blue);
+                }
+            }
+        }
+    } 
+    else if (type === 'pastel') {
+        // Pastel colors (high lightness, medium saturation)
+        for (let h = 0; h < 360; h += 30) {
+            for (let s = 40; s <= 70; s += 15) {
+                const rgb = hslToRgb(h, s, 85);
+                addColorToPalette(rgb[0], rgb[1], rgb[2]);
+            }
+        }
+    }
+    else if (type === 'vibrant') {
+        // Vibrant colors (high saturation)
+        for (let h = 0; h < 360; h += 30) {
+            for (let v = 70; v <= 100; v += 15) {
+                const rgb = hsvToRgb(h, 100, v);
+                addColorToPalette(rgb[0], rgb[1], rgb[2]);
+            }
+        }
+    }
+}
+function addColorToPalette(r, g, b) {
+    const colorDiv = document.createElement('div');
+    colorDiv.className = 'palette-color';
+    colorDiv.style.backgroundColor = rgbToHex3(r, g, b);
+    colorDiv.title = `RGB: ${r}, ${g}, ${b}`;
+    
+    colorDiv.addEventListener('click', () => {
+        redInput.value = r;
+        greenInput.value = g;
+        blueInput.value = b;
+        updateColor();
+    });
+    
+    palette.appendChild(colorDiv);
+}
+        // Initialize color picker
+        updateColorInputs();
+        createPalette();
+        
+        // Drawing functions
+        function startDrawing(e) {
+            if (colorPickerMode) {
+                const x = e.offsetX;
+                const y = e.offsetY;
+                const pixel = ctx.getImageData(x, y, 1, 1).data;
+                const hex = rgbToHex3(pixel[0], pixel[1], pixel[2]);
+                
+                // Update color inputs
+                redInput.value = pixel[0];
+                greenInput.value = pixel[1];
+                blueInput.value = pixel[2];
+                updateColor();
+                
+                return;
+            }
+            
+            isDrawing = true;
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+            
+            if (currentTool === 'paintbucket') {
+                floodFill(e.offsetX, e.offsetY, currentColor);
+                isDrawing = false;
+                saveState();
+            } else if (currentTool === 'pen' || currentTool === 'brush') {
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(e.offsetX, e.offsetY);
+                ctx.stroke();
+                [lastX, lastY] = [e.offsetX, e.offsetY];
+            }
+        }
+        
+        function draw(e) {
+            if (!isDrawing || colorPickerMode) return;
+            
+            if (currentTool === 'pen' || currentTool === 'brush') {
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(e.offsetX, e.offsetY);
+                
+                if (currentTool === 'pen') {
+                    ctx.lineWidth = 2;
+                    ctx.lineCap = 'round';
+                } else if (currentTool === 'brush') {
+                    ctx.lineWidth = brushSize;
+                    ctx.lineCap = 'round';
+                    
+                    // Apply brush hardness
+                    if (brushHardness < 100) {
+                        const tempCanvas = document.createElement('canvas');
+                        tempCanvas.width = canvas.width;
+                        tempCanvas.height = canvas.height;
+                        const tempCtx = tempCanvas.getContext('2d');
+                        
+                        // Draw the line on temp canvas
+                        tempCtx.strokeStyle = ctx.strokeStyle;
+                        tempCtx.lineWidth = ctx.lineWidth;
+                        tempCtx.lineCap = ctx.lineCap;
+                        tempCtx.beginPath();
+                        tempCtx.moveTo(lastX, lastY);
+                        tempCtx.lineTo(e.offsetX, e.offsetY);
+                        tempCtx.stroke();
+                        
+                        // Apply hardness effect
+                        const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+                        const data = imageData.data;
+                        
+                        for (let i = 3; i < data.length; i += 4) {
+                            if (data[i] > 0) {
+                                const alpha = data[i] / 255;
+                                const hardnessFactor = brushHardness / 100;
+                                const distanceFromCenter = (1 - alpha) / (1 - hardnessFactor);
+                                const newAlpha = hardnessFactor === 1 ? 1 : Math.max(0, 1 - distanceFromCenter);
+                                data[i] = newAlpha * 255;
+                            }
+                        }
+                        
+                        tempCtx.putImageData(imageData, 0, 0);
+                        
+                        // Draw the temp canvas onto main canvas
+                        ctx.drawImage(tempCanvas, 0, 0);
+                    }
+                }
+                
+                ctx.stroke();
+                [lastX, lastY] = [e.offsetX, e.offsetY];
+            }
+        }
+        
+        function stopDrawing() {
+            if (isDrawing && (currentTool === 'pen' || currentTool === 'brush')) {
+                saveState();
+            }
+            isDrawing = false;
+        }
+        
+        // Flood fill algorithm with tolerance
+        function floodFill(startX, startY, fillColor) {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            const stack = [{x: startX, y: startY}];
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Get the color at the start position
+            const startPos = (Math.round(startY) * width + Math.round(startX)) * 4;
+            const startR = data[startPos];
+            const startG = data[startPos + 1];
+            const startB = data[startPos + 2];
+            const startA = data[startPos + 3];
+            
+            // Convert fill color to RGB
+            const fillRgb = hexToRgb(fillColor);
+            const fillR = fillRgb.r;
+            const fillG = fillRgb.g;
+            const fillB = fillRgb.b;
+            
+            // If the fill color is the same as the start color, do nothing
+            if (startR === fillR && startG === fillG && startB === fillB) {
+                return;
+            }
+            
+            // Create visited map
+            const visited = new Array(width * height).fill(false);
+            
+            // Color distance function
+            function colorDistance(r1, g1, b1, r2, g2, b2) {
+                return Math.sqrt(
+                    Math.pow(r1 - r2, 2) +
+                    Math.pow(g1 - g2, 2) +
+                    Math.pow(b1 - b2, 2)
+                );
+            }
+            
+            while (stack.length) {
+                const {x, y} = stack.pop();
+                const pos = (Math.round(y) * width + Math.round(x)) * 4;
+                
+                // Check boundaries
+                if (x < 0 || x >= width || y < 0 || y >= height) continue;
+                
+                // Check if already visited
+                if (visited[Math.round(y) * width + Math.round(x)]) continue;
+                visited[Math.round(y) * width + Math.round(x)] = true;
+                
+                // Get current pixel color
+                const r = data[pos];
+                const g = data[pos + 1];
+                const b = data[pos + 2];
+                const a = data[pos + 3];
+                
+                // Check color match with tolerance
+                let shouldFill = colorDistance(r, g, b, startR, startG, startB) <= fillTolerance * 2.55;
+                
+                if (continuousTolerance) {
+                    // Check neighbors if we're using continuous tolerance
+                    if (!shouldFill) {
+                        const neighbors = [
+                            {x: x - 1, y},
+                            {x: x + 1, y},
+                            {x, y: y - 1},
+                            {x, y: y + 1}
+                        ];
+                        
+                        for (const neighbor of neighbors) {
+                            const nx = Math.round(neighbor.x);
+                            const ny = Math.round(neighbor.y);
+                            
+                            if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                                const nPos = (ny * width + nx) * 4;
+                                const nr = data[nPos];
+                                const ng = data[nPos + 1];
+                                const nb = data[nPos + 2];
+                                
+                                if (visited[ny * width + nx] && 
+                                    colorDistance(nr, ng, nb, fillR, fillG, fillB) <= fillTolerance * 2.55) {
+                                    const distToOriginal = colorDistance(r, g, b, startR, startG, startB);
+                                    const distToNeighbor = colorDistance(r, g, b, nr, ng, nb);
+                                    
+                                    if (distToOriginal <= fillTolerance * 2.55 || distToNeighbor <= fillTolerance * 2.55) {
+                                        shouldFill = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (!shouldFill) continue;
+                
+                // Set the fill color
+                data[pos] = fillR;
+                data[pos + 1] = fillG;
+                data[pos + 2] = fillB;
+                data[pos + 3] = 255; // Alpha (fully opaque)
+                
+                // Add neighboring pixels to the stack
+                stack.push({x: x + 1, y});
+                stack.push({x: x - 1, y});
+                stack.push({x, y: y + 1});
+                stack.push({x, y: y - 1});
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+        }
+        
+        // Canvas event listeners
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+        
+        // File operations
+        downloadBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'drawing.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+        
+        clearBtn.addEventListener('click', () => {
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            saveState();
+        });
+        
+        uploadBtn.addEventListener('click', () => {
+            uploadInput.click();
+        });
+        
+        uploadInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    // Clear canvas and draw the image
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    saveState();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        // Script execution
+        executeBtn.addEventListener('click', () => {
+            try {
+                // Save current state
+                saveState();
+                
+                const currentFillStyle = ctx.fillStyle;
+                const currentStrokeStyle = ctx.strokeStyle;
+                const currentLineWidth = ctx.lineWidth;
+                let brushState = false;
+                
+                // Create API functions
+                const api = {
+                    goto: (x, y) => {
+                        ctx.moveTo(x, y);
+                    },
+                    move: (x1, y1, x2, y2) => {
+                        ctx.beginPath();
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
+                        ctx.stroke();
+                    },
+                    brush: (on, size) => {
+                        brushState = on;
+                        if (size !== undefined) {
+                            ctx.lineWidth = size;
+                        }
+                    },
+                    color: (r, g, b) => {
+                        ctx.strokeStyle = rgbToHex3(r, g, b);
+                        ctx.fillStyle = rgbToHex3(r, g, b);
+                    },
+                    fill: (x, y) => {
+                        floodFill(x, y, ctx.fillStyle);
+                    },
+                    getr: (x, y) => {
+                        const pixel = ctx.getImageData(x, y, 1, 1).data;
+                        return pixel[0];
+                    },
+                    getg: (x, y) => {
+                        const pixel = ctx.getImageData(x, y, 1, 1).data;
+                        return pixel[1];
+                    },
+                    getb: (x, y) => {
+                        const pixel = ctx.getImageData(x, y, 1, 1).data;
+                        return pixel[2];
+                    }
+                };
+                
+                // Execute the code
+                new Function('ctx', 'api', codeEditor.value)(ctx, api);
+                
+                // Restore state
+                ctx.fillStyle = currentFillStyle;
+                ctx.strokeStyle = currentStrokeStyle;
+                ctx.lineWidth = currentLineWidth;
+                
+                saveState();
+            } catch (error) {
+                alert('Error executing script: ' + error.message);
+            }
+        });
+        
+        // Page management
+        pageButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const page = parseInt(button.dataset.page);
+                
+                // Save current content to current page
+                scriptPages[currentPage] = codeEditor.value;
+                
+                // Update current page
+                currentPage = page;
+                
+                // Load new page content
+                codeEditor.value = scriptPages[page];
+                
+                // Update active button
+                pageButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+            });
+        });
+        
+        // API snippet buttons
+        snippetButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const snippet = button.dataset.snippet;
+                const cursorPos = codeEditor.selectionStart;
+                const text = codeEditor.value;
+                codeEditor.value = text.substring(0, cursorPos) + snippet + text.substring(cursorPos);
+                codeEditor.focus();
+                
+                // Position cursor between parentheses if they exist
+                const parenIndex = snippet.indexOf('(');
+                if (parenIndex !== -1) {
+                    const commaCount = (snippet.match(/,/g) || []).length;
+                    if (commaCount > 0) {
+                        const newPos = cursorPos + parenIndex + 1;
+                        codeEditor.setSelectionRange(newPos, newPos);
+                    }
+                }
+            });
+        });
+        document.getElementById('palette-type').addEventListener('change', function() {
+    createPalette(this.value);
+});
+        // Initialize
+        setActiveTool('pen');
+        updateColorVisualization();
+    </script>
+</body>
+</html>

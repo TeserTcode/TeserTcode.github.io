@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Advanced Image Warper</title>
+</head>
+<body>
+    <div>
+        <h2>Source Image</h2>
+        <input type="file" id="sourceImage" accept="image/*">
+        <canvas id="sourceCanvas" width="256" height="256"></canvas>
+    </div>
+    
+    <div>
+        <h2>Warp Image</h2>
+        <input type="file" id="warpImage" accept="image/*">
+        <canvas id="warpCanvas" width="256" height="256"></canvas>
+    </div>
+    
+    <div>
+        <h2>Output</h2>
+        <div>
+            <label>Width: <input type="number" id="outputWidth" value="256" min="1" max="2048"></label>
+            <label>Height: <input type="number" id="outputHeight" value="256" min="1" max="2048"></label>
+        </div>
+        <canvas id="outputCanvas" width="256" height="256"></canvas>
+    </div>
+    
+    <div>
+        <h3>Warp Options</h3>
+        <label>
+            Coordinate Mode:
+            <select id="coordMode">
+                <option value="rg">RG (Red=X, Green=Y)</option>
+                <option value="gb">GB (Green=X, Blue=Y)</option>
+                <option value="rb">RB (Red=X, Blue=Y)</option>
+                <option value="polar_in">Polar Inside (Black=Center)</option>
+                <option value="polar_out">Polar Outside (White=Center)</option>
+                <option value="hsv_sv">HSV (Saturation=X, Value=Y)</option>
+            </select>
+        </label>
+        
+        <br>
+        
+        <label>
+            Blur Amount:
+            <input type="range" id="blurAmount" min="0" max="10" value="0">
+            <span id="blurValue">0</span>
+        </label>
+        
+        <br>
+        
+        <label>
+            <input type="checkbox" id="lerpEnabled"> Enable Lerping
+        </label>
+        
+        <h3>Pre-Warp Transformations</h3>
+        <label>
+            Zoom:
+            <input type="range" id="zoom" min="0.1" max="3" step="0.1" value="1">
+            <span id="zoomValue">1</span>
+        </label>
+        
+        <br>
+        
+        <label>
+            Rotation (degrees):
+            <input type="range" id="rotation" min="0" max="360" value="0">
+            <span id="rotationValue">0</span>
+        </label>
+        
+        <br>
+        
+        <label>
+            X Translation:
+            <input type="range" id="translateX" min="-100" max="100" value="0">
+            <span id="translateXValue">0</span>
+        </label>
+        
+        <br>
+        
+        <label>
+            Y Translation:
+            <input type="range" id="translateY" min="-100" max="100" value="0">
+            <span id="translateYValue">0</span>
+        </label>
+        
+        <h3>Post-Warp Transformations</h3>
+        <label>
+            <input type="checkbox" id="flipX"> Flip X Coordinate
+        </label>
+        
+        <br>
+        
+        <label>
+            <input type="checkbox" id="flipY"> Flip Y Coordinate
+        </label>
+        
+        <br>
+        
+        <label>
+            <input type="checkbox" id="rotate90"> Rotate 90 Degrees
+        </label>
+        
+        <br>
+        <button id="warpButton">Warp Image</button>
+    </div>
+
+    <script>
+        // DOM elements
+        const sourceInput = document.getElementById('sourceImage');
+        const warpInput = document.getElementById('warpImage');
+        const sourceCanvas = document.getElementById('sourceCanvas');
+        const warpCanvas = document.getElementById('warpCanvas');
+        const outputCanvas = document.getElementById('outputCanvas');
+        const warpButton = document.getElementById('warpButton');
+        const outputWidth = document.getElementById('outputWidth');
+        const outputHeight = document.getElementById('outputHeight');
+        
+        // Options elements
+        const coordMode = document.getElementById('coordMode');
+        const blurAmount = document.getElementById('blurAmount');
+        const blurValue = document.getElementById('blurValue');
+        const lerpEnabled = document.getElementById('lerpEnabled');
+        const zoom = document.getElementById('zoom');
+        const zoomValue = document.getElementById('zoomValue');
+        const rotation = document.getElementById('rotation');
+        const rotationValue = document.getElementById('rotationValue');
+        const translateX = document.getElementById('translateX');
+        const translateXValue = document.getElementById('translateXValue');
+        const translateY = document.getElementById('translateY');
+        const translateYValue = document.getElementById('translateYValue');
+        const flipX = document.getElementById('flipX');
+        const flipY = document.getElementById('flipY');
+        const rotate90 = document.getElementById('rotate90');
+        
+        // Update displayed values
+        blurAmount.addEventListener('input', () => blurValue.textContent = blurAmount.value);
+        zoom.addEventListener('input', () => zoomValue.textContent = zoom.value);
+        rotation.addEventListener('input', () => rotationValue.textContent = rotation.value);
+        translateX.addEventListener('input', () => translateXValue.textContent = translateX.value);
+        translateY.addEventListener('input', () => translateYValue.textContent = translateY.value);
+        
+        // Image data
+        let sourceImageData = null;
+        let warpImageData = null;
+        
+        // Load images
+        sourceInput.addEventListener('change', (e) => loadImage(e, sourceCanvas, (data) => sourceImageData = data));
+        warpInput.addEventListener('change', (e) => loadImage(e, warpCanvas, (data) => warpImageData = data));
+        
+        function loadImage(event, canvas, callback) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    callback(ctx.getImageData(0, 0, canvas.width, canvas.height));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Warp function
+        function warpImage() {
+            if (!sourceImageData || !warpImageData) {
+                alert('Please load both source and warp images first');
+                return;
+            }
+            
+            const outputCtx = outputCanvas.getContext('2d');
+            const width = parseInt(outputWidth.value);
+            const height = parseInt(outputHeight.value);
+            
+            // Validate output size
+            if (width < 1 || width > 2048 || height < 1 || height > 2048) {
+                alert('Output size must be between 1 and 2048 pixels');
+                return;
+            }
+            
+            outputCanvas.width = width;
+            outputCanvas.height = height;
+            
+            const outputData = outputCtx.createImageData(width, height);
+            
+            const blur = parseInt(blurAmount.value);
+            const useLerp = lerpEnabled.checked;
+            const zoomFactor = parseFloat(zoom.value);
+            const rotationRad = parseFloat(rotation.value) * Math.PI / 180;
+            const tx = parseFloat(translateX.value);
+            const ty = parseFloat(translateY.value);
+            
+            // Center point for transformations
+            const centerX = width / 2;
+            const centerY = height / 2;
+            
+            // Scale factor to map from output coordinates to warp image coordinates
+            const scaleX = warpImageData.width / width;
+            const scaleY = warpImageData.height / height;
+            
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    // Apply PRE-warp transformations
+                    // First scale to warp image coordinates
+                    let nx = (x * scaleX - warpImageData.width / 2) / zoomFactor;
+                    let ny = (y * scaleY - warpImageData.height / 2) / zoomFactor;
+                    
+                    // Apply rotation
+                    if (rotationRad !== 0) {
+                        const cos = Math.cos(rotationRad);
+                        const sin = Math.sin(rotationRad);
+                        const rx = nx * cos - ny * sin;
+                        const ry = nx * sin + ny * cos;
+                        nx = rx;
+                        ny = ry;
+                    }
+                    
+                    // Apply translation and move back to center
+                    nx = nx + warpImageData.width / 2 + tx;
+                    ny = ny + warpImageData.height / 2 + ty;
+                    
+                    // Get warp coordinates
+                    const warpCoords = getWarpCoordinates(nx, ny);
+                    if (!warpCoords) continue;
+                    
+                    let [srcX, srcY] = warpCoords;
+                    
+                    // Apply POST-warp transformations
+                    if (flipX.checked) {
+                        srcX = sourceImageData.width - srcX;
+                    }
+                    if (flipY.checked) {
+                        srcY = sourceImageData.height - srcY;
+                    }
+                    if (rotate90.checked) {
+                        const temp = srcX;
+                        srcX = srcY;
+                        srcY = sourceImageData.height - temp;
+                    }
+                    
+                    // Apply blur by averaging nearby pixels
+                    if (blur > 0) {
+                        let totalR = 0, totalG = 0, totalB = 0, totalA = 0;
+                        let count = 0;
+                        
+                        for (let by = -blur; by <= blur; by++) {
+                            for (let bx = -blur; bx <= blur; bx++) {
+                                const sampleX = Math.floor(srcX + bx);
+                                const sampleY = Math.floor(srcY + by);
+                                
+                                if (sampleX >= 0 && sampleX < sourceImageData.width && 
+                                    sampleY >= 0 && sampleY < sourceImageData.height) {
+                                    const idx = (sampleY * sourceImageData.width + sampleX) * 4;
+                                    totalR += sourceImageData.data[idx];
+                                    totalG += sourceImageData.data[idx + 1];
+                                    totalB += sourceImageData.data[idx + 2];
+                                    totalA += sourceImageData.data[idx + 3];
+                                    count++;
+                                }
+                            }
+                        }
+                        
+                        if (count > 0) {
+                            const idx = (y * width + x) * 4;
+                            outputData.data[idx] = totalR / count;
+                            outputData.data[idx + 1] = totalG / count;
+                            outputData.data[idx + 2] = totalB / count;
+                            outputData.data[idx + 3] = totalA / count;
+                        }
+                    } 
+                    // Or use lerping if enabled
+                    else if (useLerp) {
+                        const x1 = Math.floor(srcX);
+                        const y1 = Math.floor(srcY);
+                        const x2 = Math.min(x1 + 1, sourceImageData.width - 1);
+                        const y2 = Math.min(y1 + 1, sourceImageData.height - 1);
+                        
+                        const xf = srcX - x1;
+                        const yf = srcY - y1;
+                        
+                        const idx1 = (y1 * sourceImageData.width + x1) * 4;
+                        const idx2 = (y1 * sourceImageData.width + x2) * 4;
+                        const idx3 = (y2 * sourceImageData.width + x1) * 4;
+                        const idx4 = (y2 * sourceImageData.width + x2) * 4;
+                        
+                        const idx = (y * width + x) * 4;
+                        
+                        // Lerp between the 4 surrounding pixels
+                        for (let c = 0; c < 4; c++) {
+                            const top = lerp(sourceImageData.data[idx1 + c], sourceImageData.data[idx2 + c], xf);
+                            const bottom = lerp(sourceImageData.data[idx3 + c], sourceImageData.data[idx4 + c], xf);
+                            outputData.data[idx + c] = lerp(top, bottom, yf);
+                        }
+                    } 
+                    // Or just nearest neighbor
+                    else {
+                        const srcXInt = Math.floor(srcX);
+                        const srcYInt = Math.floor(srcY);
+                        
+                        if (srcXInt >= 0 && srcXInt < sourceImageData.width && 
+                            srcYInt >= 0 && srcYInt < sourceImageData.height) {
+                            const srcIdx = (srcYInt * sourceImageData.width + srcXInt) * 4;
+                            const dstIdx = (y * width + x) * 4;
+                            
+                            outputData.data[dstIdx] = sourceImageData.data[srcIdx];
+                            outputData.data[dstIdx + 1] = sourceImageData.data[srcIdx + 1];
+                            outputData.data[dstIdx + 2] = sourceImageData.data[srcIdx + 2];
+                            outputData.data[dstIdx + 3] = sourceImageData.data[srcIdx + 3];
+                        }
+                    }
+                }
+            }
+            
+            outputCtx.putImageData(outputData, 0, 0);
+        }
+        
+        function getWarpCoordinates(x, y) {
+            if (x < 0 || x >= warpImageData.width || y < 0 || y >= warpImageData.height) {
+                return null;
+            }
+            
+            const idx = (Math.floor(y) * warpImageData.width + Math.floor(x)) * 4;
+            const r = warpImageData.data[idx] / 255;
+            const g = warpImageData.data[idx + 1] / 255;
+            const b = warpImageData.data[idx + 2] / 255;
+            
+            let srcX, srcY;
+            
+            switch (coordMode.value) {
+                case 'rg':
+                    srcX = r * sourceImageData.width;
+                    srcY = g * sourceImageData.height;
+                    break;
+                case 'gb':
+                    srcX = g * sourceImageData.width;
+                    srcY = b * sourceImageData.height;
+                    break;
+                case 'rb':
+                    srcX = r * sourceImageData.width;
+                    srcY = b * sourceImageData.height;
+                    break;
+                case 'polar_in':
+                    // Polar Inside (black = center)
+                    const radiusIn = Math.sqrt(r * r + g * g + b * b) / Math.sqrt(3);
+                    const angleIn = Math.atan2(g - 0.5, r - 0.5);
+                    srcX = (radiusIn * Math.cos(angleIn)) * sourceImageData.width * 0.5 + sourceImageData.width * 0.5;
+                    srcY = (radiusIn * Math.sin(angleIn)) * sourceImageData.height * 0.5 + sourceImageData.height * 0.5;
+                    break;
+                case 'polar_out':
+                    // Polar Outside (white = center)
+                    const radiusOut = 1 - Math.sqrt(r * r + g * g + b * b) / Math.sqrt(3);
+                    const angleOut = Math.atan2(g - 0.5, r - 0.5);
+                    srcX = (radiusOut * Math.cos(angleOut)) * sourceImageData.width * 0.5 + sourceImageData.width * 0.5;
+                    srcY = (radiusOut * Math.sin(angleOut)) * sourceImageData.height * 0.5 + sourceImageData.height * 0.5;
+                    break;
+                case 'hsv_sv':
+                    // Convert RGB to HSV and use Saturation and Value
+                    const hsv = rgbToHsv(r, g, b);
+                    srcX = hsv.s * sourceImageData.width;
+                    srcY = hsv.v * sourceImageData.height;
+                    break;
+                default:
+                    srcX = x;
+                    srcY = y;
+            }
+            
+            return [srcX, srcY];
+        }
+        
+        function rgbToHsv(r, g, b) {
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+            const delta = max - min;
+            
+            let h = 0;
+            if (delta !== 0) {
+                if (max === r) h = ((g - b) / delta) % 6;
+                else if (max === g) h = (b - r) / delta + 2;
+                else h = (r - g) / delta + 4;
+                h *= 60;
+                if (h < 0) h += 360;
+            }
+            
+            const s = max === 0 ? 0 : delta / max;
+            const v = max;
+            
+            return { h, s, v };
+        }
+        
+        function lerp(a, b, t) {
+            return a + (b - a) * t;
+        }
+        
+        warpButton.addEventListener('click', warpImage);
+    </script>
+</body>
+</html>
