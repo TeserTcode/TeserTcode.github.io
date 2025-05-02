@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Organik Kimya</title>
+  
+  
+      <style>
+       body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 10px;
+ 
+    background: url('ORG.png') ;
+   background-size: auto;
+background-attachment: scroll ;
+
+}      
+u {
+   
+            cursor: pointer;
+            text-decoration: underline;
+        }
+#menu {
+    position: absolute;
+    background: #ffddffcc;;
+    border: 1px solid black;
+    padding: 0;
+    margin: 0;
+    line-height: normal;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+}
+#menu-table td {
+    padding: 5px;
+    cursor: pointer;
+}
+        .menu td {
+            padding: 1px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+        }
+        .menu td:hover {
+            background: #f0f0f0;
+        }
+h1 {
+    color: #2c3e50;
+    text-align: center;
+}
+
+h2 {
+  
+}
+
+p {
+    font-size: 1em;
+    margin-bottom: 10px;
+
+}
+
+large {
+font-size:  3em;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+}
+
+table, th, td {
+    border: 1px solid #ccc;
+}
+
+li, th, td, p {
+color: #333333;
+
+text-shadow: 2px 2px 2px #FFFFFF, 1px 1px 0px rgba(0,0,0,0.15);
+color: #333333;
+
+
+    padding: 12px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+.note {
+    background-color: #f9f9f9;
+    padding: 10px;
+    border: 1px dashed #ccc;
+    margin-top: 10px;
+}
+
+.section-title {
+    font-size: 1.5em;
+    color: #34495e;
+}
+
+.sub-section {
+    margin-left: 10px;
+    font-size: 1.1em;
+}
+
+/* İçindekiler Menüsü */
+#table-of-contents {
+    position: fixed;
+    left: -560px;
+    top: 50px;
+    width: 550px;
+    height: 80vh;
+    background: #333;
+    color: white;
+    padding: 10px;
+    border-radius: 0 8px 8px 0;
+    transition: left 0.3s ease;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+}
+
+#table-of-contents:hover {
+    left: 0;
+}
+
+#table-of-contents h2 {
+    font-size: 16px;
+    text-align: center;
+    margin: 0;
+    padding: 5px 0;
+}
+#table-of-contents h3 {
+    font-size: 16px;
+    text-align: center;
+    margin: 0;
+    padding: 5px 0;
+}
+#table-of-contents large {
+    font-size: 26px;
+    text-align: center;
+    margin: 0;
+    padding: 5px 0;
+}
+
+.toc-content {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 1px;
+}
+
+#table-of-contents ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#table-of-contents li {
+    margin: 0;
+    padding: 0;
+}
+
+/* İç İçe Listeler */
+#table-of-contents li ul {
+    margin-left: 10px;
+    padding-left: 5px;
+margin-right: 5px;
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    overflow: hidden;
+}
+
+#table-of-contents a {
+    text-decoration: none !important;
+    color: #fff;
+    font-size: 12px;
+    display: block;
+    padding: 3px 5px;
+    transition: background 0.2s;
+}
+
+#table-of-contents a:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+}
+
+/* Scrollbar Özelleştirme */
+.toc-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.toc-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 4px;
+}
+
+.toc-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+    </style>
+  
+  
+  
+</head>
+<body>
+
+  <h1>Organik Kimya</h1>
+
+  <h2>Hidrokarbonlar</h2>
+
+  <h3>Alifatik Hidrokarbonlar</h3>
+
+  <h4>Doymuş</h4>
+  <p><strong>Alkanlar:</strong> Sadece tekli bağ içeren düz zincirli veya dallanmış hidrokarbonlardır.</p>
+
+  <h4>Doymamış</h4>
+  <p><strong>Alkenler:</strong> En az bir çift bağ içeren hidrokarbonlardır.</p>
+  <p><strong>Alkinler:</strong> En az bir üçlü bağ içeren hidrokarbonlardır.</p>
+
+  <h3>Aromatik Hidrokarbonlar (Arenler)</h3>
+  <p><strong>Benzen Türevleri:</strong> Aromatik halkaya sahip, özel kararlılığa sahip bileşiklerdir.</p>
+
+  <h3>Siklikler ve Alkil Grupları</h3>
+  <p><strong>Siklik Bileşikler:</strong> Karbon halkaları oluşturan doymuş veya doymamış yapılar (ör. sikloalkanlar).</p>
+  <p><strong>Alkil Grupları:</strong> Alkanlardan bir hidrojen çıkarılarak elde edilen yan zincir gruplarıdır (ör. metil -CH₃, etil -C₂H₅).</p>
+
+
+
+
+
+<h2>Alkanlar</h2>
+
+<h3>Alkanlarda İzomerlik</h3>
+<p>Alkanlarda karbon sayısı arttıkça farklı yapısal izomerler oluşabilir. Örneğin:</p>
+<p><strong>CH₃−CH₂−CH₂−CH₃ (n-bütan)</strong> ve <strong>CH₃−CH(CH₃)−CH₃ (metilpropan)</strong> birbirinin izomeridir.</p>
+
+<h3>Iso ve Neo Terimleri</h3>
+<p><strong>Iso:</strong> Molekülün sonunda bir -CH(CH₃)₂ grubu varsa izo (iso) ön eki kullanılır.</p>
+<p><strong>Neo:</strong> Molekülün sonunda bir -C(CH₃)₃ grubu varsa neo ön eki kullanılır.</p>
+
+<p><strong>2-Metilpropan (izobütan):</strong> CH₃−CH(CH₃)−CH₃</p>
+<p><strong>2,2-Dimetilbütan (neoheksan):</strong> CH₃−C(CH₃)₂−CH₂−CH₃</p>
+
+<h4>Iso, Neo, Sec, Tert Karşılaştırması</h4>
+<p><strong>n- (normal):</strong> Dallanma içermeyen düz zincirli yapı.</p>
+<p><strong>iso:</strong> İkincil karbon (CH) iki metil ile dallanmışsa.</p>
+<p><strong>neo:</strong> Üç metil ile dallanmış bir karbon içeriyorsa.</p>
+<p><strong>sec-:</strong> İkincil karbona bağlanmış grup (örneğin sec-bütil).</p>
+<p><strong>tert-:</strong> Üçlü dallanmaya sahip karbon ile bağlı grup (örneğin tert-bütil).</p>
+
+<h3>Würtz Sentezi</h3>
+<p>Alkanlar, halojenli alkanlar ve sodyum ile reaksiyona girerek daha uzun zincirli alkanları oluşturabilir:</p>
+<p><strong>2 R−X + 2 Na → R−R + 2 NaX</strong></p>
+<p>Tepkime, öncelikle metal-halojen değişimiyle başlar:</p>
+<p><strong>R−X + 2 M → RM + MX</strong></p>
+
+<h3>Grignard Bileşiklerinden Alkan Elde Etme</h3>
+<p>Grignard bileşikleri asidik protonlarla tepkimeye girerek alkan oluşturabilir:</p>
+<p><strong>R−MgX + H−X → R−H + MgX₂</strong></p>
+<p>Bu yöntem genellikle tek karbonlu alkanların elde edilmesinde kullanılır.</p>
+
+<h3>Alkanların Özellikleri</h3>
+<p><strong>Katılma Tepkimesi:</strong> Alkanlar doymuş yapıda oldukları için katılma tepkimesi vermezler.</p>
+<p><strong>Apolarlık:</strong> Alkanlar apolar moleküllerdir, bu yüzden apolar çözücülerde çözünürler.</p>
+<p><strong>Yerine Geçme Tepkimesi:</strong> Alkanlarda H atomu yerine halojen atomları gelebilir. Bu, özellikle ışık varlığında gerçekleşen halojenleme tepkimesiyle olur.</p>
+
+
+
+
+
+
+
+
+<h2>Alkenler</h2>
+
+<p><strong>Alkenler</strong> (diğer bir deyişle olefinler yani "yağ oluşturucular") yapılarında en az bir tane karbon-karbon (C=C) çift bağı içeren organik bileşiklerdir. Alkenlerin yapısında karbon-karbon çift bağı bulunduğundan ve bu karbonların yapabileceği en fazla hidrojenle bağ yapmamış olduğundan alkenler <strong>doymamış bileşikler</strong> kategorisine girerler.</p>
+
+<p>Alkenlerin yapısında sadece bir karbon-karbon çift bağının bulunması durumunda homolog seriler oluşturur.</p>
+
+<h3>Katılma Tepkimeleri</h3>
+<p>Alkenler çift bağın açıldığı birçok katılma tepkimesine girer. Bu tepkimeler sonucunda genellikle alkanlar oluşur.</p>
+
+<p>Alkenlerdeki çift bağlardan biri sigma (σ), diğeri pi (π) bağıdır. Katılma tepkimelerinde pi (π) bağı kırılır ve yerine iki tane sigma (σ) bağı oluşur.</p>
+
+<h3>Alkenlerde İzomerlik</h3>
+<h4>Cis-Trans İzomerliği</h4>
+<p>Çift bağ etrafında dönme kısıtlandığı için <strong>cis-trans izomerliği</strong> gözlenebilir:</p>
+<ul>
+  <li><strong>C(X)(H)=C(X)(H)</strong> → cis izomer</li>
+  <li><strong>C(X)(H)=C(H)(X)</strong> → trans izomer</li>
+  <li><strong>C(H)(H)=C(X)(X)</strong> → cis-trans izomerliği gözlenmez</li>
+  <li><strong>C(X)(X)=C(X)(H)</strong> → cis-trans izomerliği gözlenmez</li>
+</ul>
+
+<h3>Alken Elde Etme Yöntemleri</h3>
+<h4>Alkolden Su Çekilerek</h4>
+<p><strong>CH₃−CH₂−OH → C₂H₄ + H₂O</strong></p>
+
+<h4>Alkinlere Hidrojen Katılmasıyla</h4>
+<p><strong>C<sub>n</sub>H<sub>2n−2</sub> + H₂ → C<sub>n</sub>H<sub>2n</sub></strong></p>
+
+<h4>Alkil Halojenürlerle (Baz ile)</h4>
+<p><strong>CH₃−CHBr−CH₃ + KOH → CH₃−CH=CH₂ + KBr + H₂O</strong></p>
+
+<h3>Katılma Tepkimeleri</h3>
+
+<ul>
+  <li><strong>Hidrojenasyon:</strong> <code>C=C + H–H → H–C–C–H</code></li>
+  <li><strong>Halojenleme:</strong> <code>C=C + X–X → X–C–C–X</code></li>
+  <li><strong>Hidrohalojenleme:</strong> <code>C=C + H–X → H–C–C–X</code></li>
+  <li><strong>Hidrasyon:</strong> <code>C=C + H–OH → H–C–C–OH</code></li>
+  <li><strong>Asit Katılması (örn. sülfürik asit):</strong> <code>C=C + H–OSO₃H → H–C–C–OSO₃H</code></li>
+</ul>
+
+
+<h4>Markovnikov Kuralı</h4>
+<p>Bu kural, <strong>asimetrik alkenlere</strong> HX gibi bileşikler katıldığında, hidrojenin çift bağdaki daha fazla hidrojen taşıyan karbona bağlanacağını belirtir. Diğer atom (X) ise daha az hidrojenli karbona gider.</p>
+
+<h3>Alkenlerin Yükseltgenmesi</h3>
+<p>Alkenler, <strong>derişik KMnO₄</strong> gibi oksitleyici maddelerle yükseltgenebilir. Bu tepkimelerde aşağıdaki ürünler oluşabilir:</p>
+<ul>
+  <li><strong>Aldehit</strong>: R−CH=CH₂ → R−COH</li>
+  <li><strong>Keton</strong>: R₂C=CH₂ → R₂C=O</li>
+  <li><strong>Asit</strong>: R−CH=CH−R → R−COOH</li>
+</ul>
+
+<h3>Polimerleşme</h3>
+<p>Alkenlerdeki çift bağlar açılarak birbirine bağlanabilir ve büyük moleküller (polimerler) oluşur. Bu olaya <strong>polimerleşme</strong> denir.</p>
+
+<p><strong>n C₂H₄ → [C₂H₄]ₙ (Polietilen)</strong></p>
+<p><strong>n CH₂=CHCl → [CH₂−CHCl]ₙ (Polivinil klorür - PVC)</strong></p>
+
+
+
+
+
+<h1>Alkinler</h1>
+
+<p>Alkinler, hidrokarbon zincirinde en az bir tane karbon-karbon üçlü bağı içeren organik bileşiklerdir. Yapısında sadece bir tane karbon-karbon üçlü bağı bulunduran alkinler, homolog bir sıra oluştururlar.</p>
+
+<h2>Alkin Eldesi</h2>
+
+<p><strong>1. Dihalojenürlerden:</strong></p>
+<p><code>CH₃–CHBr–CH₂Br + 2KOH → CH₃–C≡CH + 2H₂O + 2KBr</code></p>
+
+<p><strong>2. Metal Bileşiklerinden:</strong></p>
+<p><code>R–C≡CNa + R'–X → R–C≡C–R' + NaX</code></p>
+
+<h2>Katılma Tepkimeleri</h2>
+
+<p>Alkinler, doymamış yapıda oldukları için katılma tepkimeleri verirler.</p>
+
+<h3>Su Katılması (Hidrasyon)</h3>
+<p><strong>Asit katalizör ve Hg²⁺ iyonları eşliğinde:</strong></p>
+<p><code>CH≡CH + H₂O → CH₃–CHO</code> (Asetilen → Asetaldehit)</p>
+<p><code>CH₃–C≡CH + H₂O → CH₃–CO–CH₃</code> (Propin → Aseton)</p>
+
+<h3>Yer Değiştirme Tepkimesi</h3>
+
+<p><strong>Terminal alkinler (≡C–H), amonyaklı ortamda Ag⁺ ve Cu⁺ iyonlarıyla ayırt edici tepkime verir.</strong></p>
+
+<h4>Gümüş (Ag⁺) ile:</h4>
+<p><code>CH₃–C≡CH + Ag⁺ (amonyaklı ortam) → CH₃–C≡CAg + H⁺</code> (Beyaz çökelek)</p>
+
+<h4>Bakır (Cu⁺) ile:</h4>
+<p><code>HC≡CH + 2Cu⁺ + 2NH₃ → Cu–C≡C–Cu (kırmızı çökelek) + 2H⁺</code></p>
+<p><code>CH₃–C≡C–CH₃ + Cu⁺ → Tepkime gerçekleşmez</code></p>
+
+<p><strong>Not:</strong> Bu tepkimeler yalnızca terminal alkinlerle (yani üçlü bağın ucunda hidrojen bulunan alkinlerle) gerçekleşir. İç alkinlerde (ör. CH₃–C≡C–CH₃) reaktivite gözlenmez.</p>
+
+<h2>Polimerleşme</h2>
+
+<p>Alkinler de alkenler gibi polimerleşme tepkimesi verebilirler.</p>
+<p><code>3 C₂H₂ → C₆H₆</code> (Asetilen → Benzen)</p>
+<p>Bu tepkime asetilenin halka kapanması yoluyla benzen oluşturduğu polimerleşme tepkimesidir.</p>
+
+
+
+
+
+
+
+
+
+
+<h1>Halkalı Hidrokarbonlar</h1>
+
+<h2>Siklo Alkanlar</h2>
+
+<p>Halkalı alkanlar, düz zincirli alkenlerle izomeri gösteren doymuş bileşiklerdir.</p>
+<ul>
+  <li>Her karbon atomu 4 sigma (σ) bağı yapar.</li>
+  <li>İlk üyeleri 3 karbonlu <strong>siklopropan</strong>dır.</li>
+</ul>
+
+<h2>Siklo Alkenler</h2>
+
+<p>Halkalı alkenler, düz zincirli alkinlerle izomeri gösteren doymamış bileşiklerdir.</p>
+<ul>
+  <li>İlk üyeleri 3 karbonlu <strong>siklopropen</strong>dir.</li>
+</ul>
+
+
+
+
+
+<h1>Fonksiyonel Gruplar</h1>
+
+<h2>Temel Fonksiyonel Gruplar</h2>
+
+<h3>Alkol</h3>
+<p><strong>Fonksiyonel Grup:</strong> –OH</p>
+<p><strong>Genel Formül:</strong> R–OH</p>
+<p><strong>Örnek:</strong> CH<sub>3</sub>–OH (Metanol)</p>
+
+<h3>Eter</h3>
+<p><strong>Fonksiyonel Grup:</strong> –O–</p>
+<p><strong>Genel Formül:</strong> R–O–R'</p>
+<p><strong>Örnek:</strong> CH<sub>3</sub>–O–CH<sub>3</sub> (Dimetil eter)</p>
+
+<h3>Aldehit</h3>
+<p><strong>Fonksiyonel Grup:</strong> –CHO</p>
+<p><strong>Genel Formül:</strong> R–CHO</p>
+<p><strong>Örnek:</strong> CH<sub>3</sub>–CHO (Etanal)</p>
+
+<h3>Keton</h3>
+<p><strong>Fonksiyonel Grup:</strong> >C=O</p>
+<p><strong>Genel Formül:</strong> R–CO–R'</p>
+<p><strong>Örnek:</strong> CH<sub>3</sub>–CO–CH<sub>3</sub> (Propanon)</p>
+
+<h3>Karboksilik Asit</h3>
+<p><strong>Fonksiyonel Grup:</strong> –COOH</p>
+<p><strong>Genel Formül:</strong> R–COOH</p>
+<p><strong>Örnek:</strong> CH<sub>3</sub>–COOH (Etanoik asit / Asetik asit)</p>
+
+<h3>Ester</h3>
+<p><strong>Fonksiyonel Grup:</strong> –COO–</p>
+<p><strong>Genel Formül:</strong> R–COO–R'</p>
+<p><strong>Örnek:</strong> CH<sub>3</sub>–COO–C<sub>2</sub>H<sub>5</sub> (Etil etanoat / Asetik asidin etil esteri)</p>
+
+<h3>Amin</h3>
+<p><strong>Fonksiyonel Grup:</strong> –NH<sub>2</sub> (Primer), –NHR (Sekonder), –NR<sub>2</sub> (Tersiyer)</p>
+<p><strong>Genel Formül:</strong> R–NH<sub>2</sub></p>
+<p><strong>Örnek:</strong> CH<sub>3</sub>–NH<sub>2</sub> (Metilamin)</p>
+
+<h3>Amid</h3>
+<p><strong>Fonksiyonel Grup:</strong> –CONH<sub>2</sub></p>
+<p><strong>Genel Formül:</strong> R–CONH<sub>2</sub></p>
+<p><strong>Örnek:</strong> CH<sub>3</sub>–CONH<sub>2</sub> (Etanamid / Asetamid)</p>
+
+<h3>Asil Halid</h3>
+<p><strong>Fonksiyonel Grup:</strong> –COX (X = halojen)</p>
+<p><strong>Genel Formül:</strong> R–COCl (örnek için klor)</p>
+<p><strong>Örnek:</strong> CH<sub>3</sub>–COCl (Asetil klorür)</p>
+
+<h3>Asidik Anhidrid</h3>
+<p><strong>Fonksiyonel Grup:</strong> –(CO)–O–(CO)–</p>
+<p><strong>Genel Formül:</strong> R–CO–O–CO–R</p>
+<p><strong>Örnek:</strong> (CH<sub>3</sub>CO)<sub>2</sub>O (Asetik anhidrid)</p>
+
+<h2>Fonksiyonel Grup İzomerliği</h2>
+<p>Aynı moleküler formüle sahip fakat farklı fonksiyonel gruplar içeren bileşikler izomer olabilirler.</p>
+<ul>
+  <li>Alkol – Eter</li>
+  <li>Aldehit – Keton</li>
+  <li>Karboksilik Asit – Ester</li>
+</ul>
+
+
+
+
+
+
+
+<h3>Alkoller</h3>
+
+<p><strong>1) Mono Alkoller:</strong> Moleküllerinde bir tane -OH grubu bulunduran alkollerdir.</p>
+<p><strong>2) Poli Alkoller:</strong> Farklı karbonlara bağlı olmak şartıyla birden fazla -OH grubu bulunduran alkollerdir.</p>
+
+<h4>Alkol Tipleri</h4>
+<ul>
+  <li><strong>1° Alkol (Primer):</strong> R-CH<sub>2</sub>-OH</li>
+  <li><strong>2° Alkol (Sekonder):</strong> R-CH(OH)-R'</li>
+  <li><strong>3° Alkol (Tersiyer):</strong> R-C(OH)(R')(R'')</li>
+</ul>
+
+<h4>Poli Alkollere Örnekler</h4>
+<ul>
+  <li>Etandiol (Glikol): HO-CH<sub>2</sub>-CH<sub>2</sub>-OH</li>
+  <li>Propantriol (Gliserin): HO-CH<sub>2</sub>-CH(OH)-CH<sub>2</sub>-OH</li>
+</ul>
+
+<h3>Alkollerin Elde Edilmesi</h3>
+<ul>
+  <li><strong>Alkil halojenürlerden:</strong> R-X + NaOH → R-OH + NaX</li>
+  <li><strong>Alkenlere su katılmasıyla (Markownikov kuralı):</strong><br>
+      R-CH=CH<sub>2</sub> + H-OH → R-CH(OH)-CH<sub>3</sub></li>
+  <li><strong>Aldehit ve ketonların indirgenmesiyle:</strong><br>
+    <ul>
+      <li>Aldehit + [H<sub>2</sub>] → 1° Alkol</li>
+      <li>Keton + [H<sub>2</sub>] → 2° Alkol</li>
+    </ul>
+  </li>
+  <li><strong>Organik asitlerden:</strong> Asit → Aldehit → Alkol</li>
+  <li><strong>Esterlerin indirgenmesiyle:</strong> 2 mol mono alkol oluşur.</li>
+  <li><strong>Grignard bileşikleriyle:</strong><br>
+    <ul>
+      <li>R-MgX + HCHO → 1° Alkol</li>
+      <li>R-MgX + Aldehit → 2° Alkol</li>
+      <li>R-MgX + Keton → 3° Alkol</li>
+    </ul>
+  </li>
+</ul>
+
+<h3>Alkollerin Özellikleri</h3>
+<ul>
+  <li>R-OH molekülü hidrojen bağı içerir.</li>
+  <li>Benzer karbon sayılı eterlere göre daha yüksek kaynama noktalarına sahiptirler.</li>
+  <li>Alkali metallerle tepkime vererek hidrojen gazı çıkarırlar:<br>
+      R-OH + Na → R-ONa + H<sub>2</sub>↑</li>
+  <li>Asitlerle tepkime vererek ester oluştururlar:<br>
+      R-COOH + R'-OH → R-COOR' + H<sub>2</sub>O</li>
+  <li>Su kaybıyla alken oluşturabilirler:<br>
+      CH<sub>3</sub>-CH<sub>2</sub>-OH → CH<sub>2</sub>=CH<sub>2</sub> + H<sub>2</sub>O</li>
+  <li>1° alkoller → Aldehit, 2° alkoller → Keton (yükseltgenirse)</li>
+  <li>3° alkoller yükseltgenemez.</li>
+</ul>
+
+<h3>Poli Alkoller</h3>
+
+<p>Poli alkoller, mono alkollerde olduğu gibi <strong>alkali metallerle tepkime</strong> verirler.</p>
+
+<h4>Örnek Tepkime: Etandiol ve Sodyum</h4>
+
+<pre>
+HO–CH₂–CH₂–OH + 2Na → NaO–CH₂–CH₂–ONa + H₂(g)
+</pre>
+
+<p>Bu tepkimede etandiol (glikol), iki sodyum atomu ile tepkimeye girerek sodyum etandiolat ve hidrojen gazı oluşturur.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3>Eterler</h3>
+
+<p><strong>Basit Eter</strong>: R - O - R</p>
+<p><strong>Karışık Eter</strong>: R - O - R′</p>
+
+<h4>Örnek Eterler:</h4>
+<ul>
+  <li><strong>Dimetil Eter</strong>: CH₃ - O - CH₃</li>
+  <li><strong>Dietil Eter</strong>: C₂H₅ - O - C₂H₅</li>
+  <li><strong>Metil Etil Eter</strong>: CH₃ - O - C₂H₅</li>
+  <li><strong>Difenil Eter</strong>: C₆H₅ - O - C₆H₅</li>
+  <li><strong>Etil Fenil Eter</strong>: C₂H₅ - O - C₆H₅</li>
+</ul>
+
+<h4>Eterlerin Eldesi:</h4>
+
+<ul>
+  <li><strong>İki Mol Mono Alkol ile:</strong><br>
+    2 R - OH → R - O - R + H₂O
+  </li>
+  <li><strong>Williamson Sentezi ile (Alkolatlardan):</strong><br>
+    R - ONa + R′ - X → R - O - R′ + NaX
+  </li>
+</ul>
+
+<h4>Eterlerin Özellikleri:</h4>
+
+<ul>
+  <li>Eterler, oksijen atomunun ortaklaşmamış elektronları bulunduğu için polar yapıya sahiptir.</li>
+  <li>Eterlerde hidrojen bağı olmadığı için alkollerin izomerlerine kıyasla daha uçucudurlar.</li>
+  <li>Suda iyi çözünürler.</li>
+</ul>
+
+
+
+
+
+
+
+
+<h4>Aldehitler</h4>
+
+<p>Aldehitler, organik bileşiklerdir ve genel formülleri R - C - H şeklindedir. Alkanlardaki adlandırmanın sonuna <strong>-al</strong> eki getirilir.</p>
+
+<h5>Örnek Aldehitler:</h5>
+<ul>
+  <li><strong>Etanal (Asetaldehit)</strong>: CH₃ - CHO</li>
+  <li><strong>Metanal (Formaldehit)</strong>: H - CHO</li>
+  <li><strong>Propanal</strong>: CH₃ - CH₂ - CHO</li>
+  <li><strong>2-Klor Propanal</strong>: CH₃ - CHCl - CHO</li>
+  <li><strong>2-Metil Bütanal</strong>: CH₃ - CH(CH₃) - CH₂ - CHO</li>
+</ul>
+
+<h4>Aldehitlerin Eldesi</h4>
+
+<ul>
+  <li><strong>Birincil alkollerin bir kademe yükseltgenmesiyle:</strong>
+    <pre>
+      R - CH₂ - OH → R - C - H + H₂O
+    </pre>
+  </li>
+  <li><strong>Asitlerin bir kademe indirgenmesiyle:</strong>
+    <pre>
+      R - C - OH → R - C - H + H₂O
+    </pre>
+  </li>
+  <li><strong>Asit klorüründen:</strong>
+    <pre>
+      R - C - Cl + H₂ → R - C - H + HCl
+    </pre>
+  </li>
+</ul>
+
+<h4>Aldehitlerin Özellikleri</h4>
+
+<ul>
+  <li>Bir kademe indirgenirlerse birincil alkoller oluşur:
+    <pre>
+      R - C - H → R - C - OH
+    </pre>
+  </li>
+  <li>Bir kademe yükseltgenirse asitler oluşur:
+    <pre>
+      R - C - H → R - C - OH (Aldehit → Asit)
+    </pre>
+  </li>
+  <li>Aldehitler hem indirgenir hem de yükseltgenir. Birincil alkollerle indirgenebilir ve asitlere yükseltgenebilir.</li>
+  <li>Aldehitlerin ayırt edici tepkimesi, <strong>Tollens</strong> ve <strong>Fehling</strong> ayıraçlarına etki etmeleridir:
+    <ul>
+      <li><strong>Tollens Ayıraç Tepkimesi</strong>: Aldehitler, amonyaklı gümüş nitrat çözeltisinde Ag+ iyonunu indirgerken kendisi asit te yükseltgenir.
+        <pre>
+          R - C - H + 2Ag+ → R - C - OH + 2Ag
+        </pre>
+      </li>
+      <li><strong>Fehling Ayıraç Tepkimesi</strong>: Aldehitler, amonyaklı bakır nitrat çözeltisinde Cu²⁺ iyonlarını indirgerken kendileri asit te yükseltgenir.
+        <pre>
+          R - C - H + 2Cu²⁺ + 4OH⁻ → R - C - OH + Cu₂O
+        </pre>
+      </li>
+    </ul>
+  </li>
+  <li>Aldehitler katılma tepkimesi verirler:
+    <pre>
+      R - C - H + H - OH → R - C - H (Aldehit hidrat)
+    </pre>
+  </li>
+  <li>Aldehitlere NH₃ katılmasıyla amonyaklı aldehitler oluşur. Ancak ketonlara NH₃ katılamaz.
+    <pre>
+      R - C - H + NH₃ → R - CH₂ - NH₂ (Amonyaklı aldehit)
+    </pre>
+  </li>
+  <li>Aldehitler polimerleşme tepkimesi verirler.</li>
+</ul>
+
+
+<h3>Ketonlar</h3>
+
+<h4>Basit ve Karışık Ketonlar</h4>
+<p>Ketonlar, organik bileşiklerdir ve genel formülleri R - C - R şeklindedir. Basit ketonlar genellikle aynı R gruplarına sahipken, karışık ketonlar farklı R grupları içerir.</p>
+
+<h5>Örnek Ketonlar:</h5>
+<ul>
+  <li><strong>Dimetil Keton (Aseton veya Propanon)</strong>: CH₃ - C - CH₃</li>
+  <li><strong>Bütanon (Etil Metil Keton)</strong>: CH₃ - C - C₂H₅</li>
+</ul>
+
+<h4>Ketonların Eldesi</h4>
+<ul>
+  <li><strong>İkincil alkollerin yükseltgenmesiyle:</strong>
+    <pre>
+      R - C - OH → R - C - R + H₂O
+    </pre>
+  </li>
+  <li><strong>Alkinlere su katılmasıyla:</strong> 
+    <p>Üç veya daha fazla karbon sayılı alkinlere su katıldığında ketonlar oluşur. Örnek:</p>
+    <pre>
+      CH₃CH₂C≡CH + H₂O → CH₃ - CH₂ - C = O
+      (1-Bütin → Bütanon)
+    </pre>
+  </li>
+</ul>
+
+<h4>Ketonların Özellikleri</h4>
+<ul>
+  <li><strong>Ketonlarda katılma tepkimesi:</strong> Aldehitlerde olduğu gibi, ketonlar NH₃ hariç katılma tepkimesi verirler:
+    <pre>
+      R - C - R + HCN → R - C - R (Cyanhidrin oluşumu)
+    </pre>
+  </li>
+  <li><strong>Grignard bileşiklerinin katılmasıyla:</strong> Ketonlara Grignard bileşiklerinin katılmasıyla üçüncül alkoller oluşur:
+    <pre>
+      R - C - R + R - MgX → R - C - R (Grignard reaksiyonu)
+    </pre>
+  </li>
+  <li><strong>Ketonların indirgenmesiyle:</strong> Ketonlar indirgenerek ikincil alkoller oluşturur:
+    <pre>
+      R - C - R + H₂ → R - C - OH
+    </pre>
+  </li>
+  <li><strong>Ketonlar yükseltgenemezler:</strong> Ketonlar, aldehitlerde olduğu gibi yükseltgenemezler. Bu nedenle Fehling ve Tollens ayıraçlarına etki etmezler.</li>
+  <li><strong>Polimerleşme:</strong> Aldehitler polimerleşme tepkimesi verirken, ketonlar (asetondan başka) polimerleşme tepkimesi vermezler.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3>Karboksilli Asitler ve Esterler</h3>
+
+<h4>Karboksilli Asitler</h4>
+<p>Karboksilli asitlerin genel formülü R - COOH şeklindedir. Bir karboksilli asit, bir karboksil grubu (-COOH) içerir.</p>
+
+<h5>Örnek Karboksilli Asitler:</h5>
+<ul>
+  <li><strong>Etanoik Asit</strong> (Asetik Asit): CH₃COOH</li>
+  <li><strong>3-Metil Bütanoik Asit</strong> (β-Metil Bütirik Asit): CH₃ - CH - CH₂COOH</li>
+  <li><strong>3-Oksi Bütanoikasit</strong>: HC - COOH</li>
+  <li><strong>1,2-Propandioik Asit</strong>: HCOOH (Metanoik Asit)</li>
+  <li><strong>2-Aminopropanoik Asit</strong> (Amino Asit): CH₃ - CH - COOH</li>
+</ul>
+
+<h4>Asitlerin Eldesi</h4>
+<ul>
+  <li><strong>Birincil Alkollerin İki Kademe Yükseltgenmesiyle:</strong>
+    <pre>
+      R - CH₂ - OH → R - C - H → R - COOH
+    </pre>
+  </li>
+  <li><strong>Esterlerin Asitli Ortamda Su ile Tepkimesinden (Hidrolizi):</strong>
+    <pre>
+      Ester + H₂O → Asit + Alkol
+    </pre>
+  </li>
+  <li><strong>Grignard Bileşiklerinden:</strong>
+    <pre>
+      R - MgX + CO₂ → R - COOH
+    </pre>
+  </li>
+  <li><strong>Karboksilat Tuzlarından:</strong>
+    <pre>
+      R - COONa + HBr → R - COOH + NaBr
+    </pre>
+  </li>
+</ul>
+
+<h4>Karboksilli Asitlerin Genel Özellikleri</h4>
+<ul>
+  <li><strong>Metallerle Tepkimeye Girerek H₂ Gazı Çıkarırlar:</strong>
+    <pre>
+      R - COOH + Na → R - COONa + H₂ (gaz)
+    </pre>
+  </li>
+  <li><strong>Bazlarla Nötralizasyon Tepkimesi Verirler:</strong>
+    <pre>
+      RCOOH + KOH → RCOOK + H₂O
+    </pre>
+  </li>
+  <li><strong>Tuzlarla Tepkimeye Girerek CO₂ Gazı Çıkarırlar.</strong></li>
+  <li><strong>Anhidrit Oluşumu:</strong>
+    <pre>
+      R - COOH + OH - C - R → R - C - O - C - R + H₂O
+    </pre>
+  </li>
+  <li><strong>Ester Oluşumu:</strong>
+    <pre>
+      R - COOH + HO - R → R - C - O - R + H₂O
+    </pre>
+  </li>
+  <li><strong>Asitler İndirgenerek Aldehit ve Alkoller Oluşurlar:</strong>
+    <pre>
+      R - COOH + H₂ → R - C - H (Aldehit)
+      R - COOH + H₂ → R - CH₂OH (Alkol)
+    </pre>
+  </li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3>Önemli Organik Asitler</h3>
+
+<h4>Formik Asit</h4>
+<p>Formik asit, hem aldehit hem de asit grubu bulundurur ve bu özelliği nedeniyle aldehitlerden dolayı Fehling ve Tollens çözeltilerine etki eder.</p>
+<pre>
+  HCOOH (Formik Asit)
+  H - C - OH (Aldehit)
+</pre>
+
+<h4>Asetik Asit</h4>
+<p>Asetik asit, sirkenin ekşiliğini veren asittir ve meyvelerde bulunur.</p>
+<pre>
+  CH₃COOH (Asetik Asit)
+  - C - OH (Asit)
+</pre>
+
+<h4>Yağ Asitleri</h4>
+<ul>
+  <li>Moleküllerinde karbon sayısı çift olan, düz zincirli monokarboksilli asitlere yağ asitleri denir.</li>
+  <li><strong>Doymuş Yağ Asitleri:</strong> Katı ve hayvansal yağlarda bulunur.</li>
+  <li><strong>Doymamış Yağ Asitleri:</strong> Çift sayıda karbon atomu içerir. Düz zincirde çift bağın varlığı asidi doymamış hale getirir.</li>
+  <li><strong>Sıvı Yağlar:</strong> Doymamış yağ asitlerinden oluşur.</li>
+  <li><strong>Doymamış Yağ Asitlerinin Hidrojene Doyurulması:</strong> Bu işlemle margarinden elde edilir.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3>Optik İzomeri</h3>
+
+<p>Bir karbon atomuna dört farklı atom ya da grup bağlıysa, bu tür karbon atomuna <strong>asimetrik karbon atomu</strong> denir.</p>
+<pre>
+  H COOH
+  I I
+  F - C * - Br
+  I I
+  Cl CH3
+</pre>
+<p>Örnek: Brom, Flor, Klor, Metan, Süt Asidi</p>
+
+<p>Bu tür bileşikler, biri diğerinin ayna görüntüsü olan iki tür molekül oluşturarak <strong>optik izomerlik</strong> gösterir. Buna göre bir maddenin optik izomeri göstermesi için asimetrik karbon atomu içermesi gerekir. Bu tür maddeler <strong>optikçe aktiftir</strong>.</p>
+
+<h4>Düzlem Polarize Işık</h4>
+<p>Düzlem polarize ışık, asimetrik karbon atomu bulunan çözeltilerden geçirilirse, ışığın yayılma düzlemi sağa veya sola doğru çevrilir.</p>
+
+<pre>
+  COOH COOH
+  I I
+  H - C * - OH     HO - C * - H
+  I I
+  CH3 CH3
+</pre>
+<p>Örnek: D- süt asidi ve L- süt asidi</p>
+
+<h4>Polarize Işığın Yönü</h4>
+<ul>
+  <li>Polarize ışık sağa çevriliyorsa <strong>(+)</strong>, sola çevriliyorsa <strong>(-)</strong> işareti kullanılır.</li>
+  <li>D- ve L- izomerleri birbiriyle ters etkiye sahip oldukları için bu iki izomerin eşit miktarda karışımı optikçe aktifliği kaybeder. Bu tür karışımlara <strong>rasemik karışım (rasemat)</strong> adı verilir.</li>
+</ul>
+
+
+
+
+
+
+
+
+<h3>Esterler</h3>
+
+<p>Karboksilli asit molekülü ve alkol molekülünün tepkimesinde su molekülü ile birlikte oluşan maddeye <strong>ester</strong>, olaya da <strong>esterleşme</strong> denir.</p>
+<pre>
+  O O
+  II esterleşme II
+  R - C - OH + OH - R' → R - C - OR' + H2O
+</pre>
+
+<p><strong>Hidroliz:</strong> Esterleşme olayı bir denge tepkimesidir.</p>
+
+<h4>Adlandırma</h4>
+<p>Önce alkolden gelen alkil grubunun adı yazılır. Sonra asitin -ik asit kısmı kaldırılır ve yerine -at eki getirilir.</p>
+<pre>
+  O O
+  II II
+  CH3
+  - C - O C2H5  C2H5
+  - C - OCH3
+  etil etanoat   metil propanoat
+</pre>
+
+<p>Bir başka adlandırma yöntemi, önce asit adı, sonra alkolden gelen alkil isminin sonuna ester sözcüğü eklenir.</p>
+<pre>
+  O O
+  II II
+  CH3
+  - C - O C2H5   CH3
+  (CH2)2
+  - C - OCH3
+  asetik asitin etil esteri   bütanoik asitin metil esteri
+  (etanoik asitin etil esteri)
+</pre>
+
+<h4>Esterlerin Eldesi</h4>
+<p>1. Karboksilli asitlerle alkollerin tepkimesinden:</p>
+<pre>
+  O O
+  II H+ II
+  R - C - OH + HO - R' → R - C - O - R' + H2O
+</pre>
+
+<p>2. Asit klorürlerden:</p>
+<pre>
+  O O
+  II II
+  R - C - Cl + HO - R' → R - C - O - R' + HCl
+</pre>
+
+<h4>Esterlerin Genel Özellikleri</h4>
+<ul>
+  <li>Hoş kokulu maddelerdir. Parfümeride kullanılırlar.</li>
+  <li>Ester molekülleri arasında hidrojen bağı oluşmadığı için aynı karbon sayılı asitlere göre daha düşük sıcaklıkta kaynarlar.</li>
+</ul>
+
+<h4>Esterlemenin Tersi: Hidroliz</h4>
+<p>Esterleşme tersi olan hidroliz olayında ester, karboksilli asit ve alkole dönüşür:</p>
+<pre>
+  O O
+  II Asit II
+  R - C - O - R' + H2O → R - C - OH + R' + OH
+  Asit   Alkol
+</pre>
+
+<p>2. Esterlerin baz ortamdaki hidrolizine <strong>sabunlaşma</strong> denir:</p>
+<pre>
+  O O
+  II Sabun II
+  R - C - OR' + NaOH → R - C - ONa + R'
+  - OH
+</pre>
+
+
+
+
+
+
+
+
+
+
+
+
+<h3>Yağlar</h3>
+
+<p>Yağ asitlerinin gliserinle oluşturduğu esterlere <strong>yağ</strong> denir.</p>
+<pre>
+  Gliserin
+  yağ
+</pre>
+
+<p>Yağlar, yapılarındaki asitlere göre üçe ayrılırlar:</p>
+
+<h4>a) Katı Yağlar</h4>
+<p>Doymuş yağ asitlerinin oluşturdukları esterlerdir. Hayvansal yağlar bu türdendir.</p>
+
+<h4>b) Sıvı Yağlar</h4>
+<p>Doymamış yağ asitlerinin oluşturdukları esterlerdir. Zeytinyağı, pamuk yağı, soya yağı gibi.</p>
+
+<h4>c) Kuruyan Yağlar</h4>
+<p>Yapılarında çok sayıda çift bağ bulunur. Açık havada bırakıldıklarında havanın oksijeni çift bağları kırar ve katılaşmaya başlar.</p>
+
+<pre>
+  3R - C
+  O
+  OH
+  +
+  CH2
+   - OH
+  CH
+   - OH
+  CH2
+   - OH
+  CH2
+   - O - C - R
+  O
+  CH - O - C - R + 3H2
+  O
+  O
+  CH2
+   - O - C - R
+  O
+</pre>
+
+<p><strong>Not:</strong> Yapılarında çift bağ bulunduran doymamış yağlar, Ni katalizörlüğünde H2 ile doyurularak margarinler oluşur.</p>
+
+<h4>Deterjanlar</h4>
+<ul>
+  <li>Yapıları sabuna benzeyen bileşiklerdir.</li>
+  <li>Farkları, Ca+2 ve Mg+2 iyonu içeren sert sularda da işe yararlar.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+<h3>Karbonhidratlar</h3>
+
+<p><strong>Klorofil</strong></p>
+<pre>
+  CO2 + H2O + Güneş → (CH2O)n + O2
+  Enerjisi: Fotosentez
+</pre>
+<p>Karbonhidratlar yapılarında aldehit veya keton grubu bulunduran polialkollerdir.</p>
+
+<h4>Monosakkaritler</h4>
+<ul>
+  <li>Daha basit şekerlere ayrılamayan polihidroksi aldehit veya ketonlardır.</li>
+  <li>Suda çözünen tatlı maddelerdir.</li>
+  <li>En önemlileri glikoz, fruktoz ve galaktozdur.</li>
+</ul>
+
+<pre>
+  CHO      CH2OH     CHO
+  |        |         |
+  H - C - OH  C = O  H - C - OH
+  |        |         |
+  H - C - OH  HO - C - H  H - C - OH
+  |        |         |
+  H - C - OH  H - C - OH  H - C - OH
+  |        |         |
+  CH2OH   CH2OH     CH2OH
+</pre>
+
+<p>Glikoz, Fruktoz ve Galaktoz bu üç bileşiğin kapalý formülleri aynıdır (C6H12O6), ancak yapý formülleri farklı olup birbirinin izomerleridir.</p>
+
+<p>İçinde aldehit grubu bulunduran monosakkaritler, Fehling ve Tollens çözeltisine etki ederek buradaki iyonları (metal) indirgerler.</p>
+
+<h4>Dissakkaritler</h4>
+<ul>
+  <li>İki monosakkarit molekülünden 1 molekül su çıkmasıyla oluşan karbonhidratlardır.</li>
+  <li>Genel formülleri C12H22O11'dir.</li>
+  <li>En önemlileri sakkaroz (çay şekeri), laktoz, maltoz ve sellobiyozdur.</li>
+</ul>
+
+<pre>
+  C6H12O6 + C6H12O6 → C12H22O11 + H2O
+  glikoz   fruktoz   sakkaroz
+</pre>
+
+<h4>Polisakkaritler</h4>
+<ul>
+  <li>Çok sayıda monosakkaritin birleşmesiyle oluşurlar. Genel formülleri (C6H10O5)n'dir.</li>
+  <li>En önemlileri nişasta, selüloz, glikojendir.</li>
+  <li>Nişasta; buğday, patates ve mısırda bol miktarda bulunur.</li>
+  <li>Selüloz; bitkilerin yapı taşı olup en bol bulunan polisakkarittir.</li>
+  <li>Glikojen; hayvanların karbonhidrat deposudur ve karaciğer ile kaslarda bulunur.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+<h3>Alifatik Amonyak Türevleri</h3>
+
+<h4>1. AMİNLER</h4>
+<ul>
+  <li>Amonyaktaki hidrojen atomları yerine alkil gruplarının geçmesiyle oluşan bileşiklerdir.</li>
+</ul>
+
+<pre>
+  H - N - H    R - N - H    R - N - H    R - N - R
+  |     |        |     |        |     |        |     |
+  H     H        R     R        R     R        R     R
+</pre>
+<ul>
+  <li>Amonyak</li>
+  <li>Birincil amin</li>
+  <li>İkincil amin</li>
+  <li>Üçüncül amin</li>
+</ul>
+
+<pre>
+  H      NH2
+  |      |
+  CH3 - N - H    CH3 - NH - CH3
+  Metil amin    Siklo hekzil amin    Dimetil amin
+</pre>
+
+<ul>
+  <li>Doymamış azot bileşikleri hidrojenlenirse aminler oluşur.</li>
+</ul>
+
+<pre>
+  R - C ≡ N + 2H2 → R - CH2 - NH2
+  Nitril   Amin
+</pre>
+
+<ul>
+  <li>Aminler kötü kokulu bileşiklerdir.</li>
+  <li>Aminlerde N - H bağı bulunduğundan hidrojen bağı içerirler. Bu yüzden erime ve kaynama noktaları yüksektir.</li>
+  <li>Üçüncül aminlerde hidrojen bağı yoktur.</li>
+  <li>Aminler suda iyi çözünürler ve çözeltileri bazik özellik gösterirler.</li>
+</ul>
+
+<h4>AMİTLER</h4>
+<ul>
+  <li>Karboksilli asitlerin, karboksil gruplarındaki -OH yerine “NH2” grubunun gelmesiyle oluşurlar.</li>
+</ul>
+
+<pre>
+  O              O
+  ||             ||
+  R - C - OH  →  R - C - NH2
+  Formik asit   Formamit
+</pre>
+
+<pre>
+  O              O
+  ||             ||
+  CH3 - C - OH  →  CH3 - C - NH2
+  Asetik asit   Asetamit
+</pre>
+
+<pre>
+  O              O
+  ||             ||
+  CH3 - CH2 - C - NH2  →  H2N - C - NH2
+  Propiyonamit (Propanamit)  Üre
+</pre>
+
+<ul>
+  <li>Hidrojen bağı içerdiğinden suda iyi çözünürler.</li>
+  <li>Amitler nötr bileşiklerdir ve asit ve bazlarla tepkime vermezler.</li>
+  <li>Üre: Sentetik olarak elde edilen ilk organik bileşiktir.</li>
+</ul>
+
+
+
+
+
+
+
+
+<h3>AMİNO ASİTLER</h3>
+<ul>
+  <li>Yapılarında hem amino (-NH2), hem de karboksil grubu (-COOH) bulunduran bileşiklerdir.</li>
+</ul>
+
+<pre>
+   COOH
+    |
+H2N - C - H
+    |
+    R
+</pre>
+
+<ul>
+  <li>Proteinlerin yapı taşları olan amino asitler canlılığın temelidir.</li>
+  <li>Amino asitler proteinlerden hidroliz ile elde edilirler.</li>
+  <li>Suda iyi çözünürler. Hem asit hem de baz grubu taşıdıkları için iç tuz oluştururlar.</li>
+  <li>Amfoter özellik gösterirler.</li>
+  <li>Bir amino asit molekülüyle, diğer amino asit molekülünün su çıkışı ile birbirine bağlanmasına peptitleşme denir.</li>
+  <li>Çok sayıda amino asit molekülünün peptitleşmesine polipeptit denir. Proteinler birer polipeptittir.</li>
+</ul>
+
+
+
+
+
+
+<h3>AROMATİK HİDROKARBONLAR VE AROMATİK BİLEŞİKLER</h3>
+
+<h4>BENZEN (C6H6)</h4>
+<ul>
+  <li>Benzen ve diğer aromatik bileşikler yazılırken karbon ve hidrojenler gösterilmez. Benzen formülünde her köşede bir karbon ve bir hidrojen bulunur.</li>
+  <li>Tüm karbon bağları aynı kuvvettedir. Bu nedenle katılma tepkimesi vermez. Yer değiştirme tepkimesi verirler.</li>
+<li>Taşkömürünün damıtılasından, petrolden, Asetilenin basınç altında polimerleşmesiyle elde edilir 3C2H2->C6H6</li>
+<li>Kolaylıkla katılım tepkimesi vermezler</li>
+<li>Yer değiştirme tepkimesi verirler</li>
+</ul>
+
+<pre>
+  Ph
+</pre>
+
+<h4>NAFTALİN (C10H8)</h4>
+
+<pre>
+  Ph-Ph
+</pre>
+
+<h4>ANTRASEN (C14H10)</h4>
+
+<pre>
+  Ph-Ph-Ph
+</pre>
+
+<h4>MONOBROMBENZEN VE MONOKLORBENZEN</h4>
+
+<pre>
+  Ph-Br
+  Ph-Cl
+</pre>
+
+
+
+<pre>
+  Ph-CH3
+  Toluen
+   Benzen'e iki metil grubunun bağlanmasıyla isim değişir ve bu bileşiğe ksilen denir.
+</pre><pre>
+  Ph-NH2
+  Anilin
+</pre>
+
+<pre>
+  Ph-OH
+  Fenol
+</pre>
+
+<h4>Diğer Aromatik Bileşikler</h4>
+
+<pre>
+  Ph-CH2OH
+  Benzialkol
+</pre>
+
+<pre>
+  Ph-COH
+  Benzaldehit
+</pre>
+
+<pre>
+ Ph-COOH
+  Benzoikasit
+</pre>
+
+<pre>
+Ph(COOH)-O-C((O))-COH2
+  Asetil salisilik asit (aspirin)
+</pre>
+
+<h4>İzomerler</h4>
+<ul>
+  <li>Orto - (1,2) dinitro benzen</li>
+  <li>Meta - (1,3) di amino benzen</li>
+  <li>Para - (1,4) di metil benzen</li>
+</ul>
+
+
+
+<pre>
+  Ph-NO2
+  Trinitrotoluen (TNT)
+  Patlayıcı özellik gösterir
+</pre>
+
+<pre>
+  Ph-OH
+  Fenol (Fenikasit)
+  Alkole Benzemesine rağmen alkol değildir. Suda çözündüğünde zayıf asit özellik gösterir
+</pre>
+
+<pre>
+	Ph-NH2
+  Amino Benzen (Anilin)
+  Zayıf Baz Özelliği Gösterir
+</pre>
+
+
+<h1>Aromatik Bileşikler</h1>
+
+<h3>AROMATİK HİDROKARBONLAR VE AROMATİK BİLEŞİKLER</h3>
+
+<p>Aromatik bileşikler, halkalı yapıda ve özel bir elektron dağılımına sahip organik bileşiklerdir. En basit örneği benzendir.</p>
+
+<h4>BENZEN (C6H6)</h4>
+<ul>
+  <li><strong>Yapı:</strong> Benzen ve diğer aromatik bileşikler yazılırken karbon ve hidrojenler gösterilmez. Benzen formülünde her köşede bir karbon ve bir hidrojen bulunur.</li>
+  <li><strong>Bağ Özellikleri:</strong> Tüm karbon bağları aynı kuvvettedir. Bu nedenle katılma tepkimesi vermez. Yer değiştirme tepkimesi verirler.</li>
+  <li><strong>Elde Edilişi:</strong> Taşkömürünün damıtılmasından, petrolden, Asetilenin basınç altında polimerleşmesiyle elde edilir (3C2H2 → C6H6)</li>
+  <li><strong>Tepkimeler:</strong> Kolaylıkla katılım tepkimesi vermezler, yer değiştirme tepkimesi verirler</li>
+  <li><strong>Fiziksel Özellikler:</strong> Renksiz, karakteristik kokulu, suda çözünmeyen bir sıvıdır.</li>
+</ul>
+
+<h4>BENZEN TÜREVLERİ</h4>
+
+<h4>NAFTALİN (C10H8)</h4>
+<ul>
+  <li>İki benzen halkasının birleşmesiyle oluşur</li>
+  <li>Beyaz kristal katı, güçlü kokulu</li>
+  <li>Güve kovucu olarak kullanılır</li>
+</ul>
+
+<h4>ANTRASEN (C14H10)</h4>
+<ul>
+  <li>Üç benzen halkasının lineer birleşimi</li>
+  <li>Boyar madde üretiminde kullanılır</li>
+</ul>
+
+<h4>HALOJENLİ TÜREVLER</h4>
+<ul>
+  <li><strong>Monobrombenzen (Ph-Br):</strong> Benzenin bromlanmasıyla elde edilir</li>
+  <li><strong>Monoklorbenzen (Ph-Cl):</strong> Benzenin klorlanmasıyla oluşur</li>
+</ul>
+
+<h4>ALKYL BENZENLER</h4>
+<ul>
+  <li><strong>Toluen (Ph-CH3):</strong> Endüstride önemli bir çözücüdür</li>
+  <li><strong>Ksilen:</strong> Benzen'e iki metil grubunun bağlanmasıyla oluşur (orto, meta, para izomerleri vardır)</li>
+</ul>
+
+<h4>FONKSİYONEL GRUP İÇEREN TÜREVLER</h4>
+<ul>
+  <li><strong>Anilin (Ph-NH2):</strong> Boya endüstrisinde kullanılır, zayıf baz özelliği gösterir</li>
+  <li><strong>Fenol (Ph-OH):</strong> Alkole benzemesine rağmen alkol değildir. Suda çözündüğünde zayıf asit özellik gösterir</li>
+  <li><strong>Benzaldehit (Ph-COH):</strong> Badem kokulu, parfümlerde kullanılır</li>
+  <li><strong>Benzoik asit (Ph-COOH):</strong> Gıda koruyucusu olarak kullanılır</li>
+</ul>
+
+<h4>ÖNEMLİ AROMATİK BİLEŞİKLER</h4>
+<ul>
+  <li><strong>Asetil salisilik asit:</strong> Aspirin olarak bilinen ağrı kesici</li>
+  <li><strong>Trinitrotoluen (TNT):</strong> Patlayıcı özellik gösterir</li>
+</ul>
+
+<h4>İzomerler</h4>
+<ul>
+  <li><strong>Orto (1,2):</strong> dinitro benzen</li>
+  <li><strong>Meta (1,3):</strong> di amino benzen</li>
+  <li><strong>Para (1,4):</strong> di metil benzen</li>
+</ul>
+
+<h4>AROMATİK BİLEŞİKLERİN ÖNEMİ</h4>
+<ul>
+  <li>İlaç endüstrisinde ham madde</li>
+  <li>Plastik ve sentetik lif üretimi</li>
+  <li>Boya ve parfüm endüstrisi</li>
+  <li>Patlayıcı madde yapımı</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h2>Organik Bileşiklerin Özellikleri</h2>
+
+<table border="1">
+  <tr>
+	  <th>Bileşik/Bileşik Grubu</th>
+    <th>Asitlik/Bazlık</th>
+    <th>Fiziksel Hal</th>
+    <th>Görünüm</th>
+    <th>Koku</th>
+    <th>Tat</th>
+    <th>Kullanım Alanları</th>
+    <th>Sentezi</th>
+  </tr>
+  
+  <!-- ALKANLAR -->
+  <tr>
+    <td><strong>Alkanlar (CnH2n+2)</strong></td>
+    <td>Nötr</td>
+    <td>C1-C4: gaz, C5-C17: sıvı, C18+: katı</td>
+    <td>Renksiz</td>
+    <td>Hafif petrol kokusu</td>
+    <td>Tatsız</td>
+    <td>Yakıt, çözücü, mum yapımı</td>
+    <td>Petrol rafinasyonu, doğal gaz</td>
+  </tr>
+  
+  <!-- ALKENLER -->
+  <tr>
+    <td><strong>Alkenler (CnH2n)</strong></td>
+    <td>Nötr</td>
+    <td>C2-C4: gaz, C5-C15: sıvı, C16+: katı</td>
+    <td>Renksiz</td>
+    <td>Hafif tatlımsı</td>
+    <td>Tatsız</td>
+    <td>Plastik üretimi, sentetik kauçuk</td>
+    <td>Petrokimya, alkollerin dehidrasyonu</td>
+  </tr>
+  
+  <!-- ALKOLLER -->
+  <tr>
+    <td><strong>Alkoller (R-OH)</strong></td>
+    <td>Çok zayıf asit</td>
+    <td>C1-C12: sıvı, C13+: katı</td>
+    <td>Renksiz</td>
+    <td>Keskin, karakteristik</td>
+    <td>Yanıcı (metanol zehirli)</td>
+    <td>Dezenfektan, çözücü, yakıt</td>
+    <td>Fermentasyon, alken hidrasyonu</td>
+  </tr>
+  
+  <!-- KARBOKSİLİK ASİTLER -->
+  <tr>
+    <td><strong>Karboksilik Asitler (R-COOH)</strong></td>
+    <td>Zayıf asit</td>
+    <td>C1-C9: sıvı, C10+: katı</td>
+    <td>Renksiz</td>
+    <td>Keskin (düşük moleküllü), kokusuz (yüksek moleküllü)</td>
+    <td>Ekşi</td>
+    <td>Gıda koruyucu, boya, ilaç</td>
+    <td>Alkol oksidasyonu, hidroliz</td>
+  </tr>
+  
+  <!-- AROMATİK BİLEŞİKLER -->
+  <tr>
+    <td><strong>Aromatik Bileşikler</strong></td>
+    <td>Değişken (fenol: asidik, anilin: bazik)</td>
+    <td>Çoğunlukla sıvı veya katı</td>
+    <td>Renksiz veya hafif sarı</td>
+    <td>Karakteristik (benzen: tatlı, naftalin: keskin)</td>
+    <td>Genellikle acı</td>
+    <td>İlaç, boya, plastik, patlayıcı</td>
+    <td>Petrokimya, kömür katranı</td>
+  </tr>
+  
+  <!-- ÖZEL BİLEŞİKLER -->
+  <tr>
+    <td><strong>Metanol (CH3OH)</strong></td>
+    <td>Zayıf asit</td>
+    <td>Sıvı</td>
+    <td>Renksiz</td>
+    <td>Hafif alkolik</td>
+    <td>Yanıcı, zehirli</td>
+    <td>Yakıt, antifriz, çözücü</td>
+    <td>Sentetik gazdan</td>
+  </tr>
+  
+  <tr>
+    <td><strong>Etanol (C2H5OH)</strong></td>
+    <td>Zayıf asit</td>
+    <td>Sıvı</td>
+    <td>Renksiz</td>
+    <td>Alkolik</td>
+    <td>Yanıcı</td>
+    <td>İçecek, dezenfektan, yakıt</td>
+    <td>Fermentasyon, etilen hidrasyonu</td>
+  </tr>
+  
+  <tr>
+    <td><strong>Asetik Asit (CH3COOH)</strong></td>
+    <td>Zayıf asit</td>
+    <td>Sıvı</td>
+    <td>Renksiz</td>
+    <td>Keskin sirke kokusu</td>
+    <td>Ekşi</td>
+    <td>Gıda, tekstil, ilaç</td>
+    <td>Etanol fermantasyonu, sentetik</td>
+  </tr>
+  
+  <tr>
+    <td><strong>Formik Asit (HCOOH)</strong></td>
+    <td>Orta kuvvette asit</td>
+    <td>Sıvı</td>
+    <td>Renksiz</td>
+    <td>Keskin, tahriş edici</td>
+    <td>Yakıcı</td>
+    <td>Deri endüstrisi, koruyucu</td>
+    <td>Karbonmonoksit ve NaOH'den</td>
+  </tr>
+  
+  <tr>
+    <td><strong>Fenol (C6H5OH)</strong></td>
+    <td>Zayıf asit</td>
+    <td>Katı</td>
+    <td>Renksiz kristal</td>
+    <td>Hafif tatlımsı</td>
+    <td>Yakıcı</td>
+    <td>Dezenfektan, reçine üretimi</td>
+    <td>Kömür katranı, kümenden</td>
+  </tr>
+  
+  <tr>
+    <td><strong>Anilin (C6H5NH2)</strong></td>
+    <td>Zayıf baz</td>
+    <td>Sıvı</td>
+    <td>Renksiz-sarımsı</td>
+    <td>Amin kokusu</td>
+    <td>Yanıcı</td>
+    <td>Boya, ilaç, kauçuk</td>
+    <td>Nitrobenzen indirgenmesi</td>
+  </tr>
+  
+  <tr>
+    <td><strong>Aseton (CH3COCH3)</strong></td>
+    <td>Nötr</td>
+    <td>Sıvı</td>
+    <td>Renksiz</td>
+    <td>Tatlımsı</td>
+    <td>Yanıcı</td>
+    <td>Çözücü, tırnak cilası çıkarıcı</td>
+    <td>Kümensiz, izopropanol oksidasyonu</td>
+  </tr>
+  
+  <tr>
+    <td><strong>Glukoz (C6H12O6)</strong></td>
+    <td>Çok zayıf asit</td>
+    <td>Katı</td>
+    <td>Beyaz kristal</td>
+    <td>Kokusuz</td>
+    <td>Tatlı</td>
+    <td>Gıda, ilaç, fermantasyon</td>
+    <td>Fotosentez, nişasta hidrolizi</td>
+  </tr>
+</table>
+
+<h3>Genel Özellikler</h3>
+<ul>
+  <li><strong>Polarite:</strong> Fonksiyonel gruplar polariteyi belirler (OH, COOH polar; alkil gruplar apolar)</li>
+  <li><strong>Çözünürlük:</strong> Küçük polar moleküller suda çözünür, büyük apolar moleküller organik çözücülerde çözünür</li>
+  <li><strong>Kaynama Noktası:</strong> Hidrojen bağı yapabilenlerin (alkoller, asitler) kaynama noktası yüksektir</li>
+  <li><strong>Yanıcılık:</strong> Çoğu organik bileşik yanıcıdır, özellikle hidrokarbonlar</li>
+  <li><strong>Reaktivite:</strong> Fonksiyonel gruplar kimyasal reaktiviteyi belirler</li>
+</ul>
+
+
+
+
+
+    <div class="menu" id="menu">
+        <table id="menu-table"></table>
+    </div>
+
+</body>
+<script>
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const headings = document.querySelectorAll("large, h1, h2, h3, h4");
+    if (headings.length === 0) return;
+
+    const tocContainer = document.createElement("div");
+    tocContainer.id = "table-of-contents";
+    tocContainer.innerHTML = `
+        <div class="toc-header">İçindekiler</div>
+        <div class="toc-content"><ul></ul></div>
+    `;
+
+    const list = tocContainer.querySelector("ul");
+    let lastLevels = { large: list, h1: null, h2: null, h3: null, h4: null };
+
+    headings.forEach((heading, index) => {
+        const anchorId = `heading-${index}`;
+        heading.id = anchorId;
+
+        const listItem = document.createElement("li");
+        const link = document.createElement("a");
+        link.href = `#${anchorId}`;
+        link.innerText = heading.innerText;
+        listItem.appendChild(link);
+
+        let currentList;
+        switch (heading.tagName.toLowerCase()) {
+            case "large":
+                listItem.classList.add("main-item");
+                list.appendChild(listItem);
+                lastLevels.large = document.createElement("ul");
+                listItem.appendChild(lastLevels.large);
+                lastLevels.h1 = lastLevels.h2 = lastLevels.h3 = lastLevels.h4 = null;
+                break;
+            case "h1":
+                listItem.classList.add("sub-item");
+                currentList = lastLevels.large || list;
+                currentList.appendChild(listItem);
+                lastLevels.h1 = document.createElement("ul");
+                listItem.appendChild(lastLevels.h1);
+                lastLevels.h2 = lastLevels.h3 = lastLevels.h4 = null;
+                break;
+            case "h2":
+                listItem.classList.add("sub-sub-item");
+                currentList = lastLevels.h1 || lastLevels.large || list;
+                currentList.appendChild(listItem);
+                lastLevels.h2 = document.createElement("ul");
+                listItem.appendChild(lastLevels.h2);
+                lastLevels.h3 = lastLevels.h4 = null;
+                break;
+            case "h3":
+                listItem.classList.add("sub-sub-sub-item");
+                currentList = lastLevels.h2 || lastLevels.h1 || lastLevels.large || list;
+                currentList.appendChild(listItem);
+                lastLevels.h3 = document.createElement("ul");
+                listItem.appendChild(lastLevels.h3);
+                lastLevels.h4 = null;
+                break;
+            case "h4":
+                listItem.classList.add("sub-sub-sub-sub-item");
+                currentList = lastLevels.h3 || lastLevels.h2 || lastLevels.h1 || lastLevels.large || list;
+                currentList.appendChild(listItem);
+                lastLevels.h4 = document.createElement("ul");
+                listItem.appendChild(lastLevels.h4);
+                break;
+        }
+    });
+
+    document.body.appendChild(tocContainer);
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    const headers = document.querySelectorAll("h1, h2, h3, large, h4, strong");
+    const paragraphs = document.querySelectorAll("p, li, th, td");
+    const menu = document.getElementById("menu");
+    const menuTable = document.getElementById("menu-table");
+    let selectedLinks = [];
+
+    let headerWords = new Map();
+
+    headers.forEach(header => {
+        if (!header.id) header.id = "header-" + Math.random().toString(36).substr(2, 9); // Ensure ID exists
+        header.textContent.split(/\s+/).forEach(word => {
+            let key = word.toLowerCase();
+            if (!headerWords.has(key)) {
+                headerWords.set(key, []);
+            }
+            headerWords.get(key).push({ id: header.id, text: header.textContent, element: header });
+        });
+    });
+
+    paragraphs.forEach(element => {
+        element.innerHTML = element.innerHTML.replace(/\b(\w+)\b/g, function (match) {
+            let lowerMatch = match.toLowerCase();
+            if (headerWords.has(lowerMatch) && lowerMatch !== "ve") {
+                return `<u data-word="${lowerMatch}">${match}</u>`;
+            }
+            return match;
+        });
+    });
+
+    document.body.addEventListener("mouseover", function (event) {
+        if (event.target.tagName === "U") {
+            let word = event.target.getAttribute("data-word");
+            selectedLinks = headerWords.get(word);
+
+            if (selectedLinks.length > 0) {
+                selectedLinks.sort((a, b) => a.element.getBoundingClientRect().top - b.element.getBoundingClientRect().top);
+                menuTable.innerHTML = "";
+
+                selectedLinks.forEach(item => {
+                    let row = document.createElement("tr");
+                    let cell = document.createElement("td");
+                    cell.textContent = item.text;
+                    cell.onclick = () => {
+                        location.href = `#${selectedLinks[0].id}`;
+                        menu.style.display = "none";
+                    };
+                    row.appendChild(cell);
+                    menuTable.appendChild(row);
+                });
+
+                menu.style.display = "block";
+                menu.style.left = event.pageX + "px";
+                menu.style.top = (event.pageY+15) + "px";
+            }
+        }
+    });
+
+    // Hide menu when the mouse leaves the highlight
+    document.body.addEventListener("mouseout", function (event) {
+        if (event.target.tagName === "U") {
+            setTimeout(() => {
+                if (!menu.matches(":hover")) {
+                    menu.style.display = "none";
+                }
+            }, 100);
+        }
+    });
+
+    // Hide menu on click anywhere else
+    document.body.addEventListener("click", function (event) {
+        if (!menu.contains(event.target) && event.target.tagName !== "U") {
+            menu.style.display = "none";
+        }
+    });
+});
+
+</script>
+</html>
