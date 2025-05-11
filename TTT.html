@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrance Page</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+    <script src="clrspc.js"></script>
+    <script src="mthfnc.js"></script>
+    <script src="polyhedra.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/exporters/GLTFExporter.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/exporters/STLExporter.min.js"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ccapture.js@1.1.0/build/CCapture.all.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        body {
+            background-color: black;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        
+        #textbox {
+            width: 80%;
+            height: 100px;
+            font-size: 24px;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 2px solid white;
+            background-color: #222;
+            color: white;
+            text-align: center;
+        }
+        
+        #button {
+            width: 200px;
+            height: 200px;
+            background-color: #333;
+            border: 2px solid white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        #button:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <textarea id="textbox" placeholder="Enter command"></textarea>
+    <div id="button"></div>
+
+    <script>
+        document.getElementById('button').addEventListener('click', function() {
+            const input = document.getElementById('textbox').value.trim();
+            
+            if (!input) return;
+			
+			if(input=='light'){
+			document.body.style.backgroundColor = 'white';
+			return;
+			}
+			if(input=='dark'){
+			document.body.style.backgroundColor = 'black';
+			return;
+			}
+            
+            // Check if input ends with .HTML or .html
+            if (input.toUpperCase().endsWith('.HTML') || input.toLowerCase().endsWith('.html')) {
+                window.open(input, '_self');
+                return;
+            }
+            
+            // Check first character for special commands
+            const firstChar = input[0];
+            
+            if (firstChar === ';') {
+                try {
+                    const result = math.evaluate(input.substring(1));
+                    document.getElementById('textbox').value = result;
+                } catch (e) {
+                    document.getElementById('textbox').value = 'Error: ' + e.message;
+                }
+            } 
+            else if (firstChar === '#') {
+                document.body.style.backgroundColor = input;
+            } 
+            else if (isNaN(firstChar)) {
+                window.open(input + '.html', '_self');
+            } 
+            else {
+                try {
+                    const result = teth.evaluate(input);
+                    document.getElementById('textbox').value = result;
+                } catch (e) {
+                    document.getElementById('textbox').value = 'Error: ' + e.message;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

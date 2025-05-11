@@ -1,4 +1,4 @@
-
+ div
 
 
 
@@ -492,7 +492,7 @@ function stereopicosahedron(x,a=0,h=2){return div(1,div(pow(stereododecahedron(x
 
 //(1-((i*-sqrt(stereopicosahedron(x)-1)-1)+1))^-1-0.5
 
-
+/*
 function stereopgreatstellateddodecahedron(x,a=0,h=2,parity=0){//-1 for the square 0 for ^1.5 1 for -^1.5 2 for sqrt() 3 for -sqrt()  4 for 3/2.5 5 for -3/2.5
     if(parity==-1)  return div(div(pow(stereogreatstellateddodecahedron(x,a,h),3),pow(stereogreaticosahedron(x,a,h),5)))
     if(parity==0)   return div(div(pow(stereogreatstellateddodecahedron(x,a,h),1.5),pow(stereogreaticosahedron(x,a,h),2.5)))
@@ -533,6 +533,8 @@ function stereopgreaticosahedron(x,a=0,h=2,parity=0){//-1 for the square 0 for ^
     if(parity==4)  return div(div(pow(stereosmallstellateddodecahedron(x,a,h),2.5),pow(stereogreatdodecahedron(x,a,h),3)))
     if(parity==5)  return div(div(pow(stereosmallstellateddodecahedron(x,a,h),2.5),pow(stereogreatdodecahedron(x,a,h),3)),-1)
     }
+    
+*/
     
 function stereophosohedron(x,n=5,a=0,h=2){
     if(a==0,h==2)return div(1,div(sqr(sub(pow(x,n),1)),pow(x,n)))
@@ -645,8 +647,8 @@ function mercatorpicosahedron(x,a=0,h=0){return div(1,div(pow(mercatordodecahedr
 */
 
 
-
-
+//jinvariant((1-i*z)/(z-i)) ADD https://verse-and-dimensions.fandom.com/wiki/User:Cheetahrock63/Hypercomplex_stuff/Functions_of_a_hypercomplex_variable/Modular_forms_and_relatives?file=Complex_KleinJInvariant%28-2*i*%282%CF%80%29%5E-1*log%28z%29%29_dc.png#Compact_hyperbolic_tiling_stereocurves
+//ellipticlambda(0,modulartransformtq((1-i*z)/(z-i)))*ellipticlambda(0,modulartransformtq((-1-i*z)/(z+i)))
 
 function ordlist(n) {
     return Array.from({ length: n }, (_, i) => i + 1);
@@ -875,7 +877,20 @@ const sinczeros=[-3.1415926535897932385, -3.1415926535897932385,
 -94.247779607693797154, -97.389372261283590392];
 
 
+function selectorcircle(z) {
+  return math.smaller(math.add(math.pow(z.re, 2), math.pow(z.im, 2)), 1) ? 1 : 0
+}
 
+function selectorhalfplane(z) {
+  return math.larger(z.im, 1) ? 1 : 0
+}
+
+function selectorsquare(z) {
+  const re = z.re
+  const im = z.im
+  const inrange = x => math.smaller(math.abs(x), 1)
+  return inrange(re) && inrange(im) ? 1 : 0
+}
 
 
 function tobinary(n) {
@@ -2618,11 +2633,58 @@ function lcm(a, b) {
 function inversearray(A) {
     return A.slice().reverse();
 }
+function squaremodc(x,ll){return add(squaremod(add(mul(0.5,add(1,I),ll),x),ll),mul(0.5,add(1,I),ll))}
 function minkowskiquestionmark(x){
-    return continuedfraction(inversearray(gettonthbit(x,0,5)))
+    //if(re(x)<0 ^ im(x)<0)return div(minkowskiquestionmark(mul(x,I)),I)
+   // if(re(x)<0 || re(x)>1 || im(x)<0 || im(x)>1)
+ //   return add(x,sub(minkowskiquestionmark(squaremodc(x,1)),squaremodc(x,1)))
+//if(re(x)>0.5)return sub(1,minkowskiquestionmark(sub(1,x)))
+    
+    let a0 = floor(x), sum = 0, s = 1, ad = true, t = sub(x,a0); let h = 0
+    while (true) {
+    h++;
+        let a = floor(div(1,t));
+        t =sub(div(1,t),a);
+        s = sub(s,a);
+        let term = pow(2, s);
+      //  console.log(s)
+        if (h>bign || !Number.isFinite(mag(term)) ) break;
+        
+        sum = ad ? add(sum,term) : sub(sum,term);
+        ad = !ad;
+    }
+    return add( a0 , sum);
 }
-
-
+function minkowskiquestionmarkgeneralized(x,n=3){
+    //if(re(x)<0 ^ im(x)<0)return div(minkowskiquestionmark(mul(x,I)),I)
+   // if(re(x)<0 || re(x)>1 || im(x)<0 || im(x)>1)
+ //   return add(x,sub(minkowskiquestionmark(squaremodc(x,1)),squaremodc(x,1)))
+//if(re(x)>0.5)return sub(1,minkowskiquestionmark(sub(1,x)))
+    
+    let a0 = floor(x), sum = 0, s = 1, ad = true, t = sub(x,a0); let h = 0
+    while (true) {
+    h++;
+        let a = floor(div(1,t));
+        t =sub(div(1,t),a);
+        s = sub(s,a);
+        let term = pow(n, s);
+      //  console.log(s)
+        if (h>bign || !Number.isFinite(mag(term)) ) break;
+        
+        sum = ad ? add(sum,term) : sub(sum,term);
+        ad = !ad;
+    }
+    return add( a0 , sum);
+}
+function minkowskiquestionmarkradial(x){
+return mul(minkowskiquestionmark(mag(x)),signum(x))
+}
+function minkowskiquestionmarkbireal(x){
+return add(minkowskiquestionmark(re(x)),mul(I,minkowskiquestionmark(im(x))))
+}
+function inversecontinued(x){//unr
+    return continuedfraction(inversearray(gettonthbit(x,0,floor(bign/2))))
+}
 
 function cantor(x,n=bign){
 	if(n==0)return re(x);
@@ -4080,7 +4142,7 @@ function generalizedpida(b,A){return generalizedpid(b,g(A,0),g(A,1))}//aux
 function generalizedpi(p,q){return div(beta(div(1,div(p,sub(p,1))),div(1,q)),0.5,q)}//return integral(generalizedpida,0,0.99999,[a,b])}
 function generalizedasin(b,p=2,q=p){return mul(b,hypg21(div(1,p),div(1,q),add(1,div(1,q)),pow(b,q)))}//return integral(generalizedpida,0,b,[a,c])}
 function generalizedasinn(b,N){const p=g(N,0);const q=g(N,1);return mul(b,hypg21(div(1,p),div(1,q),add(1,div(1,q)),pow(b,q)))}//return integral(generalizedpida,0,b,[a,c])}
-function generalizedsin(x,p=2,q=p){return newtoninvfp(generalizedasinn,x,x,[p,q])}
+function generalizedsin(x,p=2,q=p){return halleyinvfp(generalizedasinn,x,div(x,1),[p,q])}
     //return math.evaluate("newtoninv('generalizedasin(x,"+p+","+q+")',x,x)",{x:b});}
 
 
@@ -5743,7 +5805,10 @@ function sechcdf(x){
 
 		return div(pow(t,sub(mul(2,x),1)),sub(exp(mul(pi(),2,t)),1));
 	}
-	function bernoulli(n){
+	function bernoullialt(n){
+    
+return div(mul(-4,n),div(mul(pow(-1,n),pow(mul(2,pi()),mul(2,n))),gamma(mul(2,n)),zeta(mul(2,n))))
+    }  function bernoulli(n){
            if(0 && mag(floor(n)-n)+mag(re(n)-n)<1e-5){
      
      
@@ -7121,7 +7186,7 @@ function ramanujanm(q){return eisensteinseries(4,exp(mul(2,pi(),I,q)))}
 function ramanujann(q){return eisensteinseries(6,exp(mul(2,pi(),I,q)))}
 
 
-function eisensteinseries(a, b) {
+function eisensteinseries(a, b, fixperiod=1) {
     let fi = math.complex(0);	
     let q=exp(mul(pi(),b,I))
 	if(a==2){
@@ -7148,8 +7213,8 @@ function eisensteinseries(a, b) {
 	
 	
 	
-	const bb = smodc(b,2*pi());
-    const limit = math.complex(sqrt(bign));
+	const bb = (fixperiod) ?  modc(b,2):b ;
+    const limit = floor(sqrt(bign));
     
     for (let i = -limit; i < limit; i++) {
         for (let j = -limit; j < limit; j++) {
@@ -7158,17 +7223,83 @@ function eisensteinseries(a, b) {
                 if (denominator !== 0) {
                     fi = add(fi, div(math.complex(1), denominator));
                 }
-            }
+                 }
         }
     }
     
     return fi;
 }
-
+function modifiedeisensteinseries(s, z) {
+    return mul(pow(pi(),sub(0,s)),gamma(s),zeta(mul(2,s)),eisensteinseries(s, z));
+}
+function realmodifiedeisensteinseries(s, z) {
+    return mul(pow(pi(),sub(0,s)),gamma(s),zeta(mul(2,s)),realeisensteinseries(s, z));
+}
 // Fourier eisenstein function
 function fouriereisenstein(a, b) {
+      let fi = math.complex(0);	
+    let q=exp(mul(pi(),b,I))
+    for(let k=1;k<bign;k++)fi=add(fi,div(mul(pow(k,add(a,-1)),pow(q,mul(2,k))),sub(1,pow(q,mul(2,k)))))
+    
+    return add(1,mul(div(mul(-2,a),bernoullialt(a)),fi))
+    
     return mul(eisensteinseries(a, b), math.complex(2.0), zeta(a));
 }
+
+//ADD https://mathworld.wolfram.com/LatticeSum.html
+
+function borweinsum2(ss){const s=div(ss,2);return mul(-4,dirichletbeta(s),dirichleteta(s))}
+function borweinsum4(ss){const s=div(ss,2);return mul(-8,dirichleteta(s),dirichleteta(sub(s,1)))}
+function borweinsum6(ss){const s=div(ss,2);return sub(mul(4,dirichletbeta(sub(s,2)),dirichleteta(s)),mul(16,dirichletbeta(s),dirichleteta(sub(s,2))))}
+function borweinsum8(ss){const s=div(ss,2);return mul(-16,zeta(s),dirichleteta(sub(s,3)))}
+
+//function grenzformel(d,s){return add(mul(4,zeta(s),dirichleteta(s)),div(mul(2,pi(),zeta(add(s,s,-2))),sub(s,1),pow(d,sub(s,1))),mul(...))}
+
+//ADD HEXAGONAL LATTICE SUMS
+
+function realeisensteinseries(a, b, fixperiod=1) {
+    let fi = math.complex(0);	
+
+	
+	
+	const bb = (fixperiod) ?  modc(b,2):b ;
+    const limit = floor(sqrt(bign));
+    
+    for (let i = -limit; i < limit; i++) {
+        for (let j = -limit; j < limit; j++) {
+            if (i !== 0 || j !== 0) {
+                const denominator = pow(mag(add(i,mul(j ,bb))), a);
+                if (denominator !== 0) {
+                    fi = add(fi, div(math.complex(1), denominator));
+                }
+            }
+        }
+    }
+    
+    return div(fi,2);
+}
+
+function epsteinzeta(a,b,c,s)
+{
+       let fi = math.complex(0);	
+
+	
+	
+	const bb = s ;
+    const limit = floor(sqrt(bign));
+    
+    for (let i = -limit; i < limit; i++) {
+        for (let j = -limit; j < limit; j++) {
+            if (i !== 0 || j !== 0) {
+                const denominator = pow(add(mul(c,i,i),mul(b,i,j),mul(a,j,j)), s);
+                if (denominator !== 0) {
+                    fi = add(fi, div(math.complex(1), denominator));
+                }
+            }
+        }
+    }
+}
+
 
 function specialselection(x,n=2,m=0){return sqr(div(sin(mul(pi(),add(x,1e-7))),n,sin(div(sub(mul(pi(),add(x,1e-7)),mul(pi(),m)),n))))
 }
@@ -7870,20 +8001,20 @@ function dirichleteta(b) {
 function dirichletbeta(b) {
     b = math.complex(b); // Ensure b is complex
     let fi = math.complex(0);
-    let mul = math.complex(1);
+    let mula = math.complex(1);
 
     if (b.re <= 0.5) {
         // Calculate multiplication factor
         const piHalf = div(pi(), math.complex(2));
         const bMinus1 = sub( math.complex(1),b);
-        mul = mul(
+        mula = mul(
             pow(piHalf, sub(math.complex(0),bMinus1)),
             math.sin(div(mul(pi(), bMinus1), math.complex(2))),
             gamma(bMinus1),dirichletbeta(bMinus1)
         );
 
 
-return mul;
+return mula;
     }
 
     // Summation part
@@ -8106,6 +8237,408 @@ function jinvariant(z) {
     
     return div(numerator, denominator);
 }
+
+
+//https://en.wikipedia.org/wiki/Mock_modular_form
+function apelllerchtheta(v,t){
+    let fi=0
+    const b=exp(mul(2,pi(),I,v));const q=exp(mul(2,pi(),I,t));
+    for(let n=-bign;n<=bign;n++)
+    fi=add(fi,mul(pow(-1,n),pow(b,add(n,0.5)),pow(q,div(sqr(add(n,0.5)),2))))
+    return fi
+}
+function apelllerchsum(u,v,t){
+    let fi=0
+    const a=exp(mul(2,pi(),I,u));const b=exp(mul(2,pi(),I,v));const q=exp(mul(2,pi(),I,t));
+    for(let n=-bign;n<=bign;n++)
+    fi=add(fi,div(mul(pow(sub(0,b),n),pow(q,div(mul(n,add(n,1)),2))),sub(1,mul(a,pow(q,n)))))
+    return div(pow(a,0.5),apelllerchtheta(v,t))
+}
+function apelllerchr(z,t){
+    let fi=0
+    const q=exp(mul(2,pi(),I,t));
+    for(let v=0.5-bign;v<bign;v++)
+    fi=add(fi,mul(pow(-1,sub(v,0.5)),sub(signum(v),apelllerche(mul(add(v,div(im(z),im(t))),sqrt(mul(2,im(t)))))),pow(q,div(sqr(v),-2)),exp(mul(-2,pi(),I,v,z))))
+    return fi
+}
+function apelllerched(t){
+    return exp(mul(-1,pi(),sqr(t)));
+}
+function apelllerche(z){
+return mul(2,integral(apelllerched,0,z));
+}
+function apelllerchmodifiedsum(u,v,t){
+    return sub(apelllerchsum(u,v,t),div(apelllerchr(sub(u,v),t),2))
+}
+
+
+
+
+
+//order 2
+
+function ramanujanmocka(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(mul(pow(q,sqr(add(1,n))),qpoch(sub(0,q),sqr(q),n)),sqr(qpoch(q,sqr(q),add(n,1)))))
+    return fi;
+}
+function ramanujanmockb(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(mul(pow(q,mul(n,add(n,1))),qpoch(sub(0,sqr(q)),sqr(q),n)),sqr(qpoch(q,sqr(q),add(n,1)))))
+    return fi;
+}
+function ramanujanmockmu(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(mul(pow(-1,n),pow(q,sqr(n)),qpoch(q,sqr(q),n)),sqr(qpoch(sub(0,sqr(q)),sqr(q),n))))
+    return fi;
+}
+
+//order 3
+
+function ramanujanmockf(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(pow(q,sqr(n)),sqr(qpoch(sub(0,q),q,n))))
+    return fi;
+}
+function ramanujanmockphi(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(pow(q,sqr(n)),(qpoch(sub(0,sqr(q)),sqr(q),n))))
+    return fi;
+}
+function ramanujanmockpsi(q){
+    let fi=0
+    for(let n=1;n<bign;n++)
+    fi=add(fi,div(pow(q,sqr(n)),(qpoch(q,sqr(q),n))))
+    return fi;
+}
+function ramanujanmockomega(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(pow(q,mul(2,n,add(n,1))),sqr(qpoch(sub(0,sqr(q)),sqr(q),add(n,1)))))
+    return fi;
+}
+function ramanujanmocknu(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(pow(q,mul(2,n,add(n,1))),sqr(qpoch(sub(0,sqr(q)),sqr(q),add(n,1)))))
+    return fi;
+}
+function ramanujanmockxi(q){
+    let fi=0
+    for(let n=0;n<bign;n++){
+    let fid=1;
+    for(let i=1;i<=n;i++)    
+    fid=mul(fid,sub(pow(q,mul(2,i)),-1,pow(q,i)))
+    fi=add(fi,div(pow(q,sqr(n)),fid))}
+    return fi;
+}
+function ramanujanmockrho(q){
+    let fi=0
+    for(let n=0;n<bign;n++){
+    let fid=1;
+    for(let i=0;i<=n;i++)    
+    fid=mul(fid,add(1,pow(q,add(i,i,1)),pow(q,add(i,i,i,i,2))))
+    fi=add(fi,div(pow(q,mul(2,n,add(n,1))),fid))}
+    return fi;
+}
+
+
+
+
+//order 5
+
+
+function ramanujanmockf0(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(pow(q,sqr(n)),qpoch(sub(0,q),q,n)))
+    return fi;
+}
+function ramanujanmockf1(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(pow(q,add(sqr(n),n)),qpoch(sub(0,q),q,n)))
+    return fi;
+}
+function ramanujanmockphi0(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(pow(q,sqr(add(n,0))),qpoch(sub(0,q),sqr(q),n)))
+    return fi;
+}
+function ramanujanmockphi1(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(pow(q,sqr(add(n,1))),qpoch(sub(0,q),sqr(q),n)))
+    return fi;
+}
+function ramanujanmockpsi0(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(pow(q,mul(0.5,add(n,1),add(n,2))),qpoch(sub(0,q),q,n)))
+    return fi;
+}
+function ramanujanmockpsi1(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(pow(q,mul(0.5,add(n,1),add(n,0))),qpoch(sub(0,q),q,n)))
+    return fi;
+}
+function ramanujanmockxi0(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(pow(q,n),qpoch(pow(q,add(n,1)),q,n)))
+    return fi;
+}
+function ramanujanmockxi1(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(pow(q,n),qpoch(pow(q,add(n,1)),q,add(n,1))))
+    return fi;
+}
+function ramanujanmockcf0(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(pow(q,mul(2,sqr(n))),qpoch(q,sqr(q),n)))
+    return fi;
+}
+function ramanujanmockcf1(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(pow(q,mul(2,add(sqr(n),n))),qpoch(q,sqr(q),n)))
+    return fi;
+}
+function ramanujanmockcpsi0(q){
+     let fi=0
+    for(let n=0;n<bign;n++){
+    let fid=1;
+    for(let i=0;i<=n;i++)  {  
+    if(n==0)fid=mul(fid,sub(1,pow(q,add(i,i,i,i,i,1))))
+    else  fid=mul(fid,sub(1,pow(q,add(i,i,i,i,i,-1))),sub(1,pow(q,add(i,i,i,i,i,1))))}
+    fi=add(fi,div(pow(q,mul(5,n,n)),fid))}
+    return add(-1,fi);
+}
+function ramanujanmockcpsi1(q){
+     let fi=0
+    for(let n=0;n<bign;n++){
+    let fid=1;
+    for(let i=0;i<=n;i++)  {  
+    if(n==0)fid=mul(fid,sub(1,pow(q,add(i,i,i,i,i,2))))
+    else  fid=mul(fid,sub(1,pow(q,add(i,i,i,i,i,-2))),sub(1,pow(q,add(i,i,i,i,i,2))))}
+    fi=add(fi,div(pow(q,mul(5,n,n)),fid))}
+    return add(-1,fi);
+}
+
+//order 6
+
+function ramanujanmockphi6(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(mul(pow(q,sqr(n)),pow(-1,n),qpoch(q,sqr(q),n)),qpoch(sub(0,q),q,add(n,n))))
+    return fi;
+}
+function ramanujanmockpsi6(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(mul(pow(q,sqr(add(n,1))),pow(-1,n),qpoch(q,sqr(q),n)),qpoch(sub(0,q),q,add(n,n,1))))
+    return fi;
+}
+function ramanujanmockrho6(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(mul(pow(q,div(mul(n,add(n,1)),2)),qpoch(sub(0,q),q,n)),qpoch(q,sqr(q),add(n,1))))
+    return fi;
+}
+function ramanujanmocksigma6(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+fi=add(fi,div(mul(pow(q,div(mul(add(n,2),add(n,1)),2)),qpoch(sub(0,q),q,n)),qpoch(q,sqr(q),add(n,1))))
+    return fi;
+}
+function ramanujanmocklambda6(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(mul(pow(q,n),pow(-1,n),qpoch(q,sqr(q),n)),qpoch(sub(0,q),q,add(n))))
+    return fi;
+}
+function ramanujanmockmu6(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(mul(pow(q,add(n,1)),pow(-1,n),add(q,pow(q,n)),qpoch(q,sqr(q),n)),qpoch(sub(0,q),q,add(n,1))))
+    return div(fi,2);
+}
+function ramanujanmockgamma6(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(mul(pow(q,sqr(n)),qpoch(q,q,n)),qpoch(cum(q),cum(q),n)))
+    return fi;
+}
+function ramanujanmockphim(q){
+    let fi=0
+    for(let n=1;n<bign;n++)
+    fi=add(fi,div(mul(pow(q,n),qpoch(sub(0,q),q,add(n,n,-1))),qpoch(q,sqr(q),n)))
+    return fi;
+}
+function ramanujanmockpsim(q){
+    let fi=0
+    for(let n=1;n<bign;n++)
+    fi=add(fi,div(mul(pow(q,n),qpoch(sub(0,q),q,add(n,n,-2))),qpoch(q,sqr(q),n)))
+    return fi;
+}
+//order 7
+
+function ramanujanmockf70(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(pow(q,sqr(n)),qpoch(pow(q,add(n,1)),q,n)))
+    return fi;
+}
+function ramanujanmockf71(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(pow(q,sqr(n)),qpoch(pow(q,add(n,0)),q,n)))
+    return fi;
+}
+function ramanujanmockf72(q){
+    let fi=0
+    for(let n=-bign;n<=bign;n++){
+   
+    fi=add(fi,div(pow(q,mul(n,add(n,1))),qpoch(pow(q,add(n,1)),q,add(n,1))))}
+    return fi;
+}
+
+
+
+function ramanujanmockm1(q){
+const t=modulartransformqt(q);
+   return add(mul(pow(q,-1/168),ramanujanmockf71(q)),ramanujanmockr(7,1,t))
+    }
+function ramanujanmockm2(q){
+const t=modulartransformqt(q);
+   return add(mul(pow(q,-25/168),ramanujanmockf72(q)),ramanujanmockr(7,2,t))
+    }
+function ramanujanmockm3(q){
+const t=modulartransformqt(q);
+   return add(mul(pow(q,47/168),ramanujanmockf70(q)),ramanujanmockr(7,3,t))
+    }
+
+
+
+
+function ramanujanmockr(p,j,t){//aux
+    const q=exp(mul(2,pi(),I,t));
+    let fi=0
+    for(let n=-bign;n<=bign;n++){
+        let m=add(j,mul(n,p))
+    fi=add(fi,mul(signum(m),ncr(12,m),ramanujanmockbeta(div(mul(m,m,im(t)),6,p)),pow(q,div(sqr(m),-24,p))))}
+    return fi;
+}
+function ramanujanmockbetad(u){//aux
+   return div(exp(mul(-1,pi(),u)),sqrt(u));
+}
+function ramanujanmockbeta(x){//aux
+   return integral(ramanujanmockbetad,x,sqrt(bign));
+}
+//order 8
+
+function ramanujanmocks0(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div( mul(pow(q,mul(2,sqr(n))) , qpoch(sub(0,q),sqr(q),n)), qpoch(sub(0,sqr(q)),sqr(q),n)))
+    return fi;
+}
+function ramanujanmocks1(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div( mul(pow(q,mul(2,mul(n,add(n,2)))) , qpoch(sub(0,q),sqr(q),n)), qpoch(sub(0,sqr(q)),sqr(q),n)))
+    return fi;
+}
+function ramanujanmockt0(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div( mul(pow(q,mul(2,mul(add(n,1),add(n,2)))) , qpoch(sub(0,sqr(n)),sqr(q),n)), qpoch(sub(0,sqr(q)),sqr(q),add(n,1))))
+    return fi;
+}
+function ramanujanmockt1(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div( mul(pow(q,mul(2,mul(add(n,1),add(n,0)))) , qpoch(sub(0,sqr(n)),sqr(q),n)), qpoch(sub(0,sqr(q)),sqr(q),add(n,1))))
+    return fi;
+}
+function ramanujanmocku0(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div( mul(pow(q,mul(2,sqr(n))) , qpoch(sub(0,q),sqr(q),n)), qpoch(sub(0,tesseract(q)),tesseract(q),n)))
+    return fi;
+}
+function ramanujanmocku1(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div( mul(pow(q,mul(2,sqr(add(n,1)))) , qpoch(sub(0,q),sqr(q),n)), qpoch(sub(0,sqr(q)),tesseract(q),n)))
+    return fi;
+}
+function ramanujanmockv0(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+fi=add(fi,div( mul(pow(q,mul(2,sqr(n))) , qpoch(sub(0,q),sqr(q),n)), qpoch(q,sqr(q),add(n,1))))
+    return add(-1,fi,fi);
+}
+function ramanujanmockv1(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+fi=add(fi,div( mul(pow(q,mul(2,sqr(add(n,1)))) , qpoch(sub(0,q),sqr(q),n)), qpoch(q,sqr(q),add(n,1))))
+    return fi;
+}
+//order 10
+
+function ramanujanmockphi10(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(pow(q,mul(0.5,n,add(n,1))),qpoch(q,sqr(q),add(n,1))))
+    return fi;
+}
+function ramanujanmockpsi10(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(pow(q,mul(0.5,add(n,2),add(n,1))),qpoch(q,sqr(q),add(n,1))))
+    return fi;
+}
+function ramanujanmockx(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(mul(pow(-1,n),pow(q,sqr(n))),qpoch(sub(0,q),q,add(n,n))))
+    return fi;
+}function ramanujanmockxi10(q){
+    let fi=0
+    for(let n=0;n<bign;n++)
+    fi=add(fi,div(mul(pow(-1,n),pow(q,sqr(add(n,1)))),qpoch(sub(0,q),q,add(n,n,1))))
+    return fi;
+}
+
+
+
+//https://arxiv.org/pdf/1208.1421 ADD
+function sg(x){
+    if(re(x)<0)return -1;return 0;
+}
+function heckedoublesum(a,b,c,x,y,q){
+  //  for(let sss=-1;sss<=1;sss+=2)
+      let fi=0
+    for(let r=-bign;r<=bign;r++)
+    for(let s=-bign;s<=bign;s++)
+if(sg(r)==sg(s))
+        fi=add(fi,mul(sg(r),pow(-1,add(r,s)),pow(x,r),pow(y,s),pow(q,add(mul(a,ncr(r,2)),mul(b,r,s),mul(c,ncr(s,2))))))
+        return fi
+        }
+
+
+
+
 function lemniscaten(b) {
     return div(
         lemniscatem(mul(math.complex(1.0, 1.0), b)),
@@ -9871,7 +10404,7 @@ function dixondn(x,n){return integral(dixondnd,0,sqrt(bign),[x,n]);}
 
 
 
-function hexasin(){}
+function hexasin(z){}
 
 
 function sin434(z){const c=tesseract(cn(z,1/sqrt(2)));return div(sqrt(sub(1,c)),sqrt(add(1,c)))}//div(,add(1,mul(4,sqrt(weierstrassellipticg))))
@@ -10064,6 +10597,7 @@ function dqexp(n,q) {
 }
 
 function qpoch(a, q, k) {
+    if(k==0)return 1;
     let fi = math.complex(1.0, 0);
     if (todoub(k) > 0) {
         for (let i = 0; i <= todoub(k) - 1.0; i++) {
@@ -11640,7 +12174,30 @@ function newtoninvfp(func, y, guess,parameter, tolerance = 1e-7, maxIter = bign)
         if (Math.abs(math.subtract(f_x, y)) < tolerance) {
             return x; } }
    return x;
-}/*
+}
+
+function halleyinvfp(func, y, guess,parameter, tolerance = 1e-7, maxIter = bign) {
+    let x = guess;
+    for (let i = 0; i < maxIter; i++) {
+        let f_x = func(x,parameter)
+        let f_prime_x = derv2(func, x,parameter);
+        let f_double_prime_x = nthderivfp(func, x,2,parameter);
+
+        // Halley's formula: x_n+1 = x_n - (2 * (f(x_n) - y) * f'(x_n)) / (2 * (f'(x_n))^2 - (f(x_n) - y) * f''(x_n))
+        let f_diff = math.subtract(f_x, y);
+        let numerator = math.multiply(2, math.multiply(f_diff, f_prime_x));
+        let denominator = math.subtract(math.multiply(2, math.pow(f_prime_x, 2)), math.multiply(f_diff, f_double_prime_x));
+
+        x = math.subtract(x, math.divide(numerator, denominator));
+
+        if (Math.abs(f_diff) < tolerance) {
+            return x; // Inverse found
+        }
+    }
+	return x;
+    throw new Error("Max iterations reached, inverse not found.");
+}
+/*
 function newtoninvfpn(func, y, guess,parameter,n,move=1, tolerance = 1e-7, maxIter = bign) {
 let guesss=guess
 let diver = -1000;
@@ -11734,6 +12291,27 @@ function halleyinv(func, y, guess, tolerance = 1e-7, maxIter = bign) {
         let f_x = math.evaluate(func, { x: x });
         let f_prime_x = nthderiv(func, x, 1);
         let f_double_prime_x = nthderiv(func, x, 2);
+
+        // Halley's formula: x_n+1 = x_n - (2 * (f(x_n) - y) * f'(x_n)) / (2 * (f'(x_n))^2 - (f(x_n) - y) * f''(x_n))
+        let f_diff = math.subtract(f_x, y);
+        let numerator = math.multiply(2, math.multiply(f_diff, f_prime_x));
+        let denominator = math.subtract(math.multiply(2, math.pow(f_prime_x, 2)), math.multiply(f_diff, f_double_prime_x));
+
+        x = math.subtract(x, math.divide(numerator, denominator));
+
+        if (Math.abs(f_diff) < tolerance) {
+            return x; // Inverse found
+        }
+    }
+	return x;
+    throw new Error("Max iterations reached, inverse not found.");
+}
+function halleyinvf(func, y, guess, tolerance = 1e-7, maxIter = bign) {
+    let x = guess;
+    for (let i = 0; i < maxIter; i++) {
+        let f_x = func(x)
+        let f_prime_x = derv(func, x);
+        let f_double_prime_x = nthderivf(func, x, 2);
 
         // Halley's formula: x_n+1 = x_n - (2 * (f(x_n) - y) * f'(x_n)) / (2 * (f'(x_n))^2 - (f(x_n) - y) * f''(x_n))
         let f_diff = math.subtract(f_x, y);
@@ -11979,13 +12557,14 @@ function superfunctionff(funcStr, arcfuncStr, a, bf, initialGuess=1,globalc=2, b
        let fix = 12;
 if(startq!==-12341234)fix=add(startq,math.complex(1e-7,1e-7));else  fix = newtonfixe(funcStr, add(bf,math.complex(0.2,0.2)));
        // let fix = newtonfix(funcStr, fi, 1e-7); // Calculate fix using newtonfix
-   
+    let lam = funcStr(fi);
+    //if(mag(lam)<1)
         
         for (let i = 0; i < bignc; i++) {
         fi =  arcfuncStr(fi); // Use newtoninv
     //        lam = arcfuncStr(lam); // Use newtoninv
         }
-         let lam = funcStr(fi);
+        
     //    fi =  arcfuncStr(fi);
         
         fi = math.divide(
@@ -12644,6 +13223,15 @@ let fi=math.complex(0,0);
 for(let i=0;i<=n;i++)
 //fi = add(fi,mul(pow(-1,i),ncr(n,i),math.evaluate(func,{x:sub(add(input,div(n,2)),mul(h,i))})));	
 fi=add(fi,mul(pow(-1,i),ncr(n,i),func(add(input,mul(sub(div(n,2),i),h)))))
+return div(fi,pow(h,n));
+return fi;
+}
+function nthderivfp(func,input,n,p){
+	const h=pow(10,add(-7,div(n,1.2)));
+let fi=math.complex(0,0);
+for(let i=0;i<=n;i++)
+//fi = add(fi,mul(pow(-1,i),ncr(n,i),math.evaluate(func,{x:sub(add(input,div(n,2)),mul(h,i))})));	
+fi=add(fi,mul(pow(-1,i),ncr(n,i),func(add(input,mul(sub(div(n,2),i),h)),p)))
 return div(fi,pow(h,n));
 return fi;
 }
@@ -16839,6 +17427,16 @@ function arcgamma(x){
     return newtoninvf(gamma,x,7);
     
 }
+
+
+
+
+
+function arcbarnesg(x){
+    return halleyinvf(barnesg,x,div(x,10),1e-4,bign/3); 
+}
+    
+    
 function arcfactorial(x){return add(-1,arcgamma(x))}
 
 //function superasin(x,a=1;N=bign*5){superfunctionff(asin,sin,a,x,0,3,N,0,0)}
@@ -16849,7 +17447,7 @@ function arcfactorial(x){return add(-1,arcgamma(x))}
 //function slog1(x,N=bign){return arcsuperfunctionff(exp,log,1,x,1,2,N,math.complex(0.3181315052047642,1.3372357014306893))}
 //superfunctionff(sin,asin,1,x,0,3,10,0,0)
 
-
+//&&7.54745
 function supersin(x,a=1,N=bign*5){return superfunctionff(sin,asin,a,x,0,3,N,0,0)}
 function superasin(x,a=1,N=bign*5){return superfunctionff(asin,sin,a,x,0,3,N,0,0)}
 //function susin(x,a=0){return superfunctionosp("sin(x)",smodc(x,2*pi()),0)}
@@ -16860,6 +17458,10 @@ function supercos(x,a=0,N=bign,parity=0){if(parity==1)return yconjn(superfunctio
 function supercosalt(x,a=1,N=bign){return superfunctionrsp("acos(x)",a,mul(-0.5,x),N)}
 
 
+function supercot(x,a=1,N=bign*5){return superfunctionff(cot,acot,a,x,0,3,N,0.86033,0)}
+function superacot(x,a=1,N=bign*5){return superfunctionff(acot,cot,a,x,0,3,N,0.86033,0)}
+
+
 function superchord(x,a=1,N=bign*2){return superfunctionff(crd,arccrd,a,x,2,2,N,0,0)}
 function superarcchord(x,a=1,N=bign*2){return superfunctionff(arccrd,crd,a,x,2,2,N,0,0)}
 
@@ -16868,6 +17470,7 @@ function superzex(x,a=1,N=bign/2){return superfunctionff(zex,lambertw,a,x,0,3,N,
     //return superfunctionf2(zex,a,x,0,3,N,0,0)}//return superfunctionff(zex,lambertw,a,x,0,3,N,0,0)}
 
 function superfactorial(x,a=3,N=bign*1.5){return superfunctionff(factorial,arcfactorial,a,x,2,2,N,2,0)}
+function superbarnesg(x,a=5,N=bign/2){return superfunctionff(barnesg,arcbarnesg,a,x,4.54552,4.54552,N,4.54552,0)}//x≈4.54552
 function supergamma(x,a=4,N=bign*1){return superfunctionff(gamma,arcgamma,a,x,3.56238,3.56238,N,3.56238,0)}
 function superfz(x,a=2,N=bign/2){return superfunctionff(fz,arcfz,a,x,0.5,3,N,1,0)}
 
@@ -16958,7 +17561,11 @@ function superexpm(x,N=bign*5){
 
 
 
-
+function supersex(x,s=1,e=0,a=1,N=bign*5) {
+    const f = (x) => sex(x, s, e);
+    const af = (x) => asex(x, s, e);
+    return superfunctionff(f, af, a, x, 0, 3, N, 0, 0);
+}
 
 
 
@@ -19052,6 +19659,9 @@ class CustomEvaluator {
     '>': { precedence: 0, fn: (a, b) => gt(a, b) },
     '<=': { precedence: 0, fn: (a, b) => le(a, b) },
     '>=': { precedence: 0, fn: (a, b) => ge(a, b) },
+    
+    'c': { precedence: 3, fn: (a, b) => ncr(a, b) },
+    'p': { precedence: 3, fn: (a, b) => cpr(a, b) },
 
         };
         this.expressionCache = new Map(); // Cache for parsed expressions
@@ -19162,7 +19772,9 @@ const parseTerm = () => {
         node = expr;
     } else if (token.startsWith("'") && token.endsWith("'")) {
         node = { type: 'string', value: token.slice(1, -1) }; // Remove single quotes
-    } else {
+    } else if (token.startsWith('"') && token.endsWith('"')) {
+        node = { type: 'string', value: token.slice(1, -1) }; // Remove single quotes
+    }else {
         node = { type: 'variable', name: token };
     }
 

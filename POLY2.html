@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polyhedron Viewer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.6.0/math.js"></script>
+    <script src="mthfnc.js"></script>
+    <script src="polyhedra.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .category {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            color: #333;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .category-header h1 {
+            margin: 0;
+        }
+        .category-content {
+            margin-top: 15px;
+        }
+        .polyhedron {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #fafafa;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        .polyhedron-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .polyhedron-header h2 {
+            margin-top: 0;
+            margin-bottom: 0;
+            color: #2c3e50;
+        }
+        .polyhedron-dual {
+            font-size: 0.8em;
+            color: #666;
+            margin-left: 10px;
+        }
+        .polyhedron-content {
+            margin-top: 15px;
+            display: none;
+        }
+        .polyhedron.expanded .polyhedron-content {
+            display: block;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 200px;
+        }
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, select, button {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button.secondary {
+            background-color: #2196F3;
+        }
+        button.tertiary {
+            background-color: #9C27B0;
+        }
+        canvas {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            margin-top: 10px;
+            max-width: 100%;
+        }
+        .loading {
+            color: #777;
+            font-style: italic;
+        }
+        .toggle-icon {
+            font-size: 1.2em;
+            margin-left: 10px;
+        }
+        .size-controls {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .size-controls button {
+            padding: 5px 8px;
+            font-size: 0.8em;
+        }
+        .vertices-display {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: white;
+            font-family: monospace;
+            white-space: pre;
+        }
+        .view-state {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Polyhedron Viewer</h1>
+    
+    <div id="container">
+        <!-- Polyhedra will be generated here -->
+    </div>
+
+    <script>
+        // Polyhedron categories and names with duals
+        const polyhedra = {
+            platonic: [
+                {name: "tetrahedron", dual: "tetrahedron"},
+                {name: "octahedron", dual: "cube"},
+                {name: "cube", dual: "octahedron"},
+                {name: "icosahedron", dual: "dodecahedron"},
+                {name: "dodecahedron", dual: "icosahedron"}
+            ],
+            archimedean: [
+                {name: "truncated tetrahedron", dual: "triakis tetrahedron"},
+                {name: "truncated octahedron", dual: "tetrakis hexahedron"},
+                {name: "truncated cube", dual: "triakis octahedron"},
+                {name: "truncated icosahedron", dual: "pentakis dodecahedron"},
+                {name: "truncated dodecahedron", dual: "triakis icosahedron"},
+                {name: "cuboctahedron", dual: "rhombic dodecahedron"},
+                {name: "icosidodecahedron", dual: "rhombic triacontahedron"},
+                {name: "rhombicuboctahedron", dual: "deltoidal icositetrahedron"},
+                {name: "rhombicosidodecahedron", dual: "deltoidal hexecontahedron"},
+                {name: "snub cube", dual: "pentagonal icositetrahedron"},
+                {name: "snub dodecahedron", dual: "pentagonal hexecontahedron"}
+            ],
+            catalan: [
+                {name: "triakis tetrahedron", dual: "truncated tetrahedron"},
+                {name: "triakis octahedron", dual: "truncated cube"},
+                {name: "tetrakis hexahedron", dual: "truncated octahedron"},
+                {name: "triakis icosahedron", dual: "truncated dodecahedron"},
+                {name: "pentakis dodecahedron", dual: "truncated icosahedron"},
+                {name: "rhombic dodecahedron", dual: "cuboctahedron"},
+                {name: "rhombic triacontahedron", dual: "icosidodecahedron"},
+                {name: "deltoidal icositetrahedron", dual: "rhombicuboctahedron"},
+                {name: "deltoidal hexecontahedron", dual: "rhombicosidodecahedron"},
+                {name: "pentagonal icositetrahedron", dual: "snub cube"},
+                {name: "pentagonal hexecontahedron", dual: "snub dodecahedron"}
+            ],
+            poinsot: [
+                {name: "great stellated dodecahedron", dual: "great icosahedron"},
+                {name: "small stellated dodecahedron", dual: "great dodecahedron"},
+                {name: "great icosahedron", dual: "great stellated dodecahedron"},
+                {name: "great dodecahedron", dual: "small stellated dodecahedron"}
+            ],
+            degenerate: [
+                {name: "hosohogon", dual: ""},
+                {name: "dihedron", dual: ""}
+            ],
+            unusual: [
+                {name: "csaszar", dual: ""},
+                {name: "szilassi", dual: ""}
+            ]
+        };
+
+        // Category display names
+        const categoryNames = {
+            platonic: "Platonic Solids",
+            archimedean: "Archimedean Solids",
+            catalan: "Catalan Solids",
+            poinsot: "Poinsot Solids (Kepler-Poinsot)",
+            degenerate: "Degenerate Polyhedra",
+            unusual: "Unusual Polyhedra"
+        };
+
+        // View state for each canvas (zoom and translation)
+        const viewStates = {};
+
+        // Convert complex number to color using domain coloring
+        function complexToColor(z, options) {
+            const magnitude = math.abs(z);
+            const phase = math.arg(z);
+            let brightness;
+            
+            try {
+                brightness = math.evaluate(options.brightnessFn.replace(/x/g, magnitude.toString()));
+                // Clamp brightness between 0 and 1
+                brightness = Math.max(0, Math.min(1, brightness));
+            } catch (e) {
+                console.error("Error evaluating brightness function:", e);
+                brightness = 0.5;
+            }
+            
+            let hue, saturation, value;
+            
+            // Calculate hue based on phase (0 to 2π)
+            hue = (phase + Math.PI) / (2 * Math.PI); // Normalize to 0-1
+            hue = (hue * 360) % 360;
+            
+            // Calculate saturation and value based on coloring type
+            switch(options.domainColoring) {
+                case 'phase':
+                    saturation = 1;
+                    value = 1;
+                    break;
+                case 'magnitude':
+                    saturation = 0; // For magnitude, we want grayscale
+                    value = brightness;
+                    hue = 0; // Magnitude coloring typically uses a single hue
+                    break;
+                case 'both':
+                default:
+                    saturation = 1;
+                    value = brightness;
+                    break;
+            }
+            
+            // Convert to RGB based on color space
+            if (options.colorSpace === 'hsl') {
+                return hslToRgb(hue/360, saturation, value);
+            } else if (options.colorSpace === 'hsv') {
+                return hsvToRgb(hue, saturation, value);
+            } else {
+                // Default to RGB
+                return {
+                    r: value,
+                    g: value,
+                    b: value
+                };
+            }
+        }
+
+        // Helper function: HSV to RGB
+        function hsvToRgb(h, s, v) {
+            let r, g, b;
+            const i = Math.floor(h / 60);
+            const f = h / 60 - i;
+            const p = v * (1 - s);
+            const q = v * (1 - f * s);
+            const t = v * (1 - (1 - f) * s);
+            
+            switch (i % 6) {
+                case 0: r = v; g = t; b = p; break;
+                case 1: r = q; g = v; b = p; break;
+                case 2: r = p; g = v; b = t; break;
+                case 3: r = p; g = q; b = v; break;
+                case 4: r = t; g = p; b = v; break;
+                case 5: r = v; g = p; b = q; break;
+            }
+            
+            return { r: r || 0, g: g || 0, b: b || 0 };
+        }
+
+        // Helper function: HSL to RGB
+        function hslToRgb(h, s, l) {
+            let r, g, b;
+            
+            if (s === 0) {
+                r = g = b = l;
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1/6) return p + (q - p) * 6 * t;
+                    if (t < 1/2) return q;
+                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
+                };
+                
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1/3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1/3);
+            }
+            
+            return { r: r || 0, g: g || 0, b: b || 0 };
+        }
+
+        // Function to draw a polyhedron on canvas
+        function drawPolyhedron(canvasId, polyhedronName, a, h, brightnessFn, colorSpace, domainColoring, fastMode = false) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Show loading message
+            const loadingText = document.getElementById(`${canvasId}-loading`);
+            if (loadingText) loadingText.textContent = "Rendering...";
+            
+            // Get the appropriate function name
+            let funcName = "stereop" + polyhedronName.replace(/ /g, '');
+            
+            // Initialize view state if not exists
+            if (!viewStates[canvasId]) {
+                viewStates[canvasId] = {
+                    zoom: 1,
+                    translation: math.complex(0, 0)
+                };
+            }
+            
+            const viewState = viewStates[canvasId];
+            
+            // Call the appropriate function from mthfnc.js
+            if (typeof window[funcName] === 'function') {
+                setTimeout(() => {
+                    try {
+                        // Create a complex coordinate grid and render
+                        const width = canvas.width;
+                        const height = canvas.height;
+                        const imageData = ctx.createImageData(width, height);
+                        const data = imageData.data;
+                        
+                        // Parameters for domain coloring
+                        const options = {
+                            brightnessFn: brightnessFn,
+                            colorSpace: colorSpace,
+                            domainColoring: domainColoring
+                        };
+                        
+                        // Use fast mode defaults if in fast mode
+                        if (fastMode) {
+                            a = 0;
+                            h = 2;
+                            options.colorSpace = 'hsv';
+                            options.domainColoring = 'magnitude';
+                            options.brightnessFn = 'x^0.1';
+                        }
+                        
+                        // Render each pixel
+                        for (let y = 0; y < height; y++) {
+                            for (let x = 0; x < width; x++) {
+                                // Convert pixel coordinates to complex plane coordinates with zoom and translation
+                                const zx = (x - width/2) / (width/4) / viewState.zoom + viewState.translation.re;
+                                const zy = (height/2 - y) / (height/4) / viewState.zoom + viewState.translation.im;
+                                const z = math.complex(zx, zy);
+                                
+                                // Call the polyhedron function (x, a, h)
+                                const result = window[funcName](z, a, h);
+                                
+                                // Apply domain coloring to the complex result
+                                const color = complexToColor(result, options);
+                                
+                                // Set pixel color
+                                const idx = (y * width + x) * 4;
+                                data[idx] = color.r * 255;
+                                data[idx+1] = color.g * 255;
+                                data[idx+2] = color.b * 255;
+                                data[idx+3] = 255; // alpha
+                            }
+                        }
+                        
+                        ctx.putImageData(imageData, 0, 0);
+                        if (loadingText) loadingText.textContent = "";
+                        
+                        // Update button text to show it's rendered
+                        const buttons = document.querySelectorAll(`button[onclick="updatePolyhedron('${canvasId}', '${polyhedronName}')"]`);
+                        buttons.forEach(btn => {
+                            btn.textContent = fastMode ? "Fast Rendered" : "Rendered";
+                            btn.classList.add('rendered');
+                        });
+                    } catch (e) {
+                        ctx.fillStyle = '#f44336';
+                        ctx.font = '16px Arial';
+                        ctx.fillText(`Error rendering: ${e.message}`, 20, 30);
+                        console.error(e);
+                        if (loadingText) loadingText.textContent = `Error: ${e.message}`;
+                    }
+                }, fastMode ? 0 : 50); // No delay in fast mode
+            } else {
+                ctx.fillStyle = '#f44336';
+                ctx.font = '16px Arial';
+                ctx.fillText(`Function ${funcName} not found`, 20, 30);
+                if (loadingText) loadingText.textContent = `Function ${funcName} not found`;
+            }
+        }
+
+        // Function to resize canvas
+        function resizeCanvas(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            canvas.width = size;
+            canvas.height = size;
+            
+            // Redraw if the polyhedron was already rendered
+            const name = canvasId.replace('-canvas', '').replace(/-/g, ' ');
+            const renderBtn = document.querySelector(`button[onclick="updatePolyhedron('${canvasId}', '${name}')"]`);
+            if (renderBtn && renderBtn.textContent.includes("Rendered")) {
+                updatePolyhedron(canvasId, name);
+            }
+        }
+
+        // Function to show vertices
+        function showVertices(canvasId, polyhedronName) {
+            const verticesDisplay = document.getElementById(`${canvasId}-vertices`);
+            if (!verticesDisplay) return;
+            
+            const dualName = polyhedra[polyhedronName.split(' ')[0] === 'great' ? 'poinsot' : 
+                                      polyhedronName.split(' ')[0] === 'small' ? 'poinsot' : 
+                                      Object.keys(polyhedra).find(cat => 
+                                          polyhedra[cat].some(p => p.name === polyhedronName))]
+                              .find(p => p.name === polyhedronName)?.dual;
+            
+            if (!dualName || !window.dualsMap || !window.dualsMap.get(dualName)) {
+                verticesDisplay.textContent = "Vertex data not available for this polyhedron";
+                return;
+            }
+            
+            const vertices = window.dualsMap.get(dualName).vertices;
+            verticesDisplay.textContent = vertices.map(v => 
+                `[${v[0].toFixed(4)}, ${v[1].toFixed(4)}, ${v[2].toFixed(4)}]`
+            ).join('\n');
+        }
+
+        // Move canvas view
+        function moveCanvas(canvasId, direction) {
+            const viewState = viewStates[canvasId] || {
+                zoom: 1,
+                translation: math.complex(0, 0)
+            };
+            
+            const moveStep = 0.2 / viewState.zoom;
+            
+            switch(direction) {
+                case 'up':
+                    viewState.translation = math.add(viewState.translation, math.complex(0, moveStep));
+                    break;
+                case 'down':
+                    viewState.translation = math.add(viewState.translation, math.complex(0, -moveStep));
+                    break;
+                case 'left':
+                    viewState.translation = math.add(viewState.translation, math.complex(-moveStep, 0));
+                    break;
+                case 'right':
+                    viewState.translation = math.add(viewState.translation, math.complex(moveStep, 0));
+                    break;
+            }
+            
+            viewStates[canvasId] = viewState;
+            
+            // Redraw the polyhedron
+            const name = canvasId.replace('-canvas', '').replace(/-/g, ' ');
+            updatePolyhedron(canvasId, name);
+        }
+
+        // Zoom canvas view
+        function zoomCanvas(canvasId, direction) {
+            const viewState = viewStates[canvasId] || {
+                zoom: 1,
+                translation: math.complex(0, 0)
+            };
+            
+            const zoomFactor = direction === 'in' ? 1.2 : 1/1.2;
+            viewState.zoom *= zoomFactor;
+            viewStates[canvasId] = viewState;
+            
+            // Redraw the polyhedron
+            const name = canvasId.replace('-canvas', '').replace(/-/g, ' ');
+            updatePolyhedron(canvasId, name);
+        }
+
+        // Update polyhedron with current parameters
+        function updatePolyhedron(canvasId, polyhedronName, fastMode = false) {
+            const aInput = document.getElementById(`${canvasId}-a`);
+            const hInput = document.getElementById(`${canvasId}-h`);
+            const brightnessInput = document.getElementById(`${canvasId}-brightness`);
+            const colorSpaceSelect = document.getElementById(`${canvasId}-color-space`);
+            const domainColoringSelect = document.getElementById(`${canvasId}-domain-coloring`);
+            
+            try {
+                const a = fastMode ? 0 : math.evaluate(aInput.value || '0');
+                const h = fastMode ? 2 : math.evaluate(hInput.value || '0');
+                const brightnessFn = fastMode ? 'x^0.1' : (brightnessInput.value || 'x^0.1');
+                const colorSpace = fastMode ? 'hsv' : colorSpaceSelect.value;
+                const domainColoring = fastMode ? 'magnitude' : domainColoringSelect.value;
+                
+                drawPolyhedron(canvasId, polyhedronName, a, h, brightnessFn, colorSpace, domainColoring, fastMode);
+            } catch (e) {
+                console.error("Error evaluating parameters:", e);
+                const loadingText = document.getElementById(`${canvasId}-loading`);
+                if (loadingText) loadingText.textContent = `Error: ${e.message}`;
+            }
+        }
+
+        // Fast calculate button handler
+        function fastCalculate(canvasId, polyhedronName) {
+            updatePolyhedron(canvasId, polyhedronName, true);
+        }
+
+        // Generate the UI for all polyhedra
+        function generatePolyhedraUI() {
+            const container = document.getElementById('container');
+            
+            for (const [category, polyhedrons] of Object.entries(polyhedra)) {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category';
+                
+                const categoryHeader = document.createElement('div');
+                categoryHeader.className = 'category-header';
+                categoryHeader.innerHTML = `
+                    <h1>${categoryNames[category] || category}</h1>
+                    <span class="toggle-icon">▼</span>
+                `;
+                categoryHeader.onclick = () => {
+                    categoryDiv.classList.toggle('expanded');
+                    const icon = categoryHeader.querySelector('.toggle-icon');
+                    icon.textContent = categoryDiv.classList.contains('expanded') ? '▼' : '▶';
+                };
+                categoryDiv.appendChild(categoryHeader);
+                
+                const categoryContent = document.createElement('div');
+                categoryContent.className = 'category-content';
+                
+                // Start with categories collapsed
+                categoryDiv.classList.add('expanded');
+                
+                for (const poly of polyhedrons) {
+                    const name = poly.name;
+                    const polyhedronDiv = document.createElement('div');
+                    polyhedronDiv.className = 'polyhedron';
+                    
+                    const polyhedronHeader = document.createElement('div');
+                    polyhedronHeader.className = 'polyhedron-header';
+                    
+                    const titleDiv = document.createElement('div');
+                    titleDiv.innerHTML = `
+                        <h2>${name.charAt(0).toUpperCase() + name.slice(1)}</h2>
+                        ${poly.dual ? `<span class="polyhedron-dual">(dual: ${poly.dual})</span>` : ''}
+                    `;
+                    
+                    polyhedronHeader.appendChild(titleDiv);
+                    polyhedronHeader.innerHTML += `<span class="toggle-icon">▶</span>`;
+                    polyhedronHeader.onclick = () => {
+                        polyhedronDiv.classList.toggle('expanded');
+                        const icon = polyhedronHeader.querySelector('.toggle-icon');
+                        icon.textContent = polyhedronDiv.classList.contains('expanded') ? '▼' : '▶';
+                    };
+                    polyhedronDiv.appendChild(polyhedronHeader);
+                    
+                    // Create content area
+                    const polyhedronContent = document.createElement('div');
+                    polyhedronContent.className = 'polyhedron-content';
+                    
+                    // Size controls
+                    const sizeControls = document.createElement('div');
+                    sizeControls.className = 'size-controls';
+                    sizeControls.innerHTML = `
+                        <button onclick="resizeCanvas('${name.replace(/ /g, '-')}-canvas', 50)">50×50</button>
+                        <button onclick="resizeCanvas('${name.replace(/ /g, '-')}-canvas', 100)">100×100</button>
+                        <button onclick="resizeCanvas('${name.replace(/ /g, '-')}-canvas', 300)">300×300</button>
+                        <button onclick="resizeCanvas('${name.replace(/ /g, '-')}-canvas', 500)">500×500</button>
+                    `;
+                    polyhedronContent.appendChild(sizeControls);
+                    
+                    // Create canvas
+                    const canvas = document.createElement('canvas');
+                    const canvasId = name.replace(/ /g, '-') + '-canvas';
+                    canvas.id = canvasId;
+                    canvas.width = 300;
+                    canvas.height = 300;
+                    
+                    // Loading text
+                    const loadingText = document.createElement('div');
+                    loadingText.id = `${canvasId}-loading`;
+                    loadingText.className = 'loading';
+                    
+                    // Vertices display
+                    const verticesDisplay = document.createElement('div');
+                    verticesDisplay.id = `${canvasId}-vertices`;
+                    verticesDisplay.className = 'vertices-display';
+                    verticesDisplay.textContent = "Click 'Show Vertices' to view coordinates";
+                    
+                    polyhedronContent.appendChild(canvas);
+                    polyhedronContent.appendChild(loadingText);
+                    
+                    // Create controls
+                    const controlsDiv = document.createElement('div');
+                    controlsDiv.className = 'controls';
+                    
+                    // Movement controls
+                    const movementDiv = document.createElement('div');
+                    movementDiv.className = 'control-group';
+                    movementDiv.innerHTML = `
+                        <label>Movement</label>
+                        <div>
+                            <button onclick="moveCanvas('${canvasId}', 'up')">↑</button>
+                            <button onclick="moveCanvas('${canvasId}', 'left')">←</button>
+                            <button onclick="moveCanvas('${canvasId}', 'right')">→</button>
+                            <button onclick="moveCanvas('${canvasId}', 'down')">↓</button>
+                        </div>
+                        <label>Zoom</label>
+                        <div>
+                            <button onclick="zoomCanvas('${canvasId}', 'in')">+</button>
+                            <button onclick="zoomCanvas('${canvasId}', 'out')">-</button>
+                        </div>
+                    `;
+                    controlsDiv.appendChild(movementDiv);
+                    
+                    // Parameters
+                    const paramsDiv = document.createElement('div');
+                    paramsDiv.className = 'control-group';
+                    paramsDiv.innerHTML = `
+                        <label>Parameter a (complex)</label>
+                        <input type="text" id="${canvasId}-a" value="0" placeholder="e.g., 1+2i">
+                        <label>Parameter h (complex)</label>
+                        <input type="text" id="${canvasId}-h" value="0" placeholder="e.g., 0.5-0.3i">
+                    `;
+                    controlsDiv.appendChild(paramsDiv);
+                    
+                    // Color settings
+                    const colorDiv = document.createElement('div');
+                    colorDiv.className = 'control-group';
+                    colorDiv.innerHTML = `
+                        <label>Color Space</label>
+                        <select id="${canvasId}-color-space">
+                            <option value="hsv">HSV</option>
+                            <option value="hsl">HSL</option>
+                            <option value="rgb">RGB</option>
+                        </select>
+                        <label>Domain Coloring</label>
+                        <select id="${canvasId}-domain-coloring">
+                            <option value="both">Phase and Magnitude</option>
+                            <option value="phase">Phase Only</option>
+                            <option value="magnitude">Magnitude Only</option>
+                        </select>
+                        <label>Brightness function</label>
+                        <input type="text" id="${canvasId}-brightness" value="x^0.1" placeholder="e.g., x^0.2 or log(x)">
+                    `;
+                    controlsDiv.appendChild(colorDiv);
+                    
+                    // Action buttons
+                    const actionDiv = document.createElement('div');
+                    actionDiv.className = 'control-group';
+                    actionDiv.innerHTML = `
+                        <label>&nbsp;</label>
+                        <button class="secondary" onclick="fastCalculate('${canvasId}', '${name}')">Fast Calculate</button>
+                        <button onclick="updatePolyhedron('${canvasId}', '${name}')">Full Render</button>
+                        <button class="tertiary" onclick="showVertices('${canvasId}', '${name}')">Show Vertices</button>
+                    `;
+                    controlsDiv.appendChild(actionDiv);
+                    
+                    polyhedronContent.appendChild(controlsDiv);
+                    polyhedronContent.appendChild(verticesDisplay);
+                    polyhedronDiv.appendChild(polyhedronContent);
+                    categoryContent.appendChild(polyhedronDiv);
+                }
+                
+                categoryDiv.appendChild(categoryContent);
+                container.appendChild(categoryDiv);
+            }
+        }
+
+        // Initialize the page when loaded
+        window.onload = generatePolyhedraUI;
+    </script>
+</body>
+</html>

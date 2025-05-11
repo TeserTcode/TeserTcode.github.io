@@ -228,12 +228,154 @@ background-color: #eeeeee;
     font-weight: bold;
     color: black;
   }
+
+
+.popup-container {
+    position: relative;
+    /* Add dimensions to contain the absolute button */
+    width: 100%;
+    height: 100%;
+}
+
+.popup-button {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Safe positioning values */
+    top: 20px;
+    right: 20px;
+    z-index: 1001; /* Above the popup */
+}
+
+.popup-content {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    font-family: monospace;
+    white-space: pre-wrap;
+    z-index: 1000;
+    max-width: 80vw; /* Responsive width */
+    max-height: 80vh; /* Responsive height */
+    overflow: auto;
+    color: #000;
+    /* Ensure popup stays on screen */
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.popup-button:hover {
+    background-color: #e0e0e0;
+}
+@media (max-width: 600px) {
+    .popup-content {
+        max-width: 95vw;
+        max-height: 90vh;
+    }
+}
+,
+
     </style>
 
 </head>
 <body>
     <h1>Complex Domain Coloring</h1>
+    
      <button id="darkModeToggle">Dark Mode</button>
+        <div class="popup-container">
+        <button class="popup-button">?</button>
+        <div class="popup-content">
+1- output types
+1.1 - domain; generic output for domain colourings the size/quslity can be chanted with bmp width and height, alternative generators methods such as generategif and generatemapping and generate inverse are also put on this
+1.2- graphing; graphs the function in 2d red is real and blue is imaginary, start locations and end location defines a line in the complex domain, positive numbers for maximum sets the maximum height of the graph setting it to 0 makes it seet maximum automativly and setting it negative will directly set the max output range (positive values take maximum value and maximums minimum)
+1.2.1- the checkbox at the right makes it a polar graph while moving along a contour imaginary parts sets y axis and real part sets real axis, to make parametric just do f(x)+i*g(x) and 
+1.3 -numerical; you input the number for substituting "x" and you get result
+1.4- heightmap use the letters with capslock ON to move, wasdzx(zx for up and down ws for forwards and backwards) to move and qe,cv,rf to rotate  you can click reset camera to reset movement
+1.4.0.1 the capital T makes it change heightmap being magnitude to real or imaginary part it cycles every 3
+1.4.1 the maximum height parameter is used for 3d mesh generation set it to 0 to make height always 1
+1.4.2 download stl downloads the mesh as stl (warning the mesh might be big or have NaN values so loading stls is slow)
+1.4.3 download objects download it as a gltf file as what three.js uses
+1.4.4 create gif creates a gif rotating around the mesh, there are options
+1.4.4.1 default - circular path looking down (sqrt2)
+1.4.4.2 close - smaller orbit (1)
+1.4.4.3 ortho camera orbits on flat plane (z=0), no tilt
+1.4.4.4 zero -camera at origin, spins in place
+1.4.4.5 zeroup - camera at origin, spins while angled up
+1.4.4.6 topdown - rotates around Z-axis looking down from above
+1.4.4.7 flyover -  camera moves in a straight line past the origin
+1.4.4.8 spherical -  looks at 45 deg up and makes a circle z=0 r=0.9
+1.4.5 there are buttons on the very bottom left, these change the mesh directly and  not the camera, useful when making gifs
+
+2-image generation
+2.0- the variable x and z can be used, q can be used for the nome inputs and t can be used for period ratio tau, they are basically modulartransformqt ( div(log(q),I,pi())), modulartransformtq(t) (exp(mul(pi(),I,t))), t cant be used while making gifs
+2.1 generate- it generates domain coloring on the domain canvas
+2.2 generate inverse- it colors as the initial point and draws at output complex number essentially drawing the inverse, unlike using newtoninv('sin(x)',x) it is faster but you will not be able to get values
+2.3-generate mapping - made for conformal mapslike schwarz triangle function at is essentially same as generate inverse but it only draws at gridlines to show how the domain is tested and such
+2.4 generate gifs usingthe variable t moving from 0 to 1, you maw want to use sin(pi*t) for better easing, while using this you cannot use t for period ratio
+2.5 under the toggle mesh option there are mesh generating functions the heightmap is generated form the magnitude of the output, yse maximum heigs in the heigtmap area to limit height
+2.5.1-create mesh, cretes heightmap
+2.5.2-create spherical mesh , using spherical coordianls theta and pphi the function F(theta,phi)=f(theta+phi*i) so it should both have periods 2 pi n both real and imaginary axis to work correctly
+2.5.3- create stereopgraphis mesh, this is mainly used for functions such as stereopcube where there is a stereographic projection
+2.5.4 - create toroidal mesh, this time the periods of the functiın both in imaginary and real should be 1, for functions like cm you may want to use unwarp(x,w1,w2) function where w1 and w2 are periods eg. cm(unwarp(5*x,5.29991625,exp(2*pi*i/3)*5.29991625))
+2.5.5- cylindric mesh, the function should be periodic don't the real asix with period 1 
+3 color modes
+3.1 contour, draws line where f(x)'s one of the components gets close to a integer
+3.1.2 pcountour is polar contour and uses arg and mag instead of re and im
+3.1.3 acountour or antialias contoıur, it is very slow and doesn't have many advantages 
+3.2 HSV , value is determined by the magnitude to lightness function as well as the other methods below
+3.3 HSL, 
+3.4 HCL
+3.5 LCH , this is the cyldiric version of the CIELAB color space
+3.6 YCbCr real part effects blue and image effects red
+3.7 YDbDr same as YCbCr
+3.8 YCoCg ral part effects orange and imag effects green
+3.9 YPbPr blue and red again
+3.10 "real" it colours based on the real part of the output
+3.11 "image" it colours based on the imaginary part of the output
+3.12 "2d" it is technical and used to save function to be used as photos in an another software
+3.13 pallette, you can choose your own pallete by loading a 360x100 bmp image or select colors
+3.14 freeRGB, the magnitude to lightness function in form "[r,g,b]" eg [mag(x),sqr(x),log(1+re(x)^2)]
+3.15 freeHSV the magnitude to lightness function in form "[h,s,v]" eg 
+[360+arg(z)/pi*180,100,log(x+1)*100]
+3.16 freeHSV the magnitude to lightness function in form "[h,s,l]" eg 
+[360+arg(z)/pi*180,100,(x+1)/x*100]
+3.17 isolines, draws lines where magnitudes is the same
+3.18 dynamic, changes with time cool for gifs I guess
+3.19 magnitudeold ,aka Magnitude 2 , colours based on magnitude
+3.20 magnitude ,aka Magnitude , colours based on magnitude
+3.21  magnitudecolour ,aka  Magnitude 3, colours based on magnitude
+3.22  magnitude4 ,aka Magnitude 4, colours based on magnitude
+3.23   neon, becomes brighter wheree f(x)'s one of the components gets close to a integer
+3.24 differ, the main idea behind this was the the difference between the means of real and imaginary parts 
+3.25 purify, its cool I guess 
+3.26 quadrant, colors depending only on the angle, colors quadrants
+3.27 upperplanebw, if imaginary part is larger than 0 white else black
+3.28 unitcirclebw, if inside unit circle white else black
+3.29 trisect, similar to quadrant but with 3 colors
+3.30 hexasect, similar to quadrant but with 6 colors
+3.31 octant, similar to quadrant but with 8 colors
+3.32 dodecant, similar to quadrant but with 12 colors
+3.33 griddistort, makes a checkerboard smoothly
+3.34 griddistorts, makes a checkerboard unsmoothly
+3.35 griddistortbw, makes a checkerboard black and white
+3.36 realimagheat, colors depending on the ratio of imag^2/real and real^2/imag
+        </div>
+    </div>
+
 <div class="split left">
 <div class="form-group">
     <label for="function">Function (e.g., '2^x'):</label>
@@ -252,7 +394,7 @@ background-color: #eeeeee;
        <option value=" meijerg([0.5],[0.25],[2],[5/3,7/3],x)+accuracy(40)">MeijerG: G[0.5;0.25;2;5/3,7/3|x]</option>
         <option value="schwarztriangle(1/3,1/3,1/3,x)">Schwarz Triangle 1/3</option>
         <!--<option value="cbrt(x)*hypg21(1/3,2/3,4/3,x)/hypg21(0,1/3,2/3,x)">Schwarz Triangle 1/3</option> -->
-        
+        <option value="cm(unwarp(5*x,5.29991625,exp(2*pi*i/3)*5.29991625))">Dixon cm unwarp example</option>
         <option value="stereopicosahedron(x)">Stereographic projection of icosahedron: stereopicosahedron(x)</option>
         <option value="polynomial([polynomial([log(cos(x)+sin(x)*i)^2],pow(2,pow(1.5,2))),derve('sin(x)',x^2)],sinc(x))^2">Very long test function</option>
    
@@ -264,7 +406,7 @@ background-color: #eeeeee;
    
    </select>
   
-  
+     
   
 </div>
     <div class="form-group">
@@ -294,12 +436,14 @@ background-color: #eeeeee;
     
     <select id="lightness-presets" class="preset-button">
   <option value="">.....Presets</option>
-
+<!--0.1+2*((log10(x+1)/3)^0.43275)/(1+(log10(x+1)/3)^0.43275) -->
   <optgroup label="Standards">
       <option value="log(1+x)">Logarithmic: log(1+x)</option>
     <option value="((x/3)^0.43275)/(1+(x/3)^0.43275)">SageMat</option>
     <option value="(log(x+1)/(5+log(x+1)))^4*2">Modified Logarithmic Fraction</option>
-    <option value="1-modc(log(x),1)/2">Log-Contour</option>
+    <option value="(2/3)-modc(log(x),1)/3">Log Contour Soft</option>
+    <option value="1-modc(log(x),1)/2">Log Contour</option>
+     <option value="modc(log(x),1)">Log Contour Hard</option>
      <option value="1-10^-x">Exponential: 1-10^-x</option>
   </optgroup>
 
@@ -367,6 +511,7 @@ background-color: #eeeeee;
   <optgroup label="Weird">
     <option value="floor(x*10)/10">Floor: floor(x*10)/10</option>
     <option value="cantor(x)">Cantor: cantor(x)</option>
+      <option value="minkowskiquestionmark(x)">Minkowski?: minkowski?(x)</option>
   </optgroup>
   
   <optgroup label="Polynomials">
@@ -484,11 +629,14 @@ background-color: #eeeeee;
 <!-- <button id="createMeshButtongnm">Create Gnomonic Mesh and Animate</button> --->
 </div>
 	</div>
+    
     <button onclick="renderBMP()">Generate</button>
 	 <button onclick="renderBMPinv()">Generate Inverse</button>
 <button onclick="renderBMPmap()">Generate Mapping</button>
 
 <button id="domaingifbtn">Generate Gif</button></div>
+
+
    <div class="split right">
        <div id="canvasContainer">
         <canvas id="bmpCanvas" width="320" height="320"></canvas>
@@ -503,6 +651,31 @@ background-color: #eeeeee;
         <button id="downloadBtn">Download Object</button>
         <button id="downloadSTLBtn">Download STL</button>
         <button id="captureGIFBtn">Create GIF</button>
+        <select id="gifModeSelect">
+  <option value="default">Default</option>
+  <option value="close">Close</option>
+  <option value="ortho">Ortho</option>
+  <option value="zero">Zero</option>
+  <option value="zeroup">Zero Up</option>
+    <option value="topdown">Top Down</option>
+  <option value="flyover">Flyover</option>
+  <option value="spherical">Spherical</option>
+
+</select>
+<div style="position: fixed; bottom: 10px; left: 10px; font-size: 10px;">
+  <!-- Size -->
+  <button id="scaleUpBtn">↑ Size</button>
+  <button id="scaleDownBtn">↓ Size</button><br>
+
+  <!-- Rotation -->
+  <button id="rotateXPosBtn">+X</button>
+  <button id="rotateXNegBtn">−X</button>
+  <button id="rotateYPosBtn">+Y</button>
+  <button id="rotateYNegBtn">−Y</button>
+  <button id="rotateZPosBtn">+Z</button>
+  <button id="rotateZNegBtn">−Z</button>
+</div>
+
     <!--    <button id="createGifBtn">Create GIF</button> -->
 
         <button id="resetCameraBtn">Reset Camera</button>
@@ -528,12 +701,15 @@ background-color: #eeeeee;
 		  <div><div id="coordinate-container"></div></div><br>
     <input type="checkbox" id="parametricMode">
     <br>
+    
     </div>
 <button onclick="change()" style="position: fixed; top: 70%; right: 25%;">></button>
 <button onclick="change(1)" style="position: fixed; top: 75%; right: 20%;">Domain</button>
 <button onclick="change(2)" style="position: fixed; top: 75%; right: 30%;">Graphing</button>
 <button onclick="change(3)" style="position: fixed; top: 80%; right: 20%;">Heightmap</button>
+
 <button onclick="change(4)" style="position: fixed; top: 80%; right: 30%;">Numerical</button>
+
 <!-- <button onclick="change(3)" style="position: fixed; top: 80%; right: 20%;">Heightmap</button> --> 
 <!-- <button onclick="change(4)" style="position: fixed; top: 80%; right: 30%;">Spherical</button> --> 
 
@@ -1622,7 +1798,7 @@ const xxx = math.complex(xre,xim);
                     let color = [0, 0, 0];
                     try {
 					const complexValue = math.complex(re, im);
-                    const funcValue = teth.evaluate(funcStr,  { x: complexValue , z: complexValue ,xx: re ,yy: im ,q:exp(mul(I,pi(),complexValue)) });
+                    const funcValue = teth.evaluate(funcStr,  { x: complexValue , z: complexValue ,xx: re ,yy: im ,q:exp(mul(I,pi(),complexValue)),t:modulartransformqt(complexValue) });
                      //  const funcValue = teth.evaluate(funcStr, { x: complexValue , z: complexValue ,xx: re ,yy: im ,q:exp(mul(I,pi(),complexValue)) });
                   //        const funcValue = teth.evaluate(funcStr, { x: complexValue, q:exp(mul(I,pi(),complexValue)) });
 				//console.log(funcValue);
@@ -1776,6 +1952,7 @@ function renderBMPt(t) {
                     x: z, z: z,
                     xx: x, yy: y,
                     q: math.exp(math.multiply(math.i, math.pi, z))
+                    ,t:modulartransformqt(z)
                 });
                 
                 const canvasX = toCanvasX(fz.re);
@@ -1834,6 +2011,7 @@ function renderBMPt(t) {
                     x: z, z: z,
                     xx: x, yy: y,
                     q: math.exp(math.multiply(math.i, math.pi, z))
+                    ,t:modulartransformqt(complexValue)
                 });
                 
                 const canvasX = toCanvasX(fz.re);
@@ -1913,7 +2091,7 @@ let thick = parseFloat(document.getElementById('thick').value);
             let color = [0, 0, 0];
             try {
                 const complexValue = math.complex(re, im);
-                const funcValue = teth.evaluate(funcStr, { x: complexValue , z: complexValue ,xx: re ,yy: im ,q:exp(mul(I,pi(),complexValue)) });
+                const funcValue = teth.evaluate(funcStr, { x: complexValue , z: complexValue ,xx: re ,yy: im ,q:exp(mul(I,pi(),complexValue)) ,t:modulartransformqt(complexValue)});
                 
                 // Use input values (complexValue) for coloring
                 // Use input values (complexValue) for coloring
@@ -2355,67 +2533,140 @@ const workerScript = `
 // Create blob URL for the worker
 const workerBlob = new Blob([workerScript], {type: 'application/javascript'});
 const workerUrl = URL.createObjectURL(workerBlob);
-document.getElementById('captureGIFBtn').addEventListener('click', async function() {
-    // First add html2canvas to your project
-    // 
-    
+document.getElementById('captureGIFBtn').addEventListener('click', async function () {
+    const mode = document.getElementById('gifModeSelect').value;
     const frames = [];
     const totalFrames = 30;
-    const delay = 100; // ms between frames
-    
-    // Store original camera state
+    const delay = 100;
+
     const originalPosition = camera.position.clone();
     const originalRotation = camera.rotation.clone();
-    
+
     for (let i = 0; i < totalFrames; i++) {
-        // Position camera
         const angle = (i / totalFrames) * Math.PI * 2;
-        camera.position.x = Math.sqrt(2) * Math.cos(angle);
-        camera.position.z = Math.sqrt(2) * Math.sin(angle);
-        camera.position.y = Math.sqrt(2);
-        camera.lookAt(new THREE.Vector3(0, 0, 0));
-        
+
+        switch (mode) {
+            case 'close':
+                camera.position.set(
+                    Math.cos(angle),
+                    1,
+                    Math.sin(angle)
+                );
+                camera.lookAt(0, 0, 0);
+                break;
+
+            case 'ortho':
+                camera.position.set(
+                    Math.cos(angle),
+                    0,
+                    Math.sin(angle)
+                );
+                camera.lookAt(0, 0, 0);
+                break;
+
+            case 'zero':
+                camera.position.set(0, 0, 0);
+                camera.rotation.set(0, angle, 0);
+                break;
+
+            case 'zeroup':
+                camera.position.set(0, 0, 0);
+                camera.rotation.set(-Math.PI / 4, angle, 0);
+                break;
+
+            case 'topdown':
+                camera.position.set(
+                    Math.cos(angle),
+                    Math.sin(angle),
+                    5
+                );
+                camera.lookAt(0, 0, 0);
+                break;
+
+            case 'flyover':
+                const t = i / totalFrames;
+                camera.position.set(-2 + 4 * t, 1, 2);
+                camera.lookAt(0, 0, 0);
+                break;
+case 'spherical':
+    {
+        const radius = 0.9;
+        camera.position.set(
+            radius * Math.cos(angle),
+            0,
+            radius * Math.sin(angle)
+        );
+        // Look up 45 degrees (elevated lookAt point)
+        camera.lookAt(0, 0.5, 0);
+    }
+    break;
+            case 'default':
+            default:
+                camera.position.set(
+                    Math.sqrt(2) * Math.cos(angle),
+                    Math.sqrt(2),
+                    Math.sqrt(2) * Math.sin(angle)
+                );
+                camera.lookAt(0, 0, 0);
+                break;
+        }
+
         renderer.render(scene, camera);
-        
-        // Capture frame using html2canvas
+
         const canvas = await html2canvas(renderer.domElement);
         frames.push({
             image: canvas,
             delay: delay
         });
-        
-        // Small delay between frames
+
         await new Promise(resolve => setTimeout(resolve, delay));
     }
-    
-    // Restore camera
+
+    // Restore original camera state
     camera.position.copy(originalPosition);
     camera.rotation.copy(originalRotation);
-    
-    // Create GIF using gif.js
+
     const gif = new GIF({
         workers: 2,
         quality: 10,
         width: frames[0].image.width,
         height: frames[0].image.height,
-        workerScript: workerUrl
+        workerScript: workerUrl // Make sure this is defined elsewhere
     });
-    
+
     frames.forEach(frame => {
-        gif.addFrame(frame.image, {delay: frame.delay});
+        gif.addFrame(frame.image, { delay: frame.delay });
     });
-    
-    gif.on('finished', function(blob) {
+
+    gif.on('finished', function (blob) {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'scene_rotation.gif';
+        a.download = `scene_${mode}.gif`;
         a.click();
         URL.revokeObjectURL(url);
     });
-    
+
     gif.render();
 });
+
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const popupButton = document.querySelector('.popup-button');
+            const popupContent = document.querySelector('.popup-content');
+            
+            // Toggle popup when button is clicked
+            popupButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                popupContent.style.display = popupContent.style.display === 'block' ? 'none' : 'block';
+            });
+            
+            // Close popup when clicking outside
+            document.addEventListener('click', function() {
+                popupContent.style.display = 'none';
+            });
+        });
 
 //Domain
 
@@ -2477,6 +2728,46 @@ document.getElementById('domaingifbtn').addEventListener('click', async function
     
     gif.render();
 });
+
+
+
+
+
+
+
+
+document.getElementById('scaleUpBtn').addEventListener('click', () => {
+    mesh.scale.multiplyScalar(1.1);
+});
+
+document.getElementById('scaleDownBtn').addEventListener('click', () => {
+    mesh.scale.multiplyScalar(0.9);
+});
+
+document.getElementById('rotateXPosBtn').addEventListener('click', () => {
+    mesh.rotation.x += 0.1;
+});
+
+document.getElementById('rotateXNegBtn').addEventListener('click', () => {
+    mesh.rotation.x -= 0.1;
+});
+
+document.getElementById('rotateYPosBtn').addEventListener('click', () => {
+    mesh.rotation.y += 0.1;
+});
+
+document.getElementById('rotateYNegBtn').addEventListener('click', () => {
+    mesh.rotation.y -= 0.1;
+});
+
+document.getElementById('rotateZPosBtn').addEventListener('click', () => {
+    mesh.rotation.z += 0.1;
+});
+
+document.getElementById('rotateZNegBtn').addEventListener('click', () => {
+    mesh.rotation.z -= 0.1;
+});
+
 </script>
 
 

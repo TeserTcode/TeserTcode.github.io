@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Polyhedra Viewer</title>
+  <style>
+    canvas { display: block; margin: auto; background: #000; }
+    #controls { 
+      text-align: center; 
+      margin-top: 10px; 
+      color: white; 
+      padding: 10px;
+      background: #333;
+      border-radius: 5px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    body { 
+      background: #222; 
+      font-family: Arial, sans-serif;
+    }
+    input, select, button { 
+      margin: 5px;
+      vertical-align: middle;
+    }
+    label { 
+      display: inline-block;
+      margin: 5px;
+    }
+    .control-section {
+      background: #444;
+      padding: 8px;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+    .control-section h3 {
+      margin-top: 0;
+      color: #ddd;
+    }
+    button {
+      background: #555;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #666;
+    }
+    .advanced-options {
+      display: none;
+      margin-top: 10px;
+      padding: 10px;
+      background: #3a3a3a;
+      border-radius: 5px;
+    }
+    .show-advanced {
+      font-size: 0.8em;
+      color: #aaa;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <div class="control-section">
+      <h3>Shape Controls</h3>
+      Shape: <select id="shapeSelect"></select>
+    </div>
+    
+    <div class="control-section">
+      <h3>Edge Controls</h3>
+      <div id="edgeControls">
+        <label><input type="checkbox" class="edgeToggle" checked> 
+          Edge Distance <input type="range" class="edgeN" min="1" max="5" value="1" style="width: 100px;"></label>
+      </div>
+      <button id="addEdgeBtn">+ Add Edge Distance</button>
+      <div class="show-advanced" id="showEdgeAdvanced">Show Edge Advanced Options</div>
+      <div class="advanced-options" id="edgeAdvancedOptions">
+        <label><input type="checkbox" id="edgeOverdrive"> Edge Overdrive (all vertex combinations)</label>
+      </div>
+    </div>
+    
+    <div class="control-section">
+      <h3>Face Controls</h3>
+      <label><input type="checkbox" id="drawFaces" checked> Draw Faces</label>
+      <div class="show-advanced" id="showFaceAdvanced">Show Face Advanced Options</div>
+      <div class="advanced-options" id="faceAdvancedOptions">
+            <div class="color-option">
+        Face Coloring:
+        <select id="faceColorMode">
+          <option value="normal">Normal</option>
+          <option value="normal2">Normal 2 (Mirrored)</option>
+          <option value="random">Random</option>
+          <option value="subtle">Subtle Normal</option>
+        </select>
+      </div>
+        <label><input type="checkbox" id="faceOverdrive"> Face Overdrive (colinear vertices)</label><br>
+        <label><input type="checkbox" id="faceOverdriveSup"> Face Overdrive Sup (all 3-vertex combinations)</label><br>
+        <label><input type="checkbox" id="faceOverdriveSub"> Face Overdrive Sub (convex faces only)</label>
+      </div>
+    </div>
+    
+    <div class="control-section">
+      <h3>View Controls</h3>
+      Pitch: <input type="range" id="pitch" min="0" max="360" value="0"><br>
+      Yaw: <input type="range" id="yaw" min="0" max="360" value="0"><br>
+      Roll: <input type="range" id="roll" min="0" max="360" value="0"><br>
+      <button id="zoomIn">Zoom In</button>
+      <button id="zoomOut">Zoom Out</button>
+      <button id="resetView">Reset View</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+  <script src="mthfnc.js"></script>
+  <script src="polyhedra.js"></script>
+  <script>
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // UI Elements
+    const shapeSelect = document.getElementById("shapeSelect");
+    const pitchInput = document.getElementById("pitch");
+    const yawInput = document.getElementById("yaw");
+    const rollInput = document.getElementById("roll");
+    const drawFacesCheckbox = document.getElementById("drawFaces");
+    const edgeControls = document.getElementById("edgeControls");
+    const addEdgeBtn = document.getElementById("addEdgeBtn");
+    const zoomInBtn = document.getElementById("zoomIn");
+    const zoomOutBtn = document.getElementById("zoomOut");
+    const resetViewBtn = document.getElementById("resetView");
+    const edgeOverdriveCheckbox = document.getElementById("edgeOverdrive");
+    const faceOverdriveCheckbox = document.getElementById("faceOverdrive");
+    const faceOverdriveSupCheckbox = document.getElementById("faceOverdriveSup");
+    const faceOverdriveSubCheckbox = document.getElementById("faceOverdriveSub");
+    const showEdgeAdvanced = document.getElementById("showEdgeAdvanced");
+    const edgeAdvancedOptions = document.getElementById("edgeAdvancedOptions");
+    const showFaceAdvanced = document.getElementById("showFaceAdvanced");
+    const faceAdvancedOptions = document.getElementById("faceAdvancedOptions");
+
+    let mesh, edges = [], faces = [];
+    let activeEdgeControls = [];
+    const defaultCameraZ = 5;
+
+  const faceColorModeSelect = document.getElementById("faceColorMode");
+   function getFaceColor(normal, mode) {
+      const normalizedNormal = math.divide(normal, math.norm(normal));
+      
+      switch(mode) {
+        case 'normal2': // Normal 2 (mirrored - same color for normal and its negative)
+          const absNormal = normalizedNormal.map(Math.abs);
+          return new THREE.Color(
+            absNormal[0],
+            absNormal[1],
+            absNormal[2]
+          );
+          
+        case 'random': // Random color per face
+          return new THREE.Color().setHSL(Math.random(), 0.7, 0.6);
+          
+        case 'subtle': // Subtle normal-based color
+          return new THREE.Color(
+            0.5 + normalizedNormal[0] * 0.3,
+            0.5 + normalizedNormal[1] * 0.3,
+            0.5 + normalizedNormal[2] * 0.3
+          );
+          
+        case 'normal': // Default normal-based color
+        default:
+          return new THREE.Color(
+            (normalizedNormal[0] + 1) / 2,
+            (normalizedNormal[1] + 1) / 2,
+            (normalizedNormal[2] + 1) / 2
+          );
+      }
+    }
+    // Helper functions
+    function areColinear(a, b, c, epsilon = 1e-7) {
+      const ab = math.subtract(b, a);
+      const ac = math.subtract(c, a);
+      const cross = math.cross(ab, ac);
+      return math.norm(cross) < epsilon;
+    }
+
+    function isConvexFace(vertices, faceIndices, epsilon = 1e-7) {
+      if (faceIndices.length < 3) return false;
+      
+      // Get face vertices
+      const faceVerts = faceIndices.map(i => vertices[i]);
+      
+      // Calculate face normal
+      const v1 = math.subtract(faceVerts[1], faceVerts[0]);
+      const v2 = math.subtract(faceVerts[2], faceVerts[0]);
+      const normal = math.cross(v1, v2);
+      const normalLength = math.norm(normal);
+      if (normalLength < epsilon) return false; // Degenerate face
+      const normalizedNormal = math.divide(normal, normalLength);
+      
+      // Calculate face center
+      const center = faceVerts.reduce((acc, v) => math.add(acc, v), [0, 0, 0]);
+      const normalizedCenter = math.divide(center, faceVerts.length);
+      
+      // Check all other vertices are on the same side of the face
+      const refVertex = faceVerts[0];
+      for (let i = 0; i < vertices.length; i++) {
+        if (faceIndices.includes(i)) continue; // Skip vertices that are part of the face
+        
+        const vertex = vertices[i];
+        const vecToVertex = math.subtract(vertex, refVertex);
+        const dot = math.dot(vecToVertex, normalizedNormal);
+        
+        // If any vertex is on the "inside" of the face, it's not convex
+        if (dot < -epsilon) {
+          return false;
+        }
+      }
+      
+      return true;
+    }
+
+    function getEdges(verts, n = 1, allCombinations = false) {
+      if (allCombinations) {
+        // Edge Overdrive - all vertex combinations
+        const edges = [];
+        for (let i = 0; i < verts.length; i++) {
+          for (let j = i + 1; j < verts.length; j++) {
+            edges.push([i, j]);
+          }
+        }
+        return edges;
+      }
+
+      const EPSILON = 1e-7;
+      const distances = [];
+      for (let i = 0; i < verts.length; i++) {
+        for (let j = i + 1; j < verts.length; j++) {
+          const d = math.distance(verts[i], verts[j]);
+          distances.push(d);
+        }
+      }
+      const uniqueSorted = [...new Set(distances.map(d => d.toFixed(7)))].map(Number).sort((a, b) => a - b);
+      const targetDistance = uniqueSorted[n - 1];
+      const edges = [];
+      for (let i = 0; i < verts.length; i++) {
+        for (let j = i + 1; j < verts.length; j++) {
+          const d = math.distance(verts[i], verts[j]);
+          if (Math.abs(d - targetDistance) < EPSILON) {
+            edges.push([i, j]);
+          }
+        }
+      }
+      return edges;
+    }
+
+    function getFaces(verts, options = {}) {
+      const {
+        fromDual = true,
+        overdrive = false,
+        overdriveSup = false,
+        overdriveSub = false
+      } = options;
+      
+      const faces = [];
+      const EPSILON = 1e-5;
+
+      if (overdriveSup) {
+        // Face Overdrive Sup - all combinations of 3 vertices
+        for (let i = 0; i < verts.length; i++) {
+          for (let j = i + 1; j < verts.length; j++) {
+            for (let k = j + 1; k < verts.length; k++) {
+              faces.push([i, j, k]);
+            }
+          }
+        }
+        return faces;
+      }
+
+      if (overdrive) {
+        // Face Overdrive - colinear vertices
+        for (let i = 0; i < verts.length; i++) {
+          for (let j = i + 1; j < verts.length; j++) {
+            for (let k = j + 1; k < verts.length; k++) {
+              if (areColinear(verts[i], verts[j], verts[k], EPSILON)) {
+                faces.push([i, j, k]);
+              }
+            }
+          }
+        }
+        return faces;
+      }
+
+      if (fromDual) {
+        // Original face detection from dual
+        const currentShape = dualsMap.get(shapeSelect.value);
+        if (!currentShape.dual) return [];
+        
+        const dualName = currentShape.dual;
+        const dualShape = dualsMap.get(dualName);
+        if (!dualShape) return [];
+        
+        const dualVertices = typeof dualShape.vertices === "function" ? dualShape.vertices() : dualShape.vertices;
+        
+        // For each dual vertex (which represents a face in the original)
+        for (const dualVertex of dualVertices) {
+          // Find all vertices in the original that are closest to this dual vertex
+          const distances = verts.map((v, i) => ({
+            index: i,
+            distance: math.distance(v, dualVertex)
+          }));
+          
+          // Sort by distance to find the face vertices
+          distances.sort((a, b) => a.distance - b.distance);
+          const minDistance = distances[0].distance;
+          
+          // Get all vertices at this minimum distance (within epsilon)
+          const faceIndices = distances
+            .filter(d => Math.abs(d.distance - minDistance) < EPSILON)
+            .map(d => d.index);
+          
+          if (faceIndices.length >= 3) {
+            if (overdriveSub && !isConvexFace(verts, faceIndices, EPSILON)) {
+              continue;
+            }
+            
+            // Order the vertices to form a proper polygon
+            const faceVerts = faceIndices.map(i => verts[i]);
+            const center = faceVerts.reduce((acc, v) => math.add(acc, v), [0, 0, 0]);
+            const normalizedCenter = math.divide(center, faceVerts.length);
+            
+            // Create vectors from center to each vertex
+            const vectors = faceVerts.map(v => math.subtract(v, normalizedCenter));
+            
+            // Calculate normal vector for the face
+            const normal = math.cross(vectors[0], vectors[1]);
+            
+            // Sort vertices clockwise around the normal
+            faceIndices.sort((a, b) => {
+              const va = math.subtract(verts[a], normalizedCenter);
+              const vb = math.subtract(verts[b], normalizedCenter);
+              const cross = math.cross(va, vb);
+              return math.dot(normal, cross);
+            });
+            
+            faces.push(faceIndices);
+          }
+        }
+      }
+      
+      return faces;
+    }
+
+    function createFaceGeometry(verts, faceIndices) {
+      const faceGeometry = new THREE.BufferGeometry();
+      const faceVerts = [];
+      const faceCenter = [0, 0, 0];
+      
+      // Get all vertices for this face
+      const faceVertices = faceIndices.map(i => verts[i]);
+      for (const v of faceVertices) {
+        faceCenter[0] += v[0];
+        faceCenter[1] += v[1];
+        faceCenter[2] += v[2];
+      }
+      faceCenter[0] /= faceVertices.length;
+      faceCenter[1] /= faceVertices.length;
+      faceCenter[2] /= faceVertices.length;
+      
+      // Calculate face normal
+      let nx = 0, ny = 0, nz = 0;
+      for (let i = 0; i < faceVertices.length; i++) {
+        const curr = faceVertices[i];
+        const next = faceVertices[(i + 1) % faceVertices.length];
+        nx += (curr[1] - next[1]) * (curr[2] + next[2]);
+        ny += (curr[2] - next[2]) * (curr[0] + next[0]);
+        nz += (curr[0] - next[0]) * (curr[1] + next[1]);
+      }
+      const len = Math.hypot(nx, ny, nz);
+      const normald = [nx / len, ny / len, nz / len];
+
+      // Choose basis vectors in the face plane
+      const up = Math.abs(normald[2]) < 0.99 ? [0, 0, 1] : [1, 0, 0];
+      const tangent = [
+        normald[1] * up[2] - normald[2] * up[1],
+        normald[2] * up[0] - normald[0] * up[2],
+        normald[0] * up[1] - normald[1] * up[0]
+      ];
+      const bitangent = [
+        normald[1] * tangent[2] - normald[2] * tangent[1],
+        normald[2] * tangent[0] - normald[0] * tangent[2],
+        normald[0] * tangent[1] - normald[1] * tangent[0]
+      ];
+
+      // Project to 2D and sort
+      const projected = faceVertices.map(v => {
+        const rel = [v[0] - faceCenter[0], v[1] - faceCenter[1], v[2] - faceCenter[2]];
+        const x = rel[0] * tangent[0] + rel[1] * tangent[1] + rel[2] * tangent[2];
+        const y = rel[0] * bitangent[0] + rel[1] * bitangent[1] + rel[2] * bitangent[2];
+        return { v, angle: Math.atan2(y, x) };
+      });
+      projected.sort((a, b) => a.angle - b.angle);
+      const sorted = projected.map(p => p.v);
+
+      // Create triangles
+      for (let i = 0; i < sorted.length; i++) {
+        const next = (i + 1) % sorted.length;
+        faceVerts.push(...faceCenter, ...sorted[i], ...sorted[next]);
+      }
+      
+      faceGeometry.setAttribute('position', new THREE.Float32BufferAttribute(faceVerts, 3));
+      
+      // Calculate face normal for coloring
+      const v1 = math.subtract(faceVertices[0], faceCenter);
+      const v2 = math.subtract(faceVertices[1], faceCenter);
+      const normal = math.cross(v1, v2);
+      const normalLength = math.norm(normal);
+      const normalizedNormal = math.divide(normal, normalLength);
+      
+      // Create color based on normal
+        const color = getFaceColor(normal, faceColorModeSelect.value);
+      
+      return {
+        geometry: faceGeometry,
+        material: new THREE.MeshBasicMaterial({
+          color: color,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.7
+        })
+      };
+    }
+
+    function createShape(name) {
+      cleanupScene();
+      // Clear previous objects
+      if (mesh) scene.remove(mesh);
+      edges.forEach(edge => scene.remove(edge));
+      edges = [];
+      faces.forEach(face => scene.remove(face));
+      faces = [];
+
+      const data = dualsMap.get(name);
+      const vert = typeof data.vertices === "function" ? data.vertices() : data.vertices;
+      const vertices = vert.map(v => new THREE.Vector3(...v));
+
+      // Create points for vertices
+      const geometry = new THREE.BufferGeometry().setFromPoints(vertices);
+      const material = new THREE.PointsMaterial({ color: 0x00ff00, size: 0.1 });
+      mesh = new THREE.Points(geometry, material);
+      scene.add(mesh);
+
+      // Create edges
+      if (edgeOverdriveCheckbox.checked) {
+        // Edge Overdrive mode - draw all possible edges
+        const edgeIndices = getEdges(vert, 1, true);
+        const edgeGeom = new THREE.BufferGeometry();
+        const edgeVerts = [];
+        for (const [i, j] of edgeIndices) {
+          edgeVerts.push(...vert[i], ...vert[j]);
+        }
+        edgeGeom.setAttribute('position', new THREE.Float32BufferAttribute(edgeVerts, 3));
+        const edgeObj = new THREE.LineSegments(
+          edgeGeom, 
+          new THREE.LineBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.3 })
+        );
+        edges.push(edgeObj);
+        scene.add(edgeObj);
+      } else {
+        // Normal edge mode - use edge distance controls
+        activeEdgeControls.forEach((control, idx) => {
+          if (control.toggle.checked) {
+            const edgeN = parseInt(control.range.value);
+            const edgeIndices = getEdges(vert, edgeN);
+            
+            const edgeGeom = new THREE.BufferGeometry();
+            const edgeVerts = [];
+            for (const [i, j] of edgeIndices) {
+              edgeVerts.push(...vert[i], ...vert[j]);
+            }
+            edgeGeom.setAttribute('position', new THREE.Float32BufferAttribute(edgeVerts, 3));
+            
+            // Use different colors for different edge distances
+            const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff];
+            const edgeMaterial = new THREE.LineBasicMaterial({ 
+              color: colors[idx % colors.length],
+              linewidth: 2
+            });
+            
+            const edgeObj = new THREE.LineSegments(edgeGeom, edgeMaterial);
+            edges.push(edgeObj);
+            scene.add(edgeObj);
+          }
+        });
+      }
+
+      // Create faces if enabled
+      if (drawFacesCheckbox.checked) {
+        const faceOptions = {
+          fromDual: !faceOverdriveCheckbox.checked && !faceOverdriveSupCheckbox.checked && !faceOverdriveSubCheckbox.checked,
+          overdrive: faceOverdriveCheckbox.checked,
+          overdriveSup: faceOverdriveSupCheckbox.checked,
+          overdriveSub: faceOverdriveSubCheckbox.checked
+        };
+        
+        const faceIndices = getFaces(vert, faceOptions);
+        
+        if (faceIndices.length > 0) {
+          // Create a group for all faces
+          const faceGroup = new THREE.Group();
+          
+          for (const face of faceIndices) {
+            try {
+              const { geometry, material } = createFaceGeometry(vert, face);
+              const faceMesh = new THREE.Mesh(geometry, material);
+              faceGroup.add(faceMesh);
+              faces.push(faceMesh);
+            } catch (e) {
+              console.warn("Failed to create face geometry:", e);
+            }
+          }
+          
+          scene.add(faceGroup);
+        }
+      }
+    }
+
+    function addEdgeControl(n = 1) {
+      const controlId = activeEdgeControls.length;
+      const controlDiv = document.createElement('div');
+      
+      const toggle = document.createElement('input');
+      toggle.type = 'checkbox';
+      toggle.className = 'edgeToggle';
+      toggle.checked = true;
+      
+      const range = document.createElement('input');
+      range.type = 'range';
+      range.className = 'edgeN';
+      range.min = '1';
+      range.max = '5';
+      range.value = n;
+      range.style.width = '100px';
+      
+      const removeBtn = document.createElement('button');
+      removeBtn.textContent = '×';
+      removeBtn.style.marginLeft = '5px';
+      removeBtn.style.padding = '0 5px';
+      
+      controlDiv.appendChild(toggle);
+      controlDiv.appendChild(document.createTextNode(` Edge Distance ${controlId + 1}: `));
+      controlDiv.appendChild(range);
+      controlDiv.appendChild(removeBtn);
+      
+      edgeControls.appendChild(controlDiv);
+      
+      // Store references
+      const controlObj = { toggle, range, removeBtn, div: controlDiv };
+      activeEdgeControls.push(controlObj);
+      
+      // Add event listeners
+      const updateEdges = () => createShape(shapeSelect.value);
+      toggle.addEventListener('change', updateEdges);
+      range.addEventListener('input', updateEdges);
+      removeBtn.addEventListener('click', () => {
+        edgeControls.removeChild(controlDiv);
+        activeEdgeControls = activeEdgeControls.filter(c => c !== controlObj);
+        updateEdges();
+      });
+    }
+
+    // Initialize UI
+    function initUI() {
+      // Populate shape selector
+      for (const key of dualsMap.keys()) {
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = key;
+        shapeSelect.appendChild(option);
+      }
+
+      // Add initial edge control
+      addEdgeControl(1);
+      
+      // Event listeners
+      shapeSelect.addEventListener("change", () => createShape(shapeSelect.value));
+      drawFacesCheckbox.addEventListener("change", () => createShape(shapeSelect.value));
+      addEdgeBtn.addEventListener("click", () => {
+        if (activeEdgeControls.length < 5) {
+          addEdgeControl(activeEdgeControls.length + 1);
+        }
+      });
+       faceColorModeSelect.addEventListener("change", () => {
+        createShape(shapeSelect.value);
+      });
+      // Advanced options toggles
+      showEdgeAdvanced.addEventListener("click", () => {
+        edgeAdvancedOptions.style.display = edgeAdvancedOptions.style.display === 'block' ? 'none' : 'block';
+      });
+      
+      showFaceAdvanced.addEventListener("click", () => {
+        faceAdvancedOptions.style.display = faceAdvancedOptions.style.display === 'block' ? 'none' : 'block';
+      });
+      
+      // Advanced options checkboxes
+      edgeOverdriveCheckbox.addEventListener("change", () => {
+        createShape(shapeSelect.value);
+      });
+      
+      faceOverdriveCheckbox.addEventListener("change", () => {
+        if (faceOverdriveCheckbox.checked) {
+          faceOverdriveSupCheckbox.checked = false;
+          faceOverdriveSubCheckbox.checked = false;
+        }
+        createShape(shapeSelect.value);
+      });
+      
+      faceOverdriveSupCheckbox.addEventListener("change", () => {
+        if (faceOverdriveSupCheckbox.checked) {
+          faceOverdriveCheckbox.checked = false;
+          faceOverdriveSubCheckbox.checked = false;
+        }
+        createShape(shapeSelect.value);
+      });
+      
+      faceOverdriveSubCheckbox.addEventListener("change", () => {
+        if (faceOverdriveSubCheckbox.checked) {
+          faceOverdriveCheckbox.checked = false;
+          faceOverdriveSupCheckbox.checked = false;
+        }
+        createShape(shapeSelect.value);
+      });
+      
+      // Zoom controls
+      zoomInBtn.addEventListener("click", () => {
+        camera.position.z *= 0.9;
+      });
+      
+      zoomOutBtn.addEventListener("click", () => {
+        camera.position.z *= 1.1;
+      });
+      
+      resetViewBtn.addEventListener("click", () => {
+        camera.position.z = defaultCameraZ;
+        pitchInput.value = 0;
+        yawInput.value = 0;
+        rollInput.value = 0;
+        createShape(shapeSelect.value);
+      });
+    }
+
+    camera.position.z = defaultCameraZ;
+  function cleanupScene() {
+      // Remove all objects from scene
+      while(scene.children.length > 0) { 
+        const obj = scene.children[0];
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) {
+          if (Array.isArray(obj.material)) {
+            obj.material.forEach(m => m.dispose());
+          } else {
+            obj.material.dispose();
+          }
+        }
+        scene.remove(obj);
+      }
+      
+      // Reset references
+      mesh = null;
+      edges = [];
+      faces = [];
+    }
+    function animate() {
+      requestAnimationFrame(animate);
+      const pitch = parseFloat(pitchInput.value) * Math.PI / 180;
+      const yaw = parseFloat(yawInput.value) * Math.PI / 180;
+      const roll = parseFloat(rollInput.value) * Math.PI / 180;
+      const rotationMatrix = new THREE.Matrix4()
+        .makeRotationX(pitch)
+        .multiply(new THREE.Matrix4().makeRotationY(yaw))
+        .multiply(new THREE.Matrix4().makeRotationZ(roll));
+      if (mesh) mesh.setRotationFromMatrix(rotationMatrix);
+      edges.forEach(edge => edge.setRotationFromMatrix(rotationMatrix));
+      faces.forEach(face => face.setRotationFromMatrix(rotationMatrix));
+      renderer.render(scene, camera);
+    }
+    
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    initUI();
+    animate();
+    createShape(shapeSelect.value = "octahedron");
+  </script>
+</body>
+</html>
