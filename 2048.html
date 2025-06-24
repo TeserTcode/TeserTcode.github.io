@@ -5,122 +5,397 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2048</title>
     <style>
-	body {
-	text-align: center;
-	background: url('2048bg.png') no-repeat center center fixed;
-	background-size: 100vw 100vh;
-	}
+        body {
+            text-align: center;
+            background: url('2048bg.png') no-repeat center center fixed;
+            background-size: 100vw 100vh;
+            touch-action: none; /* For swipe controls */
+            user-select: none; /* Prevent text selection during swipes */
+        }
         table {
             border-collapse: collapse;
-			  margin-left: auto;
-  margin-right: auto;
+            margin-left: auto;
+            margin-right: auto;
         }
-		#retryButton {
-  background: #34d9d6;
-  background-image: -webkit-linear-gradient(top, #34d9d6, #2bb85a);
-  background-image: -moz-linear-gradient(top, #34d9d6, #2bb85a);
-  background-image: -ms-linear-gradient(top, #34d9d6, #2bb85a);
-  background-image: -o-linear-gradient(top, #34d9d6, #2bb85a);
-  background-image: linear-gradient(to bottom, #34d9d6, #2bb85a);
-  -webkit-border-radius: 26;
-  -moz-border-radius: 26;
-  border-radius: 26px;
-  font-family: Georgia;
-  color: #000000;
-  font-size: 40px;
-  padding: 20px 40px 20px 40px;
-  text-decoration: none;
-		}
-
+        #retryButton {
+            background: #34d9d6;
+            background-image: -webkit-linear-gradient(top, #34d9d6, #2bb85a);
+            background-image: -moz-linear-gradient(top, #34d9d6, #2bb85a);
+            background-image: -ms-linear-gradient(top, #34d9d6, #2bb85a);
+            background-image: -o-linear-gradient(top, #34d9d6, #2bb85a);
+            background-image: linear-gradient(to bottom, #34d9d6, #2bb85a);
+            -webkit-border-radius: 26;
+            -moz-border-radius: 26;
+            border-radius: 26px;
+            font-family: Georgia;
+            color: #000000;
+            font-size: 40px;
+            padding: 20px 40px 20px 40px;
+            text-decoration: none;
+        }
+        .board-button {
+            background: #34d9d6;
+            background-image: -webkit-linear-gradient(top, #34d9d6, #2bb85a);
+            background-image: -moz-linear-gradient(top, #34d9d6, #2bb85a);
+            background-image: -ms-linear-gradient(top, #34d9d6, #2bb85a);
+            background-image: -o-linear-gradient(top, #34d9d6, #2bb85a);
+            background-image: linear-gradient(to bottom, #34d9d6, #2bb85a);
+            -webkit-border-radius: 26;
+            -moz-border-radius: 26;
+            border-radius: 26px;
+            font-family: Georgia;
+            color: #000000;
+            font-size: 20px;
+            padding: 10px 20px 10px 20px;
+            text-decoration: none;
+            margin: 5px;
+        }
         td {
             padding: 0;
             line-height: 0;
         }
-		h1 {
-		font-size: 50px;
-		font-family: "Comic Sans MS";
-		color:white;
-		}
+        h1 {
+            font-size: 50px;
+            font-family: "Comic Sans MS";
+            color:white;
+        }
         img {
             border: 5px solid black;
             width: 128px;
             height: 128px;
-			
         }
-       #score, #highscore {
-    display: inline-block; /* Make sure elements stay on the same line */
-    width: 256px; /* Set the width of each element */
-    margin: 10px 0;
-    font-size: 24px;
-    background: #ebb467;
-    background-image: -webkit-linear-gradient(top, #00ffdd, #00ddff);
-    background-image: -moz-linear-gradient(top, #00ffdd, #00ddff);
-    background-image: -ms-linear-gradient(top, #00ffdd, #00ddff);
-    background-image: -o-linear-gradient(top, #00ffdd, #00ddff);
-    background-image: linear-gradient(to bottom, #00ffdd, #00ddff);
-    -webkit-border-radius: 0;
-    -moz-border-radius: 0;
-    border-radius: 0px;
-    -webkit-box-shadow: 0px 1px 3px #666666;
-    -moz-box-shadow: 0px 1px 3px #666666;
-    box-shadow: 0px 1px 3px #666666;
-    font-family: Arial;
-    color: #000000; /* Fix color code to #000000 */
-    padding: 10px 5px;
-    border: solid #000000 2px;
-    text-decoration: none;
-}
+        #score, #highscore {
+            display: inline-block;
+            width: 256px;
+            margin: 10px 0;
+            font-size: 24px;
+            background: #ebb467;
+            background-image: -webkit-linear-gradient(top, #00ffdd, #00ddff);
+            background-image: -moz-linear-gradient(top, #00ffdd, #00ddff);
+            background-image: -ms-linear-gradient(top, #00ffdd, #00ddff);
+            background-image: -o-linear-gradient(top, #00ffdd, #00ddff);
+            background-image: linear-gradient(to bottom, #00ffdd, #00ddff);
+            -webkit-border-radius: 0;
+            -moz-border-radius: 0;
+            border-radius: 0px;
+            -webkit-box-shadow: 0px 1px 3px #666666;
+            -moz-box-shadow: 0px 1px 3px #666666;
+            box-shadow: 0px 1px 3px #666666;
+            font-family: Arial;
+            color: #000000;
+            padding: 10px 5px;
+            border: solid #000000 2px;
+            text-decoration: none;
+        }
         #error-message {
             display: none;
             color: red;
             font-weight: bold;
-			font-size: 20px;
+            font-size: 20px;
         }
         #error-message2 {
-		font-size: 50px;
+            font-size: 50px;
             display: none;
             color: red;
             font-weight: bold;
         }
+        #controls {
+            margin: 20px;
+        }
+        .control-button {
+            background: #34d9d6;
+            background-image: -webkit-linear-gradient(top, #34d9d6, #2bb85a);
+            background-image: -moz-linear-gradient(top, #34d9d6, #2bb85a);
+            background-image: -ms-linear-gradient(top, #34d9d6, #2bb85a);
+            background-image: -o-linear-gradient(top, #34d9d6, #2bb85a);
+            background-image: linear-gradient(to bottom, #34d9d6, #2bb85a);
+            -webkit-border-radius: 26;
+            -moz-border-radius: 26;
+            border-radius: 26px;
+            font-family: Georgia;
+            color: #000000;
+            font-size: 30px;
+            padding: 15px 30px 15px 30px;
+            text-decoration: none;
+            margin: 5px;
+        }
+        #extra-controls {
+            display: none; /* Initially hidden */
+            margin: 20px auto;
+            max-width: 800px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 15px;
+            border-radius: 15px;
+        }
+        #toggle-controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #34d9d6;
+            background-image: -webkit-linear-gradient(top, #34d9d6, #2bb85a);
+            background-image: -moz-linear-gradient(top, #34d9d6, #2bb85a);
+            background-image: -ms-linear-gradient(top, #34d9d6, #2bb85a);
+            background-image: -o-linear-gradient(top, #34d9d6, #2bb85a);
+            background-image: linear-gradient(to bottom, #34d9d6, #2bb85a);
+            -webkit-border-radius: 26;
+            -moz-border-radius: 26;
+            border-radius: 26px;
+            font-family: Georgia;
+            color: #000000;
+            font-size: 20px;
+            padding: 10px 20px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+        }
+        #map-json {
+            width: 100%;
+            height: 100px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        #load-map-button {
+            background: #ff9d5c;
+            background-image: -webkit-linear-gradient(top, #ff9d5c, #ff6b6b);
+            background-image: -moz-linear-gradient(top, #ff9d5c, #ff6b6b);
+            background-image: -ms-linear-gradient(top, #ff9d5c, #ff6b6b);
+            background-image: -o-linear-gradient(top, #ff9d5c, #ff6b6b);
+            background-image: linear-gradient(to bottom, #ff9d5c, #ff6b6b);
+            -webkit-border-radius: 26;
+            -moz-border-radius: 26;
+            border-radius: 26px;
+            font-family: Georgia;
+            color: #000000;
+            font-size: 20px;
+            padding: 10px 20px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+        }
+        #theme-selector {
+            margin: 10px 0;
+            padding: 8px;
+            font-size: 16px;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+        }
+        .theme-option {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        .theme-preview {
+            width: 32px;
+            height: 32px;
+            margin-right: 10px;
+            border: 1px solid #000;
+        }
     </style>
 </head>
 <body>
+    <button id="toggle-controls">☰ Menu</button>
     <h1>2048</h1> <div id="error-message2">Ultraskill issue</div>
     <div>
-	
-<div id="score">Score: 0</div> <!-- Score display -->
-<div id="highscore">High-Score: 0</div> <!-- Highscore display -->
-</div>
+        <div id="score">Score: 0</div>
+        <div id="highscore">High-Score: 0</div>
+    </div>
     <table id="imageTable"></table>
-	<h1></h1>
-	
-    <button id="retryButton">Retry</button> <!-- Add the retry button -->
- <div id="error-message">Skill issue</div>
-    <script>
-	
-        let a = Array.from({ length: 4 }, (_, row) =>
-            Array.from({ length: 4 }, (_, col) => 0)
-        );
+    <h1></h1>
+    
+    <div id="controls">
+        <button class="control-button" id="upButton">↑</button><br>
+        <button class="control-button" id="leftButton">←</button>
+        <button class="control-button" id="downButton">↓</button>
+        <button class="control-button" id="rightButton">→</button>
+    </div>
+    
+    <button id="retryButton">Retry</button>
+    
+    <div id="extra-controls">
+        <div>
+            <button class="board-button" id="standardBoard">Standard (4×4)</button>
+            <button class="board-button" id="smallBoard">Small (3×3)</button>
+            <button class="board-button" id="longBoard">Long (5×3)</button>
+            <button class="board-button" id="donutBoard">Donut (5×5)</button>
+        </div>
+        
+        <h3>Tile Theme</h3>
+        <select id="theme-selector">
+            <!-- Options will be populated by JavaScript -->
+        </select>
+        
+        <h3>Load Custom Map</h3>
+        <textarea id="map-json" placeholder='Paste map JSON here, example:
+{
+    "n": 4,
+    "m": 4,
+    "L": [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    "Mv": {
+        "W": [[0,4,8,12],[1,5,9,13],[2,6,10,14],[3,7,11,15]],
+        "A": [[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],
+        "S": [[12,8,4,0],[13,9,5,1],[14,10,6,2],[15,11,7,3]],
+        "D": [[3,2,1,0],[7,6,5,4],[11,10,9,8],[15,14,13,12]]
+    },
+    "Lc": {"10": [1], "1": [2]}
+}'></textarea>
+        <button id="load-map-button">Load Map</button>
+    </div>
+    
+    <div id="error-message">Skill issue</div>
 
-        let score = 0; // Initialize score
-		let highscore = 0;
+    <script>
+        let a = [];
+        let n = 4, m = 4;
+        let score = 0;
+        let highscore = 0;
+        let activeTiles = Array(16).fill(1); // Default all tiles active
+        let moveRules = {
+            'W': [[0,4,8,12],[1,5,9,13],[2,6,10,14],[3,7,11,15]],
+            'A': [[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],
+            'S': [[12,8,4,0],[13,9,5,1],[14,10,6,2],[15,11,7,3]],
+            'D': [[3,2,1,0],[7,6,5,4],[11,10,9,8],[15,14,13,12]]
+        };
+        let spawnRules = {10: [1], 1: [2]};
+        let currentTheme = 'classic'; // Default theme
+
+        // Swipe variables
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchEndX = 0;
+        let touchEndY = 0;
 
         const table = document.getElementById('imageTable');
         const scoreDisplay = document.getElementById('score');
-		const highscoreDisplay = document.getElementById('highscore');
-		 const errorMessage = document.getElementById('error-message');
-		 const errorMessage2 = document.getElementById('error-message2');
-retry();
+        const highscoreDisplay = document.getElementById('highscore');
+        const errorMessage = document.getElementById('error-message');
+        const errorMessage2 = document.getElementById('error-message2');
+        const extraControls = document.getElementById('extra-controls');
+        const mapJsonInput = document.getElementById('map-json');
+        const themeSelector = document.getElementById('theme-selector');
+
+        // Available themes (this would normally be fetched from the server)
+        // For this example, we'll hardcode the known themes
+        const availableThemes = ['classic', 'basee'];
+
+        // Populate theme selector
+        function populateThemeSelector() {
+            themeSelector.innerHTML = '';
+            availableThemes.forEach(theme => {
+                const option = document.createElement('option');
+                option.value = theme;
+                option.textContent = theme;
+                if (theme === currentTheme) {
+                    option.selected = true;
+                }
+                themeSelector.appendChild(option);
+            });
+        }
+
+        // Get image path based on current theme
+        function getImagePath(value) {
+            if (value === 0 || value === -1 || (value >= 1 && value <= 9)) {
+                return `2048tiles/${currentTheme}/${value}.png`;
+            }
+            return `${value}.png`;
+        }
+
+        // Example boards
+        const boards = {
+            standard: {
+                n: 4, m: 4,
+                L: Array(16).fill(1),
+                Mv: {
+                    'W': [[0,4,8,12],[1,5,9,13],[2,6,10,14],[3,7,11,15]],
+                    'A': [[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],
+                    'S': [[12,8,4,0],[13,9,5,1],[14,10,6,2],[15,11,7,3]],
+                    'D': [[3,2,1,0],[7,6,5,4],[11,10,9,8],[15,14,13,12]]
+                },
+                Lc: {10: [1], 1: [2]}
+            },
+            small: {
+                n: 3, m: 3,
+                L: Array(9).fill(1),
+                Mv: {
+                    'W': [[0,3,6],[1,4,7],[2,5,8]],
+                    'A': [[0,1,2],[3,4,5],[6,7,8]],
+                    'S': [[6,3,0],[7,4,1],[8,5,2]],
+                    'D': [[2,1,0],[5,4,3],[8,7,6]]
+                },
+                Lc: {10: [1], 1: [2]}
+            },
+            long: {
+                n: 5, m: 3,
+                L: Array(15).fill(1),
+                Mv: {
+                    'W': [[0,3,6,9,12],[1,4,7,10,13],[2,5,8,11,14]],
+                    'A': [[0,1,2],[3,4,5],[6,7,8],[9,10,11],[12,13,14]],
+                    'S': [[12,9,6,3,0],[13,10,7,4,1],[14,11,8,5,2]],
+                    'D': [[2,1,0],[5,4,3],[8,7,6],[11,10,9],[14,13,12]]
+                },
+                Lc: {10: [1], 1: [2]}
+            },
+            donut: {
+                n: 5, m: 5,
+                L: [
+                    1,1,1,1,1,
+                    1,0,0,0,1,
+                    1,0,0,0,1,
+                    1,0,0,0,1,
+                    1,1,1,1,1
+                ],
+                Mv: {
+                    'W': [
+                        [0,5,10,15,20], [1,6,11,16,21], [2,7,12,17,22], [3,8,13,18,23], [4,9,14,19,24]
+                    ],
+                    'A': [
+                        [0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14], [15,16,17,18,19], [20,21,22,23,24]
+                    ],
+                    'S': [
+                        [20,15,10,5,0], [21,16,11,6,1], [22,17,12,7,2], [23,18,13,8,3], [24,19,14,9,4]
+                    ],
+                    'D': [
+                        [4,3,2,1,0], [9,8,7,6,5], [14,13,12,11,10], [19,18,17,16,15], [24,23,22,21,20]
+                    ]
+                },
+                Lc: {10: [1], 1: [2]}
+            }
+        };
+
+        function loadBoard(boardConfig) {
+            n = boardConfig.n;
+            m = boardConfig.m;
+            activeTiles = boardConfig.L;
+            moveRules = boardConfig.Mv;
+            spawnRules = boardConfig.Lc;
+            
+            // Initialize the board
+            a = Array.from({ length: n }, (_, row) =>
+                Array.from({ length: m }, (_, col) => 0)
+            );
+            
+            // Clear the table
+            table.innerHTML = '';
+            
+            // Redraw with new dimensions
+            draw();
+            
+            // Start new game
+            retry();
+        }
 
         function draw() {
-	;
             table.innerHTML = '';
-            for (let row = 0; row < 4; row++) {
+            for (let row = 0; row < n; row++) {
                 const tr = document.createElement('tr');
-                for (let col = 0; col < 4; col++) {
+                for (let col = 0; col < m; col++) {
                     const td = document.createElement('td');
                     const img = document.createElement('img');
-                    img.src = `${a[row][col]}.png`; // Append .png to the array value
+                    const index = row * m + col;
+                    if (activeTiles[index] === 0) {
+                        img.src = getImagePath(-1); // Inactive tile
+                    } else {
+                        img.src = getImagePath(a[row][col]);
+                    }
                     td.appendChild(img);
                     tr.appendChild(td);
                 }
@@ -134,147 +409,256 @@ retry();
         }
 
         function fail() {
-         
             errorMessage.style.display = 'block';
-			for (let i = 0; i < 4; i++)
-                for (let j = 0; j < 4; j++)
-				 if(a[i][j]==0)return;
+            for (let i = 0; i < n; i++)
+                for (let j = 0; j < m; j++)
+                    if(a[i][j] == 0 && activeTiles[i * m + j] === 1) return;
 
-			for (let i = 0; i < 4; i++)	 
-				 for (let j = 0; j < 3; j++){
-				 if(a[i][j]==a[i][j+1])return;
-				 if(a[j][i]==a[j+1][i])return;}
-
-				 
-				 errorMessage2.style.display = 'block';
-				 errorMessage.style.display = 'none'
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < m - 1; j++) {
+                    if(a[i][j] == a[i][j + 1] && activeTiles[i * m + j] === 1 && activeTiles[i * m + j + 1] === 1) return;
+                }
+            }
+            
+            for (let j = 0; j < m; j++) {
+                for (let i = 0; i < n - 1; i++) {
+                    if(a[i][j] == a[i + 1][j] && activeTiles[i * m + j] === 1 && activeTiles[(i + 1) * m + j] === 1) return;
+                }
+            }
+            
+            errorMessage2.style.display = 'block';
+            errorMessage.style.display = 'none';
         }
 
         function rain() {
-			errorMessage.style.display = 'none'
-			errorMessage2.style.display = 'none'
+            errorMessage.style.display = 'none';
+            errorMessage2.style.display = 'none';
+            
+            // Get all empty and active positions
             const emp = [];
-            for (let i = 0; i < 4; i++)
-                for (let j = 0; j < 4; j++)
-                    if (a[i][j] == 0)
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < m; j++) {
+                    const index = i * m + j;
+                    if (a[i][j] == 0 && activeTiles[index] === 1) {
                         emp.push({ i, j });
+                    }
+                }
+            }
+            
+            if (emp.length === 0) return;
+            
             const ran = Math.floor(Math.random() * emp.length);
             const { i, j } = emp[ran];
-            a[i][j] = 1 + Math.floor(Math.random() * Math.random() * 2);
+            
+            // Calculate total weight for spawn probabilities
+            let totalWeight = 0;
+            for (const weight in spawnRules) {
+                totalWeight += parseInt(weight);
+            }
+            
+            // Random selection based on weights
+            let random = Math.random() * totalWeight;
+            let cumulativeWeight = 0;
+            let selectedValue = 2; // default
+            
+            for (const weight in spawnRules) {
+                cumulativeWeight += parseInt(weight);
+                if (random <= cumulativeWeight) {
+                    const options = spawnRules[weight];
+                    selectedValue = options[Math.floor(Math.random() * options.length)];
+                    break;
+                }
+            }
+            
+            a[i][j] = selectedValue;
         }
-		function updatehighScore() {
-		highscore=Math.max(score,highscore);
+
+        function updatehighScore() {
+            highscore = Math.max(score, highscore);
             highscoreDisplay.textContent = `High-Score: ${highscore}`;
         }
+
         function updateScore() {
             scoreDisplay.textContent = `Score: ${score}`;
-			updatehighScore();
+            updatehighScore();
         }
 
-        function falla() {
-            for (let i = 0; i < 4; i++) {
-                for (let j = 2; j >= 0; j--) {
-                    if (a[i][j] != 0 && a[i][j] == a[i][j + 1]) {
-                        a[i][j + 1] = a[i][j] + 1;
-                        score += Math.pow(2,a[i][j + 1]); // Update score
-                        a[i][j] = 0;
+        function performMove(direction) {
+            const b = dc(a); // Deep copy for reference if needed
+            let moved = false;
+
+            // Track merge status for each cell
+            const merged = Array.from({ length: n }, () => Array(m).fill(false));
+
+            // Directional iteration depends on move direction
+            const isHorizontal = direction === "left" || direction === "right";
+            const reverse = direction === "right" || direction === "down";
+
+            for (const sequence of moveRules[direction]) {
+                // Convert positions to row/col
+                let line = sequence.map(pos => {
+                    const row = Math.floor(pos / m);
+                    const col = pos % m;
+                    return { row, col };
+                });
+
+                if (reverse) line = line.reverse();
+
+                for (let i = 1; i < line.length; i++) {
+                    let { row: r, col: c } = line[i];
+                    if (a[r][c] === 0) continue;
+
+                    let value = a[r][c];
+                    let j = i - 1;
+
+                    while (j >= 0) {
+                        const { row: pr, col: pc } = line[j];
+                        if (a[pr][pc] === 0) {
+                            j--;
+                        } else if (a[pr][pc] === value && !merged[pr][pc]) {
+                            // Merge allowed
+                            a[pr][pc] += 1;
+                            a[r][c] = 0;
+                            score += Math.pow(2, a[pr][pc]);
+                            merged[pr][pc] = true;
+                            moved = true;
+                            break;
+                        } else {
+                            break;
+                        }
+                    }
+
+                    // Move if not merged
+                    if (j !== i - 1 && a[r][c] !== 0) {
+                        const { row: targetR, col: targetC } = line[j + 1];
+                        if (a[targetR][targetC] === 0) {
+                            a[targetR][targetC] = a[r][c];
+                            a[r][c] = 0;
+                            moved = true;
+                        }
                     }
                 }
             }
-        }
 
-        function fallb() {
-            for (let i = 0; i < 4; i++) {
-                for (let j = 2; j >= 0; j--) {
-                    if (a[i][j + 1] == 0) {
-                        a[i][j + 1] = a[i][j];
-                        a[i][j] = 0;
-                    }
-                }
-            }
-        }
-
-        function fall() {
-            fallb(); fallb(); fallb();
-            falla();
-            fallb(); fallb(); fallb();
-        }
-
-        function rotate() {
-            const newArray = Array.from({ length: 4 }, () => Array(4).fill(0));
-
-            for (let i = 0; i < 4; i++) {
-                for (let j = 0; j < 4; j++) {
-                    newArray[j][3 - i] = a[i][j];
-                }
+            if (moved) {
+                rain(); // Add new tile
+            } else {
+                fail(); // No move possible
             }
 
-            for (let i = 0; i < 4; i++) {
-                for (let j = 0; j < 4; j++) {
-                    a[i][j] = newArray[i][j];
-                }
-            }
-
-            draw();
-        }
-
-        function r() {
-            const b = dc(a);
-            fall();
-            if (JSON.stringify(a) !== JSON.stringify(b)) rain();
-            else fail();
-            draw();
-        }
-
-        function l() {
-            const b = dc(a);
-            rotate(); rotate(); fall(); rotate(); rotate();
-            if (JSON.stringify(a) !== JSON.stringify(b)) rain();
-            else fail();
-            draw();
-        }
-
-        function u() {
-            const b = dc(a);
-            rotate(); fall(); rotate(); rotate(); rotate();
-            if (JSON.stringify(a) !== JSON.stringify(b)) rain();
-            else fail();
-            draw();
-        }
-
-        function d() {
-            const b = dc(a);
-            rotate(); rotate(); rotate(); fall(); rotate();
-            if (JSON.stringify(a) !== JSON.stringify(b)) rain();
-            else fail();
-            draw();
+            draw(); // Refresh screen
         }
 
         function retry() {
-            for (let i = 0; i < 4; i++) {
-                for (let j = 0; j < 4; j++) {
-                    a[i][j] = 0;
-                }
-            }
-            score = 0; // Reset score
+            a = Array.from({ length: n }, (_, row) =>
+                Array.from({ length: m }, (_, col) => 0)
+            );
+            score = 0;
             rain();
             rain();
             draw();
         }
 
+        // Swipe detection functions
+        function handleTouchStart(e) {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }
+
+        function handleTouchEnd(e) {
+            if (!touchStartX || !touchStartY) return;
+            
+            touchEndX = e.changedTouches[0].clientX;
+            touchEndY = e.changedTouches[0].clientY;
+            
+            const dx = touchEndX - touchStartX;
+            const dy = touchEndY - touchStartY;
+            
+            // Determine the direction of the swipe
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (dx > 50) {
+                    performMove('D'); // Right swipe
+                } else if (dx < -50) {
+                    performMove('A'); // Left swipe
+                }
+            } else {
+                if (dy > 50) {
+                    performMove('S'); // Down swipe
+                } else if (dy < -50) {
+                    performMove('W'); // Up swipe
+                }
+            }
+            
+            // Reset touch coordinates
+            touchStartX = 0;
+            touchStartY = 0;
+        }
+
+        // Event listeners for keyboard
         document.addEventListener('keydown', function(event) {
             if (event.key === 'w' || event.key === 'ArrowUp') {
-                u();
+                performMove('W');
             } else if (event.key === 'a' || event.key === 'ArrowLeft') {
-                l();
+                performMove('A');
             } else if (event.key === 's' || event.key === 'ArrowDown') {
-                d();
+                performMove('S');
             } else if (event.key === 'd' || event.key === 'ArrowRight') {
-                r();
+                performMove('D');
             }
         });
 
+        // Event listeners for touch/swipe
+        document.addEventListener('touchstart', handleTouchStart, false);
+        document.addEventListener('touchend', handleTouchEnd, false);
+
+        // Event listeners for buttons
         document.getElementById('retryButton').addEventListener('click', retry);
+        document.getElementById('upButton').addEventListener('click', () => performMove('W'));
+        document.getElementById('leftButton').addEventListener('click', () => performMove('A'));
+        document.getElementById('downButton').addEventListener('click', () => performMove('S'));
+        document.getElementById('rightButton').addEventListener('click', () => performMove('D'));
+        
+        // Event listeners for board selection
+        document.getElementById('standardBoard').addEventListener('click', () => loadBoard(boards.standard));
+        document.getElementById('smallBoard').addEventListener('click', () => loadBoard(boards.small));
+        document.getElementById('longBoard').addEventListener('click', () => loadBoard(boards.long));
+        document.getElementById('donutBoard').addEventListener('click', () => loadBoard(boards.donut));
+        
+        // Event listener for toggle controls button
+        document.getElementById('toggle-controls').addEventListener('click', () => {
+            extraControls.style.display = extraControls.style.display === 'none' ? 'block' : 'none';
+        });
+        
+        // Event listener for load map button
+        document.getElementById('load-map-button').addEventListener('click', () => {
+            try {
+                const customMap = JSON.parse(mapJsonInput.value);
+                if (customMap.n && customMap.m && customMap.L && customMap.Mv && customMap.Lc) {
+                    loadBoard(customMap);
+                    errorMessage.style.display = 'none';
+                } else {
+                    throw new Error("Invalid map format");
+                }
+            } catch (e) {
+                errorMessage.textContent = "Invalid map JSON: " + e.message;
+                errorMessage.style.display = 'block';
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 3000);
+            }
+        });
+
+        // Event listener for theme selector
+        themeSelector.addEventListener('change', (e) => {
+            currentTheme = e.target.value;
+            draw(); // Redraw with new theme
+        });
+
+        // Initialize theme selector
+        populateThemeSelector();
+
+        // Load standard board by default
+        loadBoard(boards.standard);
     </script>
 </body>
 </html>
