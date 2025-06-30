@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2<sup>1024</sup></title>
+    <style>
+        body {
+            text-align: center;
+            background: url('22048bg.png') no-repeat center center fixed;
+            background-size: 100vw 100vh;
+            transition: all 0.5s;
+            filter: none;
+        }
+        /* Visual Effects */
+        .event-effect {
+            animation: eventPulse 1s;
+        }
+        .invert-effect {
+            filter: invert(1);
+        }
+        .blur-effect {
+            filter: blur(2px);
+        }
+        .sepia-effect {
+            filter: sepia(1);
+        }
+        .hue-effect {
+            filter: hue-rotate(90deg);
+        }
+        .contrast-effect {
+            filter: contrast(200%);
+        }
+        @keyframes eventPulse {
+            0% { background-color: rgba(255,255,255,0); }
+            50% { background-color: rgba(255,255,255,0.3); }
+            100% { background-color: rgba(255,255,255,0); }
+        }
+        table {
+            border-collapse: collapse;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #retryButton, #saveButton, #loadButton, #toggleSettingsButton {
+            background: #34d9d6;
+            background-image: -webkit-linear-gradient(top, #34d9d6, #2bb85a);
+            background-image: -moz-linear-gradient(top, #34d9d6, #2bb85a);
+            background-image: -ms-linear-gradient(top, #34d9d6, #2bb85a);
+            background-image: -o-linear-gradient(top, #34d9d6, #2bb85a);
+            background-image: linear-gradient(to bottom, #34d9d6, #2bb85a);
+            -webkit-border-radius: 26;
+            -moz-border-radius: 26;
+            border-radius: 26px;
+            font-family: Georgia;
+            color: #000000;
+            font-size: 40px;
+            padding: 20px 40px 20px 40px;
+            text-decoration: none;
+            margin: 10px;
+        }
+        #eventMessage {
+            font-size: 30px;
+            color: gold;
+            text-shadow: 2px 2px 4px #000;
+            margin: 20px;
+            height: 40px;
+        }
+        td {
+            padding: 0;
+            line-height: 0;
+            position: relative;
+        }
+        h1 {
+            font-size: 50px;
+            font-family: "Comic Sans MS";
+            color:purple;
+            transition: all 0.5s;
+        }
+        img {
+            border: 5px solid black;
+            width: 128px;
+            height: 128px;
+            transition: all 0.1s ease;
+        }
+        .exploding {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 10;
+            animation: explode var(--explosion-duration) steps(4) forwards;
+        }
+        .upgrading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 10;
+            animation: upgrade var(--explosion-duration) steps(4) forwards;
+        }
+        @keyframes explode {
+            0% { background-image: url('explosion1.png'); }
+            25% { background-image: url('explosion2.png'); }
+            50% { background-image: url('explosion3.png'); }
+            75% { background-image: url('explosion4.png'); }
+            100% { opacity: 0; }
+        }
+        @keyframes upgrade {
+            0% { background-image: url('upgrade1.png'); }
+            25% { background-image: url('upgrade2.png'); }
+            50% { background-image: url('upgrade3.png'); }
+            75% { background-image: url('upgrade4.png'); }
+            100% { opacity: 0; }
+        }
+        #score, #highscore, #difficulty, #level, #phase, #explosionDuration {
+            display: inline-block;
+            width: 256px;
+            margin: 10px 0;
+            font-size: 24px;
+            background: #ebb467;
+            background-image: -webkit-linear-gradient(top, #00ffdd, #00ddff);
+            background-image: -moz-linear-gradient(top, #00ffdd, #00ddff);
+            background-image: -ms-linear-gradient(top, #00ffdd, #00ddff);
+            background-image: -o-linear-gradient(top, #00ffdd, #00ddff);
+            background-image: linear-gradient(to bottom, #00ffdd, #00ddff);
+            -webkit-border-radius: 0;
+            -moz-border-radius: 0;
+            border-radius: 0px;
+            -webkit-box-shadow: 0px 1px 3px #666666;
+            -moz-box-shadow: 0px 1px 3px #666666;
+            box-shadow: 0px 1px 3px #666666;
+            font-family: Arial;
+            color: #000000;
+            padding: 10px 5px;
+            border: solid #000000 2px;
+            text-decoration: none;
+            transition: all 0.5s;
+        }
+        #error-message {
+            display: none;
+            color: red;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        #error-message2 {
+            font-size: 50px;
+            display: none;
+            color: red;
+            font-weight: bold;
+        }
+        .controls {
+            margin: 20px 0;
+            transition: all 0.3s;
+            overflow: hidden;
+        }
+        .controls.collapsed {
+            height: 0;
+            margin: 0;
+            opacity: 0;
+        }
+        .controls button {
+            padding: 10px 20px;
+            margin: 0 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>2<sup>1024</sup></h1> <div id="error-message2">Ultraskill issue</div>
+    <div id="eventMessage"></div>
+    <div>
+        <div id="score">Score: 0</div>
+        <div id="highscore">High-Score: 0</div>
+        <div id="difficulty">Difficulty: 7</div>
+        <div id="level">Level: 1</div>
+        <div id="phase">Phase: 1</div>
+        <div id="explosionDuration">Explosion: 500ms</div>
+    </div>
+    
+    <div id="difficultyControls" class="controls">
+        <button id="decrease-difficulty">-</button>
+        Difficulty
+        <button id="increase-difficulty">+</button>
+    </div>
+    
+    <div id="explosionControls" class="controls">
+        <button id="decrease-explosion">-</button>
+        Explosion Duration
+        <button id="increase-explosion">+</button>
+    </div>
+    
+    <table id="imageTable"></table>
+    <h1></h1>
+    
+    <button id="retryButton">Retry</button>
+    <button id="saveButton">Save</button>
+    <button id="loadButton">Load</button>
+    <button id="toggleSettingsButton">Hide Settings</button>
+    <div id="error-message">Skill issue</div>
+
+    <script>
+        // Game state
+        let gameBoard = Array.from({ length: 4 }, (_, row) =>
+            Array.from({ length: 4 }, (_, col) => 0)
+        );
+        let score = 0;
+        let highscore = 0;
+        let difficulty = 7;
+        let level = 1;
+        let phase = 1;
+        let explosionDuration = 500;
+        let explodingCells = [];
+        let upgradingCells = [];
+        let isAnimating = false;
+        let currentEvent = null;
+        let movesetModified = false;
+        const effects = [
+            {name: "Normal", class: ""},
+            {name: "Invert", class: "invert-effect"},
+            {name: "Blur", class: "blur-effect"},
+            {name: "Sepia", class: "sepia-effect"},
+            {name: "Hue", class: "hue-effect"},
+            {name: "Contrast", class: "contrast-effect"}
+        ];
+        let currentEffect = 0;
+
+        // DOM elements
+        const table = document.getElementById('imageTable');
+        const scoreDisplay = document.getElementById('score');
+        const highscoreDisplay = document.getElementById('highscore');
+        const difficultyDisplay = document.getElementById('difficulty');
+        const levelDisplay = document.getElementById('level');
+        const phaseDisplay = document.getElementById('phase');
+        const explosionDurationDisplay = document.getElementById('explosionDuration');
+        const errorMessage = document.getElementById('error-message');
+        const errorMessage2 = document.getElementById('error-message2');
+        const eventMessage = document.getElementById('eventMessage');
+        const difficultyControls = document.getElementById('difficultyControls');
+        const explosionControls = document.getElementById('explosionControls');
+        const toggleSettingsButton = document.getElementById('toggleSettingsButton');
+
+        // Initialize
+        retry();
+
+        function draw() {
+            table.innerHTML = '';
+            for (let row = 0; row < 4; row++) {
+                const tr = document.createElement('tr');
+                for (let col = 0; col < 4; col++) {
+                    const td = document.createElement('td');
+                    const img = document.createElement('img');
+                    
+                    // Set custom property for animation duration
+                    td.style.setProperty('--explosion-duration', `${explosionDuration/1000}s`);
+                    
+                    const isExploding = explodingCells.some(cell => cell.row === row && cell.col === col);
+                    const isUpgrading = upgradingCells.some(cell => cell.row === row && cell.col === col);
+                    
+                    if (gameBoard[row][col] > 0) {
+                        img.src = `22048/${gameBoard[row][col]}.png`;
+                        
+                        if (isExploding) {
+                            const explosion = document.createElement('div');
+                            explosion.className = 'exploding';
+                            explosion.style.width = '128px';
+                            explosion.style.height = '128px';
+                            td.appendChild(explosion);
+                        }
+                        
+                        if (isUpgrading) {
+                            const upgrade = document.createElement('div');
+                            upgrade.className = 'upgrading';
+                            upgrade.style.width = '128px';
+                            upgrade.style.height = '128px';
+                            td.appendChild(upgrade);
+                        }
+                    } else {
+                        img.src = '22048/0.png';
+                    }
+                    
+                    td.appendChild(img);
+                    tr.appendChild(td);
+                }
+                table.appendChild(tr);
+            }
+            updateDisplays();
+        }
+
+        function dc(array) {
+            return array.map(row => row.slice());
+        }
+
+        function fail() {
+            if (isAnimating) return;
+            
+            errorMessage.style.display = 'block';
+            for (let i = 0; i < 4; i++)
+                for (let j = 0; j < 4; j++)
+                    if(gameBoard[i][j]==0) return;
+
+            for (let i = 0; i < 4; i++)	 
+                for (let j = 0; j < 3; j++) {
+                    if(gameBoard[i][j]==gameBoard[i][j+1]) return;
+                    if(gameBoard[j][i]==gameBoard[j+1][i]) return;
+                }
+
+            errorMessage2.style.display = 'block';
+            errorMessage.style.display = 'none';
+        }
+
+        function rain() {
+            if (isAnimating) return;
+            
+            errorMessage.style.display = 'none';
+            errorMessage2.style.display = 'none';
+            
+            // Check for level up event (every 10 levels)
+            if (level % 10 === 0 && currentEvent === null) {
+                triggerEvent();
+                return;
+            }
+            
+            // Handle phase-specific mechanics
+            const currentPhase = Math.min(11, Math.floor(level / 100) + 1);
+            if (currentPhase !== phase) {
+                phase = currentPhase;
+                updateDisplays();
+            }
+            
+            // Phase 1 (0-100): Explode lowest tiles
+            if (phase === 1) {
+                const threshold = Math.max(1, level - difficulty);
+                for (let i = 0; i < 4; i++) {
+                    for (let j = 0; j < 4; j++) {
+                        if (gameBoard[i][j] > 0 && gameBoard[i][j] < threshold) {
+                            explodingCells.push({row: i, col: j});
+                        }
+                    }
+                }
+                
+                if (explodingCells.length > 0) {
+                    isAnimating = true;
+                    draw();
+                    setTimeout(() => {
+                        for (const cell of explodingCells) {
+                            gameBoard[cell.row][cell.col] = 0;
+                        }
+                        explodingCells = [];
+                        isAnimating = false;
+                        spawnNewTiles();
+                    }, explosionDuration);
+                    return;
+                }
+            }
+            // Phase 2 (101-200): Upgrade lowest tiles
+            else if (phase === 2) {
+                const threshold = Math.max(1, level - difficulty);
+                let minVal = 1024;
+                
+                // Find the minimum value below threshold
+                for (let i = 0; i < 4; i++) {
+                    for (let j = 0; j < 4; j++) {
+                        if (gameBoard[i][j] > 0 && gameBoard[i][j] < threshold && gameBoard[i][j] < minVal) {
+                            minVal = gameBoard[i][j];
+                        }
+                    }
+                }
+                
+                // Upgrade all tiles with minVal
+                if (minVal < 1024) {
+                    for (let i = 0; i < 4; i++) {
+                        for (let j = 0; j < 4; j++) {
+                            if (gameBoard[i][j] === minVal) {
+                                upgradingCells.push({row: i, col: j});
+                            }
+                        }
+                    }
+                    
+                    if (upgradingCells.length > 0) {
+                        isAnimating = true;
+                        draw();
+                        setTimeout(() => {
+                            for (const cell of upgradingCells) {
+                                gameBoard[cell.row][cell.col] += 1;
+                            }
+                            upgradingCells = [];
+                            isAnimating = false;
+                            spawnNewTiles();
+                        }, explosionDuration);
+                        return;
+                    }
+                }
+            }
+            // Phases 3-11: Placeholder - explode for now
+            else {
+                const threshold = Math.max(1, level - difficulty);
+                for (let i = 0; i < 4; i++) {
+                    for (let j = 0; j < 4; j++) {
+                        if (gameBoard[i][j] > 0 && gameBoard[i][j] < threshold) {
+                            explodingCells.push({row: i, col: j});
+                        }
+                    }
+                }
+                
+                if (explodingCells.length > 0) {
+                    isAnimating = true;
+                    draw();
+                    setTimeout(() => {
+                        for (const cell of explodingCells) {
+                            gameBoard[cell.row][cell.col] = 0;
+                        }
+                        explodingCells = [];
+                        isAnimating = false;
+                        spawnNewTiles();
+                    }, explosionDuration);
+                    return;
+                }
+            }
+            
+            spawnNewTiles();
+        }
+
+        function spawnNewTiles() {
+            const emp = [];
+            for (let i = 0; i < 4; i++)
+                for (let j = 0; j < 4; j++)
+                    if (gameBoard[i][j] == 0)
+                        emp.push({ i, j });
+                        
+            if (emp.length === 0) {
+                draw();
+                return;
+            }
+            
+            const ran = Math.floor(Math.random() * emp.length);
+            const { i, j } = emp[ran];
+            
+            // Spawn tiles based on level and difficulty
+            let spawnValue;
+            if (currentEvent === 'betterTile') {
+                spawnValue = Math.max(1, level - difficulty + 3);
+            } else {
+                spawnValue = Math.random() < 0.9 ? 
+                    Math.max(1, level - difficulty) : 
+                    Math.max(2, level - difficulty + 1);
+            }
+                
+            gameBoard[i][j] = spawnValue;
+            
+            // Update level if this is a new highest tile
+            if (spawnValue > level) {
+                level = spawnValue;
+                updateDisplays();
+            }
+            
+            draw();
+        }
+
+        function updateDisplays() {
+            scoreDisplay.textContent = `Score: ${score}`;
+            highscore = Math.max(score, highscore);
+            highscoreDisplay.textContent = `High-Score: ${highscore}`;
+            difficultyDisplay.textContent = `Difficulty: ${difficulty}`;
+            levelDisplay.textContent = `Level: ${level}`;
+            phaseDisplay.textContent = `Phase: ${phase}`;
+            explosionDurationDisplay.textContent = `Explosion: ${explosionDuration}ms`;
+        }
+
+        function triggerEvent() {
+            const events = [
+                'betterTile',
+                'modifiedMoveset',
+                'rotateBomb',
+                'doublePoints',
+                'freeUpgrade',
+                'gravityShift'
+            ];
+            
+            const randomEvent = events[Math.floor(Math.random() * events.length)];
+            currentEvent = randomEvent;
+            
+            // Change visual effect every 10 levels
+            applyVisualEffect();
+            
+            // Show event message
+            switch(randomEvent) {
+                case 'betterTile':
+                    eventMessage.textContent = "Event: Next tile will be better!";
+                    break;
+                case 'modifiedMoveset':
+                    eventMessage.textContent = "Event: Moveset modified until next level!";
+                    movesetModified = true;
+                    break;
+                case 'rotateBomb':
+                    eventMessage.textContent = "Event: Bombs now rotate!";
+                    break;
+                case 'doublePoints':
+                    eventMessage.textContent = "Event: Double points until next level!";
+                    break;
+                case 'freeUpgrade':
+                    eventMessage.textContent = "Event: Free upgrade to lowest tile!";
+                    // Find and upgrade the lowest tile
+                    let minVal = 1024;
+                    for (let i = 0; i < 4; i++) {
+                        for (let j = 0; j < 4; j++) {
+                            if (gameBoard[i][j] > 0 && gameBoard[i][j] < minVal) {
+                                minVal = gameBoard[i][j];
+                            }
+                        }
+                    }
+                    if (minVal < 1024) {
+                        for (let i = 0; i < 4; i++) {
+                            for (let j = 0; j < 4; j++) {
+                                if (gameBoard[i][j] === minVal) {
+                                    gameBoard[i][j]++;
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case 'gravityShift':
+                    eventMessage.textContent = "Event: Gravity shifted!";
+                    // Randomly change gravity direction
+                    const directions = ['up', 'down', 'left', 'right'];
+                    const randomDir = directions[Math.floor(Math.random() * directions.length)];
+                    // This would need to be implemented in the move functions
+                    break;
+            }
+            
+            // Screen effect
+            document.body.classList.add('event-effect');
+            setTimeout(() => {
+                document.body.classList.remove('event-effect');
+            }, 1000);
+            
+            // Clear event after a short delay
+            setTimeout(() => {
+                eventMessage.textContent = "";
+                currentEvent = null;
+                rain();
+            }, 2000);
+        }
+
+        function applyVisualEffect() {
+            // Remove current effect only if it exists
+            if (effects[currentEffect].class && effects[currentEffect].class.length > 0) {
+                document.body.classList.remove(effects[currentEffect].class);
+            }
+            
+            // Cycle to next effect every 10 levels
+            currentEffect = Math.floor(level / 10) % effects.length;
+            
+            // Apply new effect only if it exists
+            if (effects[currentEffect].class && effects[currentEffect].class.length > 0) {
+                document.body.classList.add(effects[currentEffect].class);
+            }
+        }
+
+        function falla() {
+            if (isAnimating) return false;
+            
+            let moved = false;
+            for (let i = 0; i < 4; i++) {
+                for (let j = 2; j >= 0; j--) {
+                    if (gameBoard[i][j] != 0 && gameBoard[i][j] == gameBoard[i][j + 1]) {
+                        gameBoard[i][j + 1] = gameBoard[i][j] + 1;
+                        score += (currentEvent === 'doublePoints' ? 2 : 1) * Math.pow(2, gameBoard[i][j + 1]);
+                        if (gameBoard[i][j + 1] > level) {
+                            level = gameBoard[i][j + 1];
+                        }
+                        gameBoard[i][j] = 0;
+                        moved = true;
+                    }
+                }
+            }
+            return moved;
+        }
+
+        function fallb() {
+            if (isAnimating) return false;
+            
+            let moved = false;
+            for (let i = 0; i < 4; i++) {
+                for (let j = 2; j >= 0; j--) {
+                    if (gameBoard[i][j + 1] == 0 && gameBoard[i][j] != 0) {
+                        gameBoard[i][j + 1] = gameBoard[i][j];
+                        gameBoard[i][j] = 0;
+                        moved = true;
+                    }
+                }
+            }
+            return moved;
+        }
+
+        function fall() {
+            if (isAnimating) return false;
+            
+            let moved = false;
+            moved |= fallb(); moved |= fallb(); moved |= fallb();
+            moved |= falla();
+            moved |= fallb(); moved |= fallb(); moved |= fallb();
+            return moved;
+        }
+
+        function rotate() {
+            if (isAnimating) return;
+            
+            const newArray = Array.from({ length: 4 }, () => Array(4).fill(0));
+
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    newArray[j][3 - i] = gameBoard[i][j];
+                }
+            }
+
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    gameBoard[i][j] = newArray[i][j];
+                }
+            }
+
+            draw();
+        }
+
+        function r() {
+            if (isAnimating) return;
+            
+            const b = dc(gameBoard);
+            let moved;
+            
+            if (movesetModified) {
+                // Modified moveset behavior
+                rotate(); rotate();
+                moved = fall();
+                rotate(); rotate();
+            } else {
+                // Normal behavior
+                moved = fall();
+            }
+            
+            if (moved) rain();
+            else fail();
+            draw();
+            
+            // Reset moveset modification if we leveled up
+            if (moved && movesetModified && level % 10 !== 0) {
+                movesetModified = false;
+            }
+        }
+
+        function l() {
+            if (isAnimating) return;
+            
+            const b = dc(gameBoard);
+            let moved;
+            
+            if (movesetModified) {
+                // Modified moveset behavior
+                moved = fall();
+            } else {
+                // Normal behavior
+                rotate(); rotate(); 
+                moved = fall(); 
+                rotate(); rotate();
+            }
+            
+            if (moved) rain();
+            else fail();
+            draw();
+            
+            if (moved && movesetModified && level % 10 !== 0) {
+                movesetModified = false;
+            }
+        }
+
+        function u() {
+            if (isAnimating) return;
+            
+            const b = dc(gameBoard);
+            let moved;
+            
+            if (movesetModified) {
+                // Modified moveset behavior
+                rotate(); rotate(); rotate();
+                moved = fall();
+                rotate();
+            } else {
+                // Normal behavior
+                rotate(); 
+                moved = fall(); 
+                rotate(); rotate(); rotate();
+            }
+            
+            if (moved) rain();
+            else fail();
+            draw();
+            
+            if (moved && movesetModified && level % 10 !== 0) {
+                movesetModified = false;
+            }
+        }
+
+        function d() {
+            if (isAnimating) return;
+            
+            const b = dc(gameBoard);
+            let moved;
+            
+            if (movesetModified) {
+                // Modified moveset behavior
+                rotate();
+                moved = fall();
+                rotate(); rotate(); rotate();
+            } else {
+                // Normal behavior
+                rotate(); rotate(); rotate(); 
+                moved = fall(); 
+                rotate();
+            }
+            
+            if (moved) rain();
+            else fail();
+            draw();
+            
+            if (moved && movesetModified && level % 10 !== 0) {
+                movesetModified = false;
+            }
+        }
+
+        function retry() {
+            if (isAnimating) return;
+            
+            // Remove current visual effect if it exists
+            if (effects[currentEffect].class && effects[currentEffect].class.length > 0) {
+                document.body.classList.remove(effects[currentEffect].class);
+            }
+            
+            // Reset game state
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    gameBoard[i][j] = 0;
+                }
+            }
+            score = 0;
+            level = 1;
+            phase = 1;
+            explodingCells = [];
+            upgradingCells = [];
+            isAnimating = false;
+            currentEvent = null;
+            movesetModified = false;
+            eventMessage.textContent = "";
+            
+            // Reset to default effect
+            currentEffect = 0;
+            if (effects[currentEffect].class && effects[currentEffect].class.length > 0) {
+                document.body.classList.add(effects[currentEffect].class);
+            }
+            
+            rain();
+            rain();
+            draw();
+        }
+
+        function changeDifficulty(amount) {
+            if (isAnimating) return;
+            
+            difficulty = Math.max(1, Math.min(20, difficulty + amount));
+            updateDisplays();
+        }
+
+        function changeExplosionDuration(amount) {
+            if (isAnimating) return;
+            
+            explosionDuration = Math.max(100, Math.min(2000, explosionDuration + amount * 100));
+            updateDisplays();
+            
+            // Update CSS animation duration
+            const style = document.createElement('style');
+            style.innerHTML = `
+                .exploding, .upgrading {
+                    animation-duration: ${explosionDuration/1000}s;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        function toggleSettings() {
+            difficultyControls.classList.toggle('collapsed');
+            explosionControls.classList.toggle('collapsed');
+            toggleSettingsButton.textContent = 
+                difficultyControls.classList.contains('collapsed') ? 
+                "Show Settings" : "Hide Settings";
+        }
+
+        function saveGame() {
+            if (isAnimating) return;
+            
+            const gameState = {
+                board: gameBoard,
+                score: score,
+                highscore: highscore,
+                level: level,
+                phase: phase,
+                difficulty: difficulty,
+                explosionDuration: explosionDuration,
+                currentEffect: currentEffect
+            };
+            
+            const stateString = JSON.stringify(gameState);
+            const encodedState = btoa(encodeURIComponent(stateString));
+            
+            const blob = new Blob([encodedState], {type: 'text/plain'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'game.tzfe';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            eventMessage.textContent = "Game saved!";
+            setTimeout(() => {
+                eventMessage.textContent = "";
+            }, 2000);
+        }
+
+        function loadGame() {
+            if (isAnimating) return;
+            
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.tzfe';
+            
+            input.onchange = e => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = event => {
+                    try {
+                        const fileContent = event.target.result;
+                        const decodedState = decodeURIComponent(atob(fileContent));
+                        const gameState = JSON.parse(decodedState);
+                        
+                        // Validate loaded data
+                        if (!gameState.board || !gameState.score || !gameState.level) {
+                            throw new Error("Invalid save file");
+                        }
+                        
+                        // Remove current visual effect if it exists
+                        if (effects[currentEffect].class && effects[currentEffect].class.length > 0) {
+                            document.body.classList.remove(effects[currentEffect].class);
+                        }
+                        
+                        // Apply loaded state
+                        gameBoard = gameState.board;
+                        score = gameState.score;
+                        highscore = gameState.highscore || score;
+                        level = gameState.level;
+                        phase = gameState.phase || Math.min(11, Math.floor(level / 100) + 1);
+                        difficulty = gameState.difficulty || 7;
+                        explosionDuration = gameState.explosionDuration || 500;
+                        currentEffect = gameState.currentEffect || 0;
+                        
+                        // Apply visual effect if it exists
+                        if (effects[currentEffect].class && effects[currentEffect].class.length > 0) {
+                            document.body.classList.add(effects[currentEffect].class);
+                        }
+                        
+                        explodingCells = [];
+                        upgradingCells = [];
+                        isAnimating = false;
+                        currentEvent = null;
+                        movesetModified = false;
+                        
+                        eventMessage.textContent = "Game loaded!";
+                        setTimeout(() => {
+                            eventMessage.textContent = "";
+                        }, 2000);
+                        
+                        draw();
+                    } catch (err) {
+                        eventMessage.textContent = "Error loading save file";
+                        setTimeout(() => {
+                            eventMessage.textContent = "";
+                        }, 2000);
+                        console.error(err);
+                    }
+                };
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+
+        // Event listeners
+        document.addEventListener('keydown', function(event) {
+            if (isAnimating) return;
+            
+            if (event.key === 'w' || event.key === 'ArrowUp') {
+                u();
+            } else if (event.key === 'a' || event.key === 'ArrowLeft') {
+                l();
+            } else if (event.key === 's' || event.key === 'ArrowDown') {
+                d();
+            } else if (event.key === 'd' || event.key === 'ArrowRight') {
+                r();
+            }
+        });
+
+        document.getElementById('retryButton').addEventListener('click', retry);
+        document.getElementById('saveButton').addEventListener('click', saveGame);
+        document.getElementById('loadButton').addEventListener('click', loadGame);
+        document.getElementById('increase-difficulty').addEventListener('click', () => changeDifficulty(1));
+        document.getElementById('decrease-difficulty').addEventListener('click', () => changeDifficulty(-1));
+        document.getElementById('increase-explosion').addEventListener('click', () => changeExplosionDuration(1));
+        document.getElementById('decrease-explosion').addEventListener('click', () => changeExplosionDuration(-1));
+        document.getElementById('toggleSettingsButton').addEventListener('click', toggleSettings);
+    </script>
+</body>
+</html>
