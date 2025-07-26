@@ -104,9 +104,83 @@
             </tr>
         </tbody>
     </table>
+<div class="download-button">
+    <button onclick="convertBeavers()">Show TTBB ↔ Standard Representations</button>
+</div>
 
-    <script>
-        // Function to open beaver in simulator (already handled by links)
+<pre id="conversion-output" style="white-space: pre-wrap; background: #f9f9f9; padding: 10px; border: 1px solid #ccc;"></pre>
+
+<script>
+function ttbbToStd(ttbbStr) {
+    const groups = ttbbStr.split('|');
+    const states = {};
+    let maxState = 0;
+
+    for (let i = 0; i < groups.length; i++) {
+        const [next, dir, write] = groups[i].split(';');
+        const stateIdx = Math.floor(i / 2);
+        const symbolIdx = i % 2;
+        const key = stateIdx;
+
+        if (!states[key]) states[key] = [];
+        const stateChar = next === '0' ? 'Z' : String.fromCharCode(65 + (parseInt(next) - 1));
+        states[key][symbolIdx] = `${write}${dir}${stateChar}`;
+        maxState = Math.max(maxState, stateIdx);
+    }
+
+    const stdStates = [];
+    for (let i = 0; i <= maxState; i++) {
+        const transitions = states[i] || [];
+        stdStates.push(transitions.join(''));
+    }
+
+    return stdStates.join('_');
+}
+
+function stdToTtbb(stdStr) {
+    const stateBlocks = stdStr.split('_');
+    const ttbbList = [];
+
+    for (let stateIdx = 0; stateIdx < stateBlocks.length; stateIdx++) {
+        const block = stateBlocks[stateIdx];
+        for (let symbolIdx = 0; symbolIdx < block.length; symbolIdx += 3) {
+            const write = block[symbolIdx];
+            const dir = block[symbolIdx + 1];
+            const nextChar = block[symbolIdx + 2];
+            let nextState;
+            if (nextChar === 'Z') {
+                nextState = 0;
+            } else {
+                nextState = nextChar.charCodeAt(0) - 64; // A = 1
+            }
+            ttbbList.push(`${nextState};${dir};${write}`);
+        }
+    }
+
+    return ttbbList.join('|');
+}
+
+function convertBeavers() {
+    const output = document.getElementById("conversion-output");
+    const links = document.querySelectorAll('.beaver-link');
+    let results = "";
+
+    links.forEach((link, i) => {
+        const url = new URL(link.href);
+        const ttbb = decodeURIComponent(url.searchParams.get("beaver"));
+        let std;
+        try {
+            std = ttbbToStd(ttbb);
+        } catch {
+            std = "(invalid or unsupported format)";
+        }
+        results += `Beaver #${i + 1}:\n`;
+        results += `TTBB: ${ttbb}\n`;
+        results += `STD:  ${std}\n\n`;
+    });
+
+    output.textContent = results.trim();
+}    // Function to open beaver in simulator (already handled by links)
         function openBeaver(transitions) {
             window.open(`https://tesertcode.github.io/BBJ.html?beaver=${encodeURIComponent(transitions)}`, '_blank');
         }
