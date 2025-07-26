@@ -1,226 +1,366 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TeserT</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: row;
-            height: 100vh;
-            align-items: center;
-            justify-content: center;
-            background-image: url('epic1.png');
-            background-position: center;
-        }
-        .container {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-        }
-        .sidebar {
-            width: 300px;
-            background-color: #222;
-            padding: 20px;
-            box-shadow: 5px 0 25px rgba(0, 0, 0, 1);
-            overflow-y: auto; /* Enable vertical scrolling */
-            height: 95vh; /* Make the sidebar take the full height of the viewport */
-            direction: rtl; /* Reverse the direction of the content */
-        }
-        .sidebar-content {
-            direction: ltr; /* Reset the direction for the links */
-        }
-        .sidebar a {
-            display: block;
-            margin: 10px 0;
-            text-decoration: none;
-            color: #ddd;
-            text-shadow: 1px 1px 5px #022, 1px 1px 5px #033;
-            font-weight: bold;
-        }
-        .content {
-            flex: 1;
-            text-align: center;
-        }
-        .title {
-            font-size: 4em;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 1px 1px 10px #000, 1px 1px 10px #7dd;
-            margin: 20px 0;
-        }
-        .small-text {
-            font-size: 1.2em;
-            text-shadow: 1px 1px 5px #a99, 1px 1px 5px #a99;
-            color: #fff;
-            margin-top: 20px;
-        }
-        .gallery-button {
-                    position: relative;
-    top: -20px;
-     left: 48px;
-            margin-left: 0px;
-            padding: 10px 20px;
-            font-size: 1em;
-            background-color: #007BFF;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .gallery-button:hover {
-            background-color: #0056b3;
-        }
-		.h-button {
-            position: relative;
-    top: 20px;
-
-            padding: 10px 20px;
-            font-size: 1em;
-            background-color: #007BFF;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .h-button:hover {
-            background-color: #0056b3;
-        }
-        #esd {
-            padding: -5px;
-            box-shadow: 5px 10px 5px #888888;
-            max-width: fit-content;
-            margin: 0px auto;
-            margin-left: auto;
-            border: 5px solid;
-            margin-right: auto;
-            visibility: hidden;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TeserT</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: row;
+      height: 100vh;
+      align-items: center;
+      justify-content: center;
+      background-image: url('epic1.png');
+      background-position: center;
+    }
+    .container {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+    }
+    .sidebar {
+      width: 300px;
+      background-color: #222;
+      padding: 20px;
+      box-shadow: 5px 0 25px rgba(0, 0, 0, 1);
+      overflow-y: auto;
+      height: 95vh;
+      direction: rtl;
+    }
+    .sidebar-content {
+      direction: ltr;
+    }
+    .sidebar a {
+      display: block;
+      margin: 10px 0;
+      text-decoration: none;
+      color: #ddd;
+      text-shadow: 1px 1px 5px #022, 1px 1px 5px #033;
+      font-weight: bold;
+    }
+    .collapsible {
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      padding-left: 30px;
+      color: #aff;
+      font-weight: bold;
+      margin: 15px 5px;
+      text-shadow: 2px 2px 5px #000, 5px 3px 10px #000;
+    }
+    .collapsible::before {
+      content: "▼";
+      position: absolute;
+      left: 5px;
+      transition: transform 0.2s;
+    }
+    .collapsible.collapsed::before {
+      transform: rotate(-90deg);
+    }
+    .collapsible-content {
+      display: block;
+      margin-left: 10px;
+      padding-left: 10px;
+    }
+    .collapsible.collapsed + .collapsible-content {
+      display: none;
+    }
+    .content {
+      flex: 1;
+      text-align: center;
+    }
+    .title {
+      font-size: 4em;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 1px 1px 10px #000, 1px 1px 10px #7dd;
+      margin: 20px 0;
+    }
+    .small-text {
+      font-size: 1.2em;
+      text-shadow: 1px 1px 5px #a99, 1px 1px 5px #a99;
+      color: #fff;
+      margin-top: 20px;
+    }
+    .gallery-button {
+      position: relative;
+      top: -20px;
+      left: 48px;
+      padding: 10px 20px;
+      font-size: 1em;
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .gallery-button:hover {
+      background-color: #0056b3;
+    }
+    .h-button {
+      position: relative;
+      top: 20px;
+      padding: 10px 20px;
+      font-size: 1em;
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .h-button:hover {
+      background-color: #0056b3;
+    }
+    
+        #toggleAllBtn {
+      position: relative;
+      top: 20px;
+      padding: 10px 20px;
+      font-size: 1em;
+      background-color: #001133;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #toggleAllBtn:hover {
+      background-color: #0056b3;
+    }
+    #esd {
+      padding: -5px;
+      box-shadow: 5px 10px 5px #888888;
+      max-width: fit-content;
+      margin: 0px auto;
+      margin-left: auto;
+      border: 5px solid;
+      margin-right: auto;
+      visibility: hidden;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="sidebar">
-            <div class="sidebar-content">
-			<br><br><br><br>
-                <a href="TTBPN.html">TTBPN</a>
-                <a href="TTOBPN.html">TTOBPN</a>
-                <a href="TTFfq.html">TTFfq</a>
-                <a href="TTWWS.html">TTWws</a>
-                <a href="CSC.html">Complex Superfunction Calculator</a>
-                <a href="AFKA.html">Generalized Abel Solver</a>
-                <a href="GF.html">Generalized Filog Solver</a>
-                <a id="domainLink" href="DC.html">Complex Domain Coloring</a>
-                <a href="ESCTF.html">Escapetime Fractal Renderer</a>
-                <a href="funclib.html">Complex Function Library</a>
-                <a href="NEWF.html">Newton Fractal Renderer</a>
-                <a href="BTBC.html">Number Base Comverter</a>
-                <a href="ABRE.html">Number -illion Abbreviator</a>
-                <a href="SUD.html">Sudoku Annihilator (SANT)</a>
-                <a href="2048.html">2048</a>
-                <a href="732048.html">{7,3} hyperbolic 2048</a>
-                <a href="PT.html">Periodic Table</a>
-                <a href="PCALC.html">Fictional Element Calculator</a>
-                <a href="SA3.html">3-Dimensional Attractor Similator</a>
-                <a href="SA.html">N-Dimensional Attractor Similator</a>
-                <a href="EC.html">Eternal Calendar</a>
-                <a href="MZ.html">Maze Generator</a>
-                <a href="BOCF.html">Bucholz Ordinal Collapsing Function</a>
-                <a href="PrSS.html">Primitive Sequence System</a>
-                <a href="BB.html">Busy Beaver Variants</a>
-                <a href="ColP.html">Colour Space Picker</a>
-                <a href="CG.html">Chaos Game</a>
-                <a href="PTHFND.html">Miner Gun Builder Pathfinder</a>
-                <a href="CM.html">Circular Membrane Visualizer</a>
-                <a href="BBJ.html">Busy Beaver Simulator</a>
-                <a href="TRR.html">Text Effects</a>
-                <a href="CP.html">Capacitor Colour Code</a>
-                <a href="IN.html">Inductor Colour Code</a>
-                <a href="DD.html">Diode Colour Code</a>
-                <a href="RS.html">Resistor Colour Code</a>
-                <a href="PN.html">Rythm Game</a>
-				<a href="TETR.html">Tetration Shader Renderer</a>
-                <a href="TTR.html">Tetris</a>
-                <a href="HP.html">Hyperbolic Tilings</a>
-                <a href="RDN.html">Radon Transform</a>
-                <a href="IRDN.html">Inverse Radon Transform</a>
-                <a href="FT.html">Fourier Transform</a>
-                <a href="PH.html">Phase Change Sim</a>
-                <a href="IM.html">Image Effects</a>
-                <a href="FISH.html">Fish</a>
-                 <a href="SHARK.html">Shark</a>
-                <a href="CDF.html">Probability Distribution Showcase</a>
-                <a href="CF.html">Confusion Matrix</a>
-                <a href="WVFRM.html">Custom Waveform</a>
-                 <a href="AP.html">Platonic Solids</a>
-                 <a href="BF.html">Bifrucation Diagram Calculator</a>
-                  <a href="CPS.html">Clicks Per Second</a>
-                   <a href="PUNK.html">Punctuation Marks </a>
-                   <a href="TAR.html">ASCII Art Generator </a>
-                   
-                   
-                   
-                       <a href="LS.html">L-System </a>
-                           <a href="HLT.html">Miner Gun Builder Level Visulizer </a>
-                               <a href="HOR.html">Hormonlar </a>
-                                   <a href="HOR.html">Hormonlar </a>
-                                       <a href="HOR.html">Hormonlar </a>
-                                           <a href="HOR.html">Hormonlar </a>
-                                               <a href="HOR.html">Hormonlar </a>
-                   
-                   
-                   
-                   
-                   
-                   <a href="ORG.html">Organik Kimya </a>
-                   <a href="BIT.html">Bitkiler </a>
-                   <a href="HOR.html">Hormonlar </a>
-                   
-                   
-                   
-                   
-                   
-                   
-                                <br><br><br><br><br><br><br><br>
-            </div>
-        </div>
-        <div id="esd">
-            <img src="logo.png">
-        </div>
-        <div class="content">
-            <div class="title">TESERT</div>
-            <div class="small-text">
-                now in hatred of my future<br>
-                was in fear of my past<br>
-                last ought i swore<br>
-                was my own wrath
-            </div>
-        </div>
-   <div>     <button class="gallery-button" onclick="window.location.href='gallery.html'">Gallery</button>
-	</div>
-		<br>
-<div><button class="h-button">h</button></div>
-    </div>
-    <script>
-        // 1% chance to change "Complex Domain Coloring" to "Complex Domain Expansion" and redirect to kaju.html
-        function randomizeDomainLink() {
-            const chance = Math.random(); // Generate a random number between 0 and 1
-            const domainLink = document.getElementById('domainLink');
-            if (chance <= 0.05) {
-                domainLink.textContent = "Complex Domain Expansion";
-                domainLink.href = "kaju.html"; // Change the href to direct to kaju.html
-            }
-        }
+  <div class="container">
+    <div class="sidebar">
+      <div class="sidebar-content">
+      
+        <button id="toggleAllBtn" style="margin: 10px 0; width: 100%; font-weight: bold;">Collapse All</button>
 
-        // Run the function when the page loads
-        window.onload = randomizeDomainLink;
-    </script>
+        <br><br>
+
+        <h3 class="collapsible">Complex Numbers</h3>
+        <div class="collapsible-content">
+          <a href="CSC.html">Complex Superfunction Calculator</a>
+          <a href="AFKA.html">Generalized Abel Solver</a>
+          <a href="GF.html">Generalized Filog Solver</a>
+          <a id="domainLink" href="DC.html">Complex Domain Coloring</a>
+          <a href="funclib.html">Complex Function Library</a>
+        </div>
+
+        <h3 class="collapsible">Fractals</h3>
+        <div class="collapsible-content">
+          <a href="ESCTF.html">Escapetime Fractal Renderer</a>
+          <a href="NEWF.html">Newton Fractal Renderer</a>
+          <a href="SA3.html">3-Dimensional Attractor Similator</a>
+          <a href="SA.html">N-Dimensional Attractor Similator</a>
+          <a href="CG.html">Chaos Game</a>
+          <a href="BF.html">Bifrucation Diagram Calculator</a>
+          <a href="LS.html">L-System</a>
+          <a href="TETR.html">Tetration Shader Renderer</a>
+        </div>
+
+        <h3 class="collapsible">Numbers</h3>
+        <div class="collapsible-content">
+          <a href="BTBC.html">Number Base Comverter</a>
+          <a href="ABRE3.html">Number -illion Abbreviator</a>
+          <a href="CDF.html">Probability Distribution Showcase</a>
+          <a href="CF.html">Confusion Matrix</a>
+        </div>
+
+        <h3 class="collapsible">Games</h3>
+        <div class="collapsible-content">
+          <a href="SUD.html">Sudoku Annihilator (SANT)</a>
+          <a href="2048.html">2048</a>
+          <a href="732048.html">{7,3} hyperbolic 2048</a>
+          <a href="PN.html">Rythm Game</a>
+          <a href="TTR.html">Tetris</a>
+          <a href="MZ.html">Maze Generator</a>
+          <a href="CPS.html">Clicks Per Second</a>
+        </div>
+
+        <h3 class="collapsible">Chemistry</h3>
+        <div class="collapsible-content">
+          <a href="PT.html">Periodic Table</a>
+          <a href="PCALC.html">Fictional Element Calculator</a>
+          <a href="PH.html">Phase Change Sim</a>
+        </div>
+
+        <h3 class="collapsible">Colors</h3>
+        <div class="collapsible-content">
+          <a href="ColP.html">Colour Space Picker</a>
+        </div>
+
+        <h3 class="collapsible">Googology</h3>
+        <div class="collapsible-content">
+          <a href="BOCF.html">Bucholz Ordinal Collapsing Function</a>
+          <a href="PrSS.html">Primitive Sequence System</a>
+          <a href="BB.html">Busy Beaver Variants</a>
+          <a href="BBJ.html">Busy Beaver Simulator</a>
+        </div>
+
+        <h3 class="collapsible">Images</h3>
+        <div class="collapsible-content">
+          <a href="RDN.html">Radon Transform</a>
+          <a href="IRDN.html">Inverse Radon Transform</a>
+          <a href="FT.html">Fourier Transform</a>
+          <a href="IM.html">Image Effects</a>
+        </div>
+
+        <h3 class="collapsible">Text</h3>
+        <div class="collapsible-content">
+          <a href="TRR.html">Text Effects</a>
+          <a href="TAR.html">ASCII Art Generator</a>
+        </div>
+
+        <h3 class="collapsible">Electric</h3>
+        <div class="collapsible-content">
+          <a href="CP.html">Capacitor Colour Code</a>
+          <a href="IN.html">Inductor Colour Code</a>
+          <a href="DD.html">Diode Colour Code</a>
+          <a href="RS.html">Resistor Colour Code</a>
+        </div>
+
+        <h3 class="collapsible">Fishe</h3>
+        <div class="collapsible-content">
+          <a href="FISH.html">Fish</a>
+          <a href="SHARK.html">Shark</a>
+        </div>
+
+        <h3 class="collapsible">Sound</h3>
+        <div class="collapsible-content">
+          <a href="WVFRM.html">Custom Waveform</a>
+        </div>
+
+        <h3 class="collapsible">Geometry</h3>
+        <div class="collapsible-content">
+          <a href="AP.html">Platonic Solids</a>
+          <a href="HP.html">Hyperbolic Tilings</a>
+        </div>
+
+        <h3 class="collapsible">Miner Gun Builder</h3>
+        <div class="collapsible-content">
+          <a href="HLT.html">Miner Gun Builder Level Visulizer</a>
+          <a href="PTHFND.html">Miner Gun Builder Pathfinder</a>
+        </div>
+
+        <h3 class="collapsible">Lesson stuff</h3>
+        <div class="collapsible-content">
+          <a href="PUNK.html">Punctuation Marks</a>
+          <a href="ORG.html">Organik Kimya</a>
+          <a href="BIT.html">Bitkiler</a>
+          <a href="HOR.html">Hormonlar</a>
+        </div>
+
+        <h3 class="collapsible">Young Tableaux</h3>
+        <div class="collapsible-content">
+          <a href="YNG.html">Young Tableaux</a>
+          <a href="SYNG.html">Skew Young Tableaux</a>
+          <a href="YNGCG.html">Young Tableaux Crystal Graph</a>
+          <a href="YNGSYT.html">Standard Young Tableaux</a>
+          <a href="YNGPM.html">Young Tableaux Plactic Monoid</a>
+          <a href="YNGJTP.html">Young Tableaux Jeu de Taquin Path</a>
+          <a href="YNGC.html">Young Tableaux Creation</a>
+          <a href="YNGSC.html">Skew Young Tableaux Creation</a>
+          <a href="YNGLR.html">Young Tableaux Littlewood-Richardson Rule</a>
+          <a href="YNGRSK.html">Young Tableaux RSK</a>
+        </div>
+
+        <h3 class="collapsible">Kneser Graphs</h3>
+        <div class="collapsible-content">
+          <a href="KNSG.html">Kneser Graphs</a>
+          <a href="GKNSG.html">Generalized Kneser Graphs</a>
+          <a href="JNSG.html">Johnson Graphs</a>
+          <a href="GJNSG.html">Generalized Johnson Graphs</a>
+        </div>
+
+        <br><br><br><br><br><br><br><br>
+      </div>
+    </div>
+
+    <div id="esd">
+      <img src="logo.png" />
+    </div>
+
+    <div class="content">
+      <div class="title">TESERT</div>
+      <div class="small-text">
+        now in hatred of my future<br />
+        was in fear of my past<br />
+        last ought i swore<br />
+        was my own wrath
+      </div>
+    </div>
+
+    <div>
+      <button class="gallery-button" onclick="window.location.href='gallery.html'">Gallery</button>
+    </div>
+    <br />
+    <div><button class="h-button">h</button></div>
+    <div><button class="h-button">ġ</button></div>
+  </div>
+
+  <script>
+    function randomizeDomainLink() {
+      const chance = Math.random();
+      const domainLink = document.getElementById("domainLink");
+      if (chance <= 0.05) {
+        domainLink.textContent = "Complex Domain Expansion";
+        domainLink.href = "kaju.html";
+      }
+    }
+
+    function setupCollapsibles() {
+      const headers = document.querySelectorAll(".collapsible");
+      headers.forEach(header => {
+        header.addEventListener("click", () => {
+          header.classList.toggle("collapsed");
+        });
+      });
+    }
+function setupCollapsibles() {
+  const headers = document.querySelectorAll(".collapsible");
+  headers.forEach(header => {
+    header.addEventListener("click", () => {
+      header.classList.toggle("collapsed");
+    });
+  });
+
+  const toggleAllBtn = document.getElementById("toggleAllBtn");
+  let allExpanded = true;
+
+  toggleAllBtn.addEventListener("click", () => {
+    allExpanded = !allExpanded;
+    headers.forEach(header => {
+      if (allExpanded) {
+        header.classList.remove("collapsed");
+      } else {
+        header.classList.add("collapsed");
+      }
+    });
+    toggleAllBtn.textContent = allExpanded ? "Collapse All" : "Expand All";
+  });
+}
+
+    window.onload = () => {
+      randomizeDomainLink();
+      setupCollapsibles();
+    };
+  </script>
 </body>
 </html>

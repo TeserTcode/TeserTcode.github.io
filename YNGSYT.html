@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SYT/SSYT Skew Tableau Graph</title>
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style>
+    body { font-family: sans-serif; }
+    #network { width: 65%; height: 90vh; float: left; border: 1px solid #aaa; }
+    #viewer {
+      float: right; width: 33%; padding: 10px; border-left: 1px solid #ccc;
+      height: 90vh; overflow-y: auto;
+    }
+    .box {
+      width: 26px; height: 26px;
+      border: 1px solid #444;
+      display: inline-block;
+      text-align: center;
+      line-height: 26px;
+      margin: 1px;
+      background-color: lightyellow;
+      font-weight: bold;
+    }
+    .hole-box {
+      background-color: transparent;
+      border: none;
+    }
+    #diagram > div { height: 28px; }
+  </style>
+</head>
+<body>
+
+<h3>SYT/SSYT Graph Viewer</h3>
+Outer λ: <input id="lambda" value="3,2" />
+Inner μ: <input id="mu" value="" />
+Max Number: <input id="maxVal" type="number" value="5" />
+<br>
+Rules:
+<select id="rule">
+  <option value="syt">SYT (strict rows, strict cols)</option>
+  <option value="ssyt">SSYT (weak rows, strict cols)</option>
+  <option value="wsyt">WSYT (weak rows, weak cols)</option>
+  <option value="dsyt">DSYT (strict rows, weak cols)</option>
+</select>
+<button onclick="drawTableauGraph()">Generate</button>
+
+<div id="network"></div>
+<div id="viewer"><h3>Tableau</h3><div id="diagram"></div></div>
+
+<script>
+// Helper: Parse string like "3,2" → [3,2]
+function parsePartition(str) {
+  return str.trim() === "" ? [] : str.split(",").map(Number);
+}
+
+// Generate boxes of skew shape
+function getSkewBoxes(lambda, mu) {
+  const boxes = [];
+  for (let i = 0; i < lambda.length; i++) {
+    const rowLen = lambda[i];
+    const muLen = mu[i] || 0;
+    for (let j = muLen; j < rowLen; j++) {
+      boxes.push([i, j]);
+    }
+  }
+  return boxes;
+}
+function isSwap(a, b) {
+  let diffs = [];
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) diffs.push([a[i], b[i]]);
+  }
+  return diffs.length === 2 &&
+         diffs[0][0] === diffs[1][1] &&
+         diffs[0][1] === diffs[1][0];
+}
+
+// Generate all tableaux (recursive)
+function generateTableaux(boxes, maxVal, rule) {
+  const results = [];
+
+  function valid(tableau) {
+    const map = new Map(tableau.map((v, i) => [boxes[i].join(","), v]));
+    for (let i = 0; i < boxes.length; i++) {
+      const [r1, c1] = boxes[i];
+      const v = tableau[i];
+      for (let j = 0; j < boxes.length; j++) {
+        const [r2, c2] = boxes[j];
+        const w = tableau[j];
+        if (r1 === r2 && c1 < c2) { // right
+          if (rule === "syt" || rule === "dsyt") { if (v >= w) return false; }
+          if (rule === "ssyt" || rule === "wsyt") { if (v > w) return false; }
+        }
+        if (c1 === c2 && r1 < r2) { // below
+          if (rule === "syt" || rule === "ssyt") { if (v >= w) return false; }
+          if (rule === "dsyt" || rule === "wsyt") { if (v > w) return false; }
+        }
+      }
+    }
+    return true;
+  }
+
+  function usedUpTo(tableau) {
+    const used = new Set(tableau);
+    for (let i = 1; i <= maxVal; i++) {
+      if (used.has(i)) continue;
+      for (let j = i + 1; j <= maxVal; j++) {
+        if (used.has(j)) return false;
+      }
+    }
+    return true;
+  }
+
+  function backtrack(index, current) {
+    if (index === boxes.length) {
+      if (valid(current) && usedUpTo(current)) results.push([...current]);
+      return;
+    }
+    for (let val = 1; val <= maxVal; val++) {
+      current.push(val);
+      backtrack(index + 1, current);
+      current.pop();
+    }
+  }
+
+  backtrack(0, []);
+  return results;
+}
+
+// Check if two tableaux differ by exactly one value ±1
+function isOneValueOff(a, b) {
+  let diffCount = 0;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) {
+      if (Math.abs(a[i] - b[i]) !== 1) return false;
+      diffCount++;
+    }
+  }
+  return diffCount === 1;
+}
+
+// Draw a tableau grid
+function showDiagram(boxes, values) {
+  const diagram = document.getElementById("diagram");
+  diagram.innerHTML = "";
+  const boxMap = new Map();
+  boxes.forEach((b, i) => boxMap.set(b.join(","), values[i]));
+
+  const maxRow = Math.max(...boxes.map(b => b[0]));
+  for (let r = 0; r <= maxRow; r++) {
+    const rowDiv = document.createElement("div");
+    const rowBoxes = boxes.filter(b => b[0] === r);
+    const minCol = Math.min(...rowBoxes.map(b => b[1]));
+    const maxCol = Math.max(...rowBoxes.map(b => b[1]));
+
+    for (let c = 0; c <= maxCol; c++) {
+      const cell = document.createElement("div");
+      const key = `${r},${c}`;
+      if (boxMap.has(key)) {
+        cell.className = "box";
+        cell.textContent = boxMap.get(key);
+      } else {
+        cell.className = "box hole-box";
+      }
+      rowDiv.appendChild(cell);
+    }
+    diagram.appendChild(rowDiv);
+  }
+}
+
+function drawTableauGraph() {
+  const lambda = parsePartition(document.getElementById("lambda").value);
+  const mu = parsePartition(document.getElementById("mu").value);
+  const maxVal = parseInt(document.getElementById("maxVal").value, 10);
+  const rule = document.getElementById("rule").value;
+
+  const boxes = getSkewBoxes(lambda, mu);
+  const tableaux = generateTableaux(boxes, maxVal, rule);
+
+  const nodes = tableaux.map((tab, idx) => ({
+    id: idx,
+    label: `T${idx + 1}`,
+    tableau: tab
+  }));
+
+  const layoutEdges = [];
+  const allEdges = [];
+
+  for (let i = 0; i < tableaux.length; i++) {
+    for (let j = 0; j < tableaux.length; j++) {
+      if (i === j) continue;
+      const a = tableaux[i], b = tableaux[j];
+
+      if (isOneValueOff(a, b)) {
+        layoutEdges.push({ from: i, to: j }); // layout purposes
+        allEdges.push({ from: i, to: j, arrows: "to", color: { color: "black" } });
+      } else if (isSwap(a, b)) {
+        allEdges.push({ from: i, to: j, arrows: "to", color: { color: "red" } });
+      }
+    }
+  }
+
+  // Compute levels based on layoutEdges (only ±1)
+  const levels = {};
+  function assignLevels(node, level) {
+    if (levels[node] !== undefined && levels[node] <= level) return;
+    levels[node] = level;
+    layoutEdges
+      .filter(e => e.from === node)
+      .forEach(e => assignLevels(e.to, level + 1));
+  }
+
+  for (let i = 0; i < tableaux.length; i++) {
+    if (!(i in levels)) assignLevels(i, 0);
+  }
+
+  // Set level per node
+  nodes.forEach(node => {
+    node.level = levels[node.id] || 0;
+  });
+
+  const container = document.getElementById("network");
+  const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(allEdges) };
+  const options = {
+    layout: {
+      hierarchical: {
+        enabled: true,
+        direction: "UD",
+        sortMethod: "directed",
+        nodeSpacing: 120,
+        levelSeparation: 80
+      }
+    },
+    nodes: { shape: "box", font: { size: 14 }, margin: 10 },
+    edges: {
+      smooth: {
+        type: "cubicBezier",
+        forceDirection: "vertical",
+        roundness: 0.4
+      }
+    },
+    physics: false
+  };
+
+  const network = new vis.Network(container, data, options);
+
+  network.on("click", function (params) {
+    if (params.nodes.length === 1) {
+      const node = nodes.find(n => n.id === params.nodes[0]);
+      showDiagram(boxes, node.tableau);
+    }
+  });
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>RSK with Tableau Types and Bumping Path Arrows</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; }
+  input[type=text], select { font-size: 16px; padding: 4px; margin-right: 10px; }
+  button { font-size: 16px; }
+  .tableaux-container {
+    display: flex;
+    gap: 40px;
+    margin-top: 20px;
+  }
+  .tableau {
+    border: 1px solid #333;
+    padding: 10px;
+    min-width: 240px;
+    position: relative;
+  }
+  .tableau h3 {
+    margin-top: 0;
+  }
+  .row {
+    display: flex;
+    position: relative;
+  }
+  .cell {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #666;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 16px;
+    margin: 1px;
+    background-color: #f0f0f0;
+    position: relative;
+    transition: background-color 0.3s ease;
+  }
+  .cell.bumped {
+    background-color: #ff9999 !important;
+  }
+  .cell.inserting {
+    background-color: #99ccff !important;
+  }
+  svg.arrows {
+    position: absolute;
+    top: 0; left: 0;
+    pointer-events: none;
+    overflow: visible;
+  }
+  .info {
+    margin-top: 20px;
+    font-size: 16px;
+  }
+</style>
+</head>
+<body>
+
+<h1>RSK Algorithm with Tableau Types and Animated Bumping Path + Arrows</h1>
+
+<label for="wordInput">Input word (comma or space separated integers):</label>
+<input type="text" id="wordInput" value="3 1 4 1 5 9 2 6 5" />
+<label for="tableauType">Tableau type:</label>
+<select id="tableauType">
+  <option value="SYT">SYT (Strict rows & cols)</option>
+  <option value="SSYT" selected>SSYT (Weak rows, strict cols)</option>
+  <option value="DSYT">DSYT (Strict rows, weak cols)</option>
+  <option value="WSYT">WSYT (Weak rows & cols)</option>
+</select>
+<button id="startBtn">Start RSK</button>
+<button id="nextBtn" disabled>Next Step</button>
+
+<div class="tableaux-container">
+  <div class="tableau" id="P-tableau">
+    <h3>Insertion Tableau (P)</h3>
+    <div id="P-content"></div>
+    <svg id="arrows-svg" class="arrows"></svg>
+  </div>
+  <div class="tableau" id="Q-tableau">
+    <h3>Recording Tableau (Q)</h3>
+    <div id="Q-content"></div>
+  </div>
+</div>
+
+<div class="info" id="info"></div>
+
+<script>
+  let word = [];
+  let step = 0;
+  let P = [];
+  let Q = [];
+  let bumpPath = [];
+  let tableauType = "SSYT";
+
+  const pContainer = document.getElementById("P-content");
+  const qContainer = document.getElementById("Q-content");
+  const infoDiv = document.getElementById("info");
+  const nextBtn = document.getElementById("nextBtn");
+  const startBtn = document.getElementById("startBtn");
+  const wordInput = document.getElementById("wordInput");
+  const tableauSelect = document.getElementById("tableauType");
+  const arrowsSvg = document.getElementById("arrows-svg");
+  const pTableauDiv = document.getElementById("P-tableau");
+
+  function clearTableau(container) {
+    container.innerHTML = "";
+  }
+
+  // Draw tableau and highlight bump path cells
+  function drawTableau(container, tableau, highlights = []) {
+    container.innerHTML = "";
+    for (let r = 0; r < tableau.length; r++) {
+      const rowDiv = document.createElement("div");
+      rowDiv.className = "row";
+      for (let c = 0; c < tableau[r].length; c++) {
+        const cellDiv = document.createElement("div");
+        cellDiv.className = "cell";
+        cellDiv.textContent = tableau[r][c];
+        for (const h of highlights) {
+          if (h.row === r && h.col === c) {
+            if (h.type === "bumped") cellDiv.classList.add("bumped");
+            if (h.type === "inserting") cellDiv.classList.add("inserting");
+          }
+        }
+        rowDiv.appendChild(cellDiv);
+      }
+      container.appendChild(rowDiv);
+    }
+  }
+
+  // Insertion rules based on tableau type
+  // Return true if x can be inserted before val according to rules
+  function canInsert(x, val, rowIndex, colIndex) {
+    if (tableauType === "SYT") {
+      // Strict rows and cols
+      return x < val;
+    } else if (tableauType === "SSYT") {
+      // Weak rows, strict cols
+      // Insertion bumps if strictly less than val in row (to keep weakly increasing)
+      return x < val;
+    } else if (tableauType === "DSYT") {
+      // Strict rows, weak cols
+      // In row: strictly less; in col: weakly less (allow equal)
+      return x < val;
+    } else if (tableauType === "WSYT") {
+      // Weak rows and cols (allow equal)
+      return x <= val;
+    }
+    return x < val; // default fallback
+  }
+
+  // Insert x into row of P with bumping according to rules
+  function insertRow(row, x, rowIndex) {
+    for (let i = 0; i < row.length; i++) {
+      if (canInsert(x, row[i], rowIndex, i)) {
+        const bumped = row[i];
+        row[i] = x;
+        return { bumped, col: i };
+      }
+    }
+    row.push(x);
+    return { bumped: null, col: row.length - 1 };
+  }
+
+  // Insert x into P and record bump path
+  function insert(P, Q, x, k) {
+    let bumped = x;
+    let row = 0;
+    bumpPath = [];
+    while (bumped !== null) {
+      if (row >= P.length) {
+        P.push([]);
+        Q.push([]);
+      }
+      const { bumped: newBump, col } = insertRow(P[row], bumped, row);
+      bumpPath.push({ row, col, val: bumped });
+      bumped = newBump;
+      if (newBump === null) {
+        Q[row].splice(col, 0, k);
+      }
+      row++;
+    }
+    return bumpPath;
+  }
+
+  // Calculate positions of cells for drawing arrows
+  function getCellPositions() {
+    const positions = [];
+    const rows = pContainer.children;
+    for (let r = 0; r < rows.length; r++) {
+      const rowDiv = rows[r];
+      const cells = rowDiv.children;
+      for (let c = 0; c < cells.length; c++) {
+        const rect = cells[c].getBoundingClientRect();
+        const parentRect = pTableauDiv.getBoundingClientRect();
+        positions.push({
+          row: r,
+          col: c,
+          x: rect.left - parentRect.left + rect.width / 2,
+          y: rect.top - parentRect.top + rect.height / 2,
+        });
+      }
+    }
+    return positions;
+  }
+
+  // Draw arrows between bump path cells
+  function drawArrows(path) {
+    arrowsSvg.innerHTML = "";
+    if (path.length < 2) return;
+    const pos = getCellPositions();
+
+    for (let i = 0; i < path.length - 1; i++) {
+      const from = pos.find(p => p.row === path[i].row && p.col === path[i].col);
+      const to = pos.find(p => p.row === path[i + 1].row && p.col === path[i + 1].col);
+      if (!from || !to) continue;
+
+      const arrow = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      arrow.setAttribute("x1", from.x);
+      arrow.setAttribute("y1", from.y);
+      arrow.setAttribute("x2", to.x);
+      arrow.setAttribute("y2", to.y);
+      arrow.setAttribute("stroke", "#444");
+      arrow.setAttribute("stroke-width", "2");
+      arrow.setAttribute("marker-end", "url(#arrowhead)");
+      arrowsSvg.appendChild(arrow);
+    }
+  }
+
+  // Animate bump path with highlights and arrows
+  async function animateBumpPath(path) {
+    arrowsSvg.setAttribute("width", pTableauDiv.clientWidth);
+    arrowsSvg.setAttribute("height", pTableauDiv.clientHeight);
+
+    // Define arrowhead marker once
+    if (!document.getElementById("arrowhead")) {
+      const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+      const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+      marker.setAttribute("id", "arrowhead");
+      marker.setAttribute("markerWidth", "10");
+      marker.setAttribute("markerHeight", "7");
+      marker.setAttribute("refX", "10");
+      marker.setAttribute("refY", "3.5");
+      marker.setAttribute("orient", "auto");
+      const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      polygon.setAttribute("points", "0 0, 10 3.5, 0 7");
+      polygon.setAttribute("fill", "#444");
+      marker.appendChild(polygon);
+      defs.appendChild(marker);
+      arrowsSvg.appendChild(defs);
+    }
+
+    for (let i = 0; i < path.length; i++) {
+      const highlights = path.slice(0, i).map(({ row, col }) => ({ row, col, type: "bumped" }));
+      highlights.push({ ...path[i], type: "inserting" });
+
+      drawTableau(pContainer, P, highlights);
+      drawTableau(qContainer, Q);
+      drawArrows(path.slice(0, i + 1));
+
+      await new Promise((r) => setTimeout(r, 600));
+    }
+    // Final highlight only last cell inserting
+    drawTableau(pContainer, P, [{ ...path[path.length - 1], type: "inserting" }]);
+    drawTableau(qContainer, Q);
+    drawArrows(path);
+  }
+
+  async function animateStep() {
+    if (step >= word.length) {
+      infoDiv.textContent = "Finished inserting all letters.";
+      nextBtn.disabled = true;
+      return;
+    }
+    const x = word[step];
+    infoDiv.textContent = `Inserting letter ${x} (step ${step + 1} of ${word.length})...`;
+
+    bumpPath = insert(P, Q, x, step + 1);
+    await animateBumpPath(bumpPath);
+
+    step++;
+    if (step === word.length) {
+      infoDiv.textContent = "Finished inserting all letters.";
+      nextBtn.disabled = true;
+    } else {
+      infoDiv.textContent = `Inserted letter ${x}. Press "Next Step" or spacebar to insert next letter.`;
+    }
+  }
+
+  startBtn.onclick = () => {
+    tableauType = tableauSelect.value;
+    const input = wordInput.value;
+    word = input.split(/[\s,]+/).map(x => parseInt(x)).filter(x => !isNaN(x));
+    if (word.length === 0) {
+      alert("Please enter a valid word of integers.");
+      return;
+    }
+    step = 0;
+    P = [];
+    Q = [];
+    bumpPath = [];
+    clearTableau(pContainer);
+    clearTableau(qContainer);
+    arrowsSvg.innerHTML = "";
+    infoDiv.textContent = "Press 'Next Step' or spacebar to start inserting letters.";
+    nextBtn.disabled = false;
+  };
+
+  nextBtn.onclick = () => {
+    nextBtn.disabled = true;
+    animateStep().then(() => (nextBtn.disabled = false));
+  };
+
+  // Spacebar or Enter triggers next step if enabled
+  document.addEventListener("keydown", (e) => {
+    if ((e.code === "Space" || e.code === "Enter") && !nextBtn.disabled) {
+      e.preventDefault();
+      nextBtn.click();
+    }
+  });
+</script>
+
+</body>
+</html>

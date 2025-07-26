@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Crystal Graph Viewer</title>
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style>
+    body { font-family: sans-serif; }
+    #controls { margin-bottom: 10px; }
+    #network { width: 70%; height: 85vh; float: left; border: 1px solid #aaa; }
+    #viewer {
+      float: right; width: 28%; padding: 10px;
+      height: 85vh; overflow-y: auto; border-left: 1px solid #ccc;
+    }
+    .box {
+      width: 30px; height: 30px;
+      border: 1px solid #444;
+      display: inline-block;
+      margin: 1px;
+      line-height: 30px;
+      text-align: center;
+      font-weight: bold;
+      background-color: #f0f8ff;
+    }
+    #diagram > div { height: 34px; }
+  </style>
+</head>
+<body>
+
+<h2>Crystal Graph Viewer</h2>
+<div id="controls">
+  Shape: <input id="shapeInput" value="2,1" size="5">
+  Max Entry: <input id="maxEntryInput" value="3" size="2">
+  <button onclick="drawCrystal()">Draw</button>
+</div>
+
+<div id="network"></div>
+<div id="viewer">
+  <h3>Tableau</h3>
+  <div id="diagram"></div>
+  <div id="info"></div>
+</div>
+
+<script>
+let shape = [2,1];
+let alphabet = [1,2,3];
+const colors = {1: 'red', 2: 'blue', 3: 'green', 4: 'purple'};
+
+function generateSSYT(shape, alphabet) {
+  const tableaux = [];
+  function isValid(tableau) {
+    for (let i = 0; i < tableau.length; i++) {
+      const row = tableau[i];
+      for (let j = 1; j < row.length; j++) {
+        if (row[j] < row[j - 1]) return false;
+      }
+    }
+    for (let j = 0; j < shape[0]; j++) {
+      for (let i = 1; i < tableau.length; i++) {
+        if (j < tableau[i].length && j < tableau[i - 1].length) {
+          if (tableau[i][j] <= tableau[i - 1][j]) return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  function fill(row = 0, col = 0, tableau = shape.map(n => Array(n).fill(0))) {
+    if (row === shape.length) {
+      if (isValid(tableau)) {
+        tableaux.push(JSON.parse(JSON.stringify(tableau)));
+      }
+      return;
+    }
+    const length = shape[row];
+    if (col === length) {
+      fill(row + 1, 0, tableau);
+      return;
+    }
+    for (const num of alphabet) {
+      tableau[row][col] = num;
+      fill(row, col + 1, tableau);
+    }
+  }
+
+  fill(0, 0, shape.map(n => Array(n).fill(0)));
+  return tableaux;
+}
+
+function tableauKey(t) {
+  return t.map(r => r.join(",")).join("|");
+}
+
+function tableauWeight(t) {
+  const w = {};
+  for (const row of t) {
+    for (const x of row) {
+      if (!(x in w)) w[x] = 0;
+      w[x]++;
+    }
+  }
+  return w;
+}
+
+function applyFi(t, i, isE = false) {
+  const flat = [];
+  for (let r = 0; r < t.length; r++) {
+    for (let c = 0; c < t[r].length; c++) {
+      flat.push({val: t[r][c], r, c});
+    }
+  }
+
+  const sig = [];
+  for (const box of flat) {
+    if (box.val === i) sig.push({type: '+', box});
+    if (box.val === i + 1) sig.push({type: '-', box});
+  }
+
+  const stack = [];
+  const unmatched = [];
+  for (const s of sig) {
+    if (s.type === '+') {
+      stack.push(s);
+    } else {
+      if (stack.length > 0) {
+        stack.pop();
+      } else {
+        unmatched.push(s);
+      }
+    }
+  }
+
+  if (isE) {
+    if (unmatched.length === 0) return null;
+    const target = unmatched[0].box;
+    const newT = t.map(row => row.slice());
+    newT[target.r][target.c] -= 1;
+    return isSSYT(newT) ? newT : null;
+  } else {
+    if (stack.length === 0) return null;
+    const target = stack[stack.length - 1].box;
+    const newT = t.map(row => row.slice());
+    newT[target.r][target.c] += 1;
+    return isSSYT(newT) ? newT : null;
+  }
+}
+
+function isSSYT(t) {
+  for (let i = 0; i < t.length; i++) {
+    for (let j = 1; j < t[i].length; j++) {
+      if (t[i][j] < t[i][j - 1]) return false;
+    }
+  }
+  for (let j = 0; j < t[0].length; j++) {
+    for (let i = 1; i < t.length; i++) {
+      if (j < t[i].length && j < t[i - 1].length) {
+        if (t[i][j] <= t[i - 1][j]) return false;
+      }
+    }
+  }
+  return true;
+}
+
+function showTableau(t) {
+  const diagram = document.getElementById("diagram");
+  diagram.innerHTML = "";
+  for (const row of t) {
+    const rowDiv = document.createElement("div");
+    for (const x of row) {
+      const box = document.createElement("div");
+      box.className = "box";
+      box.textContent = x;
+      rowDiv.appendChild(box);
+    }
+    diagram.appendChild(rowDiv);
+  }
+
+  const weight = tableauWeight(t);
+  const keys = Object.keys(weight).sort();
+  const wText = keys.map(k => weight[k]).join(',');
+  document.getElementById("info").innerHTML =
+    `<p><b>Weight:</b> (${wText})</p>`;
+}
+
+function drawCrystal() {
+  shape = document.getElementById("shapeInput").value.split(',').map(Number);
+  const maxEntry = parseInt(document.getElementById("maxEntryInput").value);
+  alphabet = Array.from({length: maxEntry}, (_, i) => i + 1);
+
+  const tableaux = generateSSYT(shape, alphabet);
+  const nodes = [];
+  const edges = [];
+  const tableMap = new Map();
+
+  tableaux.forEach((t, i) => {
+    const key = tableauKey(t);
+    tableMap.set(key, {id: i, t});
+    const w = tableauWeight(t);
+    const label = key.replace(/\|/g, "\n") + `\n(${alphabet.map(k => w[k] || 0).join(',')})`;
+    nodes.push({ id: i, label, shape: "box" });
+  });
+
+  tableaux.forEach((t, i) => {
+    for (const iVal of alphabet.slice(0, -1)) {
+      const f = applyFi(t, iVal);
+      if (f) {
+        const toKey = tableauKey(f);
+        if (tableMap.has(toKey)) {
+          edges.push({
+            from: i,
+            to: tableMap.get(toKey).id,
+            arrows: "to",
+            color: { color: colors[iVal] || 'gray' },
+            label: `f${iVal}`
+          });
+        }
+      }
+      const e = applyFi(t, iVal, true);
+      if (e) {
+        const toKey = tableauKey(e);
+        if (tableMap.has(toKey)) {
+          edges.push({
+            from: tableMap.get(toKey).id,
+            to: i,
+            arrows: "to",
+            dashes: true,
+            color: { color: colors[iVal] || 'gray' },
+            label: `e${iVal}`
+          });
+        }
+      }
+    }
+  });
+
+  const container = document.getElementById("network");
+  const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
+  const options = {
+    layout: {
+      hierarchical: {
+        enabled: true,
+        direction: "UD",
+        sortMethod: "directed",
+        nodeSpacing: 130,
+        levelSeparation: 100
+      }
+    },
+    nodes: { font: { size: 14 }, margin: 10 },
+    physics: false
+  };
+
+  const network = new vis.Network(container, data, options);
+  network.on("click", function (params) {
+    if (params.nodes.length === 1) {
+      const nodeId = params.nodes[0];
+      const tableau = tableaux[nodeId];
+      showTableau(tableau);
+    }
+  });
+}
+
+drawCrystal();
+</script>
+</body>
+</html>

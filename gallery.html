@@ -75,42 +75,103 @@
                 opacity: 1;
             }
         }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2em;
+            color: #666;
+        }
     </style>
 </head>
 <body>
+    <div class="loading" id="loading">Loading images...</div>
     <div class="gallery" id="gallery"></div>
     <div class="fullscreen-overlay" id="fullscreenOverlay">
         <img id="fullscreenImage" src="" alt="">
         <div class="filename" id="filename"></div>
     </div>
     <script>
-        const imageNames = [
-            "sudbg", "resistbg1", "logo", "inductorbg", "epic1", "diodebg", "capacitorbg", "bgssad", "basee", "ABREbg", "7048bg", "7024bg", "2048bg","plantelligence","flowers"
-        ];
-        for (let i = 0; i <= 17; i++) {
-            imageNames.push(`${i}`);
-        }
-        
         const galleryDiv = document.getElementById("gallery");
+        const loadingDiv = document.getElementById("loading");
         const fullscreenOverlay = document.getElementById("fullscreenOverlay");
         const fullscreenImage = document.getElementById("fullscreenImage");
         const filenameDiv = document.getElementById("filename");
 
-        imageNames.forEach(name => {
-            const img = document.createElement("img");
-            img.src = `./${name}.png`;
-            img.alt = name;
-            img.addEventListener('click', () => {
-                fullscreenImage.src = img.src;
-                filenameDiv.textContent = name;
-                fullscreenOverlay.style.display = 'flex';
+        // Function to check if an image exists
+        async function checkImage(url) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => resolve(true);
+                img.onerror = () => resolve(false);
+                img.src = url;
             });
-            galleryDiv.appendChild(img);
-        });
+        }
+
+        // Function to find all available images
+        async function findAvailableImages() {
+            const extensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
+            const foundImages = [];
+            
+            // First check for named images (if you still want some specific ones)
+            const namedImages = ["sudbg", "resistbg1", "logo", "inductorbg", "epic1", 
+                               "diodebg", "capacitorbg", "bgssad", "basee", "ABREbg", 
+                               "7048bg", "7024bg", "2048bg", "plantelligence", "flowers"];
+            
+            for (const name of namedImages) {
+                for (const ext of extensions) {
+                    const url = `./${name}${ext}`;
+                    if (await checkImage(url)) {
+                        foundImages.push({name, url});
+                        break;
+                    }
+                }
+            }
+            
+            // Then check for numbered images (0-17 as in your original code)
+            for (let i = 0; i <= 17; i++) {
+                for (const ext of extensions) {
+                    const url = `./${i}${ext}`;
+                    if (await checkImage(url)) {
+                        foundImages.push({name: i.toString(), url});
+                        break;
+                    }
+                }
+            }
+            
+            return foundImages;
+        }
+
+        // Load and display all available images
+        async function loadGallery() {
+            loadingDiv.textContent = "Scanning for images...";
+            const availableImages = await findAvailableImages();
+            
+            if (availableImages.length === 0) {
+                loadingDiv.textContent = "No images found in the directory.";
+                return;
+            }
+            
+            loadingDiv.style.display = "none";
+            
+            availableImages.forEach(image => {
+                const img = document.createElement("img");
+                img.src = image.url;
+                img.alt = image.name;
+                img.addEventListener('click', () => {
+                    fullscreenImage.src = img.src;
+                    filenameDiv.textContent = image.name;
+                    fullscreenOverlay.style.display = 'flex';
+                });
+                galleryDiv.appendChild(img);
+            });
+        }
 
         fullscreenOverlay.addEventListener('click', () => {
             fullscreenOverlay.style.display = 'none';
         });
+
+        // Start loading the gallery
+        loadGallery();
     </script>
 </body>
 </html>

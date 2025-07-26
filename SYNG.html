@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Skew Young Tableau Viewer (Box Move Arrows)</title>
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style>
+    body { font-family: sans-serif; }
+    #network { width: 65%; height: 90vh; float: left; border: 1px solid #aaa; }
+    #viewer {
+      float: right; width: 33%; padding: 10px; border-left: 1px solid #ccc;
+      height: 90vh; overflow-y: auto;
+    }
+    .box {
+      width: 20px; height: 20px;
+      border: 1px solid #444;
+      display: inline-block;
+      margin: 1px;
+      background-color: lightblue;
+    }
+    .hole-box {
+      background-color: transparent;
+      border: none;
+    }
+    #diagram > div { height: 24px; }
+  </style>
+</head>
+<body>
+
+<div id="controls">
+  Outer size (|λ|): <input id="outer" type="number" value="5" min="1" max="20" />
+  Inner size (|μ|): <input id="inner" type="number" value="2" min="0" max="19" />
+  <button onclick="drawSkewGraph()">Draw Skew Graph</button>
+</div>
+
+<div id="network"></div>
+<div id="viewer"><h3>Skew Diagram λ / μ</h3><div id="diagram"></div></div>
+
+<script>
+function generatePartitions(n, max = n) {
+  if (n === 0) return [[]];
+  const result = [];
+  for (let i = Math.min(n, max); i >= 1; i--) {
+    const subparts = generatePartitions(n - i, i);
+    for (const part of subparts) {
+      result.push([i, ...part]);
+    }
+  }
+  return result;
+}
+
+function isSubpartition(mu, lambda) {
+  if (mu.length > lambda.length) return false;
+  for (let i = 0; i < mu.length; i++) {
+    if (mu[i] > lambda[i]) return false;
+  }
+  return true;
+}
+
+function shapeKey(lambda, mu) {
+  return `${lambda.join(",")} / ${mu.join(",")}`;
+}
+
+function getBoxSet(lambda, mu) {
+  const boxes = new Set();
+  for (let i = 0; i < lambda.length; i++) {
+    const l = lambda[i];
+    const m = mu[i] || 0;
+    for (let j = m; j < l; j++) {
+      boxes.add(`${i},${j}`);
+    }
+  }
+  return boxes;
+}
+
+function boxSetDiff(a, b) {
+  const add = [];
+  const rem = [];
+  for (let box of a) if (!b.has(box)) rem.push(box);
+  for (let box of b) if (!a.has(box)) add.push(box);
+  return { add, rem };
+}
+
+function showSkewDiagram(lambda, mu) {
+  const diagram = document.getElementById("diagram");
+  diagram.innerHTML = "";
+
+  const height = lambda.length;
+  for (let i = 0; i < height; i++) {
+    const row = document.createElement("div");
+    const lambdaLen = lambda[i];
+    const muLen = mu[i] || 0;
+
+    for (let j = 0; j < muLen; j++) {
+      const hole = document.createElement("div");
+      hole.className = "box hole-box";
+      row.appendChild(hole);
+    }
+    for (let j = 0; j < lambdaLen - muLen; j++) {
+      const box = document.createElement("div");
+      box.className = "box";
+      row.appendChild(box);
+    }
+    diagram.appendChild(row);
+  }
+}
+
+function drawSkewGraph() {
+  const outerSize = parseInt(document.getElementById("outer").value, 10);
+  const innerSize = parseInt(document.getElementById("inner").value, 10);
+  const lambdas = generatePartitions(outerSize);
+  const mus = generatePartitions(innerSize);
+
+  const skewShapes = [];
+  const nodeMap = new Map();
+  let id = 0;
+
+  for (const lambda of lambdas) {
+    for (const mu of mus) {
+      if (isSubpartition(mu, lambda)) {
+        const key = shapeKey(lambda, mu);
+        skewShapes.push({ id, lambda, mu, key });
+        nodeMap.set(key, id);
+        id++;
+      }
+    }
+  }
+
+  const nodes = skewShapes.map(s => ({
+    id: s.id,
+    label: s.key,
+    group: s.lambda.length,
+    level: s.lambda.length
+  }));
+
+  const edges = [];
+
+  for (let i = 0; i < skewShapes.length; i++) {
+    const A = skewShapes[i];
+    const setA = getBoxSet(A.lambda, A.mu);
+    for (let j = 0; j < skewShapes.length; j++) {
+      if (i === j) continue;
+      const B = skewShapes[j];
+      const setB = getBoxSet(B.lambda, B.mu);
+      const diff = boxSetDiff(setA, setB);
+      if (diff.add.length === 1 && diff.rem.length === 1) {
+        edges.push({
+          from: A.id,
+          to: B.id,
+          arrows: "to",
+          color: { color: "#444" }
+        });
+      }
+    }
+  }
+
+  const container = document.getElementById("network");
+  const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
+
+  const options = {
+    layout: {
+      hierarchical: {
+        enabled: true,
+        direction: "UD",
+        nodeSpacing: 140,
+        levelSeparation: 80
+      }
+    },
+    nodes: {
+      shape: "box",
+      font: { size: 14 },
+      margin: 10
+    },
+    physics: false
+  };
+
+  const network = new vis.Network(container, data, options);
+
+  network.on("click", function (params) {
+    if (params.nodes.length === 1) {
+      const nodeId = params.nodes[0];
+      const shape = skewShapes.find(s => s.id === nodeId);
+      showSkewDiagram(shape.lambda, shape.mu);
+    }
+  });
+}
+</script>
+
+</body>
+</html>

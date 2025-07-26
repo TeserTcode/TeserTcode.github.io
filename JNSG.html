@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Johnson Graph Visualizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: white;
+            color: black;
+            text-align: center;
+            margin: 20px;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 0 auto;
+            display: block;
+        }
+        .orbit-controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 5px;
+            margin: 10px 0;
+        }
+        .orbit-btn {
+            padding: 3px 6px;
+            font-size: 12px;
+        }
+        .config-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px auto;
+            max-width: 800px;
+            text-align: left;
+        }
+        .config-group {
+            border: 1px solid #eee;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        button {
+            padding: 5px 10px;
+            margin: 0 5px;
+        }
+        label {
+            display: block;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Johnson Graph Visualizer</h1>
+    <div class="controls">
+        <label for="n">n (size):</label>
+        <input type="number" id="n" min="2" max="10" value="5">
+        <label for="k">k (subset size):</label>
+        <input type="number" id="k" min="1" max="5" value="2">
+        <button onclick="generateGraph()">Generate Graph</button>
+    </div>
+    
+    <div class="config-panel">
+        <div class="config-group">
+            <h3>Orbit Controls</h3>
+            <button onclick="rotateAllOrbits()">Rotate All Orbits</button>
+            <button onclick="optimizeLayout()">Optimize Layout</button>
+            <div id="orbitButtons" class="orbit-controls"></div>
+        </div>
+        
+        <div class="config-group">
+            <h3>Edge Style</h3>
+            <label>
+                <select id="edgeStyle" onchange="updateEdgeStyle()">
+                    <option value="straight">Straight</option>
+                    <option value="curved">Curved</option>
+                    <option value="bundled">Bundled</option>
+                    <option value="faded">Length-Faded</option>
+                </select>
+            </label>
+            <label>
+                Curvature: <input type="range" id="curvature" min="0" max="100" value="30" onchange="drawCircularGraph()">
+            </label>
+            <label>
+                <input type="checkbox" id="interOrbitOnly" onchange="drawCircularGraph()"> Show only inter-orbit connections
+            </label>
+        </div>
+        
+        <div class="config-group">
+            <h3>Edge Filtering</h3>
+            <label>
+                Max edges per node: <input type="number" id="maxEdges" min="1" max="50" value="10" onchange="drawCircularGraph()">
+            </label>
+            <label>
+                Min edge length: <input type="range" id="minEdgeLength" min="0" max="200" value="0" onchange="drawCircularGraph()">
+            </label>
+        </div>
+    </div>
+    
+    <canvas id="graphCanvas" width="800" height="600"></canvas>
+
+    <script>
+        let canvas, ctx;
+        let orbits = [];
+        let vertices = [];
+        let n = 5, k = 2;
+        let currentRotations = [];
+        let edgeStyle = "straight";
+        let curvature = 0.3;
+        let interOrbitOnly = false;
+        let maxEdges = 10;
+        let minEdgeLength = 0;
+        
+        window.onload = function() {
+            canvas = document.getElementById('graphCanvas');
+            ctx = canvas.getContext('2d');
+            generateGraph();
+        };
+        
+        function generateGraph() {
+            n = parseInt(document.getElementById('n').value);
+            k = parseInt(document.getElementById('k').value);
+            edgeStyle = document.getElementById('edgeStyle').value;
+            curvature = parseInt(document.getElementById('curvature').value) / 100;
+            interOrbitOnly = document.getElementById('interOrbitOnly').checked;
+            maxEdges = parseInt(document.getElementById('maxEdges').value);
+            minEdgeLength = parseInt(document.getElementById('minEdgeLength').value);
+            
+            if (k > n) {
+                alert("k must be less than or equal to n");
+                return;
+            }
+            
+            vertices = generateCombinations(n, k);
+            orbits = groupIntoOrbits(vertices, n);
+            currentRotations = new Array(orbits.length).fill(0);
+            
+            createOrbitButtons();
+            optimizeLayout();
+        }
+        
+        function updateEdgeStyle() {
+            edgeStyle = document.getElementById('edgeStyle').value;
+            drawCircularGraph();
+        }
+        
+        function createOrbitButtons() {
+            const container = document.getElementById('orbitButtons');
+            container.innerHTML = '';
+            
+            orbits.forEach((orbit, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'orbit-btn';
+                btn.textContent = `Orbit ${i+1}`;
+                btn.onclick = () => {
+                    currentRotations[i] = (currentRotations[i] + 1) % orbit.length;
+                    drawCircularGraph();
+                };
+                container.appendChild(btn);
+            });
+        }
+        
+        function rotateAllOrbits() {
+            for (let i = 0; i < orbits.length; i++) {
+                currentRotations[i] = (currentRotations[i] + 1) % orbits[i].length;
+            }
+            drawCircularGraph();
+        }
+        
+        function generateCombinations(n, k) {
+            let result = [];
+            function backtrack(start, path) {
+                if (path.length === k) {
+                    result.push([...path]);
+                    return;
+                }
+                for (let i = start; i < n; i++) {
+                    path.push(i);
+                    backtrack(i + 1, path);
+                    path.pop();
+                }
+            }
+            backtrack(0, []);
+            return result.map(arr => arr.join(''));
+        }
+        
+        function groupIntoOrbits(vertices, n) {
+            const visited = new Set();
+            const orbitGroups = [];
+            
+            for (const vertex of vertices) {
+                if (!visited.has(vertex)) {
+                    const orbit = new Set();
+                    let rotated = vertex;
+                    
+                    // Convert to array for rotation
+                    let vertexArr = vertex.split('').map(Number);
+                    
+                    for (let i = 0; i < n; i++) {
+                        if (!visited.has(rotated)) {
+                            orbit.add(rotated);
+                            visited.add(rotated);
+                        }
+                        // Rotate the elements (cyclic permutation)
+                        vertexArr = vertexArr.map(x => (x + 1) % n);
+                        rotated = vertexArr.filter(x => x < n).sort((a,b) => a-b).join('');
+                    }
+                    
+                    if (orbit.size > 0) orbitGroups.push(Array.from(orbit));
+                }
+            }
+            
+            return orbitGroups;
+        }
+        
+        function shareKMinus1Elements(a, b) {
+            // Convert strings to arrays of numbers
+            const aArr = a.split('').map(Number);
+            const bArr = b.split('').map(Number);
+            
+            // Count how many elements they share
+            const intersection = aArr.filter(x => bArr.includes(x));
+            return intersection.length === k - 1;
+        }
+        
+        function drawCircularGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const maxRadius = Math.min(centerX, centerY) - 50;
+            
+            ctx.font = '20px Arial';
+            ctx.fillText(`Johnson Graph J(${n},${k})`, centerX - 100, 30);
+            
+            const vertexPositions = {};
+            const orbitCount = orbits.length;
+            const orbitRadiusStep = maxRadius / (orbitCount + 1);
+            
+            // Position all vertices
+            for (let i = 0; i < orbitCount; i++) {
+                const orbit = orbits[i];
+                const orbitRadius = orbitRadiusStep * (i + 1);
+                const angleStep = (2 * Math.PI) / orbit.length;
+                const rotationOffset = currentRotations[i] * angleStep;
+                
+                for (let j = 0; j < orbit.length; j++) {
+                    const angle = rotationOffset + j * angleStep;
+                    vertexPositions[orbit[j]] = {
+                        x: centerX + orbitRadius * Math.cos(angle),
+                        y: centerY + orbitRadius * Math.sin(angle),
+                        orbitIndex: i
+                    };
+                }
+            }
+            
+            // Collect all edges first for filtering
+            const allEdges = [];
+            for (let i = 0; i < vertices.length; i++) {
+                const edges = [];
+                for (let j = 0; j < vertices.length; j++) {
+                    if (i !== j && shareKMinus1Elements(vertices[i], vertices[j])) {
+                        const pos1 = vertexPositions[vertices[i]];
+                        const pos2 = vertexPositions[vertices[j]];
+                        const dx = pos1.x - pos2.x;
+                        const dy = pos1.y - pos2.y;
+                        const length = Math.sqrt(dx*dx + dy*dy);
+                        
+                        if (length >= minEdgeLength && (!interOrbitOnly || pos1.orbitIndex !== pos2.orbitIndex)) {
+                            edges.push({
+                                target: j,
+                                length: length,
+                                pos1: pos1,
+                                pos2: pos2
+                            });
+                        }
+                    }
+                }
+                // Sort by length and keep only the top N
+                edges.sort((a, b) => a.length - b.length);
+                allEdges.push(...edges.slice(0, maxEdges));
+            }
+            
+            // Draw edges based on selected style
+            allEdges.forEach(edge => {
+                switch (edgeStyle) {
+                    case "straight":
+                        drawStraightEdge(edge.pos1, edge.pos2);
+                        break;
+                    case "curved":
+                        drawCurvedEdge(edge.pos1, edge.pos2);
+                        break;
+                    case "bundled":
+                        drawBundledEdge(edge.pos1, edge.pos2);
+                        break;
+                    case "faded":
+                        drawFadedEdge(edge.pos1, edge.pos2, edge.length);
+                        break;
+                }
+            });
+            
+            // Draw orbit circles and nodes
+            for (let i = 0; i < orbitCount; i++) {
+                const orbit = orbits[i];
+                const orbitRadius = orbitRadiusStep * (i + 1);
+                
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, orbitRadius, 0, 2 * Math.PI);
+                ctx.strokeStyle = '#f0f0f0';
+                ctx.stroke();
+                
+                for (const vertex of orbit) {
+                    const pos = vertexPositions[vertex];
+                    drawNode(pos.x, pos.y, vertex);
+                }
+            }
+        }
+        
+        function drawStraightEdge(pos1, pos2) {
+            ctx.beginPath();
+            ctx.moveTo(pos1.x, pos1.y);
+            ctx.lineTo(pos2.x, pos2.y);
+            ctx.strokeStyle = pos1.orbitIndex === pos2.orbitIndex ? 'rgba(170, 170, 170, 0.7)' : 'rgba(102, 102, 102, 0.7)';
+            ctx.stroke();
+        }
+        
+        function drawCurvedEdge(pos1, pos2) {
+            const midX = (pos1.x + pos2.x) / 2;
+            const midY = (pos1.y + pos2.y) / 2;
+            const dx = pos2.x - pos1.x;
+            const dy = pos2.y - pos1.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            const curveHeight = dist * curvature;
+            
+            const angle = Math.atan2(dy, dx);
+            const ctrlX = midX + Math.sin(angle) * curveHeight;
+            const ctrlY = midY - Math.cos(angle) * curveHeight;
+            
+            ctx.beginPath();
+            ctx.moveTo(pos1.x, pos1.y);
+            ctx.quadraticCurveTo(ctrlX, ctrlY, pos2.x, pos2.y);
+            ctx.strokeStyle = pos1.orbitIndex === pos2.orbitIndex ? 'rgba(170, 170, 170, 0.5)' : 'rgba(102, 102, 102, 0.5)';
+            ctx.stroke();
+        }
+        
+        function drawBundledEdge(pos1, pos2) {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const dist1 = Math.sqrt(Math.pow(pos1.x - centerX, 2) + Math.pow(pos1.y - centerY, 2));
+            const dist2 = Math.sqrt(Math.pow(pos2.x - centerX, 2) + Math.pow(pos2.y - centerY, 2));
+            const radius = Math.min(dist1, dist2) * 0.7;
+            
+            const angle1 = Math.atan2(pos1.y - centerY, pos1.x - centerX);
+            const angle2 = Math.atan2(pos2.y - centerY, pos2.x - centerX);
+            
+            // Find the shorter arc between the two angles
+            let startAngle, endAngle;
+            if (Math.abs(angle2 - angle1) < Math.PI) {
+                startAngle = Math.min(angle1, angle2);
+                endAngle = Math.max(angle1, angle2);
+            } else {
+                startAngle = Math.max(angle1, angle2);
+                endAngle = Math.min(angle1, angle2) + 2 * Math.PI;
+            }
+            
+            ctx.beginPath();
+            ctx.moveTo(pos1.x, pos1.y);
+            ctx.arc(centerX, centerY, radius, startAngle, endAngle, false);
+            ctx.lineTo(pos2.x, pos2.y);
+            ctx.strokeStyle = pos1.orbitIndex === pos2.orbitIndex ? 'rgba(170, 170, 170, 0.4)' : 'rgba(102, 102, 102, 0.4)';
+            ctx.stroke();
+        }
+        
+        function drawFadedEdge(pos1, pos2, length) {
+            const maxLength = Math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height);
+            const opacity = 1 - (length / maxLength) * 0.8; // Fade longer edges more
+            
+            ctx.beginPath();
+            ctx.moveTo(pos1.x, pos1.y);
+            ctx.lineTo(pos2.x, pos2.y);
+            ctx.strokeStyle = pos1.orbitIndex === pos2.orbitIndex ? 
+                `rgba(170, 170, 170, ${opacity})` : 
+                `rgba(102, 102, 102, ${opacity})`;
+            ctx.stroke();
+        }
+        
+        function drawNode(x, y, vertex) {
+            const radius = 15;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, 2 * Math.PI);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
+            ctx.strokeStyle = '#000';
+            ctx.stroke();
+            
+            // Draw the subset label inside the node
+            ctx.fillStyle = '#000';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(vertex.split('').join(','), x, y);
+        }
+        
+        function optimizeLayout() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const maxRadius = Math.min(centerX, centerY) - 50;
+            const orbitCount = orbits.length;
+            const orbitRadiusStep = maxRadius / (orbitCount + 1);
+            
+            for (let i = 0; i < orbitCount; i++) {
+                const orbit = orbits[i];
+                const angleStep = (2 * Math.PI) / orbit.length;
+                let bestRotation = 0;
+                let minTotalLength = Infinity;
+                
+                for (let rotation = 0; rotation < orbit.length; rotation++) {
+                    currentRotations[i] = rotation;
+                    const vertexPositions = {};
+                    
+                    for (let o = 0; o < orbitCount; o++) {
+                        const currentOrbit = orbits[o];
+                        const orbitRadius = orbitRadiusStep * (o + 1);
+                        const currentAngleStep = (2 * Math.PI) / currentOrbit.length;
+                        const rotationOffset = currentRotations[o] * currentAngleStep;
+                        
+                        for (let j = 0; j < currentOrbit.length; j++) {
+                            const angle = rotationOffset + j * currentAngleStep;
+                            vertexPositions[currentOrbit[j]] = {
+                                x: centerX + orbitRadius * Math.cos(angle),
+                                y: centerY + orbitRadius * Math.sin(angle)
+                            };
+                        }
+                    }
+                    
+                    let totalLength = 0;
+                    for (let v1 = 0; v1 < vertices.length; v1++) {
+                        for (let v2 = v1 + 1; v2 < vertices.length; v2++) {
+                            if (shareKMinus1Elements(vertices[v1], vertices[v2])) {
+                                const pos1 = vertexPositions[vertices[v1]];
+                                const pos2 = vertexPositions[vertices[v2]];
+                                const dx = pos1.x - pos2.x;
+                                const dy = pos1.y - pos2.y;
+                                totalLength += Math.sqrt(dx*dx + dy*dy);
+                            }
+                        }
+                    }
+                    
+                    if (totalLength < minTotalLength) {
+                        minTotalLength = totalLength;
+                        bestRotation = rotation;
+                    }
+                }
+                
+                currentRotations[i] = bestRotation;
+            }
+            
+            drawCircularGraph();
+        }
+    </script>
+</body>
+</html>

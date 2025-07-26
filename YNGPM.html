@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Plactic Monoid with Edge Color Filtering</title>
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; }
+  #network { width: 65%; height: 90vh; float: left; border: 1px solid #ccc; }
+  #viewer { width: 33%; float: right; padding: 10px; border-left: 1px solid #ccc; height: 90vh; overflow-y: auto; }
+  .box {
+    width: 20px; height: 20px; border: 1px solid #444; display: inline-block;
+    text-align: center; vertical-align: middle; line-height: 20px; margin: 1px;
+    background: #a0d8f0; font-weight: bold;
+  }
+  h3 { margin-top: 0; }
+  #legend { clear: both; padding: 10px; }
+  #legend div { margin-bottom: 6px; }
+  .legend-color {
+    display: inline-block;
+    width: 16px; height: 16px;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  #controls {
+    margin: 10px 0;
+  }
+  #controls label {
+    margin-right: 15px;
+    user-select: none;
+  }
+</style>
+</head>
+<body>
+
+<div>
+  Alphabet size n: <input id="alphabet" type="number" min="2" max="5" value="3" />
+  Word length k: <input id="wordlen" type="number" min="1" max="5" value="3" />
+  <button onclick="buildGraph()">Build Plactic Monoid Graph</button>
+</div>
+
+<div id="controls">
+  <label><input type="checkbox" value="red" checked onchange="filterEdges()"> <span class="legend-color" style="background:red;"></span> Dual Knuth equivalence</label>
+  <label><input type="checkbox" value="blue" checked onchange="filterEdges()"> <span class="legend-color" style="background:blue;"></span> Knuth equivalence</label>
+  <label><input type="checkbox" value="gray" checked onchange="filterEdges()"> <span class="legend-color" style="background:gray;"></span> Fundamental ±1 move</label>
+  <label><input type="checkbox" value="yellow" checked onchange="filterEdges()"> <span class="legend-color" style="background:yellow;"></span> Adjacent swap</label>
+</div>
+
+<div id="network"></div>
+<div id="viewer"><h3>Insertion Tableau</h3><div id="tableau"></div></div>
+
+<div id="legend">
+  <h4>Legend</h4>
+  <div><span class="legend-color" style="background:red;"></span> Dual Knuth equivalence moves</div>
+  <div><span class="legend-color" style="background:blue;"></span> Knuth equivalence moves (classical)</div>
+  <div><span class="legend-color" style="background:gray;"></span> Fundamental moves (one cell ±1)</div>
+  <div><span class="legend-color" style="background:yellow;"></span> Swap of two adjacent cells (tableau)</div>
+</div>
+
+<script>
+let network = null;
+let nodes = null;
+let allEdges = [];
+let currentNodes = null;
+
+function rskInsert(P, x) {
+  for (let i = 0; i < P.length; i++) {
+    let row = P[i];
+    let bumpedIndex = row.findIndex(v => v > x);
+    if (bumpedIndex === -1) {
+      row.push(x);
+      return P;
+    } else {
+      let bumped = row[bumpedIndex];
+      row[bumpedIndex] = x;
+      x = bumped;
+    }
+  }
+  P.push([x]);
+  return P;
+}
+
+function rskInsertion(w) {
+  let P = [];
+  for (let x of w) {
+    P = rskInsert(P, x);
+  }
+  return P;
+}
+
+function generateWords(n, k) {
+  if (k === 0) return [[]];
+  const words = [];
+  function backtrack(prefix) {
+    if (prefix.length === k) {
+      words.push(prefix.slice());
+      return;
+    }
+    for (let i = 1; i <= n; i++) {
+      prefix.push(i);
+      backtrack(prefix);
+      prefix.pop();
+    }
+  }
+  backtrack([]);
+  return words;
+}
+
+function tableauKey(P) {
+  return P.map(row => row.join(",")).join("|");
+}
+
+function parseTableauKey(s) {
+  if (!s) return [];
+  return s.split("|").map(r => r.split(",").map(Number));
+}
+
+function displayTableau(P) {
+  const container = document.getElementById("tableau");
+  container.innerHTML = "";
+  for (let row of P) {
+    const div = document.createElement("div");
+    for (let x of row) {
+      const box = document.createElement("div");
+      box.className = "box";
+      box.textContent = x;
+      div.appendChild(box);
+    }
+    container.appendChild(div);
+  }
+}
+
+function knuthRelations(word) {
+  const neighbors = [];
+  for (let i = 0; i < word.length - 2; i++) {
+    let a = word[i], b = word[i+1], c = word[i+2];
+    let w = word.slice();
+
+    if (b < a && a < c) {
+      let w2 = w.slice();
+      w2[i+1] = c;
+      w2[i+2] = a;
+      neighbors.push(w2);
+    }
+    if (a < c && c < b) {
+      let w2 = w.slice();
+      w2[i] = c;
+      w2[i+1] = a;
+      neighbors.push(w2);
+    }
+  }
+  return neighbors;
+}
+
+function dualKnuthRelations(word) {
+  const neighbors = [];
+  for (let i = 0; i < word.length - 2; i++) {
+    let a = word[i], b = word[i+1], c = word[i+2];
+    let w = word.slice();
+
+    // Here we use the negation of knuth relation conditions to get different neighbors
+    if (!(b < a && a < c)) {
+      let w2 = w.slice();
+      w2[i+1] = c;
+      w2[i+2] = a;
+      neighbors.push(w2);
+    }
+    if (!(a < c && c < b)) {
+      let w2 = w.slice();
+      w2[i] = c;
+      w2[i+1] = a;
+      neighbors.push(w2);
+    }
+  }
+  return neighbors;
+}
+
+function wordKey(w) { return w.join(","); }
+
+function differByOneCellValueChange(P, Q) {
+  if (P.length !== Q.length) return false;
+  let diffCount = 0;
+  for (let i = 0; i < P.length; i++) {
+    if (P[i].length !== Q[i].length) return false;
+    for (let j = 0; j < P[i].length; j++) {
+      if (P[i][j] !== Q[i][j]) {
+        let diff = Math.abs(P[i][j] - Q[i][j]);
+        if (diff !== 1) return false;
+        diffCount++;
+        if (diffCount > 1) return false;
+      }
+    }
+  }
+  return diffCount === 1;
+}
+
+function differByAdjacentSwap(P, Q) {
+  if (P.length !== Q.length) return false;
+  let swaps = 0;
+  for (let i = 0; i < P.length; i++) {
+    if (P[i].length !== Q[i].length) return false;
+    for (let j = 0; j < P[i].length - 1; j++) {
+      if (
+        P[i][j] === Q[i][j+1] &&
+        P[i][j+1] === Q[i][j] &&
+        (j === 0 || (P[i][j-1] === Q[i][j-1])) &&
+        P[i].slice(0,j).every((v,idx)=>v===Q[i][idx]) &&
+        P[i].slice(j+2).every((v,idx)=>v===Q[i].slice(j+2)[idx])
+      ) {
+        swaps++;
+      }
+    }
+  }
+  return swaps === 1;
+}
+
+let container, data, options;
+
+function buildGraph() {
+  const n = parseInt(document.getElementById("alphabet").value,10);
+  const k = parseInt(document.getElementById("wordlen").value,10);
+
+  if (k < 1 || n < 2) {
+    alert("Alphabet n >= 2 and word length k >= 1");
+    return;
+  }
+
+  // Generate all words
+  const words = generateWords(n, k);
+
+  // Build nodes keyed by tableau
+  let tableauMap = new Map();
+
+  for (let w of words) {
+    let P = rskInsertion(w);
+    let key = tableauKey(P);
+    if (!tableauMap.has(key)) {
+      tableauMap.set(key, { tableau: P, words: [] });
+    }
+    tableauMap.get(key).words.push(w);
+  }
+
+  // Build node list
+  nodes = [];
+  let id = 0;
+  let keyToId = new Map();
+  for (let [key, val] of tableauMap.entries()) {
+    keyToId.set(key, id);
+    nodes.push({ id: id, label: val.words[0].join(""), title: val.words.length + " words\n" + val.words.map(w=>w.join(",")).join("\n") });
+    id++;
+  }
+
+  // Build edges: for each node, connect to nodes reachable by relations
+  allEdges = [];
+
+  // Precompute keys array for quick lookup
+  const keys = Array.from(tableauMap.keys());
+
+  function getNodeIdByKey(k) {
+    return keyToId.get(k);
+  }
+
+  // Helper: for each tableau, try to find edges by relations on words
+
+  for (let [key, val] of tableauMap.entries()) {
+    const fromId = getNodeIdByKey(key);
+    const repWord = val.words[0];
+
+    // Knuth equivalence edges (blue)
+    const knuthNeighbors = knuthRelations(repWord);
+    for (let nb of knuthNeighbors) {
+      let Pnb = rskInsertion(nb);
+      let nbKey = tableauKey(Pnb);
+      if (tableauMap.has(nbKey)) {
+        const toId = getNodeIdByKey(nbKey);
+        allEdges.push({ from: fromId, to: toId, color: "blue", arrows: "to", label: "" });
+      }
+    }
+
+    // Dual Knuth edges (red)
+    const dualKnuthNeighbors = dualKnuthRelations(repWord);
+    for (let nb of dualKnuthNeighbors) {
+      let Pnb = rskInsertion(nb);
+      let nbKey = tableauKey(Pnb);
+      if (tableauMap.has(nbKey)) {
+        const toId = getNodeIdByKey(nbKey);
+        allEdges.push({ from: fromId, to: toId, color: "red", arrows: "to", label: "" });
+      }
+    }
+
+    // Fundamental moves ±1 cell value (gray)
+    for (let [key2, val2] of tableauMap.entries()) {
+      if (key === key2) continue;
+      if (differByOneCellValueChange(val.tableau, val2.tableau)) {
+        const toId = getNodeIdByKey(key2);
+        allEdges.push({ from: fromId, to: toId, color: "gray", arrows: "to", label: "" });
+      }
+    }
+
+    // Adjacent swap in tableau (yellow)
+    for (let [key2, val2] of tableauMap.entries()) {
+      if (key === key2) continue;
+      if (differByAdjacentSwap(val.tableau, val2.tableau)) {
+        const toId = getNodeIdByKey(key2);
+        allEdges.push({ from: fromId, to: toId, color: "yellow", arrows: "to", label: "" });
+      }
+    }
+  }
+
+  currentNodes = nodes;
+
+  data = {
+    nodes: nodes,
+    edges: allEdges
+  };
+
+  options = {
+    nodes: {
+      shape: "box",
+      color: {
+        background: "#a0d8f0",
+        border: "#004080",
+        highlight: { background: "#0080ff", border: "#004080" }
+      },
+      font: { size: 14 }
+    },
+    edges: {
+      smooth: { enabled: true, type: "cubicBezier" },
+      font: { align: "top", size: 10 }
+    },
+    physics: {
+      enabled: true,
+      stabilization: { iterations: 150 }
+    },
+    interaction: {
+      hover: true,
+      tooltipDelay: 100
+    }
+  };
+
+  if (network) {
+    network.destroy();
+  }
+  container = document.getElementById("network");
+  network = new vis.Network(container, data, options);
+
+  network.on("click", function (params) {
+    if (params.nodes.length === 1) {
+      let nodeId = params.nodes[0];
+      let tableau = tableauMap.get(nodes[nodeId].label.split("").join(",") === "" ? tableauKey(tableauMap.get(nodes[nodeId].label).tableau) : nodes[nodeId].label);
+      let tableauData = tableauMap.get(keys[nodeId]).tableau;
+      if (!tableauData) {
+        // fallback
+        tableauData = tableauMap.get(keys[nodeId]).tableau;
+      }
+      displayTableau(tableauMap.get(keys[nodeId]).tableau);
+    }
+  });
+
+  // Show tableau of first node by default
+  displayTableau(tableauMap.get(keys[0]).tableau);
+}
+
+function filterEdges() {
+  if (!network) return;
+  const checkboxes = document.querySelectorAll('#controls input[type=checkbox]');
+  const selectedColors = new Set();
+  checkboxes.forEach(cb => { if(cb.checked) selectedColors.add(cb.value); });
+
+  const filteredEdges = allEdges.filter(e => selectedColors.has(e.color));
+
+  network.setData({ nodes: nodes, edges: filteredEdges });
+}
+
+</script>
+
+</body>
+</html>

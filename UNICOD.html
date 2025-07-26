@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Unicode Grid</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 0; }
+    #controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 10px;
+      background: #f0f0f0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    #search {
+      flex: 1;
+      min-width: 200px;
+      font-size: 1.2em;
+      padding: 10px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+    }
+    select, button {
+      padding: 10px;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      background: white;
+      cursor: pointer;
+    }
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 8px;
+      padding: 10px;
+    }
+    .cell {
+      border: 1px solid #ccc;
+      padding: 5px;
+      text-align: center;
+      font-size: 1.5em;
+      cursor: default;
+      background: #f9f9f9;
+      position: relative;
+    }
+    .cell:hover { background: #eef; }
+    .symbol { font-size: 2em; display: block; }
+    .name { font-size: 0.6em; word-break: break-word; color: #444; }
+    .metrics {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      font-size: 0.5em;
+      color: #888;
+      background: rgba(255,255,255,0.7);
+      padding: 2px;
+      border-radius: 2px;
+    }
+    #loading-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    #loading-bar {
+      width: 80%;
+      max-width: 500px;
+      background: #f0f0f0;
+      border-radius: 5px;
+      padding: 3px;
+    }
+    #loading-progress {
+      width: 0%;
+      height: 20px;
+      background: #4CAF50;
+      border-radius: 3px;
+      transition: width 0.1s;
+    }
+    #loading-text {
+      color: white;
+      text-align: center;
+      margin-top: 10px;
+      font-size: 1.2em;
+    }
+    #cancel-load {
+      margin-top: 20px;
+      padding: 8px 15px;
+      background: #f44336;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .cell.unmeasured {
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+
+<div id="controls">
+  <input type="text" id="search" placeholder="Search by Unicode name or hex...">
+  <select id="sort">
+    <option value="code">Sort by Code Point</option>
+    <option value="brightness">Sort by Brightness</option>
+    <option value="width">Sort by Width</option>
+    <option value="height">Sort by Height</option>
+    <option value="size">Sort by Size (Area)</option>
+  </select>
+  <select id="order">
+    <option value="asc">Ascending</option>
+    <option value="desc">Descending</option>
+  </select>
+  <button id="refresh">Refresh View</button>
+  <button id="load-all">Large Load (All Unicode)</button>
+</div>
+<div id="grid"></div>
+
+<div id="loading-container">
+  <div>
+    <div id="loading-bar">
+      <div id="loading-progress"></div>
+    </div>
+    <div id="loading-text">Loading: 0%</div>
+    <button id="cancel-load">Cancel Loading</button>
+  </div>
+</div>
+
+<!-- Load Unicode names -->
+<script src="unicodedata.js"></script>
+
+<!-- Main script AFTER DOM elements exist -->
+<script>
+const grid = document.getElementById("grid");
+const search = document.getElementById("search");
+const sortSelect = document.getElementById("sort");
+const orderSelect = document.getElementById("order");
+const refreshBtn = document.getElementById("refresh");
+const loadAllBtn = document.getElementById("load-all");
+const loadingContainer = document.getElementById("loading-container");
+const loadingProgress = document.getElementById("loading-progress");
+const loadingText = document.getElementById("loading-text");
+const cancelLoadBtn = document.getElementById("cancel-load");
+
+const BATCH_SIZE = 1000;
+const INITIAL_LOAD_SIZE = 1000; // First batch to show immediately
+const BACKGROUND_BATCH_SIZE = 500; // Subsequent batches
+let currentCode = 0;
+const MAX_CODE = 0xE01EF;
+let loadingActive = false;
+let cancelRequested = false;
+
+const nameMap = new Map();
+const cellData = new Map(); // Store cell metrics for sorting
+const sortIndex = new Map(); // Index for faster sorting
+
+function parseUnicodeData() {
+  const lines = unidata.trim().split("\n");
+  for (let line of lines) {
+    const [hex, name] = line.split(";");
+    if (!hex || !name) continue;
+    const code = parseInt(hex, 16);
+    nameMap.set(code, name.trim());
+  }
+}
+
+function getUnicodeName(codePoint) {
+  return nameMap.get(codePoint) || "U+" + codePoint.toString(16).toUpperCase().padStart(4, '0');
+}
+
+function createBasicCell(codePoint) {
+  const char = String.fromCodePoint(codePoint);
+  const name = getUnicodeName(codePoint);
+  const codeStr = "U+" + codePoint.toString(16).toUpperCase().padStart(4, '0');
+  
+  const cell = document.createElement("div");
+  cell.className = "cell unmeasured";
+  cell.innerHTML = `
+    <span class="symbol">${char}</span>
+    <span class="name">${name}<br>${codeStr}</span>
+    <span class="metrics">...</span>
+  `;
+  cell.dataset.name = name.toLowerCase();
+  cell.dataset.code = codeStr.toLowerCase();
+  cell.dataset.codePoint = codePoint;
+  
+  return cell;
+}
+
+function measureCharacter(char) {
+  const span = document.createElement('span');
+  span.style.position = 'absolute';
+  span.style.left = '-9999px';
+  span.style.fontSize = '100px';
+  span.style.fontFamily = 'sans-serif';
+  span.textContent = char;
+  document.body.appendChild(span);
+  
+  const rect = span.getBoundingClientRect();
+  const width = rect.width;
+  const height = rect.height;
+  
+  // Create canvas for brightness measurement
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.ceil(width));
+  canvas.height = Math.max(1, Math.ceil(height));
+  const ctx = canvas.getContext('2d');
+  ctx.font = '100px sans-serif';
+  ctx.fillText(char, 0, 100);
+  
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  let brightness = 0;
+  let pixelCount = 0;
+  
+  for (let i = 0; i < data.length; i += 4) {
+    const alpha = data[i + 3] / 255;
+    if (alpha > 0) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      brightness += (0.299 * r + 0.587 * g + 0.114 * b) * alpha;
+      pixelCount++;
+    }
+  }
+  
+  document.body.removeChild(span);
+  
+  return {
+    width: width,
+    height: height,
+    size: width * height,
+    brightness: pixelCount > 0 ? brightness / pixelCount : 0
+  };
+}
+
+function updateCellMetrics(cell) {
+  const codePoint = parseInt(cell.dataset.codePoint);
+  const char = String.fromCodePoint(codePoint);
+  const metrics = measureCharacter(char);
+  
+  cell.querySelector('.metrics').textContent = 
+    `${metrics.width.toFixed(1)}×${metrics.height.toFixed(1)}`;
+  cell.classList.remove('unmeasured');
+  
+  cell.dataset.width = metrics.width;
+  cell.dataset.height = metrics.height;
+  cell.dataset.size = metrics.size;
+  cell.dataset.brightness = metrics.brightness;
+  
+  // Store metrics for sorting
+  cellData.set(codePoint, metrics);
+}
+
+function loadInitialBatch(limit = INITIAL_LOAD_SIZE) {
+  const fragment = document.createDocumentFragment();
+  let count = 0;
+  while (count < limit && currentCode <= MAX_CODE) {
+    try {
+      const cell = createBasicCell(currentCode);
+      fragment.appendChild(cell);
+      currentCode++;
+      count++;
+    } catch (e) {
+      currentCode++;
+      console.warn(`Skipping code point U+${currentCode.toString(16)}: ${e}`);
+    }
+  }
+  grid.appendChild(fragment);
+  return count;
+}
+
+async function processMeasurementsInBackground() {
+  const cells = Array.from(grid.querySelectorAll('.unmeasured'));
+  const total = cells.length;
+  let processed = 0;
+  
+  for (const cell of cells) {
+    if (cancelRequested) break;
+    
+    updateCellMetrics(cell);
+    processed++;
+    
+    // Update progress every 50 cells
+    if (processed % 50 === 0) {
+      const progress = Math.floor((processed / total) * 100);
+      loadingProgress.style.width = `${progress}%`;
+      loadingText.textContent = `Processing: ${progress}%`;
+      
+      // Yield to UI thread
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+  }
+  
+  return processed;
+}
+
+function filterGrid() {
+  const terms = search.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const cells = Array.from(grid.children);
+
+  let matches = 0;
+  for (let i = 0; i < cells.length; i++) {
+    const cell = cells[i];
+    const name = cell.dataset.name;
+    const code = cell.dataset.code;
+    const matched = terms.every(term => name.includes(term) || code.includes(term));
+    cell.style.display = matched ? "block" : "none";
+    if (matched) matches++;
+  }
+  return matches;
+}
+
+function buildSortIndex() {
+  sortIndex.clear();
+  const cells = Array.from(grid.children);
+  
+  // Build indexes for each sort type
+  ['brightness', 'width', 'height', 'size', 'codePoint'].forEach(type => {
+    const index = cells.map(cell => ({
+      cell,
+      value: parseFloat(cell.dataset[type]) || parseInt(cell.dataset[type])
+    }));
+    
+    // Sort once and store the ordered cells
+    index.sort((a, b) => a.value - b.value);
+    sortIndex.set(`${type}_asc`, index.map(item => item.cell));
+    
+    // Reverse for descending
+    index.sort((a, b) => b.value - a.value);
+    sortIndex.set(`${type}_desc`, index.map(item => item.cell));
+  });
+}
+
+function sortGrid() {
+  const sortBy = sortSelect.value;
+  const order = orderSelect.value;
+  const sortKey = `${sortBy}_${order}`;
+  
+  // Use pre-built index if available
+  if (sortIndex.has(sortKey)) {
+    const sortedCells = sortIndex.get(sortKey);
+    sortedCells.forEach(cell => grid.appendChild(cell));
+    return;
+  }
+  
+  // Fallback to live sorting if index not available
+  const cells = Array.from(grid.children);
+  cells.sort((a, b) => {
+    let valA, valB;
+    
+    switch (sortBy) {
+      case 'brightness':
+        valA = parseFloat(a.dataset.brightness);
+        valB = parseFloat(b.dataset.brightness);
+        break;
+      case 'width':
+        valA = parseFloat(a.dataset.width);
+        valB = parseFloat(b.dataset.width);
+        break;
+      case 'height':
+        valA = parseFloat(a.dataset.height);
+        valB = parseFloat(b.dataset.height);
+        break;
+      case 'size':
+        valA = parseFloat(a.dataset.size);
+        valB = parseFloat(b.dataset.size);
+        break;
+      default: // code
+        valA = parseInt(a.dataset.codePoint);
+        valB = parseInt(b.dataset.codePoint);
+    }
+    
+    return order === 'asc' ? valA - valB : valB - valA;
+  });
+  
+  cells.forEach(cell => grid.appendChild(cell));
+}
+
+function smartSearch() {
+  filterGrid();
+  sortGrid();
+}
+
+async function loadAllCharacters() {
+  if (loadingActive) return;
+  
+  loadingActive = true;
+  cancelRequested = false;
+  loadingContainer.style.display = "flex";
+  grid.innerHTML = '';
+  currentCode = 0;
+  cellData.clear();
+  sortIndex.clear();
+  
+  // Load initial batch quickly
+  loadingText.textContent = "Loading initial set...";
+  const loadedCount = loadInitialBatch();
+  
+  // Start background processing
+  loadingText.textContent = "Processing measurements...";
+  const processed = await processMeasurementsInBackground();
+  
+  if (!cancelRequested) {
+    // Load remaining characters in background
+    loadingText.textContent = "Loading remaining characters...";
+    const totalCodes = MAX_CODE;
+    const remainingStart = currentCode;
+    
+    for (let i = remainingStart; i <= totalCodes && !cancelRequested; i += BACKGROUND_BATCH_SIZE) {
+      const fragment = document.createDocumentFragment();
+      const end = Math.min(i + BACKGROUND_BATCH_SIZE, totalCodes);
+      
+      for (let code = i; code <= end && !cancelRequested; code++) {
+        try {
+          const cell = createBasicCell(code);
+          fragment.appendChild(cell);
+          currentCode++;
+        } catch (e) {
+          console.warn(`Skipping code point U+${code.toString(16)}: ${e}`);
+          currentCode++;
+        }
+      }
+      
+      grid.appendChild(fragment);
+      
+      // Update progress
+      const progress = Math.min(100, Math.floor((currentCode / totalCodes) * 100));
+      loadingProgress.style.width = `${progress}%`;
+      loadingText.textContent = `Loading: ${progress}%`;
+      
+      // Yield to UI thread
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+    
+    if (!cancelRequested) {
+      // Build sort indexes in background
+      loadingText.textContent = "Building indexes...";
+      buildSortIndex();
+      
+      loadingText.textContent = "Complete!";
+      smartSearch();
+      setTimeout(() => {
+        loadingContainer.style.display = "none";
+      }, 1000);
+    }
+  }
+  
+  loadingActive = false;
+  if (cancelRequested) {
+    loadingContainer.style.display = "none";
+    cancelRequested = false;
+  }
+}
+
+window.addEventListener("scroll", () => {
+  if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
+    loadInitialBatch(BATCH_SIZE);
+    smartSearch();
+  }
+});
+
+search.addEventListener("input", smartSearch);
+sortSelect.addEventListener("change", sortGrid);
+orderSelect.addEventListener("change", sortGrid);
+refreshBtn.addEventListener("click", () => {
+  grid.innerHTML = '';
+  currentCode = 0;
+  cellData.clear();
+  sortIndex.clear();
+  loadInitialBatch();
+  smartSearch();
+});
+loadAllBtn.addEventListener("click", loadAllCharacters);
+cancelLoadBtn.addEventListener("click", () => {
+  cancelRequested = true;
+});
+
+parseUnicodeData();
+loadInitialBatch();
+</script>
+
+</body>
+</html>

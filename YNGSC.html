@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Skew Young Diagram Growth Graph</title>
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; margin: 10px; }
+  #network { width: 100%; height: 90vh; border: 1px solid #ccc; }
+  label { display: block; margin: 8px 0 4px; }
+  input { width: 200px; }
+  button { margin-top: 10px; }
+  .node-label {
+    font-family: monospace;
+    white-space: pre;
+    text-align: left;
+  }
+</style>
+</head>
+<body>
+
+<h2>Skew Young Diagram Growth Graph</h2>
+
+<label>Outer shape λ (comma-separated row lengths):</label>
+<input type="text" id="lambdaInput" value="4,3,2" />
+<label>Inner shape μ (comma-separated row lengths):</label>
+<input type="text" id="muInput" value="2,1,0" />
+<br />
+<button onclick="buildGrowthGraph()">Build Growth Graph (Skew)</button>
+
+<div id="network"></div>
+
+<script>
+function parseArray(str) {
+  return str.split(",").map(x => parseInt(x.trim())).filter(x => !isNaN(x));
+}
+
+function getShapeBoxes(lambda, mu) {
+  const boxes = [];
+  for (let r = 0; r < lambda.length; r++) {
+    const start = mu[r] || 0;
+    const end = lambda[r];
+    for (let c = start; c < end; c++) {
+      boxes.push([r, c]);
+    }
+  }
+  return boxes;
+}
+
+function boxKey(boxes) {
+  return boxes.map(([r,c]) => `${r},${c}`).sort().join(";");
+}
+
+function drawLabel(boxes, lambda, mu) {
+  const lines = [];
+  for (let r = 0; r < lambda.length; r++) {
+    let line = "";
+    for (let c = 0; c < lambda[r]; c++) {
+      if (c < (mu[r] || 0)) {
+        line += " ";
+      } else if (boxes.find(b => b[0] === r && b[1] === c)) {
+        line += "■";
+      } else {
+        line += ".";
+      }
+    }
+    lines.push(line);
+  }
+  return lines.join("\n");
+}
+
+function buildGrowthGraph() {
+  const lambda = parseArray(document.getElementById("lambdaInput").value);
+  let mu = parseArray(document.getElementById("muInput").value);
+  if (mu.length === 1 && mu[0] === 0) {
+    // extend μ with zeros if shorter than λ
+    mu = Array(lambda.length).fill(0);
+  }
+
+  const allBoxes = getShapeBoxes(lambda, mu);
+  const visited = new Map();
+  const nodes = [];
+  const edges = [];
+  let idCounter = 1;
+
+  function dfs(currentBoxes) {
+    const key = boxKey(currentBoxes);
+    if (visited.has(key)) return visited.get(key);
+    const id = idCounter++;
+    visited.set(key, id);
+
+    const label = drawLabel(currentBoxes, lambda, mu);
+    nodes.push({
+      id,
+      label,
+      shape: "box",
+      font: { align: "left", size: 14 },
+      margin: 8
+    });
+
+    for (const [r, c] of allBoxes) {
+      if (!currentBoxes.some(([rr, cc]) => rr === r && cc === c)) {
+        const nextBoxes = [...currentBoxes, [r, c]];
+
+        // Check if nextBoxes form a valid partial skew shape:
+        // Rows counts must be weakly decreasing
+        const rowCounts = {};
+        for (const [rr, cc] of nextBoxes) {
+          rowCounts[rr] = (rowCounts[rr] || 0) + 1;
+        }
+        const counts = [];
+        for (let i = 0; i < lambda.length; i++) {
+          counts.push(rowCounts[i] || 0);
+        }
+        let valid = true;
+        for (let i = 1; i < counts.length; i++) {
+          if (counts[i - 1] < counts[i]) {
+            valid = false;
+            break;
+          }
+        }
+
+        if (valid) {
+          const toId = dfs(nextBoxes);
+          edges.push({ from: id, to: toId, arrows: "to" });
+        }
+      }
+    }
+    return id;
+  }
+
+  dfs([]); // Start from empty shape
+
+  const container = document.getElementById("network");
+  container.innerHTML = "";
+
+  const data = {
+    nodes: new vis.DataSet(nodes),
+    edges: new vis.DataSet(edges)
+  };
+
+  const options = {
+    layout: {
+      hierarchical: { direction: "UD", sortMethod: "directed" }
+    },
+    physics: false,
+    nodes: { margin: 10 }
+  };
+
+  new vis.Network(container, data, options);
+}
+</script>
+
+</body>
+</html>

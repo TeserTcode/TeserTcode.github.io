@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Jeu de Taquin Path Explorer - Enhanced</title>
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; }
+  #controls { margin-bottom: 10px; }
+  #network { width: 65%; height: 90vh; float: left; border: 1px solid #ccc; }
+  #viewer { width: 33%; height: 90vh; float: right; overflow-y: auto; padding: 10px; border-left: 1px solid #ccc; }
+  .row { height: 24px; }
+  .box {
+    width: 24px; height: 24px;
+    border: 1px solid #444;
+    display: inline-block;
+    vertical-align: top;
+    line-height: 24px;
+    text-align: center;
+    font-weight: bold;
+    background: lightblue;
+    user-select: none;
+    transition: background-color 0.3s;
+  }
+  .hole {
+    background: white;
+    border: 1px dashed #aaa;
+  }
+  .outside {
+    background: transparent;
+    border: none;
+    width: 24px; height: 24px;
+    display: inline-block;
+  }
+  #info { margin-top: 8px; font-size: 0.9em; color: #555; }
+</style>
+</head>
+<body>
+
+<h2>Jeu de Taquin Path Explorer - Enhanced</h2>
+
+<div id="controls">
+  <label>Lambda (outer shape rows, comma separated): 
+    <input type="text" id="lambdaInput" value="5,4,3" size="10" />
+  </label>
+  &nbsp;&nbsp;
+  <label>Mu (inner shape rows, comma separated or 0): 
+    <input type="text" id="muInput" value="2,1,0" size="10" />
+  </label>
+  &nbsp;&nbsp;
+  <label>Hole positions (click boxes or enter row,col;row,col): 
+    <input type="text" id="holeInput" value="0,2;1,2" size="20" />
+  </label>
+  &nbsp;&nbsp;
+  <button onclick="start()">Build Graph</button>
+</div>
+
+<div id="network"></div>
+<div id="viewer"><h3>Selected Tableau</h3><div id="tableau"></div><div id="info"></div></div>
+
+<script>
+function parseArray(input) {
+  if (input.trim() === "0") return [0];
+  return input.split(",").map(x => parseInt(x.trim())).filter(x => !isNaN(x));
+}
+
+function parseHolePositions(input) {
+  if (!input.trim()) return [];
+  return input.split(";").map(s => s.trim().split(",").map(Number));
+}
+
+function tableauKey(tableau) {
+  let arr = [];
+  for(let r=0; r<lambda.length; r++) {
+    let start = mu[r]||0;
+    for(let c=start; c<lambda[r]; c++) {
+      let val = tableau.get(`${r},${c}`);
+      arr.push(val === null ? "H" : val);
+    }
+  }
+  return arr.join(",");
+}
+
+function formatKeyForLabel(key) {
+  const chunks = key.split(",");
+  let lines = [];
+  let i = 0;
+  for (let r = 0; r < lambda.length; r++) {
+    let count = (lambda[r] || 0) - (mu[r] || 0);
+    lines.push(chunks.slice(i, i + count).join(" "));
+    i += count;
+  }
+  return lines.join("\n");
+}
+
+function drawTableau(tableau) {
+  const container = document.getElementById("tableau");
+  container.innerHTML = "";
+  for(let r=0; r<lambda.length; r++) {
+    const rowDiv = document.createElement("div");
+    rowDiv.className = "row";
+    let start = mu[r]||0;
+    for(let i=0; i<start; i++) {
+      const outside = document.createElement("div");
+      outside.className = "outside";
+      rowDiv.appendChild(outside);
+    }
+    for(let c=start; c<lambda[r]; c++) {
+      const box = document.createElement("div");
+      const val = tableau.get(`${r},${c}`);
+      box.className = val === null ? "box hole" : "box";
+      box.textContent = val === null ? "" : val;
+      box.onclick = () => toggleHole(r, c);
+      rowDiv.appendChild(box);
+    }
+    container.appendChild(rowDiv);
+  }
+}
+
+function toggleHole(r, c) {
+  const holes = parseHolePositions(document.getElementById("holeInput").value);
+  const idx = holes.findIndex(([hr,hc]) => hr === r && hc === c);
+  if (idx >= 0) {
+    holes.splice(idx, 1);
+  } else {
+    holes.push([r,c]);
+  }
+  document.getElementById("holeInput").value = holes.map(([hr,hc]) => `${hr},${hc}`).join(";");
+  start();
+}
+
+function getShapeBoxes(lambda, mu) {
+  let boxes = [];
+  for(let r=0; r<lambda.length; r++) {
+    let start = mu[r]||0;
+    for(let c=start; c<lambda[r]; c++) {
+      boxes.push([r,c]);
+    }
+  }
+  return boxes;
+}
+
+function inShape(r,c) {
+  if(r<0 || r>=lambda.length) return false;
+  if(c < (mu[r]||0) || c >= lambda[r]) return false;
+  return true;
+}
+
+function findNeighbors(tableau) {
+  let holeCells = [...tableau.entries()].filter(([k,v]) => v === null);
+  const results = [];
+  for (let [key] of holeCells) {
+    let [r,c] = key.split(",").map(Number);
+    const dirs = [[0,1],[1,0],[0,-1],[-1,0]]; // 4 directions
+    for(let [dr,dc] of dirs) {
+      let nr = r+dr, nc = c+dc;
+      if(inShape(nr,nc)) {
+        const newT = new Map(tableau);
+        newT.set(`${r},${c}`, tableau.get(`${nr},${nc}`));
+        newT.set(`${nr},${nc}`, null);
+        results.push(newT);
+      }
+    }
+  }
+  return results;
+}
+
+let lambda, mu;
+function start() {
+  lambda = parseArray(document.getElementById("lambdaInput").value);
+  mu = parseArray(document.getElementById("muInput").value);
+  if (mu.length === 1 && mu[0] === 0) mu = Array(lambda.length).fill(0);
+
+  const holeList = parseHolePositions(document.getElementById("holeInput").value);
+  const boxes = getShapeBoxes(lambda, mu);
+
+  let tableau = new Map();
+  let counter = 1;
+  for(let [r,c] of boxes) {
+    tableau.set(`${r},${c}`, counter++);
+  }
+  for(let [r,c] of holeList) {
+    if (inShape(r,c)) tableau.set(`${r},${c}`, null);
+  }
+
+  const nodes = [], edges = [], visited = new Map();
+  let tableauStates = [], nodeDistances = new Map();
+
+  function dfs(tab, dist=0) {
+    const key = tableauKey(tab);
+    if (visited.has(key)) return visited.get(key);
+    const id = visited.size + 1;
+    visited.set(key, id);
+    tableauStates[id] = tab;
+    nodeDistances.set(id, dist);
+
+    nodes.push({
+      id, 
+      label: formatKeyForLabel(key), 
+      title: key,
+      color: {background: `hsl(${(120 - dist*20)}, 70%, 70%)`}
+    });
+
+    for (let nb of findNeighbors(tab)) {
+      const nbId = dfs(nb, dist + 1);
+      edges.push({from: id, to: nbId, arrows: "to"});
+    }
+    return id;
+  }
+
+  dfs(tableau);
+
+  const container = document.getElementById("network");
+  container.innerHTML = "";
+
+  const data = {
+    nodes: new vis.DataSet(nodes),
+    edges: new vis.DataSet(edges)
+  };
+
+  const options = {
+    layout: { improvedLayout: true },
+    nodes: { shape: "box", font: {size: 12} },
+    edges: { arrows: {to: true}, color: '#aaa' },
+    physics: { enabled: true, stabilization: false }
+  };
+
+  const network = new vis.Network(container, data, options);
+  network.on("click", function(params) {
+    if(params.nodes.length) {
+      const tableau = tableauStates[params.nodes[0]];
+      drawTableau(tableau);
+      document.getElementById("info").textContent = `Slides from start: ${nodeDistances.get(params.nodes[0])}`;
+    }
+  });
+}
+</script>
+
+</body>
+</html>
