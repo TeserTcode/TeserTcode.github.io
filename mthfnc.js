@@ -1668,7 +1668,7 @@ function quotientschur(L,n,X){
         fi=mul(fi,schurpoly(g(R,i),X))
     return fi
 }
-function principaldominoschur(,nL,x){
+function principaldominoschur(L,n,x){
     let R=nquotient(L,n);
     let fi=1;
     for(let i=0;i<leng(R);i++)
