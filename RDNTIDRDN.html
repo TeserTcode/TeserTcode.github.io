@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Inverse Dual Radon - Step-by-Step</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.7.0/math.js"></script>
+  <style>
+    canvas { border: 1px solid #aaa; margin: 5px; }
+    body { font-family: sans-serif; padding: 1em; }
+    #controls { margin: 10px 0; }
+    label { margin-right: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Inverse Dual Radon Transform - Step by Step</h2>
+  <input type="file" id="upload" accept="image/*" />
+
+  <div id="controls">
+    <label>Brightness: <input type="range" id="brightness" min="-100" max="100" value="0" /></label>
+    <label>Contrast: <input type="range" id="contrast" min="0" max="300" value="100" /></label>
+    <label>
+      Color Negatives:
+      <select id="negatives">
+        <option value="gray">Gray</option>
+        <option value="red" selected>Red</option>
+        <option value="hide">Hide</option>
+      </select>
+    </label>
+  </div>
+
+  <div id="steps"></div>
+
+  <script>
+    const MAX_SIZE = 256;
+    let realResult = null, resultSize = [0, 0];
+
+    document.getElementById("upload").addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const img = new Image();
+      img.onload = () => processImage(img);
+      img.src = URL.createObjectURL(file);
+    });
+
+    document.getElementById("brightness").addEventListener("input", updateFinalImage);
+    document.getElementById("contrast").addEventListener("input", updateFinalImage);
+    document.getElementById("negatives").addEventListener("change", updateFinalImage);
+
+    function createCanvas(title, w, h) {
+      const div = document.createElement("div");
+      const label = document.createElement("div");
+      label.textContent = title;
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      div.appendChild(label);
+      div.appendChild(canvas);
+      document.getElementById("steps").appendChild(div);
+      return canvas.getContext("2d");
+    }
+
+    function resizeCanvasToFit(img) {
+      const scale = Math.min(1, MAX_SIZE / Math.max(img.width, img.height));
+      const w = Math.floor(img.width * scale);
+      const h = Math.floor(img.height * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, w, h);
+      return ctx.getImageData(0, 0, w, h);
+    }
+
+    function grayscaleMatrix(imageData) {
+      const { width: w, height: h, data } = imageData;
+      const matrix = [];
+      for (let y = 0; y < h; y++) {
+        const row = [];
+        for (let x = 0; x < w; x++) {
+          const i = (y * w + x) * 4;
+          const gray = (data[i] + data[i + 1] + data[i + 2]) / 3;
+          row.push(gray);
+        }
+        matrix.push(row);
+      }
+      return matrix;
+    }
+
+    function normalizeToImage(matrix, colorMode = "red", brightness = 0, contrast = 100) {
+      const h = matrix.length;
+      const w = matrix[0].length;
+      const flat = matrix.flat();
+      const min = Math.min(...flat);
+      const max = Math.max(...flat);
+      const maxabs = colorMode === "gray" ? (max - min || 1)
+                    : colorMode === "red" ? Math.max(max, -min) || 1
+                    : Math.max(max, 0) || 1;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      const imgData = ctx.createImageData(w, h);
+
+      const b = +brightness;
+      const c = +contrast / 100;
+
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const i = (y * w + x) * 4;
+          const val = matrix[y][x];
+
+          let gray = 0, r = 0, g = 0, bval = 0, a = 255;
+
+          if (colorMode === "gray") {
+  // Map -maxabs → 0, 0 → 0.5, maxabs → 1
+  let norm = (val + maxabs) / (2 * maxabs);
+  let gray = norm * 255;
+  gray = ((gray - 128) * c + 128 + b);
+  gray = Math.max(0, Math.min(255, gray));
+  r = g = bval = gray;
+} else if (colorMode === "red" && val < 0) {
+            r = ((-val / maxabs) * 255 - 128) * c + 128 + b;
+            r = Math.max(0, Math.min(255, r));
+            g = bval = 0;
+          } else if (colorMode === "hide" && val < 0) {
+            a = 0;
+          } else {
+            gray = ((val / maxabs) * 255 - 128) * c + 128 + b;
+            gray = Math.max(0, Math.min(255, gray));
+            r = g = bval = gray;
+          }
+
+          imgData.data[i + 0] = r;
+          imgData.data[i + 1] = g;
+          imgData.data[i + 2] = bval;
+          imgData.data[i + 3] = a;
+        }
+      }
+
+      ctx.putImageData(imgData, 0, 0);
+      return ctx;
+    }
+
+    function fft2D(matrix, inverse = false) {
+      const h = matrix.length;
+      const w = matrix[0].length;
+      const temp = Array(h);
+      for (let y = 0; y < h; y++) {
+        temp[y] = inverse ? math.ifft(matrix[y]) : math.fft(matrix[y]);
+      }
+      const result = Array(h).fill().map(() => Array(w));
+      for (let x = 0; x < w; x++) {
+        const col = temp.map(row => row[x]);
+        const colTrans = inverse ? math.ifft(col) : math.fft(col);
+        for (let y = 0; y < h; y++) {
+          result[y][x] = colTrans[y];
+        }
+      }
+      return result;
+    }
+
+    function multiplyComplexMatrix(matA, matB) {
+      const h = matA.length;
+      const w = matA[0].length;
+      const result = [];
+      for (let y = 0; y < h; y++) {
+        const row = [];
+        for (let x = 0; x < w; x++) {
+          row.push(math.multiply(matA[y][x], matB[y][x]));
+        }
+        result.push(row);
+      }
+      return result;
+    }
+
+    function extractReal(matrix) {
+      return matrix.map(row => row.map(val => val.re || 0));
+    }
+
+    function processImage(img) {
+      document.getElementById("steps").innerHTML = "";
+      const inputData = resizeCanvasToFit(img);
+      const w = inputData.width;
+      const h = inputData.height;
+
+      const gray = grayscaleMatrix(inputData);
+      const grayCtx = normalizeToImage(gray);
+      createCanvas("Step 1: Input Sinogram", w, h).drawImage(grayCtx.canvas, 0, 0);
+
+      const lhalf = gray.map((row, i) => row.map(() => Math.min(i, h - i)));
+      const lhalfCtx = normalizeToImage(lhalf, "gray");
+      createCanvas("Step 2: lhalf Filter", w, h).drawImage(lhalfCtx.canvas, 0, 0);
+
+      const fft = fft2D(gray);
+      const fftMag = normalizeToImage(fft.map(row => row.map(c => math.abs(c))), "gray");
+      createCanvas("Step 3: FFT Magnitude", w, h).drawImage(fftMag.canvas, 0, 0);
+
+      const lhalfComplex = lhalf.map(row => row.map(val => math.complex(val, 0)));
+      const filteredFFT = multiplyComplexMatrix(fft, lhalfComplex);
+      const filteredMag = normalizeToImage(filteredFFT.map(row => row.map(c => math.abs(c))), "gray");
+      createCanvas("Step 4: FFT × lhalf", w, h).drawImage(filteredMag.canvas, 0, 0);
+
+      const ifft = fft2D(filteredFFT, true);
+      realResult = extractReal(ifft);
+      resultSize = [w, h];
+      updateFinalImage();
+    }
+
+    function updateFinalImage() {
+      if (!realResult) return;
+      const [w, h] = resultSize;
+      const brightness = document.getElementById("brightness").value;
+      const contrast = document.getElementById("contrast").value;
+      const negMode = document.getElementById("negatives").value;
+      const finalCtx = normalizeToImage(realResult, negMode, brightness, contrast);
+
+      // Replace or update final canvas
+      let canvasDiv = [...document.querySelectorAll("#steps div")]
+        .find(div => div.firstChild?.textContent?.includes("Step 5"));
+
+      if (!canvasDiv) {
+        finalCtx.canvas.style.display = "block";
+        createCanvas("Step 5: Inverse FFT (Reconstructed)", w, h).drawImage(finalCtx.canvas, 0, 0);
+      } else {
+        const canvas = canvasDiv.querySelector("canvas");
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, w, h);
+        ctx.drawImage(finalCtx.canvas, 0, 0);
+      }
+    }
+  </script>
+</body>
+</html>

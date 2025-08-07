@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dual Radon Transform</title>
+  <style>
+    /* Keep your existing styles */
+    canvas { border: 1px solid black; margin: 5px; max-width: 100%; }
+    body { font-family: sans-serif; margin: 10px; }
+    .row { display: flex; flex-wrap: wrap; justify-content: center; }
+    .col { margin: 5px; width: 300px; }
+    button { padding: 5px 10px; margin: 5px; }
+    label { display: inline-block; width: 120px; }
+    h3 { margin: 5px 0; font-size: 14px; text-align: center; }
+    .control-panel { background: #f0f0f0; padding: 10px; border-radius: 5px; margin-bottom: 10px; text-align: center; }
+    .canvas-container { width: 300px; height: 300px; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+  </style>
+</head>
+<body>
+  <h1 style="text-align: center;">Dual Radon Transform</h1>
+  
+  <div class="control-panel">
+    <button id="loadBtn">Load Sinogram</button>
+    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+    
+    <div>
+      <label>Brightness: <input type="range" id="brightness" min="0" max="2" step="0.1" value="1"></label>
+      <label>Contrast: <input type="range" id="contrast" min="0" max="2" step="0.1" value="1"></label>
+    </div>
+    <select id="valueMode">
+      <option value="normal">Normal grayscale</option>
+      <option value="red">Red = negative</option>
+      <option value="threshold">Threshold map (0→−1, 0.5→0, 1→1)</option>
+    </select>
+    <button id="rotateInputBtn">Rotate Input 90°</button>
+    <button id="rotateOutputBtn">Rotate Output 90°</button>
+    <label>
+      <input type="checkbox" id="rgbMode"> RGB mode (process channels separately)
+    </label>
+    <button id="reconstructBtn">Compute Dual Radon</button>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <h3>Input Sinogram</h3>
+      <div class="canvas-container">
+        <canvas id="inputCanvas" width="300" height="200"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <h3>Polar Visualization</h3>
+      <div class="canvas-container">
+        <canvas id="polarCanvas" width="300" height="300"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <h3>Reconstructed Image (Dual Radon)</h3>
+      <div class="canvas-container">
+        <canvas id="reconstructedCanvas" width="300" height="300"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Canvas elements
+    const inputCanvas = document.getElementById('inputCanvas');
+    const inputCtx = inputCanvas.getContext('2d');
+    const polarCanvas = document.getElementById('polarCanvas');
+    const polarCtx = polarCanvas.getContext('2d');
+    const reconstructedCanvas = document.getElementById('reconstructedCanvas');
+    const reconstructedCtx = reconstructedCanvas.getContext('2d');
+    
+    // UI elements
+    const loadBtn = document.getElementById('loadBtn');
+    const fileInput = document.getElementById('fileInput');
+    const reconstructBtn = document.getElementById('reconstructBtn');
+    const brightnessInput = document.getElementById('brightness');
+    const contrastInput = document.getElementById('contrast');
+    const rotateInputBtn = document.getElementById('rotateInputBtn');
+    const rotateOutputBtn = document.getElementById('rotateOutputBtn');
+    const valueModeSelect = document.getElementById('valueMode');
+    const rgbModeCheckbox = document.getElementById('rgbMode');
+    
+    // Processing parameters
+    let brightness = 1.0;
+    let contrast = 1.0;
+    let sinogramData = null;
+    let outputRotation = 0;
+    
+    // Event listeners
+    loadBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', handleFileUpload);
+    reconstructBtn.addEventListener('click', computeDualRadon);
+    brightnessInput.addEventListener('input', () => {
+      brightness = parseFloat(brightnessInput.value);
+      if (sinogramData) computeDualRadon();
+    });
+    contrastInput.addEventListener('input', () => {
+      contrast = parseFloat(contrastInput.value);
+      if (sinogramData) computeDualRadon();
+    });
+    rotateInputBtn.addEventListener('click', rotateInputImage);
+    rotateOutputBtn.addEventListener('click', rotateOutputImage);
+    
+    function handleFileUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const img = new Image();
+      img.onload = () => {
+        window.loadedImage = img;
+        drawInputImage(img);
+      };
+      img.src = URL.createObjectURL(file);
+    }
+    
+    function drawInputImage(img) {
+      // Resize and draw
+      const aspectRatio = img.width / img.height;
+      const maxWidth = 300;
+      const maxHeight = 200;
+
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth) {
+        width = maxWidth;
+        height = width / aspectRatio;
+      }
+      if (height > maxHeight) {
+        height = maxHeight;
+        width = height * aspectRatio;
+      }
+
+      inputCanvas.width = width;
+      inputCanvas.height = height;
+      inputCtx.drawImage(img, 0, 0, width, height);
+
+      processSinogram();
+    }
+    
+    function rotateInputImage() {
+      if (!window.loadedImage) return;
+      
+      // Create a temporary canvas to rotate the image
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      
+      // Swap width and height
+      tempCanvas.width = inputCanvas.height;
+      tempCanvas.height = inputCanvas.width;
+      
+      // Rotate 90 degrees
+      tempCtx.translate(tempCanvas.width / 2, tempCanvas.height / 2);
+      tempCtx.rotate(Math.PI / 2);
+      tempCtx.drawImage(inputCanvas, -inputCanvas.width / 2, -inputCanvas.height / 2);
+      
+      // Update the input canvas
+      inputCanvas.width = tempCanvas.width;
+      inputCanvas.height = tempCanvas.height;
+      inputCtx.drawImage(tempCanvas, 0, 0);
+      
+      // Process the rotated image
+      processSinogram();
+    }
+    
+    function rotateOutputImage() {
+      if (!sinogramData) return;
+      
+      outputRotation = (outputRotation + 90) % 360;
+      computeDualRadon();
+    }
+    
+    function processSinogram() {
+      // Convert to grayscale data
+      const imageData = inputCtx.getImageData(0, 0, inputCanvas.width, inputCanvas.height);
+      const data = imageData.data;
+      
+      // Store as sinogram data (angles along columns)
+      const valueMode = valueModeSelect.value;
+      
+      sinogramData = new Array(inputCanvas.width);
+      for (let x = 0; x < inputCanvas.width; x++) {
+        sinogramData[x] = new Array(inputCanvas.height);
+        for (let y = 0; y < inputCanvas.height; y++) {
+          const idx = (y * inputCanvas.width + x) * 4;
+          const r = data[idx] / 255;
+          const g = data[idx + 1] / 255;
+          const b = data[idx + 2] / 255;
+          
+          let value;
+          
+          switch (valueMode) {
+            case 'red':
+              if (r > 0.01 && r > g && r > b) {
+                value = -r * 255;
+              } else {
+                value = (r + g + b) / 3 * 255;
+              }
+              break;
+            case 'threshold':
+              const gray = (r + g + b) / 3;
+              if (gray < 0.5) {
+                value = -1 + gray * 2; // maps 0→-1, 0.5→0
+              } else {
+                value = (gray - 0.5) * 2; // maps 0.5→0, 1→1
+              }
+              value *= 255;
+              break;
+            default: // normal
+              value = (r + g + b) / 3 * 255;
+          }
+          
+          sinogramData[x][y] = value;
+        }
+      }
+      
+      // Create polar visualization
+      drawPolarVisualization(inputCanvas, polarCanvas);
+    }
+    
+    function computeDualRadon() {
+      if (!sinogramData) return;
+      
+      const rgbMode = rgbModeCheckbox.checked;
+      const size = reconstructedCanvas.width;
+
+      if (!rgbMode) {
+        const reconstruction = dualRadonTransform(sinogramData, size);
+        drawReconstruction(reconstruction);
+      } else {
+        // Process RGB channels separately
+        const imageData = inputCtx.getImageData(0, 0, inputCanvas.width, inputCanvas.height);
+        const data = imageData.data;
+
+        const width = inputCanvas.width;
+        const height = inputCanvas.height;
+
+        const channels = { R: [], G: [], B: [] };
+
+        for (let x = 0; x < width; x++) {
+          channels.R[x] = [];
+          channels.G[x] = [];
+          channels.B[x] = [];
+          for (let y = 0; y < height; y++) {
+            const idx = (y * width + x) * 4;
+            channels.R[x][y] = data[idx];
+            channels.G[x][y] = data[idx + 1];
+            channels.B[x][y] = data[idx + 2];
+          }
+        }
+
+        const reconR = dualRadonTransform(channels.R, size);
+        const reconG = dualRadonTransform(channels.G, size);
+        const reconB = dualRadonTransform(channels.B, size);
+
+        drawRGBReconstruction(reconR, reconG, reconB);
+      }
+    }
+    
+    function drawRGBReconstruction(reconR, reconG, reconB) {
+      const size = reconstructedCanvas.width;
+      const imageData = reconstructedCtx.createImageData(size, size);
+
+      const maxR = Math.max(...reconR);
+      const maxG = Math.max(...reconG);
+      const maxB = Math.max(...reconB);
+
+      const bF = brightness;
+      const cF = contrast;
+
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const idx = (y * size + x);
+          const outIdx = idx * 4;
+
+          let r = reconR[idx] / maxR * 255;
+          let g = reconG[idx] / maxG * 255;
+          let b = reconB[idx] / maxB * 255;
+
+          r = ((r - 127.5) * cF + 127.5) * bF;
+          g = ((g - 127.5) * cF + 127.5) * bF;
+          b = ((b - 127.5) * cF + 127.5) * bF;
+
+          r = Math.max(0, Math.min(255, r));
+          g = Math.max(0, Math.min(255, g));
+          b = Math.max(0, Math.min(255, b));
+
+          imageData.data[outIdx] = r;
+          imageData.data[outIdx + 1] = g;
+          imageData.data[outIdx + 2] = b;
+          imageData.data[outIdx + 3] = 255;
+        }
+      }
+
+      // Apply output rotation if needed
+      if (outputRotation !== 0) {
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = size;
+        tempCanvas.height = size;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.putImageData(imageData, 0, 0);
+        
+        reconstructedCtx.clearRect(0, 0, size, size);
+        reconstructedCtx.save();
+        reconstructedCtx.translate(size/2, size/2);
+        reconstructedCtx.rotate(outputRotation * Math.PI / 180);
+        reconstructedCtx.drawImage(tempCanvas, -size/2, -size/2);
+        reconstructedCtx.restore();
+      } else {
+        reconstructedCtx.putImageData(imageData, 0, 0);
+      }
+    }
+    
+    function dualRadonTransform(sinogram, outputSize) {
+      const numAngles = sinogram.length;
+      const numBins = sinogram[0].length;
+      const recon = new Array(outputSize * outputSize).fill(0);
+      const center = outputSize / 2;
+      const scale = outputSize / numBins;
+      
+      // Normalization factor (equivalent to 1/h in Mathematica version)
+      const normFactor = 1 / numBins;
+      
+      for (let angleIdx = 0; angleIdx < numAngles; angleIdx++) {
+        const angle = (angleIdx / numAngles) * Math.PI;
+        const cosAngle = Math.cos(angle);
+        const sinAngle = Math.sin(angle);
+        
+        for (let r = 0; r < numBins; r++) {
+          const radius = (r - numBins/2) * scale;
+          const value = sinogram[angleIdx][r] * normFactor;
+          
+          // Backproject this value (dual operation)
+          for (let t = -center; t <= center; t++) {
+            const x = Math.round(center + t * cosAngle - radius * sinAngle);
+            const y = Math.round(center + t * sinAngle + radius * cosAngle);
+            
+            if (x >= 0 && x < outputSize && y >= 0 && y < outputSize) {
+              recon[y * outputSize + x] += value;
+            }
+          }
+        }
+      }
+      
+      return recon;
+    }
+    
+    function drawReconstruction(recon) {
+      const size = reconstructedCanvas.width;
+      const imageData = reconstructedCtx.createImageData(size, size);
+      
+      // Find max value for normalization
+      let maxVal = 0;
+      for (let i = 0; i < recon.length; i++) {
+        maxVal = Math.max(maxVal, recon[i]);
+      }
+      
+      // Apply brightness and contrast
+      const brightnessFactor = brightness;
+      const contrastFactor = contrast;
+      
+      // Draw reconstruction with brightness/contrast adjustments
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const idx = (y * size + x) * 4;
+          let val = (recon[y * size + x] / maxVal) * 255;
+          
+          // Apply contrast
+          val = ((val - 127.5) * contrastFactor) + 127.5;
+          
+          // Apply brightness
+          val = val * brightnessFactor;
+          
+          // Clamp to 0-255
+          val = Math.max(0, Math.min(255, val));
+          
+          imageData.data[idx] = val;
+          imageData.data[idx+1] = val;
+          imageData.data[idx+2] = val;
+          imageData.data[idx+3] = 255;
+        }
+      }
+      
+      // Apply output rotation if needed
+      if (outputRotation !== 0) {
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = size;
+        tempCanvas.height = size;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.putImageData(imageData, 0, 0);
+        
+        reconstructedCtx.clearRect(0, 0, size, size);
+        reconstructedCtx.save();
+        reconstructedCtx.translate(size/2, size/2);
+        reconstructedCtx.rotate(outputRotation * Math.PI / 180);
+        reconstructedCtx.drawImage(tempCanvas, -size/2, -size/2);
+        reconstructedCtx.restore();
+      } else {
+        reconstructedCtx.putImageData(imageData, 0, 0);
+      }
+    }
+   
+   
+   
+   
+   
+   
+   
+   
+function drawPolarVisualization(sourceCanvas, targetCanvas) {
+  const w = sourceCanvas.width;
+  const h = sourceCanvas.height;
+
+  // Each row of source becomes a ray across the full diameter.
+  const size = 2 * Math.floor(Math.min(w, h) / 2); // Keep it square and even
+  targetCanvas.width = size;
+  targetCanvas.height = size;
+  const ctx = targetCanvas.getContext('2d');
+
+  // Black background
+  ctx.fillStyle = 'black';
+  ctx.fillRect(0, 0, size, size);
+
+  const srcCtx = sourceCanvas.getContext('2d');
+  const src = srcCtx.getImageData(0, 0, w, h);
+  const srcData = src.data;
+
+  const output = ctx.getImageData(0, 0, size, size);
+  const outData = output.data;
+
+  const cx = size / 2;
+  const cy = size / 2;
+  const maxRadius = size ;
+
+  for (let y = 0; y < h; y++) {
+    const angle = ((y - h / 2) / h) * Math.PI; // From -π/2 to +π/2
+    const dx = Math.cos(angle);
+    const dy = Math.sin(angle);
+
+    for (let x = 0; x < w; x+=0.5) {
+      // -1 to +1 range across the diameter
+      const t = (x / (w - 1)) * 2 - 1;
+
+      const px = Math.round(cx + t * maxRadius * dx);
+      const py = Math.round(cy + t * maxRadius * dy);
+
+      const srcIndex = (y * w + Math.floor(x)) * 4;
+      const destIndex = (py * size + px) * 4;
+
+      if (px >= 0 && px < size && py >= 0 && py < size) {
+        outData[destIndex] = srcData[srcIndex];
+        outData[destIndex + 1] = srcData[srcIndex + 1];
+        outData[destIndex + 2] = srcData[srcIndex + 2];
+        outData[destIndex + 3] = 255;
+      }
+    }
+  }
+
+  ctx.putImageData(output, 0, 0);
+}
+
+
+
+
+   
+   
+   
+   
+   
+   
+   
+   
+    
+    // Update sinogram processing when value mode changes
+    valueModeSelect.addEventListener('change', () => {
+      if (window.loadedImage) {
+        processSinogram();
+        if (sinogramData) computeDualRadon();
+      }
+    });
+  </script>
+</body>
+</html>
