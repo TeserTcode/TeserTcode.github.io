@@ -1,4 +1,4 @@
-
+//this is stupid
 function rgbToHex(r, g, b) {
   function toHex(x) {
     const hex = x.toString(16);
