@@ -155,42 +155,7 @@ input[type="range"]::-moz-range-thumb {
 
 <div class="lower-bar">
     <div class="row">
-        <button onclick="showContainer('rgb')">RGB</button>
-        <button onclick="showContainer('hsv')">HSV</button>
-        <button onclick="showContainer('hsl')">HSL</button>
-		<button onclick="showContainer('hsi')">HSI</button>
-		<button onclick="showContainer('hsm')">HSM</button>
-		<button onclick="showContainer('hsg')">HSG</button>
-		<button onclick="showContainer('hsh')">HSh</button>
-        <button onclick="showContainer('hwb')">HWB</button>
-        <button onclick="showContainer('hcl')">HCL</button>
-        <button onclick="showContainer('lch')">LCh</button>
-        <button onclick="showContainer('ycbcr')">YCbCr</button>
-        <button onclick="showContainer('xyz')">XYZ</button>
-        <button onclick="showContainer('yjk')">YJK</button>
-        <button onclick="showContainer('lab')">LAB</button>
-		<button onclick="showContainer('oklab')">OKLAB</button>
-        <button onclick="showContainer('cmy')">CMY</button>
-        <button onclick="showContainer('uvw')">UVW</button>
-        <button onclick="showContainer('lms')">LMS</button>
-        <button onclick="showContainer('ydbdr')">YDbDr</button>
-        <button onclick="showContainer('yiq')">YIQ</button>
-        <button onclick="showContainer('ycocg')">YCoCg</button>
-        <button onclick="showContainer('ycocgr')">YCoCgR</button>
-        <button onclick="showContainer('yuv')">YUV</button>
-        <button onclick="showContainer('ypbpr')">YPbPr</button>
-        <button onclick="showContainer('bt')">BT</button>
-        <button onclick="showContainer('tsl')">TSL</button>
-        <button onclick="showContainer('luv')">LUV</button>
-		<button onclick="showContainer('srgb')">sRGB</button>
-		<button onclick="showContainer('scrgb')">scRGB</button>
-		<button onclick="showContainer('ecirgb')">eciRGB</button>
- <button onclick="showContainer('rxy')">rXY</button>
-  <button onclick="showContainer('lcw')">LCW</button>
-   <button onclick="showContainer('lct')">LCT</button>
-   
-      <button onclick="showContainer('ypo')">YPO</button>
-         <button onclick="showContainer('yrl')">YRL</button>
+   <div class="row" id="lowerBarButtons"></div>
    </div>
 </div>
 <script src="clrspc.js"></script>
@@ -203,54 +168,81 @@ input[type="range"]::-moz-range-thumb {
 let gr=0;
 let gb=0;
 let gg=0;
-const sliders = {
-    rgb: ['rSlider', 'gSlider', 'bSlider'],
-    hsv: ['hSlider', 'sSlider', 'vSlider'],
-    hsl: ['hSlider', 'sSlider', 'lSlider'],
-	 hsi: ['hSlider', 'sSlider', 'iSlider'],
-	  hsm: ['hSlider', 'sSlider', 'mSlider'],
-	   hsg: ['hSlider', 'sSlider', 'gSlider'],
-	    hsh: ['hSlider', 'sSlider', 'hhSlider'],
-    hwb: ['hSlider', 'wSlider', 'bSlider'],
-    hcl: ['hSlider', 'cSlider', 'lSlider'],
-    lch: ['lSlider', 'cSlider', 'hSlider'],
-    ycbcr: ['ySlider', 'cbSlider', 'crSlider'],
-    xyz: ['xSlider', 'ySlider', 'zSlider'],
-    yjk: ['ySlider', 'jSlider', 'kSlider'],
-    lab: ['lSlider', 'aSlider', 'bSlider'],
-	 oklab: ['lSlider', 'aSlider', 'bSlider'],
-    cmyk: ['cSlider', 'mSlider', 'ySlider', 'kSlider'],
-    cmy: ['cSlider', 'mSlider', 'ySlider'],
-    uvw: ['uSlider', 'vSlider', 'wSlider'],
-    lms: ['lSlider', 'mSlider', 'sSlider'],
-    ydbdr: ['ySlider', 'dbSlider', 'drSlider'],
-    yiq: ['ySlider', 'iSlider', 'qSlider'],
 
-    ycocg: ['ySlider', 'coSlider', 'cgSlider'],
-    ycocgr: ['ySlider', 'coSlider', 'cgSlider'],
-    yuv: ['ySlider', 'uSlider', 'vSlider'],
-    ypbpr: ['ySlider', 'pbSlider', 'prSlider'],
-    ypbpr: ['ySlider', 'pbSlider', 'prSlider'],
-    bt: ['xSlider', 'ySlider', 'zSlider'],
-    tsl: ['tSlider', 'sSlider', 'lSlider'],
-    luv: ['lSlider', 'uSlider', 'vSlider'],
-	 srgb: ['rSlider', 'gSlider', 'bSlider'],
-	  scrgb: ['rSlider', 'gSlider', 'bSlider'],
-	   lab: ['lSlider', 'aSlider', 'bSlider'],
-	    lch: ['lSlider', 'cSlider', 'hSlider'],
-	   ecirgb: ['rSlider', 'gSlider', 'bSlider'],
-	    rxy: ['rSlider', 'xSlider', 'ySlider'],
-		lcw: ['lSlider', 'cSlider', 'wSlider'],
-		lct: ['lSlider', 'cSlider', 'tSlider'],
-		
-		ypo: ['ySlider', 'pSlider', 'oSlider'],
-        yrl: ['ySlider', 'rSlider', 'lSlider'],
-};
-const colorSpaces = [
-    'rgb', 'hsv', 'hsl', 'hwb', 'hcl', 'lch', 'ycbcr', 'xyz', 'hsi','hsm','hsh','hsg',
-    'yjk', 'lab', 'cmyk', 'cmy', 'uvw', 'lms', 'ydbdr', 'yiq', 'lcw','lct',
-     'ycocg', 'ycocgr', 'yuv', 'ypbpr', 'tsl', 'luv', 'srgb','scrgb','ecirgb','rxy','oklab','ypo','yrl'
+
+const sliderConfigs = [
+  ['rgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['hsv', 'h', 's', 'v', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['hsl', 'h', 's', 'l', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['hsi', 'h', 's', 'i', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['hsm', 'h', 's', 'm', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['hsg', 'h', 's', 'g', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['hsh', 'h', 's', 'hh', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['hwb', 'h', 'w', 'b', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['cmy', 'c', 'm', 'y', 0, 0, 0, 100, 100, 100, 0, 0, 0],
+  ['hcl', 'h', 'c', 'l', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['srgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['scrgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['ecirgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['lch', 'l', 'c', 'h', 0, 0, -180, 150, 150, 180, 100, 100, 0],
+['ycbcr', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255],
+  ['xyz', 'x', 'y', 'z', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['yjk', 'y', 'j', 'k', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['lab', 'l', 'a', 'b', 0, -127, -127, 150, 127, 127, 100, 127, 127],
+  ['uvw', 'u', 'v', 'w', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['lms', 'l', 'm', 's', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['ydbdr', 'y', 'db', 'dr', 0, -255, -255, 255, 255, 255, 255, 255, 255],
+  ['yiq', 'y', 'i', 'q', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['ycocg', 'y', 'co', 'cg', 0, -255, -255, 255, 255, 255, 255, 255, 255],
+  ['ycocgr', 'y', 'co', 'cg', 0, -255, -255, 255, 255, 255, 255, 255, 255],
+  ['yuv', 'y', 'u', 'v', 0, -255, -255, 255, 255, 255, 255, 255, 255],
+  ['ypbpr', 'y', 'pb', 'pr', 0, -255, -255, 255, 255, 255, 255, 255, 255],
+  ['bt', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255],  // BT.709 (Rec. 709)
+  ['bt2020', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255], // BT.2020
+  ['bt470', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255],  // BT.470-6
+  ['smpte240m', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255], // SMPTE 240M
+  ['jpegycbcr', 'y', 'cb', 'cr', 0, 0, 0, 255, 255, 255, 255, 255],    // JPEG full range (no offset)
+  ['bt4706', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255],  // BT.470-6 System B,G (rarely used)
+  ['itut871', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255], // ITU-T T.871 (ideal)
+  ['ycbcrturbo', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255], // yCbCrTurbo 8-bit approx
+  ['tsl', 't', 's', 'l', 0, 0, 0, 100, 100, 255, 100, 100, 255],
+  ['luv', 'l', 'u', 'v', 0, 0, 0, 100, 100, 255, 100, 100, 255],
+  ['oklab', 'l', 'a', 'b', 0, -255, -255, 255, 255, 255, 255, 255, 255],
+  //['rxy', 'r', 'x', 'y', 0, -255, -255, 255, 255, 255, 255, 255, 360],
+  ['lcw', 'l', 'c', 'w', 0, 0, 380, 255, 255, 780, 255, 255, 1000],
+  ['lct', 'l', 'c', 't', 0, 0, 4000, 255, 255, 7000, 255, 255, 5000],
+  ['ypo', 'y', 'p', 'o', 0, -160, -165, 100, 361, 155, 0, 1, 1],
+  ['yrl', 'y', 'r', 'l', -255, -255, -255, 255, 255, 255, 255, 255, 255],
+  
+  
+  ['jzazbz', 'jz', 'az', 'bz', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+   ['jzczhz', 'jz', 'cz', 'hz', 0, 0, 0, 255, 255, 360, 255, 255, 255],
+   
+   ['pqlms', 'l', 'm', 's', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+   ['hlglms', 'l', 'm', 's', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+    ['pqxyz', 'x', 'y', 'z', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+     ['hlgxyz', 'x', 'y', 'z', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+     ['ictcp', 'i', 'ct', 'cp', 0, -128, -128, 255, 127, 127, 255, 127, 127],
+      ['hlgictcp', 'i', 'ct', 'cp', 0, -128, -128, 255, 127, 127, 255, 127, 127],
+    ['ictcpqc2', 'i', 'ct', 'cp', 0, -128, -128, 255, 127, 127, 255, 127, 127],
+   
+ //   ['okhsv', 'h', 's', 'v', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+   
 ];
+
+
+const sliders = {};
+const colorSpaces = [];
+
+for (const [space, ch1, ch2, ch3] of sliderConfigs) {
+  sliders[space] = [`${ch1}Slider`, `${ch2}Slider`, `${ch3}Slider`];
+  if (!colorSpaces.includes(space)) {
+    colorSpaces.push(space);
+  }
+}
+
+console.log("sliders =", sliders);
+console.log("colorSpaces =", colorSpaces);
 // Initialize sliders to null
 Object.keys(sliders).forEach(space => {
     sliders[space] = sliders[space].reduce((acc, key) => {
@@ -551,46 +543,18 @@ function createSliders(name, slidersParams, conversions) {
         console.error("Error occurred in createSliders function:", error);
     }
 }
-// Initialize sliders
+
 function initializeSliders() {
-    createSliders('rgb', ['r', 'g', 'b'], colorConversions.rgb);
-    createSliders('hsv', ['h', 's', 'v'], colorConversions.hsv);
-    createSliders('hsl', ['h', 's', 'l'], colorConversions.hsl);
-	createSliders('hsi', ['h', 's', 'i'], colorConversions.hsi);
-	createSliders('hsm', ['h', 's', 'm'], colorConversions.hsm);
-	createSliders('hsg', ['h', 's', 'g'], colorConversions.hsg);
-	createSliders('hsh', ['h', 's', 'hh'], colorConversions.hsh);
-    createSliders('hwb', ['h', 'w', 'b'], colorConversions.hwb);
-    createSliders('hcl', ['h', 'c', 'l'], colorConversions.hcl);
-    createSliders('lch', ['l', 'c', 'h'], colorConversions.lch);
-    createSliders('ycbcr', ['y', 'cb', 'cr'], colorConversions.ycbcr);
-    createSliders('xyz', ['x', 'y', 'z'], colorConversions.xyz);
-    createSliders('yjk', ['y', 'j', 'k'], colorConversions.yjk);
-    createSliders('lab', ['l', 'a', 'b'], colorConversions.lab);
-	createSliders('oklab', ['l', 'a', 'b'], colorConversions.oklab);
-   // createSliders('cmyk', ['c', 'm', 'y', 'k'], colorConversions.cmyk);
-    createSliders('cmy', ['c', 'm', 'y'], colorConversions.cmy);
-    createSliders('uvw', ['u', 'v', 'w'], colorConversions.uvw);
-    createSliders('lms', ['l', 'm', 's'], colorConversions.lms);
-    createSliders('ydbdr', ['y', 'db', 'dr'], colorConversions.ydbdr);
-    createSliders('yiq', ['y', 'i', 'q'], colorConversions.yiq);
-    createSliders('ycocg', ['y', 'co', 'cg'], colorConversions.ycocg);
-    createSliders('ycocgr', ['y', 'co', 'cg'], colorConversions.ycocgr);
-    createSliders('yuv', ['y', 'u', 'v'], colorConversions.yuv);
-    createSliders('ypbpr', ['y', 'pb', 'pr'], colorConversions.ypbpr);
-    createSliders('bt', ['x', 'y', 'z'], colorConversions.bt);
-    createSliders('tsl', ['t', 's', 'l'], colorConversions.tsl);
-    createSliders('luv', ['l', 'u', 'v'], colorConversions.luv);
-	 createSliders('srgb', ['r', 'g', 'b'], colorConversions.srgb);
-	  createSliders('scrgb', ['r', 'g', 'b'], colorConversions.scrgb);
-	   createSliders('ecirgb', ['r', 'g', 'b'], colorConversions.ecirgb);
-	   createSliders('rxy', ['r', 'x', 'y'], colorConversions.rxy);
-	   createSliders('lcw', ['l', 'c', 'w'], colorConversions.lcw);
-	   createSliders('lct', ['l', 'c', 't'], colorConversions.lct);
-
-
-createSliders('ypo', ['y', 'p', 'o'], colorConversions.ypo);
-createSliders('yrl', ['y', 'r', 'l'], colorConversions.yrl);
+    for (const config of sliderConfigs) {
+        const [space, ...rest] = config;
+        const channels = rest.slice(0, 4).filter(ch => typeof ch === 'string');
+        const conversion = colorConversions[space];
+        if (conversion) {
+            createSliders(space, channels, conversion);
+        } else {
+            console.warn(`Missing color conversion for: ${space}`);
+        }
+    }
 }
         function toggleContainer(id) {
             const container = document.getElementById(id);
@@ -739,67 +703,31 @@ function sliderInit4(name, var1, var2, var3, var4, min1, min2, min3, min4, max1,
     sliders[name][`${var3}Slider`] = document.getElementById(`${name}_${var3}_slider`);
 }
 
-// Function to initialize all sliders
-function init() {
-    sliderInit('rgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255);
-    sliderInit('hsv', 'h', 's', 'v', 0, 0, 0, 360, 100, 100, 360, 100, 100);
-    sliderInit('hsl', 'h', 's', 'l', 0, 0, 0, 360, 100, 100, 360, 100, 100);
-	sliderInit('hsi', 'h', 's', 'i', 0, 0, 0, 360, 100, 100, 360, 100, 100);
-	sliderInit('hsm', 'h', 's', 'm', 0, 0, 0, 360, 100, 100, 360, 100, 100);
-	sliderInit('hsg', 'h', 's', 'g', 0, 0, 0, 360, 100, 100, 360, 100, 100);
-	sliderInit('hsh', 'h', 's', 'hh', 0, 0, 0, 360, 100, 100, 360, 100, 100);
-    sliderInit('hwb', 'h', 'w', 'b', 0, 0, 0, 360, 100, 100, 360, 100, 100);
-	sliderInit('cmy', 'c', 'm', 'y', 0, 0, 0, 100, 100, 100, 0,0,0);
-	sliderInit('hcl', 'h', 'c', 'l', 0, 0, 0, 360, 100, 100, 360, 100, 100);
-	sliderInit('srgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255);
-	sliderInit('scrgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255);
-	sliderInit('ecirgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255);
- 
-   sliderInit('rgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255);
-sliderInit('hsv', 'h', 's', 'v', 0, 0, 0, 360, 100, 100, 100, 100, 100);
-sliderInit('hsl', 'h', 's', 'l', 0, 0, 0, 360, 100, 100, 100, 100, 100);
-sliderInit('hwb', 'h', 'w', 'b', 0, 0, 0, 360, 100, 100, 100, 100, 100);
-sliderInit('hcl', 'h', 'c', 'l', 0, 0, 0, 360, 100, 100, 100, 100, 100);
-sliderInit('lch', 'l', 'c', 'h', 0, 0, -180, 150, 150, 180, 100, 100, 0);
-sliderInit('ycbcr', 'y', 'cb', 'cr', 0 -255, -255, 255, 255, 255, 255, 255, 255);
-sliderInit('xyz', 'x', 'y', 'z', 0, 0, 0, 255, 255, 255, 255, 255, 255);
-sliderInit('yjk', 'y', 'j', 'k', 0, 0, 0, 255, 255, 255, 255, 255, 255);
-sliderInit('lab', 'l', 'a', 'b', 0, -127, -127, 150, 127, 127, 100, 127, 127);
-sliderInit('cmy', 'c', 'm', 'y', 0, 0, 0, 255, 255, 255, 255, 255, 255);
-sliderInit('uvw', 'u', 'v', 'w', 0, 0, 0, 255, 255, 255, 255, 255, 255);
-sliderInit('lms', 'l', 'm', 's', 0, 0, 0, 255, 255, 255, 255, 255, 255);
-sliderInit('ydbdr', 'y', 'db', 'dr', 0, -255, -255, 255, 255, 255, 255, 255, 255);
-sliderInit('yiq', 'y', 'i', 'q', 0, 0, 0, 255, 255, 255, 255, 255, 255);
-sliderInit('ycocg', 'y', 'co', 'cg', 0, -255, -255, 255, 255, 255, 255, 255, 255);
-sliderInit('ycocgr', 'y', 'co', 'cg', 0, -255 -255, 255, 255, 255, 255, 255, 255);
-sliderInit('yuv', 'y', 'u', 'v', 0, -255, -255, 255, 255, 255, 255, 255, 255);
-sliderInit('ypbpr', 'y', 'pb', 'pr', 0, -255, -255, 255, 255, 255, 255, 255, 255);
-sliderInit('bt', 'x', 'y', 'z', 0, -255, -255, 255, 255, 255, 255, 255, 255);
-sliderInit('tsl', 't', 's', 'l', 0, 0, 0, 100, 100, 255, 100, 100, 255);
-sliderInit('luv', 'l', 'u', 'v', 0, 0, 0, 100, 100, 255, 100, 100, 255);
-sliderInit('srgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255);
-sliderInit('scrgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255);
-sliderInit('ecirgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255);
-sliderInit('lab', 'l', 'a', 'b', 0, -255, -255, 255, 255, 255, 255, 255, 255);
-sliderInit('oklab', 'l', 'a', 'b', 0, -255, -255, 255, 255, 255, 255, 255, 255);
-sliderInit('lch', 'l', 'c', 'h', 0, 0, 0, 255, 255, 255, 255, 255, 360);
- sliderInit('rxy', 'r', 'x', 'y', 0, -255, -255, 255, 255, 255, 255, 255, 360);
- sliderInit('lcw', 'l', 'c', 'w', 0, 0, 380, 255, 255, 780, 255, 255, 1000);
- 
-sliderInit('lct', 'l', 'c', 't', 0, 0, 4000, 255, 255, 7000, 255, 255, 5000);
-sliderInit('ypo', 'y', 'p', 'o', 0, -160, -165, 100, 361, 155, 0, 1, 1);
- 
- 
- sliderInit('yrl', 'y', 'r', 'l', -255, -255, -255, 255, 255, 255, 255, 255, 255);
- 
- // sliderInit('cmyk', 'c', 'm', 'y', 'k', 0, 0, 0, 0, 100, 100, 100, 100, 100, 100, 100, 100);
 
-    initializeSliders();
+function init() {
+  for (const config of sliderConfigs) {
+    sliderInit(...config);
+  }
+  initializeSliders();
 }
+
 
         init();
 		
-		
+		  const container = document.getElementById('lowerBarButtons');
+
+  sliderConfigs.forEach(config => {
+    const model = config[0];
+    // Capitalize model name for button label nicely if you want
+    // For mixed casing like 'lch' -> 'LCh' or 'ycbcr' -> 'YCbCr' you may want a custom mapping
+    // Here, simply uppercase first letter:
+    const label = model.charAt(0).toUpperCase() + model.slice(1);
+
+    const btn = document.createElement('button');
+    btn.textContent = label;
+    btn.onclick = () => showContainer(model);
+    container.appendChild(btn);
+  });
 		
 		
         function hexToRgb(hex) {

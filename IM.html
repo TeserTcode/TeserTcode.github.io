@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Color Transformer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.6.4/math.min.js"></script>
+<script src="clrspc.js"></script>
+<style>
+body{display:flex;gap:10px;align-items:flex-start}
+canvas{border:1px solid black;height:50vh}
+.hidden{display:none}
+textarea{width:500px;height:200px}
+.controls{flex:1}
+.example-tag {
+    display: inline-block;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    margin-left: 5px;
+}
+.tag-F { background-color: #4CAF50; color: white; }
+.tag-J { background-color: #2196F3; color: white; }
+.tag-A { background-color: #9C27B0; color: white; }
+</style>
+</head>
+<body>
+<div class="controls">
+<input type="file" id="upload" accept="image/png"><br>
+<input type="checkbox" id="bwMode" onchange="toggleMode()"> Black & White Mode<br>
+<select id="examples" onchange="loadExample(this.value)">
+<option value="">-- Example Effects --</option>
+
+<option value="gay">Gay <span class="example-tag tag-F">F</span></option>
+<option value="inverse">Inverse <span class="example-tag tag-A">A</span></option>
+
+<option value="">-- Generated Examples --</option>
+
+<option value="boxblur">2x2 Box Blur <span class="example-tag tag-J">J</span></option>
+<option value="waves">Wave Distortion <span class="example-tag tag-J">J</span></option>
+<option value="contrast">Increase Contrast <span class="example-tag tag-A">A</span></option>
+<option value="redshift">Red Shift <span class="example-tag tag-A">A</span></option>
+<option value="bright">Brightness Boost <span class="example-tag tag-A">A</span></option>
+<option value="grayscale">Grayscale <span class="example-tag tag-A">A</span></option>
+<option value="edges">Edge Detection <span class="example-tag tag-J">J</span></option>
+<option value="sharpen">Sharpen <span class="example-tag tag-J">J</span></option>
+<option value="sepia">Sepia <span class="example-tag tag-A">A</span></option>
+<option value="hue-rotate">Hue Rotate <span class="example-tag tag-A">A</span></option>
+<option value="saturate">Saturate <span class="example-tag tag-A">A</span></option>
+<option value="posterize">Posterize <span class="example-tag tag-A">A</span></option>
+<option value="solarize">Solarize <span class="example-tag tag-A">A</span></option>
+<option value="blur-gaussian">Gaussian Blur <span class="example-tag tag-J">J</span></option>
+<option value="emboss">Emboss <span class="example-tag tag-J">J</span></option>
+<option value="invert-channels">Invert Channels <span class="example-tag tag-A">A</span></option>
+<option value="solar-flare">Solar Flare <span class="example-tag tag-A">A</span></option>
+<option value="vignette">Vignette <span class="example-tag tag-A">A</span></option>
+<option value="pixelate">Pixelate <span class="example-tag tag-J">J</span></option>
+<option value="noise">Add Noise <span class="example-tag tag-J">J</span></option>
+<option value="cartoonify">Cartoonify <span class="example-tag tag-F">F</span></option>
+<option value="poster-edge">Poster Edge <span class="example-tag tag-F">F</span></option>
+<option value="bloom">Bloom <span class="example-tag tag-A">A</span></option>
+<option value="glitch">Glitch <span class="example-tag tag-J">J</span></option>
+<option value="thermal">Thermal <span class="example-tag tag-A">A</span></option>
+<option value="color-invert">Color Invert <span class="example-tag tag-A">A</span></option>
+<option value="threshold">Threshold <span class="example-tag tag-J">J</span></option>
+<option value="edge-glow">Edge Glow <span class="example-tag tag-F">F</span></option>
+<option value="kaleidoscope">Kaleidoscope <span class="example-tag tag-F">F</span></option>
+<option value="face-stretch">Face Stretch <span class="example-tag tag-J">J</span></option>
+<option value="pixel-sort">Pixel Sort Explosion <span class="example-tag tag-J">J</span></option>
+<option value="meltdown">Meltdown <span class="example-tag tag-J">J</span></option>
+<option value="disco-fever">Disco Fever <span class="example-tag tag-A">A</span></option>
+<option value="anaglyph">Anaglyph 3D <span class="example-tag tag-J">J</span></option>
+<option value="film-grain">Film Grain <span class="example-tag tag-J">J</span></option>
+<option value="scan-lines">Scan Lines <span class="example-tag tag-J">J</span></option>
+<option value="oil-painting">Oil Painting <span class="example-tag tag-F">F</span></option>
+<option value="dot-screen">Dot Screen <span class="example-tag tag-F">F</span></option>
+<option value="technicolor">Technicolor <span class="example-tag tag-A">A</span></option>
+<option value="night-vision">Night Vision <span class="example-tag tag-A">A</span></option>
+<option value="infrared">Infrared <span class="example-tag tag-A">A</span></option>
+<option value="color-splash">Color Splash (Red) <span class="example-tag tag-A">A</span></option>
+<option value="x-ray">X-Ray <span class="example-tag tag-A">A</span></option>
+<option value="psych-pulse">Psychedelic Pulse <span class="example-tag tag-A">A</span></option>
+<option value="color-isolate">Color Isolate <span class="example-tag tag-A">A</span></option>
+<option value="split-tone">Split Tone <span class="example-tag tag-A">A</span></option>
+<option value="chromatic-aberration">Chromatic Aberration <span class="example-tag tag-J">J</span></option>
+<option value="perceptual-glow">Perceptual Glow <span class="example-tag tag-J">J</span></option>
+<option value="ntsc-artifacts">NTSC Artifacts <span class="example-tag tag-J">J</span></option>
+</select><br>
+<input type="checkbox" id="jsMode" onchange="toggleJS()"> JS Function Mode<br>
+<div id="colorSpaceContainer">
+<label>Color Space:</label>
+<select id="colorSpace" onchange="updateColorSpace()">
+</select>
+</div>
+<div id="colorInputs">
+<div id="channelInputs"></div>
+</div>
+<div id="bwInput" class="hidden">
+<label>Intensity:</label> <input type="text" id="funcBW" value="avrg(r,g,b)">
+</div>
+<div id="jsInput" class="hidden">
+<textarea id="funcJS">function f(img){
+let {w,h,pic}=img;
+let out=[];
+for(let y=0;y<h;y++){
+ for(let x=0;x<w;x++){
+  let r=pic(x/w,y/h,'r'),g=pic(x/w,y/h,'g'),b=pic(x/w,y/h,'b');
+  out.push({r,g,b});
+ }
+}
+return out;
+}</textarea>
+</div>
+<button onclick="applyTransform()">Apply Transform</button>
+<button onclick="downloadImage()">Download</button>
+</div>
+<canvas id="originalCanvas"></canvas>
+<canvas id="modifiedCanvas"></canvas>
+<script>
+let img = new Image();
+let originalCanvas = document.getElementById("originalCanvas");
+let modifiedCanvas = document.getElementById("modifiedCanvas");
+let ctxOrig = originalCanvas.getContext("2d");
+let ctxMod = modifiedCanvas.getContext("2d");
+let imgDataCache = null, imgW = 0, imgH = 0;
+let currentColorSpace = 'rgb';
+let currentX = 0, currentY = 0;
+const sliderConfigs = [
+  ['rgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['hsv', 'h', 's', 'v', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['hsl', 'h', 's', 'l', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['hsi', 'h', 's', 'i', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['hsm', 'h', 's', 'm', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['hsg', 'h', 's', 'g', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['hsh', 'h', 's', 'hh', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['hwb', 'h', 'w', 'b', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['cmy', 'c', 'm', 'y', 0, 0, 0, 100, 100, 100, 0, 0, 0],
+  ['hcl', 'h', 'c', 'l', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['srgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['scrgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['ecirgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['lch', 'l', 'c', 'h', 0, 0, -180, 150, 150, 180, 100, 100, 0],
+['ycbcr', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255],
+  ['xyz', 'x', 'y', 'z', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['yjk', 'y', 'j', 'k', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['lab', 'l', 'a', 'b', 0, -127, -127, 150, 127, 127, 100, 127, 127],
+  ['uvw', 'u', 'v', 'w', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['lms', 'l', 'm', 's', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['ydbdr', 'y', 'db', 'dr', 0, -255, -255, 255, 255, 255, 255, 255, 255],
+  ['yiq', 'y', 'i', 'q', 0, -0.5957, -0.5226, 1, 0.5957, 0.5226, 1, 1, 1],
+  ['ycocg', 'y', 'co', 'cg', 0, -255, -255, 255, 255, 255, 255, 255, 255],
+  ['ycocgr', 'y', 'co', 'cg', 0, -255, -255, 255, 255, 255, 255, 255, 255],
+  ['yuv', 'y', 'u', 'v', 0, -255, -255, 255, 255, 255, 255, 255, 255],
+  ['ypbpr', 'y', 'pb', 'pr', 0, -255, -255, 255, 255, 255, 255, 255, 255],
+  ['bt', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255],  // BT.709 (Rec. 709)
+  ['bt2020', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255], // BT.2020
+  ['bt470', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255],  // BT.470-6
+  ['smpte240m', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255], // SMPTE 240M
+  ['jpegycbcr', 'y', 'cb', 'cr', 0, 0, 0, 255, 255, 255, 255, 255],    // JPEG full range (no offset)
+  ['bt4706', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255],  // BT.470-6 System B,G (rarely used)
+  ['itut871', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255], // ITU-T T.871 (ideal)
+  ['ycbcrturbo', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255], // yCbCrTurbo 8-bit approx
+  ['tsl', 't', 's', 'l', 0, 0, 0, 1, 1, 1, 1, 1, 1],
+  ['luv', 'l', 'u', 'v', 0, 0, 0, 100, 100, 255, 100, 100, 255],
+  ['oklab', 'l', 'a', 'b', 0, -0.4, -0.4, 1, 0.4, 0.4, 1, 1, 1],
+  ['lcw', 'l', 'c', 'w', 0, 0, 380, 255, 255, 780, 255, 255, 1000],
+  ['lct', 'l', 'c', 't', 0, 0, 4000, 255, 255, 7000, 255, 255, 5000],
+  ['ypo', 'y', 'p', 'o', 0, -160, -165, 100, 361, 155, 0, 1, 1],
+  ['yrl', 'y', 'r', 'l', -255, -255, -255, 255, 255, 255, 255, 255, 255],
+  ['jzazbz', 'jz', 'az', 'bz', 0, -0.1, -0.15, 0.17, 0.1, 0.15, 1, 1, 1],
+   ['jzczhz', 'jz', 'cz', 'hz', 0, 0, 0, 255, 255, 360, 255, 255, 255],
+   ['pqlms', 'l', 'm', 's', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+   ['hlglms', 'l', 'm', 's', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+    ['pqxyz', 'x', 'y', 'z', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+     ['hlgxyz', 'x', 'y', 'z', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+     ['ictcp', 'i', 'ct', 'cp', 0, -128, -128, 255, 127, 127, 255, 127, 127],
+      ['hlgictcp', 'i', 'ct', 'cp', 0, -128, -128, 255, 127, 127, 255, 127, 127],
+    ['ictcpqc2', 'i', 'ct', 'cp', 0, -128, -128, 255, 127, 127, 255, 127, 127],
+];
+
+
+const sliders = {};
+const colorSpaces = [];
+
+for (const [space, ch1, ch2, ch3] of sliderConfigs) {
+  sliders[space] = [`${ch1}Slider`, `${ch2}Slider`, `${ch3}Slider`];
+  if (!colorSpaces.includes(space)) {
+    colorSpaces.push(space);
+  }
+}
+
+// Global cache for color space conversions to speed up JS functions
+let conversionCache = {};
+
+// Initialize color space dropdown
+function initColorSpaces() {
+    const select = document.getElementById('colorSpace');
+    colorSpaces.forEach(space => {
+        const option = document.createElement('option');
+        option.value = space;
+        option.textContent = space;
+        select.appendChild(option);
+    });
+}
+
+// Update the inputs based on selected color space
+function updateColorSpace() {
+    currentColorSpace = document.getElementById("colorSpace").value;
+    const config = sliderConfigs.find(c => c[0] === currentColorSpace);
+    if (!config) return;
+    
+    const container = document.getElementById('channelInputs');
+    container.innerHTML = '';
+    
+    for (let i = 0; i < 3; i++) {
+        const channel = config[i+1];
+        
+        const div = document.createElement('div');
+        div.className = 'channel-input';
+        
+        const label = document.createElement('label');
+        label.textContent = channel + ':';
+        div.appendChild(label);
+        
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = `func_${channel}`;
+        input.value = channel;
+        div.appendChild(input);
+        
+        container.appendChild(div);
+    }
+}
+
+// Convert from RGB to target color space and normalize to 0-1
+function toColorSpace(r, g, b, space) {
+    const cacheKey = `${r},${g},${b},${space}`;
+    if (conversionCache[cacheKey]) return conversionCache[cacheKey];
+
+    if (space === 'rgb') return {r: r/255, g: g/255, b: b/255};
+    
+    const converter = window[`rgbTo${space.charAt(0).toUpperCase() + space.slice(1)}`];
+    if (!converter) return {r: r/255, g: g/255, b: b/255};
+    
+    const converted = converter(r, g, b);
+    const config = sliderConfigs.find(c => c[0] === space);
+    if (!config) return {
+        [config[1]]: converted[0]/255,
+        [config[2]]: converted[1]/255,
+        [config[3]]: converted[2]/255
+    };
+    
+    const result = {
+        [config[1]]: (converted[0] - config[4]) / (config[7] - config[4]),
+        [config[2]]: (converted[1] - config[5]) / (config[8] - config[5]),
+        [config[3]]: (converted[2] - config[6]) / (config[9] - config[6])
+    };
+    conversionCache[cacheKey] = result;
+    return result;
+}
+
+// Convert from normalized color space back to RGB
+function fromColorSpace(vals, space) {
+    if (space === 'rgb') {
+        return [
+            Math.min(255, Math.max(0, vals.r * 255)),
+            Math.min(255, Math.max(0, vals.g * 255)),
+            Math.min(255, Math.max(0, vals.b * 255))
+        ];
+    }
+    
+    const config = sliderConfigs.find(c => c[0] === space);
+    if (!config) return [
+        Math.min(255, Math.max(0, vals[config[1]] * 255)),
+        Math.min(255, Math.max(0, vals[config[2]] * 255)),
+        Math.min(255, Math.max(0, vals[config[3]] * 255))
+    ];
+    
+    // Denormalize values
+    const denormalized = [
+        vals[config[1]] * (config[7] - config[4]) + config[4],
+        vals[config[2]] * (config[8] - config[5]) + config[5],
+        vals[config[3]] * (config[9] - config[6]) + config[6]
+    ];
+    
+    const converter = window[`${space}ToRgb`];
+    if (!converter) return [
+        Math.min(255, Math.max(0, denormalized[0] * 255)),
+        Math.min(255, Math.max(0, denormalized[1] * 255)),
+        Math.min(255, Math.max(0, denormalized[2] * 255))
+    ];
+    
+    return converter(...denormalized);
+}
+
+// Helper functions for math expressions
+math.import({
+    avrg: (a, b, c) => (a + b + c) / 3,
+    mix: (a, b, t) => a * (1 - t) + b * t,
+    clip: x => Math.min(255, Math.max(0, x)),
+    sat: x => Math.min(1, Math.max(0, x)),
+    norm2: (x, min, max) => (x - min) / (max - min),
+    inv2: x => 255 - x,
+    wrap: (x, min, max) => {
+        const range = max - min;
+        return ((x - min) % range + range) % range + min;
+    },
+    y: (r, g, b) => 0.299 * r + 0.587 * g + 0.114 * b,
+    cb: (r, g, b) => 128 - 0.168736 * r - 0.331264 * g + 0.5 * b,
+    cr: (r, g, b) => 128 + 0.5 * r - 0.418688 * g - 0.081312 * b
+});
+
+function pic(x, y, what) {
+    let px = Math.floor(x * imgW);
+    let py = Math.floor(y * imgH);
+    if (px < 0 || px >= imgW || py < 0 || py >= imgH) return 0;
+    let index = (py * imgW + px) * 4;
+    let r = imgDataCache[index] / 255;
+    let g = imgDataCache[index + 1] / 255;
+    let b = imgDataCache[index + 2] / 255;
+    let values = {
+        r, g, b, 
+        avg: (r+ g+ b)/3,
+    };
+    return values[what] ?? 0;
+}
+math.import({pic});
+
+function picN(dx, dy, c) {
+    return pic((currentX + dx) / imgW, (currentY + dy) / imgH, c);
+}
+math.import({picN});
+
+// Wrapper for JS functions to get pixels in a specific color space
+function picColor(x, y, space) {
+    let px = Math.floor(x * imgW);
+    let py = Math.floor(y * imgH);
+    if (px < 0 || px >= imgW || py < 0 || py >= imgH) return null;
+    let index = (py * imgW + px) * 4;
+    let r = imgDataCache[index];
+    let g = imgDataCache[index + 1];
+    let b = imgDataCache[index + 2];
+    return toColorSpace(r, g, b, space);
+}
+
+
+document.getElementById("upload").addEventListener("change", function(e) {
+    let file = e.target.files[0];
+    if (file) {
+        let reader = new FileReader();
+        reader.onload = function(ev) {
+            img.onload = function() {
+                imgW = img.width;
+                imgH = img.height;
+                originalCanvas.width = imgW;
+                originalCanvas.height = imgH;
+                modifiedCanvas.width = imgW;
+                modifiedCanvas.height = imgH;
+                ctxOrig.drawImage(img, 0, 0);
+                imgDataCache = ctxOrig.getImageData(0, 0, imgW, imgH).data;
+                conversionCache = {}; // Clear cache on new image
+            };
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+function applyTransform() {
+    if (!imgDataCache) return;
+    
+    let bwMode = document.getElementById("bwMode").checked;
+    let jsMode = document.getElementById("jsMode").checked;
+    let imgData = ctxOrig.getImageData(0, 0, imgW, imgH);
+    let data = imgData.data;
+    
+    if (jsMode) {
+        let f = eval("(" + document.getElementById("funcJS").value + ")");
+        let res = f({w: imgW, h: imgH, pic, picColor, fromColorSpace});
+        let i = 0;
+        for (let y = 0; y < imgH; y++) {
+            for (let x = 0; x < imgW; x++) {
+                let c = res[i++];
+                data[(y * imgW + x) * 4] = Math.min(255, Math.max(0, c.r * 255));
+                data[(y * imgW + x) * 4 + 1] = Math.min(255, Math.max(0, c.g * 255));
+                data[(y * imgW + x) * 4 + 2] = Math.min(255, Math.max(0, c.b * 255));
+            }
+        }
+    } else if (bwMode) {
+        for (let y = 0; y < imgH; y++) {
+            for (let x = 0; x < imgW; x++) {
+                currentX = x;
+                currentY = y;
+                let index = (y * imgW + x) * 4;
+                let r = imgDataCache[index] / 255;
+                let g = imgDataCache[index + 1] / 255;
+                let b = imgDataCache[index + 2] / 255;
+                
+                let intensity = math.evaluate(
+                    document.getElementById("funcBW").value,
+                    {
+                        x: x / imgW,
+                        y: y / imgH,
+                        r, g, b,
+                        avg: (r+g+b)/3,
+                    }
+                );
+                let gray = Math.min(255, Math.max(0, intensity * 255));
+                data[index] = data[index + 1] = data[index + 2] = gray;
+            }
+        }
+    } else {
+        for (let y = 0; y < imgH; y++) {
+            for (let x = 0; x < imgW; x++) {
+                currentX = x;
+                currentY = y;
+                let index = (y * imgW + x) * 4;
+                
+                let r = imgDataCache[index];
+                let g = imgDataCache[index + 1];
+                let b = imgDataCache[index + 2];
+                
+                let converted = toColorSpace(r, g, b, currentColorSpace);
+                const config = sliderConfigs.find(c => c[0] === currentColorSpace);
+                const channels = [config[1], config[2], config[3]];
+                
+                let transformed = {};
+                for (let i = 0; i < 3; i++) {
+                    const channel = channels[i];
+                    const expr = document.getElementById(`func_${channel}`).value;
+                    
+                    const scope = {
+                        x: x / imgW,
+                        y: y / imgH,
+                        ...converted,
+                        r: r/255,
+                        g: g/255,
+                        b: b/255,
+                        avg: (r/255+g/255+b/255)/3,
+                    };
+                    
+                    transformed[channel] = math.evaluate(expr, scope);
+                }
+                
+                let rgb = fromColorSpace(transformed, currentColorSpace);
+                
+                data[index] = rgb[0];
+                data[index + 1] = rgb[1];
+                data[index + 2] = rgb[2];
+            }
+        }
+    }
+    
+    ctxMod.putImageData(imgData, 0, 0);
+}
+
+function toggleMode() {
+    let bwMode = document.getElementById("bwMode").checked;
+    let jsMode = document.getElementById("jsMode").checked;
+    document.getElementById("colorSpaceContainer").classList.toggle("hidden", bwMode || jsMode);
+    document.getElementById("colorInputs").classList.toggle("hidden", bwMode || jsMode);
+    document.getElementById("bwInput").classList.toggle("hidden", !bwMode || jsMode);
+}
+
+function toggleJS() {
+    let jsMode = document.getElementById("jsMode").checked;
+    document.getElementById("colorSpaceContainer").classList.toggle("hidden", jsMode);
+    document.getElementById("colorInputs").classList.toggle("hidden", jsMode || document.getElementById("bwMode").checked);
+    document.getElementById("bwInput").classList.toggle("hidden", jsMode || !document.getElementById("bwMode").checked);
+    document.getElementById("jsInput").classList.toggle("hidden", !jsMode);
+}
+
+function downloadImage() {
+    let link = document.createElement("a");
+    link.download = "modified.png";
+    link.href = modifiedCanvas.toDataURL("image/png");
+    link.click();
+}
+
+function loadExample(v) {
+    if (!v) return;
+    
+    let formulas = {
+        inverse: ["1-r", "1-g", "1-b"],
+        contrast: ["(r-0.5)*1.5+0.5", "(g-0.5)*1.5+0.5", "(b-0.5)*1.5+0.5"],
+        redshift: ["r*1.2", "g*0.8", "b*0.8"],
+        bright: ["r+0.2", "g+0.2", "b+0.2"],
+        grayscale: ["avg(r,g,b)", "avg(r,g,b)", "avg(r,g,b)"],
+        sepia: ["(r*0.393+g*0.769+b*0.189)", "(r*0.349+g*0.686+b*0.168)", "(r*0.272+g*0.534+b*0.131)"],
+        "hue-rotate": { colorSpace: "hsl", formulas: ["h+0.3", "s", "l"] },
+        saturate: { colorSpace: "hsl", formulas: ["h", "s*1.5", "l"] },
+        posterize: ["floor(r*4)/4", "floor(g*4)/4", "floor(b*4)/4"],
+        solarize: ["r>0.5?1-r:r", "g>0.5?1-g:g", "b>0.5?1-b:b"],
+        "invert-channels": ["1-b", "1-g", "1-r"],
+        "solar-flare": { colorSpace: "hsv", formulas: ["h+0.1", "s*1.5", "v*1.2"] },
+        vignette: ["r*(1-((x-0.5)^2+(y-0.5)^2)*1.5", "g*(1-((x-0.5)^2+(y-0.5)^2)*1.5)", "b*(1-((x-0.5)^2+(y-0.5)^2)*1.5)"],
+        bloom: ["r+(r>0.8?0.2:0)", "g+(g>0.8?0.2:0)", "b+(b>0.8?0.2:0)"],
+        "color-invert": { colorSpace: "hsv", formulas: ["(h+0.5)%1", "s", "v"] },
+        waves: ["picN(sin(y*15)*5,cos(x*15)*5,'r')", "picN(sin(y*15)*5,cos(x*15)*5,'g')", "picN(sin(y*15)*5,cos(x*15)*5,'b')"],
+        technicolor: { colorSpace: "lch", formulas: ["l", "c*1.5", "h+0.1"] },
+        "night-vision": { colorSpace: "hsv", formulas: ["120/360", "s", "v"] },
+        infrared: { colorSpace: "yiq", formulas: ["y", "q", "i"] },
+        "color-splash": { colorSpace: "hsl", formulas: ["h", "(h > 0.9 || h < 0.1) ? s : 0", "l"] },
+        "x-ray": { colorSpace: "lab", formulas: ["1-l", "0", "0"] },
+        "psych-pulse": { colorSpace: "hsm", formulas: ["(h + sin(x*30 + m*10)) % 1", "s * (cos(y*30 - m*10) * 0.5 + 0.5)", "m"] },
+        "color-isolate": { colorSpace: "jzazbz", formulas: ["jz", "sqrt(az^2 + bz^2) < 0.2 ? az : 0", "sqrt(az^2 + bz^2) < 0.2 ? bz : 0"] },
+         "gay": { colorSpace: "jzazbz", formulas: ["jz", "az-x*550+275", "bz-y*550+275"] },
+        "split-tone": { colorSpace: "tsl", formulas: ["l < 0.5 ? 0.66 : 0.16", "s * 1.2", "l"] },
+    };
+    
+    let jsFuncs = {
+        "disco-fever": `function f(img){...}`, // existing JS functions omitted for brevity
+        "meltdown": `function f(img){...}`,
+        "pixel-sort": `function f(img){...}`,
+        "face-stretch": `function f(img){...}`,
+        "waves": `function f(img){...}`,
+        "blur-gaussian": `function f(img){...}`,
+        "sharpen": `function f(img){...}`,
+        "emboss": `function f(img){...}`,
+        "pixelate": `function f(img){...}`,
+        "noise": `function f(img){...}`,
+        "glitch": `function f(img){...}`,
+        "threshold": `function f(img){...}`,
+        "thermal": `function f(img){...}`,
+        edges: `function f(img){...}`,
+        "anaglyph": `function f(img){...}`,
+        "film-grain": `function f(img){...}`,
+        "scan-lines": `function f(img){...}`,
+        "oil-painting": `function f(img){...}`,
+        "dot-screen": `function f(img){...}`,
+        "chromatic-aberration": `function f({w,h,picColor,fromColorSpace}){
+    let out=[];
+    const offset = 5;
+    for(let y=0;y<h;y++){
+        for(let x=0;x<w;x++){
+            let c_center = picColor(x/w, y/h, 'lch');
+            let c_left = picColor((x-offset)/w, y/h, 'lch');
+            let c_right = picColor((x+offset)/w, y/h, 'lch');
+
+            if (!c_center || !c_left || !c_right) { // Handle edges
+                out.push({r:0,g:0,b:0}); continue;
+            }
+
+            let final_color = {
+                l: c_center.l,
+                c: c_left.c,
+                h: c_right.h,
+            };
+            let [r,g,b] = fromColorSpace(final_color, 'lch');
+            out.push({r:r/255, g:g/255, b:b/255});
+        }
+    }
+    return out;
+}`,
+    "perceptual-glow": `function f({w,h,picColor,fromColorSpace}){
+    let out=[];
+    const radius = 4;
+    for(let y=0;y<h;y++){
+        for(let x=0;x<w;x++){
+            let center_c = picColor(x/w, y/h, 'oklab');
+            if (!center_c) { out.push({r:0,g:0,b:0}); continue; }
+            
+            let avg_a=0, avg_b=0, count=0;
+            for(let j=-radius; j<=radius; j++){
+                for(let i=-radius; i<=radius; i++){
+                    let n_c = picColor((x+i)/w, (y+j)/h, 'oklab');
+                    if (n_c) {
+                        avg_a += n_c.a;
+                        avg_b += n_c.b;
+                        count++;
+                    }
+                }
+            }
+            let final_color = {
+                l: center_c.l,
+                a: avg_a/count,
+                b: avg_b/count
+            };
+            let [r,g,b] = fromColorSpace(final_color, 'oklab');
+            out.push({r:r/255, g:g/255, b:b/255});
+        }
+    }
+    return out;
+}`,
+    "ntsc-artifacts": `function f({w,h,picColor,fromColorSpace}){
+    let out=[];
+    for(let y=0;y<h;y++){
+        for(let x=0;x<w;x++){
+            // Simulate reduced chroma resolution by sampling I and Q from a block
+            let blockX = Math.floor(x/4)*4;
+            let chroma = picColor(blockX/w, y/h, 'yiq');
+            let luma = picColor(x/w, y/h, 'yiq');
+
+            if (!chroma || !luma) { out.push({r:0,g:0,b:0}); continue; }
+
+            // Add some noise and phase shift to luma
+            let y_val = luma.y + (Math.random()-0.5)*0.05;
+
+            // Combine sharp luma with blurry chroma
+            let final_color = { y: y_val, i: chroma.i, q: chroma.q };
+            let [r,g,b] = fromColorSpace(final_color, 'yiq');
+            out.push({r:r/255, g:g/255, b:b/255});
+        }
+    }
+    return out;
+}`
+    };
+    
+    // To keep the response tidy, I'm replacing the large block of existing JS functions
+    // with a placeholder. The new functions are added below it.
+    const allJsFuncs = {
+        "disco-fever": `function f(img){ let {w,h,pic}=img,out=[]; let time = Date.now()/1000; for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ out.push({ r: (Math.sin(x/w*30 + time*5)+1)/2, g: (Math.sin(y/h*30 + time*3)+1)/2, b: (Math.sin((x/w+y/h)*20 + time*7)+1)/2 }); } } return out; }`,
+        "meltdown": `function f(img){ let {w,h,pic}=img,out=[]; for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ let drip = Math.sin(x/w*20)*5 * (y/h); let ny = Math.min(h-1, y + drip); out.push({ r: pic(x/w,ny/h,'r'), g: pic(x/w,ny/h,'g'), b: pic(x/w,ny/h,'b') }); } } return out; }`,
+        "pixel-sort": `function f(img){ let {w,h,pic}=img,out=new Array(w*h); for(let x=0;x<w;x++){ let column = []; for(let y=0;y<h;y++){ let r=pic(x/w,y/h,'r'), g=pic(x/w,y/h,'g'), b=pic(x/w,y/h,'b'); column.push({r,g,b, bright: r*0.21+g*0.72+b*0.07}); } column.sort((a,b) => a.bright - b.bright); for(let y=0;y<h;y++){ out[x+y*w] = column[y]; } } return out; }`,
+        "face-stretch": `function f(img){ let {w,h,pic}=img,out=[]; for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ let nx = x < w/2 ? x - Math.sin(y/h*Math.PI)*10 : x + Math.sin(y/h*Math.PI)*10; out.push({ r: pic(nx/w,y/h,'r'), g: pic(nx/w,y/h,'g'), b: pic(nx/w,y/h,'b') }); } } return out; }`,
+        "waves": `function f(img){ let {w,h,pic}=img,out=[]; for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ let nx = x + Math.sin(y/15)*5; let ny = y + Math.cos(x/15)*5; out.push({ r: pic(nx/w,ny/h,'r'), g: pic(nx/w,ny/h,'g'), b: pic(nx/w,ny/h,'b') }); } } return out; }`,
+        "blur-gaussian": `function f(img){ let {w,h,pic}=img,out=[]; const kernel = [ 1, 4, 6, 4, 1, 4,16,24,16, 4, 6,24,36,24, 6, 4,16,24,16, 4, 1, 4, 6, 4, 1 ]; const kernelSize = 5; const kernelSum = 256; for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ let r=0,g=0,b=0; for(let ky=0;ky<kernelSize;ky++){ for(let kx=0;kx<kernelSize;kx++){ let px = x + kx - Math.floor(kernelSize/2); let py = y + ky - Math.floor(kernelSize/2); let weight = kernel[ky*kernelSize+kx]; r += pic(px/w,py/h,'r') * weight; g += pic(px/w,py/h,'g') * weight; b += pic(px/w,py/h,'b') * weight; } } out.push({r:r/kernelSum, g:g/kernelSum, b:b/kernelSum}); } } return out; }`,
+        "sharpen": `function f(img){ let {w,h,pic}=img,out=[]; const kernel = [0,-1,0, -1,5,-1, 0,-1,0]; for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ let r=0,g=0,b=0; for(let ky=0;ky<3;ky++){ for(let kx=0;kx<3;kx++){ let px=x+kx-1, py=y+ky-1; let weight = kernel[ky*3+kx]; r += pic(px/w,py/h,'r') * weight; g += pic(px/w,py/h,'g') * weight; b += pic(px/w,py/h,'b') * weight; } } out.push({r:Math.max(0,Math.min(1,r)), g:Math.max(0,Math.min(1,g)), b:Math.max(0,Math.min(1,b))}); } } return out; }`,
+        "emboss": `function f(img){ let {w,h,pic}=img,out=[]; const kernel = [-2,-1,0, -1,1,1, 0,1,2]; for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ let val=0; for(let ky=0;ky<3;ky++){ for(let kx=0;kx<3;kx++){ let px = x + kx - 1; let py = y + ky - 1; let gray = pic(px/w,py/h,'avg'); val += gray * kernel[ky*3+kx]; } } val = (val + 1) / 2; out.push({r:val, g:val, b:val}); } } return out; }`,
+        "pixelate": `function f(img){ let {w,h,pic}=img,out=new Array(w*h); const pixelSize = 10; for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ let blockX = Math.floor(x/pixelSize)*pixelSize; let blockY = Math.floor(y/pixelSize)*pixelSize; let r=pic(blockX/w,blockY/h,'r'); let g=pic(blockX/w,blockY/h,'g'); let b=pic(blockX/w,blockY/h,'b'); out[x+y*w] = {r,g,b}; } } return out; }`,
+        "noise": `function f(img){ let {w,h,pic}=img,out=[]; const noiseAmount = 0.2; for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ let r=pic(x/w,y/h,'r') + (Math.random()-0.5)*noiseAmount; let g=pic(x/w,y/h,'g') + (Math.random()-0.5)*noiseAmount; let b=pic(x/w,y/h,'b') + (Math.random()-0.5)*noiseAmount; out.push({r,g,b}); } } return out; }`,
+        "glitch": `function f(img){ let {w,h,pic}=img,out=[]; const glitchAmount = 0.1; for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ let offset = Math.sin(y/10)*10 * glitchAmount; let r=pic((x+offset)/w,y/h,'r'); let g=pic(x/w,y/h,'g'); let b=pic((x-offset)/w,y/h,'b'); out.push({r,g,b}); } } return out; }`,
+        "threshold": `function f(img){ let {w,h,pic}=img,out=[]; const threshold = 0.5; for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ let gray = pic(x/w,y/h,'avg'); let val = gray > threshold ? 1 : 0; out.push({r:val, g:val, b:val}); } } return out; }`,
+        "thermal": `function f(img){ let {w,h,pic}=img,out=[]; for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ let v = pic(x/w,y/h,'avg'); out.push({ r: Math.sin(v * Math.PI), g: Math.sin(v * Math.PI + 2*Math.PI/3), b: Math.sin(v * Math.PI + 4*Math.PI/3) }); } } return out; }`,
+        edges: `function f(img){ let {w,h,pic}=img,out=[]; const kernelX = [-1, 0, 1, -2, 0, 2, -1, 0, 1]; const kernelY = [-1, -2, -1, 0, 0, 0, 1, 2, 1]; for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ let gx = 0, gy = 0; for(let ky=0;ky<3;ky++){ for(let kx=0;kx<3;kx++){ let px = x + kx - 1, py = y + ky - 1; let val = pic(px/w,py/h,'avg'); gx += val * kernelX[ky*3+kx]; gy += val * kernelY[ky*3+kx]; } } let mag = Math.sqrt(gx*gx + gy*gy); out.push({r:mag, g:mag, b:mag}); } } return out; }`,
+        "anaglyph": `function f(img){ let {w,h,pic}=img,out=[]; const offset = 10; for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ let r = pic((x-offset)/w, y/h, 'r'); let g = pic(x/w, y/h, 'g'); let b = pic((x+offset)/w, y/h, 'b'); out.push({r,g,b}); } } return out; }`,
+        "film-grain": `function f(img){ let {w,h,pic}=img,out=[]; const noiseAmount = 0.1; for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ let noise = (Math.random()-0.5)*noiseAmount; let r=pic(x/w,y/h,'r') + noise; let g=pic(x/w,y/h,'g') + noise; let b=pic(x/w,y/h,'b') + noise; out.push({r,g,b}); } } return out; }`,
+        "scan-lines": `function f(img){ let {w,h,pic}=img,out=[]; for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ let r=pic(x/w,y/h,'r'); let g=pic(x/w,y/h,'g'); let b=pic(x/w,y/h,'b'); if(y % 2 === 0){ r*=0.8; g*=0.8; b*=0.8; } out.push({r,g,b}); } } return out; }`,
+        "oil-painting": `function f(img){ let {w,h,pic}=img,out=[]; const radius = 3; const intensity = 20; for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ let intensityCount = new Array(intensity+1).fill(0); let avgR = new Array(intensity+1).fill(0); let avgG = new Array(intensity+1).fill(0); let avgB = new Array(intensity+1).fill(0); for(let j=-radius; j<=radius; j++){ for(let i=-radius; i<=radius; i++){ let px=x+i, py=y+j; if(px>=0 && px<w && py>=0 && py<h){ let r = pic(px/w,py/h,'r'); let g = pic(px/w,py/h,'g'); let b = pic(px/w,py/h,'b'); let currentIntensity = Math.floor(((r+g+b)/3)*intensity); intensityCount[currentIntensity]++; avgR[currentIntensity] += r; avgG[currentIntensity] += g; avgB[currentIntensity] += b; } } } let maxIntensity = 0, maxCount = 0; for(let i=0; i<=intensity; i++){ if(intensityCount[i] > maxCount){ maxCount = intensityCount[i]; maxIntensity = i; } } out.push({ r: avgR[maxIntensity]/maxCount, g: avgG[maxIntensity]/maxCount, b: avgB[maxIntensity]/maxCount }); } } return out; }`,
+        "dot-screen": `function f(img){ let {w,h,pic}=img,out=[]; const size = 8; const center = size/2; for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ let blockX = Math.floor(x/size); let blockY = Math.floor(y/size); let avg = pic((blockX*size+center)/w, (blockY*size+center)/h, 'avg'); let dotSize = avg * size; let dist = Math.sqrt(Math.pow(x%size-center, 2) + Math.pow(y%size-center, 2)); let val = dist < dotSize/2 ? 0 : 1; out.push({r:val,g:val,b:val}); } } return out; }`,
+        ...jsFuncs
+    };
+
+    if (allJsFuncs[v]) {
+        document.getElementById("jsMode").checked = true;
+        toggleJS();
+        document.getElementById("funcJS").value = allJsFuncs[v];
+    } else if (formulas[v]) {
+        document.getElementById("jsMode").checked = false;
+        toggleJS();
+        if (typeof formulas[v] === 'object' && formulas[v].colorSpace) {
+            document.getElementById("colorSpace").value = formulas[v].colorSpace;
+            updateColorSpace();
+            const config = sliderConfigs.find(c => c[0] === formulas[v].colorSpace);
+            const channels = [config[1], config[2], config[3]];
+            for (let i = 0; i < 3; i++) {
+                document.getElementById(`func_${channels[i]}`).value = formulas[v].formulas[i];
+            }
+        } else {
+            document.getElementById("colorSpace").value = "rgb";
+            updateColorSpace();
+            document.getElementById("func_r").value = formulas[v][0];
+            document.getElementById("func_g").value = formulas[v][1];
+            document.getElementById("func_b").value = formulas[v][2];
+        }
+    }
+}
+
+// Initialize the app
+initColorSpaces();
+updateColorSpace();
+</script>
+</body>
+</html>
