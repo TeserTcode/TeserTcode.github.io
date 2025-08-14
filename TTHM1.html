@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Torus Puzzle</title>
+  <style>
+    body{font-family:sans-serif;margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f0f0f0;}
+    #container{max-width:90vw;max-height:90vh;}
+    canvas{display:block;margin:auto;border:2px solid #000;cursor:pointer;max-width:100%;height:auto;}
+    #ui,#main-menu{text-align:center;padding:1em;}
+    .hidden{display:none;}
+    button{margin:0.3em;padding:0.5em 1em;cursor:pointer;border:1px solid #ccc;background:#fff;border-radius:4px;}
+    button:hover{background:#e9e9e9;}
+    .level-btn.completed{background:#90ee90;}
+    #level-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:5px;max-width:600px;margin:1em auto;padding:10px;border:1px solid #ccc;border-radius:8px;}
+    #win-message{font-size:1.5em;color:green;margin-top:1em;min-height:1.5em;}
+  </style>
+</head>
+<body>
+<div id="container">
+  <div id="main-menu">
+    <h1>Torus Puzzle</h1>
+    <p>Connect all cells with a single line. Numbers must be visited in increasing order.</p>
+    <div id="level-list"></div>
+    <button onclick="resetProgress()">Reset Progress</button>
+  </div>
+  <div id="ui" class="hidden">
+    <button onclick="backToMenu()">Menu</button>
+    <button onclick="solveCurrentLevel()">Show Solution</button>
+    <canvas id="gameCanvas" width="600" height="600"></canvas>
+    <div id="win-message"></div>
+    <button id="next-level-btn" class="hidden" onclick="goToNextLevel()">Next Level</button>
+  </div>
+</div>
+<script>
+const canvas=document.getElementById("gameCanvas"),ctx=canvas.getContext("2d");
+let currentLevel=null,progress=JSON.parse(localStorage.getItem("progress")||"[]"),board=[],path=[],undoStack=[],redoStack=[],gridSize=0,invalidPath=false;
+let levelSolution=[]; // Store the original Hamiltonian path
+let solutionNumbers=[]; // Store the solution numbers
+
+const levels = Array.from({ length: 50 }, (_, i) => {
+  // grid size from your original
+  const gridSize = Math.min(15, 5 + Math.floor(i / 5));
+  
+  // density from your original
+  const numDensity = 0.15 + (i / 50) * 0.1;
+  
+  // seed same as level ID
+  const seed = i;
+  
+  // complexity grows smoothly from 0.2 to 0.9 over levels
+  const complexity = 0.2 + (i / 49) * 0.7;
+  
+  // curvature oscillates between 0.3 and 0.9 every 10 levels (sinusoidal for variety)
+  const curvature = 0.6 + 0.3 * Math.sin((i / 49) * 5 * Math.PI);
+  
+  return {
+    id: i,
+    gridSize,
+    numDensity,
+    seed,
+    complexity,
+    curvature,
+  };
+});
+
+function renderLevelList(){
+  const list=document.getElementById("level-list");
+  list.innerHTML="";
+  levels.forEach(lvl=>{
+    const btn=document.createElement("button");
+    btn.textContent=lvl.id+1;
+    btn.className="level-btn"+(progress.includes(lvl.id)?" completed":"");
+    btn.onclick=()=>startLevel(lvl);
+    list.appendChild(btn);
+  });
+}
+
+function backToMenu(){
+  document.getElementById("ui").classList.add("hidden");
+  document.getElementById("main-menu").classList.remove("hidden");
+  document.getElementById("win-message").textContent="";
+  document.getElementById("next-level-btn").classList.add("hidden");
+  renderLevelList();
+}
+
+function startLevel(level){
+  currentLevel=level;
+  document.getElementById("ui").classList.remove("hidden");
+  document.getElementById("main-menu").classList.add("hidden");
+  document.getElementById("win-message").textContent="";
+  document.getElementById("next-level-btn").classList.add("hidden");
+  
+  gridSize=level.gridSize;
+  board=Array.from({length:gridSize},()=>Array(gridSize).fill(null));
+  path=[]; undoStack=[]; redoStack=[]; invalidPath=false;
+  
+  // Generate and store the solution path
+  levelSolution=createHamiltonianPath(gridSize,level.seed,level.complexity,level.curvature);
+  
+  const numCount=Math.max(3,Math.floor(gridSize*gridSize*level.numDensity));
+  const nums=generateWeaklyIncreasingSequence(numCount,99,level.seed+1);
+  
+  // Store the solution numbers (1, 2, 3...)
+  solutionNumbers=Array.from({length:levelSolution.length},(_,i)=>i+1);
+  
+  // Place numbers along the solution path
+  levelSolution.forEach(([x,y],i)=>{
+    if(i%Math.max(1,Math.floor(Math.floor(numCount*Math.cos(i)*Math.cos(i)+levelSolution.length)/numCount))===0&&nums.length) board[y][x]=nums.shift();
+  });
+  drawGrid();
+}
+
+
+
+
+
+
+
+
+function mulberry32(a) {
+  return function() {
+    var t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+}
+
+function createHamiltonianPatha(size, seed, complexity = 0.5, curvature = 0.5) {
+  const total = size * size;
+  const visited = Array.from({ length: size }, () => Array(size).fill(false));
+  const path = [];
+  const rng = mulberry32(seed);
+
+  const dirs = [[1,0], [0,1], [-1,0], [0,-1]];
+
+  function mod(n, m) {
+    return ((n % m) + m) % m;
+  }
+
+  function neighbors(x, y) {
+    const result = [];
+    for (const [dx, dy] of dirs) {
+      const nx = mod(x + dx, size);
+      const ny = mod(y + dy, size);
+      if (!visited[ny][nx]) {
+        result.push([nx, ny]);
+      }
+    }
+    return result;
+  }
+
+  // Start at a random position
+  let x = Math.floor(rng() * size);
+  let y = Math.floor(rng() * size);
+
+  visited[y][x] = true;
+  path.push([x, y]);
+
+  for (let step = 1; step < total; step++) {
+    let nbrs = neighbors(x, y);
+
+    if (nbrs.length === 0) {
+      // stuck, no moves left
+      break;
+    }
+
+    // Warnsdorff-like heuristic
+    nbrs.sort((a, b) => {
+      const aNbrs = neighbors(a[0], a[1]).length;
+      const bNbrs = neighbors(b[0], b[1]).length;
+      if (aNbrs !== bNbrs  && rng()<1-complexity*0.6) return aNbrs - bNbrs;
+
+      return rng() - 0.5;
+    });
+
+    [x, y] = nbrs[Math.min(nbrs.length-1,Math.floor(rng()*curvature*2))];
+    visited[y][x] = true;
+    path.push([x, y]);
+  }
+
+  return path.length === total ? path : null;
+}
+function createHamiltonianPath(size, seed,complexity = 0.5, curvature = 0.5, maxRetries = 12000) {
+  let currentSeed = seed % 12389;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const path = createHamiltonianPatha(size, currentSeed);
+    if (path) {
+      console.log(`Success on attempt ${attempt + 1} with seed ${currentSeed}`);
+      return path;
+    }
+    // square seed mod 12389 and retry
+    currentSeed = (currentSeed * 2) % 10000000 +1+10000000*attempt;
+	//console.log(currentSeed)
+  }
+  console.log("Failed to find Hamiltonian path after max retries");
+  return null;
+}
+
+
+
+
+
+
+
+function generateWeaklyIncreasingSequence(len,max,seed){
+  const seq=[];let current=1;
+  for(let i=0;i<len;i++){
+    const rand=Math.sin(seed+i)*10000-Math.floor(Math.sin(seed+i)*10000);
+    if(rand<0.7||current>=max)seq.push(current);
+    else seq.push(current=Math.min(max,current+Math.floor(rand*3)+1));
+  }
+  return seq;
+}
+
+function drawGrid(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const tw=canvas.width/gridSize,th=canvas.height/gridSize;
+  
+  ctx.strokeStyle="#ccc";ctx.lineWidth=1;
+  for(let x=0;x<=gridSize;x++){ctx.beginPath();ctx.moveTo(x*tw,0);ctx.lineTo(x*tw,canvas.height);ctx.stroke();}
+  for(let y=0;y<=gridSize;y++){ctx.beginPath();ctx.moveTo(0,y*th);ctx.lineTo(canvas.width,y*th);ctx.stroke();}
+  
+  for(let y=0;y<gridSize;y++)for(let x=0;x<gridSize;x++){
+    const val=board[y][x];
+    if(val!==null){
+      ctx.fillStyle="#000";ctx.font=`bold ${Math.floor(tw/2.5)}px sans-serif`;
+      ctx.textAlign="center";ctx.textBaseline="middle";
+      ctx.fillText(val,x*tw+tw/2,y*th+th/2);
+    }
+  }
+  drawPath();
+}
+
+function drawPath(){
+  if(!path.length)return;
+  const tw=canvas.width/gridSize,th=canvas.height/gridSize,now=Date.now();
+  const thickness=Math.max(2,tw/8);ctx.lineWidth=thickness;ctx.lineCap="round";
+  
+  if(path.length===1){
+    const[x,y]=path[0],px=x*tw+tw/2,py=y*th+th/2;
+    ctx.fillStyle='blue';ctx.beginPath();ctx.arc(px,py,thickness,0,Math.PI*2);ctx.fill();
+    return;
+  }
+  
+  const segments=[];let currentSegment=[path[0]];
+  for(let i=1;i<path.length;i++){
+    const prev=path[i-1],curr=path[i];
+    const dx=Math.min(Math.abs(curr[0]-prev[0]),gridSize-Math.abs(curr[0]-prev[0]));
+    const dy=Math.min(Math.abs(curr[1]-prev[1]),gridSize-Math.abs(curr[1]-prev[1]));
+    (dx>1||dy>1)?(segments.push(currentSegment),currentSegment=[curr]):currentSegment.push(curr);
+  }
+  segments.push(currentSegment);
+  
+  segments.forEach(segment=>{
+    if(segment.length<2)return;
+    for(let i=0;i<segment.length-1;i++){
+      const[x1,y1]=segment[i],[x2,y2]=segment[i+1];
+      const px1=x1*tw+tw/2,py1=y1*th+th/2,px2=x2*tw+tw/2,py2=y2*th+th/2;
+      const dx=x2-x1,dy=y2-y1,distanceSquared=dx*dx+dy*dy;
+      
+      ctx.strokeStyle=invalidPath?(Math.floor(now/200)%2===0?"red":"black"):'blue';
+      if(distanceSquared>1){
+    
+            ctx.globalAlpha = 1.0;
+            ctx.beginPath();
+            ctx.moveTo(px1, py1);
+            ctx.lineTo(px1 - (px2 - px1) * 0.2, py1 - (py2 - py1) * 0.2);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(px2 + (px2 - px1) * 0.2, py2 + (py2 - py1) * 0.2);
+            ctx.globalAlpha = 1.0;
+            ctx.lineTo(px2, py2);
+            ctx.stroke();
+            ctx.globalAlpha = 1.0;
+            continue;
+      }
+      ctx.beginPath();ctx.moveTo(px1,py1);ctx.lineTo(px2,py2);ctx.stroke();
+    }
+  });
+}
+
+function solveCurrentLevel(){
+  // Clear the current board
+  board=Array.from({length:gridSize},()=>Array(gridSize).fill(null));
+  
+  // Place the solution numbers (1, 2, 3...) along the original path
+  levelSolution.forEach(([x,y],i)=>{
+    board[y][x]=solutionNumbers[i];
+  });
+  
+  // Clear the current path
+  path=[];
+  undoStack=[];
+  redoStack=[];
+  
+  drawGrid();
+}
+
+function checkVictory(){
+  if(path.length===gridSize*gridSize&&!invalidPath){
+    if(!progress.includes(currentLevel.id)){
+      progress.push(currentLevel.id);
+      localStorage.setItem("progress",JSON.stringify(progress));
+    }
+    document.getElementById("win-message").textContent="You Win!";
+    document.getElementById("next-level-btn").classList.remove("hidden");
+  }
+}
+
+canvas.addEventListener("click",e=>{
+  const rect=canvas.getBoundingClientRect();
+  const x=Math.floor((e.clientX-rect.left)/(canvas.width/gridSize));
+  const y=Math.floor((e.clientY-rect.top)/(canvas.height/gridSize));
+  if(x>=0&&x<gridSize&&y>=0&&y<gridSize){
+    path=[[x,y]];undoStack=[JSON.stringify(path)];redoStack=[];
+    updatePathValidity();drawGrid();
+  }
+});
+
+document.addEventListener("keydown",e=>{
+  if(document.getElementById("ui").classList.contains("hidden"))return;
+  const key=e.key.toLowerCase();
+  if(key==='r'){resetLevel();return;}
+  if(!path.length)return;
+  if(key==='u'){undoLastMove();return;}
+  if(key==='y'){redoLastMove();return;}
+  
+  const dir={arrowup:[0,-1],arrowdown:[0,1],arrowleft:[-1,0],arrowright:[1,0],w:[0,-1],s:[0,1],a:[-1,0],d:[1,0]}[key];
+  if(!dir)return;e.preventDefault();
+  
+  const[dx,dy]=dir;
+  let[x,y]=path[path.length-1];
+  let nextX=(x+dx+gridSize)%gridSize,nextY=(y+dy+gridSize)%gridSize;
+  
+  if(path.length>1){
+    const[prevX,prevY]=path[path.length-2];
+    if(nextX===prevX&&nextY===prevY){undoLastMove();return;}
+  }
+  if(path.some(p=>p[0]===nextX&&p[1]===nextY))return;
+  
+  path.push([nextX,nextY]);undoStack.push(JSON.stringify(path));redoStack=[];
+  updatePathValidity();drawGrid();checkVictory();
+});
+
+function undoLastMove(){
+  if(undoStack.length>1){redoStack.push(undoStack.pop());path=JSON.parse(undoStack[undoStack.length-1]);}
+  else if(undoStack.length===1){redoStack.push(undoStack.pop());path=[];}
+  updatePathValidity();drawGrid();
+}
+
+function redoLastMove(){
+  if(redoStack.length>0){const nextState=redoStack.pop();path=JSON.parse(nextState);undoStack.push(nextState);}
+  updatePathValidity();drawGrid();checkVictory();
+}
+
+function resetLevel(){if(currentLevel)startLevel(currentLevel);}
+function resetProgress(){progress=[];localStorage.removeItem("progress");renderLevelList();}
+function updatePathValidity(){
+  invalidPath=false;let lastVal=-Infinity;
+  for(let[px,py]of path){
+    const val=board[py][px];
+    if(val!==null){if(val<lastVal){invalidPath=true;break;}lastVal=val;}
+  }
+}
+
+function goToNextLevel(){
+  const nextLevel=levels.find(lvl=>lvl.id===currentLevel.id+1);
+  if(nextLevel)startLevel(nextLevel);
+  else{document.getElementById("win-message").textContent="All levels completed!";document.getElementById("next-level-btn").classList.add("hidden");}
+}
+
+renderLevelList();
+</script>
+</body>
+</html>
