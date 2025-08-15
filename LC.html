@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lambda Calculus Beta Normal Form</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    body {
+        font-family: 'Inter', sans-serif;
+    }
+    .calc-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+    }
+</style>
+</head>
+<body>
+
+<div >
+    <h2 >Lambda Calculus Calculator</h2>
+
+    <div class="mb-4">
+        <label for="examples">Examples</label>
+        <select id="examples" onchange="chooseExample()">
+            <option value="">-- Select an Example --</option>
+            <option value="I">Identity (I)</option>
+            <option value="(l z. z) a">Identity (l z. z) applied to a</option>
+            <option value="(l x. x x) (l x. x x)">Omega (non-normalizing)</option>
+            <option value="K">K combinator</option>
+            <option value="K a b">K applied to a and b</option>
+            <option value="PLUS 2 3">PLUS 2 3 (Church Numerals)</option>
+            <option value="MULT 2 3">MULT 2 3</option>
+            <option value="AND TRUE FALSE">AND TRUE FALSE</option>
+            <option value="NOT TRUE">NOT TRUE</option>
+            <option value="SUCC 0">Successor of 0</option>
+        </select>
+    </div>
+
+    <div >
+        <input id="expr" placeholder="e.g., PLUS 2 1">
+        <button onclick="expand()" >Expand</button>
+        <button onclick="compute()" >Compute</button>
+    </div>
+
+    <div class="mt-6">
+        <h3>Result:</h3>
+        <pre id="result" ></pre>
+    </div>
+</div>
+
+<script>
+// --- AST Constructors ---
+function Var(name) { this.type='var'; this.name=name; }
+function Abs(param, body) { this.type='abs'; this.param=param; this.body=body; }
+function App(left, right) { this.type='app'; this.left=left; this.right=right; }
+
+// --- Parser ---
+// Simple parser for lambda calculus with left-associative application.
+function parseLambda(input) {
+    let i = 0;
+    function skip() { while (/\s/.test(input[i])) i++; }
+
+    function parseVar() {
+        skip();
+        let name = '';
+        while (i < input.length && /[a-zA-Z0-9]/.test(input[i])) {
+            name += input[i++];
+        }
+        if (name === '') throw "Unexpected token";
+        return new Var(name);
+    }
+
+    function parseAtom() {
+        skip();
+        if (input[i] === 'l') {
+            i++; skip();
+            let param = parseVar().name;
+            skip();
+            if (input[i] !== '.') throw "Expected '.' after parameter in abstraction";
+            i++; skip();
+            let body = parseExpr();
+            return new Abs(param, body);
+        } else if (input[i] === '(') {
+            i++; skip();
+            let expr = parseExpr();
+            skip();
+            if (input[i] !== ')') throw "Expected ')' to close expression";
+            i++;
+            return expr;
+        } else {
+            return parseVar();
+        }
+    }
+
+    function parseExpr() {
+        skip();
+        let expr = parseAtom();
+        while (i < input.length && input[i] !== ')') {
+            skip();
+            if (i >= input.length || input[i] === ')') break;
+            expr = new App(expr, parseAtom());
+        }
+        return expr;
+    }
+
+    const result = parseExpr();
+    skip();
+    if (i < input.length) throw "Unexpected characters at end of input";
+    return result;
+}
+
+
+// --- Core Lambda Calculus Logic ---
+let freshVarCounter = 0;
+function freshVar() { return 'v' + (freshVarCounter++); }
+
+function substitute(expr, x, s) {
+    if (expr.type === 'var') return expr.name === x ? s : expr;
+    if (expr.type === 'abs') {
+        if (expr.param === x) return expr;
+        if (freeVars(s).has(expr.param)) {
+            let newParam = freshVar();
+            let newBody = substitute(expr.body, expr.param, new Var(newParam));
+            return new Abs(newParam, substitute(newBody, x, s));
+        }
+        return new Abs(expr.param, substitute(expr.body, x, s));
+    }
+    if (expr.type === 'app') {
+        return new App(substitute(expr.left, x, s), substitute(expr.right, x, s));
+    }
+}
+
+function freeVars(expr) {
+    if (expr.type === 'var') return new Set([expr.name]);
+    if (expr.type === 'abs') {
+        let fvs = freeVars(expr.body);
+        fvs.delete(expr.param);
+        return fvs;
+    }
+    if (expr.type === 'app') {
+        return new Set([...freeVars(expr.left), ...freeVars(expr.right)]);
+    }
+}
+
+// Beta reduction (normal order) with a step limit to prevent infinite loops
+function betaReduce(expr, limit = 5500) {
+    let currentExpr = expr;
+    for (let i = 0; i < limit; i++) {
+        let reduced = reduceStep(currentExpr);
+        if (reduced === currentExpr) {
+            return currentExpr; // Normal form reached
+        }
+        currentExpr = reduced;
+    }
+    throw `Reduction limit of ${limit} steps reached. The expression might not terminate (like Omega).`;
+}
+
+function reduceStep(expr) {
+    if (expr.type === 'app' && expr.left.type === 'abs') {
+        return substitute(expr.left.body, expr.left.param, expr.right); // Beta reduction
+    } else if (expr.type === 'app') {
+        let l = reduceStep(expr.left);
+        if (l !== expr.left) return new App(l, expr.right);
+        let r = reduceStep(expr.right);
+        if (r !== expr.right) return new App(expr.left, r);
+        return expr;
+    } else if (expr.type === 'abs') {
+        let b = reduceStep(expr.body);
+        if (b !== expr.body) return new Abs(expr.param, b);
+        return expr;
+    } else return expr;
+}
+
+// Convert AST back to string with parentheses to preserve structure
+function toString(expr) {
+    if (!expr) return '';
+    if (expr.type === 'var') return expr.name;
+    if (expr.type === 'abs') return '(l' + expr.param + '.' + toString(expr.body) + ')';
+    if (expr.type === 'app') {
+        return '(' + toString(expr.left) + ' ' + toString(expr.right) + ')';
+    }
+}
+
+// --- Abbreviation Expansion and Compression ---
+
+const knownForms = {
+    // Combinators
+    'S': '(l x. l y. l z. (x z) (y z))',
+    'K': '(l x. l y. x)',
+    'I': '(l x. x)',
+    'Y': '(l f. (l x. f (x x)) (l x. f (x x)))',
+	'B': '(l x. l y. l z. x (y z))', // Composition
+    'C': '(l f. l x. l y. f y x)',   // Flip
+    'W': '(l f. l x. f x x)',        // Duplicator
+    // Booleans
+    'TRUE': '(l t. l f. t)',
+    'FALSE': '(l t. l f. f)',
+    // Logical Operators
+    'AND': '(l p. l q. p q p)',
+    'OR': '(l p. l q. p p q)',
+    'NOT': '(l p. p FALSE TRUE)',
+    'XOR': '(l a. l b. a (NOT b) b)',
+	
+	'IF': '(l p. l a. l b. p a b)',
+    // Arithmetic
+    'SUCC': '(l n. l f. l x. f (n f x))',
+    'PLUS': '(l m. l n. m SUCC n)',
+	'ADD': '(l m. l n. m SUCC n)',
+    '+': '(l m. l n. m SUCC n)',
+    'MULT': '(l m. l n. l f. m (n f))',
+	'MUL': '(l m. l n. l f. m (n f))',
+    '*': '(l m. l n. l f. m (n f))',
+    'POW': '(l b. l e. e b)',
+    '^': '(l b. l e. e b)',
+	
+	    'PRED': '(l n. l f. l x. n (l g. l h. h (g f)) (l u. x) (l u. u))',
+    'SUB': '(l m. l n. n PRED m)',
+    // Pairs
+    'PAIR': '(l x. l y. l f. f x y)',
+    'FST': '(l p. p (l x. l y. x))',
+    'SND': '(l p. p (l x. l y. y))',
+    // Lists
+    'NIL': '(l c. l n. n)',
+    'CONS': '(l h. l t. l c. l n. c h (t c n))',
+    'ISNIL': '(l l. l (l h. l t. FALSE) TRUE)',
+    'HEAD': '(l l. l (l h. l t. h) FALSE)',
+    'TAIL': '(l l. FST (l (l h. l t. PAIR t h) (PAIR NIL NIL)))',
+};
+
+// Helper to fully expand a definition string that might contain other abbreviations
+function expandString(str) {
+    let changed = true;
+    while (changed) {
+        changed = false;
+        for (const name in knownForms) {
+            const regex = new RegExp('\\b' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'g');
+            const newStr = str.replace(regex, `(${knownForms[name]})`);
+            if (newStr !== str) {
+                str = newStr;
+                changed = true;
+            }
+        }
+    }
+    return str;
+}
+
+// --- Alpha-Equivalence Aware Compression ---
+
+// Normalizes variable names in an AST for canonical representation.
+// This is the key to recognizing alpha-equivalent terms.
+function normalizeVars(expr, mapping = {}, canonicalNames = ['a','b','c','d','e','f','g','h','i','j','k','m','n','o','p','q','r','s','t','u','v','x','y','z']) {
+    if (!expr) return null;
+    switch (expr.type) {
+        case 'var':
+            return new Var(mapping[expr.name] || expr.name);
+        case 'app':
+            return new App(normalizeVars(expr.left, mapping, canonicalNames), normalizeVars(expr.right, mapping, canonicalNames));
+        case 'abs':
+            const newName = canonicalNames[0];
+            const newMapping = { ...mapping, [expr.param]: newName };
+            return new Abs(newName, normalizeVars(expr.body, newMapping, canonicalNames.slice(1)));
+    }
+}
+
+const reverseKnownForms = {};
+const reverseNumeralMap = {};
+
+// Initialize the reverse maps using normalized ASTs
+function initializeReverseMaps() {
+    // 1. Known Forms (S, K, I, etc.)
+    const sortedNames = Object.keys(knownForms).sort((a, b) => expandString(knownForms[b]).length - expandString(knownForms[a]).length);
+    sortedNames.forEach(name => {
+        const expandedDef = expandString(knownForms[name]);
+        try {
+            const ast = parseLambda(expandedDef);
+            const normalizedAst = normalizeVars(ast);
+            const canonicalString = toString(normalizedAst);
+            if (!reverseKnownForms[canonicalString]) {
+                reverseKnownForms[canonicalString] = name;
+            }
+        } catch (e) {
+            console.error(`Could not parse known form '${name}': ${expandedDef}`, e);
+        }
+    });
+
+    // 2. Church Numerals (0-20)
+    for (let i = 0; i <= 20; i++) {
+        let body = 'x';
+        if (i > 0) {
+            for (let j = 0; j < i; j++) {
+                body = `f(${body})`;
+            }
+        }
+        const numeralString = `(l f. l x. ${body})`;
+        const ast = parseLambda(numeralString);
+        const normalizedAst = normalizeVars(ast);
+        const canonicalString = toString(normalizedAst);
+        if (!reverseNumeralMap[canonicalString]) {
+             reverseNumeralMap[canonicalString] = i.toString();
+        }
+    }
+}
+
+// Call initialization once
+initializeReverseMaps();
+
+// Compresses an AST by checking for known forms and recursing.
+function compressAst(ast) {
+    if (!ast) return '';
+    // First, try to match the entire AST
+    const normalizedAst = normalizeVars(ast);
+    const canonicalString = toString(normalizedAst);
+
+    if (reverseKnownForms[canonicalString]) {
+        return reverseKnownForms[canonicalString];
+    }
+    if (reverseNumeralMap[canonicalString]) {
+        return reverseNumeralMap[canonicalString];
+    }
+
+    // If no full match, recurse and compress sub-expressions
+    switch (ast.type) {
+        case 'var':
+            return ast.name;
+        case 'app':
+            return `(${compressAst(ast.left)} ${compressAst(ast.right)})`;
+        case 'abs':
+            return `(l${ast.param}.${compressAst(ast.body)})`;
+        default:
+            return toString(ast); // Fallback
+    }
+}
+
+
+// --- UI Event Handlers ---
+
+// Expands abbreviations in the input field
+function expand() {
+    let expr = document.getElementById('expr').value;
+    // 1. Expand numerals (e.g., 3 -> l f. l x. f (f (f x)))
+    expr = expr.replace(/\b(\d+)\b/g, (match, nStr) => {
+        const n = parseInt(nStr, 10);
+        if (isNaN(n)) return match;
+        if (n === 0) return '(l f. l x. x)';
+        let body = 'x';
+        for (let i = 0; i < n; i++) { body = `f(${body})`; }
+        return `(l f. l x. ${body})`;
+    });
+    // 2. Expand other known forms iteratively
+    expr = expandString(expr);
+    document.getElementById('expr').value = expr;
+}
+
+function chooseExample() {
+    const e = document.getElementById('examples');
+    document.getElementById('expr').value = e.value;
+}
+
+function compute() {
+    const input = document.getElementById('expr').value;
+    freshVarCounter = 0; // Reset for each computation
+    const resultEl = document.getElementById('result');
+    
+    try {
+        // First, expand any abbreviations the user didn't expand manually
+        let currentInput = document.getElementById('expr').value;
+        let expandedInput = currentInput.replace(/\b(\d+)\b/g, (match, nStr) => {
+            const n = parseInt(nStr, 10);
+            if (isNaN(n)) return match;
+            if (n === 0) return '(l f. l x. x)';
+            let body = 'x';
+            for (let i = 0; i < n; i++) { body = `f(${body})`; }
+            return `(l f. l x. ${body})`;
+        });
+        expandedInput = expandString(expandedInput);
+
+        let ast = parseLambda(expandedInput);
+        let reducedAst = betaReduce(ast);
+        resultEl.textContent = compressAst(reducedAst);
+        resultEl.classList.remove('text-red-600');
+    } catch(e) {
+        resultEl.textContent = 'Error: ' + e;
+        resultEl.classList.add('text-red-600');
+    }
+}
+</script>
+
+</body>
+</html>
