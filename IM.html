@@ -32,7 +32,19 @@ textarea{width:500px;height:200px}
 <option value="">-- Example Effects --</option>
 
 <option value="gay">Gay <span class="example-tag tag-F">F</span></option>
+<option value="gay2">Gay 2 <span class="example-tag tag-F">F</span></option>
+<option value="gay3">Gay 3 <span class="example-tag tag-F">F</span></option>
 <option value="inverse">Inverse <span class="example-tag tag-A">A</span></option>
+
+<option value="">-- Colour Blindness --</option>
+
+<option value="protanopia">Protanopia (Red Blind) <span class="example-tag tag-A">A</span></option>
+<option value="deuteranopia">Deuteranopia (Green Blind) <span class="example-tag tag-A">A</span></option>
+<option value="tritanopia">Tritanopia (Blue Blind) <span class="example-tag tag-A">A</span></option>
+<option value="protanomaly">Protanomaly (Red Weak) <span class="example-tag tag-A">A</span></option>
+<option value="deuteranomaly">Deuteranomaly (Green Weak) <span class="example-tag tag-A">A</span></option>
+<option value="tritanomaly">Tritanomaly (Blue Weak) <span class="example-tag tag-A">A</span></option>
+
 
 <option value="">-- Generated Examples --</option>
 
@@ -483,6 +495,20 @@ function loadExample(v) {
     let formulas = {
         inverse: ["1-r", "1-g", "1-b"],
         contrast: ["(r-0.5)*1.5+0.5", "(g-0.5)*1.5+0.5", "(b-0.5)*1.5+0.5"],
+         "gay": { colorSpace: "jzazbz", formulas: ["jz", "az-x*550+275", "bz-y*550+275"] },
+         "gay2": { colorSpace: "oklab", formulas: ["l", "a+(x-0.5)*100", "b+(y-0.5)*100"] },
+         "gay3": { colorSpace: "lch", formulas: ["l", "c", "atan((x-0.5)/(y-0.5))"] },
+        
+        
+        
+    "protanopia": {  colorSpace: "lms", formulas: ["0", "m*1.051182", "s*0.951309"] },
+    "deuteranopia": { colorSpace: "lms", formulas: ["l*0.971", "0", "s*1.02045"]},
+    "tritanopia": {colorSpace: "lms",formulas: ["l*1.0", "m*1.0", "0"]},
+    "protanomaly": {colorSpace: "lms", formulas: ["(l*0.8 + m*0.2)", "m*1.0", "s*1.0"]},
+    "deuteranomaly": {colorSpace: "lms",formulas: ["l*1.0", "(m*0.8 + l*0.2)", "s*1.0"]},
+    "tritanomaly": {colorSpace: "lms",formulas: ["l*1.0", "m*1.0", "(s*0.8 + m*0.2)"]},
+ 
+        
         redshift: ["r*1.2", "g*0.8", "b*0.8"],
         bright: ["r+0.2", "g+0.2", "b+0.2"],
         grayscale: ["avg(r,g,b)", "avg(r,g,b)", "avg(r,g,b)"],
@@ -504,7 +530,7 @@ function loadExample(v) {
         "x-ray": { colorSpace: "lab", formulas: ["1-l", "0", "0"] },
         "psych-pulse": { colorSpace: "hsm", formulas: ["(h + sin(x*30 + m*10)) % 1", "s * (cos(y*30 - m*10) * 0.5 + 0.5)", "m"] },
         "color-isolate": { colorSpace: "jzazbz", formulas: ["jz", "sqrt(az^2 + bz^2) < 0.2 ? az : 0", "sqrt(az^2 + bz^2) < 0.2 ? bz : 0"] },
-         "gay": { colorSpace: "jzazbz", formulas: ["jz", "az-x*550+275", "bz-y*550+275"] },
+        
         "split-tone": { colorSpace: "tsl", formulas: ["l < 0.5 ? 0.66 : 0.16", "s * 1.2", "l"] },
     };
     
