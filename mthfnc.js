@@ -7681,7 +7681,9 @@ function escapetime(func,z,p=z,limit=10,itlim=5){
 	let x=z;
 	for(let i=0;i<itlim;i++)
 		{
-			 x = evale(func,{z:x,c:p,x:x,p:p,n:i});
+			  if(typeof func === "function")  x = func(x,p);
+        else
+			 x = math.evaluate(func,{z:x,c:p,x:x,p:p,n:i});
 			 if(mag(x)>limit)
 			return sub(mul(i,1),1,div(log(log(mag(x))),log(2)))
 		}
@@ -18249,7 +18251,7 @@ return fi; //foxh([[1.33],[1.5]],[[1],[0.5]],[[],[]],[[],[]],x)
 //foxh([[0.5,0.8],[1,2]],[[0.33],[0.76]],[[-1.23],[0.12]],[[0.1],[0.64]],x)
 //foxh([[0.5,0.8],[1,2]],[[0.33],[5.76]],[[-1.23],[0.12]],[[0.1,4.5],[0.64,0.1]],x)
 
-function qfoxh(Al,Bl,Cl,Dl,q,z){//ADD FIX this is just a test kilometers per nanosecond
+function qfoxh(Al,Bl,Cl,Dl,q,z){//kilometers per nanosecond
 let A = g(Al,0);let Ag = g(Al,1);
 let B = g(Bl,0);let Bg = g(Bl,1);
 let C = g(Cl,0);let Cg = g(Cl,1);
