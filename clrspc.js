@@ -2819,7 +2819,7 @@ if (colorMode === 'dynamic') {
 
 // Color mode: 'lightnessValue'
 if (colorMode === 'magnitudeold') {
-    const normMagnitude = (lightnessAdjusted / 1000); // Normalize lightnessValue
+    const normMagnitude = (lightnessAdjusted / 10); // Normalize lightnessValue
     return [
         Math.floor(255 * normMagnitude), // Red channel based on lightnessValue
         Math.floor(25 * (10 - normMagnitude)), // Green channel inverse of lightnessValue
@@ -2827,7 +2827,7 @@ if (colorMode === 'magnitudeold') {
     ];
 }
 if (colorMode === 'magnitude') {
-    const nore = (mag(lightnessAdjusted) /10); // Normalize lightnessValue
+    const nore = (mag(lightnessAdjusted) /1000); // Normalize lightnessValue
     return hsvToRgb(nore*520,50+30*sin(58*nore),50+30*cos(72*nore));
 }
 if (colorMode === 'magnitudecolour') {
