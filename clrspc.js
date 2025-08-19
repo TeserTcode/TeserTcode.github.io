@@ -2017,22 +2017,240 @@ function ictcpqc2ToRgb(i, t, p) {
 
 
 
+function rgbToHunterlab(r, g, b) {
+    const refX = 95.047;  
+const refY = 100.000;
+const refZ = 108.883;
+const Ka = 175.0; 
+const Kb = 70.0; 
+
+const [ X, Y, Z ] = rgbToXyz(r, g, b);
+
+    const sqrtY = Math.sqrt(Y / refY);
+    const L = 100 * sqrtY;
+    const a = Ka * ((X / refX - Y / refY) / sqrtY);
+    const bVal = Kb * ((Y / refY - Z / refZ) / sqrtY);
+
+return [ L, a, bVal ];
+}
+
+function hunterlabToRgb(L, a, bVal) {
+        const refX = 95.047;  
+const refY = 100.000;
+const refZ = 108.883;
+const Ka = 175.0; 
+const Kb = 70.0; 
+    const sqrtY = L / 100;
+    const Y = Math.pow(sqrtY, 2) * refY;
+    const X = ((a / Ka) * sqrtY + (Y / refY)) * refX;
+    const Z = ((Y / refY) - (bVal / Kb) * sqrtY) * refZ;
+
+    return xyzToRgb(X, Y, Z);
+}
+
+
+
+
+// RGB to RLAB conversion
+function rgbToRlab(r, g, b) {
+    // First convert RGB to LMS (cone response)
+    const l = 0.3811 * r /256 + 0.5783 * g/256 + 0.0402 * b/256;
+    const m = 0.1967 * r/256 + 0.7244 * g/256 + 0.0782 * b/256;
+    const s = 0.0241 * r/256 + 0.1288 * g/256 + 0.8444 * b/256;
+    
+    // Apply non-linear transform (log10)
+    const l_log = Math.log10(l);
+    const m_log = Math.log10(m);
+    const s_log = Math.log10(s);
+    
+    // Transformation matrix to RLAB
+    const mtx = [
+        [0.399, 0.401, 0.200],
+        [4.443, -4.838, 0.395],
+        [0.807, 0.357, -1.164]
+    ];
+    
+    return matrixMult(l_log*100, m_log*100, s_log*100, mtx);
+}
+
+// RLAB to RGB conversion
+function rlabToRgb(L, a, b) {
+    // Inverse transformation matrix
+    const invMtx = [
+        [1.1678, 0.0968, 0.1977],
+        [1.0216, -0.0839, 0.2806],
+        [0.8635, 0.2567, -0.5384]
+    ];
+    
+    // Get back LMS log values
+    const [l_log, m_log, s_log] = matrixMult(L/100, a/100, b/100, invMtx);
+    
+    // Convert back to linear LMS
+    const l = Math.pow(10, l_log);
+    const m = Math.pow(10, m_log);
+    const s = Math.pow(10, s_log);
+    
+    // Convert LMS to RGB
+    const r = 4.4679 * l * 255 - 3.5873 * m * 255+ 0.1193 * s* 255;
+    const g = -1.2186 * l * 255+ 2.3809 * m * 255- 0.1624 * s* 255;
+    const bb = 0.0497 * l * 255- 0.2439 * m * 255+ 1.2045 * s* 255;
+    
+    // Clip values to [0, 1] range (or [0, 255] if needed)
+    return [
+        Math.max(0, Math.min(256, r)),
+        Math.max(0, Math.min(256, g)),
+        Math.max(0, Math.min(256, bb))
+    ];
+}
 
 
 
 
 
+function rgbToIpt(r, g, b) {
+    // Normalize RGB to [0, 1]
+    let r_norm = r / 255;
+    let g_norm = g / 255;
+    let b_norm = b / 255;
+
+    // Linear RGB to LMS (cone response)
+    let l = 0.4002 * r_norm + 0.7075 * g_norm - 0.0807 * b_norm;
+    let m = -0.2280 * r_norm + 1.1500 * g_norm + 0.0612 * b_norm;
+    let s = 0.9184 * r_norm + 0.0 * g_norm + 0.0816 * b_norm;
+
+    // Apply non-linearity (power function)
+    let l_nonlin = Math.pow(Math.abs(l), 0.43) * Math.sign(l);
+    let m_nonlin = Math.pow(Math.abs(m), 0.43) * Math.sign(m);
+    let s_nonlin = Math.pow(Math.abs(s), 0.43) * Math.sign(s);
+
+    // Transform to IPT
+    let ipt = matrixMult(
+        l_nonlin, m_nonlin, s_nonlin,
+        [
+            [0.4000, 0.4000, 0.2000],
+            [4.4550, -4.8510, 0.3960],
+            [0.8056, 0.3572, -1.1628]
+        ]
+    );
+
+    // Scale to IPT ranges:
+    // I: 0-100, P: -100 to 100, T: -100 to 100
+    return [
+        (ipt[0] + 0.6) * (100 / 1.2),  // I [0-100]
+        ipt[1] * 100,                  // P [-100 to 100]
+        ipt[2] * 100                    // T [-100 to 100]
+    ];
+}
+
+// IPT to RGB [0-255] conversion
+function iptToRgb(i, p, t) {
+    // Normalize IPT values from their ranges
+    let i_norm = (i / 100 * 1.2) - 0.6;
+    let p_norm = p / 100;
+    let t_norm = t / 100;
+
+    // Inverse transform from IPT to LMS
+    let lms_nonlin = matrixMult(
+    i_norm, p_norm, t_norm,
+        [
+            [1.0, 0.0976, 0.2052],
+            [1.0, -0.1139, 0.1332],
+            [1.0, 0.0326, -0.6769]
+        ]
+    );
+
+    // Remove non-linearity
+    let l = Math.pow(Math.abs(lms_nonlin[0]), 1/0.43) * Math.sign(lms_nonlin[0]);
+    let m = Math.pow(Math.abs(lms_nonlin[1]), 1/0.43) * Math.sign(lms_nonlin[1]);
+    let s = Math.pow(Math.abs(lms_nonlin[2]), 1/0.43) * Math.sign(lms_nonlin[2]);
+
+    // LMS to linear RGB
+    let r_linear = 1.8502 * l - 1.1383 * m + 0.2384 * s;
+    let g_linear = 0.3668 * l + 0.6439 * m - 0.0107 * s;
+    let b_linear = 1.0889 * l - 0.2810 * m - 0.8078 * s;
+
+    // Clip and scale to 0-255
+    return [
+        Math.round(Math.max(0, Math.min(255, r_linear * 255))),
+        Math.round(Math.max(0, Math.min(255, g_linear * 255))),
+        Math.round(Math.max(0, Math.min(255, b_linear * 255)))
+    ];
+}
 
 
 
 
 
+// RGB to IgPgTg conversion
+function rgbToIgpgtg(r, g, b) {
+    // Normalize RGB to [0, 1]
+    const r_norm = r / 255;
+    const g_norm = g / 255;
+    const b_norm = b / 255;
 
+    // Linear RGB to LMS (cone response)
+    const l = 0.4124 * r_norm + 0.3576 * g_norm + 0.1805 * b_norm;
+    const m = 0.2126 * r_norm + 0.7152 * g_norm + 0.0722 * b_norm;
+    const s = 0.0193 * r_norm + 0.1192 * g_norm + 0.9505 * b_norm;
 
+    // Apply non-linearity (power function)
+    const l_nonlin = Math.pow(Math.abs(l), 0.43) * Math.sign(l);
+    const m_nonlin = Math.pow(Math.abs(m), 0.43) * Math.sign(m);
+    const s_nonlin = Math.pow(Math.abs(s), 0.43) * Math.sign(s);
 
+    // Transform to IgPgTg using optimized matrix
+    const igpgtg = matrixMult( 
+    l_nonlin, m_nonlin, s_nonlin,
+        [
+            [0.3785, 0.4205, 0.2010],  // Ig coefficients
+            [4.6530, -4.9010, 0.2480], // Pg coefficients
+            [0.8325, 0.3405, -1.1730]  // Tg coefficients
+        ]
+    );
 
+    // Scale to IgPgTg ranges:
+    // Ig: 0-100, Pg: -100 to 100, Tg: -100 to 100
+    return [
+        (igpgtg[0] + 0.6) * (100 / 1.2),  // Ig [0-100]
+        igpgtg[1] * 100,                   // Pg [-100 to 100]
+        igpgtg[2] * 100                    // Tg [-100 to 100]
+    ];
+}
 
+// IgPgTg to RGB conversion
+function igpgtgToRgb(ig, pg, tg) {
+    // Normalize IgPgTg values from their ranges
+    const ig_norm = (ig / 100 * 1.2) - 0.6;
+    const pg_norm = pg / 100;
+    const tg_norm = tg / 100;
 
+    // Inverse transform from IgPgTg to LMS
+    const lms_nonlin = matrixMult(
+    ig_norm, pg_norm, tg_norm,
+        [
+            [1.0000, 0.0945, 0.1985],  // Inverse Ig row
+            [1.0000, -0.1105, 0.1305], // Inverse Pg row
+            [1.0000, 0.0355, -0.6805]   // Inverse Tg row
+        ]
+    );
+
+    // Remove non-linearity
+    const l = Math.pow(Math.abs(lms_nonlin[0]), 1/0.43) * Math.sign(lms_nonlin[0]);
+    const m = Math.pow(Math.abs(lms_nonlin[1]), 1/0.43) * Math.sign(lms_nonlin[1]);
+    const s = Math.pow(Math.abs(lms_nonlin[2]), 1/0.43) * Math.sign(lms_nonlin[2]);
+
+    // LMS to linear RGB
+    const r_linear = 3.2406 * l - 1.5372 * m - 0.4986 * s;
+    const g_linear = -0.9689 * l + 1.8758 * m + 0.0415 * s;
+    const b_linear = 0.0557 * l - 0.2040 * m + 1.0570 * s;
+
+    // Clip and scale to 0-255
+    return [
+        Math.round(Math.max(0, Math.min(255, r_linear * 255))),
+        Math.round(Math.max(0, Math.min(255, g_linear * 255))),
+        Math.round(Math.max(0, Math.min(255, b_linear * 255)))
+    ];
+}
 
 
 
@@ -2601,7 +2819,7 @@ if (colorMode === 'dynamic') {
 
 // Color mode: 'lightnessValue'
 if (colorMode === 'magnitudeold') {
-    const normMagnitude = (lightnessValue / 10); // Normalize lightnessValue
+    const normMagnitude = (lightnessAdjusted / 1000); // Normalize lightnessValue
     return [
         Math.floor(255 * normMagnitude), // Red channel based on lightnessValue
         Math.floor(25 * (10 - normMagnitude)), // Green channel inverse of lightnessValue
@@ -2609,13 +2827,13 @@ if (colorMode === 'magnitudeold') {
     ];
 }
 if (colorMode === 'magnitude') {
-    const nore = (mag(complexOutput) / 10); // Normalize lightnessValue
+    const nore = (mag(lightnessAdjusted) /10); // Normalize lightnessValue
     return hsvToRgb(nore*520,50+30*sin(58*nore),50+30*cos(72*nore));
 }
 if (colorMode === 'magnitudecolour') {
    // const normMagnitude = Math.min(lightnessValue / 10, 1); // Normalize lightnessValue
-    const lightnessValue =lightnessAdjusted //teth.evaluate(lightnessValueToLightnessExpr, { x: lightnessValue, z: });
-    return hsvToRgb(lightnessValue*100,100,Math.max(lightnessValue,50))
+    const lightnessValue =lightnessAdjusted/100 //teth.evaluate(lightnessValueToLightnessExpr, { x: lightnessValue, z: });
+    return hsvToRgb(lightnessValue*100,100,Math.max(lightnessValue,100))
 }
 
 if (colorMode === 'neon') {
