@@ -4,49 +4,144 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lambda Calculus Beta Normal Form</title>
-<script src="https://cdn.tailwindcss.com"></script>
 <style>
     body {
-        font-family: 'Inter', sans-serif;
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
     }
-    .calc-container {
-        max-width: 800px;
-        margin: 2rem auto;
-        padding: 2rem;
+    .panel {
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin-bottom: 15px;
+        background: #f9f9f9;
+    }
+    .input-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    input, select, button {
+        padding: 8px;
+        font-size: 16px;
+    }
+    input {
+        flex-grow: 1;
+    }
+    button {
+        background: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+    button:hover {
+        background: #45a049;
+    }
+    pre {
+        background: #eee;
+        padding: 10px;
+        overflow-x: auto;
+    }
+    #history {
+        max-height: 300px;
+        overflow-y: auto;
+        border-top: 1px solid #ddd;
+        margin-top: 10px;
+        padding-top: 10px;
+    }
+    .history-step {
+        margin-bottom: 5px;
+        padding: 5px;
+        border-bottom: 1px solid #eee;
+    }
+    .error {
+        color: red;
     }
 </style>
 </head>
 <body>
 
-<div >
-    <h2 >Lambda Calculus Calculator</h2>
+<h1>Lambda Calculus Calculator</h1>
 
-    <div class="mb-4">
-        <label for="examples">Examples</label>
+<div class="panel">
+    <h2>Input</h2>
+    
+    <div>
+        <label for="examples">Examples:</label>
         <select id="examples" onchange="chooseExample()">
-            <option value="">-- Select an Example --</option>
-            <option value="I">Identity (I)</option>
-            <option value="(l z. z) a">Identity (l z. z) applied to a</option>
-            <option value="(l x. x x) (l x. x x)">Omega (non-normalizing)</option>
-            <option value="K">K combinator</option>
-            <option value="K a b">K applied to a and b</option>
-            <option value="PLUS 2 3">PLUS 2 3 (Church Numerals)</option>
-            <option value="MULT 2 3">MULT 2 3</option>
-            <option value="AND TRUE FALSE">AND TRUE FALSE</option>
-            <option value="NOT TRUE">NOT TRUE</option>
-            <option value="SUCC 0">Successor of 0</option>
-        </select>
+<option value="">-- Select an Example --</option>
+<option value="I">Identity (I)</option>
+<option value="(l z. z) a">Identity (l z. z) applied to a</option>
+<option value="(l x. x x) (l x. x x)">Omega (non-normalizing)</option>
+<option value="K">K combinator</option>
+<option value="K a b">K applied to a and b</option>
+<option value="PLUS 2 3">PLUS 2 3 (Church Numerals)</option>
+<option value="MULT 2 3">MULT 2 3</option>
+<option value="AND TRUE FALSE">AND TRUE FALSE</option>
+<option value="NOT TRUE">NOT TRUE</option>
+<option value="SUCC 0">Successor of 0</option>
+<!-- More complex examples below -->
+<option value="S K I (K I S)">S K I (K I S) combinator chain</option>
+<option value="(l x. l y. l z. x z (y z)) (l x. l y. x) (l x. x)">S K I expanded</option>
+<option value="MULT (ADD 2 3) (POW 2 3)">MULT (ADD 2 3) (POW 2 3)</option>
+<option value="(l f. (l x. f (x x)) (l x. f (x x))) (l f. l n. IF (ISZERO n) 1 (MULT n (f (PRED n))))">Y combinator factorial</option>
+<option value="(l m. l n. l s. l z. m s (n s z)) (l s. l z. s (s z)) (l s. l z. s (s (s z)))">PLUS 2 3 expanded</option>
+<option value="(l m. l n. l s. m (n s)) (l s. l z. s (s z)) (l s. l z. s (s (s z)))">MULT 2 3 expanded</option>
+<option value="(l p. l q. p q p) (l t. l f. t) (l t. l f. f)">AND TRUE FALSE expanded</option>
+<option value="(l c. l l. l (l h. l t. l c'. l n. c' h (t c' n)) (l c'. l n. n)) (l h. l t. l c. l n. c h (t c n))">CONS applied to NIL</option>
+<option value="(l n. l f. l x. f (n f x)) (l f. l x. x)">SUCC 0 expanded</option>
+<option value="(l f. (l x. f (x x)) (l x. f (x x))) (l r. l n. (l p. p (l a. l b. a)) n (l f. l x. f x) ((l m. l n. l s. m (n s)) n (r ((l n. l f. l x. n (l g. l h. h (g f)) (l u. x) (l u. u)) n))))">Y combinator for PRED</option>
+<option value="(l x. l y. l z. x z (y z)) ((l x. l y. l z. x z (y z)) (l x. l y. x) (l x. x)) (l x. l y. x)">S (S K I) K</option>
+<option value="(l x. x x) (l x. l y. x y x)">Self-application with parameters</option>
+<option value="(l x. l y. l z. x y (y z)) (l x. l y. x) (l x. l y. x)">Complex abstraction chain</option>
+<option value="(l f. l g. l x. f x (g x)) ((l x. l y. x) (l x. x)) ((l x. l y. y) (l x. x))">S combinator with K I</option>
+<option value="(l x. l y. l z. x z (y z)) (l x. l y. x) ((l x. l y. l z. x z (y z)) (l x. l y. x) (l x. x))">S K (S K I)</option>
+<option value="(l m. l n. l f. m (n f)) ((l m. l n. l f. m (n f)) (l f. l x. f (f x)) (l f. l x. f (f (f x)))) (l f. l x. f (f x))">MULT (MULT 2 3) 2</option>
+<option value="(l b. l e. e b) ((l m. l n. l f. m (n f)) (l f. l x. f (f x)) (l f. l x. f (f (f x)))) (l f. l x. f (f x))">POW (MULT 2 3) 2</option>
+<option value="(l p. l a. l b. p a b) ((l n. n (l x. l t. l f. f) (l t. l f. t)) (l f. l x. x)) (l f. l x. f x) (l f. l x. x)">IF (ISZERO 0) 1 0</option>
+<option value="(l x. x x) (l y. y y) (l z. z z)">Triple self-application omega</option>
+<option value="S (K (S I)) (S (K K) I) a b c">Complex combinator chain with 3 args</option>
+<option value="MULT (ADD 3 (POW 2 3)) (SUCC (MULT 2 5))">Nested arithmetic operations</option>
+<option value="(l f. (l x. f (x x)) (l x. f (x x))) (l f. l n. IF (ISZERO n) 1 (MULT n (f (PRED n)))) 4">Y combinator factorial of 4</option>
+<option value="(l f. (l x. f (x x)) (l x. f (x x))) (l f. l n. (ISZERO n) 0 (ADD n (f (PRED n)))) 5">Y combinator sum of 1-5</option>
+<option value="(l m. l n. PAIR m n) (POW 2 4) (MULT 3 5)">Pairs with computed values</option>
+<option value="HEAD (TAIL (CONS 1 (CONS 2 (CONS 3 NIL))))">List operations with Church numerals</option>
+<option value="(l e. l o. l n. IF (ISZERO n) e (o (e. l o. l n. IF (ISZERO n) e (o (PRED n)))) (PRED n))) TRUE FALSE 3">Nested even/odd checker</option>
+<option value="(l f. l x. f (f (f x))) ((l m. l n. l f. m (n f)) (l f. l x. f (f x)) (l f. l x. f (f (f x))))">3 * (2 * 3) expanded</option>
+<option value="(l x. l y. l z. x z (y z)) ((l x. l y. l z. x z (y z)) (l x. l y. x) (l x. x)) ((l x. l y. l z. x z (y z)) (l x. l y. x) (l x. x)) a b c">S (S K I) (S K I) applied</option>
+<option value="(l f. (l x. f (x x)) (l x. f (x x))) (l f. l p. l q. IF (ISZERO p) q (f (PRED p) (SUCC q))) 4 0">Y combinator multiplication via addition</option>
+<option value="(l c. l n. c (l f. l x. f (n f x)) (l f. l x. f (f (f x))) (l f. l x. x)">Church numeral predecessor</option>
+<option value="(l m. l n. n (l n. l f. l x. n (l g. l h. h (g f)) (l u. x) (l u. u)) m) (l f. l x. f (f (f (f x)))) (l f. l x. f (f x))">4 - 2 expanded</option>
+<option value="(l f. (l x. f (x x)) (l x. f (x x))) (l f. l n. (l p. p (l a. l b. a)) n (l f. l x. f x) ((l m. l n. l s. m (n s)) n (f ((l n. l f. l x. n (l g. l h. h (g f)) (l u. x) (l u. u)) n)))) 3">Y combinator predecessor of 3</option>
+<option value="(l f. (l x. f (x x)) (l x. f (x x))) (l f. l n. (l p. p (l a. l b. a)) n (l f. l x. f (f x)) ((l m. l n. l s. m (n s)) n (f ((l n. l f. l x. n (l g. l h. h (g f)) (l u. x) (l u. u)) n))) 2">Y combinator double factorial</option>
+
+</select>
     </div>
 
-    <div >
+    <div class="input-group">
         <input id="expr" placeholder="e.g., PLUS 2 1">
-        <button onclick="expand()" >Expand</button>
-        <button onclick="compute()" >Compute</button>
     </div>
+    
+    <div class="input-group">
+        <button onclick="expand()">Expand</button>
+        <button onclick="compute()">Compute</button>
+        <button onclick="expandAndCompute()">Expand & Compute</button>
+    </div>
+    
+    <div>
+        <h3>Expanded Form:</h3>
+        <pre id="expanded"></pre>
+    </div>
+</div>
 
-    <div class="mt-6">
-        <h3>Result:</h3>
-        <pre id="result" ></pre>
+<div class="panel">
+    <h2>Result</h2>
+    <pre id="result"></pre>
+    
+    <div id="history">
+        <h3>Reduction Steps:</h3>
     </div>
 </div>
 
@@ -111,7 +206,6 @@ function parseLambda(input) {
     return result;
 }
 
-
 // --- Core Lambda Calculus Logic ---
 let freshVarCounter = 0;
 function freshVar() { return 'v' + (freshVarCounter++); }
@@ -145,14 +239,19 @@ function freeVars(expr) {
 }
 
 // Beta reduction (normal order) with a step limit to prevent infinite loops
-function betaReduce(expr, limit = 5500) {
+function betaReduceWithHistory(expr, limit = 5500) {
     let currentExpr = expr;
+    const history = [];
+    
+    history.push({step: 0, expr: currentExpr});
+    
     for (let i = 0; i < limit; i++) {
         let reduced = reduceStep(currentExpr);
         if (reduced === currentExpr) {
-            return currentExpr; // Normal form reached
+            return {result: currentExpr, history}; // Normal form reached
         }
         currentExpr = reduced;
+        history.push({step: i+1, expr: currentExpr});
     }
     throw `Reduction limit of ${limit} steps reached. The expression might not terminate (like Omega).`;
 }
@@ -191,31 +290,59 @@ const knownForms = {
     'K': '(l x. l y. x)',
     'I': '(l x. x)',
     'Y': '(l f. (l x. f (x x)) (l x. f (x x)))',
-	'B': '(l x. l y. l z. x (y z))', // Composition
+    'B': '(l x. l y. l z. x (y z))', // Composition
     'C': '(l f. l x. l y. f y x)',   // Flip
     'W': '(l f. l x. f x x)',        // Duplicator
+    
+    'U': ' S I I ', 
+    'T': ' S I I ( S ( K ( S I ) ) ( S I I ) ) ', 
+    'R': ' B ( W W ) ( B W ( B B B ) ) ', //Θ₄ by R.Statman
+    'T4': ' B ( W W ) ( B W ( B B B ) ) ', //Θ₄ by R.Statman
+    'J': ' S S K ( S ( K ( S S ( S ( S S K ) ) ) ) K ) ', //Y' by john tromp
+    "Y'": ' S S K ( S ( K ( S S ( S ( S S K ) ) ) ) K ) ', //Y' by john tromp
+    'Z': '(l f. (l x. f (l v. x x v))) (l x. f (l v. x x v))'
+     
     // Booleans
     'TRUE': '(l t. l f. t)',
     'FALSE': '(l t. l f. f)',
     // Logical Operators
-    'AND': '(l p. l q. p q p)',
-    'OR': '(l p. l q. p p q)',
-    'NOT': '(l p. p FALSE TRUE)',
-    'XOR': '(l a. l b. a (NOT b) b)',
-	
-	'IF': '(l p. l a. l b. p a b)',
+    // Numeric Predicates
+    'ISZERO': '(l n. n (l x. FALSE) TRUE)', // λn.n (λx.FALSE) TRUE
+    'ISEVEN': '(l n. n NOT TRUE)',          // λn.n NOT TRUE
+    'ISODD': '(l n. n NOT FALSE)',          // λn.n NOT FALSE
+    
+    // Comparison Operators (for Church numerals)
+    'LEQ': '(l m. l n. ISZERO (SUB m n))',  // λm.λn.ISZERO (SUB m n)
+    'GEQ': '(l m. l n. ISZERO (SUB n m))',  // λm.λn.ISZERO (SUB n m)
+    'EQ': '(l m. l n. AND (ISZERO (SUB m n)) (ISZERO (SUB n m)))', // λm.λn.AND (ISZERO (SUB m n)) (ISZERO (SUB n m))
+    'LT': '(l m. l n. AND (LEQ m n) (NOT (EQ m n)))', // λm.λn.AND (LEQ m n) (NOT (EQ m n))
+    'GT': '(l m. l n. AND (GEQ m n) (NOT (EQ m n)))', // λm.λn.AND (GEQ m n) (NOT (EQ m n))
+    
+    // Extended Logic Gates
+    'NAND': '(l p. l q. NOT (AND p q))',    // λp.λq.NOT (AND p q)
+    'NOR': '(l p. l q. NOT (OR p q))',      // λp.λq.NOT (OR p q)
+    'XNOR': '(l a. l b. NOT (XOR a b))',    // λa.λb.NOT (XOR a b)
+    
+    // Ternary Logic
+    'IFELSE': '(l c. l t. l f. c t f)',     // λc.λt.λf.c t f (same as IF)
+    
+    // Multiplexers
+    'MUX': '(l s. l a. l b. s a b)',        // λs.λa.λb.s a b (2:1 mux)
+    
+    // De Morgan's Laws implemented directly
+    'DEMORGAN_AND': '(l p. l q. NOT (OR (NOT p) (NOT q)))', // ¬(¬p ∨ ¬q) ≡ p ∧ q
+    'DEMORGAN_OR': '(l p. l q. NOT (AND (NOT p) (NOT q)))'  // ¬(¬p ∧ ¬q) ≡ p ∨ q
     // Arithmetic
     'SUCC': '(l n. l f. l x. f (n f x))',
     'PLUS': '(l m. l n. m SUCC n)',
-	'ADD': '(l m. l n. m SUCC n)',
+    'ADD': '(l m. l n. m SUCC n)',
     '+': '(l m. l n. m SUCC n)',
     'MULT': '(l m. l n. l f. m (n f))',
-	'MUL': '(l m. l n. l f. m (n f))',
+    'MUL': '(l m. l n. l f. m (n f))',
     '*': '(l m. l n. l f. m (n f))',
     'POW': '(l b. l e. e b)',
     '^': '(l b. l e. e b)',
-	
-	    'PRED': '(l n. l f. l x. n (l g. l h. h (g f)) (l u. x) (l u. u))',
+    'PRED': '(l n. l f. l x. n (l g. l h. h (g f)) (l u. x) (l u. u))',
     'SUB': '(l m. l n. n PRED m)',
     // Pairs
     'PAIR': '(l x. l y. l f. f x y)',
@@ -333,7 +460,6 @@ function compressAst(ast) {
     }
 }
 
-
 // --- UI Event Handlers ---
 
 // Expands abbreviations in the input field
@@ -350,7 +476,7 @@ function expand() {
     });
     // 2. Expand other known forms iteratively
     expr = expandString(expr);
-    document.getElementById('expr').value = expr;
+    document.getElementById('expanded').textContent = expr;
 }
 
 function chooseExample() {
@@ -358,10 +484,21 @@ function chooseExample() {
     document.getElementById('expr').value = e.value;
 }
 
+function expandAndCompute() {
+    expand();
+    compute();
+}
+
 function compute() {
     const input = document.getElementById('expr').value;
     freshVarCounter = 0; // Reset for each computation
     const resultEl = document.getElementById('result');
+    const historyEl = document.getElementById('history');
+    
+    // Clear previous history (except the title)
+    while (historyEl.childNodes.length > 1) {
+        historyEl.removeChild(historyEl.lastChild);
+    }
     
     try {
         // First, expand any abbreviations the user didn't expand manually
@@ -377,12 +514,22 @@ function compute() {
         expandedInput = expandString(expandedInput);
 
         let ast = parseLambda(expandedInput);
-        let reducedAst = betaReduce(ast);
+        let {result: reducedAst, history} = betaReduceWithHistory(ast);
+        
+        // Display the final result
         resultEl.textContent = compressAst(reducedAst);
-        resultEl.classList.remove('text-red-600');
+        resultEl.className = '';
+        
+        // Display the reduction history
+        history.forEach((step, index) => {
+            const stepEl = document.createElement('div');
+            stepEl.className = 'history-step';
+            stepEl.innerHTML = `<strong>Step ${step.step}:</strong> ${compressAst(step.expr)}`;
+            historyEl.appendChild(stepEl);
+        });
     } catch(e) {
         resultEl.textContent = 'Error: ' + e;
-        resultEl.classList.add('text-red-600');
+        resultEl.className = 'error';
     }
 }
 </script>

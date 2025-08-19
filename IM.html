@@ -35,6 +35,7 @@ textarea{width:500px;height:200px}
 <option value="gay2">Gay 2 <span class="example-tag tag-F">F</span></option>
 <option value="gay3">Gay 3 <span class="example-tag tag-F">F</span></option>
 <option value="inverse">Inverse <span class="example-tag tag-A">A</span></option>
+<option value="tesertbot">TeserTBot <span class="example-tag tag-A">A</span></option>
 
 <option value="">-- Colour Blindness --</option>
 
@@ -535,6 +536,73 @@ function loadExample(v) {
     };
     
     let jsFuncs = {
+    
+    "tesertbot": 
+    `
+    
+    function f(im) {
+  let g = (x, y) => im.pic(x / im.w, y / im.h, 'avg'),
+      o = [],
+      X = [0, 0, 0, -1, 0, 1, 0, 0, 0], // Simple Sobel X
+      Y = [0, -1, 0, 0, 0, 0, 0, 1, 0]; // Simple Sobel Y
+  
+  // First pass: Edge detection
+  let edges = [];
+  for (let y = 0; y < im.h; y++) {
+    for (let x = 0; x < im.w; x++) {
+      let a = 0, b = 0;
+      for (let k = 0; k < 9; k++) {
+        let v = g(x + (k % 3) - 1, y + (k / 3 | 0) - 1);
+        a += v * X[k];
+        b += v * Y[k];
+      }
+      let m = Math.sqrt(a * a + b * b);
+      edges.push(m);
+    }
+  }
+
+  // Second pass: Simple box blur (for glow)
+  let blurred = [];
+  for (let y = 0; y < im.h; y++) {
+    for (let x = 0; x < im.w; x++) {
+      let sum = 0, count = 0;
+      for (let ky = -1; ky <= 1; ky++) {
+        for (let kx = -1; kx <= 1; kx++) {
+          let px = x + kx, py = y + ky;
+          if (px >= 0 && px < im.w && py >= 0 && py < im.h) {
+            sum += edges[py * im.w + px];
+            count++;
+          }
+        }
+      }
+      blurred.push(sum / count);
+    }
+  }
+
+  // Combine original edges + blurred edges (glow)
+  for (let y = 0; y < im.h; y++) {
+    for (let x = 0; x < im.w; x++) {
+      let idx = y * im.w + x;
+      let m = edges[idx] / 1 + (blurred[idx] * 1); // Original + blurred/2
+      m = Math.min(1, m * 1); // Boost brightness
+
+      // Vertical gradient (green → cyan → blue)
+      let t = y / im.h;
+      let c = {
+        r: 0,
+        g: 2 - 2 * t,
+        b:  2 * t - 1
+      };
+
+      o.push({ r: m * c.r, g: m * c.g, b: m * c.b * 2 });
+    }
+  }
+  return o;
+}
+    
+    
+    `
+    ,
 
         "chromatic-aberration": `function f({w,h,picColor,fromColorSpace}){
     let out=[];

@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Advanced MP3 DSP Stack</title>
+  <style>
+    body { font-family: sans-serif; margin: 2em; }
+    .block { 
+      padding: 0.5em; 
+      border: 1px solid #ccc; 
+      margin: 0.5em 0; 
+      background: #f9f9f9; 
+      cursor: move;
+      position: relative;
+    }
+    .block button { float: right; margin-left: 5px; }
+    .block-params { margin-top: 5px; padding-top: 5px; border-top: 1px dashed #ddd; }
+    .block-params input, .block-params select { width: 60px; margin-right: 5px; }
+    #blocks, #stack { margin: 1em 0; min-width: 300px; min-height: 100px; }
+    .column { display: inline-block; vertical-align: top; margin-right: 2em; }
+    #waveform { width: 100%; height: 150px; border: 1px solid #ccc; margin-top: 1em; }
+    canvas { width: 100%; height: 100%; }
+    .dragging { opacity: 0.5; }
+    .drop-target { border: 2px dashed #666; }
+    #progressContainer { 
+      width: 100%; 
+      height: 20px; 
+      background: #f0f0f0; 
+      margin: 10px 0; 
+      display: none;
+    }
+    #progressBar {
+      width: 0%; 
+      height: 100%; 
+      background: #4CAF50;
+      transition: width 0.3s;
+    }
+    .tooltip {
+      position: relative;
+      display: inline-block;
+    }
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 200px;
+      background-color: #555;
+      color: #fff;
+      text-align: center;
+      border-radius: 6px;
+      padding: 5px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%;
+      left: 50%;
+      margin-left: -100px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <h1>Advanced MP3 DSP Stack</h1>
+  <input type="file" id="fileInput" accept="audio/mp3" />
+  
+  <div id="waveform">
+    <canvas id="waveformCanvas"></canvas>
+  </div>
+  
+  <div id="progressContainer">
+    <div id="progressBar"></div>
+  </div>
+  
+  <div class="column">
+    <h3>Available Blocks</h3>
+    <div id="blocks"></div>
+  </div>
+  <div class="column">
+    <h3>DSP Stack <small>(drag to reorder)</small></h3>
+    <div id="stack"></div>
+    <button id="generate">Generate Output</button>
+  </div>
+  
+  <div id="output"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.0/lame.min.js"></script>
+  <script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const waveformCanvas = document.getElementById('waveformCanvas');
+    const waveformCtx = waveformCanvas.getContext('2d');
+    let originalBuffer = null;
+    let currentBuffer = null;
+    let dragItem = null;
+
+    // FFT implementation since the CDN one wasn't working
+    class FFT {
+      constructor(size) {
+        this.size = size;
+        this._cosTable = new Float32Array(size);
+        this._sinTable = new Float32Array(size);
+        
+        for (let i = 0; i < size; i++) {
+          this._cosTable[i] = Math.cos(2 * Math.PI * i / size);
+          this._sinTable[i] = Math.sin(2 * Math.PI * i / size);
+        }
+      }
+      
+      realTransform(outImag, outReal) {
+        const n = this.size;
+        for (let i = 0; i < n; i++) {
+          let sumReal = 0;
+          let sumImag = 0;
+          for (let j = 0; j < n; j++) {
+            const angle = 2 * Math.PI * i * j / n;
+            sumReal += outReal[j] * Math.cos(angle);
+            sumImag -= outReal[j] * Math.sin(angle);
+          }
+          outReal[i] = sumReal;
+          outImag[i] = sumImag;
+        }
+      }
+      
+      inverseTransform(outReal, outImag) {
+        const n = this.size;
+        for (let i = 0; i < n; i++) {
+          let sum = 0;
+          for (let j = 0; j < n; j++) {
+            const angle = 2 * Math.PI * i * j / n;
+            sum += outReal[j] * Math.cos(angle) - outImag[j] * Math.sin(angle);
+          }
+          outReal[i] = sum / n;
+        }
+      }
+    }
+
+    // Helper function to resize canvas properly
+    function resizeCanvas() {
+      waveformCanvas.width = waveformCanvas.clientWidth;
+      waveformCanvas.height = waveformCanvas.clientHeight;
+      if (currentBuffer) drawWaveform(currentBuffer);
+    }
+    
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Draw waveform
+    function drawWaveform(buffer) {
+      const width = waveformCanvas.width;
+      const height = waveformCanvas.height;
+      const data = buffer.getChannelData(0);
+      const step = Math.ceil(data.length / width);
+      
+      waveformCtx.clearRect(0, 0, width, height);
+      waveformCtx.beginPath();
+      waveformCtx.strokeStyle = '#3498db';
+      waveformCtx.lineWidth = 1;
+      
+      for (let i = 0; i < width; i++) {
+        const start = i * step;
+        const end = start + step;
+        let min = 1.0;
+        let max = -1.0;
+        
+        for (let j = start; j < end && j < data.length; j++) {
+          const value = data[j];
+          min = Math.min(min, value);
+          max = Math.max(max, value);
+        }
+        
+        const yMin = (1 + min) * height / 2;
+        const yMax = (1 + max) * height / 2;
+        
+        if (i === 0) {
+          waveformCtx.moveTo(i, yMin);
+        } else {
+          waveformCtx.lineTo(i, yMin);
+        }
+        waveformCtx.lineTo(i, yMax);
+      }
+      
+      waveformCtx.stroke();
+    }
+
+    // Update progress bar
+    function updateProgress(percent) {
+      const progressBar = document.getElementById('progressBar');
+      progressBar.style.width = percent + '%';
+    }
+
+    // DSP block definitions with parameters
+    const blockTypes = [
+      {
+        name: "Invert Phase",
+        description: "Inverts the audio signal phase",
+        process: async (buffer, params, updateProgress) => {
+          const out = audioCtx.createBuffer(1, buffer.length, buffer.sampleRate);
+          const input = buffer.getChannelData(0);
+          const output = out.getChannelData(0);
+          for (let i = 0; i < input.length; i++) {
+            output[i] = -input[i];
+            if (i % 1000 === 0) updateProgress(i / input.length * 100);
+          }
+          return out;
+        }
+      },
+      {
+        name: "Nonlinear Distortion",
+        description: "Applies x * |x|^k nonlinearity",
+        params: [
+          { name: "exponent", type: "number", min: 0, max: 5, step: 0.1, default: 1 }
+        ],
+        process: async (buffer, params, updateProgress) => {
+          const exponent = params.exponent || 1;
+          const out = audioCtx.createBuffer(1, buffer.length, buffer.sampleRate);
+          const input = buffer.getChannelData(0);
+          const output = out.getChannelData(0);
+          for (let i = 0; i < input.length; i++) {
+            output[i] = input[i] * Math.pow(Math.abs(input[i]), exponent - 1);
+            if (i % 1000 === 0) updateProgress(i / input.length * 100);
+          }
+          return out;
+        }
+      },
+      {
+        name: "Echo",
+        description: "Adds echo effect",
+        params: [
+          { name: "delay", type: "number", min: 0.01, max: 1, step: 0.01, default: 0.3, unit: "sec" },
+          { name: "decay", type: "number", min: 0, max: 1, step: 0.05, default: 0.4 }
+        ],
+        process: async (buffer, params, updateProgress) => {
+          const delaySamples = Math.floor(buffer.sampleRate * (params.delay || 0.3));
+          const decay = params.decay || 0.4;
+          const out = audioCtx.createBuffer(1, buffer.length + delaySamples, buffer.sampleRate);
+          const input = buffer.getChannelData(0);
+          const output = out.getChannelData(0);
+          for (let i = 0; i < input.length; i++) {
+            output[i] += input[i];
+            if (i + delaySamples < out.length) {
+              output[i + delaySamples] += decay * input[i];
+            }
+            if (i % 1000 === 0) updateProgress(i / input.length * 100);
+          }
+          return out;
+        }
+      },
+      {
+        name: "FFT Filter",
+        description: "FFT-based frequency filter",
+        params: [
+          { name: "lowCut", type: "number", min: 20, max: 20000, step: 10, default: 100, unit: "Hz" },
+          { name: "highCut", type: "number", min: 20, max: 20000, step: 10, default: 5000, unit: "Hz" }
+        ],
+        process: async (buffer, params, updateProgress) => {
+          const lowCut = params.lowCut || 100;
+          const highCut = params.highCut || 5000;
+          
+          // Get audio data
+          const input = buffer.getChannelData(0);
+          const out = audioCtx.createBuffer(1, buffer.length, buffer.sampleRate);
+          const output = out.getChannelData(0);
+          
+          // Prepare FFT
+          const fftSize = Math.pow(2, Math.ceil(Math.log2(input.length)));
+          const fft = new FFT(fftSize);
+          const real = new Float32Array(fftSize);
+          const imag = new Float32Array(fftSize);
+          
+          // Copy input data
+          for (let i = 0; i < input.length; i++) {
+            real[i] = input[i];
+            if (i % 1000 === 0) updateProgress(i / input.length * 33);
+          }
+          
+          // Perform FFT
+          fft.realTransform(imag, real);
+          updateProgress(66);
+          
+          // Apply frequency filter
+          const binSize = buffer.sampleRate / fftSize;
+          for (let i = 0; i < fftSize / 2; i++) {
+            const freq = i * binSize;
+            if (freq < lowCut || freq > highCut) {
+              real[i] = 0;
+              imag[i] = 0;
+              if (i > 0) {
+                real[fftSize - i] = 0;
+                imag[fftSize - i] = 0;
+              }
+            }
+          }
+          
+          // Perform inverse FFT
+          fft.inverseTransform(real, imag);
+          updateProgress(80);
+          
+          // Copy back to output with normalization
+          const scale = 1 / fftSize;
+          for (let i = 0; i < output.length; i++) {
+            output[i] = real[i] * scale;
+            if (i % 1000 === 0) updateProgress(80 + (i / output.length * 20));
+          }
+          
+          return out;
+        }
+      },
+      {
+        name: "Sinc Convolution",
+        description: "Convolves with sinc function (low-pass)",
+        params: [
+          { name: "cutoff", type: "number", min: 20, max: 20000, step: 10, default: 1000, unit: "Hz" },
+          { name: "kernelSize", type: "number", min: 3, max: 101, step: 2, default: 51 }
+        ],
+        process: async (buffer, params, updateProgress) => {
+          const cutoff = params.cutoff || 1000;
+          const kernelSize = params.kernelSize || 51;
+          
+          const out = audioCtx.createBuffer(1, buffer.length, buffer.sampleRate);
+          const input = buffer.getChannelData(0);
+          const output = out.getChannelData(0);
+          
+          // Create sinc kernel
+          const kernel = new Float32Array(kernelSize);
+          const center = Math.floor(kernelSize / 2);
+          const fc = cutoff / buffer.sampleRate;
+          
+          for (let i = 0; i < kernelSize; i++) {
+            const x = i - center;
+            if (x === 0) {
+              kernel[i] = 2 * Math.PI * fc;
+            } else {
+              kernel[i] = Math.sin(2 * Math.PI * fc * x) / x;
+            }
+          }
+          
+          // Normalize kernel
+          let sum = 0;
+          for (let i = 0; i < kernelSize; i++) sum += kernel[i];
+          for (let i = 0; i < kernelSize; i++) kernel[i] /= sum;
+          
+          // Perform convolution
+          const halfKernel = Math.floor(kernelSize / 2);
+          for (let i = 0; i < output.length; i++) {
+            for (let j = -halfKernel; j <= halfKernel; j++) {
+              if (i + j >= 0 && i + j < input.length) {
+                output[i] += input[i + j] * kernel[j + halfKernel];
+              }
+            }
+            if (i % 1000 === 0) updateProgress(i / output.length * 100);
+          }
+          
+          return out;
+        }
+      },
+      {
+        name: "Time Stretch",
+        description: "Changes duration without changing pitch",
+        params: [
+          { name: "factor", type: "number", min: 0.1, max: 10, step: 0.1, default: 1.5 }
+        ],
+        process: async (buffer, params, updateProgress) => {
+          const factor = params.factor || 1.5;
+          const newLength = Math.floor(buffer.length * factor);
+          const out = audioCtx.createBuffer(1, newLength, buffer.sampleRate);
+          const input = buffer.getChannelData(0);
+          const output = out.getChannelData(0);
+          
+          for (let i = 0; i < newLength; i++) {
+            const pos = i / factor;
+            const idx = Math.floor(pos);
+            const frac = pos - idx;
+            
+            if (idx + 1 < input.length) {
+              // Linear interpolation
+              output[i] = input[idx] * (1 - frac) + input[idx + 1] * frac;
+            } else if (idx < input.length) {
+              output[i] = input[idx];
+            }
+            if (i % 1000 === 0) updateProgress(i / newLength * 100);
+          }
+          
+          return out;
+        }
+      },
+      {
+        name: "Pitch Shift",
+        description: "Changes pitch without changing duration",
+        params: [
+          { name: "semitones", type: "number", min: -24, max: 24, step: 1, default: 5 }
+        ],
+        process: async (buffer, params, updateProgress) => {
+          const semitones = params.semitones || 5;
+          const factor = Math.pow(2, semitones / 12);
+          
+          // First time stretch to make room
+          const stretched = audioCtx.createBuffer(1, buffer.length * factor, buffer.sampleRate);
+          const input = buffer.getChannelData(0);
+          const stretchedData = stretched.getChannelData(0);
+          
+          for (let i = 0; i < stretched.length; i++) {
+            const pos = i / factor;
+            const idx = Math.floor(pos);
+            const frac = pos - idx;
+            
+            if (idx + 1 < input.length) {
+              stretchedData[i] = input[idx] * (1 - frac) + input[idx + 1] * frac;
+            } else if (idx < input.length) {
+              stretchedData[i] = input[idx];
+            }
+            if (i % 1000 === 0) updateProgress(i / stretched.length * 50);
+          }
+          
+          // Then resample back to original length
+          const out = audioCtx.createBuffer(1, buffer.length, buffer.sampleRate);
+          const output = out.getChannelData(0);
+          
+          for (let i = 0; i < output.length; i++) {
+            const pos = i * factor;
+            const idx = Math.floor(pos);
+            const frac = pos - idx;
+            
+            if (idx + 1 < stretched.length) {
+              output[i] = stretchedData[idx] * (1 - frac) + stretchedData[idx + 1] * frac;
+            } else if (idx < stretched.length) {
+              output[i] = stretchedData[idx];
+            }
+            if (i % 1000 === 0) updateProgress(50 + (i / output.length * 50));
+          }
+          
+          return out;
+        }
+      },
+      {
+        name: "Multiplicative Echo",
+        description: "Echo that multiplies with original signal",
+        params: [
+          { name: "delay", type: "number", min: 0.01, max: 1, step: 0.01, default: 0.2, unit: "sec" },
+          { name: "amount", type: "number", min: 0, max: 1, step: 0.05, default: 0.5 }
+        ],
+        process: async (buffer, params, updateProgress) => {
+          const delaySamples = Math.floor(buffer.sampleRate * (params.delay || 0.2));
+          const amount = params.amount || 0.5;
+          const out = audioCtx.createBuffer(1, buffer.length + delaySamples, buffer.sampleRate);
+          const input = buffer.getChannelData(0);
+          const output = out.getChannelData(0);
+          
+          for (let i = 0; i < input.length; i++) {
+            output[i] = input[i];
+            if (i + delaySamples < out.length) {
+              output[i + delaySamples] += amount * input[i] * output[i];
+            }
+            if (i % 1000 === 0) updateProgress(i / input.length * 100);
+          }
+          
+          return out;
+        }
+      },
+      {
+        name: "Subtractive Echo",
+        description: "Echo that subtracts from original signal",
+        params: [
+          { name: "delay", type: "number", min: 0.01, max: 1, step: 0.01, default: 0.15, unit: "sec" },
+          { name: "amount", type: "number", min: 0, max: 1, step: 0.05, default: 0.3 }
+        ],
+        process: async (buffer, params, updateProgress) => {
+          const delaySamples = Math.floor(buffer.sampleRate * (params.delay || 0.15));
+          const amount = params.amount || 0.3;
+          const out = audioCtx.createBuffer(1, buffer.length + delaySamples, buffer.sampleRate);
+          const input = buffer.getChannelData(0);
+          const output = out.getChannelData(0);
+          
+          for (let i = 0; i < input.length; i++) {
+            output[i] = input[i];
+            if (i + delaySamples < out.length) {
+              output[i + delaySamples] -= amount * input[i];
+            }
+            if (i % 1000 === 0) updateProgress(i / input.length * 100);
+          }
+          
+          return out;
+        }
+      },
+      {
+        name: "Noise Gate",
+        description: "Reduces noise below threshold",
+        params: [
+          { name: "threshold", type: "number", min: 0, max: 1, step: 0.01, default: 0.1 },
+          { name: "ratio", type: "number", min: 1, max: 20, step: 0.1, default: 4 }
+        ],
+        process: async (buffer, params, updateProgress) => {
+          const threshold = params.threshold || 0.1;
+          const ratio = params.ratio || 4;
+          const out = audioCtx.createBuffer(1, buffer.length, buffer.sampleRate);
+          const input = buffer.getChannelData(0);
+          const output = out.getChannelData(0);
+          
+          for (let i = 0; i < input.length; i++) {
+            const absVal = Math.abs(input[i]);
+            if (absVal < threshold) {
+              output[i] = input[i] / ratio;
+            } else {
+              output[i] = input[i];
+            }
+            if (i % 1000 === 0) updateProgress(i / input.length * 100);
+          }
+          
+          return out;
+        }
+      },
+      {
+        name: "Add Noise",
+        description: "Adds white noise to signal",
+        params: [
+          { name: "amount", type: "number", min: 0, max: 1, step: 0.01, default: 0.05 }
+        ],
+        process: async (buffer, params, updateProgress) => {
+          const amount = params.amount || 0.05;
+          const out = audioCtx.createBuffer(1, buffer.length, buffer.sampleRate);
+          const input = buffer.getChannelData(0);
+          const output = out.getChannelData(0);
+          
+          for (let i = 0; i < input.length; i++) {
+            output[i] = input[i] + (Math.random() * 2 - 1) * amount;
+            if (i % 1000 === 0) updateProgress(i / input.length * 100);
+          }
+          
+          return out;
+        }
+      },
+      {
+        name: "Formant Shift",
+        description: "Shifts formants (vocal character) without changing pitch",
+        params: [
+          { name: "amount", type: "number", min: 0.5, max: 50, step: 0.1, default: 1.2 }
+        ],
+        process: async (buffer, params, updateProgress) => {
+          const amount = params.amount || 1.2;
+          const out = audioCtx.createBuffer(1, buffer.length, buffer.sampleRate);
+          const input = buffer.getChannelData(0);
+          const output = out.getChannelData(0);
+          
+          // Simple formant shifting using spectral envelope manipulation
+          const fftSize = 1024;
+          const hopSize = fftSize / 4;
+          const fft = new FFT(fftSize);
+          
+          // Process in chunks
+          for (let pos = 0; pos < input.length; pos += hopSize) {
+            const real = new Float32Array(fftSize);
+            const imag = new Float32Array(fftSize);
+            
+            // Get chunk
+            for (let i = 0; i < fftSize && pos + i < input.length; i++) {
+              real[i] = input[pos + i] * (0.5 - 0.5 * Math.cos(2 * Math.PI * i / fftSize));
+            }
+            
+            // FFT
+            fft.realTransform(imag, real);
+            
+            // Modify spectral envelope
+            const newReal = new Float32Array(fftSize);
+            const newImag = new Float32Array(fftSize);
+            
+            for (let i = 0; i < fftSize / 2; i++) {
+              const newBin = Math.floor(i * amount);
+              if (newBin < fftSize / 2) {
+                newReal[newBin] += real[i];
+                newImag[newBin] += imag[i];
+                if (newBin > 0) {
+                  newReal[fftSize - newBin] += real[fftSize - i];
+                  newImag[fftSize - newBin] += imag[fftSize - i];
+                }
+              }
+            }
+            
+            // IFFT
+            fft.inverseTransform(newReal, newImag);
+            
+            // Overlap-add to output
+            for (let i = 0; i < fftSize && pos + i < output.length; i++) {
+              output[pos + i] += newReal[i] / (fftSize / hopSize);
+            }
+            
+            if (pos % (hopSize * 10) === 0) {
+              updateProgress(pos / input.length * 100);
+            }
+          }
+          
+          return out;
+        }
+      },
+      {
+        name: "Harmonic Exciter",
+        description: "Adds harmonic overtones",
+        params: [
+          { name: "amount", type: "number", min: 0, max: 50, step: 0.05, default: 0.3 }
+        ],
+        process: async (buffer, params, updateProgress) => {
+          const amount = params.amount || 0.3;
+          const out = audioCtx.createBuffer(1, buffer.length, buffer.sampleRate);
+          const input = buffer.getChannelData(0);
+          const output = out.getChannelData(0);
+          
+          for (let i = 0; i < input.length; i++) {
+            // Simple harmonic excitation using nonlinearity
+            const x = input[i];
+            output[i] = x + amount * (Math.abs(x) * x - x * x * x / 3);
+            if (i % 1000 === 0) updateProgress(i / input.length * 100);
+          }
+          
+          return out;
+        }
+      },
+	  {
+  name: "Tube Saturator",
+  description: "Adds warm even harmonics like a tube amp",
+  params: [
+    { name: "drive", type: "number", min: 0, max: 50, step: 0.1, default: 1.5 },
+    { name: "mix", type: "number", min: 0, max: 1, step: 0.05, default: 0.6 }
+  ],
+  process: async (buffer, params, updateProgress) => {
+    const drive = params.drive || 1.5;
+    const mix = params.mix || 0.6;
+    const input = buffer.getChannelData(0);
+    const out = audioCtx.createBuffer(1, buffer.length, buffer.sampleRate);
+    const output = out.getChannelData(0);
+
+    for (let i = 0; i < input.length; i++) {
+      const x = input[i] * drive;
+      const saturated = Math.tanh(x); // Soft saturation
+      output[i] = mix * saturated + (1 - mix) * input[i];
+      if (i % 1000 === 0) updateProgress(i / input.length * 100);
+    }
+
+    return out;
+  }
+}
+,{
+  name: "Odd Harmonic Exciter",
+  description: "Adds strong odd harmonics for crisp tone",
+  params: [
+    { name: "intensity", type: "number", min: 0, max: 50, step: 0.05, default: 0.4 }
+  ],
+  process: async (buffer, params, updateProgress) => {
+    const intensity = params.intensity || 0.4;
+    const input = buffer.getChannelData(0);
+    const out = audioCtx.createBuffer(1, buffer.length, buffer.sampleRate);
+    const output = out.getChannelData(0);
+
+    for (let i = 0; i < input.length; i++) {
+      const x = input[i];
+      const odd = x - Math.pow(x, 3) / 3;
+      output[i] = (1 - intensity) * x + intensity * odd;
+      if (i % 1000 === 0) updateProgress(i / input.length * 100);
+    }
+
+    return out;
+  }
+}
+,{
+  name: "Multiband Exciter",
+  description: "Excites high frequencies only, preserving lows",
+  params: [
+    { name: "cutoff", type: "number", min: 1000, max: 10000, step: 100, default: 4000, unit: "Hz" },
+    { name: "amount", type: "number", min: 0, max: 1, step: 0.05, default: 0.5 }
+  ],
+  process: async (buffer, params, updateProgress) => {
+    const cutoff = params.cutoff || 4000;
+    const amount = params.amount || 0.5;
+    const input = buffer.getChannelData(0);
+    const out = audioCtx.createBuffer(1, buffer.length, buffer.sampleRate);
+    const output = out.getChannelData(0);
+
+    const sampleRate = buffer.sampleRate;
+    const rc = 1.0 / (2 * Math.PI * cutoff);
+    const alpha = rc / (rc + 1 / sampleRate);
+
+    let low = 0;
+    for (let i = 0; i < input.length; i++) {
+      // Simple 1st-order low-pass
+      low = alpha * input[i] + (1 - alpha) * low;
+      const high = input[i] - low;
+
+      // Apply saturation only to highs
+      const excited = Math.tanh(high * 3) * amount + high * (1 - amount);
+      output[i] = low + excited;
+
+      if (i % 1000 === 0) updateProgress(i / input.length * 100);
+    }
+
+    return out;
+  }
+}
+,
+{
+  name: "Soft Clipper",
+  description: "Analog-style soft saturation with dry/wet mix",
+  params: [
+    { name: "amount", type: "number", min: 0, max: 3, step: 0.1, default: 1.0 },
+    { name: "mix", type: "number", min: 0, max: 1, step: 0.05, default: 0.5 }
+  ],
+  process: async (buffer, params, updateProgress) => {
+    const amount = params.amount || 1.0;
+    const mix = params.mix || 0.5;
+    const input = buffer.getChannelData(0);
+    const output = new Float32Array(input.length);
+    const out = audioCtx.createBuffer(1, input.length, buffer.sampleRate);
+
+    for (let i = 0; i < input.length; i++) {
+      const x = input[i] * amount;
+      const clipped = Math.tanh(x);
+      output[i] = mix * clipped + (1 - mix) * input[i];
+      if (i % 1000 === 0) updateProgress(i / input.length * 100);
+    }
+
+    out.copyToChannel(output, 0);
+    return out;
+  }
+}
+,
+{
+  name: "Tilt EQ",
+  description: "Simple tone tilt EQ with dry/wet mix",
+  params: [
+    { name: "tilt", type: "number", min: -1, max: 1, step: 0.05, default: 0.0 }, // -1 = more bass, 1 = more treble
+    { name: "mix", type: "number", min: 0, max: 1, step: 0.05, default: 1.0 }
+  ],
+  process: async (buffer, params, updateProgress) => {
+    const tilt = params.tilt || 0.0;
+    const mix = params.mix || 1.0;
+    const input = buffer.getChannelData(0);
+    const output = new Float32Array(input.length);
+    const out = audioCtx.createBuffer(1, input.length, buffer.sampleRate);
+
+    let bass = 0, treble = 0;
+    const gainLow = 1 + Math.max(0, -tilt);
+    const gainHigh = 1 + Math.max(0, tilt);
+    for (let i = 0; i < input.length; i++) {
+      // Simplified single-sample tilt (for demo, not phase-accurate)
+      const low = input[i] * gainLow;
+      const high = input[i] * gainHigh;
+      const tilted = (low + high) / 2;
+      output[i] = mix * tilted + (1 - mix) * input[i];
+      if (i % 1000 === 0) updateProgress(i / input.length * 100);
+    }
+
+    out.copyToChannel(output, 0);
+    return out;
+  }
+}
+,
+{
+  name: "3-Band EQ",
+  description: "Low, mid, and high gain control",
+  params: [
+    { name: "lowGain", type: "number", min: -24, max: 24, step: 1, default: 0, unit: "dB" },
+    { name: "midGain", type: "number", min: -24, max: 24, step: 1, default: 0, unit: "dB" },
+    { name: "highGain", type: "number", min: -24, max: 24, step: 1, default: 0, unit: "dB" }
+  ],
+  process: async (buffer, params, updateProgress) => {
+    const { lowGain, midGain, highGain } = params;
+    const input = buffer.getChannelData(0);
+    const output = new Float32Array(input.length);
+    const out = audioCtx.createBuffer(1, input.length, buffer.sampleRate);
+
+    // Simple 3-band using biquads
+    const offlineCtx = new OfflineAudioContext(1, buffer.length, buffer.sampleRate);
+    const source = offlineCtx.createBufferSource();
+    source.buffer = buffer;
+
+    const lows = offlineCtx.createBiquadFilter();
+    lows.type = "lowshelf";
+    lows.frequency.value = 200;
+    lows.gain.value = lowGain || 0;
+
+    const mids = offlineCtx.createBiquadFilter();
+    mids.type = "peaking";
+    mids.frequency.value = 1000;
+    mids.Q.value = 1.0;
+    mids.gain.value = midGain || 0;
+
+    const highs = offlineCtx.createBiquadFilter();
+    highs.type = "highshelf";
+    highs.frequency.value = 4000;
+    highs.gain.value = highGain || 0;
+
+    source.connect(lows).connect(mids).connect(highs).connect(offlineCtx.destination);
+    source.start();
+
+    const rendered = await offlineCtx.startRendering();
+    return rendered;
+  }
+}
+
+,
+{
+  name: "Harmony Adder",
+  description: "Adds octave and fifth harmonics with dry/wet mix",
+  params: [
+    { name: "amount", type: "number", min: 0, max: 50, step: 0.05, default: 0.4 }
+  ],
+  process: async (buffer, params, updateProgress) => {
+    const amount = params.amount || 0.4;
+    const input = buffer.getChannelData(0);
+    const output = new Float32Array(input.length);
+    const out = audioCtx.createBuffer(1, input.length, buffer.sampleRate);
+
+    // Naive pitch doubling (octave up) and 3:2 harmonic (fifth)
+    for (let i = 0; i < input.length - 2; i++) {
+      const base = input[i];
+      const octave = input[i * 2] || 0;
+      const fifth = input[Math.floor(i * 1.5)] || 0;
+      const harmonic = 0.5 * octave + 0.5 * fifth;
+      output[i] = (1 - amount) * base + amount * harmonic;
+      if (i % 1000 === 0) updateProgress(i / input.length * 100);
+    }
+
+    out.copyToChannel(output, 0);
+    return out;
+  }
+}
+,
+
+{
+	name: "Transient Enhancer",
+  description: "Emphasizes fast transients for punchier sound",
+  params: [
+    { name: "intensity", type: "number", min: 0, max: 50, step: 0.1, default: 1.0 }
+  ],
+  process: async (buffer, params, updateProgress) => {
+    const intensity = params.intensity || 1.0;
+    const input = buffer.getChannelData(0);
+    const output = new Float32Array(input.length);
+    const out = audioCtx.createBuffer(1, input.length, buffer.sampleRate);
+
+    // Simple transient detection via sample difference
+    for (let i = 1; i < input.length; i++) {
+      const transient = input[i] - input[i - 1];
+      output[i] = input[i] + intensity * transient;
+      if (i % 1000 === 0) updateProgress(i / input.length * 100);
+    }
+
+    out.copyToChannel(output, 0);
+    return out;
+  }
+},
+	
+	{
+  name: "Gaussian Blur",
+  description: "Applies a Gaussian low-pass filter",
+  params: [
+    { name: "sigma", type: "number", min: 0.1, max: 50, step: 0.1, default: 1.0 }
+  ],
+  process: async (buffer, params, updateProgress) => {
+    const sigma = params.sigma || 1.0;
+    const kernelSize = Math.max(3, 2 * Math.ceil(sigma * 3) + 1); // Rule of thumb
+    const kernel = new Float32Array(kernelSize);
+    const center = Math.floor(kernelSize / 2);
+    const input = buffer.getChannelData(0);
+    const output = new Float32Array(input.length);
+    const out = audioCtx.createBuffer(1, input.length, buffer.sampleRate);
+
+    // Create Gaussian kernel
+    let sum = 0;
+    for (let i = 0; i < kernelSize; i++) {
+      const x = i - center;
+      const value = Math.exp(-0.5 * (x * x) / (sigma * sigma));
+      kernel[i] = value;
+      sum += value;
+    }
+    for (let i = 0; i < kernelSize; i++) kernel[i] /= sum;
+
+    // Convolution
+    for (let i = 0; i < input.length; i++) {
+      for (let j = -center; j <= center; j++) {
+        const k = i + j;
+        if (k >= 0 && k < input.length) {
+          output[i] += input[k] * kernel[j + center];
+        }
+      }
+      if (i % 1000 === 0) updateProgress(i / input.length * 100);
+    }
+
+    out.copyToChannel(output, 0);
+    return out;
+  }
+}
+,
+	  {
+  name: "High-pass Subtractive",
+  description: "Subtracts a blurred (low-pass) version to isolate high-frequency content",
+  params: [
+    { name: "cutoff", type: "number", min: 20, max: 20000, step: 10, default: 1000, unit: "Hz" },
+    { name: "kernelSize", type: "number", min: 3, max: 101, step: 2, default: 51 }
+  ],
+  process: async (buffer, params, updateProgress) => {
+    const cutoff = params.cutoff || 1000;
+    const kernelSize = params.kernelSize || 51;
+    const center = Math.floor(kernelSize / 2);
+    const fc = cutoff / buffer.sampleRate;
+    
+    const input = buffer.getChannelData(0);
+    const out = audioCtx.createBuffer(1, input.length, buffer.sampleRate);
+    const output = out.getChannelData(0);
+
+    const kernel = new Float32Array(kernelSize);
+    for (let i = 0; i < kernelSize; i++) {
+      const x = i - center;
+      kernel[i] = x === 0 ? 2 * Math.PI * fc : Math.sin(2 * Math.PI * fc * x) / x;
+    }
+
+    let sum = 0;
+    for (let i = 0; i < kernelSize; i++) sum += kernel[i];
+    for (let i = 0; i < kernelSize; i++) kernel[i] /= sum;
+
+    // Low-pass version
+    const lowpass = new Float32Array(input.length);
+    for (let i = 0; i < input.length; i++) {
+      for (let j = -center; j <= center; j++) {
+        const idx = i + j;
+        if (idx >= 0 && idx < input.length) {
+          lowpass[i] += input[idx] * kernel[j + center];
+        }
+      }
+    }
+
+    // Subtract
+    for (let i = 0; i < input.length; i++) {
+      output[i] = input[i] - lowpass[i];
+      if (i % 1000 === 0) updateProgress(i / input.length * 100);
+    }
+
+    return out;
+  }
+}
+,
+{
+  name: "Box Blur",
+  description: "Simple moving average low-pass filter",
+  params: [
+    { name: "kernelSize", type: "number", min: 3, max: 101, step: 2, default: 21 }
+  ],
+  process: async (buffer, params, updateProgress) => {
+    const kernelSize = params.kernelSize || 21;
+    const half = Math.floor(kernelSize / 2);
+    const input = buffer.getChannelData(0);
+    const output = new Float32Array(input.length);
+    const out = audioCtx.createBuffer(1, input.length, buffer.sampleRate);
+
+    const kernel = new Float32Array(kernelSize).fill(1 / kernelSize);
+
+    for (let i = 0; i < input.length; i++) {
+      for (let j = -half; j <= half; j++) {
+        const k = i + j;
+        if (k >= 0 && k < input.length) {
+          output[i] += input[k] * kernel[j + half];
+        }
+      }
+      if (i % 1000 === 0) updateProgress(i / input.length * 100);
+    }
+
+    out.copyToChannel(output, 0);
+    return out;
+  }
+}
+,
+{
+  name: "Edge Detection",
+  description: "Highlights rapid changes (derivative-like filter)",
+  params: [],
+  process: async (buffer, params, updateProgress) => {
+    const input = buffer.getChannelData(0);
+    const output = new Float32Array(input.length);
+    const out = audioCtx.createBuffer(1, input.length, buffer.sampleRate);
+
+    // Simple [-1, 0, +1] kernel
+    for (let i = 1; i < input.length - 1; i++) {
+      output[i] = (input[i + 1] - input[i - 1]) * 0.5;
+      if (i % 1000 === 0) updateProgress(i / input.length * 100);
+    }
+
+    out.copyToChannel(output, 0);
+    return out;
+  }
+}
+
+    ];
+
+    const blocksDiv = document.getElementById("blocks");
+    const stackDiv = document.getElementById("stack");
+    const outputDiv = document.getElementById("output");
+    const progressContainer = document.getElementById("progressContainer");
+
+    let stack = [];
+
+    // Create parameter controls
+    function createParamControls(paramDef) {
+      const container = document.createElement('div');
+      container.className = 'block-params';
+      
+      paramDef.forEach(param => {
+        const label = document.createElement('label');
+        label.textContent = `${param.name}: `;
+        
+        let control;
+        if (param.type === 'select') {
+          control = document.createElement('select');
+          param.options.forEach(opt => {
+            const option = document.createElement('option');
+            option.value = opt.value;
+            option.textContent = opt.label;
+            control.appendChild(option);
+          });
+          if (param.default) control.value = param.default;
+        } else {
+          control = document.createElement('input');
+          control.type = param.type || 'number';
+          if (param.min) control.min = param.min;
+          if (param.max) control.max = param.max;
+          if (param.step) control.step = param.step;
+          if (param.default) control.value = param.default;
+        }
+        
+        if (param.unit) {
+          const unitSpan = document.createElement('span');
+          unitSpan.textContent = ` ${param.unit}`;
+          label.appendChild(control);
+          label.appendChild(unitSpan);
+        } else {
+          label.appendChild(control);
+        }
+        
+        container.appendChild(label);
+      });
+      
+      return container;
+    }
+
+    // Get parameter values from controls
+    function getParamsFromDiv(div) {
+      const params = {};
+      const inputs = div.querySelectorAll('.block-params input, .block-params select');
+      inputs.forEach(input => {
+        params[input.previousSibling.textContent.trim().replace(': ', '')] = 
+          input.type === 'number' ? parseFloat(input.value) : input.value;
+      });
+      return params;
+    }
+
+    function addBlockToStack(blockType) {
+      const div = document.createElement("div");
+      div.className = "block";
+      div.dataset.blockType = blockType.name;
+      
+      const title = document.createElement('div');
+      title.className = 'tooltip';
+      title.textContent = blockType.name;
+      if (blockType.description) {
+        const tooltip = document.createElement('span');
+        tooltip.className = 'tooltiptext';
+        tooltip.textContent = blockType.description;
+        title.appendChild(tooltip);
+      }
+      div.appendChild(title);
+      
+      const removeBtn = document.createElement("button");
+      removeBtn.textContent = "✕";
+      removeBtn.onclick = (e) => {
+        e.stopPropagation();
+        stack = stack.filter(item => item.div !== div);
+        stackDiv.removeChild(div);
+      };
+      div.appendChild(removeBtn);
+      
+      if (blockType.params) {
+        const paramsDiv = createParamControls(blockType.params);
+        div.appendChild(paramsDiv);
+      }
+      
+      const stackItem = { blockType, div, getParams: () => getParamsFromDiv(div) };
+      stack.push(stackItem);
+      stackDiv.appendChild(div);
+      
+      // Make draggable
+      div.draggable = true;
+      div.addEventListener('dragstart', handleDragStart);
+      div.addEventListener('dragover', handleDragOver);
+      div.addEventListener('dragleave', handleDragLeave);
+      div.addEventListener('drop', handleDrop);
+      div.addEventListener('dragend', handleDragEnd);
+    }
+
+    // Drag and drop functions
+    function handleDragStart(e) {
+      dragItem = this;
+      this.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/html', this.innerHTML);
+    }
+
+    function handleDragOver(e) {
+      if (e.preventDefault) e.preventDefault();
+      if (dragItem !== this) {
+        this.classList.add('drop-target');
+      }
+      e.dataTransfer.dropEffect = 'move';
+      return false;
+    }
+
+    function handleDragLeave() {
+      this.classList.remove('drop-target');
+    }
+
+    function handleDrop(e) {
+      if (e.stopPropagation) e.stopPropagation();
+      this.classList.remove('drop-target');
+      
+      if (dragItem !== this) {
+        // Get the index of the dragged item and the drop target
+        const items = Array.from(stackDiv.children);
+        const fromIndex = items.indexOf(dragItem);
+        const toIndex = items.indexOf(this);
+        
+        // Move the item in the stack array
+        const [movedItem] = stack.splice(fromIndex, 1);
+        stack.splice(toIndex, 0, movedItem);
+        
+        // Move the DOM element
+        if (fromIndex < toIndex) {
+          stackDiv.insertBefore(dragItem, this.nextSibling);
+        } else {
+          stackDiv.insertBefore(dragItem, this);
+        }
+      }
+      
+      return false;
+    }
+
+    function handleDragEnd() {
+      this.classList.remove('dragging');
+      const items = document.querySelectorAll('#stack .block');
+      items.forEach(item => item.classList.remove('drop-target'));
+    }
+
+    // Initialize available blocks
+    blockTypes.forEach((block) => {
+      const btn = document.createElement("button");
+      btn.textContent = block.name;
+      if (block.description) {
+        btn.title = block.description;
+      }
+      btn.onclick = () => addBlockToStack(block);
+      blocksDiv.appendChild(btn);
+      blocksDiv.appendChild(document.createElement("br"));
+    });
+
+    // Handle file input
+    document.getElementById("fileInput").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const arrayBuffer = await file.arrayBuffer();
+      originalBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+      currentBuffer = originalBuffer;
+      drawWaveform(currentBuffer);
+      alert("MP3 loaded. Duration: " + originalBuffer.duration.toFixed(2) + " seconds");
+    });
+
+    // Handle generate button
+    document.getElementById("generate").addEventListener("click", async () => {
+      if (!originalBuffer) return alert("No audio loaded");
+      
+      outputDiv.innerHTML = "Processing...";
+      progressContainer.style.display = 'block';
+      updateProgress(0);
+      
+      let buffer = originalBuffer;
+      
+      try {
+        for (let i = 0; i < stack.length; i++) {
+          const item = stack[i];
+          updateProgress(0);
+          const params = item.getParams();
+          buffer = await item.blockType.process(buffer, params, (percent) => {
+            updateProgress((i / stack.length * 100) + (percent / stack.length));
+          });
+        }
+        
+        currentBuffer = buffer;
+        drawWaveform(currentBuffer);
+        const mp3Blob = encodeMP3(buffer);
+        createPlayerAndDownload(mp3Blob);
+      } catch (error) {
+        console.error("Processing error:", error);
+        outputDiv.innerHTML = `<div style="color:red">Error: ${error.message}</div>`;
+      } finally {
+        progressContainer.style.display = 'none';
+      }
+    });
+
+    // MP3 encoding
+    function encodeMP3(buffer) {
+      const mp3Encoder = new lamejs.Mp3Encoder(1, buffer.sampleRate, 128);
+      const samples = buffer.getChannelData(0);
+      const mp3Data = [];
+
+      for (let i = 0; i < samples.length; i += 1152) {
+        const sampleChunk = samples.subarray(i, i + 1152);
+        const int16 = new Int16Array(sampleChunk.length);
+        for (let j = 0; j < sampleChunk.length; j++) {
+          int16[j] = Math.max(-32768, Math.min(32767, sampleChunk[j] * 32767));
+        }
+        const mp3buf = mp3Encoder.encodeBuffer(int16);
+        if (mp3buf.length > 0) mp3Data.push(mp3buf);
+      }
+      
+      const end = mp3Encoder.flush();
+      if (end.length > 0) mp3Data.push(end);
+      return new Blob(mp3Data, { type: 'audio/mp3' });
+    }
+
+    // Create audio player and download link
+    function createPlayerAndDownload(blob) {
+      outputDiv.innerHTML = "";
+      const url = URL.createObjectURL(blob);
+
+      const audio = document.createElement("audio");
+      audio.controls = true;
+      audio.src = url;
+
+      const download = document.createElement("a");
+      download.href = url;
+      download.download = "processed.mp3";
+      download.textContent = "Download Processed MP3";
+      download.style.display = "block";
+      download.style.marginTop = "1em";
+
+      outputDiv.appendChild(audio);
+      outputDiv.appendChild(download);
+    }
+  </script>
+</body>
+</html>

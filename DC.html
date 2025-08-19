@@ -299,80 +299,231 @@ background-color: #eeeeee;
         <div class="popup-container">
         <button class="popup-button">?</button>
         <div class="popup-content">
-1- output types
-1.1 - domain; generic output for domain colourings the size/quslity can be chanted with bmp width and height, alternative generators methods such as generategif and generatemapping and generate inverse are also put on this
-1.2- graphing; graphs the function in 2d red is real and blue is imaginary, start locations and end location defines a line in the complex domain, positive numbers for maximum sets the maximum height of the graph setting it to 0 makes it seet maximum automativly and setting it negative will directly set the max output range (positive values take maximum value and maximums minimum)
-1.2.1- the checkbox at the right makes it a polar graph while moving along a contour imaginary parts sets y axis and real part sets real axis, to make parametric just do f(x)+i*g(x) and 
-1.3 -numerical; you input the number for substituting "x" and you get result
-1.4- heightmap use the letters with capslock ON to move, wasdzx(zx for up and down ws for forwards and backwards) to move and qe,cv,rf to rotate  you can click reset camera to reset movement
-1.4.0.1 the capital T makes it change heightmap being magnitude to real or imaginary part it cycles every 3
-1.4.1 the maximum height parameter is used for 3d mesh generation set it to 0 to make height always 1
-1.4.2 download stl downloads the mesh as stl (warning the mesh might be big or have NaN values so loading stls is slow)
-1.4.3 download objects download it as a gltf file as what three.js uses
-1.4.4 create gif creates a gif rotating around the mesh, there are options
-1.4.4.1 default - circular path looking down (sqrt2)
-1.4.4.2 close - smaller orbit (1)
-1.4.4.3 ortho camera orbits on flat plane (z=0), no tilt
-1.4.4.4 zero -camera at origin, spins in place
-1.4.4.5 zeroup - camera at origin, spins while angled up
-1.4.4.6 topdown - rotates around Z-axis looking down from above
-1.4.4.7 flyover -  camera moves in a straight line past the origin
-1.4.4.8 spherical -  looks at 45 deg up and makes a circle z=0 r=0.9
-1.4.5 there are buttons on the very bottom left, these change the mesh directly and  not the camera, useful when making gifs
+1 - Output Types
 
-2-image generation
-2.0- the variable x and z can be used, q can be used for the nome inputs and t can be used for period ratio tau, they are basically modulartransformqt ( div(log(q),I,pi())), modulartransformtq(t) (exp(mul(pi(),I,t))), t cant be used while making gifs
-2.1 generate- it generates domain coloring on the domain canvas
-2.2 generate inverse- it colors as the initial point and draws at output complex number essentially drawing the inverse, unlike using newtoninv('sin(x)',x) it is faster but you will not be able to get values
-2.3-generate mapping - made for conformal mapslike schwarz triangle function at is essentially same as generate inverse but it only draws at gridlines to show how the domain is tested and such
-2.4 generate gifs usingthe variable t moving from 0 to 1, you maw want to use sin(pi*t) for better easing, while using this you cannot use t for period ratio
-2.5 under the toggle mesh option there are mesh generating functions the heightmap is generated form the magnitude of the output, yse maximum heigs in the heigtmap area to limit height
-2.5.1-create mesh, cretes heightmap
-2.5.2-create spherical mesh , using spherical coordianls theta and pphi the function F(theta,phi)=f(theta+phi*i) so it should both have periods 2 pi n both real and imaginary axis to work correctly
-2.5.3- create stereopgraphis mesh, this is mainly used for functions such as stereopcube where there is a stereographic projection
-2.5.4 - create toroidal mesh, this time the periods of the functiın both in imaginary and real should be 1, for functions like cm you may want to use unwarp(x,w1,w2) function where w1 and w2 are periods eg. cm(unwarp(5*x,5.29991625,exp(2*pi*i/3)*5.29991625))
-2.5.5- cylindric mesh, the function should be periodic don't the real asix with period 1 
-3 color modes
-3.1 contour, draws line where f(x)'s one of the components gets close to a integer
-3.1.2 pcountour is polar contour and uses arg and mag instead of re and im
-3.1.3 acountour or antialias contoıur, it is very slow and doesn't have many advantages 
-3.2 HSV , value is determined by the magnitude to lightness function as well as the other methods below
-3.3 HSL, 
-3.4 HCL
-3.5 LCH , this is the cyldiric version of the CIELAB color space
-3.6 YCbCr real part effects blue and image effects red
-3.7 YDbDr same as YCbCr
-3.8 YCoCg ral part effects orange and imag effects green
-3.9 YPbPr blue and red again
-3.10 "real" it colours based on the real part of the output
-3.11 "image" it colours based on the imaginary part of the output
-3.12 "2d" it is technical and used to save function to be used as photos in an another software
-3.13 pallette, you can choose your own pallete by loading a 360x100 bmp image or select colors
-3.14 freeRGB, the magnitude to lightness function in form "[r,g,b]" eg [mag(x),sqr(x),log(1+re(x)^2)]
-3.15 freeHSV the magnitude to lightness function in form "[h,s,v]" eg 
-[360+arg(z)/pi*180,100,log(x+1)*100]
-3.16 freeHSV the magnitude to lightness function in form "[h,s,l]" eg 
-[360+arg(z)/pi*180,100,(x+1)/x*100]
-3.17 isolines, draws lines where magnitudes is the same
-3.18 dynamic, changes with time cool for gifs I guess
-3.19 magnitudeold ,aka Magnitude 2 , colours based on magnitude
-3.20 magnitude ,aka Magnitude , colours based on magnitude
-3.21  magnitudecolour ,aka  Magnitude 3, colours based on magnitude
-3.22  magnitude4 ,aka Magnitude 4, colours based on magnitude
-3.23   neon, becomes brighter wheree f(x)'s one of the components gets close to a integer
-3.24 differ, the main idea behind this was the the difference between the means of real and imaginary parts 
-3.25 purify, its cool I guess 
-3.26 quadrant, colors depending only on the angle, colors quadrants
-3.27 upperplanebw, if imaginary part is larger than 0 white else black
-3.28 unitcirclebw, if inside unit circle white else black
-3.29 trisect, similar to quadrant but with 3 colors
-3.30 hexasect, similar to quadrant but with 6 colors
-3.31 octant, similar to quadrant but with 8 colors
-3.32 dodecant, similar to quadrant but with 12 colors
-3.33 griddistort, makes a checkerboard smoothly
-3.34 griddistorts, makes a checkerboard unsmoothly
-3.35 griddistortbw, makes a checkerboard black and white
-3.36 realimagheat, colors depending on the ratio of imag^2/real and real^2/imag
+1.1 - domain
+Generic output for domain colourings.
+- Size/quality can be changed with bmp width and height.
+- Alternative generator methods: generategif, generatemapping, and generate inverse are also under this.
+
+1.2 - graphing
+Graphs the function in 2D.
+- Red = real part, Blue = imaginary part.
+- start locations and end location define a line in the complex domain.
+- maximum parameter:
+  - Positive → sets the maximum height of the graph.
+  - 0 → automatically sets maximum.
+  - Negative → directly sets the max output range (positive values take maximum value, and maximum’s minimum).
+
+1.2.1 - polar graph
+Checkbox at the right makes it a polar graph.
+- Moving along a contour: imaginary parts set y-axis, real part sets real axis.
+- To make parametric: use f(x)+i*g(x).
+
+1.3 - numerical
+Input the number for substituting x → get result.
+
+1.4 - heightmap
+- Use capslock ON for movement:
+  - WASDZX → move (Z/X = up/down, W/S = forward/backward).
+  - QE, CV, RF → rotate.
+- Click reset camera to reset movement.
+
+1.4.0.1
+T (capital) changes heightmap from magnitude → real part → imaginary part (cycles every 3).
+
+1.4.1
+maximum height parameter:
+- Set to 0 → height always = 1.
+
+1.4.2
+download stl → downloads mesh as STL.
+⚠ Mesh might be large or have NaN values, loading STLs may be slow.
+
+1.4.3
+download objects → downloads as .gltf (Three.js format).
+
+1.4.4 - create gif
+Creates a GIF rotating around the mesh. Options:
+1. default - circular path looking down (sqrt2).
+2. close - smaller orbit (1).
+3. ortho - camera orbits flat plane (z=0), no tilt.
+4. zero - camera at origin, spins in place.
+5. zeroup - camera at origin, spins while angled up.
+6. topdown - rotates around Z-axis, looking down.
+7. flyover - camera moves in a straight line past origin.
+8. spherical - 45° up view, circle path (z=0, r=0.9).
+
+1.4.5
+Buttons at bottom left change the mesh directly (not the camera) — useful for GIFs.
+
+
+2 - Image Generation
+
+2.0
+Variables:
+- x, z can be used.
+- q → nome inputs.
+- t → period ratio τ.
+  - modulartransformqt = div(log(q), I, pi())
+  - modulartransformtq(t) = exp(mul(pi(), I, t))
+  - Note: t cannot be used when making GIFs.
+
+2.1 - generate
+Generates domain coloring on the domain canvas.
+
+2.2 - generate inverse
+Colors as initial point and draws at output complex number (inverse).
+- Faster than newtoninv('sin(x)', x) but you cannot get values.
+
+2.3 - generate mapping
+For conformal maps (e.g., Schwarz triangle function).
+- Similar to generate inverse, but only draws gridlines.
+
+2.4 - generate gifs
+Uses variable t moving from 0 to 1.
+- Suggestion: use sin(pi*t) for easing.
+- Cannot use t for period ratio when doing this.
+
+2.5 - mesh generation
+Under toggle mesh:
+- Heightmap generated from magnitude of output.
+- Use maximum height in heightmap area to limit height.
+
+2.5.1 - create mesh
+Creates heightmap.
+
+2.5.2 - create spherical mesh
+Uses spherical coordinates (θ, φ).
+- F(θ, φ) = f(θ + φ*i).
+- Should have periods 2π in both real and imaginary axis.
+
+2.5.3 - create stereographic mesh
+For functions such as stereopcube (stereographic projection).
+
+2.5.4 - create toroidal mesh
+- Function should have period 1 in both imaginary and real axes.
+- For functions like cm, use unwarp(x, w1, w2) where w1, w2 are periods.
+  - Example: cm(unwarp(5*x, 5.29991625, exp(2*pi*i/3)*5.29991625)).
+
+2.5.5 - cylindric mesh
+- Function should be periodic along the real axis with period 1.
+
+
+3 - Color Modes
+
+3.1 - contour
+Draws lines where f(x) components get close to an integer.
+
+3.1.2 - pcontour
+Polar contour (uses arg & mag instead of re & im).
+
+3.1.3 - acountour
+Antialias contour (slow, minimal advantages).
+
+3.2 - HSV
+Value from magnitude-to-lightness function plus other methods below.
+
+3.3 - HSL
+3.4 - HCL
+3.5 - LCH
+Cylindrical version of CIELAB color space.
+
+3.6 - YCbCr
+Real part → blue, Imag part → red.
+
+3.7 - YDbDr
+Same as YCbCr.
+
+3.8 - YCoCg
+Real part → orange, Imag part → green.
+
+3.9 - YPbPr
+Blue and red again.
+
+3.10 - real
+Colors based on real part of output.
+
+3.11 - image
+Colors based on imaginary part.
+
+3.12 - 2d
+Technical; used to save function for use in other software.
+
+3.13 - palette
+User can choose palette by loading 360×100 BMP or selecting colors.
+
+3.14 - freeRGB
+[r, g, b] from magnitude-to-lightness. Example:
+[mag(x), sqr(x), log(1+re(x)^2)]
+
+3.15 - freeHSV
+[h, s, v]. Example:
+[360+arg(z)/pi*180, 100, log(x+1)*100]
+
+3.16 - freeHSL
+[h, s, l]. Example:
+[360+arg(z)/pi*180, 100, (x+1)/x*100]
+
+3.17 - isolines
+Draws lines of equal magnitude.
+
+3.18 - dynamic
+Changes with time (good for GIFs).
+
+3.19 - magnitudeold (Magnitude 2)
+Colors by magnitude.
+
+3.20 - magnitude (Magnitude)
+Colors by magnitude.
+
+3.21 - magnitudecolour (Magnitude 3)
+Colors by magnitude.
+
+3.22 - magnitude4 (Magnitude 4)
+Colors by magnitude.
+
+3.23 - neon
+Brighter where f(x) components get close to an integer.
+
+3.24 - differ
+Based on difference between means of real and imaginary parts.
+
+3.25 - purify
+"Cool" effect.
+
+3.26 - quadrant
+Colors depending only on angle — colors quadrants.
+
+3.27 - upperplanebw
+Imag > 0 → white, else black.
+
+3.28 - unitcirclebw
+Inside unit circle → white, else black.
+
+3.29 - trisect
+Similar to quadrant but 3 colors.
+
+3.30 - hexasect
+Similar to quadrant but 6 colors.
+
+3.31 - octant
+Similar to quadrant but 8 colors.
+
+3.32 - dodecant
+Similar to quadrant but 12 colors.
+
+3.33 - griddistort
+Checkerboard (smooth).
+
+3.34 - griddistorts
+Checkerboard (unsmooth).
+
+3.35 - griddistortbw
+Checkerboard (black and white).
+
+3.36 - realimagheat
+Colors based on imag^2/real and real^2/imag.
         </div>
     </div>
 
@@ -392,11 +543,17 @@ background-color: #eeeeee;
         <option value="tetr(x)">Tetration: tetr(x)</option>
         <option value="pent(x)">Pentation: pent(x)</option>
        <option value=" meijerg([0.5],[0.25],[2],[5/3,7/3],x)+accuracy(40)">MeijerG: G[0.5;0.25;2;5/3,7/3|x]</option>
+     <option value=" foxh([[0.5,0.8],[1,2]],[[0.33],[0.76]],[[-1.23],[0.12]],[[0.1],[0.64]],x))"> FoxH example</option>
         <option value="schwarztriangle(1/3,1/3,1/3,x)">Schwarz Triangle 1/3</option>
         <!--<option value="cbrt(x)*hypg21(1/3,2/3,4/3,x)/hypg21(0,1/3,2/3,x)">Schwarz Triangle 1/3</option> -->
         <option value="cm(unwarp(5*x,5.29991625,exp(2*pi*i/3)*5.29991625))">Dixon cm unwarp example</option>
+        
+        <option value="jacobipineiro2orthopoly(3,re(x),1,2,im(x))">Jacobi Pineiro Multiple Orthogonal Polynomial 2</option>
+        <option value="sphericalharmonicoscillator(2,1,0,r,re(x),im(x))">Spherical Oscilator Density</option>
+        <option value="re(sphericalharmonic(3,2,re(x),im(x)))))">Spherical harmonic</option>
+        
         <option value="stereopicosahedron(x)">Stereographic projection of icosahedron: stereopicosahedron(x)</option>
-        <option value="polynomial([polynomial([log(cos(x)+sin(x)*i)^2],pow(2,pow(1.5,2))),derve('sin(x)',x^2)],sinc(x))^2">Very long test function</option>
+        <option value="polynomial([polynomial([log(intge(cos,x)+intge("sin(x)",x)*i)^2],pow(2,pow(1.5,2))),derv('sin(x)',x^2)],sinc(x))^2">Very long test function</option>
    
    <option value="5*x^5+4*x^4-3*x^2+x-8">Real Coeff Polynomial</option>
 <option value="5*i*x^5+(2*i+1)*x^3-(-i+3)*x^2+(i-5)*x+2*i">Complex Coeff Polynomial</option>
@@ -480,7 +637,8 @@ background-color: #eeeeee;
    <option value=" sin(0.5*pi*x/(1+x))">Finite sin</option>
   <option value="1-sinc(0.5*pi*x/(1+x))">Finite sinc</option>
  <option value="1-cos(0.5*pi*x/(1+x))">Finite cos</option>
-
+<option value="mag(tetr((log(1+x)/2)/2/e/5-1+0.01*i))*4">Tetration</option>
+ <option value="mag(tetr((x/(1+x)*2)*2/e-1+0.01*i))">Finite Tetration</option>
  </optgroup>
 
   <optgroup label="Fractions">
@@ -526,6 +684,53 @@ background-color: #eeeeee;
 
 <optgroup label="Free">
     <option value="[360+arg(z)/pi*180,100,log(x+1)*100]">F-HSV: x</option>
+</optgroup>
+
+<optgroup label="Exotic">
+    <option value="mag(re(z))+mag(im(z))">Chebyshev</option>
+    <option value="maxc(mag(re(z)),mag(im(z)))">Taxicab</option>
+    
+     <option value="log(1+mag(re(z))+mag(im(z)))">Log Chebyshev</option>
+    <option value="log(1+maxc(mag(re(z)),mag(im(z))))">Log Taxicab</option>
+<!--mobiustransform(1,0,1,1,x)-->
+     <option value="mobiustransform(1,0,1,1,mag(re(z))+mag(im(z)))">Fractional Chebyshev</option>
+    <option value="mobiustransform(1,0,1,1,maxc(mag(re(z)),mag(im(z))))">fractional Taxicab</option>
+
+<option value="mag(re(z))">Real Magnitude</option>
+<option value="log(1+mag(re(z)))">Log Real Magnitude</option>
+<option value="mobiustransform(1,0,1,1,mag(re(z)))">Fractional Real Magnitude</option>
+
+<option value="mag(im(z))">Imag Magnitude</option>
+<option value="log(1+mag(im(z)))">Log Imag Magnitude</option>
+<option value="mobiustransform(1,0,1,1,mag(im(z)))">Fractional Imag Magnitude</option>
+
+<option value="mag(mag(re(z))-mag(im(z)))">Difference Magnitude</option>
+<option value="log(1+mag(mag(re(z))-mag(im(z))))">Log Difference Magnitude</option>
+<option value="mobiustransform(1,0,1,1,mag(mag(re(z))-mag(im(z))))">Fractional Difference Magnitude</option>
+
+<option value="mag(re(z))*mag(im(z))">Product Magnitude</option>
+<option value="log(1+mag(re(z))*mag(im(z)))">Log Product Magnitude</option>
+<option value="mobiustransform(1,0,1,1,mag(re(z))*mag(im(z)))">Fractional Product Magnitude</option>
+
+<option value="sqr(tan(arg(z)))">Tangent Angle</option>
+<option value="log(1+sqr(tan(arg(z))))">Log Tangent Angle</option>
+<option value="mobiustransform(1,0,1,1,sqr(tan(arg(z))))">Fractional Tangent Angle</option>
+
+<option value="sqr(cot(arg(z)))">Cotangent Angle</option>
+<option value="log(1+sqr(cot(arg(z))))">Log Cotangent Angle</option>
+<option value="mobiustransform(1,0,1,1,sqr(cot(arg(z))))">Fractional Cotangent Angle</option>
+
+
+<option value="sqr(sin(arg(z)))">Sine Angle</option>
+<option value="log(1+sqr(sin(arg(z))))">Log Sine Angle</option>
+<option value="mobiustransform(1,0,1,1,sqr(sin(arg(z))))">Fractional Sine Angle</option>
+
+<option value="sqr(cos(arg(z)))">Cosine Angle</option>
+<option value="log(1+sqr(cos(arg(z))))">Log Cosine Angle</option>
+<option value="mobiustransform(1,0,1,1,sqr(cos(arg(z))))">Fractional Cosine Angle</option>
+
+
+
 </optgroup>
 </select>
     
@@ -583,7 +788,7 @@ background-color: #eeeeee;
     </div>
     <div id="palette-group" class="form-group" style="display: none;">
         <label for="palette-file">Select Palette BMP (360x100):</label>
-        <input type="file" id="palette-file" accept=".bmp">
+        <input type="file" id="palette-file">
         <div>
             <label for="rows">Rows:</label>
             <input type="number" id="rows" name="rows" min="1" value="3">
@@ -621,11 +826,15 @@ background-color: #eeeeee;
 <button onclick="toggleMeshButtons()">Toggle Mesh Options</button>
 
 <div id="meshButtons" style="display:none; margin-top:10px;">
-    <button id="createMeshButton">Create Mesh and Animate</button>
-    <button id="createMeshButtonsph">Create Spherical Mesh and Animate</button>
-    <button id="createMeshButtonstr">Create Stereographic Mesh and Animate</button>
-    <button id="createMeshButtontor">Create Toroidal Mesh and Animate</button>
-     <button id="createMeshButtoncyl">Create Cylindrical Mesh and Animate</button>
+    <button id="createMeshButton">Create Mesh</button>
+    <button id="createMeshButtonsph">Create Spherical Mesh</button>
+    <button id="createMeshButtonstr">Create Stereographic Mesh</button>
+    <button id="createMeshButtontor">Create Toroidal Mesh</button>
+     <button id="createMeshButtoncyl">Create Cylindrical Mesh</button>
+     <button id="createAndAnimate4D">Create 4D Mesh</button>
+     
+     <button id="createMeshButtonsphd">Create Spherical Density</button>
+          <button id="createMeshButtond">Create Density</button>
 <!-- <button id="createMeshButtongnm">Create Gnomonic Mesh and Animate</button> --->
 </div>
 	</div>
@@ -679,7 +888,7 @@ background-color: #eeeeee;
     <!--    <button id="createGifBtn">Create GIF</button> -->
 
         <button id="resetCameraBtn">Reset Camera</button>
-<button id="resetRotationBtn">Reset Rotation</button>
+
 
     </div>
 </div>
@@ -796,7 +1005,11 @@ let thick = parseFloat(document.getElementById('thick').value);
     }
 
     geometry = new THREE.PlaneGeometry(10, 10, gridSize, gridSize);
-    material = new THREE.MeshBasicMaterial({ vertexColors: true, wireframe: false });
+   material = new THREE.MeshBasicMaterial({ 
+    vertexColors: true, 
+    wireframe: false,
+    side: THREE.DoubleSide  // This makes the material visible from both sides
+});
     mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
 
@@ -843,6 +1056,142 @@ z =  teth.evaluate(document.getElementById('function').value, { x: z });
     }
 updateMesh();
     animateMesh();
+}
+function createAndAnimate4DMesh() {
+    gridSize = document.getElementById('bmp-width').value;
+    const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+    const lightness = parseInt(document.getElementById('lightness').value);
+    const hue = parseInt(document.getElementById('hue').value);
+
+    const funcStr = document.getElementById('function').value.trim();
+    const maxHeight = parseFloat(document.getElementById('max-height').value);
+    let thick = parseFloat(document.getElementById('thick').value);
+    
+    if (mesh) {
+        scene.remove(mesh);
+        geometry.dispose();
+        material.dispose();
+    }
+
+    // Create base geometry
+    geometry = new THREE.PlaneGeometry(10, 10, gridSize, gridSize);
+    material = new THREE.MeshBasicMaterial({ 
+        vertexColors: true, 
+        wireframe: false,
+        side: THREE.DoubleSide
+    });
+    mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    function updateMesh() {
+        const positions = geometry.attributes.position.array;
+        const numVertices = positions.length / 3;
+        const colors = new Float32Array(numVertices * 3);
+        const scales = new Float32Array(numVertices); // Store scale factors for each vertex
+
+        for (let i = 0; i < numVertices; i++) {
+            const x = positions[i * 3];
+            const y = positions[i * 3 + 1];
+
+            // Evaluate 4D function (returns complex number where re=z, im=w)
+            let z = math.complex(x, y);
+            z = teth.evaluate(funcStr, { x: z });
+            
+            // Extract z and w components
+            const zValue = z.re;  // z-coordinate (height)
+            const wValue = z.im;  // w-coordinate (scale factor)
+            
+            // Apply z-coordinate as height (clamped to maxHeight)
+            positions[i * 3 + 2] = -Math.min(maxHeight, Math.abs(zValue));
+            
+            // Store scale factor based on w-coordinate
+            scales[i] = 0.5 + 0.5 * Math.tanh(wValue); // Scale between 0 and 1 using tanh
+            
+            // Create color based on 4D position (x,y,z,w)
+            const color = complexTo4DColor(
+                math.complex(x, y), 
+                z, 
+                magnitudeToLightnessExpr, 
+                colorMode, 
+                saturationChroma, 
+                lightness, 
+                paletteImageData,
+                thick,
+                scales[i]  // Include scale in color calculation
+            );
+
+            colors[i * 3] = color[0] / 255;
+            colors[i * 3 + 1] = color[1] / 255;
+            colors[i * 3 + 2] = color[2] / 255;
+        }
+
+        // Apply scale transformation to vertices
+        for (let i = 0; i < numVertices; i++) {
+            const scale = scales[i];
+            positions[i * 3] *= scale;  // Scale x
+            positions[i * 3 + 1] *= scale;  // Scale y
+            // z is already set as height
+        }
+
+        geometry.attributes.position.needsUpdate = true;
+        geometry.computeVertexNormals();
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        geometry.attributes.color.needsUpdate = true;
+    }
+
+    function animateMesh() {
+        requestAnimationFrame(animateMesh);
+        renderer.render(scene, camera);
+    }
+
+    updateMesh();
+    animateMesh();
+}
+
+// Helper function for 4D coloring
+function complexTo4DColor(position, value, magnitudeExpr, colorMode, saturation, lightness, palette, thickness, scale) {
+    // You can modify this to incorporate the 4th dimension (scale) into the color
+    const x = position.re;
+    const y = position.im;
+    const z = value.re;
+    const w = value.im;
+  const maxHeight = parseFloat(document.getElementById('max-height').value);   
+    // Example: Use HSV where Hue = arg(z), Saturation = |w|, Value = |z|
+    const magnitude = math.abs(value);
+    const angle = math.arg(value);
+    
+    // Convert to RGB
+    let hue = (angle + Math.PI) / (2 * Math.PI); // Normalize to 0-1
+    let sat = math.min(1, math.abs(w) / 2); // Use w for saturation
+    let val = math.min(1, magnitude / maxHeight); // Use magnitude for value
+    
+    // Convert HSV to RGB
+    let rgb = hsvToRgb4(hue, sat, val);
+    
+    return [rgb.r * 255, rgb.g * 255, rgb.b * 255];
+}
+
+// Standard HSV to RGB conversion
+function hsvToRgb4(h, s, v) {
+    let r, g, b;
+    let i = Math.floor(h * 6);
+    let f = h * 6 - i;
+    let p = v * (1 - s);
+    let q = v * (1 - f * s);
+    let t = v * (1 - (1 - f) * s);
+
+    switch (i % 6) {
+        case 0: r = v, g = t, b = p; break;
+        case 1: r = q, g = v, b = p; break;
+        case 2: r = p, g = v, b = t; break;
+        case 3: r = p, g = q, b = v; break;
+        case 4: r = t, g = p, b = v; break;
+        case 5: r = v, g = p, b = q; break;
+    }
+
+    return { r: r * 255, g: g * 255, b: b * 255 };
 }
 function createAndAnimateMeshSPH() {
     const gridSize = document.getElementById('bmp-width').value;
@@ -1267,6 +1616,15 @@ document.getElementById('createMeshButtontor').addEventListener('click', () => {
 });
 document.getElementById('createMeshButtoncyl').addEventListener('click', () => {
     createAndAnimateMeshCYL();
+});
+document.getElementById('createAndAnimate4D').addEventListener('click', () => {
+    createAndAnimate4DMesh();
+});
+document.getElementById('createMeshButtonsphd').addEventListener('click', () => {
+    createAndAnimateMeshSPHD();
+});
+document.getElementById('createMeshButtond').addEventListener('click', () => {
+    createAndAnimateMeshD();
 });
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
 let rotateLeft = false, rotateRight = false, rotateUp = false, rotateDown = false, rotateUpc = false, rotateDownc = false, moveUp = false, moveDown = false;
@@ -1822,6 +2180,294 @@ const xxx = math.complex(xre,xim);
 ;
  scaleCanvas();
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function createAndAnimateMeshSPHD() {
+    // Cancel any previous animation loop
+    if (window._sphdAnimId) {
+        cancelAnimationFrame(window._sphdAnimId);
+        window._sphdAnimId = null;
+    }
+
+    const numSamples = parseInt(document.getElementById('bmp-width').value) ** 2 * 20; // more points for cloudiness
+    const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+    const lightness = parseInt(document.getElementById('lightness').value);
+    const hue = parseInt(document.getElementById('hue').value);
+
+    const funcStr = document.getElementById('function').value.trim();
+    const maxRadius = parseFloat(document.getElementById('max-height').value);
+
+    // Clean up previous mesh/material/geometry if present
+    try {
+        if (mesh) {
+            if (mesh.material) {
+                // dispose any texture map first
+                if (mesh.material.map) {
+                    mesh.material.map.dispose();
+                }
+                mesh.material.dispose();
+            }
+            if (geometry) geometry.dispose();
+            scene.remove(mesh);
+            mesh = null;
+        }
+    } catch (e) {
+        // ignore disposal errors
+        console.warn('dispose warning', e);
+    }
+
+    const positions = [];
+    const colors = [];
+
+    // density multiplier — tune for more/less cloudiness
+    const densityMultiplier = 1.5;
+    const jitter = 0.05; // small position jitter to avoid "perfect" look
+
+    for (let i = 0; i < numSamples; i++) {
+        // Random spherical coordinates
+        const theta = Math.acos(2 * Math.random() - 1);
+        const phi = 2 * Math.PI * Math.random();
+        const r = maxRadius * Math.sqrt(Math.random());
+
+        // build spherical input as complex (keeps your existing code's interface)
+        const sphericalInput = math.complex(theta, phi);
+        const density = teth.evaluate(funcStr, { x: sphericalInput, r: r });
+        const densVal = Math.abs(density);
+
+        // Acceptance test: slightly more generous to increase cloud density
+        if (Math.random() < Math.min(1, densVal * densityMultiplier)) {
+            const x = (r * Math.sin(theta) * Math.cos(phi)) + (Math.random() - 0.5) * jitter;
+            const y = (r * Math.sin(theta) * Math.sin(phi)) + (Math.random() - 0.5) * jitter;
+            const z = (r * Math.cos(theta)) + (Math.random() - 0.5) * jitter;
+
+            positions.push(x, y, z);
+
+            const col = complexToColor(
+                math.complex(theta, phi),
+                density,
+                magnitudeToLightnessExpr,
+                colorMode,
+                saturationChroma,
+                lightness,
+                paletteImageData,
+                0.1,
+                1
+            );
+            colors.push(col[0] / 255, col[1] / 255, col[2] / 255);
+        }
+    }
+
+    geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+    // --- Create a soft circular sprite dynamically with canvas (no external file / no CORS) ---
+    const spriteSize = 128; // texture size (power of two recommended)
+    const cvs = document.createElement('canvas');
+    cvs.width = cvs.height = spriteSize;
+    const ctx = cvs.getContext('2d');
+
+    // radial gradient: center opaque, fades to transparent near edges
+    const cx = spriteSize / 2;
+    const cy = spriteSize / 2;
+    const maxR = spriteSize / 2;
+    const grad = ctx.createRadialGradient(cx, cy, spriteSize * 0.05, cx, cy, maxR);
+    grad.addColorStop(0.0, 'rgba(255,255,255,1.0)');
+    grad.addColorStop(0.45, 'rgba(255,255,255,0.85)');
+    grad.addColorStop(0.7, 'rgba(255,255,255,0.35)');
+    grad.addColorStop(1.0, 'rgba(255,255,255,0.0)');
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, spriteSize, spriteSize);
+
+    // Create a THREE texture from the canvas
+    const spriteTexture = new THREE.CanvasTexture(cvs);
+    spriteTexture.needsUpdate = true;
+    spriteTexture.minFilter = THREE.LinearMipMapLinearFilter;
+    spriteTexture.magFilter = THREE.LinearFilter;
+    spriteTexture.generateMipmaps = true;
+
+    // Points material tuned for soft, cloud-like look
+    material = new THREE.PointsMaterial({
+        size: 1.6,                  // increase for cloudier dots (tweak)
+        map: spriteTexture,
+        transparent: true,
+        opacity: 0.34,
+        vertexColors: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        sizeAttenuation: true,
+        alphaTest: 0.01
+    });
+
+    mesh = new THREE.Points(geometry, material);
+    scene.add(mesh);
+
+    // Simple slow rotation to visually emphasize the volumetric effect (optional)
+    // Remove or tweak if you already have separate controls for rotation
+    let rotateSpeed = 0.0008;
+
+renderer.render(scene, camera);
+}
+
+
+function createAndAnimateMeshD() {
+    // Cancel any previous animation loop
+    if (window._meshDAnimId) {
+        cancelAnimationFrame(window._meshDAnimId);
+        window._meshDAnimId = null;
+    }
+
+    const numSamples = parseInt(document.getElementById('bmp-width').value) ** 3 * 4; // controls density in 3D grid
+    const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+    const lightness = parseInt(document.getElementById('lightness').value);
+    const hue = parseInt(document.getElementById('hue').value);
+
+    const funcStr = document.getElementById('function').value.trim();
+    const maxRadius = parseFloat(document.getElementById('max-height').value);
+
+    // Clean up previous mesh/material/geometry if present
+    try {
+        if (mesh) {
+            if (mesh.material) {
+                if (mesh.material.map) mesh.material.map.dispose();
+                mesh.material.dispose();
+            }
+            if (geometry) geometry.dispose();
+            scene.remove(mesh);
+            mesh = null;
+        }
+    } catch (e) {
+        console.warn('dispose warning', e);
+    }
+
+    const positions = [];
+    const colors = [];
+
+    const densityMultiplier = 1.5;
+    const jitter = 0.05;
+
+    for (let i = 0; i < numSamples; i++) {
+        // Random point in cube [-1, 1]³ scaled to maxRadius
+        let x = (Math.random() * 2 - 1) * maxRadius;
+        let y = (Math.random() * 2 - 1) * maxRadius;
+        let z = (Math.random() * 2 - 1) * maxRadius;
+
+        // Optional: reject points outside a sphere of radius maxRadius (for spherical boundary)
+        if (Math.sqrt(x*x + y*y + z*z) > maxRadius) continue;
+
+        // Evaluate function directly with Cartesian coords
+        const density = teth.evaluate(funcStr, { x: x, y: y, z: z });
+        const densVal = Math.abs(density);
+
+        if (Math.random() < Math.min(1, densVal * densityMultiplier)) {
+            // Add jitter for more natural clouds
+            x += (Math.random() - 0.5) * jitter;
+            y += (Math.random() - 0.5) * jitter;
+            z += (Math.random() - 0.5) * jitter;
+
+            positions.push(x, y, z);
+
+            // Convert to color (still using theta, phi from this cartesian point for consistency)
+            const theta = Math.acos(z / Math.sqrt(x*x + y*y + z*z));
+            const phi = Math.atan2(y, x);
+            const col = complexToColor(
+                math.complex(theta, phi),
+                density,
+                magnitudeToLightnessExpr,
+                colorMode,
+                saturationChroma,
+                lightness,
+                paletteImageData,
+                0.1,
+                1
+            );
+            colors.push(col[0] / 255, col[1] / 255, col[2] / 255);
+        }
+    }
+
+    geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+    // --- Create radial gradient sprite ---
+    const spriteSize = 128;
+    const cvs = document.createElement('canvas');
+    cvs.width = cvs.height = spriteSize;
+    const ctx = cvs.getContext('2d');
+
+    const cx = spriteSize / 2;
+    const cy = spriteSize / 2;
+    const maxR = spriteSize / 2;
+    const grad = ctx.createRadialGradient(cx, cy, spriteSize * 0.05, cx, cy, maxR);
+    grad.addColorStop(0.0, 'rgba(255,255,255,1.0)');
+    grad.addColorStop(0.45, 'rgba(255,255,255,0.85)');
+    grad.addColorStop(0.7, 'rgba(255,255,255,0.35)');
+    grad.addColorStop(1.0, 'rgba(255,255,255,0.0)');
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, spriteSize, spriteSize);
+
+    const spriteTexture = new THREE.CanvasTexture(cvs);
+    spriteTexture.needsUpdate = true;
+    spriteTexture.minFilter = THREE.LinearMipMapLinearFilter;
+    spriteTexture.magFilter = THREE.LinearFilter;
+    spriteTexture.generateMipmaps = true;
+
+    material = new THREE.PointsMaterial({
+        size: 1.6,
+        map: spriteTexture,
+        transparent: true,
+        opacity: 0.34,
+        vertexColors: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        sizeAttenuation: true,
+        alphaTest: 0.01
+    });
+
+    mesh = new THREE.Points(geometry, material);
+    scene.add(mesh);
+
+    renderer.render(scene, camera);
+}
+      
+        
+        
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
 function renderBMPt(t) {
 		
             const width = parseInt(document.getElementById('bmp-width').value);
@@ -2177,10 +2823,10 @@ let thick = parseFloat(document.getElementById('thick').value);
 
         const container = document.getElementById('canvasContainer');
 
-        function scaleCanvas() {
+        function scaleCanvas(k=1) {
             const widthScale = container.clientWidth / (canvas.width);
             const heightScale = container.clientHeight / (canvas.height);
-            const scale = Math.min(widthScale, heightScale);
+            const scale = Math.min(k*widthScale, k*heightScale);
             canvas.style.transform = `scale(${scale})`;
         }
 		
@@ -2191,28 +2837,25 @@ let thick = parseFloat(document.getElementById('thick').value);
 //const autocompleteList = document.getElementById("autocomplete-list");
 //const textarea = document.getElementById("function");
 //const autocompleteList = document.getElementById("autocomplete-list");
+
+
+
+
+
 let selectedIndex = -1;
 let hoverTimer;
 const prefixHelp = {
   "_": "All functions",
   "#": "Total functions count",
-  "@": "Recently used functions",
   ":": "Random functions",
-  "!": "Utility functions (e.g., log, debug, error)",
   "?": "Show help for all prefixes",
-  "$": "DOM manipulation functions",
-  ">": "Async or promise-based functions",
-  "*": "Math or calculation functions",
-  "~": "String manipulation functions",
-  "&": "Event-related or callback functions",
-  "%": "Date or time-related functions",
-  "t": "Trigonometric functions (e.g., sin, cos, tan)",
-  "g": "Gamma and related functions",
-  "l": "Logarithmic and exponential functions",
-  "b": "Bessel and special functions",
   "L": "Long functions (>100 characters)",
-  "LL": "Longer functions (>200 characters)"
+  "LL": "Longer functions (>200 characters)",
+  "LLL": "Sort by length",
+  "S": "Single-parameter functions",
+  "D": "Double-parameter functions"
 };
+
 textarea.addEventListener("input", (e) => {
   const cursorPosition = textarea.selectionStart;
   const text = textarea.value;
@@ -2220,13 +2863,8 @@ textarea.addEventListener("input", (e) => {
   const prefixMatch = /[a-zA-Z0-9_#@:!?$>*~&%]+$/;
   const match = text.slice(0, cursorPosition).match(prefixMatch);
   let prefix = match ? match[0] : "";
-const trigFunctions = ["sin", "cos", "tan", "asin", "acos", "atan", "sinh", "cosh", "tanh", "asinh", "acosh", "atanh"];
-const gammaFunctions = ["gamma", "lambertw", "factorial", "sinc"];
-const logExpFunctions = ["log", "exp", "log10", "log2", "ln"];
-const besselFunctions = ["besselj", "bessely", "besseli", "besselk"];
-const specialFunctions = ["dedekindeta", "jinvariant", "sinc", "ncr", "npr", "npdf", "ncdf", "npsi"];
- 
- autocompleteList.innerHTML = "";
+
+  autocompleteList.innerHTML = "";
   selectedIndex = -1;
 
   if (!prefix) {
@@ -2244,13 +2882,9 @@ const specialFunctions = ["dedekindeta", "jinvariant", "sinc", "ncr", "npr", "np
     autocompleteList.appendChild(suggestionDiv);
     autocompleteList.style.display = "block";
     return;
-  } else if (prefix === "@") {
-    suggestions = recentFunctions; // Assuming `recentFunctions` is an array of recently used functions
   } else if (prefix === ":") {
-    suggestions = allFunctionsNames.sort(() => Math.random() - 0.5).slice(0, 10); // Random functions
-  } else if (prefix === "!") {
-    suggestions = allFunctionsNames.filter(name => name.startsWith("log") || name.startsWith("debug") || name.startsWith("error"));
-  } else if (prefix === "?"){
+    suggestions = allFunctionsNames.sort(() => Math.random() - 0.5).slice(0, 10);
+  } else if (prefix === "?") {
     // Show help for all prefixes
     const helpDiv = document.createElement("div");
     helpDiv.className = "help-text";
@@ -2260,32 +2894,29 @@ const specialFunctions = ["dedekindeta", "jinvariant", "sinc", "ncr", "npr", "np
     autocompleteList.appendChild(helpDiv);
     autocompleteList.style.display = "block";
     return;
-    
-  } else if (prefix === "$") {
-    suggestions = allFunctionsNames.filter(name => name.startsWith("$") || name.includes("DOM"));
-  } else if (prefix === ">") {
-    suggestions = allFunctionsNames.filter(name => name.endsWith("Async") || name.startsWith("fetch"));
-  } else if (prefix === "*") {
-    suggestions = allFunctionsNames.filter(name => name.startsWith("calc") || name.startsWith("math"));
-  } else if (prefix === "~") {
-    suggestions = allFunctionsNames.filter(name => name.startsWith("trim") || name.startsWith("substring") || name.startsWith("replace"));
-  } else if (prefix === "&") {
-    suggestions = allFunctionsNames.filter(name => name.startsWith("on") || name.startsWith("handle"));
-  } else if (prefix === "%") {
-    suggestions = allFunctionsNames.filter(name => name.startsWith("date") || name.startsWith("time"));
-  }else if (prefix === "t") {
-    suggestions = trigFunctions;
-  } else if (prefix === "g") {
-    suggestions = gammaFunctions;
-  } else if (prefix === "l") {
-    suggestions = logExpFunctions;
-  } else if (prefix === "b") {
-    suggestions = besselFunctions.concat(specialFunctions);
   } else if (prefix === "L") {
-    suggestions = longFunctions;
+    suggestions = allFunctionsNames.filter(name => 
+      allFunctions[name].toString().length > 100
+    );
   } else if (prefix === "LL") {
-    suggestions = longerFunctions;
-  }  else {
+    suggestions = allFunctionsNames.filter(name => 
+      allFunctions[name].toString().length > 200
+    );
+  } else if (prefix === "LLL") {
+    suggestions = [...allFunctionsNames].sort((a, b) => 
+      allFunctions[b].toString().length - allFunctions[a].toString().length
+    );
+  } else if (prefix === "S") {
+    suggestions = allFunctionsNames.filter(name => {
+      const params = getParamNames(allFunctions[name]);
+      return params && params.length === 1;
+    });
+  } else if (prefix === "D") {
+    suggestions = allFunctionsNames.filter(name => {
+      const params = getParamNames(allFunctions[name]);
+      return params && params.length === 2;
+    });
+  } else {
     let searchTerms = [prefix];
     if (prefix.includes("arc") || prefix.includes("inv")) {
       searchTerms.push(prefix.replace(/arc/g, "inv"), prefix.replace(/inv/g, "arc"));
@@ -2311,6 +2942,8 @@ const specialFunctions = ["dedekindeta", "jinvariant", "sinc", "ncr", "npr", "np
   autocompleteList.style.left = `${textarea.offsetLeft}px`;
   autocompleteList.style.top = `${textarea.offsetTop + textarea.offsetHeight}px`;
   autocompleteList.style.width = `${textarea.offsetWidth}px`;
+  autocompleteList.style.maxHeight = "50vh"; // 50% of viewport height
+  autocompleteList.style.overflowY = "auto";
 
   suggestions.forEach((suggestion, index) => {
     const params = getParamNames(allFunctions[suggestion]) || [];
@@ -2327,7 +2960,7 @@ const specialFunctions = ["dedekindeta", "jinvariant", "sinc", "ncr", "npr", "np
     suggestionDiv.addEventListener("mouseenter", () => {
       hoverTimer = setTimeout(() => {
         showFunctionCode(suggestion, suggestionDiv);
-      }, 1000); // 1 second hover delay
+      }, 1000);
     });
 
     suggestionDiv.addEventListener("mouseleave", () => {
@@ -2338,7 +2971,6 @@ const specialFunctions = ["dedekindeta", "jinvariant", "sinc", "ncr", "npr", "np
     autocompleteList.appendChild(suggestionDiv);
   });
 });
-
 textarea.addEventListener("keydown", (e) => {
     hideFunctionCode();
   const items = autocompleteList.children;
@@ -2475,13 +3107,7 @@ document.getElementById('resetCameraBtn').addEventListener('click', () => {
   camera.updateProjectionMatrix();
 });
 
-// Reset Object Rotation
-document.getElementById('resetRotationBtn').addEventListener('click', () => {
-  const object = scene.children.find(obj => obj.type !== 'AmbientLight' && obj.type !== 'DirectionalLight');
-  if (object) {
-    object.rotation.set(0, 0, 0);
-  }
-});
+
 document.getElementById('downloadSTLBtn').addEventListener('click', function() {
     // Get all meshes from the scene
     const meshes = [];
