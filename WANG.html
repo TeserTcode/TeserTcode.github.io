@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Backtracking Wang Tiler (11 Tiles)</title>
+  <style>
+    body { background: #111; color: white; text-align: center; font-family: sans-serif; }
+    canvas { border: 1px solid #aaa; margin: 10px; }
+    button { padding: 6px 16px; margin: 10px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h1>Backtracking Wang Tiler — 11 Tile Set</h1>
+  <button onclick="generateTiling()">Generate Tiling</button>
+  <canvas id="canvas" width="600" height="600"></canvas>
+  <p id="status">Ready</p>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const status = document.getElementById("status");
+
+    const tileSize = 40;
+    const cols = Math.floor(canvas.width / tileSize);
+    const rows = Math.floor(canvas.height / tileSize);
+
+    // Your 11-tile set
+    const tiles = [
+      { n: 'a', e: 'a', s: 'a', w: 'b' },
+      { n: 'c', e: 'a', s: 'c', w: 'b' },
+      { n: 'a', e: 'b', s: 'b', w: 'b' },
+      { n: 'd', e: 'c', s: 'a', w: 'c' },
+
+      { n: 'c', e: 'c', s: 'd', w: 'c' },
+      { n: 'd', e: 'd', s: 'a', w: 'd' },
+      { n: 'a', e: 'b', s: 'c', w: 'd' },
+
+      { n: 'c', e: 'd', s: 'c', w: 'a' },
+      { n: 'c', e: 'a', s: 'd', w: 'a' },
+      { n: 'b', e: 'b', s: 'c', w: 'a' },
+      { n: 'a', e: 'd', s: 'a', w: 'b' },
+    ];
+
+    const colorMap = {
+      'a': '#e74c3c', // red
+      'b': '#27ae60', // green
+      'c': '#3498db', // blue
+      'd': '#f1c40f'  // yellow
+    };
+
+    function drawTile(x, y, tile) {
+      const px = x * tileSize;
+      const py = y * tileSize;
+      const midX = px + tileSize / 2;
+      const midY = py + tileSize / 2;
+
+      // Top
+      ctx.fillStyle = colorMap[tile.n] || "#555";
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(px + tileSize, py);
+      ctx.lineTo(midX, midY);
+      ctx.closePath();
+      ctx.fill();
+
+      // Right
+      ctx.fillStyle = colorMap[tile.e] || "#555";
+      ctx.beginPath();
+      ctx.moveTo(px + tileSize, py);
+      ctx.lineTo(px + tileSize, py + tileSize);
+      ctx.lineTo(midX, midY);
+      ctx.closePath();
+      ctx.fill();
+
+      // Bottom
+      ctx.fillStyle = colorMap[tile.s] || "#555";
+      ctx.beginPath();
+      ctx.moveTo(px, py + tileSize);
+      ctx.lineTo(px + tileSize, py + tileSize);
+      ctx.lineTo(midX, midY);
+      ctx.closePath();
+      ctx.fill();
+
+      // Left
+      ctx.fillStyle = colorMap[tile.w] || "#555";
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(px, py + tileSize);
+      ctx.lineTo(midX, midY);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = "#222";
+      ctx.strokeRect(px, py, tileSize, tileSize);
+    }
+
+    function getCompatibleTiles(top, left) {
+      return tiles.filter(tile => {
+        const matchTop = !top || tile.n === top.s;
+        const matchLeft = !left || tile.w === left.e;
+        return matchTop && matchLeft;
+      });
+    }
+
+    function drawGrid(grid) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const tile = grid[y][x];
+          if (tile) drawTile(x, y, tile);
+        }
+      }
+    }
+
+    async function generateTiling() {
+      status.textContent = "Generating...";
+      await new Promise(r => setTimeout(r, 10));
+
+      let grid = Array.from({ length: rows }, () => Array(cols).fill(null));
+      const success = await backtrack(grid, 0, 0);
+
+      if (success) {
+        status.textContent = "Tiling complete!";
+        drawGrid(grid);
+      } else {
+        status.textContent = "Failed to generate tiling.";
+      }
+    }
+
+    async function backtrack(grid, x, y) {
+      if (y >= rows) return true;
+
+      const nextX = (x + 1) % cols;
+      const nextY = x + 1 >= cols ? y + 1 : y;
+
+      const top = y > 0 ? grid[y - 1][x] : null;
+      const left = x > 0 ? grid[y][x - 1] : null;
+      const candidates = shuffle(getCompatibleTiles(top, left));
+
+      for (const tile of candidates) {
+        grid[y][x] = tile;
+        if (await backtrack(grid, nextX, nextY)) return true;
+        grid[y][x] = null;
+      }
+
+      return false;
+    }
+
+    function shuffle(arr) {
+      let a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    generateTiling(); // auto-generate on load
+  </script>
+</body>
+</html>
