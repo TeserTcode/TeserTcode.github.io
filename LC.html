@@ -300,7 +300,7 @@ const knownForms = {
     'T4': ' B ( W W ) ( B W ( B B B ) ) ', //Θ₄ by R.Statman
     'J': ' S S K ( S ( K ( S S ( S ( S S K ) ) ) ) K ) ', //Y' by john tromp
     "Y'": ' S S K ( S ( K ( S S ( S ( S S K ) ) ) ) K ) ', //Y' by john tromp
-    'Z': '(l f. (l x. f (l v. x x v))) (l x. f (l v. x x v))'
+    'Z': '(l f. (l x. f (l v. x x v))) (l x. f (l v. x x v))',
      
     // Booleans
     'TRUE': '(l t. l f. t)',
@@ -331,7 +331,7 @@ const knownForms = {
     
     // De Morgan's Laws implemented directly
     'DEMORGAN_AND': '(l p. l q. NOT (OR (NOT p) (NOT q)))', // ¬(¬p ∨ ¬q) ≡ p ∧ q
-    'DEMORGAN_OR': '(l p. l q. NOT (AND (NOT p) (NOT q)))'  // ¬(¬p ∧ ¬q) ≡ p ∨ q
+    'DEMORGAN_OR': '(l p. l q. NOT (AND (NOT p) (NOT q)))',  // ¬(¬p ∧ ¬q) ≡ p ∨ q
     // Arithmetic
     'SUCC': '(l n. l f. l x. f (n f x))',
     'PLUS': '(l m. l n. m SUCC n)',
@@ -351,9 +351,9 @@ const knownForms = {
     // Lists
     'NIL': '(l c. l n. n)',
     'CONS': '(l h. l t. l c. l n. c h (t c n))',
-    'ISNIL': '(l l. l (l h. l t. FALSE) TRUE)',
-    'HEAD': '(l l. l (l h. l t. h) FALSE)',
-    'TAIL': '(l l. FST (l (l h. l t. PAIR t h) (PAIR NIL NIL)))',
+  //  'ISNIL': '(l l. l (l h. l t. FALSE) TRUE)',
+ //   'HEAD': '(l l. l (l h. l t. h) FALSE)',
+  //  'TAIL': '(l l. FST (l (l h. l t. PAIR t h) (PAIR NIL NIL)))',
 };
 
 // Helper to fully expand a definition string that might contain other abbreviations
