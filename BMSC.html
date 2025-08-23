@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Matrix Expander & Standardness Checker</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+  <script src="clrspc.js"></script>
+  <script src="mthfnc.js"></script>
+  <style>
+    body { display: flex; font-family: monospace; }
+    #left, #right { flex: 1; padding: 10px; border: 1px solid #ccc; }
+    textarea, input { width: 100%; margin-bottom: 5px; }
+    pre { background: #f9f9f9; padding: 5px; border: 1px solid #ddd; }
+  </style>
+</head>
+<body>
+
+  <div id="left">
+    <h3>Expander</h3>
+    <label>Input Matrix:</label><br>
+    <textarea id="matrixInput">(0,0,0)(1,1,1)(2,1,1)</textarea><br>
+    <button onclick="runExpansion()">Expand (n=0..5)</button>
+    <h4>Results:</h4>
+    <pre id="expansionOutput"></pre>
+
+    <h3>Single Expansion</h3>
+    <label>Matrix:</label><br>
+    <textarea id="singleMatrixInput">(0,0,0)(1,1,1)(2,1,1)</textarea><br>
+    <label>n:</label><br>
+    <input type="number" id="singleNInput" value="2"><br>
+    <button onclick="runSingleExpansion()">Expand with n</button>
+    <h4>Result:</h4>
+    <pre id="singleExpansionOutput"></pre>
+  </div>
+
+  <div id="right">
+    <h3>Standardness Checker</h3>
+    <label>Matrix to Check:</label><br>
+    <textarea id="checkInput">(0,0,0)(1,1,1)(2,1,1)(3,1,1)</textarea><br>
+    <button onclick="checkStandard()">Check Standardness</button>
+    <h4>Result:</h4>
+    <pre id="standardOutput"></pre>
+  </div>
+
+<script>
+function parseMatrix(str) {
+  if (!str.trim()) return [];
+  return str.trim().match(/\((.*?)\)/g).map(s =>
+    s.slice(1,-1).split(",").map(Number)
+  );
+}
+
+function formatMatrix(M) {
+  return M.map(row => `(${row.join(",")})`).join("");
+}
+
+function trim(matrix) {
+  if (matrix.length === 0) return matrix.map(r => [...r]);
+  let numCols = matrix[0].length;
+  let end = numCols;
+  for (let col = numCols - 1; col >= 0; col--) {
+    let allZero = true;
+    for (let row of matrix) {
+      if (row[col] !== 0) { allZero = false; break; }
+    }
+    if (!allZero) break;
+    end = col;
+  }
+  return matrix.map(row => row.slice(0, end));
+}
+
+function compareMatrices(A, B) {
+  let At = trim(A);
+  let Bt = trim(B);
+  let rows = Math.max(At.length, Bt.length);
+  let cols = 0;
+  for (let r = 0; r < rows; r++) {
+    cols = Math.max(cols, (At[r]||[]).length, (Bt[r]||[]).length);
+  }
+  for (let c = 0; c < rows; c++) {
+    for (let r = 0; r < cols; r++) {
+      let av = (At[c] && At[c][r] !== undefined) ? At[c][r] : 0;
+      let bv = (Bt[c] && Bt[c][r] !== undefined) ? Bt[c][r] : 0;
+      if (av < bv) return -1;
+      if (av > bv) return 1;
+    }
+  }
+  return 0;
+}
+
+function isStandard(M) {
+  let history = [];
+  let usedN = [];
+  try {
+    let current = [
+      Array(M[0].length + 1).fill(0),
+      Array(M[0].length + 1).fill(1)
+    ];
+    for (let step = 0; step < 100; step++) {
+      let foundBigger = null;
+      for (let n = 0; n < 20; n++) {
+        let expanded = trim(expandbms(current, n));
+        let cmp = compareMatrices(expanded, M);
+        let cmpSymbol = cmp === 0 ? "=" : (cmp < 0 ? "<" : ">");
+        history.push(`Expand by n=${n}: ${formatMatrix(expanded)} ${cmpSymbol} ${formatMatrix(M)}`);
+        if (cmp === 0) {
+          usedN.push(n);
+          return { result: true, history, usedN };
+        }
+        if (cmp > 0) {
+          if (!foundBigger || compareMatrices(expanded, foundBigger) < 0) {
+            foundBigger = expanded;
+            usedN.push(n);
+          }
+          break;
+        }
+      }
+      if (foundBigger) {
+        current = foundBigger;
+      } else {
+        break;
+      }
+    }
+  } catch (e) {
+    return { result: false, history, usedN };
+  }
+  return { result: false, history, usedN };
+}
+
+function runExpansion() {
+  let B = parseMatrix(document.getElementById("matrixInput").value);
+  let output = "";
+  for (let n=0; n<=5; n++) {
+    let exp = trim(expandbms(B,n));
+    output += "n=" + n + " → " + formatMatrix(exp) + "\n";
+  }
+  document.getElementById("expansionOutput").textContent = output;
+}
+
+function runSingleExpansion() {
+  let B = parseMatrix(document.getElementById("singleMatrixInput").value);
+  let n = parseInt(document.getElementById("singleNInput").value, 10);
+  let exp = trim(expandbms(B,n));
+  let output = "Matrix: " + formatMatrix(B) + " [" + n + "] ";
+  output +=  " = " + formatMatrix(exp);
+  document.getElementById("singleExpansionOutput").textContent = output;
+}
+
+function checkStandard() {
+  let M = parseMatrix(document.getElementById("checkInput").value);
+  let res = isStandard(M);
+  let txt = res.result ? "✅ Standard\n\n" : "❌ Not Standard\n\n";
+  txt += "History:\n" + res.history.join("\n") + "\n\n";
+  txt += "n used: " + JSON.stringify(res.usedN);
+  document.getElementById("standardOutput").textContent = txt;
+}
+</script>
+
+</body>
+</html>
