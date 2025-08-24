@@ -3,7 +3,7 @@
 <head>
   <title>Advanced Sinogram Reconstruction</title>
   <style>
-    canvas { border: 1px solid black; margin: 5px; max-width: 100%; }
+   canvas { border: 1px solid black; margin: 5px; max-width: 100%; }
     body { font-family: sans-serif; margin: 10px; }
     .row { display: flex; flex-wrap: wrap; justify-content: center; }
     .col { margin: 5px; width: 300px; }
@@ -15,102 +15,75 @@
   </style>
 </head>
 <body>
-  <h1 style="text-align: center;">Advanced Sinogram Reconstruction</h1>
-  
+  <h1>Advanced Sinogram Reconstruction</h1>
+
   <div class="control-panel">
     <button id="loadBtn">Load Sinogram</button>
     <input type="file" id="fileInput" accept="image/*" style="display: none;">
-    
-    <div>
-      <label>Brightness: <input type="range" id="brightness" min="0" max="2" step="0.1" value="1"></label>
-      <label>Contrast: <input type="range" id="contrast" min="0" max="2" step="0.1" value="1"></label>
+    <button id="reconstructBtn">Reconstruct Image</button>
+
+    <div class="control-group">
+      <label>Brightness: <input type="range" id="brightness" min="0" max="3" step="0.1" value="1"></label>
+      <label>Contrast: <input type="range" id="contrast" min="0" max="3" step="0.1" value="1"></label>
     </div>
-    
-    <div>
-      <label>Filter Type:</label>
+
+    <div class="control-group">
+      <label>Filter:</label>
       <select id="filterType">
         <option value="ramp" selected>Ramp</option>
         <option value="shepp-logan">Shepp-Logan</option>
         <option value="cosine">Cosine</option>
-        <option value="hann">Hann</option>
         <option value="hamming">Hamming</option>
+        <option value="hann">Hann</option>
+        <option value="blackman">Blackman</option>
+        <option value="bartlett">Bartlett (Triangular)</option>
+        <option value="parzen">Parzen</option>
         <option value="none">None</option>
       </select>
-    </div>
-    
-    <div>
-      <label>Transform Type:</label>
+      <label>Transform:</label>
       <select id="transformType">
-        <option value="standard" selected>Standard</option>
-        <option value="hyperbolic">Hyperbolic</option>
+        <option value="standard" selected>Standard (Fourier)</option>
+        <option value="cos">Cosine</option>
+        <option value="triangle">Triangle</option>
+        <option value="square">Square</option>
+        <option value="sawtooth">Sawtooth</option>
+        <option value="slighter">sinx1.1</option>
+        <option value="hyperbolic">cos 0</option>
         <option value="cubic">Cubic</option>
+        <option value="parabolic">Parabolic</option>
+        <option value="quintic">Quintic</option>
       </select>
     </div>
-    
-    <button id="reconstructBtn">Reconstruct Image</button>
+    <!-- slighter -->
+    <div class="control-group">
+        <label>Backprojection Interpolation:</label>
+        <select id="interpolationType">
+            <option value="nearest" selected>Nearest Neighbor</option>
+            <option value="bilinear">Bilinear</option>
+        </select>
+    </div>
+
+    <div class="control-group">
+      <label for="separateChannels">Process R, G, B Channels Separately</label>
+      <input type="checkbox" id="separateChannels">
+      <label for="centerFFT" style="margin-left: 20px;">Center FFT Visualization</label>
+      <input type="checkbox" id="centerFFT" checked>
+    </div>
   </div>
 
   <div class="row">
     <div class="col">
       <h3>Input Sinogram</h3>
-      <div class="canvas-container">
+      <div class="canvas-container" style="height: 200px;">
         <canvas id="inputCanvas" width="300" height="200"></canvas>
       </div>
     </div>
     <div class="col">
-      <h3>Polar Visualization</h3>
-      <div class="canvas-container">
-        <canvas id="polarCanvas" width="300" height="300"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col">
-      <h3>FFT of Projections</h3>
-      <div class="canvas-container">
-        <canvas id="fftCanvas" width="200" height="300"></canvas>
-      </div>
-    </div>
-    <div class="col">
-      <h3>Polar FFT</h3>
-      <div class="canvas-container">
-        <canvas id="polarFftCanvas" width="300" height="300"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col">
-      <h3>Filtered FFT</h3>
-      <div class="canvas-container">
-        <canvas id="filteredFftCanvas" width="200" height="300"></canvas>
-      </div>
-    </div>
-    <div class="col">
-      <h3>Polar Filtered FFT</h3>
-      <div class="canvas-container">
-        <canvas id="polarFilteredFftCanvas" width="300" height="300"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col">
       <h3>Filtered Sinogram</h3>
-      <div class="canvas-container">
-        <canvas id="filteredSinogramCanvas" width="200" height="300"></canvas>
+      <div class="canvas-container" style="height: 200px;">
+        <canvas id="filteredSinogramCanvas" width="300" height="200"></canvas>
       </div>
     </div>
-    <div class="col">
-      <h3>Polar Filtered Sinogram</h3>
-      <div class="canvas-container">
-        <canvas id="polarFilteredSinogramCanvas" width="300" height="300"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <div class="row">
     <div class="col">
       <h3>Reconstructed Image</h3>
       <div class="canvas-container">
@@ -119,560 +92,457 @@
     </div>
   </div>
 
-  <script>
-    // Canvas elements
-    const inputCanvas = document.getElementById('inputCanvas');
-    const inputCtx = inputCanvas.getContext('2d');
-    const polarCanvas = document.getElementById('polarCanvas');
-    const polarCtx = polarCanvas.getContext('2d');
-    const fftCanvas = document.getElementById('fftCanvas');
-    const fftCtx = fftCanvas.getContext('2d');
-    const polarFftCanvas = document.getElementById('polarFftCanvas');
-    const polarFftCtx = polarFftCanvas.getContext('2d');
-    const filteredFftCanvas = document.getElementById('filteredFftCanvas');
-    const filteredFftCtx = filteredFftCanvas.getContext('2d');
-    const polarFilteredFftCanvas = document.getElementById('polarFilteredFftCanvas');
-    const polarFilteredFftCtx = polarFilteredFftCanvas.getContext('2d');
-    const filteredSinogramCanvas = document.getElementById('filteredSinogramCanvas');
-    const filteredSinogramCtx = filteredSinogramCanvas.getContext('2d');
-    const polarFilteredSinogramCanvas = document.getElementById('polarFilteredSinogramCanvas');
-    const polarFilteredSinogramCtx = polarFilteredSinogramCanvas.getContext('2d');
-    const reconstructedCanvas = document.getElementById('reconstructedCanvas');
-    const reconstructedCtx = reconstructedCanvas.getContext('2d');
-    
-    // UI elements
-    const loadBtn = document.getElementById('loadBtn');
-    const fileInput = document.getElementById('fileInput');
-    const reconstructBtn = document.getElementById('reconstructBtn');
-    const brightnessInput = document.getElementById('brightness');
-    const contrastInput = document.getElementById('contrast');
-    const filterTypeSelect = document.getElementById('filterType');
-    const transformTypeSelect = document.getElementById('transformType');
-    
-    // Processing parameters
-    let brightness = 1.0;
-    let contrast = 1.0;
-    let sinogramData = null;
-    
-    // Event listeners
-    loadBtn.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', handleFileUpload);
-    reconstructBtn.addEventListener('click', reconstructImage);
-    brightnessInput.addEventListener('input', () => {
-      brightness = parseFloat(brightnessInput.value);
-      if (sinogramData) reconstructImage();
+  <hr style="border-color: #555; margin: 20px 0;">
+  <h2 style="text-align: center;">Auxiliary Visualizations</h2>
+
+  <div class="row">
+    <div class="col">
+      <h3>FFT of Projections (Cartesian)</h3>
+      <div class="canvas-container" style="height: 200px;">
+        <canvas id="fftCanvas" width="300" height="200"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <h3>FFT of Projections (Polar)</h3>
+      <div class="canvas-container">
+        <canvas id="polarFftCanvas" width="300" height="300"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <h3>Filtered FFT (Cartesian)</h3>
+      <div class="canvas-container" style="height: 200px;">
+        <canvas id="filteredFftCanvas" width="300" height="200"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <h3>Filtered FFT (Polar)</h3>
+      <div class="canvas-container">
+        <canvas id="polarFilteredFftCanvas" width="300" height="300"></canvas>
+      </div>
+    </div>
+  </div>
+
+<script>
+    // --- Canvas and UI Element Setup ---
+    const elements = {
+        inputCanvas: document.getElementById('inputCanvas'),
+        fftCanvas: document.getElementById('fftCanvas'),
+        polarFftCanvas: document.getElementById('polarFftCanvas'),
+        filteredFftCanvas: document.getElementById('filteredFftCanvas'),
+        polarFilteredFftCanvas: document.getElementById('polarFilteredFftCanvas'),
+        filteredSinogramCanvas: document.getElementById('filteredSinogramCanvas'),
+        reconstructedCanvas: document.getElementById('reconstructedCanvas'),
+    };
+    const ctx = Object.fromEntries(Object.entries(elements).map(([key, canvas]) => [key, canvas.getContext('2d')]));
+
+    const controls = {
+        loadBtn: document.getElementById('loadBtn'),
+        fileInput: document.getElementById('fileInput'),
+        reconstructBtn: document.getElementById('reconstructBtn'),
+        brightness: document.getElementById('brightness'),
+        contrast: document.getElementById('contrast'),
+        filterType: document.getElementById('filterType'),
+        transformType: document.getElementById('transformType'),
+        interpolationType: document.getElementById('interpolationType'),
+        separateChannels: document.getElementById('separateChannels'),
+        centerFFT: document.getElementById('centerFFT'),
+    };
+
+    let originalSinogram = null;
+
+    // --- Event Listeners ---
+    controls.loadBtn.addEventListener('click', () => controls.fileInput.click());
+    controls.fileInput.addEventListener('change', handleFileUpload);
+    controls.reconstructBtn.addEventListener('click', reconstructImage);
+    [controls.brightness, controls.contrast, controls.filterType, controls.transformType, controls.interpolationType, controls.separateChannels, controls.centerFFT].forEach(control => {
+        control.addEventListener('input', () => {
+            if (originalSinogram) reconstructImage();
+        });
     });
-    contrastInput.addEventListener('input', () => {
-      contrast = parseFloat(contrastInput.value);
-      if (sinogramData) reconstructImage();
-    });
-    
+
+    // --- Core Functions ---
     function handleFileUpload(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      
-      const img = new Image();
-      img.onload = () => {
-        // Calculate dimensions to maintain aspect ratio
-        const aspectRatio = img.width / img.height;
-        const maxWidth = 300;
-        const maxHeight = 200;
-        
-        let width = img.width;
-        let height = img.height;
-        
-        if (width > maxWidth) {
-          width = maxWidth;
-          height = width / aspectRatio;
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const img = new Image();
+        img.onload = () => {
+            const aspectRatio = img.width / img.height;
+            const maxWidth = 300, maxHeight = 200;
+            let width = Math.min(maxWidth, img.width);
+            let height = width / aspectRatio;
+            if (height > maxHeight) {
+                height = maxHeight;
+                width = height * aspectRatio;
+            }
+
+            elements.inputCanvas.width = width;
+            elements.inputCanvas.height = height;
+            ctx.inputCanvas.drawImage(img, 0, 0, width, height);
+
+            const imageData = ctx.inputCanvas.getImageData(0, 0, width, height);
+            originalSinogram = imageData;
+            reconstructImage();
+        };
+        img.src = URL.createObjectURL(file);
+    }
+
+    function getSinogramChannels(imageData) {
+        const { width, height, data } = imageData;
+        const R = Array.from({ length: width }, () => new Array(height));
+        const G = Array.from({ length: width }, () => new Array(height));
+        const B = Array.from({ length: width }, () => new Array(height));
+
+        for (let x = 0; x < width; x++) {
+            for (let y = 0; y < height; y++) {
+                const idx = (y * width + x) * 4;
+                R[x][y] = data[idx];
+                G[x][y] = data[idx + 1];
+                B[x][y] = data[idx + 2];
+            }
         }
-        if (height > maxHeight) {
-          height = maxHeight;
-          width = height * aspectRatio;
-        }
-        
-        // Draw the input sinogram
-        inputCanvas.width = width;
-        inputCanvas.height = height;
-        inputCtx.drawImage(img, 0, 0, width, height);
-        
-        // Process the sinogram
-        processSinogram(img);
-      };
-      img.src = URL.createObjectURL(file);
+        return { R, G, B };
     }
     
-    function processSinogram(img) {
-      // Convert to grayscale data
-      const imageData = inputCtx.getImageData(0, 0, inputCanvas.width, inputCanvas.height);
-      const data = imageData.data;
-      
-      // Store as sinogram data (angles along columns)
-      sinogramData = new Array(inputCanvas.width);
-      for (let x = 0; x < inputCanvas.width; x++) {
-        sinogramData[x] = new Array(inputCanvas.height);
-        for (let y = 0; y < inputCanvas.height; y++) {
-          const idx = (y * inputCanvas.width + x) * 4;
-          const avg = (data[idx] + data[idx+1] + data[idx+2]) / 3;
-          sinogramData[x][y] = avg;
+    function getGrayscaleSinogram(imageData) {
+        const { width, height, data } = imageData;
+        const gray = Array.from({ length: width }, () => new Array(height));
+        for (let x = 0; x < width; x++) {
+            for (let y = 0; y < height; y++) {
+                const idx = (y * width + x) * 4;
+                gray[x][y] = (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
+            }
         }
-      }
-      
-      // Create polar visualization
-      drawPolarVisualization(inputCanvas, polarCanvas);
-      
-      // Start reconstruction
-      reconstructImage();
+        return gray;
     }
-    
+
     function reconstructImage() {
-      if (!sinogramData) return;
-      
-      const filterType = filterTypeSelect.value;
-      const transformType = transformTypeSelect.value;
-      const numAngles = sinogramData.length;
-      const numBins = sinogramData[0].length;
-      
-      // Set reconstructed image size (square)
-      const size = 300;
-      reconstructedCanvas.width = size;
-      reconstructedCanvas.height = size;
-      
-      // 1. Show FFT of projections
-      const fftResult = showProjectionFFT(transformType);
-      
-      // 2. Create polar FFT visualization
-      drawPolarVisualization(fftCanvas, polarFftCanvas);
-      
-      // 3. Apply filter and show filtered FFT
-      const filteredSinogram = applyFilter(fftResult, filterType);
-      
-      // 4. Create polar filtered FFT visualization
-      drawPolarVisualization(filteredFftCanvas, polarFilteredFftCanvas);
-      
-      // 5. Show filtered sinogram
-      const filteredProjections = showFilteredSinogram(filteredSinogram);
-      
-      // 6. Create polar filtered sinogram visualization
-      drawPolarVisualization(filteredSinogramCanvas, polarFilteredSinogramCanvas);
-      
-      // 7. Perform backprojection and show reconstruction
-      const reconstruction = backproject(filteredProjections, size, transformType);
-      drawReconstruction(reconstruction);
+        if (!originalSinogram) return;
+        
+        if (controls.separateChannels.checked) {
+            const { R, G, B } = getSinogramChannels(originalSinogram);
+            const reconR = processSingleChannel(R);
+            const reconG = processSingleChannel(G);
+            const reconB = processSingleChannel(B);
+            drawReconstructionRGB(reconR, reconG, reconB);
+        } else {
+            const graySinogram = getGrayscaleSinogram(originalSinogram);
+            const reconGray = processSingleChannel(graySinogram);
+            drawReconstruction(reconGray);
+        }
+    }
+
+    function processSingleChannel(sinogramData) {
+        // 1. FFT
+        const fftResult = performFFT(sinogramData);
+        drawSinogram(fftResult.magnitudes, elements.fftCanvas, ctx.fftCanvas);
+        drawPolarVisualization(elements.fftCanvas, elements.polarFftCanvas, ctx.polarFftCanvas);
+
+        // 2. Filter
+        const filteredFFT = applyFilter(fftResult.complex);
+        drawSinogram(filteredFFT.magnitudes, elements.filteredFftCanvas, ctx.filteredFftCanvas);
+        drawPolarVisualization(elements.filteredFftCanvas, elements.polarFilteredFftCanvas, ctx.polarFilteredFftCanvas);
+
+        // 3. Inverse FFT
+        const filteredProjections = performIFFT(filteredFFT.complex);
+        drawSinogram(filteredProjections, elements.filteredSinogramCanvas, ctx.filteredSinogramCanvas);
+
+        // 4. Backprojection
+        const size = 300;
+        return backproject(filteredProjections, size);
     }
     
-    function showProjectionFFT(transformType) {
-      const numAngles = sinogramData.length;
-      const numBins = sinogramData[0].length;
-      
-      fftCanvas.width = numAngles;
-      fftCanvas.height = numBins;
-      const fftImageData = fftCtx.createImageData(numAngles, numBins);
-      const fftResult = new Array(numAngles);
-      
-      for (let angleIdx = 0; angleIdx < numAngles; angleIdx++) {
-        fftResult[angleIdx] = new Array(numBins);
-        const projection = sinogramData[angleIdx];
-        
-        // Apply FFT with selected transform type
-        const fft = transformType === 'hyperbolic' ? hyperbolicFFT1D(projection) : 
-                   transformType === 'cubic' ? cubicFFT1D(projection) : 
-                   fft1D(projection);
-        
-        // Store FFT result
-        for (let i = 0; i < numBins; i++) {
-          fftResult[angleIdx][i] = fft[i];
+    // --- FFT and Filtering ---
+    function performFFT(sinogram) {
+        const numAngles = sinogram.length;
+        const numBins = sinogram[0].length;
+        const complexResult = Array.from({ length: numAngles }, () => new Array(numBins));
+        const magnitudeResult = Array.from({ length: numAngles }, () => new Array(numBins));
+
+        for (let angleIdx = 0; angleIdx < numAngles; angleIdx++) {
+            const projection = sinogram[angleIdx];
+            const fft = fft1D(projection, controls.transformType.value);
+            
+            let fftShifted = fft;
+            if (controls.centerFFT.checked) {
+                fftShifted = new Array(numBins);
+                const pivot = Math.ceil(numBins / 2);
+                for(let i = 0; i < numBins; i++) {
+                    fftShifted[i] = fft[(i + pivot) % numBins];
+                }
+            }
+            
+            complexResult[angleIdx] = fftShifted;
+            for (let i = 0; i < numBins; i++) {
+                const mag = Math.sqrt(fftShifted[i].re**2 + fftShifted[i].im**2);
+                magnitudeResult[angleIdx][i] = Math.log(1 + mag); // Log scale for better visualization
+            }
         }
-        
-        // Find max magnitude for scaling
-        let maxMag = 0;
-        for (let i = 0; i < numBins; i++) {
-          const mag = Math.sqrt(fft[i].re**2 + fft[i].im**2);
-          maxMag = Math.max(maxMag, mag);
-        }
-        
-        // Draw FFT magnitudes
-        for (let i = 0; i < numBins; i++) {
-          const idx = (i * numAngles + angleIdx) * 4;
-          const mag = Math.sqrt(fft[i].re**2 + fft[i].im**2) / maxMag;
-          const val = Math.log(1 + mag * 100) * 20; // Log scale for visualization
-          
-          fftImageData.data[idx] = val;
-          fftImageData.data[idx+1] = val;
-          fftImageData.data[idx+2] = val;
-          fftImageData.data[idx+3] = 255;
-        }
-      }
-      
-      fftCtx.putImageData(fftImageData, 0, 0);
-      return fftResult;
+        return { complex: complexResult, magnitudes: magnitudeResult };
     }
-    
-    function applyFilter(fftResult, filterType) {
-      const numAngles = fftResult.length;
-      const numBins = fftResult[0].length;
-      const filtered = new Array(numAngles);
-      
-      // Create filter
-      const filter = createFilter(numBins, filterType);
-      
-      filteredFftCanvas.width = numAngles;
-      filteredFftCanvas.height = numBins;
-      const filteredFftImageData = filteredFftCtx.createImageData(numAngles, numBins);
-      
-      for (let angleIdx = 0; angleIdx < numAngles; angleIdx++) {
-        filtered[angleIdx] = new Array(numBins);
-        
-        // Apply filter
-        for (let i = 0; i < numBins; i++) {
-          filtered[angleIdx][i] = {
-            re: fftResult[angleIdx][i].re * filter[i],
-            im: fftResult[angleIdx][i].im * filter[i]
-          };
+
+    function applyFilter(fftComplex) {
+        const numAngles = fftComplex.length;
+        const numBins = fftComplex[0].length;
+        const filter = createFilter(numBins, controls.filterType.value);
+        const filteredComplex = Array.from({ length: numAngles }, () => new Array(numBins));
+        const filteredMagnitudes = Array.from({ length: numAngles }, () => new Array(numBins));
+
+        for (let angleIdx = 0; angleIdx < numAngles; angleIdx++) {
+            for (let i = 0; i < numBins; i++) {
+                filteredComplex[angleIdx][i] = {
+                    re: fftComplex[angleIdx][i].re * filter[i],
+                    im: fftComplex[angleIdx][i].im * filter[i]
+                };
+                const mag = Math.sqrt(filteredComplex[angleIdx][i].re**2 + filteredComplex[angleIdx][i].im**2);
+                filteredMagnitudes[angleIdx][i] = Math.log(1 + mag);
+            }
         }
-        
-        // Find max magnitude for scaling
-        let maxMag = 0;
-        for (let i = 0; i < numBins; i++) {
-          const mag = Math.sqrt(filtered[angleIdx][i].re**2 + filtered[angleIdx][i].im**2);
-          maxMag = Math.max(maxMag, mag);
-        }
-        
-        // Draw filtered FFT
-        for (let i = 0; i < numBins; i++) {
-          const idx = (i * numAngles + angleIdx) * 4;
-          const mag = Math.sqrt(filtered[angleIdx][i].re**2 + filtered[angleIdx][i].im**2) / maxMag;
-          const val = Math.log(1 + mag * 100) * 20; // Log scale
-          
-          filteredFftImageData.data[idx] = val;
-          filteredFftImageData.data[idx+1] = val;
-          filteredFftImageData.data[idx+2] = val;
-          filteredFftImageData.data[idx+3] = 255;
-        }
-      }
-      
-      filteredFftCtx.putImageData(filteredFftImageData, 0, 0);
-      return filtered;
-    }
-    
-    function showFilteredSinogram(filteredFft) {
-      const numAngles = filteredFft.length;
-      const numBins = filteredFft[0].length;
-      const filteredProjections = new Array(numAngles);
-      
-      filteredSinogramCanvas.width = numAngles;
-      filteredSinogramCanvas.height = numBins;
-      const filteredSinogramImageData = filteredSinogramCtx.createImageData(numAngles, numBins);
-      
-      for (let angleIdx = 0; angleIdx < numAngles; angleIdx++) {
-        filteredProjections[angleIdx] = new Array(numBins);
-        
-        // Inverse FFT to get filtered projection
-        const transformType = transformTypeSelect.value;
-        const ifft = transformType === 'hyperbolic' ? hyperbolicIFFT1D(filteredFft[angleIdx]) : 
-                     transformType === 'cubic' ? cubicIFFT1D(filteredFft[angleIdx]) : 
-                     ifft1D(filteredFft[angleIdx]);
-        
-        // Find min/max for scaling
-        let min = Infinity, max = -Infinity;
-        for (let i = 0; i < numBins; i++) {
-          min = Math.min(min, ifft[i].re);
-          max = Math.max(max, ifft[i].re);
-        }
-        const range = max - min;
-        
-        // Draw filtered sinogram and store projections
-        for (let i = 0; i < numBins; i++) {
-          filteredProjections[angleIdx][i] = ifft[i].re;
-          
-          const idx = (i * numAngles + angleIdx) * 4;
-          const val = ((ifft[i].re - min) / range) * 255;
-          
-          filteredSinogramImageData.data[idx] = val;
-          filteredSinogramImageData.data[idx+1] = val;
-          filteredSinogramImageData.data[idx+2] = val;
-          filteredSinogramImageData.data[idx+3] = 255;
-        }
-      }
-      
-      filteredSinogramCtx.putImageData(filteredSinogramImageData, 0, 0);
-      return filteredProjections;
+        return { complex: filteredComplex, magnitudes: filteredMagnitudes };
     }
     
     function createFilter(length, type) {
-      const filter = new Array(length);
-      const center = Math.floor(length / 2);
-      
-      for (let i = 0; i < length; i++) {
-        const freq = Math.abs(i - center) / center;
-        
-        switch (type) {
-          case 'ramp':
-            filter[i] = freq;
-            break;
-          case 'shepp-logan':
-            filter[i] = freq * (Math.sin(Math.PI * freq) / (Math.PI * freq) || 0);
-            break;
-          case 'cosine':
-            filter[i] = freq * Math.cos(Math.PI * freq / 2);
-            break;
-          case 'hann':
-            filter[i] = freq * (0.5 * (1 - Math.cos(2 * Math.PI * freq)));
-            break;
-          case 'hamming':
-            filter[i] = freq * (0.54 - 0.46 * Math.cos(2 * Math.PI * freq));
-            break;
-          case 'none':
-          default:
-            filter[i] = 1;
-        }
-      }
-      
-      return filter;
-    }
-    
-    function backproject(filteredProjections, size, transformType) {
-      const numAngles = filteredProjections.length;
-      const numBins = filteredProjections[0].length;
-      const recon = new Array(size * size).fill(0);
-      
-      const center = size / 2;
-      const scale = size / numBins;
-      
-      for (let angleIdx = 0; angleIdx < numAngles; angleIdx++) {
-        const angle = (angleIdx / numAngles) * Math.PI;
-        const cosAngle = Math.cos(angle);
-        const sinAngle = Math.sin(angle);
-        
-        for (let r = 0; r < numBins; r++) {
-          const radius = (r - numBins/2) * scale;
-          const value = filteredProjections[angleIdx][r];
-          
-          // Backproject this value
-          for (let t = -center; t <= center; t++) {
-            const x = Math.round(center + t * cosAngle - radius * sinAngle);
-            const y = Math.round(center + t * sinAngle + radius * cosAngle);
-            
-            if (x >= 0 && x < size && y >= 0 && y < size) {
-              recon[y * size + x] += value;
+        const filter = new Array(length);
+        const center = Math.floor(length / 2);
+        for (let i = 0; i < length; i++) {
+            const freq = Math.abs(i - center) / center;
+            const pi_freq = Math.PI * freq;
+            switch (type) {
+                case 'ramp': filter[i] = freq; break;
+                case 'shepp-logan': filter[i] = freq * (freq === 0 ? 1 : Math.sin(pi_freq) / pi_freq); break;
+                case 'cosine': filter[i] = freq * Math.cos(pi_freq / 2); break;
+                case 'hamming': filter[i] = freq * (0.54 - 0.46 * Math.cos(2 * pi_freq)); break;
+                case 'hann': filter[i] = freq * 0.5 * (1 - Math.cos(2 * pi_freq)); break;
+                case 'blackman': filter[i] = freq * (0.42 - 0.5 * Math.cos(2 * pi_freq) + 0.08 * Math.cos(4 * pi_freq)); break;
+                case 'bartlett': filter[i] = freq * (1 - freq); break;
+                case 'parzen':
+                    const w = freq <= 0.5 ? (1 - 6 * freq**2 + 6 * freq**3) : (2 * (1 - freq)**3);
+                    filter[i] = freq * w;
+                    break;
+                default: filter[i] = 1;
             }
-          }
         }
-      }
-      
-      return recon;
+        return filter;
+    }
+
+    function performIFFT(fftComplex) {
+        const numAngles = fftComplex.length;
+        const numBins = fftComplex[0].length;
+        const result = Array.from({ length: numAngles }, () => new Array(numBins));
+
+        for (let angleIdx = 0; angleIdx < numAngles; angleIdx++) {
+            let toTransform = fftComplex[angleIdx];
+            if (controls.centerFFT.checked) {
+                const pivot = Math.floor(numBins / 2);
+                const temp = new Array(numBins);
+                for(let i = 0; i < numBins; i++) {
+                    temp[i] = toTransform[(i + pivot) % numBins];
+                }
+                toTransform = temp;
+            }
+
+            const ifft = ifft1D(toTransform, controls.transformType.value);
+            for (let i = 0; i < numBins; i++) {
+                result[angleIdx][i] = ifft[i].re;
+            }
+        }
+        return result;
+    }
+
+    // --- Backprojection ---
+    function backproject(projections, size) {
+        const numAngles = projections.length;
+        const numBins = projections[0].length;
+        const recon = new Array(size * size).fill(0);
+        const center = size / 2;
+        const angleStep = Math.PI / numAngles;
+
+        for (let angleIdx = 0; angleIdx < numAngles; angleIdx++) {
+            const angle = angleIdx * angleStep;
+            const cosAngle = Math.cos(angle);
+            const sinAngle = Math.sin(angle);
+            const projection = projections[angleIdx];
+
+            for (let y = 0; y < size; y++) {
+                for (let x = 0; x < size; x++) {
+                    const x_rot = (x - center) * cosAngle + (y - center) * sinAngle;
+                    const bin_pos = x_rot + numBins / 2;
+
+                    let value = 0;
+                    if (controls.interpolationType.value === 'bilinear' && bin_pos >= 0 && bin_pos < numBins - 1) {
+                        const floor = Math.floor(bin_pos);
+                        const ceil = floor + 1;
+                        const frac = bin_pos - floor;
+                        value = projection[floor] * (1 - frac) + projection[ceil] * frac;
+                    } else { // Nearest Neighbor
+                        const nearestBin = Math.round(bin_pos);
+                        if (nearestBin >= 0 && nearestBin < numBins) {
+                            value = projection[nearestBin];
+                        }
+                    }
+                    recon[y * size + x] += value;
+                }
+            }
+        }
+        return recon;
     }
     
+    // --- Drawing and Visualization ---
+    function drawSinogram(data, canvas, context) {
+        const numAngles = data.length;
+        const numBins = data[0].length;
+        canvas.width = numAngles;
+        canvas.height = numBins;
+        const imageData = context.createImageData(numAngles, numBins);
+
+        let min = Infinity, max = -Infinity;
+        for (let x = 0; x < numAngles; x++) {
+            for (let y = 0; y < numBins; y++) {
+                min = Math.min(min, data[x][y]);
+                max = Math.max(max, data[x][y]);
+            }
+        }
+        const range = max - min;
+        
+        for (let x = 0; x < numAngles; x++) {
+            for (let y = 0; y < numBins; y++) {
+                const idx = (y * numAngles + x) * 4;
+                const val = range === 0 ? 0 : ((data[x][y] - min) / range) * 255;
+                imageData.data[idx] = imageData.data[idx+1] = imageData.data[idx+2] = val;
+                imageData.data[idx+3] = 255;
+            }
+        }
+        context.putImageData(imageData, 0, 0);
+    }
+    
+    function drawPolarVisualization(sourceCanvas, targetCanvas, targetCtx) {
+        const w = sourceCanvas.width;
+        const h = sourceCanvas.height;
+        targetCanvas.width = 300;
+        targetCanvas.height = 300;
+        targetCtx.fillStyle = 'black';
+        targetCtx.fillRect(0, 0, 300, 300);
+
+        const srcData = sourceCanvas.getContext('2d').getImageData(0, 0, w, h).data;
+        const output = targetCtx.createImageData(300, 300);
+        const outData = output.data;
+        const cx = 150, cy = 150;
+        const maxRadius = 150;
+
+        for (let r_px = 0; r_px < maxRadius; r_px++) {
+            const y_src = Math.floor((r_px / maxRadius) * h);
+            for (let a_px = 0; a_px < 360; a_px++) {
+                const x_src = Math.floor((a_px / 360) * w);
+                const angleRad = (a_px * Math.PI) / 180;
+                
+                const px = Math.round(cx + r_px * Math.cos(angleRad));
+                const py = Math.round(cy + r_px * Math.sin(angleRad));
+
+                const srcIndex = (y_src * w + x_src) * 4;
+                const destIndex = (py * 300 + px) * 4;
+
+                if (destIndex >= 0 && destIndex < outData.length - 3) {
+                    outData[destIndex]     = srcData[srcIndex];
+                    outData[destIndex + 1] = srcData[srcIndex + 1];
+                    outData[destIndex + 2] = srcData[srcIndex + 2];
+                    outData[destIndex + 3] = 255;
+                }
+            }
+        }
+        targetCtx.putImageData(output, 0, 0);
+    }
+
+    function applyBrightnessContrast(val, maxVal) {
+        let norm_val = (val / maxVal) * 255;
+        norm_val = ((norm_val - 127.5) * controls.contrast.value) + 127.5; // Contrast
+        norm_val = norm_val * controls.brightness.value; // Brightness
+        return Math.max(0, Math.min(255, norm_val));
+    }
+
     function drawReconstruction(recon) {
-      const size = reconstructedCanvas.width;
-      const imageData = reconstructedCtx.createImageData(size, size);
-      
-      // Find max value for normalization
-      let maxVal = 0;
-      for (let i = 0; i < recon.length; i++) {
-        maxVal = Math.max(maxVal, recon[i]);
-      }
-      
-      // Apply brightness and contrast
-      const brightnessFactor = brightness;
-      const contrastFactor = contrast;
-      
-      // Draw reconstruction with brightness/contrast adjustments
-      for (let y = 0; y < size; y++) {
-        for (let x = 0; x < size; x++) {
-          const idx = (y * size + x) * 4;
-          let val = (recon[y * size + x] / maxVal) * 255;
-          
-          // Apply contrast
-          val = ((val - 127.5) * contrastFactor) + 127.5;
-          
-          // Apply brightness
-          val = val * brightnessFactor;
-          
-          // Clamp to 0-255
-          val = Math.max(0, Math.min(255, val));
-          
-          imageData.data[idx] = val;
-          imageData.data[idx+1] = val;
-          imageData.data[idx+2] = val;
-          imageData.data[idx+3] = 255;
+        const size = elements.reconstructedCanvas.width;
+        const imageData = ctx.reconstructedCanvas.createImageData(size, size);
+        let maxVal = 0;
+        for (let i = 0; i < recon.length; i++) maxVal = Math.max(maxVal, recon[i]);
+
+        for (let i = 0; i < recon.length; i++) {
+            const val = applyBrightnessContrast(recon[i], maxVal);
+            imageData.data[i * 4] = imageData.data[i * 4 + 1] = imageData.data[i * 4 + 2] = val;
+            imageData.data[i * 4 + 3] = 255;
         }
-      }
-      
-      reconstructedCtx.putImageData(imageData, 0, 0);
+        ctx.reconstructedCanvas.putImageData(imageData, 0, 0);
     }
     
-    function drawPolarVisualization(sourceCanvas, targetCanvas) {
-      const w = sourceCanvas.width;
-      const h = sourceCanvas.height;
-      
-      targetCanvas.width = 300;
-      targetCanvas.height = 300;
-      const ctx = targetCanvas.getContext('2d');
-      
-      // Black background
-      ctx.fillStyle = 'black';
-      ctx.fillRect(0, 0, targetCanvas.width, targetCanvas.height);
-      
-      const src = sourceCanvas.getContext('2d').getImageData(0, 0, w, h);
-      const srcData = src.data;
-      const output = ctx.getImageData(0, 0, targetCanvas.width, targetCanvas.height);
-      const outData = output.data;
-      
-      const cx = targetCanvas.width / 2;
-      const cy = targetCanvas.height / 2;
-      const maxRadius = Math.min(cx, cy);
-      
-      for (let y = 0; y < h; y++) {
-        const angle = (y / h) * Math.PI * 2;
-        
-        for (let x = 0; x < w; x++) {
-          // Map x coordinate to radius (0 to maxRadius)
-          const radius = (x / w) * maxRadius;
-          
-          const px = Math.round(cx + radius * Math.cos(angle));
-          const py = Math.round(cy + radius * Math.sin(angle));
-          
-          const srcIndex = (y * w + x) * 4;
-          const destIndex = (py * targetCanvas.width + px) * 4;
-          
-          if (destIndex >= 0 && destIndex < outData.length - 3) {
-            outData[destIndex] = srcData[srcIndex];
-            outData[destIndex + 1] = srcData[srcIndex + 1];
-            outData[destIndex + 2] = srcData[srcIndex + 2];
-            outData[destIndex + 3] = 255;
-          }
+    function drawReconstructionRGB(reconR, reconG, reconB) {
+        const size = elements.reconstructedCanvas.width;
+        const imageData = ctx.reconstructedCanvas.createImageData(size, size);
+        let maxR = 0, maxG = 0, maxB = 0;
+        for (let i = 0; i < reconR.length; i++) {
+            maxR = Math.max(maxR, reconR[i]);
+            maxG = Math.max(maxG, reconG[i]);
+            maxB = Math.max(maxB, reconB[i]);
         }
-      }
-      
-      ctx.putImageData(output, 0, 0);
+
+        for (let i = 0; i < reconR.length; i++) {
+            imageData.data[i * 4] = applyBrightnessContrast(reconR[i], maxR);
+            imageData.data[i * 4 + 1] = applyBrightnessContrast(reconG[i], maxG);
+            imageData.data[i * 4 + 2] = applyBrightnessContrast(reconB[i], maxB);
+            imageData.data[i * 4 + 3] = 255;
+        }
+        ctx.reconstructedCanvas.putImageData(imageData, 0, 0);
     }
     
-    // Standard FFT implementations
-    function fft1D(signal) {
-      const N = signal.length;
-      const output = new Array(N);
-      
-      for (let k = 0; k < N; k++) {
-        let re = 0;
-        let im = 0;
+    // --- Generalized FFT Implementations ---
+    function getBasisFunctions(type, angle) {
+        switch (type) {
+            case 'hyperbolic': return {  c: 0, s: Math.sin(angle) };
+            case 'cos': return { c: Math.sin(angle), s: Math.cos(angle) };
+            case 'cubic':      return { c: Math.pow(Math.cos(angle), 3), s: Math.pow(Math.sin(angle), 3) };
+            case 'parabolic':  const cos2 = Math.cos(angle)**2, sin2 = Math.sin(angle)**2; return { c: cos2 - sin2, s: 2 * Math.sin(angle) * Math.cos(angle) };
+            case 'quintic':    return { c: Math.pow(Math.cos(angle), 5), s: Math.pow(Math.sin(angle), 5) };
         
-        for (let n = 0; n < N; n++) {
-          const angle = -2 * Math.PI * k * n / N;
-          re += signal[n] * Math.cos(angle);
-          im += signal[n] * Math.sin(angle);
+        case 'triangle':return { c: 2*Math.asin(Math.cos(angle))/ Math.PI, s: 2*Math.asin(Math.sin(angle))/ Math.PI };
+        case 'square': return { c: Math.sign(Math.cos(angle)), s: Math.sign(Math.sin(angle)) };
+        case 'sawtooth':return {  c: 1 - 2 * (((angle / Math.PI) % 2 + 2) % 2), 
+        s: 2 * (((angle / Math.PI + 1) % 2 + 2) % 2) - 1 };
+        
+        case 'slighter':return { c: Math.cos(angle), s: Math.sin(angle*1.1) };
+        
+        default:           return { c: Math.cos(angle), s: Math.sin(angle) }; // Standard Fourier
         }
-        
-        output[k] = { re: re/N, im: im/N };
-      }
-      
-      return output;
     }
-    
-    function ifft1D(freq) {
-      const N = freq.length;
-      const output = new Array(N);
-      
-      for (let n = 0; n < N; n++) {
-        let re = 0;
-        let im = 0;
-        
+
+    function fft1D(signal, type) {
+        const N = signal.length;
+        const output = new Array(N);
         for (let k = 0; k < N; k++) {
-          const angle = 2 * Math.PI * k * n / N;
-          re += freq[k].re * Math.cos(angle) - freq[k].im * Math.sin(angle);
-          im += freq[k].re * Math.sin(angle) + freq[k].im * Math.cos(angle);
+            let re = 0, im = 0;
+            for (let n = 0; n < N; n++) {
+                const angle = -2 * Math.PI * k * n / N;
+                const { c, s } = getBasisFunctions(type, angle);
+                re += signal[n] * c;
+                im += signal[n] * s;
+            }
+            output[k] = { re: re / N, im: im / N };
         }
-        
-        output[n] = { re: re, im: im };
-      }
-      
-      return output;
+        return output;
     }
-    
-    // Hyperbolic FFT implementation
-    function hyperbolicFFT1D(signal) {
-      const N = signal.length;
-      const output = new Array(N);
-      
-      for (let k = 0; k < N; k++) {
-        let re = 0;
-        let im = 0;
-        
+
+    function ifft1D(freq, type) {
+        const N = freq.length;
+        const output = new Array(N);
         for (let n = 0; n < N; n++) {
-          const angle = -2 * Math.PI * k * n / N;
-          re += signal[n] * Math.cosh(angle);
-          im += signal[n] * Math.sinh(angle);
+            let re = 0, im = 0;
+            for (let k = 0; k < N; k++) {
+                const angle = 2 * Math.PI * k * n / N;
+                const { c, s } = getBasisFunctions(type, angle);
+                re += freq[k].re * c - freq[k].im * s;
+                im += freq[k].re * s + freq[k].im * c;
+            }
+            output[n] = { re, im };
         }
-        
-        output[k] = { re: re/N, im: im/N };
-      }
-      
-      return output;
+        return output;
     }
-    
-    function hyperbolicIFFT1D(freq) {
-      const N = freq.length;
-      const output = new Array(N);
-      
-      for (let n = 0; n < N; n++) {
-        let re = 0;
-        let im = 0;
-        
-        for (let k = 0; k < N; k++) {
-          const angle = 2 * Math.PI * k * n / N;
-          re += freq[k].re * Math.cosh(angle) + freq[k].im * Math.sinh(angle);
-          im += freq[k].re * Math.sinh(angle) + freq[k].im * Math.cosh(angle);
-        }
-        
-        output[n] = { re: re, im: im };
-      }
-      
-      return output;
-    }
-    
-    // Cubic FFT implementation
-    function cubicFFT1D(signal) {
-      const N = signal.length;
-      const output = new Array(N);
-      
-      for (let k = 0; k < N; k++) {
-        let re = 0;
-        let im = 0;
-        
-        for (let n = 0; n < N; n++) {
-          const angle = -2 * Math.PI * k * n / N;
-          const cos3 = Math.pow(Math.cos(angle), 3);
-          const sin3 = Math.pow(Math.sin(angle), 3);
-          re += signal[n] * cos3;
-          im += signal[n] * sin3;
-        }
-        
-        output[k] = { re: re/N, im: im/N };
-      }
-      
-      return output;
-    }
-    
-    function cubicIFFT1D(freq) {
-      const N = freq.length;
-      const output = new Array(N);
-      
-      for (let n = 0; n < N; n++) {
-        let re = 0;
-        let im = 0;
-        
-        for (let k = 0; k < N; k++) {
-          const angle = 2 * Math.PI * k * n / N;
-          const cos3 = Math.pow(Math.cos(angle), 3);
-          const sin3 = Math.pow(Math.sin(angle), 3);
-          re += freq[k].re * cos3 - freq[k].im * sin3;
-          im += freq[k].re * sin3 + freq[k].im * cos3;
-        }
-        
-        output[n] = { re: re, im: im };
-      }
-      
-      return output;
-    }
-  </script>
+</script>
 </body>
 </html>
