@@ -141,7 +141,7 @@ function runSingleExpansion() {
   let B = parseMatrix(document.getElementById("singleMatrixInput").value);
   let n = parseInt(document.getElementById("singleNInput").value, 10);
   let exp = trim(expandbms(B,n));
-  let output = "Matrix: " + formatMatrix(B) + " [" + n + "] ";
+  let output = "" + formatMatrix(B) + " [" + n + "] ";
   output +=  " = " + formatMatrix(exp);
   document.getElementById("singleExpansionOutput").textContent = output;
 }
