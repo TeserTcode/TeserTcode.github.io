@@ -1,33 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Waveform Generator & Piano</title>
+  <meta charset="UTF--8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Waveform Generator & Piano (Enhanced)</title>
+  <style>
+  </style>
 </head>
 <body>
-    <h1>Waveform Generator and Piano</h1>
-    
-    <label for="waveform">Waveform (e.g., sin(2 * pi * t)): </label>
-    <input type="text" id="waveform" value="sin(2 * 3.14 * t)" />
-    <button id="updateWaveform">Change Instrument</button>
-    <br />
-    
-    <label for="presetFunctions">Preset Functions: </label>
-    <select id="presetFunctions">
-     <option value="sin(t)">sin(t)</option>
-            <optgroup label="Some waves">
-            <option value="sin(t)">Sine - sin(t)</option>
-            <option value="sinc(t)">Sinc - sinc(t)</option>
-            <option value="tan(t)">Tangent - tan(t)</option>
-            <option value="sec(t)">Secant - sec(t)</option>
-<option value="trianglewave(t)">Triangle - trianglewave(t)</option>
-<option value="unittrianglewave(t)">Triangle - unittrianglewave(t)</option>
-<option value="sawtooth(t)">Sawthooth - sawtooth(t)</option>
-<option value="squarewave(t)">Square - squarewave(t)</option>
-        </optgroup>
-        <optgroup label="Nowhere Continuous">
-            <option value="darboux(t)">Darboux - darboux(t)</option>
+  <h1>Waveform Generator & Piano</h1>
+  <div class="panel">
+    <div class="row">
+      <div>
+        <label for="waveform">Waveform Expression (t is time in seconds)</label>
+        <input id="waveform" type="text" value="sin(2 * PI * t)" />
+        <small class="muted">Use <code class="inline">sin</code>, <code class="inline">cos</code>, <code class="inline">noise</code>, and custom fns like <code class="inline">fmsynth2(t,440,3,2)</code>, <code class="inline">amsynth2(t,440,6,0.6)</code>, <code class="inline">adsr2(t,0.01,0.12,0.7,0.2,1)</code>. Constants: <code class="inline">PI</code>.</small>
+      </div>
+      <div>
+        <label for="presetFunctions">Presets</label>
+        <select id="presetFunctions">
+          <option value="sin(2 * PI * t)">Pure Sine</option>
+          <option value="sign(sin(2*PI*t))/3">Square (naïve)</option>
+          <option value="(2*(t%1)-1)/3">Saw (naïve)</option>
+          <option value="fmsynth2(t,440,220,3)">FM Bell</option>
+          <option value="amsynth2(t,440,8,0.8)/3">AM Tremolo</option>
+          <option value="mengerSponge(t,5)">Menger-ish</option>
+          <option value="fractalNoise(t,5)/3">Fractal Noise</option>
+          <option value="blit2(t,220)">BLIT</option>
+
+
+
+
+          <option value="sinc(t)">Sinc - sinc(t)</option>
+           <option value="sinc(t*45)*5*sqrt(t)*15">Sine/sqrt - sin(t*45)/sqrt(t)</option>
+           <option value="sin(t*45)/log(1+t)">Sine/log - sin(t*45)/log(1+t)</option>
+             <option value="lncos(t*3)/10">lncos - lncos(t*3)/10</option>
+             <option value="tan(t)/10">Tangent - tan(t)</option>
+            <option value="sec(t)/10">Secant - sec(t)</option>
+
+
+
+
+             <option value="darboux(t)">Darboux - darboux(t)</option>
             <option value="takagi(t)">Takagi - takagi(t)</option>
             <option value="weierstrass(t,0.5,2)">Weierstrass - weierstrass(t,0.5,2)</option>
             <option value="faberf1(t)">Faber F1 - faberf1(t)</option>
@@ -40,91 +54,19 @@
             <option value="cellerier(t,10)">Cellerier (a=10) - cellerier(t,10)</option>
             <option value="mccarthy(t)">McCarthy - mccarthy(t)</option>
             <option value="petr(t)">Petr - petr(t)</option>
-        </optgroup>
-        <optgroup label="Supermaths">
-            <option value="cex(t,2)">Cex - cex(t,2)</option>
-            <option value="sel(t,2)">Sel - sel(t,2)</option>
-            <option value="sir(t,2)">Sir - sir(t,2)</option>
-            <option value="nip(t,2)">Nip - nip(t,2)</option>
-            <option value="cps(t)">Cps - cps(t)</option>
-            <option value="sq(t)">Sq - sq(t)</option>
-            <option value="csel(t,2)">Csel - csel(t,2)</option>
-            <option value="csex(t,2)">Csex - csex(t,2)</option>
-        </optgroup>
-        <optgroup label="Mathiru">
-            <option value="mathieuce(2,t,2)">Mathieu CE (a=2) - mathieuce(2,t,2)</option>
-            <option value="mathieuce(10,t,2)">Mathieu CE (a=10) - mathieuce(10,t,2)</option>
-            <option value="mathieuse(10,t,2)">Mathieu SE (a=10) - mathieuse(10,t,2)</option>
-            <option value="mathieuce(10,t,3)">Mathieu CE (a=10, q=3) - mathieuce(10,t,3)</option>
-        </optgroup>
-         <optgroup label="Noise">
-        <option value="noise()">White Noise - noise()</option>
-        <option value="pinknoise()">Pink Noise - pinknoise()</option>
-        <option value="brownnoise()">Brown Noise - brownnoise()</option>
-        
-                <option value="violetnoise()">Violet Noise - violetnoise()</option>
-        <option value="bluenoise()">Blue Noise - bluenoise()</option>
-        <option value="greynoise()">Grey Noise - greynoise()</option>
-                <option value="velvetNoise(1000, 1, 44100)">Velvet Noise - velvetNoise(1000, 1, 44100)</option>
+        </select>
+      </div>
+      <div>
+        <label for="scale">Scale</label>
+        <select id="scale">
+          <option value="Major">Major (Ionian)</option>
+          <option value="Minor">Minor (Aeolian)</option>
+          <option value="Pentatonic">Pentatonic</option>
+          <option value="Chromatic">Chromatic (12TET)</option>
+          <option value="Octatonic2">Octatonic 2</option>
 
-    </optgroup>
-    <optgroup label="Complex Waveforms">
-        <option value="fmsynth(t/10, 440, 220, 5)">FM Synthesis - fmynth(t, 440, 220, 5)</option>
-        <option value="amsynth(t/10, 440, 220, 0.5)">AM Synthesis - amynth(t, 440, 220, 0.5)</option>
-        <option value="chirp(t/10, 440, 880)">Chirp - chirp(t, 440, 880)</option>
-        <option value="blit(t/10, 440)">BLIT - blit(t, 440)</option>
-                    <option value="sin(t) + 0.5*sin(3*t) + 0.25*sin(5*t)">Harmonic Series</option>
-            <option value="sin(t) + 0.7*sin(2.3*t) + 0.4*sin(4.1*t)">Inharmonic Series</option>
-            <option value="sin(t) * sin(0.5*t)">Ring Modulation</option>
-            <option value="sin(t) * (1 + 0.5*sin(0.2*t))">Tremolo Effect</option>
-    </optgroup>
-    <optgroup label="Envelopes">
-        <option value="adsr(t, 0.1, 0.2, 0.5, 0.3)">ADSR Envelope - adsr(t, 0.1, 0.2, 0.5, 0.3)</option>
-    <option value="exp(-t*0.1) * sin(t)">Decaying Sine</option>
-            <option value="(t < 0.5 ? 1 : 0) * sin(t)">Gate Envelope</option>
-   </optgroup>
-        <optgroup label="Others">
-        <option value="sinc(t*45)*5*sqrt(t)">Sine/sqrt - sin(t*45)/sqrt(t)</option>
-        <option value="sin(t*t/10)/10*t">I dont even know - sin(t*t/10)/10*t</option>
-        
-        
-                        <option value="sin(t) + darboux(t/2)">Sine + Darboux</option>
-            <option value="weierstrass(t,0.5,3) * tan(t)">Weierstrass * Tan</option>
-            <option value="sin(t) * takagi(t*5)">Sine * Takagi</option>
-            <option value="sawtooth(t) * cellerier(t,3)">Sawtooth * Cellerier</option>
-            <option value="sin(t) + noise()*0.2">Noisy Sine</option>
-            <option value="sin(t) * mathieuce(2,t,2)">Sine * Mathieu</option>
-            <option value="fractalNoise(t, 3)">Fractal Noise</option>
-            <option value="chaos(t, 3.9)">Chaotic Function</option>
-            <option value="sin(t) + sin(pi*t) + sin(e*t)">Irrational Harmonics</option>
-            <option value="sin(t) * sin(e*t) * sin(pi*t)">Pi * e Modulation</option>
-            <option value="mengerSponge(t, 3)">Menger Sponge</option>
-            <option value="sin(t) + sin(2*t)">Sine + Sine(2t)</option>
-            <option value="sin(t) + sin(2*t) + sin(3*t)">Sine + Sine(2t) + Sine(3t)</option>
-            <option value="sin(t) + sin(3*t)">Sine + Sine(3t)</option>
-            <option value="sin(t) + sin(4*t)">Sine + Sine(4t)</option>
-            <option value="sin(t) + sin(5*t)">Sine + Sine(5t)</option>
-            <option value="sin(t) + sin(6*t)">Sine + Sine(6t)</option>
-            <option value="sin(t) + sin(7*t)">Sine + Sine(7t)</option>
-            <option value="sin(t) + sin(8*t)">Sine + Sine(8t)</option>
-            <option value="sin(t) + sin(9*t)">Sine + Sine(9t)</option>
-            <option value="sin(t) + sin(10*t)">Sine + Sine(10t)</option>
-            <option value="sin(t) + sin(2*t) + sin(4*t)">Sine + Sine(2t) + Sine(4t)</option>
-            <option value="sin(t) + sin(3*t) + sin(5*t)">Sine + Sine(3t) + Sine(5t)</option>
-            <option value="sin(t) + sin(2*t) + sin(3*t) + sin(4*t)">Sine + Sine(2t) + Sine(3t) + Sine(4t)</option>
-            <option value="sin(t) + sin(2*t) + sin(3*t) + sin(5*t)">Sine + Sine(2t) + Sine(3t) + Sine(5t)</option>
-            <option value="sin(t) + sin(2*t) + sin(3*t) + sin(4*t) + sin(5*t)">Sine + Sine(2t) + Sine(3t) + Sine(4t) + Sine(5t)</option>
-            <option value="sin(t) + sin(2*t) + sin(3*t) + sin(4*t) + sin(5*t) + sin(6*t)">Sine + Sine(2t) + Sine(3t) + Sine(4t) + Sine(5t) + Sine(6t)</option>
-            <option value="sin(t) + sin(2*t) + sin(3*t) + sin(4*t) + sin(5*t) + sin(6*t) + sin(7*t)">Sine + Sine(2t) + Sine(3t) + Sine(4t) + Sine(5t) + Sine(6t) + Sine(7t)</option>
-            <option value="sin(t) + sin(2*t) + sin(3*t) + sin(4*t) + sin(5*t) + sin(6*t) + sin(7*t) + sin(8*t)">Sine + Sine(2t) + Sine(3t) + Sine(4t) + Sine(5t) + Sine(6t) + Sine(7t) + Sine(8t)</option>
-            <option value="sin(t) + sin(2*t) + sin(3*t) + sin(4*t) + sin(5*t) + sin(6*t) + sin(7*t) + sin(8*t) + sin(9*t)">Sine + Sine(2t) + Sine(3t) + Sine(4t) + Sine(5t) + Sine(6t) + Sine(7t) + Sine(8t) + Sine(9t)</option>
-        </optgroup>
-    </select>
-    <br />
-    
-    <label for="scale">Scale: </label>
-    <select id="scale">
-          <option value="Major">C Major</option>
+
+      <option value="Major">C Major</option>
     <option value="Minor">C Minor</option>
         <option value="HarmonicMinor">C Harmonic Minor</option>
         <option value="MelodicMinor">C Melodic Minor</option>
@@ -155,116 +97,126 @@
     <option value="Balinese">C Balinese</option>
        <option value="Octatonic">C Octatonic (H-W)</option>
         <option value="Octatonic2">C Octatonic (W-H)</option>
+
+
     </select>
-    
-    <br />
-    
-    <label for="startTone">Start Tone (Hz): </label>
-    <input type="number" id="startTone" value="440" step="1" />
-    
-    <br />
-        
-    <label>
+      </div>
+      <div>
+        <label for="startTone">Root / Start Tone (Hz)</label>
+        <input id="startTone" type="number" value="440" step="1" />
+        <small class="muted">Used to build flexible scales. Keyboard: <code class="inline">a s d f g h j k l</code></small>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="btn-row">
+      <button id="updateWaveform">Change Instrument</button>
+      <label style="display:flex;align-items:center;gap:8px;">
         <input type="checkbox" id="disableDoubleSound" /> Disable Double Sound
-    </label>
-    <br />
-    <button id="saveButton">Save Waveform as .WAV</button>
-    <br />
-    <canvas id="waveformCanvas" width="800" height="200" style="border:1px solid #000000;"></canvas>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.6.0/math.min.js"></script>
-    <script src="mthfnc.js"></script>
-    <script>
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        let activeSources = {}; // Store active audio sources for each key
-        let cachedWaveform = null; // Cache the generated waveform
+      </label>
+      <button id="saveWav">Export WAV</button>
+      <button id="saveMp3">Export MP3</button>
+    </div>
+  </div>
 
-        const waveformInput = document.getElementById('waveform');
-        const presetFunctions = document.getElementById('presetFunctions');
-        const updateWaveformButton = document.getElementById('updateWaveform');
-        const scaleSelect = document.getElementById('scale');
-        const startToneInput = document.getElementById('startTone');
-        const saveButton = document.getElementById('saveButton');
-        const disableDoubleSoundCheckbox = document.getElementById('disableDoubleSound');
-        const waveformCanvas = document.getElementById('waveformCanvas');
-        const canvasContext = waveformCanvas.getContext('2d');
-        let currentFrequency = parseFloat(startToneInput.value);
-        let waveformExpression = waveformInput.value;
+  <div class="panel">
+    <label>Waveform Preview</label>
+    <canvas id="waveformCanvas" width="960" height="220"></canvas>
+  </div>
 
+  <div class="panel">
+      <div class="row">
+      <div>
+        <label for="sequence">Sequence Text (notes + durations)</label>
+        <textarea id="sequence" placeholder="Example: a.250ms b.250ms c.500ms - .125s j.100ms"></textarea>
+        <small class="muted">Format: <code class="inline">[key][.duration][unit]</code> separated by spaces or commas. Keys are <code class="inline">a s d f g h j k l</code>. Use <code class="inline">-</code> for rest. Units: <code class="inline">us, ms, s</code>. Examples: <code class="inline">a.50ms</code>, <code class="inline">d.1s</code>, <code class="inline">-.200ms</code>, repeats: <code class="inline">a.120msx4</code>.</small>
+      </div>
+      <div>
+        <label for="tempo">Tempo (BPM)</label>
+        <input id="tempo" type="number" value="120" />
+        <small class="muted">If you omit units, duration is in beats at this tempo. E.g. <code class="inline">a.1</code> = quarter note at 120 BPM.</small>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="btn-row">
+      <button id="playSeq">Play Sequence</button>
+      <button id="stopSeq">Stop</button>
+      <button id="saveSeqMp3">Export Sequence as MP3</button>
+      <button class="jgl" data-seq="a.250ms s.250ms d.250ms f.250ms g.250ms h.250ms j.250ms k.250ms l.500ms">Scale Walk</button>
+      <button class="jgl" data-seq="a.1 a.1 g.1 g.1 h.1 h.1 g.2 f.1 f.1 d.1 d.1 s.1 s.1 a.2">Twinkle Twinkle</button>
+      <button class="jgl" data-seq="d.1 d.1 f.1 g.1 g.1 f.1 d.1 s.1 a.1 a.1 s.1 d.1 d.1 s.1 s.3">Ode to Joy</button>
+      <button class="jgl" data-seq="k.120ms k.120ms k.120ms - .120ms g.240ms h.240ms j.480ms">Test Jingle 3</button>
 
-        math.import({
-            fractalNoise: function(t, octaves) {
-                let value = 0;
-                let amplitude = 1;
-                for (let i = 0; i < octaves; i++) {
-                    value += amplitude * math.noise(t * math.pow(2, i));
-                    amplitude *= 0.5;
-                }
-                return value;
-            },
-            chaos: function(t, r) {
-                // Logistic map chaotic function
-                let x = 0.5;
-                for (let i = 0; i < 100; i++) {
-                    x = r * x * (1 - x);
-                }
-                let value = 0;
-                for (let i = 0; i < 10; i++) {
-                    x = r * x * (1 - x);
-                    value += (x - 0.5) * math.sin(t * (i + 1));
-                }
-                return value / 5;
-            },
-            mengerSponge: function(t, iterations) {
-                // Approximation of Menger sponge fractal
-                let value = 0;
-                for (let i = 0; i < iterations; i++) {
-                    const freq = math.pow(3, i);
-                    value += math.sin(t * freq * 2 * math.PI) / freq;
-                }
-                return value;
-            },
-            // More complex FM synthesis
-            fmsynth2: function(t, carrier, modulator, index) {
-                const modulation = index * math.sin(2 * math.PI * modulator * t);
-                return math.sin(2 * math.PI * carrier * t + modulation);
-            },
-            // More complex AM synthesis
-            amsynth2: function(t, carrier, modulator, depth) {
-                return (1 + depth * math.sin(2 * math.PI * modulator * t)) * 
-                       math.sin(2 * math.PI * carrier * t);
-            },
-            // Band-limited impulse train (for aliasing-free waveforms)
-            blit2: function(t, freq) {
-                const period = 1 / freq;
-                const phase = t % period;
-                const n = 7; // number of harmonics
-                let sum = 0;
-                for (let k = 1; k <= n; k++) {
-                    sum += math.sin(2 * math.PI * k * freq * t) / k;
-                }
-                return (2 / math.PI) * sum;
-            },
-            // More sophisticated ADSR envelope
-            adsr2: function(t, attack, decay, sustainLevel, release, duration = 1) {
-                if (t < 0) return 0;
-                if (t < attack) {
-                    return t / attack;
-                }
-                if (t < attack + decay) {
-                    return 1 - (1 - sustainLevel) * ((t - attack) / decay);
-                }
-                if (t < duration) {
-                    return sustainLevel;
-                }
-                if (t < duration + release) {
-                    return sustainLevel * (1 - (t - duration) / release);
-                }
-                return 0;
-            }
-        });
-        // Scales
-const scales = {
-     Major: [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25, 587.33, 659.25, 698.46, 783.99, 880.00, 987.77],
+<button class="jgl" data-seq="s.160ms s.160ms l.320ms h.480ms g.320ms f.320ms d.320ms s.160ms d.160ms f.160ms">Megalovania (Half Tempo)</button>
+<button class="jgl" data-seq="g.160ms g.160ms g.320ms g.160ms g.160ms g.320ms g.160ms g.160ms j.320ms l.640ms">Wm Tell Overture (Half Tempo)</button>
+<button class="jgl" data-seq="l.120ms k.120ms j.120ms h.120ms g.120ms f.120ms d.120ms s.120ms d.120ms f.120ms g.120ms h.120ms j.120ms k.120ms l.120msx2">Bumblebee (Half Tempo)</button>
+<button class="jgl" data-seq="a.180ms s.180ms d.180ms s.180ms a.180ms h.180ms g.360ms f.180ms g.180ms h.180ms g.180ms f.180ms d.180ms s.360ms">Misirlou (Half Tempo)</button>
+<button class="jgl" data-seq="g.200ms k.200ms j.200ms h.200ms g.400ms h.200ms j.200ms h.200ms g.200ms f.200ms d.400ms">Can-can (Half Tempo)</button>
+<button class="jgl" data-seq="g.200ms k.200ms j.200ms h.200ms g.400ms h.200ms j.200ms h.200ms g.200ms f.200ms d.400ms">Can-can (Half Tempo)</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <label>Computer Keyboard Piano</label>
+    <div class="kbd-row" id="kbd"></div>
+    <small class="muted">Play with your keyboard: <code class="inline">a s d f g h j k l</code></small>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.6.0/math.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.0/lame.min.js"></script>
+
+<script src="mthfnc.js"></script>
+  <script>
+  // ---------- Audio Context ----------
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  let activeSources = {}; // per-frequency live notes
+  let cachedWaveform = null; // Float32Array base instrument @ currentFrequency
+  let currentFrequency = 440;
+  let waveformExpression = 'sin(2 * PI * t)';
+
+  // UI elements
+  const waveformInput = document.getElementById('waveform');
+  const presetFunctions = document.getElementById('presetFunctions');
+  const updateWaveformButton = document.getElementById('updateWaveform');
+  const scaleSelect = document.getElementById('scale');
+  const startToneInput = document.getElementById('startTone');
+  const disableDoubleSoundCheckbox = document.getElementById('disableDoubleSound');
+  const saveWavBtn = document.getElementById('saveWav');
+  const saveMp3Btn = document.getElementById('saveMp3');
+  const saveSeqMp3Btn = document.getElementById('saveSeqMp3');
+  const canvas = document.getElementById('waveformCanvas');
+  const ctx = canvas.getContext('2d');
+  const tempoInput = document.getElementById('tempo');
+  const seqInput = document.getElementById('sequence');
+  const playSeqBtn = document.getElementById('playSeq');
+  const stopSeqBtn = document.getElementById('stopSeq');
+
+  // ---------- Math.js helpers & custom fns ----------
+
+  math.import({ PI }, { override: true });
+
+  math.import({
+    fractalNoise: function(t, octaves) {
+      let value = 0; let amplitude = 1;
+      for (let i = 0; i < (octaves|0); i++) { value += amplitude * math.noise(t * Math.pow(2, i)); amplitude *= 0.5; }
+      return value;
+    },
+    chaos: function(t, r) {
+      let x = 0.5; for (let i=0;i<100;i++) x = r*x*(1-x);
+      let v=0; for (let i=0;i<10;i++){ x = r*x*(1-x); v += (x-0.5)*Math.sin(t*(i+1)); }
+      return v/5;
+    },
+    mengerSponge: function(t, iterations) {
+      let v = 0; for (let i=0;i<(iterations|0);i++){ const f = Math.pow(3,i); v += Math.sin(t*f*2*PI)/f; } return v;
+    },
+    fmsynth2: function(t, carrier, modulator, index) { const mod = index * Math.sin(2*PI*modulator*t); return Math.sin(2*PI*carrier*t + mod); },
+    amsynth2: function(t, carrier, modulator, depth) { return (1 + depth*Math.sin(2*PI*modulator*t)) * Math.sin(2*PI*carrier*t); },
+    blit2: function(t, freq) { const n=10; let sum=0; for (let k=1;k<=n;k++) sum+= Math.sin(2*PI*k*freq*t)/k; return (2/PI)*sum; },
+    adsr2: function(t,a,d,s,rel,dur=1){ if (t<0) return 0; if (t<a) return t/a; if (t<a+d) return 1 - (1-s)*((t-a)/d); if (t<dur) return s; if (t<dur+rel) return s*(1-(t-dur)/rel); return 0; }
+  }, { override: true });
+
+  // ---------- Scales ----------
+  const scalesStatic = {
+      Major: [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25, 587.33, 659.25, 698.46, 783.99, 880.00, 987.77],
             Minor: [261.63, 293.66, 311.13, 349.23, 392.00, 415.30, 466.16, 523.25, 587.33, 622.25, 698.46, 783.99, 830.61, 932.33],
             HarmonicMinor: [261.63, 293.66, 311.13, 349.23, 392.00, 415.30, 493.88, 523.25, 587.33, 622.25, 698.46, 783.99, 830.61, 987.77],
             MelodicMinor: [261.63, 293.66, 311.13, 349.23, 392.00, 440.00, 493.88, 523.25, 587.33, 622.25, 698.46, 783.99, 880.00, 987.77],
@@ -302,159 +254,381 @@ const scales = {
     RomanianMinor: [261.63, 293.66, 311.13, 369.99, 392.00, 415.30, 493.88, 523.25, 587.33],
             Octatonic: [261.63, 293.66, 311.13, 349.23, 369.99, 415.30, 440.00, 466.16, 523.25, 587.33, 622.25, 698.46, 739.99, 830.61, 880.00, 932.33],
             Octatonic2: [261.63, 277.18, 329.63, 349.23, 392.00, 415.30, 466.16, 493.88, 523.25, 554.37, 659.25, 698.46, 783.99, 830.61, 932.33, 987.77],
-    
-};
 
-        // Key to frequency mapping
-        const keyMap = {
-            'a':0,'s':1,'d':2,'f':3,'g':4,'h':5,'j':6,'k':7,'l':8
-        };
-      const pressedKeys = new Set();
+  };
 
-        function generateWaveform(frequency, duration = 1) {
-            const sampleRate = audioContext.sampleRate;
-            const numSamples = Math.floor(duration * sampleRate);
-            const waveformData = new Float32Array(numSamples);
 
-            for (let i = 0; i < numSamples; i++) {
-                let t = i / sampleRate; // Time in seconds
-                waveformData[i] = math.evaluate(waveformExpression, { t: t * frequency });
-            }
+  // a..l => 0..8 map
+  const keyMap = { 'a':0,'s':1,'d':2,'f':3,'g':4,'h':5,'j':6,'k':7,'l':8 };
+  const pressedKeys = new Set();
 
-            return waveformData;
+  function buildScaleFrequencies() {
+  const sel = scaleSelect.value;   // e.g. "Phrygian"
+  return scalesStatic[sel].slice(0, 16);
+}
+
+  // ---------- Instrument synthesis ----------
+  function generateWaveform(frequency, duration=1) {
+    const sampleRate = audioContext.sampleRate;
+    const numSamples = Math.floor(duration * sampleRate);
+    const data = new Float32Array(numSamples);
+    for (let i=0;i<numSamples;i++) {
+      const t = i / sampleRate; // seconds
+      // Evaluate expression where user expects t in seconds; we scale inside expression manually using *frequency when desired
+      // To maintain backward compatibility with your code, expose both t and tf (t*frequency)
+      const val = math.evaluate(waveformExpression, { t:t*440, tf: t*frequency, PI });
+      data[i] = Math.max(-1, Math.min(1, val));
+    }
+    return data;
+  }
+
+  function updateCachedWaveform() {
+    cachedWaveform = generateWaveform(currentFrequency, 1.0);
+    drawWaveform(cachedWaveform);
+  }
+
+  function drawWaveform(arr) {
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0,0,w,h);
+    if (!arr || arr.length === 0) return;
+    ctx.beginPath();
+    ctx.moveTo(0, h/2);
+    const samplesToDraw = arr.length / 100; // MODIFIED: Only draw 1/100th of a second
+    const step = samplesToDraw / w;
+    for (let x=0; x<w; x++) {
+      const i = Math.min(arr.length-1, Math.floor(x * step)); // MODIFIED: Use new step
+      const y = h * (0.5 - 0.45 * arr[i]);
+      ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = '#7dd3fc';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  function makeSourceForFrequency(freq, durationSec = 1.0) {
+    if (!cachedWaveform) updateCachedWaveform();
+    const buffer = audioContext.createBuffer(1, cachedWaveform.length, audioContext.sampleRate);
+    buffer.getChannelData(0).set(cachedWaveform);
+    const source = audioContext.createBufferSource();
+    source.buffer = buffer;
+    source.playbackRate.value = freq / currentFrequency;
+    source.loop = true;
+    const gain = audioContext.createGain();
+    gain.gain.setValueAtTime(0, audioContext.currentTime);
+    // Simple envelope
+    const now = audioContext.currentTime;
+    const a=0.005, d=0.03, s=0.85; // ADS
+    gain.gain.linearRampToValueAtTime(1, now + a);
+    gain.gain.linearRampToValueAtTime(s, now + a + d);
+
+    source.connect(gain).connect(audioContext.destination);
+
+    return { source, gain };
+  }
+
+  function playSound(freq) {
+    if (disableDoubleSoundCheckbox.checked) {
+      for (const f in activeSources) stopSound(f);
+    }
+    if (activeSources[freq]) return;
+    const node = makeSourceForFrequency(freq, 1.0);
+    node.source.start();
+    activeSources[freq] = node;
+  }
+
+  function stopSound(freq) {
+    const node = activeSources[freq];
+    if (!node) return;
+    const now = audioContext.currentTime;
+    node.gain.gain.cancelScheduledValues(now);
+    node.gain.gain.setTargetAtTime(0, now, 0.03);
+    setTimeout(()=>{ try { node.source.stop(); node.source.disconnect(); node.gain.disconnect(); } catch(e){} }, 120);
+    delete activeSources[freq];
+  }
+
+  // ---------- Keyboard handling ----------
+  const kbdDiv = document.getElementById('kbd');
+  function renderKeys() {
+    const scale = buildScaleFrequencies();
+    kbdDiv.innerHTML = '';
+    Object.keys(keyMap).forEach(k => {
+      const el = document.createElement('div');
+      el.className = 'key';
+      el.textContent = k;
+      kbdDiv.appendChild(el);
+    });
+  }
+  renderKeys();
+
+  function handleKeyDown(e) {
+    const key = e.key.toLowerCase();
+    if (!(key in keyMap)) return;
+    if (pressedKeys.has(key)) return;
+    pressedKeys.add(key);
+    const scale = buildScaleFrequencies();
+    const freq = scale[keyMap[key]];
+    if (freq) {
+      playSound(freq);
+      kbdDiv.children[keyMap[key]].classList.add('down');
+    }
+  }
+  function handleKeyUp(e) {
+    const key = e.key.toLowerCase();
+    if (!(key in keyMap)) return;
+    pressedKeys.delete(key);
+    const scale = buildScaleFrequencies();
+    const freq = scale[keyMap[key]];
+    if (freq) {
+      stopSound(freq);
+      kbdDiv.children[keyMap[key]].classList.remove('down');
+    }
+  }
+  document.addEventListener('keydown', handleKeyDown);
+  document.addEventListener('keyup', handleKeyUp);
+
+  // ---------- Sequence Parser & Player ----------
+  // token grammar: "note[.duration][unit][xN]" where note in a,s,d,f,g,h,j,k,l or '-' rest
+  // unit in us, ms, s; if absent -> beats (duration * 60 / BPM)
+  function parseSequence(text, bpm) {
+    const tokens = String(text || '').split(/[,\s]+/).filter(Boolean);
+    const out = [];
+    for (let raw of tokens) {
+      const m = raw.match(/^([a-z\-\[\]]+)(?:\.(\d*\.?\d+))?(us|ms|s)?(?:x(\d+))?$/i);
+      if (!m) continue;
+      let [_, noteStr, durNum, unit, reps] = m;
+      reps = Math.max(1, parseInt(reps||'1',10));
+      const beatDur = durNum !== undefined ? parseFloat(durNum) : 0.25; // default 1/4 beat
+      let seconds;
+      if (!unit) seconds = (beatDur * 60) / bpm; else if (unit==='s') seconds = beatDur; else if (unit==='ms') seconds = beatDur/1000; else seconds = beatDur/1e6;
+      for (let i=0;i<reps;i++) out.push({ note: noteStr.toLowerCase(), dur: seconds });
+    }
+    return out;
+  }
+
+  let seqStopFlag = false;
+  async function playSequence(text) {
+    const scale = buildScaleFrequencies();
+    const events = parseSequence(text, parseFloat(tempoInput.value||'120'));
+    seqStopFlag = false;
+    for (const ev of events) {
+      if (seqStopFlag) break;
+      const n = ev.note;
+      if (n === '-' || n === 'rest') {
+        await wait(ev.dur);
+        continue;
+      }
+      // chords like [ad]
+      const chord = n.startsWith('[') && n.endsWith(']') ? n.slice(1,-1).split('') : [n[0]];
+      const freqs = chord.map(ch => scale[keyMap[ch]]).filter(Boolean);
+      const nodes = freqs.map(f => makeSourceForFrequency(f, ev.dur));
+      nodes.forEach(n => n.source.start());
+      await wait(Math.max(0, ev.dur - 0.03)); // leave tiny tail for release
+      nodes.forEach(n => { const now = audioContext.currentTime; n.gain.gain.setTargetAtTime(0, now, 0.03); setTimeout(()=>{ try { n.source.stop(); n.source.disconnect(); n.gain.disconnect(); } catch(e){} }, 120); });
+    }
+  }
+  function wait(sec){ return new Promise(res=>setTimeout(res, sec*1000)); }
+
+  // ---------- Export (WAV & MP3) ----------
+  function encodeWavPCM16(float32, sampleRate) {
+    const clamp = v => Math.max(-1, Math.min(1, v));
+    const buffer = new ArrayBuffer(44 + float32.length * 2);
+    const view = new DataView(buffer);
+
+    function writeString(off, s){ for (let i=0;i<s.length;i++) view.setUint8(off+i, s.charCodeAt(i)); }
+
+    const numChannels = 1; const bitsPerSample = 16;
+    const byteRate = sampleRate * numChannels * bitsPerSample/8;
+
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + float32.length * 2, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true); // PCM chunk size
+    view.setUint16(20, 1, true); // PCM format
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, byteRate, true);
+    view.setUint16(32, numChannels * bitsPerSample/8, true);
+    view.setUint16(34, bitsPerSample, true);
+    writeString(36, 'data');
+    view.setUint32(40, float32.length * 2, true);
+
+    let offset = 44;
+    for (let i=0;i<float32.length;i++) {
+      const s = clamp(float32[i]);
+      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      offset += 2;
+    }
+    return new Blob([view], { type: 'audio/wav' });
+  }
+
+  function renderInstrumentSeconds(seconds=2) {
+    if (!cachedWaveform) updateCachedWaveform();
+    // tile cached waveform to "seconds"
+    const sr = audioContext.sampleRate;
+    const len = Math.floor(seconds * sr);
+    const data = new Float32Array(len);
+    for (let i=0;i<len;i++) data[i] = cachedWaveform[i % cachedWaveform.length];
+    return { data, sampleRate: sr };
+  }
+
+  async function exportWav() {
+    const { data, sampleRate } = renderInstrumentSeconds(3);
+    const blob = encodeWavPCM16(data, sampleRate);
+    const url = URL.createObjectURL(blob);
+    triggerDownload(url, 'waveform.wav');
+  }
+
+  async function exportMp3() {
+    const { data, sampleRate } = renderInstrumentSeconds(3);
+    const mp3encoder = new lamejs.Mp3Encoder(1, sampleRate, 128);
+    const samples = floatTo16BitPCM(data);
+    const chunkSize = 1152; // MP3 frame samples
+    let mp3Data = [];
+    for (let i=0; i < samples.length; i += chunkSize) {
+      const slice = samples.subarray(i, i + chunkSize);
+      const mp3buf = mp3encoder.encodeBuffer(slice);
+      if (mp3buf.length > 0) mp3Data.push(new Int8Array(mp3buf));
+    }
+    const end = mp3encoder.flush();
+    if (end.length > 0) mp3Data.push(new Int8Array(end));
+    const blob = new Blob(mp3Data, { type: 'audio/mpeg' });
+    triggerDownload(URL.createObjectURL(blob), 'waveform.mp3');
+  }
+
+    // NEW: Function to render and export a sequence
+    async function exportSequenceMp3() {
+        alert('Rendering sequence... this might take a moment.'); // Give user feedback
+        const bpm = parseFloat(tempoInput.value || '120');
+        const events = parseSequence(seqInput.value, bpm);
+        if (events.length === 0) {
+            alert('Sequence is empty.');
+            return;
         }
 
-        function updateCachedWaveform() {
-            cachedWaveform = generateWaveform(currentFrequency);
-            drawWaveform(cachedWaveform);
-        }
+        const scale = buildScaleFrequencies();
+        const sampleRate = audioContext.sampleRate;
+        const baseFreq = currentFrequency;
+        if (!cachedWaveform) updateCachedWaveform();
 
-        function drawWaveform(waveformData) {
-            const width = waveformCanvas.width;
-            const height = waveformCanvas.height;
-            canvasContext.clearRect(0, 0, width, height);
-            canvasContext.beginPath();
-            canvasContext.moveTo(0, height / 2);
+        const totalDuration = events.reduce((sum, ev) => sum + ev.dur, 0);
+        const totalSamples = Math.floor(totalDuration * sampleRate);
+        const masterBuffer = new Float32Array(totalSamples).fill(0);
+        let currentSample = 0;
 
-            for (let i = 0; i < waveformData.length; i++) {
-                const x = (i / waveformData.length) * width * 100;
-                const y = (1.5 - waveformData[i]) * height / 3;
-                canvasContext.lineTo(x, y);
-            }
+        for (const ev of events) {
+            const eventDurationSamples = Math.floor(ev.dur * sampleRate);
 
-            canvasContext.stroke();
-        }
+            if (ev.note !== '-' && ev.note !== 'rest') {
+                const chord = ev.note.startsWith('[') && ev.note.endsWith(']') ? ev.note.slice(1, -1).split('') : [ev.note[0]];
+                const freqs = chord.map(ch => scale[keyMap[ch]]).filter(Boolean);
+                const tempMixBuffer = new Float32Array(eventDurationSamples).fill(0);
 
-        function playSound(frequency) {
-            if (disableDoubleSoundCheckbox.checked) {
-                // Stop all currently playing notes
-                for (const freq in activeSources) {
-                    stopSound(freq);
+for (const freq of freqs) {
+    const noteBuffer = new Float32Array(eventDurationSamples);
+    const increment = freq / baseFreq; // playback rate in terms of waveform cycles
+    let phase = 0;
+ const a = 0.005, d = 0.03, s = 0.85, rel = 0.03;
+                    const attackSamples = Math.floor(a * sampleRate);
+                    const decaySamples = Math.floor(d * sampleRate);
+                    const releaseSamples = Math.floor(rel * sampleRate);
+                    const sustainStart = attackSamples + decaySamples;
+                    const releaseStart = Math.max(sustainStart, eventDurationSamples - releaseSamples);
+    for (let i = 0; i < eventDurationSamples; i++) {
+        // Linear interpolation for smoother pitch shifting
+        const idx = phase % cachedWaveform.length;
+        const idxFloor = Math.floor(idx);
+        const idxCeil = (idxFloor + 1) % cachedWaveform.length;
+        const frac = idx - idxFloor;
+        const sample = cachedWaveform[idxFloor] * (1 - frac) + cachedWaveform[idxCeil] * frac;
+
+        // Apply ADSR
+        let amp = 1;
+        if (i < attackSamples) amp = i / attackSamples;
+        else if (i < sustainStart) amp = 1 - (1 - s) * ((i - attackSamples) / decaySamples);
+        else if (i < releaseStart) amp = s;
+        else
+        amp = s * (1 - (i - releaseStart) / releaseSamples);
+
+        noteBuffer[i] = sample * amp;
+        phase += increment;
+    }
+
+    // Add to temp mix
+    for (let i = 0; i < eventDurationSamples; i++) {
+        tempMixBuffer[i] += noteBuffer[i];
+    }
+}
+
+
+                for (let i = 0; i < eventDurationSamples; i++) {
+                    if (currentSample + i < masterBuffer.length) {
+                        masterBuffer[currentSample + i] += tempMixBuffer[i];
+                    }
                 }
             }
-
-            if (activeSources[frequency]) {
-                return; // Already playing
-            }
-
-            if (!cachedWaveform) {
-                updateCachedWaveform(); // Generate waveform if not cached
-            }
-
-            const audioBuffer = audioContext.createBuffer(1, cachedWaveform.length, audioContext.sampleRate);
-            audioBuffer.getChannelData(0).set(cachedWaveform);
-
-            const source = audioContext.createBufferSource();
-            source.buffer = audioBuffer;
-            source.playbackRate.value = frequency / currentFrequency; // Adjust pitch
-            source.loop = true; // Loop the sound while the key is pressed
-            source.connect(audioContext.destination);
-            source.start();
-
-            activeSources[frequency] = source; // Store the active source
+            currentSample += eventDurationSamples;
         }
 
-        function stopSound(frequency) {
-            if (activeSources[frequency]) {
-                activeSources[frequency].stop();
-                activeSources[frequency].disconnect();
-                delete activeSources[frequency]; // Remove the source
+        let maxAmp = 0;
+        for (let i = 0; i < masterBuffer.length; i++) {
+            maxAmp = Math.max(maxAmp, Math.abs(masterBuffer[i]));
+        }
+        if (maxAmp > 1.0) {
+            for (let i = 0; i < masterBuffer.length; i++) {
+                masterBuffer[i] /= maxAmp;
             }
         }
 
-        function handleKeyDown(event) {
-            const key = event.key.toLowerCase();
-            if (keyMap.hasOwnProperty(key) && !pressedKeys.has(key)) {
-                pressedKeys.add(key); // Mark the key as pressed
-                const scale = scales[scaleSelect.value];
-                const frequency = scale[keyMap[key]];
-                if (frequency) {
-                    playSound(frequency);
-                }
-            }
+        const mp3encoder = new lamejs.Mp3Encoder(1, sampleRate, 128);
+        const samples = floatTo16BitPCM(masterBuffer);
+        const chunkSize = 1152;
+        let mp3Data = [];
+        for (let i = 0; i < samples.length; i += chunkSize) {
+            const slice = samples.subarray(i, i + chunkSize);
+            const mp3buf = mp3encoder.encodeBuffer(slice);
+            if (mp3buf.length > 0) mp3Data.push(new Int8Array(mp3buf));
         }
+        const end = mp3encoder.flush();
+        if (end.length > 0) mp3Data.push(new Int8Array(end));
+        const blob = new Blob(mp3Data, { type: 'audio/mpeg' });
+        triggerDownload(URL.createObjectURL(blob), 'sequence.mp3');
+    }
 
-        function handleKeyUp(event) {
-            const key = event.key.toLowerCase();
-            if (keyMap.hasOwnProperty(key)) {
-                pressedKeys.delete(key); // Mark the key as released
-                const scale = scales[scaleSelect.value];
-                const frequency = scale[keyMap[key]];
-                if (frequency) {
-                    stopSound(frequency);
-                }
-            }
-        }
+  function floatTo16BitPCM(float32){
+    const out = new Int16Array(float32.length);
+    for (let i=0;i<float32.length;i++) {
+      const s = Math.max(-1, Math.min(1, float32[i]));
+      out[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    }
+    return out;
+  }
+  function triggerDownload(url, filename){ const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
 
-        function saveWaveform() {
-            if (!cachedWaveform) {
-                updateCachedWaveform(); // Generate waveform if not cached
-            }
+  // ---------- Events ----------
+  waveformInput.addEventListener('input', () => { waveformExpression = waveformInput.value; });
+  presetFunctions.addEventListener('change', () => { waveformExpression = presetFunctions.value; waveformInput.value = waveformExpression; updateCachedWaveform(); });
+  updateWaveformButton.addEventListener('click', updateCachedWaveform);
+  startToneInput.addEventListener('input', () => { currentFrequency = parseFloat(startToneInput.value || '440'); updateCachedWaveform(); });
+  scaleSelect.addEventListener('change', () => { renderKeys(); });
 
-            const buffer = new ArrayBuffer(cachedWaveform.length * 2);
-            const view = new DataView(buffer);
-            let offset = 0;
+  saveWavBtn.addEventListener('click', exportWav);
+  saveMp3Btn.addEventListener('click', exportMp3);
+  saveSeqMp3Btn.addEventListener('click', exportSequenceMp3); // NEW: Event listener
 
-            cachedWaveform.forEach(sample => {
-                view.setInt16(offset, sample * 32767, true);
-                offset += 2;
-            });
+  document.querySelectorAll('.jgl').forEach(btn => {
+    btn.addEventListener('click', () => { seqInput.value = btn.dataset.seq; playSequence(seqInput.value); });
+  });
+  playSeqBtn.addEventListener('click', () => playSequence(seqInput.value));
+  stopSeqBtn.addEventListener('click', () => { seqStopFlag = true; });
 
-            const blob = new Blob([buffer], { type: 'audio/wav' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'waveform.wav';
-            link.click();
-        }
-
-        waveformInput.addEventListener('input', () => {
-            waveformExpression = waveformInput.value;
-        });
-
-        presetFunctions.addEventListener('change', () => {
-            waveformInput.value = presetFunctions.value;
-            waveformExpression = presetFunctions.value;
-        });
-
-        updateWaveformButton.addEventListener('click', () => {
-            updateCachedWaveform(); // Update the cached waveform when the button is clicked
-        });
-
-        scaleSelect.addEventListener('change', () => {
-            // Update the scale when changed
-        });
-
-        startToneInput.addEventListener('input', () => {
-            currentFrequency = parseFloat(startToneInput.value);
-        });
-
-        saveButton.addEventListener('click', saveWaveform);
-
-        document.addEventListener('keydown', handleKeyDown);
-        document.addEventListener('keyup', handleKeyUp);
-
-        // Initialize the cached waveform
-        updateCachedWaveform();
-    </script>
+  // ---------- Init ----------
+  function init() {
+    waveformExpression = waveformInput.value;
+    currentFrequency = parseFloat(startToneInput.value || '440');
+    updateCachedWaveform();
+  }
+  init();
+  </script>
 </body>
 </html>

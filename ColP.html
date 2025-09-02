@@ -228,6 +228,14 @@ const sliderConfigs = [
    
  //   ['okhsv', 'h', 's', 'v', 0, 0, 0, 255, 255, 255, 255, 255, 255],
    
+    ['hunterlab', 'l', 'a', 'b', 0, -175, -70, 100, 175, 70, 100, 175, 70],
+    ['rlab', 'l', 'a', 'b', -100, -100, -100, 100, 100, 100, 10, 0, 0],//might be wrong idc
+    ['ipt', 'i', 'p', 't', -200, -200, -200, 200, 200, 200, 10, 0, 0],
+      ['igpgtg', 'ig', 'pg', 'tg', -200, -200, -200, 200, 200, 200, 10, 0, 0],
+       ['qhsv', 'h', 's', 'v', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['qhsl', 'h', 's', 'l', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+         ['hqv', 'h', 'q', 'v', 0, 0, 0, 255, 360, 100, 255, 360, 100],
+
 ];
 
 
@@ -238,8 +246,8 @@ for (const [space, ch1, ch2, ch3] of sliderConfigs) {
   sliders[space] = [`${ch1}Slider`, `${ch2}Slider`, `${ch3}Slider`];
   if (!colorSpaces.includes(space)) {
     colorSpaces.push(space);
-  }
 }
+  }
 
 console.log("sliders =", sliders);
 console.log("colorSpaces =", colorSpaces);

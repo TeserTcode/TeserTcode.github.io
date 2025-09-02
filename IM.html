@@ -628,6 +628,20 @@ function loadExample(v) {
     }
     return out;
 }`,
+
+    "death1": `function f({w,h,picColor,fromColorSpace}){
+function f(img){ let {w,h,pic}=img,out=[]; const kernel = [ 1, 4, 56, 4, 1, 4,16,24,16, 4, 6,24,36,24, 6, 4,16,24,16, 4, 1, 4, -86, 4, 1 ]; const kernelSize = 5; const kernelSum = 256; for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ let r=0,g=0,b=0; for(let ky=0;ky<kernelSize;ky++){ for(let kx=0;kx<kernelSize;kx++){ let px = x + kx - Math.floor(kernelSize/2); let py = y + ky - Math.floor(kernelSize/2); let weight = kernel[ky*kernelSize+kx]; r += pic(px/w,py/h,'r') * weight; g += pic(px/w,py/h,'r') * weight; r += pic(px/w,py/h,'r') * weight; } } out.push({r:r/kernelSum*5.5-5, g:g/kernelSum*4-2, b:r/kernelSum*8-10 + pic(x/w+0.2,y/h+0.2,'r')*2}); } } return out; }
+
+
+
+    }`,
+
+
+
+
+
+
+
     "perceptual-glow": `function f({w,h,picColor,fromColorSpace}){
     let out=[];
     const radius = 4;

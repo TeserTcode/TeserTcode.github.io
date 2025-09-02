@@ -2253,17 +2253,236 @@ function igpgtgToRgb(ig, pg, tg) {
 }
 
 
+// h: 0–360, s: 0–1, v: 0–1
+// qhsv: cycle = R → G → B → Gray → R
+function qhsvToRgb(h, ss, vv) {
+  let r, g, b;
+let s=ss/100;
+let v=vv/100;
+
+  // Normalize hue
+  h = ((h % 360) + 360) % 360;
+  let t = (h % 90) / 90; // fractional position in sector
+
+  if (h < 90) {          // R → G
+    r = (1 - t) * v;
+    g = t * v;
+    b = 0;
+  } else if (h < 180) {  // G → B
+    r = 0;
+    g = (1 - t) * v;
+    b = t * v;
+  } else if (h < 270) {  // B → Gray
+    r = t * v * 0.5;     // fade blue into gray (equal RGB)
+    g = t * v * 0.5;
+    b = v * (1 - 0.5 * t);
+  } else {               // Gray → R
+    r = v * (0.5 + 0.5 * t);
+    g = v * (0.5 - 0.5 * t);
+    b = v * (0.5 - 0.5 * t);
+  }
+
+  // Apply saturation (mix towards v,v,v = gray)
+  let gray = v;
+  r = r * s + gray * (1 - s);
+  g = g * s + gray * (1 - s);
+  b = b * s + gray * (1 - s);
+
+  return [
+    Math.round(r * 255),
+    Math.round(g * 255),
+    Math.round(b * 255)
+  ];
+}
 
 
 
+// r,g,b: 0–255
+// returns: [h, s, v]
+// qhsv cycle = R → G → B → Gray → R
+function rgbToQhsv(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+
+  let v = Math.max(r, g, b);
+  let minc = Math.min(r, g, b);
+  let s = v === 0 ? 0 : 1 - (minc / v);  // like HSV
+
+  // detect gray
+  if (Math.abs(r - g) < 1e-6 && Math.abs(g - b) < 1e-6) {
+    return [270, 0, v];  // pure gray maps to h=270
+  }
+
+  let h;
+  if (r >= g && g >= b) {
+    // R → G
+    let t = g / v;
+    h = 0 + 90 * t;
+  } else if (g >= b && b >= r) {
+    // G → B
+    let t = b / v;
+    h = 90 + 90 * t;
+  } else if (b > r && b > g) {
+    // B → Gray
+    let avg = (r + g) / 2;
+    let t = avg / b; // 0=blue, 1=gray
+    h = 180 + 90 * t;
+  } else {
+    // Gray → R
+    let avg = (g + b) / 2;
+    let t = (r - avg) / (v - avg);
+    h = 270 + 90 * t;
+  }
+
+  return [h, s*100, v*100];
+}
+// h: 0–360, s: 0–1, l: 0–1
+// cycle: R → G → B → Gray → R
+function qhslToRgb(h, ss, ll) {
+    let s=ss/100;
+let v=vv/100;
+  h = ((h % 360) + 360) % 360;
+  let t = (h % 90) / 90; // 0..1 within a sector
+  let r, g, b;
+
+  if (h < 90) {          // R → G
+    r = 1 - t;
+    g = t;
+    b = 0;
+  } else if (h < 180) {  // G → B
+    r = 0;
+    g = 1 - t;
+    b = t;
+  } else if (h < 270) {  // B → Gray
+    r = 0.5 * t;
+    g = 0.5 * t;
+    b = 1 - 0.5 * t;
+  } else {               // Gray → R
+    r = 0.5 + 0.5 * t;
+    g = 0.5 - 0.5 * t;
+    b = 0.5 - 0.5 * t;
+  }
+
+  // Apply saturation (blend towards gray=0.5)
+  r = (r - 0.5) * s + 0.5;
+  g = (g - 0.5) * s + 0.5;
+  b = (b - 0.5) * s + 0.5;
+
+  // Apply lightness (standard HSL adjust)
+  if (l < 0.5) {
+    r *= 2 * l;
+    g *= 2 * l;
+    b *= 2 * l;
+  } else {
+    r = r + (1 - r) * (2 * l - 1);
+    g = g + (1 - g) * (2 * l - 1);
+    b = b + (1 - b) * (2 * l - 1);
+  }
+
+  return [
+    Math.round(r * 255),
+    Math.round(g * 255),
+    Math.round(b * 255)
+  ];
+}
+
+
+// r,g,b: 0–255
+// returns [h, s, l]
+function rgbToQhsl(r, g, b) {
+    function clampsdf(x, min, max) {
+return Math.max(min, Math.min(max, x));
+}
+  r /= 255; g /= 255; b /= 255;
+  let maxc = Math.max(r, g, b);
+  let minc = Math.min(r, g, b);
+  let l = (maxc + minc) / 2;
+  let s, h;
+
+  if (Math.abs(maxc - minc) < 1e-6) {
+    // pure gray
+    return [270, 0, l];
+  }
+
+  // rough sector detection (similar to rgbToQhsv)
+  if (r >= g && g >= b) {         // R→G
+    let t = g / maxc;
+    h = 0 + 90 * t;
+  } else if (g >= b && b >= r) {  // G→B
+    let t = b / maxc;
+    h = 90 + 90 * t;
+  } else if (b > r && b > g) {    // B→Gray
+    let avg = (r + g) / 2;
+    let t = avg / b;
+    h = 180 + 90 * t;
+  } else {                        // Gray→R
+    let avg = (g + b) / 2;
+    let t = (r - avg) / (maxc - avg);
+    h = 270 + 90 * t;
+  }
+
+  // QHSL saturation relative to neutral gray=0.5
+  let gray = (r + g + b) / 3;
+  let diff = Math.max(Math.abs(r - gray), Math.abs(g - gray), Math.abs(b - gray));
+  s = diff / 0.5;
+
+  return [h, Math.min(1, Math.max(0, s)), l];
+}
 
 
 
+function rgbToHqv(r, g, b) {
+    function clampsdf(x, min, max) {
+return Math.max(min, Math.min(max, x));
+}
+r = clampsdf(r, 0, 255);
+g = clampsdf(g, 0, 255);
+b = clampsdf(b, 0, 255);
 
 
+const v = (r + g + b) / 3 / 255 * 100; // average brightness → 0..100
+const h = r; // hotness = red channel (0..255)
 
 
+const gv = g / 255;
+const bv = b / 255;
+const vv = (r + g + b) / 3 / 255;
 
+
+const angle = Math.atan2(bv - vv, gv - vv); // (-pi, pi]
+let q = angle * 180 / Math.PI; // degrees
+if (q < 0) q += 360; // wrap to [0,360)
+if (!isFinite(q)) q = 0; // gray case
+
+
+return [ h, q, v ];
+}
+
+
+ function hqvToRgb(h, q, v) {
+    function clampsdf(x, min, max) {
+return Math.max(min, Math.min(max, x));
+}
+
+const R = clampsdf(h, 0, 255);
+const V = clampsdf(v, 0, 100) / 100; // 0..1 gray level
+
+
+const theta = (q % 360) * Math.PI / 180;
+
+
+const s= Math.min(V, 1 - V) 
+
+
+let G = V + s * Math.cos(theta);
+let B = V + s * Math.sin(theta);
+
+
+G = clampsdf(Math.round(G * 255), 0, 255);
+B = clampsdf(Math.round(B * 255), 0, 255);
+
+
+return [R,G,B];
+}
 
 
 
@@ -2722,13 +2941,30 @@ return [
             ? hsvToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted)
             : hslToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted);
     }
+    if (colorMode === 'qhsv' || colorMode === 'qhsl') {
+        return colorMode === 'qhsv'
+            ? qhsvToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted)
+            : qhslToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted);
+    }
 
     if (colorMode === 'hcl' || colorMode === 'cielch') {
         return colorMode === 'hcl'
             ? hclToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted)
             : lchToRgb(lightnessAdjusted, chroma ,phase * 180 / Math.PI);
     }
- const yuvModes = ['ycbcr', 'ydbdr', 'ycocg', 'ypbpr'];
+    
+    if (colorMode === 'hsi')return hsiToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted)
+     if (colorMode === 'hsm')return hsmToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted)
+     if (colorMode === 'hsg')return hsgToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted)
+     if (colorMode === 'hsh')return hshToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted)
+      if (colorMode === 'jzczhz')return jzczhzToRgb(lightnessAdjusted, chroma, phase * 180 / Math.PI)
+       if (colorMode === 'hqv')return hqvToRgb(chroma, phase * 180 / Math.PI,lightnessAdjusted)
+ 
+
+
+
+
+const yuvModes = ['ycbcr', 'ydbdr', 'ycocg', 'ypbpr'];
 if (yuvModes.includes(colorMode)) {
     const convertYUV = {
         ycbcr: ycbcrToRgb,

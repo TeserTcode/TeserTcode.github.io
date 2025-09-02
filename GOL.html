@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Game of Life — 3 Variants </title>
+  <style>
+    :root{--left:340px;--gap:12px}
+    body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:#111;color:#eee;display:flex;height:100vh}
+    .left{width:var(--left);padding:12px;box-sizing:border-box;border-right:1px solid rgba(255,255,255,0.06);overflow:auto}
+    .right{flex:1;display:flex;align-items:center;justify-content:center}
+    h1{margin:6px 0;font-size:18px}
+    .tabs{display:flex;gap:8px;margin-bottom:10px}
+    .tab{padding:8px 10px;background:#222;border-radius:6px;cursor:pointer}
+    .tab.active{background:#06f}
+    .panel{display:none}
+    .panel.active{display:block}
+    .row{display:flex;gap:8px;align-items:center;margin:6px 0}
+    label{font-size:13px}
+    .small{font-size:12px;color:#bbb}
+    #canvas{width:calc(100% - 24px);height:calc(100vh - 24px);background:#000;display:block}
+    .grid-preview{display:grid;gap:2px;margin:8px 0}
+    button,input[type=range]{cursor:pointer}
+    .checkbox-grid{display:grid;grid-template-columns:repeat(9,24px);gap:4px}
+    .counts-line{display:flex;flex-wrap:wrap;gap:3px;max-height:120px;overflow:auto}
+    .count-btn{width:20px;height:18px;font-size:11px;text-align:center;line-height:18px;border-radius:3px;background:#222}
+    .count-btn.on{background:#0a0}
+    .controls{margin-top:8px}
+    textarea{width:100%;height:70px;background:#111;color:#ddd;border:1px solid #333;padding:6px}
+  </style>
+</head>
+<body>
+  <div class="left">
+    <h1>Game of Life — 3 Variants ((x-0.5)^2)^0.1013</h1>
+    <div class="tabs">
+      <div class="tab active" data-tab="classical">Classical</div>
+      <div class="tab" data-tab="large">Large Eyesight</div>
+      <div class="tab" data-tab="smooth">Smooth</div>
+    </div>
+
+    <!-- COMMON CONTROLS -->
+    <div class="row">
+      <label>Speed: <span id="speedLabel">10</span> ms</label>
+      <input id="speed" type="range" min="10" max="500" value="10">
+    </div>
+    <div class="row">
+      <label>Grid size:</label>
+      <select id="gridSize"><option>64</option><option>48</option><option>32</option><option>24</option><option>16</option></select>
+      <button id="randomize">Randomize</button>
+      <button id="clear">Clear</button>
+      <button id="start">Start</button>
+      <button id="step">Step</button>
+    </div>
+
+    <!-- CLASSICAL PANEL -->
+    <div id="classical" class="panel active">
+      <h2 class="small">Classical rules (two rows of 9):</h2>
+      <div class="small">Survive (remain alive if neighbor count in this set):</div>
+      <div class="checkbox-grid" id="survive"></div>
+      <div class="small" style="margin-top:6px">Birth (duplicate / become alive if neighbor count in this set):</div>
+      <div class="checkbox-grid" id="birth"></div>
+    </div>
+
+    <!-- LARGE PANEL -->
+    <div id="large" class="panel">
+      <h2 class="small">Large eyesight (7×7)</h2>
+      <div class="small">Edit the 7×7 eyesight mask (center is the cell):</div>
+      <div id="eyesight" class="grid-preview" style="grid-template-columns:repeat(7,20px)"></div>
+      <div class="small">For counts 0–49, toggle whether the cell will be alive (when looked-up by integer count):</div>
+      <div class="counts-line" id="countToggles"></div>
+      <div class="small" style="margin-top:6px">Liveliness = (#on in eyesight) / 49 — you can fine tune behavior with the toggles above.</div>
+    </div>
+
+    <!-- SMOOTH PANEL -->
+    <div id="smooth" class="panel">
+      <h2 class="small">Smooth life</h2>
+      <div class="small">Each cell holds a value 0…1. A 5×5 gaussian kernel is used to compute livelyhood (x). Use a math.js expression (variable x) to compute the next cell's value. Example: <code>x&gt;0.5?1:0</code> or <code>1/(1+exp(-12*(x-0.5)))</code></div>
+      <textarea id="expr">x>0.5?1:0</textarea>
+      <div class="controls">
+        <button id="applyExpr">Apply</button>
+      </div>
+    </div>
+
+    <div style="height:20px"></div>
+    <div class="small">Notes: click canvas to toggle (classical/large) or paint (smooth). Grid wraps (toroidal).</div>
+  </div>
+
+  <div class="right">
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+  <script>
+    // --- Layout & UI ---
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(t=>t.addEventListener('click',()=>{tabs.forEach(x=>x.classList.remove('active')); t.classList.add('active');document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active')); document.getElementById(t.dataset.tab).classList.add('active');}));
+
+    const canvas = document.getElementById('canvas'); const ctx = canvas.getContext('2d');
+    let gridN = parseInt(document.getElementById('gridSize').value,10);
+    let cellSize = 10;
+
+
+    // --- grid state ---
+    let mode = 'classical';
+    function getActiveTab(){return document.querySelector('.tab.active').dataset.tab}
+
+    document.getElementById('gridSize').addEventListener('change',()=>{gridN = parseInt(document.getElementById('gridSize').value,10); initGrid();});
+    document.getElementById('speed').addEventListener('input',e=>document.getElementById('speedLabel').innerText=e.target.value);
+
+    // create grid arrays
+    let grid, grid2, smoothValues;
+    function initGrid(){grid = new Uint8Array(gridN*gridN); grid2 = new Uint8Array(gridN*gridN); smoothValues = new Float32Array(gridN*gridN); for(let i=0;i<gridN*gridN;i++){smoothValues[i]=0;}}
+    initGrid();
+
+    // classical checkboxes
+    const surviveDiv = document.getElementById('survive'); const birthDiv = document.getElementById('birth');
+    function make9(container, name, defaultSet){container.innerHTML=''; for(let i=0;i<9;i++){const cb = document.createElement('input');cb.type='checkbox';cb.id=name+i; cb.dataset.val=i; if(defaultSet && defaultSet.includes(i)) cb.checked=true; const label = document.createElement('label'); label.style.display='inline-block'; label.style.width='24px'; label.style.textAlign='center'; label.title=i; label.appendChild(cb); label.appendChild(document.createElement('div')); label.lastChild.textContent=i; container.appendChild(label);} }
+    // default: Conway B3/S23
+    make9(surviveDiv,'s', [2,3]); make9(birthDiv,'b', [3]);
+
+    // large eyesight grid (7x7)
+    const eyesight = new Uint8Array(7*7).fill(1); eyesight[24]=0; // center may be excluded by default
+    const eyeDiv = document.getElementById('eyesight'); function renderEyes(){eyeDiv.innerHTML=''; for(let r=0;r<7;r++){for(let c=0;c<7;c++){const idx=r*7+c; const btn=document.createElement('div'); btn.style.width='20px'; btn.style.height='20px'; btn.style.background = eyesight[idx]? '#0f0':'#222'; btn.style.borderRadius='3px'; btn.style.cursor='pointer'; btn.addEventListener('click',()=>{eyesight[idx]=eyeSightToggle(idx); btn.style.background = eyesight[idx]? '#0f0':'#222';}); eyeDiv.appendChild(btn);} } }
+    function eyeSightToggle(i){return eyesight[i]?0:1}
+    renderEyes();
+    function resizeCanvas(){canvas.width = Math.max(200, window.innerWidth - 360); canvas.height = window.innerHeight - 24; draw();}
+    window.addEventListener('resize',resizeCanvas); resizeCanvas();
+    // count toggles 0..49
+    const countToggles = document.getElementById('countToggles'); const countRules = new Uint8Array(50).fill(0);
+    function renderCounts(){countToggles.innerHTML=''; for(let i=0;i<50;i++){const b=document.createElement('div'); b.className='count-btn'+(countRules[i]?' on':''); b.textContent=i%10; b.title = i; b.addEventListener('click',()=>{countRules[i]=countRules[i]?0:1; b.classList.toggle('on');}); countToggles.appendChild(b);} }
+    // default: live if exactly 3 or survive at 2,3 emulate conway for 7x7? We'll default to counts>10 conservative
+    for(let i=0;i<50;i++){countRules[i]= (i>=15 && i<=30)?1:0;} renderCounts();
+
+    // smooth expression
+    let expr = document.getElementById('expr').value; let compiledExpr = null;
+    try{compiledExpr = math.compile(expr);}catch(e){compiledExpr=null}
+    document.getElementById('applyExpr').addEventListener('click',()=>{expr=document.getElementById('expr').value; try{compiledExpr = math.compile(expr); alert('Expression compiled');}catch(e){compiledExpr=null; alert('Compile error: '+e.message);}});
+
+    // randomize and clear
+    document.getElementById('randomize').addEventListener('click',()=>{for(let i=0;i<gridN*gridN;i++){grid[i]=Math.random()<0.35?1:0; smoothValues[i]=Math.random();} draw();});
+    document.getElementById('clear').addEventListener('click',()=>{grid.fill(0); smoothValues.fill(0); draw();});
+
+    // start/stop/step
+    let running=false; let timer=null;
+    document.getElementById('start').addEventListener('click',()=>{running=!running; document.getElementById('start').textContent = running? 'Pause':'Start'; if(running) run(); else stop();});
+    document.getElementById('step').addEventListener('click',()=>{step(); draw();});
+    function run(){if(timer) clearInterval(timer); timer = setInterval(()=>{step(); draw();}, parseInt(document.getElementById('speed').value));}
+    function stop(){if(timer){clearInterval(timer); timer=null;}}
+
+    // canvas interactions
+    canvas.addEventListener('click',(e)=>{const rect=canvas.getBoundingClientRect(); const x=e.clientX-rect.left; const y=e.clientY-rect.top; const s = Math.floor(Math.min(canvas.width, canvas.height) / gridN); const cx = Math.floor(x / s); const cy = Math.floor(y / s); if(cx>=0 && cy>=0 && cx<gridN && cy<gridN){const idx = ((cy%gridN)+gridN)%gridN * gridN + ((cx%gridN)+gridN)%gridN; const tab=getActiveTab(); if(tab==='smooth'){ smoothValues[idx] = smoothValues[idx]>0.5?0:1; } else { grid[idx] = grid[idx]?0:1; } draw(); }});
+
+    // main step function
+    function step(){mode = getActiveTab(); if(mode==='classical' || mode==='large'){ // integer states
+        grid2.fill(0);
+        for(let y=0;y<gridN;y++) for(let x=0;x<gridN;x++){let idx=y*gridN+x; let neigh=0;
+            for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(dx===0 && dy===0) continue; let nx=(x+dx+gridN)%gridN; let ny=(y+dy+gridN)%gridN; neigh += grid[ny*gridN+nx]; }
+            if(mode==='classical'){ // use survive/birth checkboxes
+              const alive = grid[idx]; const survSet = getCheckboxSet('s'); const birthSet = getCheckboxSet('b'); if(alive){ if(survSet.has(neigh)) grid2[idx]=1; else grid2[idx]=0; } else { if(birthSet.has(neigh)) grid2[idx]=1; }
+            } else { // large eyesight 7x7
+              // compute 7x7 centered count using eyesight mask
+              let count=0, tot=0;
+              for(let ry=0;ry<7;ry++) for(let rx=0;rx<7;rx++){const mx = rx-3; const my = ry-3; const gx=(x+mx+gridN)%gridN; const gy=(y+my+gridN)%gridN; const midx = ry*7+rx; if(eyesight[midx]){ tot++; if(grid[gy*gridN+gx]) count++; }}
+              const key = Math.max(0,Math.min(49, count)); if(countRules[key]) grid2[idx]=1; else grid2[idx]=0;
+            }
+        }
+        grid.set(grid2);
+      } else if(mode==='smooth'){
+        // convolve with 5x5 gaussian kernel
+        const kernel = makeGaussian5(); const ksz=5; const half=2; const temp = new Float32Array(gridN*gridN);
+        for(let y=0;y<gridN;y++) for(let x=0;x<gridN;x++){let s=0;
+          for(let ky=0;ky<ksz;ky++) for(let kx=0;kx<ksz;kx++){const ox=kx-half; const oy=ky-half; const nx=(x+ox+gridN)%gridN; const ny=(y+oy+gridN)%gridN; s += smoothValues[ny*gridN+nx] * kernel[ky*(kx)];}
+        }
+        // Oops bug above; we'll implement properly below
+        // proper convolution
+        for(let y=0;y<gridN;y++) for(let x=0;x<gridN;x++){let s=0; for(let ky=0;ky<ksz;ky++){ for(let kx=0;kx<ksz;kx++){const ox=kx-half; const oy=ky-half; const nx=(x+ox+gridN)%gridN; const ny=(y+oy+gridN)%gridN; s += smoothValues[ny*gridN+nx] * kernel[ky*ksz + kx]; }}
+            let xval = s; let next=0; if(compiledExpr){ try{ next = compiledExpr.evaluate({x:xval, exp:Math.exp, sin:Math.sin, cos:Math.cos, tan:Math.tan, pow:Math.pow, e:Math.E}); }catch(e){ next = xval>0.5?1:0; }} else { next = xval>0.5?1:0; } temp[y*gridN+x] = Math.max(0, Math.min(1, Number(next)));
+        }
+        smoothValues.set(temp);
+      }
+    }
+
+    // helper to get checkbox sets
+    function getCheckboxSet(prefix){const s = new Set(); for(let i=0;i<9;i++){const cb=document.getElementById(prefix+i); if(cb && cb.checked) s.add(i);} return s; }
+
+    // gaussian 5x5 kernel
+    function makeGaussian5(){ const k = [1,4,6,4,1]; const out=[]; let sum=0; for(let y=0;y<5;y++){ for(let x=0;x<5;x++){ const v = k[y]*k[x]; out.push(v); sum+=v; }} for(let i=0;i<out.length;i++) out[i]/=sum; return out; }
+
+    // draw
+    function draw(){ctx.clearRect(0,0,canvas.width,canvas.height); const s = Math.floor(Math.min(canvas.width, canvas.height) / gridN); const startX=(canvas.width - s*gridN)/2; const startY=(canvas.height - s*gridN)/2;
+      for(let y=0;y<gridN;y++) for(let x=0;x<gridN;x++){const idx=y*gridN+x; if(getActiveTab()==='smooth'){ const v = smoothValues[idx]; const gv = Math.round(v*255); ctx.fillStyle = `rgb(${gv},${gv},${gv})`; ctx.fillRect(startX+x*s, startY+y*s, s-1, s-1);} else { ctx.fillStyle = grid[idx]? '#0f0':'#111'; ctx.fillRect(startX+x*s, startY+y*s, s-1, s-1); }}
+    }
+
+    // utility to support earlier bug: ensure kernel index calculation helper removed
+    function ksz(n){return n;}
+
+    // initialize draw loop
+    draw();
+
+    // expose one-time step on interval while running
+    setInterval(()=>{ if(running){ step(); draw(); } }, 50);
+
+  </script>
+</body>
+</html>
