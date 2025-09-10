@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Brownian Motion Analyzer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.7.0/math.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="mthfnc.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .panel {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .input-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .input-col {
+            flex: 1;
+            min-width: 200px;
+        }
+        input, select, button, textarea {
+            padding: 8px;
+            font-size: 16px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #chart-container {
+            margin-top: 20px;
+            position: relative;
+            height: 500px;
+            width: 100%;
+        }
+        #stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stat-card {
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .example-btn {
+            background-color: #2196F3;
+            margin: 2px;
+            padding: 5px 8px;
+            font-size: 14px;
+            width: auto;
+        }
+        .example-btn:hover {
+            background-color: #0b7dda;
+        }
+        .tab-container {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .tab {
+            padding: 10px 15px;
+            background-color: #ddd;
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
+        .tab.active {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .formula {
+            font-family: monospace;
+            background-color: #f0f0f0;
+            padding: 5px;
+            border-radius: 3px;
+            display: inline-block;
+            margin: 2px;
+        }
+        #parameter-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .parameter-input {
+            display: flex;
+            flex-direction: column;
+            min-width: 120px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Advanced Brownian Motion Analyzer</h1>
+    
+    <div class="container">
+        <div class="panel">
+            <div class="tab-container">
+                <button class="tab active" onclick="openTab(event, 'simulation-tab')">Simulation</button>
+                <button class="tab" onclick="openTab(event, 'examples-tab')">Examples</button>
+                <button class="tab" onclick="openTab(event, 'analysis-tab')">Analysis</button>
+            </div>
+            
+            <div id="simulation-tab" class="tab-content active">
+                <div class="input-row">
+                    <div class="input-col">
+                        <div class="input-group">
+                            <label for="equation">Differential Equation:</label>
+                            <input type="text" id="equation" value="dx = v*dt + b*dw" placeholder="e.g., dx = v*dt + b*dw">
+                        </div>
+                    </div>
+                    <div class="input-col">
+                        <div class="input-group">
+                            <label for="method">Numerical Method:</label>
+                            <select id="method">
+                                <option value="euler">Euler-Maruyama</option>
+                                <option value="milstein">Milstein</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="parameter-container">
+                    <!-- Dynamic parameters will be added here -->
+                </div>
+                
+                <div class="input-row">
+                    <div class="input-col">
+                        <div class="input-group">
+                            <label for="timestep">Time Step (dt):</label>
+                            <input type="number" id="timestep" value="0.01" step="0.001" min="0.001">
+                        </div>
+                    </div>
+                    <div class="input-col">
+                        <div class="input-group">
+                            <label for="steps">Number of Steps:</label>
+                            <input type="number" id="steps" value="100" min="1">
+                        </div>
+                    </div>
+                    <div class="input-col">
+                        <div class="input-group">
+                            <label for="paths">Number of Paths:</label>
+                            <input type="number" id="paths" value="50" min="1" max="1000">
+                        </div>
+                    </div>
+                    
+                </div>
+                
+                <button id="calculate">Simulate Paths</button>
+            </div>
+            
+            <div id="examples-tab" class="tab-content">
+                <h3>Example Differential Equations</h3>
+                <p>Click to load an example:</p>
+                <div class="input-row">
+                    <button class="example-btn" onclick="loadExample(1)">1. Standard Brownian Motion <span class="formula">dx = b*dw</span></button>
+                    <button class="example-btn" onclick="loadExample(2)">2. Brownian Motion with Drift <span class="formula">dx = v*dt + b*dw</span></button>
+                    <button class="example-btn" onclick="loadExample(3)">3. Mean-Reverting Process <span class="formula">dx = a*(μ - x)*dt + b*dw</span></button>
+                </div>
+                <div class="input-row">
+                    <button class="example-btn" onclick="loadExample(4)">4. Geometric Brownian Motion <span class="formula">dx = μ*x*dt + σ*x*dw</span></button>
+                    <button class="example-btn" onclick="loadExample(5)">5. Ornstein-Uhlenbeck Process <span class="formula">dx = θ*(μ - x)*dt + σ*dw</span></button>
+                    <button class="example-btn" onclick="loadExample(6)">6. Double Differential <span class="formula">ddx = -k*x*dt + b*dw</span></button>
+                </div>
+                <div class="input-row">
+                    <button class="example-btn" onclick="loadExample(7)">7. Stochastic Oscillator <span class="formula">dx = y*dt, dy = -k*x*dt - c*y*dt + b*dw</span></button>
+                    <button class="example-btn" onclick="loadExample(8)">8. Vasicek Model <span class="formula">dx = a*(b - x)*dt + σ*dw</span></button>
+                    <button class="example-btn" onclick="loadExample(9)">9. CIR Model <span class="formula">dx = a*(b - x)*dt + σ*sqrt(x)*dw</span></button>
+                </div>
+                <div class="input-row">
+                    <button class="example-btn" onclick="loadExample(10)">10. Double Well Potential <span class="formula">ddx = (x - x³)*dt - c*dx*dt + b*dw</span></button>
+                    <button class="example-btn" onclick="loadExample(11)">11. Predator-Prey Model <span class="formula">dx = (a*x - b*x*y)*dt + σ*x*dw</span></button>
+                    <button class="example-btn" onclick="loadExample(12)">12. Heston Model <span class="formula">dx = μ*x*dt + sqrt(v)*x*dw</span></button>
+                </div>
+                <div class="input-row">
+                    <button class="example-btn" onclick="loadExample(13)">13. FitzHugh-Nagumo Model <span class="formula">dx = c*(x - x^3/3 + y)*dt + σ*dw</span></button>
+                    <button class="example-btn" onclick="loadExample(14)">14. Fractional Brownian Motion <span class="formula">dx = -α*x*dt + σ*dw</span></button>
+                    <button class="example-btn" onclick="loadExample(15)">15. Logistic Equation with Harvesting <span class="formula">dx = r*x*(1 - x/K)*dt - h*dt + σ*x*dw</span></button>
+                </div>
+                <div class="input-row">
+                    <button class="example-btn" onclick="loadExample(16)">16. Stochastic Brusselator <span class="formula">dx = (A - (B+1)x + x^2*y)*dt + σ*dw</span></button>
+                    <button class="example-btn" onclick="loadExample(17)">17. Stochastic Duffing Oscillator <span class="formula">dx = y*dt, dy = (-δ*y - α*x - β*x^3 + γ*cos(ω*t))*dt + σ*dw</span></button>
+                    <button class="example-btn" onclick="loadExample(18)">18. Langevin Equation <span class="formula">dx = v*dt, dv = (-γ*v - U'(x))*dt + σ*dw</span></button>
+                </div>
+                <div class="input-row">
+                    <button class="example-btn" onclick="loadExample(19)">19. SIS Epidemic Model <span class="formula">dS = -β*S*I*dt + σ*S*dw</span></button>
+                    <button class="example-btn" onclick="loadExample(20)">20. Black-Scholes <span class="formula">dx = μ*x*dt + σ*x*dw</span></button>
+                    <button class="example-btn" onclick="loadExample(21)">21. Stochastic Lotka-Volterra <span class="formula">dx = (a*x - b*x*y)*dt + σ*x*dw</span></button>
+                </div>
+                <div class="input-row">
+                    <button class="example-btn" onclick="loadExample(22)">22. Stochastic Harmonic Oscillator <span class="formula">ddx = -ω²x*dt - γ*dx*dt + σ*dw</span></button>
+                    <button class="example-btn" onclick="loadExample(23)">23. Stochastic Van der Pol Oscillator <span class="formula">ddx = μ(1-x²)*dx*dt - ω²x*dt + σ*dw</span></button>
+                    <button class="example-btn" onclick="loadExample(24)">24. Stochastic Lorenz System <span class="formula">dx = σ(y-x)*dt + α*dw</span></button>
+                </div>
+                <div class="input-row">
+                    <button class="example-btn" onclick="loadExample(25)">25. Stochastic SIR Model <span class="formula">dS = -β*S*I*dt + σ*S*dw</span></button>
+                    <button class="example-btn" onclick="loadExample(26)">26. Stochastic Growth Model <span class="formula">dx = r*x*(1 - x/K)*dt + σ*x*dw</span></button>
+                    <button class="example-btn" onclick="loadExample(27)">27. Stochastic Heat Equation <span class="formula">dx = k*d²x/dt² + σ*dw</span></button>
+                </div>
+                <div class="input-row">
+                    <button class="example-btn" onclick="loadExample(28)">28. Stochastic Wave Equation <span class="formula">ddx = c²*d²x/dt² + σ*dw</span></button>
+                    <button class="example-btn" onclick="loadExample(29)">29. Stochastic Schrödinger Equation <span class="formula">dx = (i/hbar)*H*x*dt + σ*dw</span></button>
+                    <button class="example-btn" onclick="loadExample(30)">30. Stochastic Ginzburg-Landau <span class="formula">dx = (ε*x - β*x³)*dt + σ*dw</span></button>
+                </div>
+            </div>
+            
+            <div id="analysis-tab" class="tab-content">
+                <h3>Analysis Options</h3>
+                <div class="input-row">
+                    <div class="input-col">
+                        <div class="input-group">
+                            <label>
+                                <input type="checkbox" id="calc-stats" checked> Calculate Statistics
+                            </label>
+                        </div>
+                    </div>
+                    <div class="input-col">
+                        <div class="input-group">
+                            <label>
+                                <input type="checkbox" id="calc-unitroot" checked> Perform Unit Root Test
+                            </label>
+                        </div>
+                    </div>
+                    <div class="input-col">
+                        <div class="input-group">
+                            <label>
+                                <input type="checkbox" id="calc-risk" checked> Calculate Risk Metrics
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="confidence-level">Confidence Level (%):</label>
+                    <input type="number" id="confidence-level" value="95" min="1" max="99">
+                </div>
+            </div>
+        </div>
+        
+        <div id="chart-container">
+            <canvas id="brownianChart"></canvas>
+        </div>
+        
+        <div id="stats-container"></div>
+    </div>
+
+    <script>
+        // Initialize chart
+        const ctx = document.getElementById('brownianChart').getContext('2d');
+        let brownianChart = new Chart(ctx, {
+            type: 'line',
+            data: { datasets: [] },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time (t)'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Value (x)'
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                animation: {
+                    duration: 0
+                }
+            }
+        });
+
+        // Store current parameters
+        let currentParameters = {
+            x0: 0,
+            v: 1,
+            a: 0,
+            b: 0.5,
+            μ: 0.1,
+            σ: 0.2,
+            θ: 0.5,
+            k: 1,
+            c: 0.1,
+            ω: 1,
+            γ: 0.5,
+            α: 0.3,
+            β: 0.2,
+            δ: 0.1,
+            r: 0.1,
+            K: 1,
+            h: 0.05,
+            ε: 0.2
+        };
+
+        // Initialize the parameter inputs
+        function initParameterInputs() {
+            const paramContainer = document.getElementById('parameter-container');
+            paramContainer.innerHTML = '';
+            
+            // Always show x0 (initial value)
+            addParameterInput('x0', 'Initial Value (x₀)', currentParameters.x0);
+            
+            // Add other common parameters
+            addParameterInput('v', 'Velocity (v)', currentParameters.v);
+            addParameterInput('a', 'Acceleration (a)', currentParameters.a);
+            addParameterInput('b', 'Brownian Coefficient (b)', currentParameters.b);
+        }
+
+        function addParameterInput(name, label, defaultValue) {
+            const paramContainer = document.getElementById('parameter-container');
+            const div = document.createElement('div');
+            div.className = 'parameter-input';
+            div.innerHTML = `
+                <label for="param-${name}">${label}:</label>
+                <input type="number" id="param-${name}" value="${defaultValue}" step="0.01">
+            `;
+            paramContainer.appendChild(div);
+            
+            // Update currentParameters when input changes
+            document.getElementById(`param-${name}`).addEventListener('input', function() {
+                currentParameters[name] = parseFloat(this.value) || 0;
+            });
+        }
+
+        // Initialize parameters on load
+        initParameterInputs();
+
+        document.getElementById('calculate').addEventListener('click', simulateBrownianPaths);
+        
+        function openTab(evt, tabName) {
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+            
+            const tabs = document.getElementsByClassName('tab');
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            
+            document.getElementById(tabName).classList.add('active');
+            evt.currentTarget.classList.add('active');
+        }
+        
+        function loadExample(num) {
+            const examples = {
+                1: { eq: "dx = b*dw", params: {x0: 0, v: 0, a: 0, b: 1} },
+                2: { eq: "dx = v*dt + b*dw", params: {x0: 0, v: 0.1, a: 0, b: 0.5} },
+                3: { eq: "dx = a*(μ - x)*dt + b*dw", params: {x0: 10, v: 0, a: 0.5, b: 0.3, μ: 0} },
+                4: { eq: "dx = μ*x*dt + σ*x*dw", params: {x0: 1, v: 0, a: 0, b: 0, μ: 0.05, σ: 0.2} },
+                5: { eq: "dx = θ*(μ - x)*dt + σ*dw", params: {x0: 5, v: 0, a: 0, b: 0, θ: 1, μ: 0, σ: 0.5} },
+                6: { eq: "ddx = -k*x*dt + b*dw", params: {x0: 0, v: 0, a: 0, b: 0.3, k: 1} },
+                7: { eq: "dx = y*dt, dy = -k*x*dt - c*y*dt + b*dw", params: {x0: 1, v: 0, a: 0, b: 0.2, k: 1, c: 0.1} },
+                8: { eq: "dx = a*(b - x)*dt + σ*dw", params: {x0: 0, v: 0, a: 1, b: 0, σ: 0.1, b_param: 0.5} },
+                9: { eq: "dx = a*(b - x)*dt + σ*sqrt(x)*dw", params: {x0: 1, v: 0, a: 0.5, b: 0, σ: 0.3, b_param: 1} },
+                10: { eq: "ddx = (x - x*x*x)*dt - c*dx*dt + b*dw", params: {x0: -1, v: 0, a: 0, b: 0.2, c: 0.1} },
+                11: { eq: "dx = (a*x - b*x*y)*dt + σ*x*dw, dy = (-c*y + d*x*y)*dt + σ*y*dw", params: {x0: 2, v: 1, a: 0.5, b: 0.3, c: 0.2, d: 0.4, σ: 0.1} },
+                12: { eq: "dx = μ*x*dt + sqrt(v)*x*dw, dv = k*(θ - v)*dt + σ*sqrt(v)*dw", params: {x0: 1, v: 0.2, a: 0.1, b: 0.05, μ: 0.05, k: 1, θ: 0.2, σ: 0.1} },
+                13: { eq: "dx = c*(x - x*x*x/3 + y)*dt + σ*dw, dy = -(x - a + b*y)*dt", params: {x0: 0, v: 0, a: 0.7, b: 0.8, c: 0.5, σ: 0.3} },
+                14: { eq: "dx = -α*x*dt + σ*dw", params: {x0: 1, v: 0, a: 0, b: 0, α: 0.5, σ: 0.2} },
+                15: { eq: "dx = r*x*(1 - x/K)*dt - h*dt + σ*x*dw", params: {x0: 0.6, v: 0, a: 0, b: 0, r: 1.2, K: 1, h: 0.05, σ: 0.1} },
+                16: { eq: "dx = (A - (B + 1)*x + x*x*y)*dt + σ*dw, dy = (B*x - x*x*y)*dt + σ*dw", params: {x0: 1, v: 0.5, a: 0.4, b: 0, A: 1, B: 0.5, σ: 0.2} },
+                17: { eq: "dx = y*dt, dy = (-δ*y - α*x - β*x*x*x + γ*cos(ω*t))*dt + σ*dw", params: {x0: 0.1, v: 0, a: 1, b: 0.3, δ: 0.1, α: 1, β: 1, γ: 0.5, ω: 1, σ: 0.2} },
+                18: { eq: "dx = v*dt, dv = (-γ*v - U'(x))*dt + σ*dw", params: {x0: 1, v: 0, a: 0, b: 0, γ: 0.5, σ: 0.2} },
+                19: { eq: "dS = -β*S*I*dt + σ*S*dw, dI = (β*S*I - γ*I)*dt + σ*I*dw", params: {x0: 0.9, v: 0.1, a: 0.6, b: 0, β: 0.5, γ: 0.2, σ: 0.15} },
+                20: { eq: "dx = μ*x*dt + σ*x*dw", params: {x0: 100, v: 0, a: 0, b: 0, μ: 0.05, σ: 0.2} },
+                21: { eq: "dx = (a*x - b*x*y)*dt + σ*x*dw, dy = (-c*y + d*x*y)*dt + σ*y*dw", params: {x0: 1, v: 0.5, a: 0.3, b: 0.2, c: 0.1, d: 0.4, σ: 0.1} },
+                22: { eq: "ddx = -ω*ω*x*dt - γ*dx*dt + σ*dw", params: {x0: 1, v: 0, a: 0, b: 0, ω: 1, γ: 0.1, σ: 0.2} },
+                23: { eq: "ddx = μ*(1-x*x)*dx*dt - ω*ω*x*dt + σ*dw", params: {x0: 0.1, v: 0, a: 0, b: 0, μ: 0.5, ω: 1, σ: 0.2} },
+                24: { eq: "dx = σ*(y-x)*dt + α*dw, dy = (x*(ρ-z)-y)*dt + α*dw, dz = (x*y - β*z)*dt + α*dw", params: {x0: 1, v: 0, a: 0, b: 0, σ: 10, ρ: 28, β: 8/3, α: 0.5} },
+                25: { eq: "dS = -β*S*I*dt + σ*S*dw, dI = (β*S*I - γ*I)*dt + σ*I*dw, dR = γ*I*dt + σ*R*dw", params: {x0: 0.99, v: 0, a: 0, b: 0, β: 0.5, γ: 0.1, σ: 0.05} },
+                26: { eq: "dx = r*x*(1 - x/K)*dt + σ*x*dw", params: {x0: 0.5, v: 0, a: 0, b: 0, r: 0.1, K: 1, σ: 0.1} },
+                27: { eq: "dx = k*a + σ*dw", params: {x0: 0, v: 0, a: 0, b: 0, k: 0.1, σ: 0.2} },
+                28: { eq: "ddx = c*c*a + σ*dw", params: {x0: 0, v: 1, a: 0, b: 0, c: 1, σ: 0.2} },
+                29: { eq: "dx = (i/hbar)*H*x*dt + σ*dw", params: {x0: 1, v: 0, a: 0, b: 0, hbar: 1, H: 1, σ: 0.1} },
+                30: { eq: "dx = (ε*x - β*x*x*x)*dt + σ*dw", params: {x0: 0.5, v: 0, a: 0, b: 0, ε: 0.2, β: 0.1, σ: 0.2} }
+            };
+           
+              const example = examples[num];
+    document.getElementById('equation').value = example.eq;
+    
+    // Clear previous parameters
+    const paramContainer = document.getElementById('parameter-container');
+    paramContainer.innerHTML = '';
+    
+    // Always add x0 (initial value)
+    addParameterInput('x0', 'Initial Value (x₀)', example.params.x0 || 0);
+    
+    // Extract all parameters from equation (excluding reserved words)
+    const parameters = extractParameters(example.eq);
+     console.log(parameters)
+    // Add input for each parameter found in equation
+    parameters.forEach(param => {
+    console.log(param)
+        //if (param !== 'x0' && example.params[param] !== undefined) {
+        console.log(234)
+            addParameterInput(param, param, example.params[param]);
+        //}
+    });
+    
+    // Switch back to simulation tab
+    openTab({currentTarget: document.querySelector('.tab')}, 'simulation-tab');
+}
+
+function extractParameters(equation) {
+    const reserved = ['dt', 'dw', 'dx', 'dy', 'ddx', 'ddy', 'sqrt', 'abs', 'cos', 'sin', 'tan', 'exp', 'log', 't', 'x', 'y'];
+    const tokens = equation.split(/[\s+\-*/=(),]+/);
+    const params = new Set();
+    
+    tokens.forEach(token => {
+       // if (token.length > 1 && !reserved.includes(token) && /^[a-zA-Zα-ωΑ-Ω]+$/.test(token)) {
+        if ( !reserved.includes(token) ){
+            params.add(token);
+        }
+    });
+    
+    return Array.from(params);
+}
+
+function addParameterInput(name, label, defaultValue) {
+    const paramContainer = document.getElementById('parameter-container');
+    const div = document.createElement('div');
+    div.className = 'parameter-input';
+    div.innerHTML = `
+        <label for="param-${name}">${label}:</label>
+        <input type="number" id="param-${name}" value="${defaultValue}" step="0.01">
+    `;
+    paramContainer.appendChild(div);
+    
+    // Store parameter value when changed
+    document.getElementById(`param-${name}`).addEventListener('input', function() {
+        currentParameters[name] = parseFloat(this.value) || 0;
+    });
+    
+    // Initialize parameter value
+    currentParameters[name] = defaultValue;
+}
+        function simulateBrownianPaths() {
+            try {
+                // Get input values
+                const equation = document.getElementById('equation').value;
+                const method = document.getElementById('method').value;
+                const dt = parseFloat(document.getElementById('timestep').value);
+                const steps = parseInt(document.getElementById('steps').value);
+                const numPaths = parseInt(document.getElementById('paths').value);
+                const calcStats = document.getElementById('calc-stats').checked;
+                const calcUnitRoot = document.getElementById('calc-unitroot').checked;
+                const calcRisk = document.getElementById('calc-risk').checked;
+                const confidenceLevel = parseFloat(document.getElementById('confidence-level').value) / 100;
+                
+                // Get initial value
+                const x0 = parseFloat(document.getElementById('param-x0').value) || 0;
+                
+                // Clear previous stats
+                document.getElementById('stats-container').innerHTML = '';
+                
+                // Generate time points
+                const timePoints = Array.from({length: steps + 1}, (_, i) => i * dt);
+                
+                // Parse the equation(s)
+                const equations = equation.split(',').map(eq => eq.trim());
+                const differentials = [];
+                const expressions = [];
+                
+                for (const eq of equations) {
+                    const eqParts = eq.split('=');
+                    if (eqParts.length !== 2) throw new Error("Invalid equation format. Use 'dx = ...' or 'dx = ..., dy = ...'");
+                    
+                    const differential = eqParts[0].trim();
+                    const expression = eqParts[1].trim();
+                    
+                    if (!['dx', 'dy', 'ddx', 'ddy'].includes(differential)) {
+                        throw new Error("Differential must be dx, dy, ddx, or ddy");
+                    }
+                    
+                    differentials.push(differential);
+                    expressions.push(expression);
+                }
+                
+                // Generate color palette
+                const colors = generateColors(numPaths);
+                
+                // Prepare datasets
+                const datasets = [];
+                const allPaths = [];
+                const finalValues = [];
+                
+                // Simulate each path
+                for (let path = 0; path < numPaths; path++) {
+                    // Initialize variables for this path
+                    let t = 0;
+                    let x = x0;
+                    let y = 0;
+                    let dx = 0;
+                    let dy = 0;
+                    const xValues = [x0];
+                    
+                    // Perform simulation for this path
+                    for (let i = 1; i <= steps; i++) {
+                        t += dt;
+                        
+                        // Generate white noise (normally distributed random variable)
+                        const dw = math.sqrt(dt) * math.randomn(0, 1);
+                        
+                        // Evaluate each equation
+                        let newDx = 0;
+                        let newDy = 0;
+                        let newDdx = 0;
+                        let newDdy = 0;
+                        
+                        for (let j = 0; j < differentials.length; j++) {
+                            const differential = differentials[j];
+                            const expression = expressions[j];
+                            
+                            // Create scope with all parameters and variables
+                            const scope = { 
+                                t, x, y, dx, dy, 
+                                dt, dw, w: dw/dt,
+                                ...currentParameters 
+                            };
+                            
+                            try {
+                                const value = math.evaluate(expression, scope);
+                                
+                                if (differential === 'dx') newDx = value;
+                                else if (differential === 'dy') newDy = value;
+                                else if (differential === 'ddx') newDdx = value;
+                                else if (differential === 'ddy') newDdy = value;
+                            } catch (e) {
+                            
+                                throw new Error(`Error evaluating expression at step ${i}: ${e.message}`);
+                            }
+                        }
+                        
+                        // Apply numerical method
+                        if (method === 'milstein') {
+                            // Milstein method (simplified)
+                            x += newDx + newDdx * dt + 0.5 * currentParameters.b * (dw*dw - dt);
+                            y += newDy + newDdy * dt;
+                        } else {
+                            // Euler-Maruyama method
+                            x += newDx + newDdx * dt;
+                            y += newDy + newDdy * dt;
+                        }
+                        
+                        // Update differentials for next step
+                        dx = newDx;
+                        dy = newDy;
+                        
+                        xValues.push(x);
+                    }
+                    
+                    // Store this path
+                    allPaths.push(xValues);
+                    finalValues.push(xValues[xValues.length - 1]);
+                    
+                    // Add dataset for this path (only show first 20 paths for performance)
+                    if (path < 20) {
+                        datasets.push({
+                            label: `Path ${path + 1}`,
+                            data: xValues,
+                            borderColor: colors[path],
+                            backgroundColor: 'rgba(0, 0, 0, 0)',
+                            borderWidth: 1,
+                            pointRadius: 0,
+                            tension: 0.1
+                        });
+                    }
+                }
+                
+                // Update chart
+                brownianChart.data.labels = timePoints;
+                brownianChart.data.datasets = datasets;
+                brownianChart.update();
+                
+                // Calculate statistics if enabled
+                if (calcStats) {
+                    calculateStatistics(allPaths, timePoints, finalValues, confidenceLevel, x0);
+                }
+                
+                // Perform unit root test if enabled
+                if (calcUnitRoot) {
+                    performUnitRootTest(allPaths);
+                }
+                
+                // Calculate risk metrics if enabled
+                if (calcRisk) {
+                    calculateRiskMetrics(finalValues, confidenceLevel, x0);
+                }
+                
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+                console.error(error);
+            }
+        }
+        
+        function calculateStatistics(allPaths, timePoints, finalValues, confidenceLevel, x0) {
+            // Calculate statistics at each time point
+            const means = [];
+            const stdDevs = [];
+            const variances = [];
+            const mins = [];
+            const maxs = [];
+            const confidenceIntervals = [];
+            
+            for (let i = 0; i < timePoints.length; i++) {
+                const valuesAtTime = allPaths.map(path => path[i]);
+                const mean = math.mean(valuesAtTime);
+                const stdDev = math.std(valuesAtTime);
+                const variance = math.variance(valuesAtTime);
+                const min = math.min(valuesAtTime);
+                const max = math.max(valuesAtTime);
+                
+                // Calculate confidence interval
+                const z = -inverf(confidenceLevel - 1) * math.sqrt(2); // Normal distribution critical value
+                const margin = z * stdDev / math.sqrt(allPaths.length);
+                const ci = [mean - margin, mean + margin];
+                
+                means.push(mean);
+                stdDevs.push(stdDev);
+                variances.push(variance);
+                mins.push(min);
+                maxs.push(max);
+                confidenceIntervals.push(ci);
+            }
+            
+            // Add mean path to chart
+            brownianChart.data.datasets.push({
+                label: 'Mean Path',
+                data: means,
+                borderColor: 'black',
+                backgroundColor: 'rgba(0, 0, 0, 0)',
+                borderWidth: 3,
+                pointRadius: 0,
+                tension: 0.1
+            });
+            
+            // Add confidence interval to chart
+            brownianChart.data.datasets.push({
+                label: `${confidenceLevel*100}% Confidence Interval`,
+                data: means.map((mean, i) => ({
+                    x: timePoints[i],
+                    y: mean,
+                    low: confidenceIntervals[i][0],
+                    high: confidenceIntervals[i][1]
+                })),
+                borderColor: 'rgba(100, 100, 100, 0.1)',
+                backgroundColor: 'rgba(100, 100, 100, 0.1)',
+                borderWidth: 0,
+                pointRadius: 0,
+                tension: 0,
+                type: 'line',
+                fill: true
+            });
+            
+            brownianChart.update();
+            
+            // Display statistics
+            const statsContainer = document.getElementById('stats-container');
+            
+            // Final value statistics
+            const finalMean = math.mean(finalValues);
+            const finalStdDev = math.std(finalValues);
+            const finalVariance = math.variance(finalValues);
+            const finalMin = math.min(finalValues);
+            const finalMax = math.max(finalValues);
+            const finalRange = finalMax - finalMin;
+            
+            statsContainer.innerHTML += `
+                <div class="stat-card">
+                    <h3>Final Value Statistics</h3>
+                    <p><strong>Mean:</strong> ${finalMean.toFixed(4)}</p>
+                    <p><strong>Standard Deviation:</strong> ${finalStdDev.toFixed(4)}</p>
+                    <p><strong>Variance:</strong> ${finalVariance.toFixed(4)}</p>
+                    <p><strong>Minimum:</strong> ${finalMin.toFixed(4)}</p>
+                    <p><strong>Maximum:</strong> ${finalMax.toFixed(4)}</p>
+                    <p><strong>Range:</strong> ${finalRange.toFixed(4)}</p>
+                </div>
+            `;
+            
+            // Path statistics
+            const pathChanges = allPaths.map(path => path[path.length - 1] - path[0]);
+            const avgChange = math.mean(pathChanges);
+            const positivePaths = finalValues.filter(v => v > x0).length;
+            const negativePaths = finalValues.filter(v => v < x0).length;
+            const zeroPaths = finalValues.filter(v => v === x0).length;
+            
+            statsContainer.innerHTML += `
+                <div class="stat-card">
+                    <h3>Path Statistics</h3>
+                    <p><strong>Average Change:</strong> ${avgChange.toFixed(4)}</p>
+                    <p><strong>Positive Paths:</strong> ${positivePaths} (${(positivePaths/finalValues.length*100).toFixed(1)}%)</p>
+                    <p><strong>Negative Paths:</strong> ${negativePaths} (${(negativePaths/finalValues.length*100).toFixed(1)}%)</p>
+                    <p><strong>Neutral Paths:</strong> ${zeroPaths} (${(zeroPaths/finalValues.length*100).toFixed(1)}%)</p>
+                </div>
+            `;
+        }
+        
+        function performUnitRootTest(allPaths) {
+            // Simplified Augmented Dickey-Fuller test implementation
+            const statsContainer = document.getElementById('stats-container');
+            
+            // We'll test the mean path for unit root
+            const meanPath = [];
+            for (let i = 0; i < allPaths[0].length; i++) {
+                meanPath.push(math.mean(allPaths.map(path => path[i])));
+            }
+            
+            // Calculate differences and lagged values
+            const diffs = [];
+            const lagged = [];
+            for (let i = 1; i < meanPath.length; i++) {
+                diffs.push(meanPath[i] - meanPath[i-1]);
+                lagged.push(meanPath[i-1]);
+            }
+            
+            // Perform regression: Δy = α + βy_{t-1} + ε
+            let sumYLagged = 0;
+            let sumYDiff = 0;
+            let sumYLaggedSq = 0;
+            let sumYLaggedYDiff = 0;
+            const n = diffs.length;
+            
+            for (let i = 0; i < n; i++) {
+                sumYLagged += lagged[i];
+                sumYDiff += diffs[i];
+                sumYLaggedSq += lagged[i] * lagged[i];
+                sumYLaggedYDiff += lagged[i] * diffs[i];
+            }
+            
+            const beta = (n * sumYLaggedYDiff - sumYLagged * sumYDiff) / (n * sumYLaggedSq - sumYLagged * sumYLagged);
+            const alpha = (sumYDiff - beta * sumYLagged) / n;
+            
+            // Calculate test statistic (tau)
+            const residuals = [];
+            for (let i = 0; i < n; i++) {
+                residuals.push(diffs[i] - (alpha + beta * lagged[i]));
+            }
+            
+            const residualVariance = math.variance(residuals);
+            const seBeta = math.sqrt(residualVariance / (sumYLaggedSq - sumYLagged * sumYLagged / n));
+            const tau = beta / seBeta;
+            
+            // Determine critical values (simplified)
+            const criticalValues = {
+                "1%": -3.43,
+                "5%": -2.86,
+                "10%": -2.57
+            };
+            
+            let result = "Non-Stationary (has unit root)";
+            if (tau < criticalValues["1%"]) {
+                result = "Stationary (no unit root) at 1% significance";
+            } else if (tau < criticalValues["5%"]) {
+                result = "Stationary (no unit root) at 5% significance";
+            } else if (tau < criticalValues["10%"]) {
+                result = "Stationary (no unit root) at 10% significance";
+            }
+            
+            statsContainer.innerHTML += `
+                <div class="stat-card">
+                    <h3>Unit Root Test (ADF)</h3>
+                    <p><strong>Test Statistic (τ):</strong> ${tau.toFixed(4)}</p>
+                    <p><strong>Critical Values:</strong></p>
+                    <p>1%: ${criticalValues["1%"].toFixed(2)}</p>
+                    <p>5%: ${criticalValues["5%"].toFixed(2)}</p>
+                    <p>10%: ${criticalValues["10%"].toFixed(2)}</p>
+                    <p><strong>Result:</strong> ${result}</p>
+                    <p><small>Note: Simplified implementation for demonstration</small></p>
+                </div>
+            `;
+        }
+        
+        function calculateRiskMetrics(finalValues, confidenceLevel, x0) {
+            const statsContainer = document.getElementById('stats-container');
+            
+            // Calculate Value at Risk (VaR)
+            const sortedValues = [...finalValues].sort((a, b) => a - b);
+            const varIndex = Math.floor(sortedValues.length * (1 - confidenceLevel));
+            const varValue = sortedValues[varIndex];
+            
+            // Calculate Expected Shortfall (CVaR)
+            const tailValues = sortedValues.slice(0, varIndex + 1);
+            const expectedShortfall = math.mean(tailValues);
+            
+            // Calculate probability of loss
+            const losses = finalValues.filter(v => v < x0).length;
+            const lossProbability = losses / finalValues.length;
+            
+            statsContainer.innerHTML += `
+                <div class="stat-card">
+                    <h3>Risk Metrics</h3>
+                    <p><strong>Value at Risk (VaR) at ${confidenceLevel*100}%:</strong> ${varValue.toFixed(4)}</p>
+                    <p><strong>Expected Shortfall (CVaR):</strong> ${expectedShortfall.toFixed(4)}</p>
+                    <p><strong>Probability of Loss:</strong> ${(lossProbability*100).toFixed(2)}%</p>
+                    <p><strong>Maximum Drawdown:</strong> ${(math.min(finalValues) - x0).toFixed(4)}</p>
+                </div>
+            `;
+        }
+        
+        // Generate distinct colors for paths
+        function generateColors(count) {
+            const colors = [];
+            const hueStep = 360 / Math.min(count, 20); // Limit to 20 distinct colors
+            for (let i = 0; i < Math.min(count, 20); i++) {
+                const hue = (i * hueStep) % 360;
+                colors.push(`hsl(${hue}, 70%, 50%)`);
+            }
+            return colors;
+        }
+        
+        // Add randomn function to math.js if not present
+        if (!math.randomn) {
+            math.randomn = function(mean, stddev) {
+                // Box-Muller transform
+                let u = 0, v = 0;
+                while(u === 0) u = Math.random();
+                while(v === 0) v = Math.random();
+                const z0 = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+                return z0 * stddev + mean;
+            };
+        }
+        
+        // Initialize on load
+        window.onload = function() {
+            initParameterInputs();
+        };
+    </script>
+</body>
+</html>
