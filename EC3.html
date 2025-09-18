@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Concentric Rotatable Circles with Size Control</title>
+</head>
+<body style="margin:0; overflow:hidden;">
+  <div style="display:flex; height:calc(100vh - 40px); margin:0;">
+    <canvas id="c" style="flex:1; display:block;"></canvas>
+    <div style="width:60px; display:flex; align-items:center; justify-content:center; writing-mode:bt-lr; transform:rotate(180deg);">
+      <input type="range" id="sizeSlider" min="20" max="90" value="40" orient="vertical" style="width:200px;">
+    </div>
+  </div>
+
+  <p style="margin:0; padding:0; text-align:center; height:40px; line-height:40px;">
+    <a href="http://ghiorzi.org/caleperp.htm" target="_blank" rel="noopener noreferrer">Credit: ghiorzi.org/caleperp.htm</a>
+  </p>
+
+  <script>
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  const sizeSlider = document.getElementById('sizeSlider');
+
+  function resize() {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = (window.innerWidth - 60) * dpr;
+    canvas.height = (window.innerHeight - 40) * dpr;
+    canvas.style.width = (window.innerWidth - 60) + "px";
+    canvas.style.height = (window.innerHeight - 40) + "px";
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.scale(dpr, dpr);
+  }
+  window.addEventListener('resize', resize, {passive:true});
+  resize();
+
+  const imgs = [new Image(), new Image(), new Image()];
+  imgs[0].src = 'perpcaln/1.png'; // smallest
+  imgs[1].src = 'perpcaln/2.png'; // mid
+  imgs[2].src = 'perpcaln/3.png'; // largest
+
+  const rot = { inner: 0, mid: 0, outer: 0 };
+
+  function computeRadii() {
+    const m = Math.min(canvas.width / (window.devicePixelRatio||1), canvas.height / (window.devicePixelRatio||1));
+    const scale = sizeSlider.value / 100;
+    // All sizes relative to largest disc
+    const outer = Math.floor(m * scale);
+    return { outer };
+  }
+
+  let dragging = null;
+  let lastAngle = 0;
+
+  function getPointerPos(e) {
+    if (e.touches && e.touches[0]) {
+      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+    return { x: e.clientX, y: e.clientY };
+  }
+
+  function pointerDown(e) {
+    e.preventDefault();
+    const p = getPointerPos(e);
+    const cx = canvas.width/(2*(window.devicePixelRatio||1));
+    const cy = canvas.height/(2*(window.devicePixelRatio||1));
+    const dx = p.x - cx;
+    const dy = p.y - cy;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    const { outer } = computeRadii();
+    const sizes = getSizes(outer);
+    if (dist <= sizes.inner/2) {
+      dragging = 'inner';
+    } else if (dist <= sizes.mid/2) {
+      dragging = 'mid';
+    } else if (dist <= sizes.outer/2) {
+      dragging = 'outer';
+    } else {
+      dragging = null;
+    }
+    lastAngle = Math.atan2(dy, dx);
+  }
+
+  function pointerMove(e) {
+    if (!dragging) return;
+    e.preventDefault();
+    const p = getPointerPos(e);
+    const cx = canvas.width/(2*(window.devicePixelRatio||1));
+    const cy = canvas.height/(2*(window.devicePixelRatio||1));
+    const dx = p.x - cx;
+    const dy = p.y - cy;
+    const angle = Math.atan2(dy, dx);
+    let delta = angle - lastAngle;
+    if (delta > Math.PI) delta -= Math.PI*2;
+    if (delta < -Math.PI) delta += Math.PI*2;
+    rot[dragging] += delta;
+    lastAngle = angle;
+  }
+
+  function pointerUp() { dragging = null; }
+
+  canvas.addEventListener('mousedown', pointerDown);
+  window.addEventListener('mousemove', pointerMove);
+  window.addEventListener('mouseup', pointerUp);
+
+  canvas.addEventListener('touchstart', pointerDown, {passive:false});
+  window.addEventListener('touchmove', pointerMove, {passive:false});
+  window.addEventListener('touchend', pointerUp);
+  window.addEventListener('touchcancel', pointerUp);
+
+  function getSizes(outer) {
+    // Preserve relative proportions: outer is base, others scale proportionally
+    const mid = outer * (imgs[1].naturalWidth / imgs[2].naturalWidth);
+    const inner = outer * (imgs[0].naturalWidth / imgs[2].naturalWidth);
+    return { outer, mid, inner };
+  }
+
+  function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const cx = canvas.width/(2*(window.devicePixelRatio||1));
+    const cy = canvas.height/(2*(window.devicePixelRatio||1));
+    const { outer } = computeRadii();
+    const sizes = getSizes(outer);
+
+    const order = [2,1,0];
+    order.forEach(i => {
+      if (imgs[i].complete) {
+        const size = i===2 ? sizes.outer : i===1 ? sizes.mid : sizes.inner;
+        const w = size;
+        const h = size * (imgs[i].naturalHeight / imgs[i].naturalWidth);
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(rot[i===2? 'outer': i===1? 'mid': 'inner']);
+        ctx.drawImage(imgs[i], -w/2, -h/2, w, h);
+        ctx.restore();
+      }
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  draw();
+  </script>
+</body>
+</html>
