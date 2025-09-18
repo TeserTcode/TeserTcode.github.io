@@ -6620,13 +6620,13 @@ return div(sin(x),sqrt(sub(1,sqr(sin(x)))))
 //amh Am hiperbolică
 //amhex Amh excentrică
 //aexa Aex autoindusă
-//ceex Cosinus eliptic excentric 
+    //ceex Cosinus eliptic excentric 
 //ceai Ce utoindusă
-//celh FSM-Hel cosinus hiperbolic elevat de VE
-//Celh FSM-HEl celh de VC 
+    //celh FSM-Hel cosinus hiperbolic elevat de VE
+    //Celh FSM-HEl celh de VC 
 //cexai Cosinus excentric autoindus de VE 
 //Cexai Cosinus excentric autoindus de VC 
-//Cexh FSM-HE cexh de VC
+    //Cexh FSM-HE cexh de VC
 //cexoh FSM-HEx cosinus hiperbolic de VE 
 //Cexoh FSM-HEx cosinus hiperbolic de VC
 //ciex Cosinus intratrigonometric excentric de VE
@@ -6645,23 +6645,23 @@ return div(sin(x),sqrt(sub(1,sqr(sin(x)))))
 //Dexai Dex autoinduse de VC
 //rexai FSM-CE radial excentric autoindusă de VE
 //Rexai FSM-CE radial excentric autoindusă deVC
-//selh FSM-HEl sinus hiperbolic elevat deVE
-//Selh FSM-HEl sinus hiuperbolic elevat de VC 
-//seex Sinus eliptic excentric de variabilăcirculara
+    //selh FSM-HEl sinus hiperbolic elevat deVE
+    //Selh FSM-HEl sinus hiuperbolic elevat de VC 
+    //seex Sinus eliptic excentric de variabilăcirculara
 //sexai Sex autoindus de VE
 //Sexai Sex autoindus de VC
 //sexi Sex indus de VE
 //Sexi Sex indus de VC
 //sexo FSM-CEx sinus exotic de VC
 //Sexo FSM-CEx sinus exotic de VC
-//sexh FSM-HE sinus hiperbolic excentric deVE
-//Sexh FSM-HE sinus hiperbolic excentric deVC
+    //^^^^sexh FSM-HE sinus hiperbolic excentric deVE
+    //^^^^Sexh FSM-HE sinus hiperbolic excentric deVC
 //sexoh FSM-HEx sinus hiperbolic exotic de VE
 //Sexoh FSM-HEx sinus hiperbolic exotic de VC
 //siex Sinus intratrigonometric excentric de VE
 //Siex Sinus intratrigonometric excentric de VC
-//tel FSM_CEl tangenta elevata de VE 
-//Tel FSM-CEl tangenta elevata de VC
+    //tel FSM_CEl tangenta elevata de VE 
+    //Tel FSM-CEl tangenta elevata de VC
 //tev FCE Noua tangenta excentrica Voinoiu 
 //Tev FCE noua tangenta excentrica Voinoiu deVC 
 //texai Tangenta excentrică autoindusă de VE
@@ -6680,8 +6680,8 @@ function csq(x){return div(1,sq(x))}
 function seq(x){return div(1,cq(x))}
 function tq(x){return div(sq(x),cq(x))}
 function ctq(x){return div(cq(x),sq(x))}
-function tqv(x){return div(sq(x),mag(cq(x)))}
-function cqv(x){return div(cq(x),mag(sq(x)))}
+function tqv(x){return div(sq(x),sabs(cq(x)))}
+function cqv(x){return div(cq(x),sabs(sq(x)))}
 function vercq(x){return sub(1,cqv(x))}
 
 function sqh(x){return mul(div(tanh(sabs(x)),sub(1,tanh(sabs(x)))),signum(x))}
@@ -6692,8 +6692,8 @@ function csqh(x){return div(1,sqh(x))}
 function seqh(x){return div(1,cqh(x))}
 function tqh(x){return div(sqh(x),cqh(x))}
 function ctqh(x){return div(cqh(x),sqh(x))}
-function tqvh(x){return div(sqh(x),mag(cqh(x)))}
-function cqvh(x){return div(cqh(x),mag(sqh(x)))}
+function tqvh(x){return div(sqh(x),sabs(cqh(x)))}
+function cqvh(x){return div(cqh(x),sabs(sqh(x)))}
 function vercqh(x){return sub(1,cqvh(x))}
 
 function sr(x,r){return div(r,add(r,tan(x)))}
@@ -6703,8 +6703,8 @@ function tr(x,r){return div(sr(x,r),cr(x,r))}
 function ctr(x,r){return div(cr(x,r),sr(x,r))}
 function crr(x,r){return div(1,sr(x,r))}
 function srr(x,r){return div(1,cr(x,r))}
-function trv(x,r){return div(sr(x,r),mag(cr(x,r)))}
-function crv(x,r){return div(cr(x,r),mag(sr(x,r)))}
+function trv(x,r){return div(sr(x,r),sabs(cr(x,r)))}
+function crv(x,r){return div(cr(x,r),sabs(sr(x,r)))}
 function vercr(x,r){return sub(1,crv(x,r))}
 
 function srh(x,r){return mul(r,sub(crh(x,r),1),signum(x))}
@@ -6715,12 +6715,12 @@ function trh(x,r){return div(srh(x,r),crh(x,r))}
 function ctrh(x,r){return div(crh(x,r),srh(x,r))}
 function crqh(x,r){return div(1,srh(x,r))}
 function srqh(x,r){return div(1,crh(x,r))}
-function trvh(x,r){return div(srh(x,r),mag(crh(x,r)))}
-function crvh(x,r){return div(crh(x,r),mag(srh(x,r)))}
+function trvh(x,r){return div(srh(x,r),sabs(crh(x,r)))}
+function crvh(x,r){return div(crh(x,r),sabs(srh(x,r)))}
 function vercrh(x,r){return sub(1,crvh(x,r))}
 
 
-function tavalt(x){return div(sin(x),mag(cos(x)))}
+function tavalt(x){return div(sin(x),sabs(cos(x)))}
 function tav(x){return rcsignumapply(tan(x),cos(x))}
 
 function ct(x,n){return mul(div(1,pow(add(1,pow(tan(x),n)),div(1,n))),1)}
@@ -6731,8 +6731,8 @@ function tt(x,n){return div(st(x,n),ct(x,n))}
 function ctt(x,n){return div(ct(x,n),st(x,n))}
 function crt(x,n){return div(1,st(x,n))}
 function srt(x,n){return div(1,ct(x,n))}
-function ttv(x,n){return div(st(x,n),mag(ct(x,n)))}
-function ctv(x,n){return div(ct(x,n),mag(st(x,n)))}
+function ttv(x,n){return div(st(x,n),sabs(ct(x,n)))}
+function ctv(x,n){return div(ct(x,n),sabs(st(x,n)))}
 function verct(x,n){return sub(1,ctv(x,n))}
 
 function ck(x,n){return mul(div(1,pow(add(1,pow(tan(x),n)),div(1,n))),signum(cos(x)))}
@@ -6743,8 +6743,8 @@ function tk(x,n){return div(sk(x,n),ck(x,n))}
 function ctk(x,n){return div(ck(x,n),sk(x,n))}
 function crk(x,n){return div(1,sk(x,n))}
 function srk(x,n){return div(1,ck(x,n))}
-function tkv(x,n){return div(sk(x,n),mag(ck(x,n)))}
-function ckv(x,n){return div(ck(x,n),mag(sk(x,n)))}
+function tkv(x,n){return div(sk(x,n),sabs(ck(x,n)))}
+function ckv(x,n){return div(ck(x,n),sabs(sk(x,n)))}
 function verck(x,n){return sub(1,ckv(x,n))}
 
 function cqa(x,y,k){/*this should have parameter phi not x and y 311*/return mul(sub(1,mul(k,k,sub(1,div(sqrt(2),2)))),sub(mul(x,cos(y,div(pi(),4))),mul(y,sin(div(pi(),4)))))}
@@ -6756,24 +6756,34 @@ function tar(x,s){return div(sir(x,s),cor(x,s))}
 function ctar(x,s){return div(cor(x,s),sir(x,s))}
 function cser(x,s){return div(1,sir(x,s))}
 function ser(x,s){return div(1,cor(x,s))}
-function triv(x,s){return div(sir(x,s),mag(cor(x,s)))}
-function ctrv(x,s){return div(cor(x,s),mag(sir(x,s)))}
-function cserv(x,s){return div(1,mag(sir(x,s)))}
-function serv(x,s){return div(1,mag(cor(x,s)))}
+function triv(x,s){return div(sir(x,s),sabs(cor(x,s)))}
+function ctrv(x,s){return div(cor(x,s),sabs(sir(x,s)))}
+function cserv(x,s){return div(1,sabs(sir(x,s)))}
+function serv(x,s){return div(1,sabs(cor(x,s)))}
 function corex(x,s,e=0){return add(cex(x,s,e),mul(aex(x,s,e),sex(x,s,e)))}
 function sirex(x,s,e=0){return add(sex(x,s,e),mul(aex(x,s,e),cex(x,s,e)))}
 function tarex(x,s,e=0){return div(sirex(x,s,e),corex(x,s,e))}
 function ctarex(x,s,e=0){return div(corex(x,s,e),sirex(x,s,e))}
 function cserex(x,s,e=0){return div(1,sirex(x,s,e))}
 function serex(x,s,e=0){return div(1,corex(x,s,e))}
-function trvex(x,s,e=0){return div(sirex(x,s,e),mag(corex(x,s,e)))}
-function ctrvex(x,s,e=0){return div(corex(x,s,e),mag(sirex(x,s,e)))}
+function trvex(x,s,e=0){return div(sirex(x,s,e),sabs(corex(x,s,e)))}
+function ctrvex(x,s,e=0){return div(corex(x,s,e),sabs(sirex(x,s,e)))}
+
+function corexh(x,s,e=0){return add(cexh(x,s,e),mul(aex(x,s,e),sexh(x,s,e)))}
+function sirexh(x,s,e=0){return add(sexh(x,s,e),mul(aex(x,s,e),cexh(x,s,e)))}
+function tarexh(x,s,e=0){return div(sirexh(x,s,e),corexh(x,s,e))}
+function ctarexh(x,s,e=0){return div(corexh(x,s,e),sirexh(x,s,e))}
+function cserexh(x,s,e=0){return div(1,sirexh(x,s,e))}
+function serexh(x,s,e=0){return div(1,corexh(x,s,e))}
+function trvexh(x,s,e=0){return div(sirexh(x,s,e),sabs(corexh(x,s,e)))}
+function ctrvexh(x,s,e=0){return div(corexh(x,s,e),sabs(sirex(x,s,e)))}
+
 
 function nip(x,s,e=0){/*nucleusof poisson integral*/ return div(sub(1,mul(s,s)),sqr(crex(x,s,e)))}
 function pld(a,T){const k=g(T,0);const e=g(T,1);return div(1,add(1,sqr(k),mul(-2,k,cos(sub(a,e)))))}
 function pl(k,e){return integral(pld,sub(0,pi()),pi(),[k,e])}
 function ipnd(x,s,e=0){return div(1,sqr(rex(x,s,e)))}
-function ipn(x,s,e=0){return div(add(x,mul(2,asin(div(mul(k,sin(mul(x,e))),rex(x,s,e))))),mag(sub(1,sqr(s))))}
+function ipn(x,s,e=0){return div(add(x,mul(2,asin(div(mul(k,sin(mul(x,e))),rex(x,s,e))))),sabs(sub(1,sqr(s))))}
 function i1n(x,s,e=0){return add(x,asin(div(mul(s,sin(sub(x,e))),sqrt(add(1,sqr(k),mul(-2,k,cos(sub(a,e))))))))}
 function i2n(x,s,e=0){return log(crex(x,s,e))}
 
@@ -6787,8 +6797,8 @@ function csps(x){return div(1,sps(x))}
 function seps(x){return div(1,cps(x))}
 function tps(x){return div(sps(x),cps(x))}
 function ctps(x){return div(cps(x),sps(x))}
-function tpsv(x){return div(sps(x),mag(cps(x)))}
-function cpsv(x){return div(cps(x),mag(sps(x)))}
+function tpsv(x){return div(sps(x),sabs(cps(x)))}
+function cpsv(x){return div(cps(x),sabs(sps(x)))}
 function vercps(x){return sub(1,cpsv(x))}
 
 function cord(x){return mul(x,cos(x));}
@@ -6798,8 +6808,8 @@ function csrd(x){return div(1,srd(x))}
 function serd(x){return div(1,crd(x))}
 function trd(x){return div(srd(x),crd(x))}
 function ctrd(x){return div(crd(x),srd(x))}
-function trdv(x){return div(srd(x),mag(crd(x)))}
-function crdv(x){return div(crd(x),mag(srd(x)))}
+function trdv(x){return div(srd(x),sabs(crd(x)))}
+function crdv(x){return div(crd(x),sabs(srd(x)))}
 function vercrd(x){return sub(1,crdv(x))}
 
 
@@ -6809,7 +6819,7 @@ function tanphi(x,phi){return div(sinphi(x,phi),cosphi(x,phi))}
 function secphi(x,phi){return div(1,cosphi(x,phi))} 
 function cscphi(x,phi){return div(1,sinphi(x,phi))} 
 function cotphi(x,phi){return div(1,tanphi(x,phi))} 
-function tanvphi(x,phi){return signumapply(tanphi(x,phi),sin(x))}//return div(sinphi(x,phi),mag(cosphi(x,phi)))} 
+function tanvphi(x,phi){return signumapply(tanphi(x,phi),sin(x))}//return div(sinphi(x,phi),sabs(cosphi(x,phi)))} 
 
 
 function siqc(x,s,e=0){return div(siq(x,s,e),x)}
@@ -6824,10 +6834,29 @@ function taq(x,s,e=0){return div(siq(x,s,e),coq(x,s,e))}
 function siqcS(x,S){return div(siq(x,g(S,0),g(S,1)),x)}
 function coqcS(x,S){return div(coq(x,g(S,0),g(S,1)),x)}
 
+//https://dn721801.ca.archive.org/0/items/sm-vol-4/SM-Vol%204.pdf
+function qsiqc(x,s,e=0){return div(qsiq(x,s,e),x)}
+function qcoqc(x,s,e=0){return div(qcoq(x,s,e),x)}
+function qcoq(x,s,e=0){return div(cos(sub(x,e)),sqrt(add(1,mul(s,s,sqr(sin(sub(x,e)))))))}
+function qsiq(x,s,e=0){return div(sin(sub(x,e)),sqrt(add(1,mul(s,s,sqr(cos(sub(x,e)))))))}
+function qtaqc(x,s,e=0){return div(qtaq(x,s,e),x)}
+function qtaq(x,s,e=0){return div(qsiq(x,s,e),qcoq(x,s,e))}
+function qctaqc(x,s,e=0){return div(qctaq(x,s,e),x)}
+function qctaq(x,s,e=0){return div(qcoq(x,s,e),qsiq(x,s,e))}
+function qtaq(x,s,e=0){return div(qsiq(x,s,e),qcoq(x,s,e))}
+function qsiqcS(x,S){return div(qsiq(x,g(S,0),g(S,1)),x)}
+function qcoqcS(x,S){return div(qcoq(x,g(S,0),g(S,1)),x)}
+
 function coqq(n,x,s,e=0){return div(cos(mul(3,n,sub(x,e))),sqrt(sub(1,mul(s,s,sqr(sin(mul(n,sub(x,e))))))))}
 function siqq(n,x,s,e=0){return div(sin(mul(3,n,sub(x,e))),sqrt(sub(1,mul(s,s,sqr(cos(mul(n,sub(x,e))))))))}
 function taqq(n,x,s,e=0){return div(siqq(n,x,s,e),coqq(n,x,s,e))}
 function ctaqq(n,x,s,e=0){return div(coqq(n,x,s,e),siqq(n,x,s,e))}
+
+function qcoqq(n,x,s,e=0){return div(cos(mul(3,n,sub(x,e))),sqrt(add(1,mul(s,s,sqr(sin(mul(n,sub(x,e))))))))}
+function qsiqq(n,x,s,e=0){return div(sin(mul(3,n,sub(x,e))),sqrt(add(1,mul(s,s,sqr(cos(mul(n,sub(x,e))))))))}
+function qtaqq(n,x,s,e=0){return div(qsiqq(n,x,s,e),qcoqq(n,x,s,e))}
+function qctaqq(n,x,s,e=0){return div(cqoqq(n,x,s,e),qsiqq(n,x,s,e))}
+
 
 function felp(t,w0,wm){return add(sqr(w0),mul(wm,wm,cos(mmul(2,t))))}
 function felr(t,w0,wm){return sub(sqr(w0),mul(wm,wm,cos(mmul(2,t))))}
@@ -6887,6 +6916,830 @@ function danduseqpoly(x,a){return add(mul(2,x,x,x),mul(-1,x,x),mul(x,2,sub(a,14)
 function moivref(n,a,a1,x=1){let fi=sin(mul(n,a1));for(let k=0;k<n;k++)fi=mul(fi,add(x,div(sin(sub(a,div(mul(k,n),n))),sin(sub(a1,div(mul(k,n),n))))));return sub(0,fi);}
 function moivret(n,a,a1){return moivref(n,a,a1,-1)}
 function moivres(n,a,a1){return moivref(n,a,a1,1)}
+
+
+
+
+
+function del(x,s,e=0){return sqrt(sub(1,mul(s,s,sqr(sin(sub(x,e))))))}
+function qdel(x,s,e=0){return sqrt(add(1,mul(s,s,sqr(sin(sub(x,e))))))}
+function rad(x){return exp(mul(I,x))}
+function walshrad(n,t){return signum(sin(mul(2,n,t)))}
+function der(x){return mul(I,exp(mul(I,x)))}
+function wal(k,x,n=floor(log2(k))){let fi=1;for(let i=0;i<n;i++)fi=mul(fi,pow(rademacher(i,x),getnthbit(k,n)));return fi;}
+function rademacher(n,t){return signum(sin(mul(pi(),t,pow(2,add(n,1)))))}
+function adr(x){return sub(0,der(add(x,pi())))}
+function vibrationam(c){return sqrt(sub(1,mul(2,c,c),mul(2,c,sqrt(sub(1,sqr(c))))))}
+function vibrationt(x,c){return sqrt(div(sub(1,mul(x,x)),add(1,pow(x,3),mul(-2,x,x,sub(1,mul(2,c,c))))))}
+function vectormodulus(x,r,s,e=0){return atan(sqrt(div(sub(sqr(r),sqr(mul(e,cos(sub(x,e))))),sub(sqr(r),sqr(mul(e,sin(sub(x,e))))))))}
+function harmonicratio(s,sp){return div(mul(sub(1,s),add(1,sp)),add(1,s),sub(1,sp))}
+function columbianpotential(x,s,e=0){return div(1,crex(x,s,e))}
+function genevadrivetheta(a,z=4){return sub(pi(),atan(div(sin(a),sub(div(1,sin(div(pi(),z))),cos(a)))))}
+
+function tex(x,s,e=0){return div(sex(x,s,e),cex(x,s,e))}
+function texv(x,s,e=0){return div(sex(x,s,e),sabs(cex(x,s,e)))}
+function ctex(x,s,e=0){return div(csex(x,s,e),ccex(x,s,e))}
+function ctexv(x,s,e=0){return div(csex(x,s,e),sabs(ccex(x,s,e)))}
+function scex(x,s,e=0){return div(1,cex(x,s,e))}
+function csex(x,s,e=0){return div(1,sex(x,s,e))}
+function cotex(x,s,e=0){return div(cex(x,s,e),sex(x,s,e))}
+function cotexv(x,s,e=0){return div(cex(x,s,e),sabs(sex(x,s,e)))}
+function ccotex(x,s,e=0){return div(ccex(x,s,e),csex(x,s,e))}
+function ccotexv(x,s,e=0){return div(ccex(x,s,e),sabs(csex(x,s,e)))}
+
+function texh(x,s,e=0){return div(sexh(x,s,e),cexh(x,s,e))}
+function texvh(x,s,e=0){return div(sexh(x,s,e),sabs(cexh(x,s,e)))}
+function ctexh(x,s,e=0){return div(csexh(x,s,e),ccexh(x,s,e))}
+function ctexvh(x,s,e=0){return div(csexh(x,s,e),sabs(ccexh(x,s,e)))}
+function scexh(x,s,e=0){return div(1,cexh(x,s,e))}
+function csexh(x,s,e=0){return div(1,sexh(x,s,e))}
+function cotexh(x,s,e=0){return div(cexh(x,s,e),sex(x,s,e))}
+function cotexvh(x,s,e=0){return div(cexh(x,s,e),sabs(sexh(x,s,e)))}
+function ccotexh(x,s,e=0){return div(ccexh(x,s,e),csexh(x,s,e))}
+function ccotexvh(x,s,e=0){return div(ccexh(x,s,e),sabs(csexh(x,s,e)))}
+
+//ADD CAPİTAL FORMS OF THESE
+//function excentriclorentzfactor(x,s)
+
+function fccgamma(a1,a2){return sub(pi,sub(a2,a1))}
+function fccr(r1,r2,a1,a2){return sqrt(add(sqr(r1),sqr(r2),mul(-2,r1,r2,cos(fccgamma(a1,a2)))))}
+function fcctheta(r1,r2,a1,a2){return sub(a2,asin(div(mul(r1,sin(sub(a1,a2))),fccr(r1,r2,a1,a2))))}
+function fccz(r1,r2,a1,a2){let s=div(r1,r2);return mul(r2,sqrt(add(1,sqr(s),mul(2,s,cos(sub(a2,a1))))),rad(fccz(r1,r2,a1,a2)))}
+
+function rex(x,s,e=0){return add(mul(s,-1,cos(sub(x,e))),sqrt(sub(1,mul(s,s,sqr(sin(sub(x,e)))))))}
+function crex(x,s,e=0){return sqrt(sub(sqr(s),-1,mul(2,s,cos(sub(x,e)))))}
+function aex(x,s,e=0){return sub(x,asin(mul(s,sin(sub(x,e)))))}
+//function aexm(x,s,e=0){return add(,)} // help 488? and sinq
+function caex(x,s,e=0){return add(x,asin(div(mul(s,sin(sub(x,e))),sqrt(add(1,mul(s,s),mul(-2,s,cos(sub(x,e))))))))}
+function caexaex(x,s,e=0){return add(asin(div(mul(s,sin(sub(aex(x,s,e),e))),sqrt(sub(sqr(s),-1,mul(2,s,cos(sub(aex(x,s,e),e))))))),aex(x,s,e))}
+function bex(x,s,e=0){return asin(mul(s,sub(x,e)))}
+function cbex(x,s,e=0){return asin(div(mul(s,sin(x)),crex(x,s,e)));}
+function sex(x,s,e=0){return sin(aex(x,s,e))}
+function cex(x,s,e=0){return cos(aex(x,s,e))}
+function csex(x,s,e=0){return sin(caex(x,s,e))}
+function ccex(x,s,e=0){return cos(caex(x,s,e))}
+function dex(x,s=-999,e=0){if(s==-999){return dex10(x);}return sub(1,div(mul(s,cos(sub(x,e))),sqrt(sub(1,mul(s,s,sqr(sin(sub(x,e))))))))}
+function cdex(x,s,e=0){return div(sub(1,mul(s,cos(sub(x,e)))),sub(sqr(s),-1,mul(2,s,cos(sub(x,e)))))}
+
+function ael(x,s,e=0){return asin(sel(x,s,e))}
+function bel(x,s,e=0){return sub(ael(x,s,e),x)}
+
+function cel(x,s,e=0){return mul(rex(x,s,e),cos(x))}
+function sel(x,s,e=0){return mul(rex(x,s,e),sin(x))}
+function ccel(x,s,e=0){return mul(crex(x,s,e),cos(x))}
+function csel(x,s,e=0){return mul(crex(x,s,e),sin(x))}
+function tel(x,s,e=0){return mul(rex(x,s,e),tan(x))}
+function telv(x,s,e=0){return mul(rex(x,s,e),tanv(x))}
+function ctel(x,s,e=0){return mul(crex(x,s,e),tan(x))}
+function cotel(x,s,e=0){return mul(rex(x,s,e),cot(x))}
+function ccotel(x,s,e=0){return mul(crex(x,s,e),cot(x))}
+
+function ctselex(x,s,e=0){return div(cel(x,s,e),sex(x,s,e))}
+function ctsexel(x,s,e=0){return div(cex(x,s,e),sel(x,s,e))}
+
+
+function cix(x,s,z=0){return add(cex(x,s,z),mul(I,sex(x,s,z)))}
+function six(x,s,z=0){return add(sex(x,s,z),mul(I,cex(x,s,z)))}
+function cax(x,s,z=0){return add(cex(x,s,z),mul(1,sex(x,s,z)))}
+function ccix(x,s,z=0){return add(ccex(x,s,z),mul(I,csex(x,s,z)))}
+function csix(x,s,z=0){return add(csex(x,s,z),mul(I,ccex(x,s,z)))}
+function ccax(x,s,z=0){return add(ccex(x,s,z),mul(1,csex(x,s,z)))}
+function cixh(x,s,z=0){return add(cexh(x,s,z),mul(I,sexh(x,s,z)))}
+function sixh(x,s,z=0){return add(sexh(x,s,z),mul(I,cexh(x,s,z)))}
+function caxh(x,s,z=0){return add(cexh(x,s,z),mul(1,sexh(x,s,z)))}
+function ccixh(x,s,z=0){return add(ccexh(x,s,z),mul(I,csexh(x,s,z)))}
+function csixh(x,s,z=0){return add(csexh(x,s,z),mul(I,ccexh(x,s,z)))}
+function ccaxh(x,s,z=0){return add(ccexh(x,s,z),mul(1,csexh(x,s,z)))}
+
+function cixa(x,s,z=0){return add(cexa(x,s,z),mul(I,sexa(x,s,z)))}
+function sixa(x,s,z=0){return add(sexa(x,s,z),mul(I,cexa(x,s,z)))}
+function caxa(x,s,z=0){return add(cexa(x,s,z),mul(1,sexai(x,s,z)))}
+
+
+function uex(x,s,e=0){return div(aex(x),x)}
+function cuex(x,s,e=0){return div(caex(x),x)}
+
+function buex(x,s,e=0){return div(bex(mul(x,sqrt(x))),x)}
+function cbuex(x,s,e=0){return div(cbex(mul(x,sqrt(x))),x)}
+
+
+//coc and sic
+function coce(x,k,p=div(1,sub(1,sqr(k)))){return div(sub(mul(add(p,p,sqr(k)),sqr(cos(div(x,2)))),1),sub(1,mul(k,k,sqr(cos(div(x,2))))))}
+function sice(x,k,p=div(1,sub(1,sqr(k)))){return div(mul(p,sin(x)),sub(1,mul(k,k,sqr(cos(div(x,2))))))}
+
+function scoce(x,s,e=div(1,sub(1,sqr(s)))){return div(1,coce(x,s,e))}
+function tace(x,s,e=div(1,sub(1,sqr(s)))){return div(sice(x,s,e),coce(x,s,e))}
+function ctce(x,s,e=div(1,sub(1,sqr(s)))){return div(1,sice(x,s,e))}
+function csice(x,s,e=div(1,sub(1,sqr(s)))){return div(coce(x,s,e),sice(x,s,e))}
+
+function coch(x,k,p=1){return coce(x,k,p)}
+function sich(x,k,p=1){return sice(x,k,p)}
+
+function scoch(x,s,e=1){return div(1,coch(x,s,e))}
+function tach(x,s,e=1){return div(sich(x,s,e),coch(x,s,e))}
+function ctch(x,s,e=1){return div(1,sich(x,s,e))}
+function csich(x,s,e=1){return div(coch(x,s,e),sich(x,s,e))}
+
+function coea(x,k,p=div(1,sub(1,sqr(k)))){return coce(x,k,p)}
+function siea(x,k,p=div(1,sub(1,sqr(k)))){return sice(x,k,p)}
+
+function scoea(x,s,e=div(1,sub(1,sqr(s)))){return div(1,coea(x,s,e))}
+function taea(x,s,e=div(1,sub(1,sqr(s)))){return div(siea(x,s,e),coea(x,s,e))}
+function ctea(x,s,e=div(1,sub(1,sqr(s)))){return div(1,siea(x,s,e))}
+function csiea(x,s,e=div(1,sub(1,sqr(s)))){return div(coea(x,s,e),siea(x,s,e))}
+
+function coh(x,k,p=1){return coce(x,k,p)}
+function sih(x,k,p=1){return sice(x,k,p)}
+
+function scoh(x,s,e=1){return div(1,coh(x,s,e))}
+function tah(x,s,e=1){return div(sih(x,s,e),coh(x,s,e))}
+function ctch(x,s,e=1){return div(1,sih(x,s,e))}
+function csih(x,s,e=1){return div(coh(x,s,e),sih(x,s,e))}
+
+function cop(x,k=1,p=1){return coce(x,k,p)}
+function sip(x,k=1,p=1){return sice(x,k,p)}
+
+function scop(x,s=1,e=1){return div(1,cop(x,s,e))}
+function tap(x,s=1,e=1){return div(sip(x,s,e),cop(x,s,e))}
+function ctcp(x,s=1,e=1){return div(1,sip(x,s,e))}
+function csip(x,s=1,e=1){return div(cop(x,s,e),sip(x,s,e))}
+
+
+function cice(x,s,z=div(1,sub(1,sqr(s)))){return add(coce(x,s,z),mul(I,sice(x,s,z)))}
+function sace(x,s,z=div(1,sub(1,sqr(s)))){return add(sice(x,s,z),mul(I,coce(x,s,z)))}
+function cace(x,s,z=div(1,sub(1,sqr(ks)))){return add(coce(x,s,z),mul(1,sice(x,s,z)))}
+
+function cich(x,s,z=1){return add(coch(x,s,z),mul(I,sich(x,s,z)))}
+function sach(x,s,z=1){return add(sich(x,s,z),mul(I,coch(x,s,z)))}
+function cach(x,s,z=1){return add(coch(x,s,z),mul(1,sich(x,s,z)))}
+
+function ciea(x,s,z=div(1,sub(1,sqr(s)))){return add(coea(x,s,z),mul(I,siea(x,s,z)))}
+function sica(x,s,z=div(1,sub(1,sqr(s)))){return add(siea(x,s,z),mul(I,coea(x,s,z)))}
+function caia(x,s,z=div(1,sub(1,sqr(s)))){return add(coea(x,s,z),mul(1,siea(x,s,z)))}
+
+function cih(x,s,z=1){return add(coh(x,s,z),mul(I,sih(x,s,z)))}
+function sah(x,s,z=1){return add(sih(x,s,z),mul(I,coh(x,s,z)))}
+function cah(x,s,z=1){return add(coh(x,s,z),mul(1,sih(x,s,z)))}
+
+function cip(x,s=1,z=1){return add(cop(x,s,z),mul(I,sip(x,s,z)))}
+function sap(x,s=1,z=1){return add(sip(x,s,z),mul(I,cop(x,s,z)))}
+function cap(x,s=1,z=1){return add(cop(x,s,z),mul(1,sip(x,s,z)))}
+
+function cism(x,k){return add(cesm(x,k),mul(I,sesm(x,k)))}
+function sism(x,k){return add(sesm(x,k),mul(I,cesm(x,k)))}
+function casm(x,k){return add(cesm(x,k),mul(1,sesm(x,k)))}
+
+function cil(x,s,z=0){return add(cel(x,s,z),mul(I,sel(x,s,z)))}
+function sal(x,s,z=0){return add(sel(x,s,z),mul(I,cel(x,s,z)))}
+function cal(x,s,z=0){return add(cel(x,s,z),mul(1,sel(x,s,z)))}
+
+
+//https://dn721608.ca.archive.org/0/items/sm-vol-2/SM-Vol%202.pdf 246
+function sesm(x,k){return div(sin(x),sqrt(sub(1,sqr(mul(k,cos(x))))))}
+function cesm(x,k){return div(cos(x),sqrt(sub(1,sqr(mul(k,cos(x))))))}
+
+
+function ruy(x,k,a){return div(rad(a),sqrt(sub(1,sqr(mul(k,cos(x))))))}
+function rux(x,k,a){return div(rad(a),sqrt(sub(1,sqr(mul(k,sin(x))))))}
+function vuy(x,k,w){return mul(w,div(sqrt(add(1,mul(k,k,sub(sqr(k),2),sqr(cos(x))))),pow(sub(1,sqr(mul(k,cos(x)))),1.5)))}
+function vux(x,k,w){return mul(w,div(sqrt(add(1,mul(k,k,sub(sqr(k),2),sqr(sin(x))))),pow(sub(1,sqr(mul(k,sin(x)))),1.5)))}
+
+function aece(x,k){return acos(cesm(x,k))}
+function aese(x,k){return asin(sesm(x,k))}
+function aete(x,k){return div(aese(x,k),aece(x,k))}
+function aesce(x,k){return div(1,aece(x,k))}
+function aecse(x,k){return div(1,aese(x,k))}
+function aecte(x,k){return div(aece(x,k),aese(x,k))}
+function aetev(x,k){return div(aese(x,k),sabs(aece(x,k)))}
+
+function dece(x,k){return div(sqrt(1,sqr(k)),sub(1,sqr(mul(k,sin(x)))))}
+function dese(x,k){return div(sqrt(1,sqr(k)),sub(1,sqr(mul(k,cos(x)))))}
+function dete(x,k){return div(dese(x,k),dece(x,k))}
+function desce(x,k){return div(1,dece(x,k))}
+function decse(x,k){return div(1,dese(x,k))}
+function decte(x,k){return div(dece(x,k),dese(x,k))}
+function detev(x,k){return div(dese(x,k),sabs(dece(x,k)))}
+
+function dsmse(x,k){return div(add(1,mul(k,2,k,sqr(sin(x)))),sub(1,sqr(mul(k,cos(x)))))}
+function dsmce(x,k){return div(add(1,mul(k,2,k,sqr(sin(x)))),sub(1,sqr(mul(k,cos(x)))))}
+function dsmte(x,k){return div(dsmse(x,k),dsmce(x,k))}
+function dsmsce(x,k){return div(1,dsmce(x,k))}
+function dsmcse(x,k){return div(1,dsmse(x,k))}
+function dsmcte(x,k){return div(dsmce(x,k),dsmse(x,k))}
+function dsmtev(x,k){return div(dsmse(x,k),sabs(dsmce(x,k)))}
+
+function smse(x,k){return div(sin(x),sqrt(sub(1,sqr(mul(k,cos(x))))))}//return add(x,x,div(atanh(div(tan(x),sqrt(sub(sqr(k),1)))),sqrt(sub(sqr(k),1))))}
+function smce(x,k){return div(cos(x),sqrt(sub(1,sqr(mul(k,cos(x))))))}//return sub(mul(2,x),div(atanh(mul(tan(x),sqrt(sub(sqr(k),1)))),sqrt(sub(sqr(k),1))))}
+function smte(x,k){return div(smse(x,k),smce(x,k))}
+function smsce(x,k){return div(1,smce(x,k))}
+function smcse(x,k){return div(1,smse(x,k))}
+function smcte(x,k){return div(smce(x,k),smse(x,k))}
+function smtev(x,k){return div(smse(x,k),sabs(smce(x,k)))}
+
+function cit(x,k){return mul(cos(x),sabs(smce(x,k)))}
+function sit(x,k){return mul(sin(x),sabs(smse(x,k)))}
+function tit(a,k){return div(sit(a,k),cit(a,k))}
+function ctit(a,k){return div(cit(a,k),sit(a,k))}
+function scit(a,k){return div(1,cit(a,k))}
+function csit(a,k){return div(1,sit(a,k))}
+function titv(a,k){return div(sit(a,k),sabs(cit(a,k)))}
+    
+    
+function cist(x,k){return add(cit(x,k),mul(I,sit(x,k)))}
+function sist(x,k){return add(sit(x,k),mul(I,cit(x,k)))}
+function cast(x,k){return add(cit(x,k),mul(1,sit(x,k)))}
+
+function smcs(x,k){return add(smce(x,k),mul(I,smse(x,k)))}
+function smsc(x,k){return add(smse(x,k),mul(I,smce(x,k)))}
+function smcas(x,k){return add(smce(x,k),mul(1,smse(x,k)))}
+
+function dsmcs(x,k){return add(dsmce(x,k),mul(I,dsmse(x,k)))}
+function dsmsc(x,k){return add(dsmse(x,k),mul(I,dsmce(x,k)))}
+function dsmcas(x,k){return add(dsmce(x,k),mul(1,dsmse(x,k)))}
+
+function desc(x,k){return add(dece(x,k),mul(I,dese(x,k)))}
+function decs(x,k){return add(dese(x,k),mul(I,dece(x,k)))}
+function decas(x,k){return add(dece(x,k),mul(1,dese(x,k)))}
+
+function aesc(x,k){return add(aece(x,k),mul(I,aese(x,k)))}
+function ascs(x,k){return add(aese(x,k),mul(I,aece(x,k)))}
+function ascas(x,k){return add(aece(x,k),mul(1,aese(x,k)))}
+
+    
+    
+    //https://dn721608.ca.archive.org/0/items/sm-vol-2/SM-Vol%202.pdf
+function cceex(x,k,s,e=0){return div(ccex(x,s,e),sqrt(sub(1,sqr(mul(k,csex(x,s,e))))))}
+function cseex(x,k,s,e=0){return div(csex(x,s,e),sqrt(sub(1,sqr(mul(k,ccex(x,s,e))))))}
+
+function csceex(x,k,s,e=0){return div(1,cceex(x,k,s,e))}
+function cteex(x,k,s,e=0){return div(cseex(x,k,s,e),cceex(x,k,s,e))}
+function ccseex(x,k,s,e=0){return div(1,cseex(x,k,s,e))}
+function ccteex(x,k,s,e=0){return div(cceex(x,k,s,e),cseex(x,k,s,e))}
+
+function ceex(x,k,s,e=0){return div(cex(x,s,e),sqrt(sub(1,sqr(mul(k,sex(x,s,e))))))}
+function seex(x,k,s,e=0){return div(sex(x,s,e),sqrt(sub(1,sqr(mul(k,cex(x,s,e))))))}
+
+function sceex(x,k,s,e=0){return div(1,ceex(x,k,s,e))}
+function teex(x,k,s,e=0){return div(seex(xv,s,e),ceex(x,k,s,e))}
+function coseex(x,k,s,e=0){return div(1,seex(x,k,s,e))}
+function coteex(x,k,s,e=0){return div(ceex(x,k,s,e),seex(x,k,s,e))}
+    
+function cceexb(x,s,e=0){return cos(add(x,asin(div(mul(s,sin(sub(x,e))),crex(x,s,e)))))}
+function cseexb(x,s,e=0){return sin(add(x,asin(div(mul(s,sin(sub(x,e))),crex(x,s,e)))))}
+
+function csceexb(x,s,e=0){return div(1,cceexb(x,y,s,e))}
+function cteexb(x,s,e=0){return div(cseexb(x,y,s,e),cceexb(x,y,s,e))}
+function ccseexb(x,s,e=0){return div(1,cseexb(x,y,s,e))}
+function ccteexb(x,s,e=0){return div(cceexb(x,y,s,e),cseexb(x,y,s,e))}
+    
+function ceexb(x,s,e=0){return cos(add(x,asin(div(mul(s,sin(sub(x,e))),rex(x,s,e)))))}
+function seexb(x,s,e=0){return sin(add(x,asin(div(mul(s,sin(sub(x,e))),rex(x,s,e)))))}
+
+function sceexb(x,s,e=0){return div(1,ceexb(x,s,e))}
+function teexb(x,s,e=0){return div(seexby(x,s,e),ceexb(x,s,e))}
+function coseexb(x,s,e=0){return div(1,seexb(x,s,e))}
+function coteexb(x,s,e=0){return div(ceexb(x,s,e),seexb(x,s,e))}
+
+
+function cceix(x,k,s,e=0){return add(cceex(x,k,s,e),mul(I,cseex(x,k,s,e)))}
+function ceix(x,k,s,e=0){return add(ceex(x,k,s,e),mul(I,seex(x,k,s,e)))}
+function cceixb(x,s,e=0){return add(cceexb(x,s,e),mul(I,cseexb(x,s,e)))}
+function ceixb(x,s,e=0){return add(ceexb(x,s,e),mul(I,seexb(x,s,e)))}
+
+function cseix(x,k,s,e=0){return add(cseex(x,k,s,e),mul(I,cceex(x,k,s,e)))}
+function seix(x,k,s,e=0){return add(seex(x,k,s,e),mul(I,ceex(x,k,s,e)))}
+function cseixb(x,s,e=0){return add(cseexb(x,s,e),mul(I,cceexb(x,s,e)))}
+function seixb(x,s,e=0){return add(seexb(x,s,e),mul(I,ceexb(x,s,e)))}
+
+function ccaix(x,k,s,e=0){return add(cceex(x,k,s,e),mul(1,cseex(x,k,s,e)))}
+function caix(x,k,s,e=0){return add(ceex(x,k,s,e),mul(1,seex(x,k,s,e)))}
+function ccaixb(x,s,e=0){return add(cceexb(x,s,e),mul(1,cseexb(x,s,e)))}
+function caixb(x,s,e=0){return add(ceexb(x,s,e),mul(1,seexb(x,s,e)))}
+
+
+//https://dn721608.ca.archive.org/0/items/sm-vol-2/SM-Vol%202.pdf 300
+function aexa(x,l,s,z=0){return sub(mul(x,pi(),div(0.5,l)),asin(mul(s,sin(sub(mul(x,pi(),div(0.5,l)),z)))))}
+function bexa(x,l,s,z=0){return asin(mul(s,sin(sub(mul(x,pi(),div(0.5,l)),z))))}
+function rexa(x,k,s,z=0){return sub(sqr(sub(1,sqr(mul(s,sin(sub(mul(x,pi(),div(0.5,l)),z)))))),sqrt(sub(1,sqr(mul(s,sin(mul(x,pi(),div(0.5,l))))))))}
+function dexa(x,k,s,z=0){return sub(l,div(mul(s,cos(mul(x,pi(),div(0.5,l)))),sqrt(sub(1,sqr(mul(s,sin(sub(mul(x,pi(),div(0.5,l)),z))))))))}
+function sexa(x,l,s,z=0){return sin(sub(mul(x,pi(),div(0.5,l)),asin(mul(s,sin(sub(mul(x,pi(),div(0.5,l)),z))))))}
+function cexa(x,l,s,z=0){return sin(sub(mul(x,pi(),div(0.5,l)),asin(mul(s,sin(sub(mul(x,pi(),div(0.5,l)),z))))))}
+function texa(x,l,s,z=0){return div(sexa(x,l,s,z),cexa(z,l,s,z))}
+function texav(x,l,s,z=0){return div(sexa(x,l,s,z),sabs(cexa(z,l,s,z)))}
+function cosqa(x,l,s,z=0){return div(cos(mul(x,pi(),div(0.5,l))),sqrt(sub(1,sqr(sin(sub(mul(x,pi(),div(0.5,l)),z))))))}
+function sinqa(x,l,s,z=0){return div(sin(mul(x,pi(),div(0.5,l))),sqrt(sub(1,sqr(cos(sub(mul(x,pi(),div(0.5,l)),z))))))}
+
+function caexa(x,l,s,z=0){return add(mul(x,pi(),div(0.5,l)),asin(div(mul(s,sin(sub(mul(x,pi(),div(0.5,l)),z))),sqrt(sub(sqr(s),-1,mul(2,s,cos(sub(mul(x,pi(),div(0.5,l)),z))))))))}
+function cbexa(x,l,s,z=0){return add(0,asin(div(mul(s,sin(sub(mul(x,pi(),div(0.5,l)),z))),sqrt(sub(sqr(s),-1,mul(2,s,cos(sub(mul(x,pi(),div(0.5,l)),z))))))))}
+function crexa(x,l,s,z=0){return sqrt(sub(sqr(s),-1,mul(2,cos(sub(mul(x,pi(),div(0.5,l)),z)))))}
+function cdexa(x,l,s,z=0){return div(sub(1,mul(s,cos(sub(mul(x,pi(),div(0.5,l)),z)))),sub(sqr(s),-1,mul(2,s,cos(sub(mul(x,pi(),div(0.5,l)),z)))))}
+function csexa(x,l,s,z=0){return cos(caexa(x,l,s,z))}
+function csexa(x,l,s,z=0){return sin(caexa(x,l,s,z))}
+
+
+
+function aexm(x,m,s,e=0){return sub(x,arcsin(mul(s,sin(sub(mul(m,t),e)))))}
+function bexm(x,m,s,e=0){return arcsin(mul(s,sin(sub(mul(m,t),e))))}
+function sexm(x,m,s,e=0){return sin(aexm(x,m,s,e))}
+function cexm(x,m,s,e=0){return cos(aexm(x,m,s,e))}
+function texm(x,m,s,z=0){return div(sexm(x,m,s,z),cexm(z,m,s,z))}
+function cotexm(x,m,s,z=0){return div(cexm(x,m,s,z),sexm(z,m,s,z))}
+function scexm(x,m,s,z=0){return div(1,cexm(z,m,s,z))}
+function cosexm(x,m,s,z=0){return div(1,sexm(z,m,s,z))}
+function texmv(x,m,s,z=0){return div(sexm(x,m,s,z),sabs(cexm(z,m,s,z)))}
+
+function cixm(x,m,s,z=0){return add(cexm(x,m,s,z),mul(I,sexm(x,m,s,z)))}
+function sixm(x,m,s,z=0){return add(sexm(x,m,s,z),mul(I,cexm(x,m,s,z)))}
+function caxm(x,m,s,z=0){return add(cexm(x,m,s,z),mul(1,sexm(x,m,s,z)))}
+
+function sexhm(x,m,s,e=0){return sinh(aexm(x,m,s,e))}
+function cexhm(x,m,s,e=0){return cpsh(aehm(x,m,s,e))}
+function texhm(x,m,s,z=0){return div(sexhm(x,m,s,z),cexhm(z,m,s,z))}
+function cotexhm(x,m,s,z=0){return div(cexhm(x,m,s,z),sexhm(z,m,s,z))}
+function scexhm(x,m,s,z=0){return div(1,cexhm(z,m,s,z))}
+function cosexhm(x,m,s,z=0){return div(1,sexhm(z,m,s,z))}
+function texhmv(x,m,s,z=0){return div(sexhm(x,m,s,z),sabs(cexhm(z,m,s,z)))}
+
+function cixhm(x,m,s,z=0){return add(cexhm(x,m,s,z),mul(I,sexhm(x,m,s,z)))}
+function sixhm(x,m,s,z=0){return add(sexhm(x,m,s,z),mul(I,cexhm(x,m,s,z)))}
+function caxhm(x,m,s,z=0){return add(cexhm(x,m,s,z),mul(1,sexhm(x,m,s,z)))}
+
+//ADD doubble adanliltc functşın c https://dn721608.ca.archive.org/0/items/sm-vol-2/SM-Vol%202.pdf 315
+
+//ADD FIX  rexh crexh bexh 
+function rexh(x,s,e=0){return sqrt(add(sqr(sub(cexh(x,s,e),mul(s,cos(e)))),sqr(sub(sexh(x,s,e),mul(s,sin(e))))))}
+    function radh(x,s,e=0){return sqrt(add(sqr(cosh(x)),sqr(sinh(x))))}
+function crexh(x,s,e=0){return sqrt(sub(sqr(s),-1,mul(2,s,cos(sub(x,e)))))}
+function aexh(x,s,e=0){return sub(mul(2,atan(exp(aex(x,s,e)))),div(pi(),2))}
+//gdex aka aexh
+//function aexmh(x,s,e=0){return add(,)} // help 488? and sinq
+   function thex(x,s,e=0){return log(tan(add(div(aex(x,s,e=0),2),div(pi(),4))))}
+   function cthex(x,s,e=0){return log(tan(add(div(caex(x,s,e=0),2),div(pi(),4))))}
+function caexh(x,s,e=0){return sub(mul(2,atan(exp(caex(x,s,e)))),div(pi(),2))}
+function caexaexh(x,s,e=0){return add(asin(div(mul(s,sin(sub(aex(x,s,e),e))),sqrt(sub(sqr(s),-1,mul(2,s,cos(sub(aex(x,s,e),e))))))),aex(x,s,e))}
+function bexh(x,s,e=0){return add(0,asin(mul(s,sub(x,e))))}
+function cbexh(x,s,e=0){return asin(div(mul(s,sin(x)),crex(x,s,e)));}
+function sexh(x,s,e=0){return sinh(aex(x,s,e))}
+function cexh(x,s,e=0){return cosh(aex(x,s,e))}
+function csexh(x,s,e=0){return sinh(caex(x,s,e))}
+function ccexh(x,s,e=0){return cosh(caex(x,s,e))}
+function dexh(x,s,e=0){return mul(2,sub(1,dex(x,s,e)),div(aex(x,s,e),add(1,exp(aex(x,s,e)))))}
+function cdexh(x,s,e=0){return dmul(2,sub(1,cdex(x,s,e)),div(caex(x,s,e),add(1,exp(caex(x,s,e)))))}
+
+function aelh(x,s,e=0){return asinh(selh(x,s,e))}
+function belh(x,s,e=0){return sub(aelh(x,s,e),x)}
+function celh(x,s,e=0){return mul(rexh(x,s,e),cos(x))}
+function selh(x,s,e=0){return mul(rexh(x,s,e),sin(x))}
+function ccelh(x,s,e=0){return mul(crexh(x,s,e),cos(x))}
+function cselh(x,s,e=0){return mul(crexh(x,s,e),sin(x))}
+function telh(x,s,e=0){return mul(rexh(x,s,e),tan(x))}
+function telvh(x,s,e=0){return mul(rexh(x,s,e),tanv(x))}
+function ctelh(x,s,e=0){return mul(crexh(x,s,e),tan(x))}
+function cotelh(x,s,e=0){return mul(rexh(x,s,e),cot(x))}
+function ccotelh(x,s,e=0){return mul(crexh(x,s,e),cot(x))}
+
+function asex(x,s,e=0){return asin(aaex(x,s,e))}
+//function acex(x,s,e=0){return add(asin(div(sin(acos(x)),s)),e)}
+function aaex(x,s,e=0){
+       const af = (t) => aex(t, s, e);
+return halleyinv(af,x,x,0.01,20)}
+    //add(x,mul(s,sin(sub(x,e)))))}
+//function acaex(x,s,e=0){return add(asin(div(sin(x),s)),e)}
+//arc and inverse are different things i dont want to care much a___ is jsut f^-1 
+
+function cex2a(x,s,e,l){return cos(mul(div(pi(),2,l),x,sub(div(mul(pi(),x),2,l),asin(sub(div(mul(pi(),x),2,l),e)))))}
+function ssf(x,s,e=0){return mul(sub(x,mul(bex(x,1,e),dex(x,s,e))),s,dex(x,s,e))}
+function s2ex(x,s,e=0){return sin(sub(0,asin(mul(s,sin(sub(x,e)))),asin(mul(s,sin(sub(x,asin(mul(s,sin(sub(x,e))))))))))}
+function s2ex2(x,s,e=0)/*unnamed*/{return sin(sub(x,atan(div(mul(s,sin(mul(2,x))),rex(mul(2,x),s,e)))))}
+function s2ex3(x,s,e=0)/*unnamed*/{return div(cos(sub(x,atan(mul(s,sin(mul(2,s)))))),sqrt(sub(a,mul(s,cos(mul(2,x))))))}
+
+function sexxy(x,y,s,e=0){return sin(sub(mul(x,y),asin(mul(s,sin(sub(mul(x,y),e))))))}
+function cexxy(x,y,s,e=0){return cos(sub(mul(x,y),asin(mul(s,sin(sub(mul(x,y),e))))))}
+function scxxy(x,y,s,e=0){return div(1,cexxy(x,y,s,e))}
+function texxy(x,y,s,e=0){return div(sexxy(x,y,s,e),cexxy(x,y,s,e))}
+function csxxy(x,y,s,e=0){return div(1,sexxy(x,y,s,e))}
+function ctxxy(x,y,s,e=0){return div(cexxy(x,y,s,e),sexxy(x,y,s,e))}
+function rexxy(x,y,s,e=0){return rex(mul(x,y),s,e)}
+function dexxy(x,y,s,e=0){return dex(mul(x,y),s,e)}
+
+
+function sexc(x,s,e=0){return div(sex(x,s,e),x)}
+function cexc(x,s,e=0){return div(cex(x,s,e),x)}
+function selc(x,s,e=0){return div(sel(x,s,e),x)}
+function celc(x,s,e=0){return div(cel(x,s,e),x)}
+function aexc(x,s,e=0){return div(aex(x,s,e),x)}
+function bexc(x,s,e=0){return div(bex(x,s,e),x)}
+function rexc(x,s,e=0){return div(rex(x,s,e),x)}
+function dexc(x,s,e=0){return div(dex(x,s,e),x)}
+
+function sexhc(x,s,e=0){return div(sexh(x,s,e),x)}
+function cexhc(x,s,e=0){return div(cexh(x,s,e),x)}
+function selhc(x,s,e=0){return div(selh(x,s,e),x)}
+function celhc(x,s,e=0){return div(celh(x,s,e),x)}
+function aexhc(x,s,e=0){return div(aexh(x,s,e),x)}
+function bexhc(x,s,e=0){return div(bexh(x,s,e),x)}
+function rexhc(x,s,e=0){return div(rexh(x,s,e),x)}
+function dexhc(x,s,e=0){return div(dexh(x,s,e),x)}
+
+
+function csexc(x,s,e=0){return div(csex(x,s,e),x)}
+function ccexc(x,s,e=0){return div(ccex(x,s,e),x)}
+function cselc(x,s,e=0){return div(csel(x,s,e),x)}
+function ccelc(x,s,e=0){return div(ccel(x,s,e),x)}
+function caexc(x,s,e=0){return div(caex(x,s,e),x)}
+function cbexc(x,s,e=0){return div(cbex(x,s,e),x)}
+function crexc(x,s,e=0){return div(crex(x,s,e),x)}
+function cdexc(x,s,e=0){return div(cdex(x,s,e),x)}
+
+function csexhc(x,s,e=0){return div(csexh(x,s,e),x)}
+function ccexhc(x,s,e=0){return div(ccexh(x,s,e),x)}
+function cselhc(x,s,e=0){return div(cselh(x,s,e),x)}
+function ccelhc(x,s,e=0){return div(ccelh(x,s,e),x)}
+function caexhc(x,s,e=0){return div(caexh(x,s,e),x)}
+function cbexhc(x,s,e=0){return div(cbexh(x,s,e),x)}
+function crexhc(x,s,e=0){return div(crexh(x,s,e),x)}
+function cdexhc(x,s,e=0){return div(cdexh(x,s,e),x)}
+
+
+function sexhcS(x,S){return div(sexh(x,g(S,0),g(S,1)),x)}
+function cexhcS(x,S){return div(cexh(x,g(S,0),g(S,1)),x)}
+function selhcS(x,S){return div(selh(x,g(S,0),g(S,1)),x)}
+function celhcS(x,S){return div(celh(x,g(S,0),g(S,1)),x)}
+function aexhcS(x,S){return div(aexh(x,g(S,0),g(S,1)),x)}
+function bexhcS(x,S){return div(bexh(x,g(S,0),g(S,1)),x)}
+function rexhcS(x,S){return div(rexh(x,g(S,0),g(S,1)),x)}
+function dexhcS(x,S){return div(dexh(x,g(S,0),g(S,1)),x)}
+function csexhcS(x,S){return div(csexh(x,g(S,0),g(S,1)),x)}
+function ccexhcS(x,S){return div(ccexh(x,g(S,0),g(S,1)),x)}
+function cselhcS(x,S){return div(cselh(x,g(S,0),g(S,1)),x)}
+function ccelhcS(x,S){return div(ccelh(x,g(S,0),g(S,1)),x)}
+function caexhcS(x,S){return div(caexh(x,g(S,0),g(S,1)),x)}
+function cbexhcS(x,S){return div(cbexh(x,g(S,0),g(S,1)),x)}
+function crexhcS(x,S){return div(crexh(x,g(S,0),g(S,1)),x)}
+function cdexhcS(x,S){return div(cdexh(x,g(S,0),g(S,1)),x)}
+
+function sexcS(x,S){return div(sex(x,g(S,0),g(S,1)),x)}
+function cexcS(x,S){return div(cex(x,g(S,0),g(S,1)),x)}
+function selcS(x,S){return div(sel(x,g(S,0),g(S,1)),x)}
+function celcS(x,S){return div(cel(x,g(S,0),g(S,1)),x)}
+function aexcS(x,S){return div(aex(x,g(S,0),g(S,1)),x)}
+function bexcS(x,S){return div(bex(x,g(S,0),g(S,1)),x)}
+function rexcS(x,S){return div(rex(x,g(S,0),g(S,1)),x)}
+function dexcS(x,S){return div(dex(x,g(S,0),g(S,1)),x)}
+function csexcS(x,S){return div(csex(x,g(S,0),g(S,1)),x)}
+function ccexcS(x,S){return div(ccex(x,g(S,0),g(S,1)),x)}
+function cselcS(x,S){return div(csel(x,g(S,0),g(S,1)),x)}
+function ccelcS(x,S){return div(ccel(x,g(S,0),g(S,1)),x)}
+function caexcS(x,S){return div(caex(x,g(S,0),g(S,1)),x)}
+function cbexcS(x,S){return div(cbex(x,g(S,0),g(S,1)),x)}
+function crexcS(x,S){return div(crex(x,g(S,0),g(S,1)),x)}
+function cdexcS(x,S){return div(cdex(x,g(S,0),g(S,1)),x)}
+
+
+
+function smverticala(k){return sqrt(div(add(1,sqrt(sub(1,sqr(k)))),2))}
+function ellipticr(k){return div(1,div(compellint1(k),0.5,pi()))}
+
+
+function sie(x,s,e=0){return integral(sexcS,0,x,[s,e])}
+function cie(x,s,e=0){return integral(cexcS,0,x,[s,e])}
+function csie(x,s,e=0){return integral(csexcS,0,x,[s,e])}
+function ccie(x,s,e=0){return integral(ccexcS,0,x,[s,e])}
+function aie(x,s,e=0){return integral(aexcS,0,x,[s,e])}
+function bie(x,s,e=0){return integral(bexcS,0,x,[s,e])}
+function rie(x,s,e=0){return integral(rexcS,0,x,[s,e])}
+function die(x,s,e=0){return integral(dexcS,0,x,[s,e])}
+function caie(x,s,e=0){return integral(caexcS,0,x,[s,e])}
+function cbie(x,s,e=0){return integral(cbexcS,0,x,[s,e])}
+function crie(x,s,e=0){return integral(crexcS,0,x,[s,e])}
+function cdie(x,s,e=0){return integral(cdexcS,0,x,[s,e])}
+
+function sieh(x,s,e=0){return integral(sexhcS,0,x,[s,e])}
+function cieh(x,s,e=0){return integral(cexhcS,0,x,[s,e])}
+function csieh(x,s,e=0){return integral(csexhcS,0,x,[s,e])}
+function ccieh(x,s,e=0){return integral(ccexhcS,0,x,[s,e])}
+function aieh(x,s,e=0){return integral(aexhcS,0,x,[s,e])}
+function bieh(x,s,e=0){return integral(bexhcS,0,x,[s,e])}
+function rieh(x,s,e=0){return integral(rexhcS,0,x,[s,e])}
+function dieh(x,s,e=0){return integral(dexhcS,0,x,[s,e])}
+function caieh(x,s,e=0){return integral(caexhcS,0,x,[s,e])}
+function cbieh(x,s,e=0){return integral(cbexhcS,0,x,[s,e])}
+function crieh(x,s,e=0){return integral(crexhcS,0,x,[s,e])}
+function cdieh(x,s,e=0){return integral(cdexhcS,0,x,[s,e])}
+
+
+function cexo(x,s,e=0,c=0,g=0){return add(cex(x,s,e),mul(c,cos(g)))}//let p=signum(re(cos(x)));const h=add(mul(-1,tan(x),s,cos(e)),mul(s,sin(e)));return div(sub(mul(p,sqrt(sub(sqr(mul(2,tan(x),h)),mul(4,add(sqr(tan(x)),1),sub(sqr(h),1))))),mul(-2,tan(x),h)),2,add(sqr(tan(x)),1))}
+function sexo(x,s,e=0,c=0,g=0){return add(sex(x,s,e),mul(c,sin(g)))}//let p=signum(re(sin(x)));const h=add(mul(-1,mul(-1,cot(x)),s,sin(e)),mul(-1,s,cos(e)));return div(sub(mul(p,sqrt(sub(sqr(mul(2,mul(-1,cot(x)),h)),mul(4,add(sqr(mul(-1,cot(x))),1),sub(sqr(h),1))))),mul(-2,mul(-1,cot(x)),h)),2,add(sqr(mul(-1,cot(x))),1))}
+function texo(x,s,e=0,c=0,g=0){return div(sexo(x,s,e,c,g),cexo(x,s,e,c,g))}
+function cotexo(x,s,e=0,c=0,g=0){return div(cexo(x,s,e,c,g),sexo(x,s,e,c,g))}
+function scexo(x,s,e=0,c=0,g=0){return div(1,cexo(x,s,e,c,g))}
+function cosexo(x,s,e=0,c=0,g=0){return div(1,sexo(x,s,e,c,g))}
+function texov(x,s,e=0,c=0,g=0){return div(sexo(x,s,e,c,g),sabs(cexo(x,s,e,c,g)))}
+
+function cixo(x,s,e=0,c=0,g=0){return add(cexo(x,s,e,c,g),mul(I,sexo(x,s,e,c,g)))}
+function sixo(x,s,e=0,c=0,g=0){return add(sexo(x,s,e,c,g),mul(I,cexo(x,s,e,c,g)))}
+function caxo(x,s,e=0,c=0,g=0){return add(cexo(x,s,e,c,g),mul(1,sexo(x,s,e,c,g)))}
+
+function ccexo(x,s,e=0,c=0,g=0){return add(ccex(x,s,e),mul(c,cos(g)))}//let p=signum(re(cos(x)));const h=add(mul(-1,tan(x),s,cos(e)),mul(s,sin(e)));return div(sub(mul(p,sqrt(sub(sqr(mul(2,tan(x),h)),mul(4,add(sqr(tan(x)),1),sub(sqr(h),1))))),mul(-2,tan(x),h)),2,add(sqr(tan(x)),1))}
+function csexo(x,s,e=0,c=0,g=0){return add(csex(x,s,e),mul(c,sin(g)))}//let p=signum(re(sin(x)));const h=add(mul(-1,mul(-1,cot(x)),s,sin(e)),mul(-1,s,cos(e)));return div(sub(mul(p,sqrt(sub(sqr(mul(2,mul(-1,cot(x)),h)),mul(4,add(sqr(mul(-1,cot(x))),1),sub(sqr(h),1))))),mul(-2,mul(-1,cot(x)),h)),2,add(sqr(mul(-1,cot(x))),1))}
+function ctexo(x,s,e=0,c=0,g=0){return div(csexo(x,s,e,c,g),ccexo(x,s,e,c,g))}
+function ccotexo(x,s,e=0,c=0,g=0){return div(ccexo(x,s,e,c,g),csexo(x,s,e,c,g))}
+function cscexo(x,s,e=0,c=0,g=0){return div(1,ccexo(x,s,e,c,g))}
+function ccosexo(x,s,e=0,c=0,g=0){return div(1,csexo(x,s,e,c,g))}
+function ctexov(x,s,e=0,c=0,g=0){return div(csexo(x,s,e,c,g),sabs(ccexo(x,s,e,c,g)))}
+
+function ccixo(x,s,e=0,c=0,g=0){return add(ccexo(x,s,e,c,g),mul(I,csexo(x,s,e,c,g)))}
+function csixo(x,s,e=0,c=0,g=0){return add(csexo(x,s,e,c,g),mul(I,ccexo(x,s,e,c,g)))}
+function ccaxo(x,s,e=0,c=0,g=0){return add(ccexo(x,s,e,c,g),mul(1,csexo(x,s,e,c,g)))}
+
+//https://ia801202.us.archive.org/26/items/sm-vol-3/SM-Vol%203.pdf 16
+
+function tscex(x,s,e=0){return div(sin(x),cex(x,s,e))}
+function tsexc(x,s,e=0){return div(sex(x,s,e),cos(x))}
+
+function tscel(x,s,e=0){return div(sin(x),cel(x,s,e))}
+function tselc(x,s,e=0){return div(sel(x,s,e),cos(x))}
+
+function tscexo(x,s,e=0,c=0,g=0){return div(sin(x),cex(x,s,e,c,g))}
+function tseoxc(x,s,e=0,c=0,g=0){return div(sex(x,s,e,c,g),cos(x))}
+
+function tsexel(x,s,e=0,ss=s,ee=e){return div(sex(x,s,e),cel(x,ss,ee))}
+function tselex(x,s,e=0,ss=s,ee=e){return div(sel(x,s,e),cex(x,ss,ee))}
+
+function tsexexo(x,s,e=0,ss=s,ee=e,c=0,g=0){return div(sex(x,s,e),cexo(x,ss,ee,c,g))}
+function tsexoex(x,s,e=0,c=0,g=0,ss=s,ee=e){return div(sexo(x,s,e,c,g),cex(x,ss,ee))}
+
+function tselexo(x,s,e=0,ss=s,ee=e,c=0,g=0){return div(sel(x,s,e),cexo(x,ss,ee,c,g))}
+function tsexoel(x,s,e=0,c=0,g=0,ss=s,ee=e){return div(sexo(x,s,e,c,g),cel(x,ss,ee))}
+
+function ctscex(x,s,e=0){return div(1,div(sin(x),cex(x,s,e)))}
+function ctsexc(x,s,e=0){return div(1,div(sex(x,s,e),cos(x)))}
+
+function ctscel(x,s,e=0){return div(1,div(sin(x),cel(x,s,e)))}
+function ctselc(x,s,e=0){return div(1,div(sel(x,s,e),cos(x)))}
+
+function ctscexo(x,s,e=0,c=0,g=0){return div(1,div(sin(x),cex(x,s,e,c,g)))}
+function ctseoxc(x,s,e=0,c=0,g=0){return div(1,div(sex(x,s,e,c,g),cos(x)))}
+
+function ctsexel(x,s,e=0,ss=s,ee=e){return div(1,div(sex(x,s,e),cel(x,ss,ee)))}
+function ctselex(x,s,e=0,ss=s,ee=e){return div(1,div(sel(x,s,e),cex(x,ss,ee)))}
+
+function ctsexexo(x,s,e=0,ss=s,ee=e,c=0,g=0){return div(1,div(sex(x,s,e),cexo(x,ss,ee,c,g)))}
+function ctsexoex(x,s,e=0,c=0,g=0,ss=s,ee=e){return div(1,div(sexo(x,s,e,c,g),cex(x,ss,ee)))}
+
+function ctselexo(x,s,e=0,ss=s,ee=e,c=0,g=0){return div(1,div(sel(x,s,e),cexo(x,ss,ee,c,g)))}
+function ctsexoel(x,s,e=0,c=0,g=0,ss=s,ee=e){return div(1,div(sexo(x,s,e,c,g),cel(x,ss,ee)))}
+
+function tcscex(x,s,e=0){return div(sin(x),ccex(x,s,e))}
+function tcsexc(x,s,e=0){return div(csex(x,s,e),cos(x))}
+
+function tcscel(x,s,e=0){return div(sin(x),ccel(x,s,e))}
+function tcselc(x,s,e=0){return div(csel(x,s,e),cos(x))}
+
+function tcscexo(x,s,e=0,c=0,g=0){return div(sin(x),ccex(x,s,e,c,g))}
+function tcseoxc(x,s,e=0,c=0,g=0){return div(csex(x,s,e,c,g),cos(x))}
+
+function tcsexel(x,s,e=0,ss=s,ee=e){return div(csex(x,s,e),ccel(x,ss,ee))}
+function tcselex(x,s,e=0,ss=s,ee=e){return div(csel(x,s,e),ccex(x,ss,ee))}
+
+function tcsexexo(x,s,e=0,ss=s,ee=e,c=0,g=0){return div(csex(x,s,e),ccexo(x,ss,ee,c,g))}
+function tcsexoex(x,s,e=0,c=0,g=0,ss=s,ee=e){return div(csexo(x,s,e,c,g),ccex(x,ss,ee))}
+
+function tcselexo(x,s,e=0,ss=s,ee=e,c=0,g=0){return div(sel(x,s,e),ccexo(x,ss,ee,c,g))}
+function tcsexoel(x,s,e=0,c=0,g=0,ss=s,ee=e){return div(csexo(x,s,e,c,g),ccel(x,ss,ee))}
+
+function ctcscex(x,s,e=0){return div(1,div(sin(x),ccex(x,s,e)))}
+function ctcsexc(x,s,e=0){return div(1,div(csex(x,s,e),cos(x)))}
+
+function ctcscel(x,s,e=0){return div(1,div(sin(x),ccel(x,s,e)))}
+function ctcselc(x,s,e=0){return div(1,div(csel(x,s,e),cos(x)))}
+
+function ctcscexo(x,s,e=0,c=0,g=0){return div(1,div(sin(x),ccex(x,s,e,c,g)))}
+function ctcseoxc(x,s,e=0,c=0,g=0){return div(1,div(csex(x,s,e,c,g),cos(x)))}
+
+function ctcsexel(x,s,e=0,ss=s,ee=e){return div(1,div(csex(x,s,e),ccel(x,ss,ee)))}
+function ctcselex(x,s,e=0,ss=s,ee=e){return div(1,div(csel(x,s,e),ccex(x,ss,ee)))}
+
+function ctcsexexo(x,s,e=0,ss=s,ee=e,c=0,g=0){return div(1,div(csex(x,s,e),ccexo(x,ss,ee,c,g)))}
+function ctcsexoex(x,s,e=0,c=0,g=0,ss=s,ee=e){return div(1,div(csexo(x,s,e,c,g),ccex(x,ss,ee)))}
+
+function ctcselexo(x,s,e=0,ss=s,ee=e,c=0,g=0){return div(1,div(csel(x,s,e),ccexo(x,ss,ee,c,g)))}
+function ctcsexoel(x,s,e=0,c=0,g=0,ss=s,ee=e){return div(1,div(csexo(x,s,e,c,g),ccel(x,ss,ee)))}
+
+
+//https://dn721801.ca.archive.org/0/items/sm-vol-4/SM-Vol%204.pdf 53
+//quadrilobe and trilobo and polylobe
+//aka sinq cosq but theya re use dso ql and tl
+//no matter sintl and sinbl are just sex and sinql is siq mf
+//function sintl(x,s,e=0){return sin(sub(x,asin(mul(s,sin(sub(x,e))))))}
+//function costl(x,s,e=0){return cos(sub(x,asin(mul(s,sin(sub(x,e))))))}
+
+
+function quadrilobeelasticforcex(x,w,k){return div(mul(w,w,add(mul(x,sub(1,mul(2,k,k))),mul(2,k,k,add(2,sqr(k),x,x,x)),mul(3,k,k,k,k,x,x,x,x,x))),sub(1,sqr(k)))}
+function quadrilobeelasticforcey(x,w,k){return div(mul(w,w,add(mul(x,add(1,mul(2,k,k))),mul(-2,k,k,add(2,sqr(k),x,x,x)),mul(3,k,k,k,k,x,x,x,x,x))),sub(1,sqr(k)))}
+
+
+function rql(x,s,e=0){return sqrt(add(sqr(coq(x,s,e)),sqr(siq(x,s,e))))}
+function rqql(x,s,e=0){return sqrt(add(sqr(qcoq(x,s,e)),sqr(qsiq(x,s,e))))}
+
+
+
+//excantric gamma 135  https://dn721801.ca.archive.org/0/items/sm-vol-4/SM-Vol%204.pdf
+function gammae(x,s=0,e=0){return gamma(aex(x,s,e))}
+function gammaec(x,s=0,e=0){return div(gamma(aex(x,s,e)),sqrt(sub(sqr(s),-1,mul(2,s,cos(sub(x,e))))))}
+
+
+//FUNCŢII SUPERMATEMATICE CIRCULARE EXCENTRICE 179
+function smnumerelor(s,e=0){return rex(0,s,e)}
+function smaritmetica(s,e=0){return 1}
+function smgeometrica(s,e=0){return rex(div(pi(),2),s,e)}
+function smarmonica(s,e=0){return sub(1,mul(sqrt(sub(rex(pi(),s,e),1)),cos(atan(div(sqrt(sub(1,sub(rex(pi(),s,e),1))),sqrt(sub(rex(pi(),s,e),1)))))))}
+function smponderataa(s,e=0){return sqrt(add(1,rex(pi(),s,e)))}
+
+
+
+
+
+
+function legendreexcentrice(s,t){return div(1,sub(sqrt(sub(1,mul(s,s,sin(t),sin(t)))),mul(s,cos(t))))}
+function legendreexcentricepari(s,t){let fi=0;for(let n=0;n<bign;n++)fi=add(fi,mul(pow(s,mul(2,n)),sub(1,div(mul(doublefactorial(add(n,n,-1)),pow(sin(t),mul(2,n))),pow(2,add(n,1)),factorial(add(n,1))))));return fi;}
+function legendreimpareepari(s,t){let fi=0;for(let n=0;n<bign;n++)fi=add(fi,mul(sub(div(mul(doublefactorial(add(n,n,-1)),pow(sin(t),mul(2,n))),pow(2,add(n,1)),factorial(add(n,1))))));return sub(1,fi);}
+//function legendreexcentricepare(s,t){let fi=0;for(let n=0;n<bign;n++)fi=add(fi,mul(pow(s,mul(2,n)),sub(1,div(mul(doublefactorial(add(n,n,-1)),pow(sin(t),mul(2,n))),pow(2,add(n,1)),factorial(add(n,1))))));return fi;}
+
+function thelakeofswans(x,n){return div(mul(cos(x),signum(cos(x))),pow(add(1,pow(tan(x),n)),n))}
+function thedanceofswords(x,n){return div(mul(cos(x),signum(x)),pow(add(1,pow(tan(x),n)),1))}
+function thedeceaseofswan(x,n){return div(mul(sin(x),signum(sin(x))),pow(add(1,pow(tan(x),n)),n))}
+function thenutcracker(x,n){return div(mul(cos(mul(5,x)),signum(sin(x))),pow(add(1,pow(tan(mul(2,x)),n)),1))}
+function quadripod(x,y){return cexq(x,t,0.8,0)}
+function draculascastle(x,y){return div(1,coq(x,t,0.8,0))}
+//function halvingcurve(x,y){return sinq(acosq)}
+function themagiccarpet(x,y){return bex(x,sqr(y),0)}
+function sinioussurface(x,l){return asin(mul(0.21,cos(div(mul(5,pi(),x),l)),sin(div(mul(3,pi(),x),l))))}
+function waterfalling(x,s,e=0){return mul(0.05,x,cos(x),dex(x,s,e))}
+function balletofthefunctions1(x,n){/*F(x)*/return div(mul(cos(x),signum(cos(x))),pow(add(1,pow(tan(x),n)),n))}
+function balletofthefunctions2(x,n){return div(mul(sin(x),signum(sin(x))),pow(add(1,pow(tan(x),n)),n))}
+function balletofthefunctions3(x,n){return mul(signum(cos(x)),tan(x),pow(add(1,sabs(pow(tan(x),n))),n))}
+function balletofthefunctions4(x,n){return mul(signum(sin(x)),tan(x),pow(add(1,sabs(pow(tan(x),n))),n))}
+function balletofthefunctions5(x,n){return div(mul(signum(sin(x)),tan(x)),pow(add(1,sabs(pow(tan(x),n))),n))}
+function balletofthefunctions6(x,n){return div(mul(signum(cos(x)),tan(x)),pow(add(1,sabs(pow(tan(x),n))),n))}
+
+
+function lobacevski(x){let fi=math.complex(0,0);for(let k=1;k<bign;k++)fi=add(div(mul(pow(-1,sub(k,1)),sin(mul(2,k,x))),sqr(k)));return sub(mul(x,log(2)),mul(0.5,fi))}
+
+
+
+
+function doubleclepsydrax(t,u,s=1,e=0){return mul(cex(t,s,e),cos(u))}
+function doubleclepsydray(t,u,s=1,e=0){return mul(cex(t,s,e),sin(u))}
+function doubleclepsydraz(t,u,s=1,e=0){return sex(x,s,e)}
+
+function supermathematicsflowersx(t,n=4,s=1,e=0){return dex(sub(t,div(pi(),2)),mul(s,sin(mul(n,t))),e)}
+function supermathematicsflowersy(t,n=4,s=1,e=0){return dex(sub(t,0),mul(s,sin(mul(n,t))),e)}
+
+function supermathematicsjacuzzi1x(t,u,s=1,e=0){return mul(sub(1,cex(t,sin(mul(2,u)),e)),cos(u))}
+function supermathematicsjacuzzi1y(t,u,s=1,e=0){return mul(sub(1,cex(t,cos(mul(2,u)),e)),sin(u))}
+function supermathematicsjacuzzi1z(t,u,s=1,e=0){return sex(t,s,e)}
+
+function supermathematicsjacuzzi2x(t,u,s=1,e=0){return mul(sub(1,cex(t,sin(u),e)),cos(u))}
+function supermathematicsjacuzzi2y(t,u,s=1,e=0){return mul(sub(1,cex(t,cos(u),e)),sin(u))}
+function supermathematicsjacuzzi2z(t,u,s=1,e=0){return sex(t,s,e)}
+
+function supermathematicsimplodedjacuzzix(t,u,s=1,e=0){return mul(sub(1,cex(t,sin(u),e)),cos(u))}
+function supermathematicsimplodedjacuzziy(t,u,s=1,e=0){return mul(sub(1,cex(t,cos(u),e)),sin(u))}
+function supermathematicsimplodedjacuzziz(t,u,s=1,e=0){return sex(t,s,e)}
+
+function damagedpartoftitanicx(t,u,s=1,e=0){return mul(sub(1,cex(t,s,e)),cos(u))}
+function damagedpartoftitanicy(t,u,s=1,e=0){return mul(add(1,cex(t,s,e)),cos(u))}
+function damagedpartoftitanicz(t,u,s=1,e=0){return sex(t,s,e)}
+
+function flyingbird1x(t,s=1,e=0){return mul(sqrt(sub(1,sqr(sin(mul(5,t))))),cex(t,s,e))}
+function flyingbird1y(t,s=0.8,e=0){return mul(sqrt(sub(1,sqr(sin(mul(5,t))))),sex(sub(t,mul(s,cos(mul(5,t))),s,e)))}
+
+function flyingbird12x(t,s=1,e=0){return add(cex(t,s,e),sub(sqrt(sub(1,sqr(sin(sub(mul(3,t),mul(s,cos(mul(5,t)))))))),mul(s,cos(sub(mul(5,t),mul(s,cos(5,t)))))))}
+function flyingbird12y(t,s=0.8,e=0){return add(sex(t,s,e),sub(sqrt(sub(1,sqr(sin(sub(mul(1,t),mul(s,cos(mul(5,t)))))))),mul(s,cos(sub(mul(5,t),mul(s,cos(5,t)))))))}
+
+function flyingbird2x(t,s=1,e=0){return add(cex(t,s,e),sub(sqrt(sub(1,sqr(sin(mul(3,t))))),mul(s,cos(mul(5,t)),cos(mul(3,t)))))}
+function flyingbird2y(t,s=0.8,e=0){return add(sex(t,s,e),sqrt(sub(1,sqr(sin(mul(9,t))))),cos(mul(3,t)))}
+
+function flyingbird22x(t,s=1,e=0){return add(cex(t,s,e),sub(sqrt(sub(1,sqr(sin(mul(3,t))))),mul(s,cos(mul(5,t)),cos(mul(3,t)))))}
+function flyingbird22y(t,s=0.8,e=0){return add(sex(t,s,e),sqrt(sub(1,sqr(sin(mul(9,t))))),mul(s,cos(mul(3,t)),cos(mul(t,t))))}
+
+function multicoloredsunx(t,s=1,e=0){return mul(dex(mul(20,t),s,e),cos(t))}
+function multicoloredsuny(t,s=1,e=0){return mul(dex(mul(20,t),s,e),sin(t))}
+
+function doublenozzlex(a,n=2,s=1,e=0){return mul(crex(mul(n,a),s,e),cos(a))}
+function doublenozzley(a,n=2,s=1,e=0){return mul(crex(mul(n,a),s,e),sin(a))}
+
+function supermathematiccometx(t,s=1,e=0){return mul(dex(t,s,e),cos(a))}
+function supermathematiccomety(t,s=1,e=0){return mul(dex(t,s,e),sin(a))}
+
+function flowering1x(x,s=1,e=-1.57079633){return dex(t,mul(s,cos(mul(4,t))),e)}
+function flowering1y(x,s=1,e=-1.57079633){return dex(t,mul(s,sin(mul(4,t))),e)}
+
+function flowering2x(x,s=1,e=-1.57079633){return dex(t,mul(s,cos(mul(8,t))),e)}
+function flowering2y(x,s=1,e=-1.57079633){return dex(t,mul(s,sin(mul(8,t))),e)}
+
+//ADD https://fs.unm.edu/SelariuFunctions.pdf 32
+//function flowering3x(x,s=1,e=-1.57079633){return dex(t,mul(s,sqr(cos(mul(2,t)))),e)}
+//function flowering3y(x,s=1,e=0){return dex(t,mul(s,sin(mul(2,t))),e)}
+
+function squareringsurfacex(t,u){return mul(add(3,cq(t)),cq(u))}
+function squareringsurfacey(t,u){return mul(add(3,cq(t)),sq(u))}
+function squareringsurfacez(t,u){return sq(t)}
+
+function polygonalringsurfacex(t,u,n=5,m=n){return mul(add(3,polygonalcos(t,n)),polygonalcos(u,m))}
+function polygonalringsurfacey(t,u,n=5,m=n){return mul(add(3,polygonalcos(t,n)),polygonalsin(u,m))}
+function polygonalringsurfacez(t,u,n=5){return polygonalsin(t,n)}
+
+function supermathematicsringsurfacex(t,u,s=1,e=0){return mul(add(2,cex(t,s,e)),cex(u,s,e))}
+function supermathematicsringsurfacey(t,u,s=1,e=0){return mul(add(2,cex(t,s,e)),sex(u,s,e))}
+function supermathematicsringsurfacez(t,u,s=1,e=0){return sex(t,s,e)}
+
+function excentricsphere1x(t,u,s=1,e=0){return mul(dex(t,s,e),cos(t),cos(u))}
+function excentricsphere1y(t,u,s=1,e=0){return mul(dex(t,s,e),cos(t),sin(u))}
+function excentricsphere1z(t,u,s=1,e=0){return mul(dex(t,s,e),sin(t))}
+
+function excentricsphere2x(t,u){return mul(cq(t),cos(t),cos(u))}
+function excentricsphere2y(t,u){return mul(sq(t),cos(t),sin(u))}
+function excentricsphere2z(t,u){return mul(cq(t),sin(t))}
+
+function excentricsphere3x(t,u,s=1,e=0){return mul(cex(t,s,e),cos(u))}
+function excentricsphere3y(t,u,s=1,e=0){return mul(sex(t,s,e),sin(u))}
+function excentricsphere3z(t,u,s=1,e=0){return mul(1,sin(u))}
+
+function excentricsphere4x(t,u){return mul(cq(t),cos(u))}
+function excentricsphere4y(t,u){return mul(sq(t),sin(u))}
+function excentricsphere4z(t,u){return mul(cq(t),sin(u))}
+
+
+
+
+
+
+
+/*
+
+function rex2(x,s,e=0){return sub(mul(s,-1,cos(sub(x,e))),sqrt(sub(1,mul(s,s,sqr(sin(sub(x,e)))))))}
+function crex2(x,s,e=0){return sub(sqrt(sub(sqr(s),-1,mul(2,s,cos(sub(x,e))))))}
+function aex2(x,s,e=0){return asin(mul(-1,s,sin(sub(x,e))))}
+function caex2(x,s,e=0){return add(x,asin(div(mul(s,sin(sub(x,e))),sqrt(add(1,mul(s,s),mul(-2,s,cos(sub(x,e))))),-1)))}
+function caexaex2(x,s,e=0){return add(asin(div(mul(s,sin(sub(aex(x,s,e),e))),sqrt(sub(sqr(s),-1,mul(2,s,cos(sub(aex(x,s,e),e))))))),aex(x,s,e))}
+function bex2(x,s,e=0){return add(x,asin(mul(s,sub(t,e))))}
+function sex2(x,s,e=0){return sin(aex2(x,s,e))}
+function cex2(x,s,e=0){return cos(aex2(x,s,e))}
+function csex2(x,s,e=0){return sin(caex2(x,s,e))}
+function ccex2(x,s,e=0){return cos(caex2(x,s,e))}
+function dex2(x,s,e=0){return sub(1,div(mul(s,cos(sub(x,e))),sqrt(1,mul(s,s,sqr(sin(sub(x,e))))),-1))}
+function cdex2(x,s,e=0){return div(sub(1,mul(s,cos(sub(aex(x,s,e),e))),sub(sqr(s),-1,mul(2,s,cos(sub(aex(x,s,e),e))))),-1)}
+function cel2(x,s,e=0){return mul(rex2(x,s,e),cos(x))}
+function sel2(x,s,e=0){return mul(rex2(x,s,e),sin(x))}
+function ccel2(x,s,e=0){return mul(crex2(x,s,e),cos(x))}
+function csel2(x,s,e=0){return mul(crex2(x,s,e),sin(x))}
+function sexc2(x,s,e=0){return div(sex2(x,s,e),x)}
+function cexc2(x,s,e=0){return div(cex2(x,s,e),x)}
+function selc2(x,s,e=0){return div(sel2(x,s,e),x)}
+function celc2(x,s,e=0){return div(cel2(x,s,e),x)}
+function aexc2(x,s,e=0){return div(aex2(x,s,e),x)}
+function bexc2(x,s,e=0){return div(bex2(x,s,e),x)}
+function rexc2(x,s,e=0){return div(rex2(x,s,e),x)}
+function dexc2(x,s,e=0){return div(dex2(x,s,e),x)}
+function csexc2(x,s,e=0){return div(csex2(x,s,e),x)}
+function ccexc2(x,s,e=0){return div(ccex2(x,s,e),x)}
+function cselc2(x,s,e=0){return div(csel2(x,s,e),x)}
+function ccelc2(x,s,e=0){return div(ccel2(x,s,e),x)}
+function caexc2(x,s,e=0){return div(caex2(x,s,e),x)}
+function cbexc2(x,s,e=0){return div(cbex2(x,s,e),x)}
+function crexc2(x,s,e=0){return div(crex2(x,s,e),x)}
+function cdexc2(x,s,e=0){return div(cdex2(x,s,e),x)}
+function sexc2S(x,S){return div(sex2(x,g(S,0),g(S,1)),x)}
+function cexc2S(x,S){return div(cex2(x,g(S,0),g(S,1)),x)}
+function selc2S(x,S){return div(sel2(x,g(S,0),g(S,1)),x)}
+function celc2S(x,S){return div(cel2(x,g(S,0),g(S,1)),x)}
+function aexc2S(x,S){return div(aex2(x,g(S,0),g(S,1)),x)}
+function bexc2S(x,S){return div(bex2(x,g(S,0),g(S,1)),x)}
+function rexc2S(x,S){return div(rex2(x,g(S,0),g(S,1)),x)}
+function dexc2S(x,S){return div(dex2(x,g(S,0),g(S,1)),x)}
+function csexc2S(x,S){return div(csex2(x,g(S,0),g(S,1)),x)}
+function ccexc2S(x,S){return div(ccex2(x,g(S,0),g(S,1)),x)}
+function cselc2S(x,S){return div(csel2(x,g(S,0),g(S,1)),x)}
+function ccelc2S(x,S){return div(ccel2(x,g(S,0),g(S,1)),x)}
+function caexc2S(x,S){return div(caex2(x,g(S,0),g(S,1)),x)}
+function cbexc2S(x,S){return div(cbex2(x,g(S,0),g(S,1)),x)}
+function crexc2S(x,S){return div(crex2(x,g(S,0),g(S,1)),x)}
+function cdexc2S(x,S){return div(cdex2(x,g(S,0),g(S,1)),x)}
+function sie2(x,s,e=0){return integral(sexc2S,0,x,[s,e])}
+function cie2(x,s,e=0){return integral(cexc2S,0,x,[s,e])}
+function csie2(x,s,e=0){return integral(csexc2S,0,x,[s,e])}
+function ccie2(x,s,e=0){return integral(ccexc2S,0,x,[s,e])}
+function aie2(x,s,e=0){return integral(aexc2S,0,x,[s,e])}
+function bie2(x,s,e=0){return integral(bexc2S,0,x,[s,e])}
+function rie2(x,s,e=0){return integral(rexc2S,0,x,[s,e])}
+function die2(x,s,e=0){return integral(dexc2S,0,x,[s,e])}
+function caie2(x,s,e=0){return integral(caexc2S,0,x,[s,e])}
+function cbie2(x,s,e=0){return integral(cbexc2S,0,x,[s,e])}
+function crie2(x,s,e=0){return integral(crexc2S,0,x,[s,e])}
+function cdie2(x,s,e=0){return integral(cdexc2S,0,x,[s,e])}
+*/
 
 
 
@@ -6969,233 +7822,6 @@ function gettonthbasedigit(x, n, m, b) {
     }
     return digits;
 }
-
-
-
-
-function del(x,s,e=0){return sqrt(sub(1,mul(s,s,sqr(sin(sub(x,e))))))}
-function rad(x){return exp(mul(I,x))}
-function walshrad(n,t){return signum(sin(mul(2,n,t)))}
-function der(x){return mul(I,exp(mul(I,x)))}
-function wal(k,x,n=floor(log2(k))){let fi=1;for(let i=0;i<n;i++)fi=mul(fi,pow(rademacher(i,x),getnthbit(k,n)));return fi;}
-function rademacher(n,t){return signum(sin(mul(pi(),t,pow(2,add(n,1)))))}
-function adr(x){return sub(0,der(add(x,pi())))}
-function vibrationam(c){return sqrt(sub(1,mul(2,c,c),mul(2,c,sqrt(sub(1,sqr(c))))))}
-function vibrationt(x,c){return sqrt(div(sub(1,mul(x,x)),add(1,pow(x,3),mul(-2,x,x,sub(1,mul(2,c,c))))))}
-function vectormodulus(x,r,s,e=0){return atan(sqrt(div(sub(sqr(r),sqr(mul(e,cos(sub(x,e))))),sub(sqr(r),sqr(mul(e,sin(sub(x,e))))))))}
-function harmonicratio(s,sp){return div(mul(sub(1,s),add(1,sp)),add(1,s),sub(1,sp))}
-function columbianpotential(x,s,e=0){return div(1,crex(x,s,e))}
-function genevadrivetheta(a,z=4){return sub(pi(),atan(div(sin(a),sub(div(1,sin(div(pi(),z))),cos(a)))))}
-
-function tex(x,s,e=0){return div(sex(x,s,e),cex(x,s,e))}
-function texv(x,s,e=0){return div(sex(x,s,e),mag(cex(x,s,e)))}
-function ctex(x,s,e=0){return div(csex(x,s,e),ccex(x,s,e))}
-function ctexv(x,s,e=0){return div(csex(x,s,e),mag(ccex(x,s,e)))}
-function scex(x,s,e=0){return div(1,cex(x,s,e))}
-function csex(x,s,e=0){return div(1,sex(x,s,e))}
-function cotex(x,s,e=0){return div(cex(x,s,e),sex(x,s,e))}
-function cotexv(x,s,e=0){return div(cex(x,s,e),mag(sex(x,s,e)))}
-function ccotex(x,s,e=0){return div(ccex(x,s,e),csex(x,s,e))}
-function ccotexv(x,s,e=0){return div(ccex(x,s,e),mag(csex(x,s,e)))}
-
-//ADD CAPİTAL FORMS OF THESE
-
-
-function fccgamma(a1,a2){return sub(pi,sub(a2,a1))}
-function fccr(r1,r2,a1,a2){return sqrt(add(sqr(r1),sqr(r2),mul(-2,r1,r2,cos(fccgamma(a1,a2)))))}
-function fcctheta(r1,r2,a1,a2){return sub(a2,asin(div(mul(r1,sin(sub(a1,a2))),fccr(r1,r2,a1,a2))))}
-function fccz(r1,r2,a1,a2){let s=div(r1,r2);return mul(r2,sqrt(add(1,sqr(s),mul(2,s,cos(sub(a2,a1))))),rad(fccz(r1,r2,a1,a2)))}
-
-function rex(x,s,e=0){return add(mul(s,-1,cos(sub(x,e))),sqrt(sub(1,mul(s,s,sqr(sin(sub(x,e)))))))}
-function crex(x,s,e=0){return sqrt(sub(sqr(s),-1,mul(2,s,cos(sub(x,e)))))}
-function aex(x,s,e=0){return asin(mul(s,sin(sub(x,e))))}
-//function aexm(x,s,e=0){return add(,)} // help 488? and sinq
-function caex(x,s,e=0){return add(x,asin(div(mul(s,sin(sub(x,e))),sqrt(add(1,mul(s,s),mul(-2,s,cos(sub(x,e))))))))}
-function caexaex(x,s,e=0){return add(asin(div(mul(s,sin(sub(aex(x,s,e),e))),sqrt(sub(sqr(s),-1,mul(2,s,cos(sub(aex(x,s,e),e))))))),aex(x,s,e))}
-function bex(x,s,e=0){return add(x,asin(mul(s,sub(x,e))))}
-function cbex(x,s,e=0){return asin(div(mul(s,sin(x)),crex(x,s,e)));}
-function sex(x,s,e=0){return sin(aex(x,s,e))}
-function cex(x,s,e=0){return cos(aex(x,s,e))}
-function csex(x,s,e=0){return sin(caex(x,s,e))}
-function ccex(x,s,e=0){return cos(caex(x,s,e))}
-function dex(x,s=-999,e=0){if(s==-999){return dex10(x);}return sub(1,div(mul(s,cos(sub(x,e))),sqrt(sub(1,mul(s,s,sqr(sin(sub(x,e))))))))}
-function cdex(x,s,e=0){return div(sub(1,mul(s,cos(sub(x,e)))),sub(sqr(s),-1,mul(2,s,cos(sub(x,e)))))}
-function cel(x,s,e=0){return mul(rex(x,s,e),cos(x))}
-function sel(x,s,e=0){return mul(rex(x,s,e),sin(x))}
-function ccel(x,s,e=0){return mul(crex(x,s,e),cos(x))}
-function csel(x,s,e=0){return mul(crex(x,s,e),sin(x))}
-function tel(x,s,e=0){return mul(rex(x,s,e),tan(x))}
-function ctel(x,s,e=0){return mul(crex(x,s,e),tan(x))}
-function cotel(x,s,e=0){return mul(rex(x,s,e),cot(x))}
-function ccotel(x,s,e=0){return mul(crex(x,s,e),cot(x))}
-
-function asex(x,s,e=0){return add(asin(div(x,s)),e)}
-function acex(x,s,e=0){return add(asin(div(sin(acos(x)),s)),e)}
-function aaex(x,s,e=0){return add(asin(div(sin(x),s)),e)}
-function acaex(x,s,e=0){return add(asin(div(sin(x),s)),e)}
-
-function cex2a(x,s,e,l){return cos(mul(div(pi(),2,l),x,sub(div(mul(pi(),x),2,l),asin(sub(div(mul(pi(),x),2,l),e)))))}
-function ssf(x,s,e=0){return mul(sub(x,mul(bex(x,1,e),dex(x,s,e))),s,dex(x,s,e))}
-function s2ex(x,s,e=0){return sin(sub(0,asin(mul(s,sin(sub(x,e)))),asin(mul(s,sin(sub(x,asin(mul(s,sin(sub(x,e))))))))))}
-function s2ex2(x,s,e=0)/*unnamed*/{return sin(sub(x,atan(div(mul(s,sin(mul(2,x))),rex(mul(2,x),s,e)))))}
-function s2ex3(x,s,e=0)/*unnamed*/{return div(cos(sub(x,atan(mul(s,sin(mul(2,s)))))),sqrt(sub(a,mul(s,cos(mul(2,x))))))}
-
-function sexxy(x,y,s,e=0){return sin(sub(mul(x,y),asin(mul(s,sin(sub(mul(x,y),e))))))}
-function cexxy(x,y,s,e=0){return cos(sub(mul(x,y),asin(mul(s,sin(sub(mul(x,y),e))))))}
-function rexxy(x,y,s,e=0){return rex(mul(x,y),s,e)}
-function dexxy(x,y,s,e=0){return dex(mul(x,y),s,e)}
-
-function sexc(x,s,e=0){return div(sex(x,s,e),x)}
-function cexc(x,s,e=0){return div(cex(x,s,e),x)}
-function selc(x,s,e=0){return div(sel(x,s,e),x)}
-function celc(x,s,e=0){return div(cel(x,s,e),x)}
-function aexc(x,s,e=0){return div(aex(x,s,e),x)}
-function bexc(x,s,e=0){return div(bex(x,s,e),x)}
-function rexc(x,s,e=0){return div(rex(x,s,e),x)}
-function dexc(x,s,e=0){return div(dex(x,s,e),x)}
-
-
-function csexc(x,s,e=0){return div(csex(x,s,e),x)}
-function ccexc(x,s,e=0){return div(ccex(x,s,e),x)}
-function cselc(x,s,e=0){return div(csel(x,s,e),x)}
-function ccelc(x,s,e=0){return div(ccel(x,s,e),x)}
-function caexc(x,s,e=0){return div(caex(x,s,e),x)}
-function cbexc(x,s,e=0){return div(cbex(x,s,e),x)}
-function crexc(x,s,e=0){return div(crex(x,s,e),x)}
-function cdexc(x,s,e=0){return div(cdex(x,s,e),x)}
-
-
-function sexcS(x,S){return div(sex(x,g(S,0),g(S,1)),x)}
-function cexcS(x,S){return div(cex(x,g(S,0),g(S,1)),x)}
-function selcS(x,S){return div(sel(x,g(S,0),g(S,1)),x)}
-function celcS(x,S){return div(cel(x,g(S,0),g(S,1)),x)}
-function aexcS(x,S){return div(aex(x,g(S,0),g(S,1)),x)}
-function bexcS(x,S){return div(bex(x,g(S,0),g(S,1)),x)}
-function rexcS(x,S){return div(rex(x,g(S,0),g(S,1)),x)}
-function dexcS(x,S){return div(dex(x,g(S,0),g(S,1)),x)}
-function csexcS(x,S){return div(csex(x,g(S,0),g(S,1)),x)}
-function ccexcS(x,S){return div(ccex(x,g(S,0),g(S,1)),x)}
-function cselcS(x,S){return div(csel(x,g(S,0),g(S,1)),x)}
-function ccelcS(x,S){return div(ccel(x,g(S,0),g(S,1)),x)}
-function caexcS(x,S){return div(caex(x,g(S,0),g(S,1)),x)}
-function cbexcS(x,S){return div(cbex(x,g(S,0),g(S,1)),x)}
-function crexcS(x,S){return div(crex(x,g(S,0),g(S,1)),x)}
-function cdexcS(x,S){return div(cdex(x,g(S,0),g(S,1)),x)}
-
-//FUNCŢII SUPERMATEMATICE CIRCULARE EXCENTRICE 179
-function smnumerelor(s,e=0){return rex(0,s,e)}
-function smaritmetica(s,e=0){return 1}
-function smgeometrica(s,e=0){return rex(div(pi(),2),s,e)}
-function smarmonica(s,e=0){return sub(1,mul(sqrt(sub(rex(pi(),s,e),1)),cos(atan(div(sqrt(sub(1,sub(rex(pi(),s,e),1))),sqrt(sub(rex(pi(),s,e),1)))))))}
-function smponderataa(s,e=0){return sqrt(add(1,rex(pi(),s,e)))}
-
-function smverticala(k){return sqrt(div(add(1,sqrt(sub(1,sqr(k)))),2))}
-function ellipticr(k){return div(1,div(compellint1(k),0.5,pi()))}
-
-
-function sie(x,s,e=0){return integral(sexcS,0,x,[s,e])}
-function cie(x,s,e=0){return integral(cexcS,0,x,[s,e])}
-function csie(x,s,e=0){return integral(csexcS,0,x,[s,e])}
-function ccie(x,s,e=0){return integral(ccexcS,0,x,[s,e])}
-function aie(x,s,e=0){return integral(aexcS,0,x,[s,e])}
-function bie(x,s,e=0){return integral(bexcS,0,x,[s,e])}
-function rie(x,s,e=0){return integral(rexcS,0,x,[s,e])}
-function die(x,s,e=0){return integral(dexcS,0,x,[s,e])}
-function caie(x,s,e=0){return integral(caexcS,0,x,[s,e])}
-function cbie(x,s,e=0){return integral(cbexcS,0,x,[s,e])}
-function crie(x,s,e=0){return integral(crexcS,0,x,[s,e])}
-function cdie(x,s,e=0){return integral(cdexcS,0,x,[s,e])}
-
-function legendreexcentrice(s,t){return div(1,sub(sqrt(sub(1,mul(s,s,sin(t),sin(t)))),mul(s,cos(t))))}
-function legendreexcentricepari(s,t){let fi=0;for(let n=0;n<bign;n++)fi=add(fi,mul(pow(s,mul(2,n)),sub(1,div(mul(doublefactorial(add(n,n,-1)),pow(sin(t),mul(2,n))),pow(2,add(n,1)),factorial(add(n,1))))));return fi;}
-function legendreimpareepari(s,t){let fi=0;for(let n=0;n<bign;n++)fi=add(fi,mul(sub(div(mul(doublefactorial(add(n,n,-1)),pow(sin(t),mul(2,n))),pow(2,add(n,1)),factorial(add(n,1))))));return sub(1,fi);}
-//function legendreexcentricepare(s,t){let fi=0;for(let n=0;n<bign;n++)fi=add(fi,mul(pow(s,mul(2,n)),sub(1,div(mul(doublefactorial(add(n,n,-1)),pow(sin(t),mul(2,n))),pow(2,add(n,1)),factorial(add(n,1))))));return fi;}
-
-function thelakeofswans(x,n){return div(mul(cos(x),signum(cos(x))),pow(add(1,pow(tan(x),n)),n))}
-function thedanceofswords(x,n){return div(mul(cos(x),signum(x)),pow(add(1,pow(tan(x),n)),1))}
-function thedeceaseofswan(x,n){return div(mul(sin(x),signum(sin(x))),pow(add(1,pow(tan(x),n)),n))}
-function thenutcracker(x,n){return div(mul(cos(mul(5,x)),signum(sin(x))),pow(add(1,pow(tan(mul(2,x)),n)),1))}
-function quadripod(x,y){return cexq(x,t,0.8,0)}
-function draculascastle(x,y){return div(1,coq(x,t,0.8,0))}
-//function halvingcurve(x,y){return sinq(acosq)}
-function themagiccarpet(x,y){return bex(x,sqr(y),0)}
-function sinioussurface(x,l){return asin(mul(0.21,cos(div(mul(5,pi(),x),l)),sin(div(mul(3,pi(),x),l))))}
-function waterfalling(x,s,e=0){return mul(0.05,x,cos(x),dex(x,s,e))}
-function balletofthefunctions1(x,n){/*F(x)*/return div(mul(cos(x),signum(cos(x))),pow(add(1,pow(tan(x),n)),n))}
-function balletofthefunctions2(x,n){return div(mul(sin(x),signum(sin(x))),pow(add(1,pow(tan(x),n)),n))}
-function balletofthefunctions3(x,n){return mul(signum(cos(x)),tan(x),pow(add(1,mag(pow(tan(x),n))),n))}
-function balletofthefunctions4(x,n){return mul(signum(sin(x)),tan(x),pow(add(1,mag(pow(tan(x),n))),n))}
-function balletofthefunctions5(x,n){return div(mul(signum(sin(x)),tan(x)),pow(add(1,mag(pow(tan(x),n))),n))}
-function balletofthefunctions6(x,n){return div(mul(signum(cos(x)),tan(x)),pow(add(1,mag(pow(tan(x),n))),n))}
-
-
-function lobacevski(x){let fi=math.complex(0,0);for(let k=1;k<bign;k++)fi=add(div(mul(pow(-1,sub(k,1)),sin(mul(2,k,x))),sqr(k)));return sub(mul(x,log(2)),mul(0.5,fi))}
-
-
-/*
-
-function rex2(x,s,e=0){return sub(mul(s,-1,cos(sub(x,e))),sqrt(sub(1,mul(s,s,sqr(sin(sub(x,e)))))))}
-function crex2(x,s,e=0){return sub(sqrt(sub(sqr(s),-1,mul(2,s,cos(sub(x,e))))))}
-function aex2(x,s,e=0){return asin(mul(-1,s,sin(sub(x,e))))}
-function caex2(x,s,e=0){return add(x,asin(div(mul(s,sin(sub(x,e))),sqrt(add(1,mul(s,s),mul(-2,s,cos(sub(x,e))))),-1)))}
-function caexaex2(x,s,e=0){return add(asin(div(mul(s,sin(sub(aex(x,s,e),e))),sqrt(sub(sqr(s),-1,mul(2,s,cos(sub(aex(x,s,e),e))))))),aex(x,s,e))}
-function bex2(x,s,e=0){return add(x,asin(mul(s,sub(t,e))))}
-function sex2(x,s,e=0){return sin(aex2(x,s,e))}
-function cex2(x,s,e=0){return cos(aex2(x,s,e))}
-function csex2(x,s,e=0){return sin(caex2(x,s,e))}
-function ccex2(x,s,e=0){return cos(caex2(x,s,e))}
-function dex2(x,s,e=0){return sub(1,div(mul(s,cos(sub(x,e))),sqrt(1,mul(s,s,sqr(sin(sub(x,e))))),-1))}
-function cdex2(x,s,e=0){return div(sub(1,mul(s,cos(sub(aex(x,s,e),e))),sub(sqr(s),-1,mul(2,s,cos(sub(aex(x,s,e),e))))),-1)}
-function cel2(x,s,e=0){return mul(rex2(x,s,e),cos(x))}
-function sel2(x,s,e=0){return mul(rex2(x,s,e),sin(x))}
-function ccel2(x,s,e=0){return mul(crex2(x,s,e),cos(x))}
-function csel2(x,s,e=0){return mul(crex2(x,s,e),sin(x))}
-function sexc2(x,s,e=0){return div(sex2(x,s,e),x)}
-function cexc2(x,s,e=0){return div(cex2(x,s,e),x)}
-function selc2(x,s,e=0){return div(sel2(x,s,e),x)}
-function celc2(x,s,e=0){return div(cel2(x,s,e),x)}
-function aexc2(x,s,e=0){return div(aex2(x,s,e),x)}
-function bexc2(x,s,e=0){return div(bex2(x,s,e),x)}
-function rexc2(x,s,e=0){return div(rex2(x,s,e),x)}
-function dexc2(x,s,e=0){return div(dex2(x,s,e),x)}
-function csexc2(x,s,e=0){return div(csex2(x,s,e),x)}
-function ccexc2(x,s,e=0){return div(ccex2(x,s,e),x)}
-function cselc2(x,s,e=0){return div(csel2(x,s,e),x)}
-function ccelc2(x,s,e=0){return div(ccel2(x,s,e),x)}
-function caexc2(x,s,e=0){return div(caex2(x,s,e),x)}
-function cbexc2(x,s,e=0){return div(cbex2(x,s,e),x)}
-function crexc2(x,s,e=0){return div(crex2(x,s,e),x)}
-function cdexc2(x,s,e=0){return div(cdex2(x,s,e),x)}
-function sexc2S(x,S){return div(sex2(x,g(S,0),g(S,1)),x)}
-function cexc2S(x,S){return div(cex2(x,g(S,0),g(S,1)),x)}
-function selc2S(x,S){return div(sel2(x,g(S,0),g(S,1)),x)}
-function celc2S(x,S){return div(cel2(x,g(S,0),g(S,1)),x)}
-function aexc2S(x,S){return div(aex2(x,g(S,0),g(S,1)),x)}
-function bexc2S(x,S){return div(bex2(x,g(S,0),g(S,1)),x)}
-function rexc2S(x,S){return div(rex2(x,g(S,0),g(S,1)),x)}
-function dexc2S(x,S){return div(dex2(x,g(S,0),g(S,1)),x)}
-function csexc2S(x,S){return div(csex2(x,g(S,0),g(S,1)),x)}
-function ccexc2S(x,S){return div(ccex2(x,g(S,0),g(S,1)),x)}
-function cselc2S(x,S){return div(csel2(x,g(S,0),g(S,1)),x)}
-function ccelc2S(x,S){return div(ccel2(x,g(S,0),g(S,1)),x)}
-function caexc2S(x,S){return div(caex2(x,g(S,0),g(S,1)),x)}
-function cbexc2S(x,S){return div(cbex2(x,g(S,0),g(S,1)),x)}
-function crexc2S(x,S){return div(crex2(x,g(S,0),g(S,1)),x)}
-function cdexc2S(x,S){return div(cdex2(x,g(S,0),g(S,1)),x)}
-function sie2(x,s,e=0){return integral(sexc2S,0,x,[s,e])}
-function cie2(x,s,e=0){return integral(cexc2S,0,x,[s,e])}
-function csie2(x,s,e=0){return integral(csexc2S,0,x,[s,e])}
-function ccie2(x,s,e=0){return integral(ccexc2S,0,x,[s,e])}
-function aie2(x,s,e=0){return integral(aexc2S,0,x,[s,e])}
-function bie2(x,s,e=0){return integral(bexc2S,0,x,[s,e])}
-function rie2(x,s,e=0){return integral(rexc2S,0,x,[s,e])}
-function die2(x,s,e=0){return integral(dexc2S,0,x,[s,e])}
-function caie2(x,s,e=0){return integral(caexc2S,0,x,[s,e])}
-function cbie2(x,s,e=0){return integral(cbexc2S,0,x,[s,e])}
-function crie2(x,s,e=0){return integral(crexc2S,0,x,[s,e])}
-function cdie2(x,s,e=0){return integral(cdexc2S,0,x,[s,e])}
-*/
-
 
 
     function isprime(num) {
@@ -8144,11 +8770,11 @@ function clamp(a, b=0) {
 }
 
 function step(a, b=0) {
-    return toDouble(b) < 0 ? 0 : a;
+    return re(b) < 0 ? 0 : a;
 }
 
 function hstepreal(a, b=0) {//heavyside
-    return toDouble(b) < toDouble(a) ? 0 : 1;
+    return re(b) < re(a) ? 0 : 1;
 }
 function hstep(a,b=0) {//heavyside signum
     return mul(0.5,add(1,signum(sub(a,b))))
@@ -8879,6 +9505,33 @@ function schechter(l,d=1,ls=3*100000000000,a=-1.25,ps=1.2/100){
 function salpeter(b) {
     return pow(b, mul(math.complex(-47.0), div(math.complex(1.0), math.complex(20.0))));
 }
+
+
+
+
+
+function diracdeltastrict(x,n=bign){if(x==0)return n}
+function diracdeltader(x,n){return derv(hstep,x)}
+function diracdeltaheat(x, n) {  return mul(div(1, sqrt(mul(2, pi(), div(1, n)))), exp(div(mul(-1, sqr(x)), mul(2, div(1, n)))));}
+
+//integral(diracdelta,-1,1)
+function diracdelta(x, n=bign*5){return diracdeltaheat(x,n)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function sigmoid(b) {
     return sigm(b);
@@ -10797,7 +11450,9 @@ function pochhammer(x,n){
 	 return div(gamma(add(n, x)),gamma(x));
 }
 function poch(x,n){return pochhammer(x,n)}
-function generalizedpochhammer(x,a,K){
+function pochk(x,n,k){return div(mul(pow(k,n),gamma(add(div(x,k),n))),gamma(div(x,k)))}
+function pochhammerk(x,n,k){return div(mul(pow(k,n),gamma(add(div(x,k),n))),gamma(div(x,k)))}
+function generalizedpochhammer(a,K){
 	 let fi=math.complex(1,0);
 	 for(let i=1;i<=leng(K);i++)
 		 for(let j=1;j<=g(K,i);j++)
@@ -12862,6 +13517,8 @@ return fi;
 }
 //https://en.wikipedia.org/wiki/Exponential_integral Inverse function of the Exponential Integral
 function inveip(n,x){
+//let fun = "(x*e^("+x+")/(ei(x+("+x+"))-ei("+x+")))^("+n+")";return fractionalderiv(fun,0,sub(n,1))
+    
     let P=[0,1]
     for (let i=0;i<n;i++)
     P=polynomialmul([0,1],polynomialsub(polynomialderv(P),polynomialmulscal(P,add(n,1))))
@@ -12869,7 +13526,7 @@ return polynomial(P,x)
 }
 function invei(x){
     let fi=0
-for(let i=0;i<bign;i++)
+for(let i=0;i<bign/2;i++)
 fi=div(mul(pow(x,i),inveip(i,log(1.45136923488338105028396848589202))),facti(i),pow(1.45136923488338105028396848589202,i))
 return fi;
 }/*
@@ -15871,6 +16528,36 @@ function semisinh(x){return div(mul(2,sqrt(x),hypg12(1,0.75,1.25,div(sqr(x),4)))
 function partialsemisin(x,k){return generalizedpartialsin(x,k,0.5,0.5)}
 function partialsemisinh(x,k){return generalizedpartialsinh(x,k,0.5,0.5)}
 
+
+function partialncrsum(n,m){return sub(pow(2,m),mul(ncr(m,add(n,1)),hypg21(1,sub(n,m,-1),add(n,2),-1)))}
+function partialnprsum(n,m){return sub(mul(eulerc(),incgamma(add(m,1),1)),div(mul(eulerc(),gamma(add(m,1),incgamma(sub(m,n),1))),gamma(sub(m,n))))}
+
+
+function partialbesselj(a,x,q){return add(div(mul(pow(-1,q),pow(2,sub(a,q,q,2)),pow(x,add(a,q,q,2)),hypg12(1,add(q,2),add(a,q,2),div(sqr(x),-4))),factorial(add(q,1)),factorial(add(a,q,1))),besselj(a,x))}
+function partialbesseli(a,x,q){return sub(besseli(a,x),div(mul(pow(-1,q),pow(2,sub(a,q,q,2)),pow(x,add(a,q,q,2)),hypg12(1,add(q,2),add(a,q,2),div(sqr(x),4))),factorial(add(q,1)),factorial(add(a,q,1))))}
+
+function partialhypg21(a,b,c,z,k){return sub(hypg21(a,b,c,z),div(mul(pow(z,add(k,1)),gamma(c),gamma(add(a,k,1)),gamma(add(b,k,1)),hypg32(1,add(a,k,1),add(b,k,1),add(k,2),add(c,k,1),z)),gamma(a),gamma(b),gamma(add(k,2)),gamma(add(c,k,1))))}
+function partialhypg11(a,b,z,k){return sub(hypg11(a,b,z),div(mul(gamma(b),pow(z,add(k,1)),gamma(add(a,k,1)),hypg22(1,add(a,k,1),add(k,2),add(b,k,1),z)),gamma(a),gamma(add(k,2)),factorial(add(b,k))))}
+
+
+
+
+
+
+function generalizedramanujannestedradical(x,n=2){
+   if(n === 100){
+        return 3; // base case
+    } else {
+        let next = generalizedramanujannestedradical(x, add(n,1));             // a(x, n+1)
+        let nPowX = pow(n, x);                  // n^x
+        let mult = mul(nPowX, next);           // n^x * a(x, n+1)
+        let sum = add(1, mult);                // 1 + n^x * a(x, n+1)
+        return sqrt(sum);                      // sqrt(1 + n^x * a(x, n+1))
+    }
+}
+
+
+
 function selbergzetamodular(x){return mul(pow(pi(),0.5),div(mul(gamma(sub(x,0.5)),zeta(add(x,x,-1))),gamma(x),zeta(add(x,x))))}
 
 
@@ -16897,7 +17584,9 @@ return ((div(sub(evale(func, { x: add(input,1e-7) }),evale(func, { x: input })),
 function derv2(func,input,p){
 return ((div(sub(evale(func, { x: add(input,1e-7),y:p }),evale(func, { x: input,y:p })),1e-7)));
 }
-
+function derve1(func,input,c){
+return ((div(sub(evale(func, { x: add(input,1e-7),c:c }),math.evaluate(func, { x: input,c:c })),1e-7)));
+}
 
 function qderv(func,input,q){
 return ((div(sub(evale(func, { x: mul(input,q),q:q  }),evale(func, { x: input,q:q  })),sub(mul(q,input),input))));
@@ -18293,16 +18982,81 @@ let b=sub(z,m)
 
 
 
+//doublehypergeometric([1.35],[2,-2.532],x)
+function doublehypergeometric(A,B,z){
+    var evenA=[],evenB=[],oddA=[],oddB=[],C=1,w=div(pow(z,2),4);
+    for(var i=0;i<leng(A);i++){
+        var a=g(A,i);
+        evenA.push(div(a,2),div(add(a,1),2));
+        oddA.push(div(add(a,1),2),div(add(a,2),2));
+        C=mul(C,a);
+    }
+    for(var j=0;j<leng(B);j++){
+        var b=g(B,j);
+        evenB.push(div(b,2),div(add(b,1),2));
+        oddB.push(div(add(b,1),2),div(add(b,2),2));
+        C=div(C,b);
+    }
+    evenB.push(1);
+ //   console.log(evenA,evenB,w,C);
+    return add(
+        hypergeometric(evenA,evenB,w),
+        mul(mul(z,C),hypergeometric(oddA,oddB,w))
+    );
+}
 
 
 
+function stepsizehypergeometric(A,B,z,k=1){
+    var s=1,term=1;
+    for(var n=0;n<bign;n++){
+        if(n>0){
+            term = 1;
+            for(var i=0;i<leng(A);i++) term = mul(term, pochk(g(A,i),n,k));
+            for(var j=0;j<leng(B);j++) term = div(term, pochk(g(B,j),n,k));
+            term = mul(term, div(pow(z,n), factorial(n)));
+        }
+        s = add(s,term);
+        if(abs(term)<1e-2) break;
+    }
+    return s;
+}
 
+function arrayhypergeometric(A,B,K,z){
+    maxn=bign;
+    tol=1e-2;
+    let s = math.complex(1,0); // sum starts at n=0 term
+    for(let n=0; n<maxn; n++){
+        let num = math.complex(1,0);
+        let den = math.complex(1,0);
 
+        // numerator Pochhammer products
+        for(let i=0; i<leng(A); i++) num = mul(num, generalizedpochhammer(g(A,i),K));
 
+        // denominator Pochhammer products
+        for(let j=0; j<leng(B); j++) den = mul(den, generalizedpochhammer(g(B,j),K));
 
+        let term = div(num, den);
+        term = mul(term, div(pow(z,n), factorial(n))); // z^n / n!
+        s = add(s, term);
 
-
-
+        if (abs(term) < tol) break; 
+    }
+    return s;
+}
+//(zetahypergeometric([],[1],1,-x)-1)/e
+function zetahypergeometric(A,B,z,ss=2){
+    var s=1,term=1;
+    for(var n=1;n<bign;n++){
+var term = 1;
+        for(var i = 0; i < leng(A); i++) term = mul(term, poch(g(A,i), n));
+        for(var j = 0; j < leng(B); j++) term = div(term, poch(g(B,j), n));
+        term = mul(term, div(pow(z, n), pow(n, ss)));
+        s = add(s, term);
+        if(abs(term)<1e-2) break;
+    }
+    return s;
+}
 
 
 
@@ -19567,7 +20321,7 @@ return div(fi,2);
 function orderedbell(n){
 return gettaylorff("1/(2-e^x)",n);
 }
-function bellnum(n){
+function bellnumalt(n){
 	let m=n;
 	if(math.complex(m).im<0)n=conj(n);
 	let fi=math.complex(0,0);
@@ -19577,6 +20331,14 @@ function bellnum(n){
 	return conj(div(fi,eulerc()));
 	return div(fi,eulerc());
 }
+function bellnum(n){
+return div(sub(zetahypergeometric([],[1],1,sub(0,n)),1),eulerc())    
+}
+function bellnumalt2(n){
+    let fun="e^(e^x-1)"
+    return fractionalderiv(fun,0,n)
+}
+
 
 function dobinski(n,l){
 	let m=n;
@@ -20088,12 +20850,18 @@ function jacobipineiro2orthopoly(n,a,b,x,y){return jacobipineiro2poly(add(div(x,
 
 
 
-
-
-
-
-
-
+/*
+function jacksonqbesselk1(vv,x,q){const v=add(vv,0.00001);return div(mul(sub(jacksonqbesseli1(sub(0,v),x,q),jacksonqbesseli1(v,x,q)),pi()),2,sin(mul(pi(),v)))};
+function jacksonqbessely1(vv,x,q){const v=add(vv,0.00001);return div(mul(sub(mul(jacksonqbesselj1(v,x,q),cos(mul(pi(),v))),jacksonqbesselj1(sub(0,v),x,q))),sin(mul(pi(),v)))};
+function jacksonsphericalqbesselj1(vv,x,q){return mul(jacksonqbesselj1(add(vv,0.5),x,q),sqrt(div(pi(),2,x)))}
+function jacksonsphericalqbessely1(vv,x,q){return mul(jacksonqbessely1(add(vv,0.5),x,q),sqrt(div(pi(),2,x)))}
+function jacksonsphericalqbesselk1(vv,x,q){return mul(jacksonqbesselk1(add(vv,0.5),x,q),sqrt(div(pi(),2,x)))}
+function jacksonsphericalqbesseli1(vv,x,q){return mul(jacksonqbesseli1(add(vv,0.5),x,q),sqrt(div(pi(),2,x)))}
+function jacksonricattiqbessels1(vv,x,q){return mul(jacksonsphericalqbesselj1(vv,x,q),x)}
+function jacksonricattiqbesselc1(vv,x,q){return mul(jacksonsphericalqbessely1(vv,x,q),x,-1)}
+function jacksonricattiqbesselxi1(vv,x,q){return mul(jacksonsphericalqhankel11(vv,x,q),x)}
+function jacksonricattiqbesselzeta1(vv,x,q){return mul(jacksonsphericalqhankel21(vv,x,q),x)}
+*/
 
 function jacksonqbesselj1(v,x,q){return div(mul(qhypergeometric([0,0],[pow(q,add(v,1))],q,div(mul(x,x),-4)),pow(div(x,2),v),qpochinf(pow(q,add(v,1),q)),qpochinf(q,q)))}
 function jacksonqbesselj2(v,x,q){return div(mul(qhypergeometric([],[pow(q,add(v,1))],q,div(mul(x,x,pow(q,add(v,1))),-4)),pow(div(x,2),v),qpochinf(pow(q,add(v,1),q)),qpochinf(q,q)))}
@@ -20914,6 +21682,41 @@ function fabiusaltd(x){
 function fabiusalt(x){
 return 	integral(fabiusaltd,0,x);
 }
+
+function fabiusalt2(x,n=4){
+    let m=round(mul(x,pow(2,n)))
+    return dyadicfabius(m,n)
+}
+
+function dyadicfabius(m,n){
+    let fi=0;
+    for(let k=0;k<=n;k++){
+    let fid=0;
+    for(let l=0;l<sub(mul(pow(2,k),m),1);l++)
+    fid=add(fid,mul(pow(-1,digitsum2(l)),pow(sub(l,mul(m,pow(2,k)),-0.5),add(n,k))))    
+    fi=add(fi,mul(fid,div(qncr(n,k,0.5),pow(2,mul(k,sub(k,1))),factorial(add(n,k)))))
+    }
+    
+    return div(fi,pow(2,sqr(n)),qpoch(0.5,0.5,n))
+}
+
+
+function digitsum2(n) {
+  return n.toString(2) // convert to binary string
+          .split('')   // split into array of characters
+          .map(Number) // convert '0'/'1' into numbers
+          .reduce((a, b) => a + b, 0); // sum them up
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -23587,7 +24390,7 @@ function wrappedcauchydistentropy(m,c){return log(mul(2,pi(),sub(1,exp(mul(-2,c)
 function wrappedcauchydistmgf(m,c,n){return exp(sub(mul(n,m),mul(mag(div(n,I)),c)))} 
 function wrappedcauchydistcf(m,c,n){return exp(sub(mul(I,n,m),mul(mag(n),c)))} 
 function wrappedcauchydistpgf(m,c,z){return exp(sub(mul(log(z),m),mul(mag(div(log(z),I)),c)))} 
-function wrappedcauchydistxi(t,z){return div(sqr(mag(sub(t,z))),4,sub(1,sqr(mag(t)),sub(1,sqr(mag(z)))))} 
+function wrappedcauchydistxi(t,z){return div(sqr(mag(sub(t,z))),4,sub(1,sqr(t)),sub(1,sqr((z))))} 
 //add maxlikeloohestimater
 
 
@@ -23896,11 +24699,11 @@ function chirawmoment(k,j){return div(gamma(div(add(k,j),2)),gamma(div(k,2)))}
 
 
 
-
+/*
 function chisqrpdf(k,x){return div(mul(pow(x,sub(div(k,2),1)),exp(div(x,-2))),pow(2,div(k,2)),gamma(div(k,2)))}
 function chisqrcdf(k,x){return div(lincgamma(div(k,2),div(x,2)),gamma(div(k,2)))}
 function chisqrmean(k){return k}
-function chisqrmedian(k){return mul(k,cum(sub(1,div(2,9,k)))) /*aprox*/}
+function chisqrmedian(k){return mul(k,cum(sub(1,div(2,9,k))))}
 function chisqrmode(k){return sub(k,2)}
 function chisqrvar(k){return mul(2,k)}
 function chisqrstandartdeviation(k){return sqrt(mul(2,k))}
@@ -23914,14 +24717,24 @@ function chisqrpgf(k,z){return chisqrmgf(k,log(z))}
 function chisqrrawmoment(k,j){return div(mul(pow(2,j),gamma(add(j,div(k,2)))),gamma(div(k,2)))}
 
 
+function scaledinversechisqrpdf(v,t,x){return div(mul(pow(mul(t,t,v,0.5),div(v,2)),exp(div(mul(v,t,t),-2,x))),gamma(div(v,2)),pow(x,add(1,div(v,2))))}
+function scaledinversechisqrcdf(v,t,x){return div(incgamma(div(v,2),div(mul(t,t,v),2,x),gamma(v,2))}
+function scaledinversechisqrmean(v,t){return div(mul(v,t,t),sub(v,2))} 
+function scaledinversechisqrmod(v,t){return div(mul(v,t,t),add(v,29))} 
+function scaledinversechisqrvar(v,t){return div(mul(2,v,v,t,t,t,t),sub(v,2),sub(v,2),sub(v,4))} 
+function scaledinversechisqrskew(v,t){return div(mul(4,sqrt(add(v,v,-8))),sub(v,6))} 
+function scaledinversechisqrexcesskurtosis(v,t){return div(mul(12,sub(mul(5,v),22)),sub(v,6),sub(v,8))} 
+function scaledinversechisqrkurtosis(v,t){return add(3,div(mul(12,sub(mul(5,v),22)),sub(v,6),sub(v,8)))} 
+function scaledinversechisqrentropy(v,t){return add(div(v,2),log(mul(0.5,t,t,v,gamma(div(v,2)))),mul(-1,add(1,div(v,2)),digamma(div(v,2))))} 
+function scaledinversechisqrmgf(v,t,x){return div(mul(2,pow(mul(-0.5,t,t,v,x),div(v,4)),besselk(div(v,2),sqrt(mul(-2,t,t,v,x)))),gamma(div(v,2)))} 
+function scaledinversechisqrpgf(v,t,x){return div(mul(2,pow(mul(-0.5,t,t,v,log(x)),div(v,4)),besselk(div(v,2),sqrt(mul(-2,t,t,v,log(x))))),gamma(div(v,2)))} 
+function scaledinversechisqrcf(v,t,x){return div(mul(2,pow(mul(-0.5,I,t,t,v,x),div(v,4)),besselk(div(v,2),sqrt(mul(-2,t,t,v,x,I)))),gamma(div(v,2)))} 
+
+function inversechipdf(v,x){return div(mul(pow(2,div(v,-2)),pow(x,sub(div(v,-2),1)),exp(div(-1,2,x))),gamma(div(v,2)))}
+function inversechicdf(v,x){return div(incgamma(div(v,2),div(1,2,x)),gamma(div(v,2)))}
 
 
-
-
-
-
-
-
+*/
 
 
 

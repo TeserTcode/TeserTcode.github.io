@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Ulam Spiral Creator</title>
+</head>
+<body>
+  <h3>Ulam Spiral Creator</h3>
+  <div>
+    <label>Grid size (odd): <span id="sizeLabel">101</span></label>
+    <button id="decSize">−</button>
+    <button id="incSize">+</button>
+    <button id="fitCanvas">Fit to window</button>
+  </div>
+
+  <div>
+    <label>Start value: <input id="startVal" type="number" value="1" step="1"></label>
+    <button data-preset="0" class="preset">0</button>
+    <button data-preset="1" class="preset">1</button>
+    <button data-preset="-1" class="preset">-1</button>
+    <button data-preset="41" class="preset">41</button>
+    <button id="decStart">Start −1</button>
+    <button id="incStart">Start +1</button>
+  </div>
+
+  <div>
+    <label><input type="checkbox" id="showPrimes" checked> primes</label>
+    <label><input type="checkbox" id="showSemi" checked> semiprimes</label>
+    <label><input type="checkbox" id="showTri" checked> triangular numbers</label>
+    <label><input type="checkbox" id="showSq" checked> square numbers</label>
+    <label><input type="checkbox" id="showPent" checked> pentagonal numbers</label>
+    <label><input type="checkbox" id="showPrimePowers" checked> prime powers (k≥2)</label>
+    <label><input type="checkbox" id="showOthers"> show others (dots)</label>
+  </div>
+
+  <div>
+    <label>Dot size: <input id="dotSize" type="range" min="1" max="10" value="5"></label>
+  </div>
+
+  <canvas id="cnv" width="900" height="900" style="border:1px solid #999"></canvas>
+
+  <script>
+    const cnv = document.getElementById('cnv');
+    const ctx = cnv.getContext('2d');
+
+    let N = 101; // grid size (odd)
+    const sizeLabel = document.getElementById('sizeLabel');
+    const startInput = document.getElementById('startVal');
+    const dotSizeInput = document.getElementById('dotSize');
+
+    const opts = {
+      primes: document.getElementById('showPrimes'),
+      semi: document.getElementById('showSemi'),
+      tri: document.getElementById('showTri'),
+      sq: document.getElementById('showSq'),
+      pent: document.getElementById('showPent'),
+      primePowers: document.getElementById('showPrimePowers'),
+      others: document.getElementById('showOthers')
+    };
+
+    const colors = {
+      primes: '#d00',        // red
+      semi: '#e76f00',       // orange
+      tri: '#0066cc',        // blue
+      sq: '#198754',         // green
+      pent: '#6f42c1',       // purple
+      primePowers: '#0aa',   // teal
+      others: '#aaa'         // gray
+    };
+
+    function oddify(x){ return x % 2 ? x : x+1; }
+
+    function updateSizeLabel(){ sizeLabel.textContent = N; }
+
+    function fitToWindow(){
+      const pad = 20;
+      const s = Math.min(window.innerWidth - pad, window.innerHeight - 220);
+      const side = Math.max(200, Math.floor(s));
+      cnv.width = side; cnv.height = side;
+      draw();
+    }
+
+    window.addEventListener('resize', fitToWindow);
+
+    document.getElementById('incSize').onclick = () => { N = oddify(N+2); updateSizeLabel(); recomputeAndDraw(); };
+    document.getElementById('decSize').onclick = () => { N = Math.max(3, oddify(N-2)); updateSizeLabel(); recomputeAndDraw(); };
+    document.getElementById('fitCanvas').onclick = fitToWindow;
+
+    document.getElementById('incStart').onclick = () => { startInput.value = (+startInput.value)+1; recomputeAndDraw(); };
+    document.getElementById('decStart').onclick = () => { startInput.value = (+startInput.value)-1; recomputeAndDraw(); };
+
+    document.querySelectorAll('.preset').forEach(b=>{
+      b.onclick = () => { startInput.value = b.dataset.preset; recomputeAndDraw(); };
+    });
+
+    Object.values(opts).forEach(chk => chk.onchange = draw);
+    startInput.onchange = recomputeAndDraw;
+    dotSizeInput.oninput = draw;
+
+    // Precomputed data containers
+    let sieve = [];
+    let isPrime = [];
+    let spf = []; // smallest prime factor
+    let isSemi = [];
+    let isPrimePower = [];
+    let triSet = new Set();
+    let sqSet = new Set();
+    let pentSet = new Set();
+
+    function recomputeAndDraw(){
+      precompute();
+      draw();
+    }
+
+    function precompute(){
+      const start = +startInput.value | 0;
+      const maxVal = start + (N*N) - 1; // may be less if start negative; still ok
+      const limit = Math.max(2, maxVal);
+
+      // Sieve with SPF
+      isPrime = Array(limit+1).fill(true);
+      isPrime[0]=false; isPrime[1]=false;
+      spf = Array(limit+1).fill(0);
+      for(let i=2;i*i<=limit;i++){
+        if(isPrime[i]){
+          spf[i]=i;
+          for(let j=i*i;j<=limit;j+=i){
+            if(isPrime[j]){ isPrime[j]=false; if(!spf[j]) spf[j]=i; }
+          }
+        }
+      }
+      for(let i=2;i<=limit;i++){ if(!spf[i]) spf[i]=i; }
+
+      // semiprime (count prime factors with multiplicity == 2)
+      isSemi = Array(limit+1).fill(false);
+      isPrimePower = Array(limit+1).fill(false);
+      for(let n=2;n<=limit;n++){
+        // prime powers
+        let p = spf[n];
+        let m = n; let k=0; let pure=true;
+        while(m>1){
+          if(spf[m] !== p) { pure=false; break; }
+          m = Math.floor(m/p); k++;
+        }
+        if(pure && k>=2) isPrimePower[n]=true;
+
+        // semiprimes (with multiplicity)
+        let count=0; m=n;
+        while(m>1){ count++; m = Math.floor(m/spf[m]); if(count>2) break; }
+        if(count===2) isSemi[n]=true;
+      }
+
+      // Triangular, square, pentagonal sets up to limit (non-negative only)
+      triSet = new Set();
+      for(let k=1;;k++){ let t = (k*(k+1))>>1; if(t>limit) break; triSet.add(t); }
+      sqSet = new Set();
+      for(let k=1;;k++){ let s = k*k; if(s>limit) break; sqSet.add(s); }
+      pentSet = new Set();
+      for(let k=1;;k++){ let p = (k*(3*k-1))>>1; if(p>limit) break; pentSet.add(p); }
+    }
+
+    function* spiralCoords(n){
+      // yields [x,y] in grid coordinates starting at center, going right, up, left, down ...
+      const c = (n-1)>>1; // center index in [0..n-1]
+      let x=c, y=c;
+      yield [x,y];
+      let step=1;
+      const dirs=[[1,0],[0,-1],[-1,0],[0,1]]; // R,U,L,D in canvas grid (y down so up is -1)
+      while(step < n){
+        for(let d=0; d<4; d++){
+          const len = d<2 ? step : step+1; // lengths repeat twice
+          for(let i=0;i<len;i++){
+            x += dirs[d][0]; y += dirs[d][1];
+            if(x<0||y<0||x>=n||y>=n) continue;
+            yield [x,y];
+          }
+        }
+        step += 2;
+      }
+    }
+
+    function classify(num){
+      // returns array of active categories this number belongs to
+      const arr=[];
+      if(num>1 && opts.primes.checked && isPrime[num]) arr.push('primes');
+      if(num>1 && opts.semi.checked && isSemi[num]) arr.push('semi');
+      if(num>=1 && opts.tri.checked && triSet.has(num)) arr.push('tri');
+      if(num>=1 && opts.sq.checked && sqSet.has(num)) arr.push('sq');
+      if(num>=1 && opts.pent.checked && pentSet.has(num)) arr.push('pent');
+      if(num>1 && opts.primePowers.checked && isPrimePower[num]) arr.push('primePowers');
+      return arr;
+    }
+
+    function draw(){
+      const w = cnv.width, h = cnv.height;
+      ctx.clearRect(0,0,w,h);
+      const cell = Math.floor(Math.min(w,h)/N);
+      const padX = Math.floor((w - cell*N)/2);
+      const padY = Math.floor((h - cell*N)/2);
+      const r = Math.max(1, Math.min(cell>>1, +dotSizeInput.value));
+
+      const start = +startInput.value | 0;
+      let val = start;
+
+      // Pre-render others as faint dots for speed
+      const showOthers = opts.others.checked;
+
+      let i=0;
+      for(const [gx,gy] of spiralCoords(N)){
+        // Compute classification for current value
+        const cats = classify(val);
+        const cx = padX + gx*cell + (cell>>1);
+        const cy = padY + gy*cell + (cell>>1);
+
+        if(cats.length===0){
+          if(showOthers){ ctx.fillStyle = colors.others; ctx.fillRect(cx-1, cy-1, 2, 2); }
+        } else {
+          // If multiple categories, draw concentric rings
+          const ringStep = Math.max(1, Math.floor(r / Math.max(1,cats.length)));
+          let rad = r;
+          for(const c of cats){
+            ctx.fillStyle = colors[c];
+            ctx.beginPath(); ctx.arc(cx, cy, Math.max(1, rad), 0, Math.PI*2); ctx.fill();
+            rad -= ringStep;
+            if(rad <= 0) rad = 1;
+          }
+        }
+        val++;
+        i++;
+        if(i >= N*N) break;
+      }
+
+      // grid border
+      ctx.strokeStyle = '#999';
+      ctx.strokeRect(padX+0.5, padY+0.5, cell*N-1, cell*N-1);
+    }
+
+    // Initialize
+    updateSizeLabel();
+    precompute();
+    fitToWindow();
+  </script>
+</body>
+</html>
