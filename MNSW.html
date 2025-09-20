@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minesweeper</title>
+<style>
+  body {
+    background: black;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  .game-container {
+    border: 4px solid;
+    border-color: #808080 #ffffff #ffffff #808080;
+    padding: 10px;
+    background: #c0c0c0;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  }
+  
+  #topbar {
+    display: grid;
+    grid-template-columns: 90px 1fr 90px;
+    align-items: center;
+    margin-bottom: 5px;
+	
+    background: #c0c0c0;
+    padding: 5px 10px;
+	padding-right: 17px;
+    border: 3px solid;
+    border-color: #808080 #ffffff #ffffff #808080;
+  }
+  
+  #counter, #timer {
+    display: flex;
+    justify-content: space-between;
+    width: 90px;
+    height: 50px;
+    background: black;
+    padding: 2px;
+    border: 2px solid #808080;
+  }
+  
+  #counter img, #timer img {
+ 
+    width: 25px;
+    height: 40px;
+	padding-top: 5px;
+  }
+
+  #status {
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    margin: auto;
+    border: 3px solid;
+    border-color: #ffffff #808080 #808080 #ffffff;
+  }
+  
+  #board-container {
+    border: 4px solid;
+    border-color: #808080 #ffffff #ffffff #808080;
+    padding: 8px;
+    background: #c0c0c0;
+  }
+  
+  #board {
+    display: grid;
+    background: black;
+  }
+  
+  .cell {
+    width: 30px;
+    height: 30px;
+    background: black;
+    margin: 0;
+    padding: 0;
+    border: none;
+  }
+  
+  .cell img {
+    width: 30px;
+    height: 30px;
+    display: block;
+    pointer-events: none;
+  }
+  
+  .difficulty {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+  }
+  
+  .difficulty button {
+    padding: 8px 15px;
+    background: #c0c0c0;
+    border: 3px solid;
+    border-color: #ffffff #808080 #808080 #ffffff;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  .difficulty button:hover {
+    background: #d0d0d0;
+  }
+  
+  .difficulty button.active {
+    background: #a0a0a0;
+    border-color: #808080 #ffffff #ffffff #808080;
+  }
+  
+  .instructions {
+    color: white;
+    margin-top: 20px;
+    text-align: center;
+    max-width: 400px;
+  }
+  
+  .hud-border {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    position: absolute;
+    width: calc(100% + 20px);
+    height: calc(100% + 20px);
+    pointer-events: none;
+    z-index: 10;
+  }
+  
+  .hud-piece {
+    width: 100%;
+    height: 100%;
+  }
+</style>
+</head>
+<body>
+
+<div class="game-container">
+  <div id="topbar">
+    <div id="counter"></div>
+    <img id="status" src="./mine/neut.png">
+    <div id="timer"></div>
+  </div>
+
+  <div id="board-container">
+    <div id="board"></div>
+  </div>
+</div>
+
+<div class="difficulty">
+  <button id="beginner" class="active">Beginner</button>
+  <button id="intermediate">Intermediate</button>
+  <button id="expert">Expert</button>
+</div>
+
+
+<script>
+let board = [];
+let rows, cols, mines;
+let revealedCount = 0;
+let flagsLeft;
+let timerInterval;
+let gameOver = false;
+let firstClick = true;
+let currentDiff = "beginner";
+let timerValue = 0;
+
+const difficultyLevels = {
+  beginner: { rows: 9, cols: 9, mines: 10 },
+  intermediate: { rows: 16, cols: 16, mines: 40 },
+  expert: { rows: 16, cols: 30, mines: 99 }
+};
+
+function initBoard(diff=currentDiff) {
+  currentDiff = diff;
+  clearInterval(timerInterval);
+  timerValue = 0;
+  updateTimer(0);
+  gameOver = false;
+  firstClick = true;
+  revealedCount = 0;
+  document.getElementById('status').src = "./mine/neut.png";
+
+  // Update active button
+  document.querySelectorAll('.difficulty button').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  document.getElementById(diff).classList.add('active');
+
+  rows = difficultyLevels[diff].rows;
+  cols = difficultyLevels[diff].cols;
+  mines = difficultyLevels[diff].mines;
+
+  flagsLeft = mines;
+  updateCounter(flagsLeft);
+
+  board = Array.from({length: rows}, ()=>Array.from({length: cols}, ()=>({revealed:false, mine:false, flag:0, adjacent:0})));
+  drawBoard();
+}
+
+function placeMines(safeR, safeC) {
+  let placed = 0;
+  while(placed < mines) {
+    let r = Math.floor(Math.random()*rows);
+    let c = Math.floor(Math.random()*cols);
+    if(board[r][c].mine || (Math.abs(r-safeR)<=1 && Math.abs(c-safeC)<=1)) continue;
+    board[r][c].mine = true;
+    placed++;
+  }
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      if(board[r][c].mine) continue;
+      let count = 0;
+      for(let dr=-1;dr<=1;dr++){
+        for(let dc=-1;dc<=1;dc++){
+          let nr=r+dr, nc=c+dc;
+          if(nr>=0 && nr<rows && nc>=0 && nc<cols && board[nr][nc].mine) count++;
+        }
+      }
+      board[r][c].adjacent = count;
+    }
+  }
+}
+
+function drawBoard() {
+  const boardDiv = document.getElementById('board');
+  boardDiv.style.gridTemplateColumns = `repeat(${cols}, 30px)`;
+  boardDiv.innerHTML = '';
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const cell = document.createElement('div');
+      cell.classList.add('cell');
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+      cell.oncontextmenu = e => { e.preventDefault(); rightClickCell(r,c); };
+      cell.onclick = () => leftClickCell(r,c);
+      let img = document.createElement('img');
+      img.src = "./mine/l.png";
+      cell.appendChild(img);
+      boardDiv.appendChild(cell);
+    }
+  }
+}
+
+function leftClickCell(r,c) {
+  if(gameOver) return;
+  const cell = board[r][c];
+  if(firstClick){
+    placeMines(r,c);
+    firstClick=false;
+    startTimer();
+  }
+  if(cell.revealed){
+    chord(r,c);
+  } else if(cell.flag!==1){
+    reveal(r,c);
+  }
+  checkWin();
+}
+
+function rightClickCell(r,c) {
+  if(gameOver) return;
+  const cell = board[r][c];
+  if(cell.revealed && cell.adjacent>0){
+    fillFlags(r,c);
+  } else if(!cell.revealed){
+    cell.flag = (cell.flag+1)%4;
+    flagsLeft = mines - board.flat().filter(c=>c.flag===1).length;
+    updateCounter(flagsLeft);
+    updateCellDisplay(r,c);
+  }
+}
+
+function chord(r,c){
+  const cell = board[r][c];
+  if(!cell.revealed || cell.adjacent===0) return;
+  let flagged=0;
+  let toReveal=[];
+  for(let dr=-1;dr<=1;dr++){
+    for(let dc=-1;dc<=1;dc++){
+      let nr=r+dr, nc=c+dc;
+      if(nr>=0 && nr<rows && nc>=0 && nc<cols){
+        let ncell=board[nr][nc];
+        if(ncell.flag===1) flagged++;
+        else if(!ncell.revealed) toReveal.push([nr,nc]);
+      }
+    }
+  }
+  if(flagged===cell.adjacent){
+    toReveal.forEach(([nr,nc])=>reveal(nr,nc));
+  }
+}
+
+function fillFlags(r,c){
+  const cell = board[r][c];
+  if(!cell.revealed || cell.adjacent===0) return;
+  let hidden=[];
+  let flagged=0;
+  for(let dr=-1;dr<=1;dr++){
+    for(let dc=-1;dc<=1;dc++){
+      let nr=r+dr, nc=c+dc;
+      if(nr>=0 && nr<rows && nc>=0 && nc<cols){
+        let ncell=board[nr][nc];
+        if(!ncell.revealed){
+          if(ncell.flag===1) flagged++;
+          else hidden.push([nr,nc]);
+        }
+      }
+    }
+  }
+  let remaining = cell.adjacent - flagged;
+  if(remaining===hidden.length){
+    hidden.forEach(([nr,nc])=>{
+      board[nr][nc].flag=1;
+      updateCellDisplay(nr,nc);
+    });
+    flagsLeft = mines - board.flat().filter(c=>c.flag===1).length;
+    updateCounter(flagsLeft);
+  }
+}
+
+function reveal(r,c){
+  const cell = board[r][c];
+  if(cell.revealed || cell.flag===1) return;
+  cell.revealed=true;
+  revealedCount++;
+  updateCellDisplay(r,c);
+  if(cell.mine) return gameLost(r,c);
+  if(cell.adjacent===0){
+    for(let dr=-1;dr<=1;dr++){
+      for(let dc=-1;dc<=1;dc++){
+        let nr=r+dr, nc=c+dc;
+        if(nr>=0 && nr<rows && nc>=0 && nc<cols) reveal(nr,nc);
+      }
+    }
+  }
+}
+
+function updateCellDisplay(r,c,loss=false){
+  const cell = board[r][c];
+  const div = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"] img`);
+  if(cell.revealed){
+    if(cell.mine){
+      div.src = loss ? "./mine/br.png" : "./mine/b.png";
+    } else {
+      div.src = `./mine/${cell.adjacent}.png`;
+    }
+  } else {
+    if(cell.flag===1){
+      div.src = gameOver && !cell.mine ? "./mine/fr.png" : "./mine/f.png";
+    } else if(cell.flag===2){
+      div.src="./mine/q.png";
+    } else if(cell.flag===3){
+      div.src="./mine/qq.png";
+    } else {
+      div.src="./mine/l.png";
+    }
+  }
+}
+
+function checkWin(){
+  if(revealedCount + mines === rows*cols){
+    gameWon();
+  }
+}
+
+function gameLost(rx,cx){
+  gameOver=true;
+  document.getElementById('status').src="./mine/loss.png";
+  revealAllMines(rx,cx);
+  clearInterval(timerInterval);
+}
+
+function gameWon(){
+  gameOver=true;
+  document.getElementById('status').src="./mine/win.png";
+  clearInterval(timerInterval);
+}
+
+function revealAllMines(clickedR,clickedC){
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const cell=board[r][c];
+      if(cell.mine){
+        cell.revealed=true;
+        updateCellDisplay(r,c, (r===clickedR && c===clickedC));
+      } else if(cell.flag===1 && !cell.mine){
+        updateCellDisplay(r,c,true);
+      }
+    }
+  }
+}
+
+function startTimer(){
+  timerValue = 0;
+  timerInterval=setInterval(()=>{
+    if(timerValue<999){
+      timerValue++;
+      updateTimer(timerValue);
+    }
+  },1000);
+}
+
+function updateCounter(num){
+  const counter=document.getElementById('counter');
+  let n=Math.max(-99,Math.min(999,num));
+  let str=n.toString().padStart(3,'0');
+  counter.innerHTML='';
+  for(let ch of str){
+    let d=ch==='-'?'rminus':`r${ch}`;
+    let img=document.createElement('img');
+    img.src=`./mine/${d}.png`;
+    counter.appendChild(img);
+  }
+}
+
+function updateTimer(num){
+  const timer=document.getElementById('timer');
+  let n=Math.min(999,num);
+  let str=n.toString().padStart(3,'0');
+  timer.innerHTML='';
+  for(let ch of str){
+    let img=document.createElement('img');
+    img.src=`./mine/r${ch}.png`;
+    timer.appendChild(img);
+  }
+}
+
+// Event listeners
+document.getElementById('status').onclick=()=>initBoard(currentDiff);
+document.getElementById('beginner').onclick=()=>initBoard("beginner");
+document.getElementById('intermediate').onclick=()=>initBoard("intermediate");
+document.getElementById('expert').onclick=()=>initBoard("expert");
+
+// start beginner by default
+initBoard("beginner");
+</script>
+</body>
+</html>
