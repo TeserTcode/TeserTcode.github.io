@@ -24,6 +24,7 @@
         <label>Preset: 
             <select id="presetSelect" onchange="loadPreset()">
                 <option value="">-- Choose a Preset --</option>
+              <!--  <option value="test">est Triangle</option> -->
                 <option value="sierpinski">Sierpiński Triangle</option>
                 <option value="kochSnowflake">Koch Snowflake</option>
                 
@@ -31,6 +32,7 @@
                 <option value="hilbertCurve">Hilbert Curve</option>
                 <option value="gosperCurve">Gosper Curve</option>
                 <option value="pentaplexity">Pentaplexity</option>
+                 <option value="penrose">Penrose</option>
                 <option value="quadraticKochIsland">Quadratic Koch Island</option>
                 <option value="cantorDust">Cantor Dust</option>
 <option value="tflowers">T-Flowers</option>
@@ -95,7 +97,9 @@
 
     <!-- Canvas -->
     <canvas id="canvas" width="400" height="400"></canvas>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+  <script src="clrspc.js"></script>
+<script src="mthfnc.js"></script>
     <script>
         let rules = {};
         let moveBehavior = {};
@@ -110,6 +114,7 @@
             pentaplexity: { angle: 36, main: "F++F++F++F++F", rules: { "F": "F++F++F+++++F-F++F" } },
             quadraticKochIsland: { angle: 90, main: "F+F+F+F", rules: { "F": "F+F-F-FF+F+F-F" } },
             cantorDust: { angle: 0, main: "A", rules: { "A": "t60ABA", "B": "t1BBB" } },
+            penrose:{ angle: 36, main: "[N]++[N]++[N]++[N]++[N]", rules: {"M": "Oq++Pq----Nq[-Oq----Mq]++","N": "+Oq--Pq[---Mq--Nq]+","O": "-Mq++Nq[+++Oq++Pq]-","P": "--Oq++++Mq[+Pq++++Nq]--Nq"}},
             colorChange: { angle: 90, main: "Fc#FF0000Fc#00FF00Fc#0000FF", rules: { "F": "F" } },
             rainbowEffect: { angle: 90, main: "FğFğFğFğFğFğ", rules: { "F": "F" } },
             thicknessChange: { angle: 90, main: "Ft1Ft2Ft3Ft4Ft5", rules: { "F": "F" } },
@@ -130,9 +135,9 @@
             mooreCurve: { angle: 90, main: "LfL+F+LfL", rules: { "L": "0-Rf+LfL+fR-", "R": "0+Lf-RfR-fL+" } },
             tree3D: { angle: 22.5, main: "F", rules: { "F": "FF+[+F-F-F]-[-F+F+F]" } },
             fractalCanopy: { angle: 20, main: "F", rules: { "F": "F[+F]F[-F]F" } },
-            spiral: { angle: 90, main: "F", rules: { "F": "F+F-F-F+F" } }
+            spiral: { angle: 90, main: "F", rules: { "F": "F+F-F-F+F" } },
+            test:{ angle: 90, main: "G", rules: {"G": "G+p"}}
         };
-
 function loadPreset() {
     const presetName = document.getElementById("presetSelect").value;
     if (!presetName) return;
@@ -177,9 +182,14 @@ function loadPreset() {
             });
         }
 
-        function generateLSystem() {
+         function generateLSystem() {
             const iterations = parseInt(document.getElementById('iterations').value);
             let result = document.getElementById('main').value;
+
+    rules['p'] = 'q';
+    rules['q'] = ' ';
+    moveBehavior['p'] = true;
+    moveBehavior['q'] = true;
 
             for (let i = 0; i < iterations; i++) {
                 result = result.split("").map(ch => rules[ch] || ch).join("");
@@ -218,7 +228,7 @@ function drawLSystem(instructions) {
     const cmd = instructions[i];
         if (cmd === '+') direction += angle;
         else if (cmd === '-') direction -= angle;
-        else if (cmd === 'f' || (rules[cmd] && moveBehavior[cmd])) {
+        else if (cmd === 'f' || (rules[cmd] && moveBehavior[cmd]) || (cmd =='F' && !(rules[cmd]))) {
             x += moveLength * Math.cos(direction);
             y += moveLength * Math.sin(direction);
             minX = Math.min(minX, x);
@@ -241,7 +251,18 @@ function drawLSystem(instructions) {
                 y = state.y;
                 direction = state.direction;
             }
-        }else if (cmd === 'l') {
+        } else if (cmd === '{') {
+    // Lightweight branch: push only position (keep current angle)
+    stack.push({ x, y });
+} else if (cmd === '}') {
+    // Restore position but keep current angle
+    const state = stack.pop();
+    if (state) {
+        ctx.moveTo(state.x, state.y);
+        x = state.x;
+        y = state.y;
+    }
+}else if (cmd === 'l') {
             // Parse thickness command: t(number)
             let numStr = '';
             while (i + 1 < instructions.length && /\d/.test(instructions[i + 1])) {
@@ -326,7 +347,7 @@ function drawLSystem(instructions) {
     }
 
 
-
+ let huechange=0;
     // Calculate scaling and translation
     const width = maxX - minX;
     const height = maxY - minY;
@@ -359,7 +380,7 @@ function drawLSystem(instructions) {
 
         if (cmd === '+') direction += angle;
         else if (cmd === '-') direction -= angle;
-        else if (cmd === 'f' || (rules[cmd] && moveBehavior[cmd])) {
+        else if (cmd === 'f' || (rules[cmd] && moveBehavior[cmd]) || (cmd =='F' && !(rules[cmd]))) {
             x += moveLength * Math.cos(direction) * scale;
             y += moveLength * Math.sin(direction) * scale;
             ctx.lineTo(x, y);
@@ -377,7 +398,18 @@ function drawLSystem(instructions) {
                 direction = state.direction;
                 ctx.moveTo(x, y);
             }
-        } else if (cmd === 'c') {
+        } else if (cmd === '{') {
+    // Lightweight branch: push only position (keep current angle)
+    stack.push({ x, y });
+} else if (cmd === '}') {
+    // Restore position but keep current angle
+    const state = stack.pop();
+    if (state) {
+        ctx.moveTo(state.x, state.y);
+        x = state.x;
+        y = state.y;
+    }
+} else if (cmd === 'c') {
             // Parse color command: c(#hex)
             const hex = instructions.substring(i + 1, i + 7);
             if (/^[0-9A-Fa-f]{6}$/.test(hex)) {
@@ -389,7 +421,35 @@ function drawLSystem(instructions) {
                 ctx.moveTo(x, y); // Move to the current position
                 i += 6; // Skip the hex part
             }
-        } else if (cmd === 't') {
+        } else if (cmd === 'u') {
+    // Parse hue shift: u(amount)
+    let numStr = '';
+    while (i + 1 < instructions.length && /[-\d]/.test(instructions[i + 1])) {
+        numStr += instructions[++i];
+    }
+    if (numStr) {
+        ctx.stroke(); // Finalize current path
+        const hueShift = parseFloat(numStr);
+        currentColor = shiftHue(currentColor, hueShift);
+        ctx.strokeStyle = currentColor;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+    }
+}else if (cmd === 'i') {
+    // Parse opacity: o(0-100)
+    let numStr = '';
+    while (i + 1 < instructions.length && /[\d.]/.test(instructions[i + 1])) {
+        numStr += instructions[++i];
+    }
+    if (numStr) {
+        ctx.stroke(); // Finalize current path
+        const opacity = Math.min(100, Math.max(0, parseFloat(numStr))) / 100;
+        currentColor = setOpacity(currentColor, opacity);
+        ctx.strokeStyle = currentColor;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+    }
+}else if (cmd === 't') {
             // Parse thickness command: t(number)
             let numStr = '';
             while (i + 1 < instructions.length && /\d/.test(instructions[i + 1])) {
@@ -505,12 +565,16 @@ k(number): Change length\n
 e(number): Change angle by number\n
 r(number): Rotate by number\n
 g(number): set rotation\n
-c(#hex): Change color\n
+c(hex): Change color\n
+u(number): Change hue\n
 t(number): Change thickness\n
 o: Go to origin\n
+i(number): Change opacity\n
 ğ: Rainbow color\n
 h: Show this help\n
-x: Halt
+x: Halt\n
+p: Bidecaying Move, every iteration p->q so only the p's from last 2 iteration count \n
+q: Decaying Move, every iteration q->_ so only the q's from last iteration count \n
 []: Branch
 
 `);
@@ -539,9 +603,25 @@ x: Halt
         }
 
 
+function shiftHue(hexColor, degrees) {
+    let [r, g, b] = hexColor.match(/\w\w/g).map(x => parseInt(x, 16));
+    let [h, s, l] = rgbToHsl(r, g, b);
+    h = (h + degrees) % 360;
+    return hslToHex(h, s, l);
+}
 
 
-
+function setOpacity(hexColor, opacity) {
+    // Ensure hex is 6-digit format
+    hexColor = hexColor.length === 4 ? 
+        `#${hexColor[1]}${hexColor[1]}${hexColor[2]}${hexColor[2]}${hexColor[3]}${hexColor[3]}` : 
+        hexColor;
+    
+    return `rgba(${parseInt(hexColor.slice(1, 3), 16)}, 
+               ${parseInt(hexColor.slice(3, 5), 16)}, 
+               ${parseInt(hexColor.slice(5, 7), 16)}, 
+               ${opacity})`;
+}
 
 
 
@@ -584,7 +664,7 @@ function calculateFractalDimension() {
             }
         }
     }
-console.log(boxCount)
+//console.log(boxCount)
     // Calculate the fractal dimension
     const fractalDimension = Math.log(boxCount) / Math.log( canvas.height / boxSize);
     alert(`Fractal Dimension: ${fractalDimension}`);
@@ -684,7 +764,7 @@ console.log(boxCount)
     const variance = boxCounts.reduce((sum, count) => sum + Math.pow(count - mean, 2), 0) / boxCounts.length;
     const lacunarity = variance / Math.pow(mean, 2);
 
-    console.log(`Lacunarity: ${lacunarity}`);
+    //console.log(`Lacunarity: ${lacunarity}`);
 
     // Calculate prefactor lacunarity
     for (let size = 1; size <= canvas.height; size *= 2) {
@@ -1003,8 +1083,11 @@ console.log(boxCount)
         function updateRuleUI() {
             const rulesDiv = document.getElementById("rules");
             rulesDiv.innerHTML = "";
-
+//console.log(rules)
+//console.log(324234)
             for (let key in rules) {
+            //console.log(key)
+            if(key!=="p" && key!=="q"){
                 const div = document.createElement("div");
                 div.classList.add("rule-container");
                 div.innerHTML = `
@@ -1012,6 +1095,7 @@ console.log(boxCount)
                     <input type="checkbox" class="move-checkbox" data-letter="${key}" checked> Draw Move
                 `;
                 rulesDiv.appendChild(div);
+                }
             }
 
             updateRuleBindings();
