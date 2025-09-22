@@ -413,7 +413,7 @@ function initializeReverseMaps() {
     });
 
     // 2. Church Numerals (0-20)
-    for (let i = 0; i <= 20; i++) {
+    for (let i = 0; i <= 2000; i++) {
         let body = 'x';
         if (i > 0) {
             for (let j = 0; j < i; j++) {
@@ -466,14 +466,15 @@ function compressAst(ast) {
 function expand() {
     let expr = document.getElementById('expr').value;
     // 1. Expand numerals (e.g., 3 -> l f. l x. f (f (f x)))
-    expr = expr.replace(/\b(\d+)\b/g, (match, nStr) => {
-        const n = parseInt(nStr, 10);
-        if (isNaN(n)) return match;
-        if (n === 0) return '(l f. l x. x)';
-        let body = 'x';
-        for (let i = 0; i < n; i++) { body = `f(${body})`; }
-        return `(l f. l x. ${body})`;
-    });
+expr = expr.replace(/\b(\d+)\b/g, (match, nStr) => {
+    const n = parseInt(nStr, 10);
+    if (isNaN(n)) return match;
+    let body = 'x';
+    for (let i = 0; i < n; i++) { 
+        body = `f(${body})`; 
+    }
+    return `(l f. l x. ${body})`;
+});
     // 2. Expand other known forms iteratively
     expr = expandString(expr);
     document.getElementById('expanded').textContent = expr;
