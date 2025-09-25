@@ -52,7 +52,7 @@
     calibOffset1 = calib1Slider.value * Math.PI/180;
     calib1Value.textContent = calib1Slider.value + "°";
     // immediately apply new offset
-    right.rots[2] = left.rots[3] + calibOffset1;
+    right.rots[2] = -left.rots[3] + calibOffset1;
   });
 
   // Calibration 2 (C–F)
@@ -124,10 +124,10 @@
 
       // Link D (index 3 left) <-> E (index 2 right)
       if(this===left && this.dragging===3){
-        right.rots[2] = this.rots[3] + calibOffset1;
+        right.rots[2] = -this.rots[3] + calibOffset1;
       }
       if(this===right && this.dragging===2){
-        left.rots[3] = this.rots[2] - calibOffset1;
+        left.rots[3] = -this.rots[2] - calibOffset1;
       }
 
       // Link C (index 0 left) <-> F (index 0 right)
