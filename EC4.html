@@ -22,8 +22,8 @@
     </div>
     <div style="width:95%; display:flex; align-items:center; justify-content:center; margin:4px 0;">
       Calibration 1 (D–E):
-      <input type="range" id="calib1Slider" min="-180" max="180" value="-136" style="flex:1; margin:0 10px;">
-      <span id="calib1Value">-136°</span>
+      <input type="range" id="calib1Slider" min="-180" max="180" value="14" style="flex:1; margin:0 10px;"> 
+      <span id="calib1Value">14°</span> 
     </div>
     <div style="width:95%; display:flex; align-items:center; justify-content:center; margin:4px 0;">
       Calibration 2 (C–F):
@@ -34,7 +34,7 @@
 
   <script>
   let globalScale = 0.17;
-  let calibOffset1 = -136; // radians (E relative to D)
+  let calibOffset1 = 14; // radians (E relative to D) 
   let calibOffset2 = -55; // radians (F relative to C)
 
   // Scale slider
@@ -62,7 +62,7 @@
     calibOffset2 = calib2Slider.value * Math.PI/180;
     calib2Value.textContent = calib2Slider.value + "°";
     // immediately apply new offset
-    right.rots[0] = left.rots[0] + calibOffset2;
+    right.rots[0] = -left.rots[0] + calibOffset2;
   });
 
   function Rotor(canvasId, imageFiles) {
@@ -132,10 +132,10 @@
 
       // Link C (index 0 left) <-> F (index 0 right)
       if(this===left && this.dragging===0){
-        right.rots[0] = this.rots[0] + calibOffset2;
+        right.rots[0] = -this.rots[0] + calibOffset2;
       }
       if(this===right && this.dragging===0){
-        left.rots[0] = this.rots[0] - calibOffset2;
+        left.rots[0] = -this.rots[0] - calibOffset2;
       }
 
       this.lastAngle=angle;
