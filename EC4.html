@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>EC4 Doomsday Device Calendar</title>
+  <style>
+   #main { flex:1; display:flex; }
+    .rotor { flex:1; background:#000; }
+    canvas { width:100%; height:100%; display:block; }
+  </style>
+</head>
+<body style="margin:0; display:flex; flex-direction:column; background:#fff; height:100vh;">
+  <div id="main" style="flex:1; display:flex; background:#fff;">
+    <div class="rotor" style="flex:1; background:#fff;"><canvas id="left"></canvas></div>
+    <div class="rotor" style="flex:1; background:#fff;"><canvas id="right"></canvas></div>
+  </div>
+  <div id="controls" style="flex-shrink:0; background:#fff; color:#000; font-family:sans-serif; font-size:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:6px 0;">
+    <div style="width:95%; display:flex; align-items:center; justify-content:center; margin:4px 0;">
+      Scale:
+      <input type="range" id="scaleSlider" min="0" max="100" value="100" style="flex:1; margin:0 10px;">
+      <span id="scaleValue">100%</span>
+    </div>
+    <div style="width:95%; display:flex; align-items:center; justify-content:center; margin:4px 0;">
+      Calibration 1 (D–E):
+      <input type="range" id="calib1Slider" min="-180" max="180" value="0" style="flex:1; margin:0 10px;">
+      <span id="calib1Value">0°</span>
+    </div>
+    <div style="width:95%; display:flex; align-items:center; justify-content:center; margin:4px 0;">
+      Calibration 2 (C–F):
+      <input type="range" id="calib2Slider" min="-180" max="180" value="0" style="flex:1; margin:0 10px;">
+      <span id="calib2Value">0°</span>
+    </div>
+  </div>
+
+  <script>
+  let globalScale = 1.0;
+  let calibOffset1 = 0; // radians (E relative to D)
+  let calibOffset2 = 0; // radians (F relative to C)
+
+  // Scale slider
+  const scaleSlider = document.getElementById("scaleSlider");
+  const scaleValue = document.getElementById("scaleValue");
+  scaleSlider.addEventListener("input", () => {
+    globalScale = scaleSlider.value/100;
+    scaleValue.textContent = scaleSlider.value + "%";
+  });
+
+  // Calibration 1 (D–E)
+  const calib1Slider = document.getElementById("calib1Slider");
+  const calib1Value = document.getElementById("calib1Value");
+  calib1Slider.addEventListener("input", () => {
+    calibOffset1 = calib1Slider.value * Math.PI/180;
+    calib1Value.textContent = calib1Slider.value + "°";
+    // immediately apply new offset
+    right.rots[2] = left.rots[3] + calibOffset1;
+  });
+
+  // Calibration 2 (C–F)
+  const calib2Slider = document.getElementById("calib2Slider");
+  const calib2Value = document.getElementById("calib2Value");
+  calib2Slider.addEventListener("input", () => {
+    calibOffset2 = calib2Slider.value * Math.PI/180;
+    calib2Value.textContent = calib2Slider.value + "°";
+    // immediately apply new offset
+    right.rots[0] = left.rots[0] + calibOffset2;
+  });
+
+  function Rotor(canvasId, imageFiles) {
+    this.canvas = document.getElementById(canvasId);
+    this.ctx = this.canvas.getContext('2d');
+    this.images = imageFiles.map(src => { let im=new Image(); im.src='doomd/'+src; return im; });
+    this.rots = imageFiles.map(()=>0);
+    this.dragging = null;
+    this.lastAngle = 0;
+
+    const resize = () => {
+      const dpr = window.devicePixelRatio||1;
+      this.canvas.width = this.canvas.clientWidth*dpr;
+      this.canvas.height = this.canvas.clientHeight*dpr;
+      this.ctx.setTransform(1,0,0,1,0,0);
+      this.ctx.scale(dpr,dpr);
+    };
+    window.addEventListener('resize', resize);
+    resize();
+
+    const getPos = e => {
+      if (e.touches) e=e.touches[0];
+      return {x:e.clientX, y:e.clientY};
+    };
+
+    const pointerDown = e => {
+      e.preventDefault();
+      const rect=this.canvas.getBoundingClientRect();
+      const cx=rect.left+rect.width/2, cy=rect.top+rect.height/2;
+      const p=getPos(e);
+      const dx=p.x-cx, dy=p.y-cy;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+
+      for(let i=this.images.length-1;i>=0;i--){
+        const img=this.images[i];
+        if(!img.complete) continue;
+        const radius=Math.max(img.width,img.height)*globalScale/2;
+        if(dist<=radius){ 
+          this.dragging=i;
+          break;
+        }
+      }
+      this.lastAngle=Math.atan2(dy,dx);
+    };
+
+    const pointerMove = e => {
+      if(this.dragging===null) return;
+      e.preventDefault();
+      const rect=this.canvas.getBoundingClientRect();
+      const cx=rect.left+rect.width/2, cy=rect.top+rect.height/2;
+      const p=getPos(e);
+      const dx=p.x-cx, dy=p.y-cy;
+      const angle=Math.atan2(dy,dx);
+      let delta=angle-this.lastAngle;
+      if(delta>Math.PI) delta-=2*Math.PI;
+      if(delta<-Math.PI) delta+=2*Math.PI;
+
+      this.rots[this.dragging]+=delta;
+
+      // Link D (index 3 left) <-> E (index 2 right)
+      if(this===left && this.dragging===3){
+        right.rots[2] = this.rots[3] + calibOffset1;
+      }
+      if(this===right && this.dragging===2){
+        left.rots[3] = this.rots[2] - calibOffset1;
+      }
+
+      // Link C (index 0 left) <-> F (index 0 right)
+      if(this===left && this.dragging===0){
+        right.rots[0] = this.rots[0] + calibOffset2;
+      }
+      if(this===right && this.dragging===0){
+        left.rots[0] = this.rots[0] - calibOffset2;
+      }
+
+      this.lastAngle=angle;
+    };
+
+    const pointerUp=()=>{this.dragging=null;};
+
+    this.canvas.addEventListener('mousedown',pointerDown);
+    window.addEventListener('mousemove',pointerMove);
+    window.addEventListener('mouseup',pointerUp);
+    this.canvas.addEventListener('touchstart',pointerDown,{passive:false});
+    window.addEventListener('touchmove',pointerMove,{passive:false});
+    window.addEventListener('touchend',pointerUp);
+    window.addEventListener('touchcancel',pointerUp);
+
+    const draw=()=>{
+      this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+      const cx=this.canvas.width/(2*(window.devicePixelRatio||1));
+      const cy=this.canvas.height/(2*(window.devicePixelRatio||1));
+
+      for(let i=0;i<this.images.length;i++){
+        const img=this.images[i];
+        if(!img.complete) continue;
+        const w=img.width*globalScale;
+        const h=img.height*globalScale;
+        this.ctx.save();
+        this.ctx.translate(cx,cy);
+        this.ctx.rotate(this.rots[i]);
+        this.ctx.drawImage(img,-w/2,-h/2,w,h);
+        this.ctx.restore();
+      }
+      requestAnimationFrame(draw);
+    };
+    draw();
+  }
+
+  // right rotor (F, G, E)
+  const right=new Rotor("right",["F.png","G.png","E.png"]);
+  // left rotor (C, B, A, D)
+  const left=new Rotor("left",["C.png","B.png","A.png","D.png"]);
+  </script>
+</body>
+</html>
