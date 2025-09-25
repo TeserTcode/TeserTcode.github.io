@@ -17,25 +17,25 @@
   <div id="controls" style="flex-shrink:0; background:#fff; color:#000; font-family:sans-serif; font-size:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:6px 0;">
     <div style="width:95%; display:flex; align-items:center; justify-content:center; margin:4px 0;">
       Scale:
-      <input type="range" id="scaleSlider" min="0" max="100" value="100" style="flex:1; margin:0 10px;">
-      <span id="scaleValue">100%</span>
+      <input type="range" id="scaleSlider" min="0" max="100" value="17" style="flex:1; margin:0 10px;">
+      <span id="scaleValue">17%</span>
     </div>
     <div style="width:95%; display:flex; align-items:center; justify-content:center; margin:4px 0;">
       Calibration 1 (D–E):
-      <input type="range" id="calib1Slider" min="-180" max="180" value="0" style="flex:1; margin:0 10px;">
-      <span id="calib1Value">0°</span>
+      <input type="range" id="calib1Slider" min="-180" max="180" value="-136" style="flex:1; margin:0 10px;">
+      <span id="calib1Value">-136°</span>
     </div>
     <div style="width:95%; display:flex; align-items:center; justify-content:center; margin:4px 0;">
       Calibration 2 (C–F):
-      <input type="range" id="calib2Slider" min="-180" max="180" value="0" style="flex:1; margin:0 10px;">
-      <span id="calib2Value">0°</span>
+      <input type="range" id="calib2Slider" min="-180" max="180" value="159" style="flex:1; margin:0 10px;">
+      <span id="calib2Value">159°</span>
     </div>
   </div>
 
   <script>
-  let globalScale = 1.0;
-  let calibOffset1 = 0; // radians (E relative to D)
-  let calibOffset2 = 0; // radians (F relative to C)
+  let globalScale = 0.17;
+  let calibOffset1 = -136; // radians (E relative to D)
+  let calibOffset2 = 159; // radians (F relative to C)
 
   // Scale slider
   const scaleSlider = document.getElementById("scaleSlider");
