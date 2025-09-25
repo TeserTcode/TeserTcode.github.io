@@ -22,8 +22,8 @@
     </div>
     <div style="width:95%; display:flex; align-items:center; justify-content:center; margin:4px 0;">
       Calibration 1 (D–E):
-      <input type="range" id="calib1Slider" min="-180" max="180" value="-165" style="flex:1; margin:0 10px;"> 
-      <span id="calib1Value">-165°</span> 
+      <input type="range" id="calib1Slider" min="-180" max="180" value="-8" style="flex:1; margin:0 10px;"> 
+      <span id="calib1Value">-8°</span> 
     </div>
     <div style="width:95%; display:flex; align-items:center; justify-content:center; margin:4px 0;">
       Calibration 2 (C–F):
@@ -34,7 +34,7 @@
 
   <script>
   let globalScale = 0.17;
-  let calibOffset1 = -165; // radians (E relative to D) 
+  let calibOffset1 = -8; // radians (E relative to D) 
   let calibOffset2 = -77; // radians (F relative to C)
 
   // Scale slider
