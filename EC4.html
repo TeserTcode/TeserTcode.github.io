@@ -27,15 +27,15 @@
     </div>
     <div style="width:95%; display:flex; align-items:center; justify-content:center; margin:4px 0;">
       Calibration 2 (C–F):
-      <input type="range" id="calib2Slider" min="-180" max="180" value="159" style="flex:1; margin:0 10px;">
-      <span id="calib2Value">159°</span>
+      <input type="range" id="calib2Slider" min="-180" max="180" value="55" style="flex:1; margin:0 10px;">
+      <span id="calib2Value">-55°</span>
     </div>
   </div>
 
   <script>
   let globalScale = 0.17;
   let calibOffset1 = -136; // radians (E relative to D)
-  let calibOffset2 = 159; // radians (F relative to C)
+  let calibOffset2 = -55; // radians (F relative to C)
 
   // Scale slider
   const scaleSlider = document.getElementById("scaleSlider");
