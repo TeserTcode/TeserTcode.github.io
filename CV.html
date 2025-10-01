@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Convolution</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    canvas {
+      border: 1px solid #000;
+      max-width: 100%;
+      height: auto;
+    }
+    table {
+      margin: 10px 0;
+    }
+    table, th, td {
+      border: 1px solid #000;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 5px;
+      text-align: center;
+    }
+    input[type="number"] {
+      width: 50px;
+    }
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    textarea {
+      width: 200px; /* Smaller textbox */
+      height: 60px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Image Convolution</h1>
+  <input type="file" id="imageInput" accept="image/*">
+  <div class="container">
+    <div>
+      <h2>Input Image</h2>
+      <canvas id="inputCanvas" width="400" height="400"></canvas> <!-- Smaller default size -->
+    </div>
+    <div>
+      <h2>Output Image</h2>
+      <canvas id="outputCanvas" width="400" height="400"></canvas> <!-- Smaller default size -->
+    </div>
+  </div>
+  <div>
+    <label for="kernelSize">Kernel Size:</label>
+    <input type="number" id="kernelSize" min="1" value="3">
+    <button onclick="createKernelTable()">Update Kernel Size</button>
+  </div>
+  <div>
+    <label for="preset">Preset:</label>
+    <select id="preset" onchange="applyPreset()">
+      <option value="none">None</option>
+
+      <option value="gaussian3x3">Gaussian 3x3</option>
+      <option value="gaussian5x5">Gaussian 5x5</option>
+      <option value="sharpen">Sharpen</option>
+      <option value="ridge">Ridge Detection</option>
+      <option value="edge">Edge Detection</option>
+      <option value="boxBlur">Box Blur</option>
+      <option value="laplacian">Laplacian</option>
+      <option value="emboss">Emboss</option>
+
+      <option value="motionBlur">Motion Blur</option>
+        <option value="sobelX">Sobel X</option>
+  <option value="sobelY">Sobel Y</option>
+  <option value="prewittX">Prewitt X</option>
+  <option value="prewittY">Prewitt Y</option>
+  <option value="highPass">High Pass</option>
+  <option value="lowPass">Low Pass</option>
+  <option value="outline">Outline</option>
+  <option value="edgeEnhance">Edge Enhancement</option>
+  <option value="unsharpMask">Unsharp Mask</option>
+  <option value="meanRemoval">Mean Removal</option>
+  <option value="kirschX">Kirsch X</option>
+  <option value="kirschY">Kirsch Y</option>
+  <option value="robertsX">Roberts X</option>
+  <option value="robertsY">Roberts Y</option>
+   <option value="gaussian5x5">Gaussian 5×5</option>
+  <option value="gaussian7x7">Gaussian 7×7</option>
+  <option value="sharpen5x5">Sharpen 5×5</option>
+  <option value="boxBlur5x5">Box Blur 5×5</option>
+  <option value="motionBlur7x7">Motion Blur 7×7</option>
+  <option value="edge5x5">Edge Detection 5×5</option>
+         <option value="hyperemboss">Hyperemboss</option>
+   <option value="laplacian5x5">Laplacian 5×5</option>
+    <option value="emboss5x5">Emboss 5×5</option>
+     <option value="prewittX5x5">Prewitt X 5×5</option>
+      <option value="sobelX5x5">Sobel X 5×5</option>
+       <option value="sobelY5x5">Sobel Y 5×5</option>
+        <option value="highPass5x5">High Pass 5x5</option>
+  
+  <option value="outline5x5">Outline 5×5</option>
+
+  <option value="embossWave5x5">Emboss Wave 5×5</option>
+  
+  <option value="diamondEdge5x5">Diamond Edge 5×5</option>
+  
+        <option value="randomedge3">Random Edge (weight 0) 3x3</option>
+      <option value="randomblur3">Random Blur (wieght 1) 3x3</option>
+      <option value="randomantiblur3">Random Antiblur (weight -1) 3x3</option>
+       <option value="randomeglow3">Random Glow (weight 2) 3x3</option>
+       
+             <option value="randomedge5">Random Edge (weight 0) 5×5</option>
+      <option value="randomblur5">Random Blur (wieght 1) 5×5</option>
+      <option value="randomantiblur5">Random Antiblur (weight -1) 5×5</option>
+       <option value="randomeglow5">Random Glow (weight 2) 5×5</option>
+       
+             <option value="randomedge7">Random Edge (weight 0) 7×7</option>
+      <option value="randomblur7">Random Blur (wieght 1) 7×7</option>
+      <option value="randomantiblur7">Random Antiblur (weight -1 7×7)</option>
+       <option value="randomeglow7">Random Glow (weight 2) 7×7</option>
+  
+
+ <option value="identity">Identity</option>
+    </select>
+  </div>
+  <div>
+    <label for="edgeHandling">Edge Handling:</label>
+    <select id="edgeHandling">
+      <option value="warp">Warp</option>
+      <option value="mirror">Mirror</option>
+      <option value="crop">Crop</option>
+      <option value="white">White</option>
+      <option value="black">Black</option>
+      <option value="average">Average Color</option>
+    </select>
+  </div>
+  <!-- <button onclick="normalizeKernel()">Normalize Kernel</button> -->
+   <div>
+    <label for="normalizeValue">Normalize Value:</label>
+    <input type="number" id="normalizeValue" value="1">
+    <button onclick="classicNormalizeKernel()">Classic Normalize</button>
+  </div>
+  <button onclick="autoNormalizeKernel()">Auto Normalize Kernel</button>
+  <button onclick="applyConvolution()">Generate Convolution</button>
+  <div id="kernelTable"></div>
+  <textarea id="kernelText" placeholder="Enter kernel in format: a,b,c;a1,b1,c1;a2,b2,c2"></textarea>
+  <button onclick="saveKernel()">Save Kernel</button>
+  <button onclick="loadKernel()">Load Kernel</button>
+<div>
+    <label for="mathFunction">Math Function (use x and y):</label>
+    <input type="text" id="mathFunction" placeholder="e.g., x * y">
+    <button onclick="fillKernelWithMathFunction()">Fill Kernel</button>
+  </div>
+    <div>
+    <label for="kernelImageInput">Load Kernel from Image:</label>
+    <input type="file" id="kernelImageInput" accept="image/*">
+    <button onclick="loadKernelFromImage()">Load Kernel</button>
+  </div>
+    <div>
+    <button onclick="previewKernel()">Preview Kernel</button>
+    <canvas id="kernelPreviewCanvas" width="200" height="200"></canvas>
+  </div>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+  <script src="mthfnc.js"></script>
+  <script>
+    let inputCanvas = document.getElementById('inputCanvas');
+    let outputCanvas = document.getElementById('outputCanvas');
+    let inputCtx = inputCanvas.getContext('2d');
+    let outputCtx = outputCanvas.getContext('2d');
+    let imageInput = document.getElementById('imageInput');
+    let kernelTable = document.getElementById('kernelTable');
+    let kernelSizeInput = document.getElementById('kernelSize');
+    let presetSelect = document.getElementById('preset');
+    let edgeHandlingSelect = document.getElementById('edgeHandling');
+    let kernelText = document.getElementById('kernelText');
+      let mathFunctionInput = document.getElementById('mathFunction');
+    let normalizeValueInput = document.getElementById('normalizeValue');
+    let kernel = [];
+    let kernelImageInput = document.getElementById('kernelImageInput');
+    let kernelPreviewCanvas = document.getElementById('kernelPreviewCanvas');
+    let kernelPreviewCtx = kernelPreviewCanvas.getContext('2d');
+    // Load image and resize canvas
+    imageInput.addEventListener('change', function (e) {
+      let file = e.target.files[0];
+      let reader = new FileReader();
+      reader.onload = function (event) {
+        let img = new Image();
+        img.onload = function () {
+          // Auto-resize canvases to fit the image while maintaining aspect ratio
+          let maxWidth = 400; // Max width for canvases
+          let scale = maxWidth / img.width;
+          inputCanvas.width = maxWidth;
+          inputCanvas.height = img.height * scale;
+          outputCanvas.width = maxWidth;
+          outputCanvas.height = img.height * scale;
+          inputCtx.drawImage(img, 0, 0, inputCanvas.width, inputCanvas.height);
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+function generateRandomKernel(size, targetSum) {
+    const kernel = [];
+    let sum = 0;
+
+    // Create a kernel filled with random values between -1 and 1
+    for (let i = 0; i < size * size; i++) {
+        const randomValue = Math.random() * 2 - 1; // Value between -1 and 1
+        kernel.push(randomValue);
+        sum += randomValue;
+    }
+
+    // Adjust values to make the sum equal to targetSum
+    const adjustment = (sum - targetSum) / (size * size); 
+    for (let i = 0; i < kernel.length; i++) {
+        kernel[i] -= adjustment;
+    }
+
+    // Convert kernel to a 2D array representation
+    const kernel2D = [];
+    for (let i = 0; i < size; i++) {
+        kernel2D.push(kernel.slice(i * size, (i + 1) * size));
+    }
+
+    return kernel2D;
+}
+    // Create kernel table
+    function fillKernelWithMathFunction() {
+      let mathFunction = mathFunctionInput.value.trim();
+      if (!mathFunction) return;
+
+      let size = kernel.length;
+      let halfSize = Math.floor(size / 2);
+
+      for (let i = 0; i < size; i++) {
+        for (let j = 0; j < size; j++) {
+          let x = (j - halfSize) / halfSize; // Normalize x to [-1, 1]
+          let y = (i - halfSize) / halfSize; // Normalize y to [-1, 1]
+          try {
+            kernel[i][j] = math.evaluate(mathFunction, { x, y , c:kernel[i][j], j,i,r:sqrt(add(sqr(y),sqr(x)))});
+          } catch (e) {
+            console.error("Invalid math function:", e);
+            return;
+          }
+        }
+      }
+      updateKernelTable();
+    }
+
+    // Update kernel when input changes
+    function updateKernel(i, j) {
+      kernel[i][j] = parseFloat(document.getElementById(`kernel-${i}-${j}`).value);
+    }
+
+    // Apply preset
+    function applyPreset() {
+      let preset = presetSelect.value;
+      switch (preset) {
+      case 'hyperemboss':
+      //283487219873903.8,144992124471636.25,318153655412976.75,-157139254914458.8,145860999470077.56,310972729094417.7,-306324224123017.3;-76735228776893.05,349985997054422.1,-306745799698645.94,-391682648088060.44,-85537829067066.44,120916882365989,262028260884663.62;336297086200474.06,-243428653777752.38,108209825966937.66,-244565072780599.44,116057320103124.25,-146245354223403.2,-168090385493785.88;79767280979252.81,-7430736329281.512,95816762776970.58,-232052113263543.44,-24561442868302.535,229474352836451.72,-159051037898883.56;-135590241716178.62,-4815526462975.279,-164749421756919.84,-9984479451118.162,210528856186624.2,243844464552061.03,-282751651445243.94;-221950148308786.6,-190338838898050.25,138202837792114.77,-2910036888755.744,-261969745927883.72,-218184703043289.5,-103174382634835.38;404474998493752.75,-351473988800588.44,107678566250334.86,-280897394858420.28,380616127531366.5,353650719993584.4,37363273205603.88
+       let kernelStr =  "283487219873903.8,144992124471636.25,318153655412976.75,-157139254914458.8,145860999470077.56,310972729094417.7,-306324224123017.3;-76735228776893.05,349985997054422.1,-306745799698645.94,-391682648088060.44,-85537829067066.44,120916882365989,262028260884663.62;336297086200474.06,-243428653777752.38,108209825966937.66,-244565072780599.44,116057320103124.25,-146245354223403.2,-168090385493785.88;79767280979252.81,-7430736329281.512,95816762776970.58,-232052113263543.44,-24561442868302.535,229474352836451.72,-159051037898883.56;-135590241716178.62,-4815526462975.279,-164749421756919.84,-9984479451118.162,210528856186624.2,243844464552061.03,-282751651445243.94;-221950148308786.6,-190338838898050.25,138202837792114.77,-2910036888755.744,-261969745927883.72,-218184703043289.5,-103174382634835.38;404474998493752.75,-351473988800588.44,107678566250334.86,-280897394858420.28,380616127531366.5,353650719993584.4,37363273205603.88";
+      let rows = kernelStr.split(';');
+      kernel = rows.map(row => row.split(',').map(Number));
+      kernelSizeInput.value = kernel.length;
+      createKernelTable(0);
+     // kernelSizeInput.value = 7;
+      updateKernelTable();
+      break;
+          case 'randomedge3':
+        kernel = generateRandomKernel(3, 0);  // Edge with sum 0
+        kernelSizeInput.value = 3;
+        break;
+    case 'randomedge5':
+        kernel = generateRandomKernel(5, 0);  // Edge with sum 0
+        kernelSizeInput.value = 5;
+        break;
+    case 'randomedge7':
+        kernel = generateRandomKernel(7, 0);  // Edge with sum 0
+        kernelSizeInput.value = 7;
+        break;
+    case 'randomblur3':
+        kernel = generateRandomKernel(3, 1);  // Blur with sum 1
+        kernelSizeInput.value = 3;
+        break;
+    case 'randomblur5':
+        kernel = generateRandomKernel(5, 1);  // Blur with sum 1
+        kernelSizeInput.value = 5;
+        break;
+    case 'randomblur7':
+        kernel = generateRandomKernel(7, 1);  // Blur with sum 1
+        kernelSizeInput.value = 7;
+        break;
+    case 'randomantiblur3':
+        kernel = generateRandomKernel(3, -1); // Antiblur with sum -1
+        kernelSizeInput.value = 3;
+        break;
+    case 'randomantiblur5':
+        kernel = generateRandomKernel(5, -1); // Antiblur with sum -1
+        kernelSizeInput.value = 5;
+        break;
+    case 'randomantiblur7':
+        kernel = generateRandomKernel(7, -1); // Antiblur with sum -1
+        kernelSizeInput.value = 7;
+        break;
+    case 'randomeglow3':
+        kernel = generateRandomKernel(3, 2);  // Glow with sum 2
+        kernelSizeInput.value = 3;
+        break;
+    case 'randomeglow5':
+        kernel = generateRandomKernel(5, 2);  // Glow with sum 2
+        kernelSizeInput.value = 5;
+        break;
+    case 'randomeglow7':
+        kernel = generateRandomKernel(7, 2);  // Glow with sum 2
+        kernelSizeInput.value = 7;
+        break;
+        case 'gaussian3x3':
+          kernel = [
+            [1, 2, 1],
+            [2, 4, 2],
+            [1, 2, 1]
+          ];
+          kernelSizeInput.value = 3;
+          break;
+        case 'gaussian5x5':
+          kernel = [
+            [1, 4, 6, 4, 1],
+            [4, 16, 24, 16, 4],
+            [6, 24, 36, 24, 6],
+            [4, 16, 24, 16, 4],
+            [1, 4, 6, 4, 1]
+          ];
+          kernelSizeInput.value = 5;
+          break;
+        case 'sharpen':
+          kernel = [
+            [0, -1, 0],
+            [-1, 5, -1],
+            [0, -1, 0]
+          ];
+          kernelSizeInput.value = 3;
+          break;
+        case 'ridge':
+          kernel = [
+            [-1, -1, -1],
+            [-1, 8, -1],
+            [-1, -1, -1]
+          ];
+          kernelSizeInput.value = 3;
+          break;
+        case 'edge':
+          kernel = [
+            [-1, -1, -1],
+            [-1, 8, -1],
+            [-1, -1, -1]
+          ];
+          kernelSizeInput.value = 3;
+          break;
+        case 'boxBlur':
+          kernel = [
+            [1, 1, 1],
+            [1, 1, 1],
+            [1, 1, 1]
+          ];
+          kernelSizeInput.value = 3;
+          break;
+        case 'laplacian':
+          kernel = [
+            [0, 1, 0],
+            [1, -4, 1],
+            [0, 1, 0]
+          ];
+          kernelSizeInput.value = 3;
+          break;
+        case 'emboss':
+          kernel = [
+            [-2, -1, 0],
+            [-1, 1, 1],
+            [0, 1, 2]
+          ];
+          kernelSizeInput.value = 3;
+          break;
+        case 'motionBlur':
+          kernel = [
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1]
+          ];
+          kernelSizeInput.value = 3;
+          break;
+              case 'sobelX':
+      kernel = [
+        [-1, 0, 1],
+        [-2, 0, 2],
+        [-1, 0, 1]
+      ];
+      kernelSizeInput.value = 3;
+      break;
+    case 'sobelY':
+      kernel = [
+        [-1, -2, -1],
+        [0, 0, 0],
+        [1, 2, 1]
+      ];
+      kernelSizeInput.value = 3;
+      break;
+    case 'prewittX':
+      kernel = [
+        [-1, 0, 1],
+        [-1, 0, 1],
+        [-1, 0, 1]
+      ];
+      kernelSizeInput.value = 3;
+      break;
+    case 'prewittY':
+      kernel = [
+        [-1, -1, -1],
+        [0, 0, 0],
+        [1, 1, 1]
+      ];
+      kernelSizeInput.value = 3;
+      break;
+    case 'highPass':
+      kernel = [
+        [-1, -1, -1],
+        [-1, 8, -1],
+        [-1, -1, -1]
+      ];
+      kernelSizeInput.value = 3;
+      break;
+    case 'lowPass':
+      kernel = [
+        [1, 2, 1],
+        [2, 4, 2],
+        [1, 2, 1]
+      ];
+      kernelSizeInput.value = 3;
+      break;
+    case 'outline':
+      kernel = [
+        [-1, -1, -1],
+        [-1, 9, -1],
+        [-1, -1, -1]
+      ];
+      kernelSizeInput.value = 3;
+      break;
+    case 'edgeEnhance':
+      kernel = [
+        [0, 0, 0],
+        [-1, 1, 0],
+        [0, 0, 0]
+      ];
+      kernelSizeInput.value = 3;
+      break;
+    case 'unsharpMask':
+      kernel = [
+        [-1, -1, -1],
+        [-1, 9, -1],
+        [-1, -1, -1]
+      ];
+      kernelSizeInput.value = 3;
+      break;
+    case 'meanRemoval':
+      kernel = [
+        [-1, -1, -1],
+        [-1, 9, -1],
+        [-1, -1, -1]
+      ];
+      kernelSizeInput.value = 3;
+      break;
+    case 'kirschX':
+      kernel = [
+        [5, 5, 5],
+        [-3, 0, -3],
+        [-3, -3, -3]
+      ];
+      kernelSizeInput.value = 3;
+      break;
+    case 'kirschY':
+      kernel = [
+        [5, -3, -3],
+        [5, 0, -3],
+        [5, -3, -3]
+      ];
+      kernelSizeInput.value = 3;
+      break;
+    case 'robertsX':
+      kernel = [
+        [1, 0],
+        [0, -1]
+      ];
+      kernelSizeInput.value = 2;
+      break;
+    case 'robertsY':
+      kernel = [
+        [0, 1],
+        [-1, 0]
+      ];
+      kernelSizeInput.value = 2;
+      break;
+          case 'gaussian5x5':
+      kernel = [
+        [1, 4, 6, 4, 1],
+        [4, 16, 24, 16, 4],
+        [6, 24, 36, 24, 6],
+        [4, 16, 24, 16, 4],
+        [1, 4, 6, 4, 1]
+      ];
+      kernelSizeInput.value = 5;
+      break;
+    case 'gaussian7x7':
+      kernel = [
+        [0, 0, 1, 2, 1, 0, 0],
+        [0, 3, 13, 22, 13, 3, 0],
+        [1, 13, 59, 97, 59, 13, 1],
+        [2, 22, 97, 159, 97, 22, 2],
+        [1, 13, 59, 97, 59, 13, 1],
+        [0, 3, 13, 22, 13, 3, 0],
+        [0, 0, 1, 2, 1, 0, 0]
+      ];
+      kernelSizeInput.value = 7;
+      break;
+    case 'sharpen3x3':
+      kernel = [
+        [0, -1, 0],
+        [-1, 5, -1],
+        [0, -1, 0]
+      ];
+      kernelSizeInput.value = 3;
+      break;
+    case 'sharpen5x5':
+      kernel = [
+        [-1, -1, -1, -1, -1],
+        [-1, 2, 2, 2, -1],
+        [-1, 2, 8, 2, -1],
+        [-1, 2, 2, 2, -1],
+        [-1, -1, -1, -1, -1]
+      ];
+      kernelSizeInput.value = 5;
+      break;
+    case 'sharpen7x7':
+      kernel = [
+        [0, 0, -1, -1, -1, 0, 0],
+        [0, -1, -1, -1, -1, -1, 0],
+        [-1, -1, 2, 2, 2, -1, -1],
+        [-1, -1, 2, 8, 2, -1, -1],
+        [-1, -1, 2, 2, 2, -1, -1],
+        [0, -1, -1, -1, -1, -1, 0],
+        [0, 0, -1, -1, -1, 0, 0]
+      ];
+      kernelSizeInput.value = 7;
+      break;
+    case 'boxBlur5x5':
+      kernel = Array(5).fill().map(() => Array(5).fill(1));
+      break;
+    case 'motionBlur7x7':
+      kernel = [
+        [1, 0, 0, 0, 0, 0, 1],
+        [0, 1, 0, 0, 0, 1, 0],
+        [0, 0, 1, 0, 1, 0, 0],
+        [0, 0, 0, 1, 0, 0, 0],
+        [0, 0, 1, 0, 1, 0, 0],
+        [0, 1, 0, 0, 0, 1, 0],
+        [1, 0, 0, 0, 0, 0, 1]
+      ];
+      kernelSizeInput.value = 3;
+      break;
+    case 'edge5x5':
+      kernel = [
+        [-1, -1, -1, -1, -1],
+        [-1, 0, 0, 0, -1],
+        [-1, 0, 16, 0, -1],
+        [-1, 0, 0, 0, -1],
+        [-1, -1, -1, -1, -1]
+      ];
+      kernelSizeInput.value = 5;
+      break;
+    case 'laplacian5x5':
+      kernel = [
+        [0, 0, -1, 0, 0],
+        [0, -1, -2, -1, 0],
+        [-1, -2, 16, -2, -1],
+        [0, -1, -2, -1, 0],
+        [0, 0, -1, 0, 0]
+      ];
+      kernelSizeInput.value = 5;
+      break;
+    case 'emboss5x5':
+      kernel = [
+        [-2, -1, 0, 1, 2],
+        [-2, -1, 0, 1, 2],
+        [-2, -1, 1, 1, 2],
+        [-2, -1, 0, 1, 2],
+        [-2, -1, 0, 1, 2]
+      ];
+      kernelSizeInput.value = 5;
+      break;
+    case 'prewittX5x5':
+      kernel = [
+        [-1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, -1],
+        [0, 0, 0, 0, 0],
+        [1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1]
+      ];
+      kernelSizeInput.value = 5;
+      break;
+    case 'sobelX5x5':
+      kernel = [
+        [-1, -2, -3, -2, -1],
+        [-2, -3, -4, -3, -2],
+        [0, 0, 0, 0, 0],
+        [2, 3, 4, 3, 2],
+        [1, 2, 3, 2, 1]
+      ];
+      kernelSizeInput.value = 5;
+      break;
+    case 'sobelY5x5':
+      kernel = [
+        [-1, -2, 0, 2, 1],
+        [-2, -3, 0, 3, 2],
+        [-3, -4, 0, 4, 3],
+        [-2, -3, 0, 3, 2],
+        [-1, -2, 0, 2, 1]
+      ];
+      kernelSizeInput.value = 5;
+      break;
+    case 'highPass5x5':
+      kernel = [
+        [-1, -1, -1, -1, -1],
+        [-1, 2, 2, 2, -1],
+        [-1, 2, 8, 2, -1],
+        [-1, 2, 2, 2, -1],
+        [-1, -1, -1, -1, -1]
+      ];
+      kernelSizeInput.value = 5;
+      break;
+    case 'outline5x5':
+      kernel = [
+        [0, 0, -1, 0, 0],
+        [0, -1, -2, -1, 0],
+        [-1, -2, 8, -2, -1],
+        [0, -1, -2, -1, 0],
+        [0, 0, -1, 0, 0]
+      ];
+      kernelSizeInput.value = 5;
+      break;
+      case 'diamondEdge5x5':
+  kernel = [
+    [0, 0, -1, 0, 0],
+    [0, -1, -2, -1, 0],
+    [-1, -2, 8, -2, -1],
+    [0, -1, -2, -1, 0],
+    [0, 0, -1, 0, 0]
+  ];
+   kernelSizeInput.value = 5;
+  break;
+case 'diamondEdge5x5':
+  kernel = [
+    [0, 0, -1, 0, 0],
+    [0, -1, -2, -1, 0],
+    [-1, -2, 8, -2, -1],
+    [0, -1, -2, -1, 0],
+    [0, 0, -1, 0, 0]
+  ]; kernelSizeInput.value = 5;
+  break;
+case 'glowGrid7x7':
+  kernel = [
+    [-1, -1, 0, 0, 0, -1, -1],
+    [-1, 0, 2, 2, 2, 0, -1],
+    [0, 2, 5, 5, 5, 2, 0],
+    [0, 2, 5, 8, 5, 2, 0],
+    [0, 2, 5, 5, 5, 2, 0],
+    [-1, 0, 2, 2, 2, 0, -1],
+    [-1, -1, 0, 0, 0, -1, -1]
+  ]; kernelSizeInput.value = 7;
+  break;
+case 'ripple5x5':
+  kernel = [
+    [0, 1, 2, 1, 0],
+    [1, 2, 3, 2, 1],
+    [2, 3, 5, 3, 2],
+    [1, 2, 3, 2, 1],
+    [0, 1, 2, 1, 0]
+  ]; kernelSizeInput.value = 5;
+  break;
+case 'glow7x7':
+  kernel = [
+    [0, 0, -1, -1, -1, 0, 0],
+    [0, -1, 2, 2, 2, -1, 0],
+    [-1, 2, 4, 4, 4, 2, -1],
+    [-1, 2, 4, 8, 4, 2, -1],
+    [-1, 2, 4, 4, 4, 2, -1],
+    [0, -1, 2, 2, 2, -1, 0],
+    [0, 0, -1, -1, -1, 0, 0]
+  ]; kernelSizeInput.value = 7;
+  break;
+case 'embossWave5x5':
+  kernel = [
+    [-2, -1, 0, 1, 2],
+    [-1, 0, 1, 0, -1],
+    [0, 1, 5, 1, 0],
+    [1, 0, -1, 0, 1],
+    [2, 1, 0, -1, -2]
+  ]; kernelSizeInput.value = 5;
+  break;
+case 'cartoonify7x7':
+  kernel = [
+    [-1, -1, -1, -1, -1, -1, -1],
+    [-1, 2, 2, 2, 2, 2, -1],
+    [-1, 2, 5, 5, 5, 2, -1],
+    [-1, 2, 5, 8, 5, 2, -1],
+    [-1, 2, 5, 5, 5, 2, -1],
+    [-1, 2, 2, 2, 2, 2, -1],
+    [-1, -1, -1, -1, -1, -1, -1]
+  ]; kernelSizeInput.value = 7;
+  break;
+case 'swirl5x5':
+  kernel = [
+    [-1, 0, 1, 0, -1],
+    [0, 2, 3, 2, 0],
+    [1, 3, 5, 3, 1],
+    [0, 2, 3, 2, 0],
+    [-1, 0, 1, 0, -1]
+  ]; kernelSizeInput.value = 5;
+  break;
+case 'pixelate5x5':
+  kernel = Array(5).fill().map(() => Array(5).fill(1));
+  kernelSizeInput.value = 5; break;
+
+    case 'identity':
+      kernel = [
+        [0, 0, 0],
+        [0, 1, 0],
+        [0, 0, 0]
+      ];
+          kernelSizeInput.value = 3;
+      break;
+        default:
+          kernel = new Array(kernel.length).fill().map(() => new Array(kernel.length).fill(0));
+          break;
+      }
+      createKernelTable(0);
+      updateKernelTable();
+    }
+
+    // Normalize kernel
+    function normalizeKernel() {
+      let sum = kernel.flat().reduce((a, b) => a + b, 0);
+      if (sum !== 0) {
+        for (let i = 0; i < kernel.length; i++) {
+          for (let j = 0; j < kernel[i].length; j++) {
+            kernel[i][j] /= sum;
+          }
+        }
+        updateKernelTable();
+      }
+    }
+    function classicNormalizeKernel() {
+      let normalizeValue = parseFloat(normalizeValueInput.value);
+      if (isNaN(normalizeValue)) return;
+
+      for (let i = 0; i < kernel.length; i++) {
+        for (let j = 0; j < kernel[i].length; j++) {
+          kernel[i][j] /= normalizeValue;
+        }
+      }
+      updateKernelTable();
+    }
+    // Auto-normalize kernel
+    function autoNormalizeKernel() {
+      let sum = kernel.flat().reduce((a, b) => a + b, 0);
+      if (sum !== 0) {
+        normalizeKernel();
+      }
+    }
+
+    // Save kernel to textbox
+    function saveKernel() {
+      let kernelStr = kernel.map(row => row.join(',')).join(';');
+      kernelText.value = kernelStr;
+    }
+
+    // Load kernel from textbox
+    function loadKernel() {
+      let kernelStr = kernelText.value.trim();
+      let rows = kernelStr.split(';');
+      kernel = rows.map(row => row.split(',').map(Number));
+      kernelSizeInput.value = kernel.length;
+      createKernelTable(0);
+      updateKernelTable();
+    }
+
+    // Update kernel table with current kernel values
+    function updateKernelTable() {
+      for (let i = 0; i < kernel.length; i++) {
+        for (let j = 0; j < kernel[i].length; j++) {
+          document.getElementById(`kernel-${i}-${j}`).value = kernel[i][j];
+        }
+      }
+    }
+
+    // Apply convolution
+    function applyConvolution() {
+      let imageData = inputCtx.getImageData(0, 0, inputCanvas.width, inputCanvas.height);
+      let outputData = outputCtx.createImageData(inputCanvas.width, inputCanvas.height);
+      let edgeHandling = edgeHandlingSelect.value;
+
+      for (let y = 0; y < inputCanvas.height; y++) {
+        for (let x = 0; x < inputCanvas.width; x++) {
+          let r = 0, g = 0, b = 0;
+          for (let ky = 0; ky < kernel.length; ky++) {
+            for (let kx = 0; kx < kernel[ky].length; kx++) {
+              let px = x + kx - Math.floor(kernel.length / 2);
+              let py = y + ky - Math.floor(kernel.length / 2);
+              let pixel = getPixel(imageData, px, py, edgeHandling);
+              r += pixel.r * kernel[ky][kx];
+              g += pixel.g * kernel[ky][kx];
+              b += pixel.b * kernel[ky][kx];
+            }
+          }
+          setPixel(outputData, x, y, r, g, b, 255);
+        }
+      }
+      outputCtx.putImageData(outputData, 0, 0);
+    }
+
+    // Get pixel with edge handling
+    function getPixel(imageData, x, y, edgeHandling) {
+      if (x >= 0 && x < imageData.width && y >= 0 && y < imageData.height) {
+        let index = (y * imageData.width + x) * 4;
+        return {
+          r: imageData.data[index],
+          g: imageData.data[index + 1],
+          b: imageData.data[index + 2]
+        };
+      } else {
+        switch (edgeHandling) {
+          case 'warp':
+            x = (x + imageData.width) % imageData.width;
+            y = (y + imageData.height) % imageData.height;
+            return getPixel(imageData, x, y, edgeHandling);
+          case 'mirror':
+            x = x < 0 ? -x : x >= imageData.width ? 2 * imageData.width - x - 1 : x;
+            y = y < 0 ? -y : y >= imageData.height ? 2 * imageData.height - y - 1 : y;
+            return getPixel(imageData, x, y, edgeHandling);
+          case 'crop':
+            return { r: 0, g: 0, b: 0 };
+          case 'white':
+            return { r: 255, g: 255, b: 255 };
+          case 'black':
+            return { r: 0, g: 0, b: 0 };
+          case 'average':
+            let avgR = 0, avgG = 0, avgB = 0;
+            let count = 0;
+            for (let i = -1; i <= 1; i++) {
+              for (let j = -1; j <= 1; j++) {
+                if (x + i >= 0 && x + i < imageData.width && y + j >= 0 && y + j < imageData.height) {
+                  let index = ((y + j) * imageData.width + (x + i)) * 4;
+                  avgR += imageData.data[index];
+                  avgG += imageData.data[index + 1];
+                  avgB += imageData.data[index + 2];
+                  count++;
+                }
+              }
+            }
+            return {
+              r: avgR / count,
+              g: avgG / count,
+              b: avgB / count
+            };
+        }
+      }
+    }
+
+    // Set pixel in output data
+    function setPixel(imageData, x, y, r, g, b, a) {
+      let index = (y * imageData.width + x) * 4;
+      imageData.data[index] = r;
+      imageData.data[index + 1] = g;
+      imageData.data[index + 2] = b;
+      imageData.data[index + 3] = a;
+    }
+    
+        function tanhNormalizeKernel() {
+      for (let i = 0; i < kernel.length; i++) {
+        for (let j = 0; j < kernel[i].length; j++) {
+          kernel[i][j] = Math.tanh(kernel[i][j]);
+        }
+      }
+      updateKernelTable();
+    }
+      function loadKernelFromImage() {
+      let file = kernelImageInput.files[0];
+      if (!file) return;
+
+      let reader = new FileReader();
+      reader.onload = function (event) {
+        let img = new Image();
+        img.onload = function () {
+          let canvas = document.createElement('canvas');
+          let ctx = canvas.getContext('2d');
+          canvas.width = parseInt(kernelSizeInput.value);
+          canvas.height = parseInt(kernelSizeInput.value);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          kernel = [];
+          for (let y = 0; y < canvas.height; y++) {
+            let row = [];
+            for (let x = 0; x < canvas.width; x++) {
+              let index = (y * canvas.width + x) * 4;
+              let r = imageData.data[index];
+              let g = imageData.data[index + 1];
+              let b = imageData.data[index + 2];
+              let value = (r + g + b) / 3 / 255; // Normalize to [0, 1]
+              row.push(value);
+            }
+            kernel.push(row);
+          }
+          kernelSizeInput.value = kernel.length;
+          createKernelTable(0);
+          updateKernelTable();
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Preview kernel on canvas
+    function previewKernel() {
+      let size = kernel.length;
+      let cellSize = kernelPreviewCanvas.width / size;
+
+      kernelPreviewCtx.clearRect(0, 0, kernelPreviewCanvas.width, kernelPreviewCanvas.height);
+
+      for (let i = 0; i < size; i++) {
+        for (let j = 0; j < size; j++) {
+          let value = Math.tanh(kernel[i][j]); // Normalize with tanh
+          let color = value < 0 ? `rgba(0, 255, 255, ${Math.abs(value)})` : `rgba(255, 0, 0, ${value})`;
+          kernelPreviewCtx.fillStyle = color;
+          kernelPreviewCtx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+
+    
+    
+    
+    
+    
+    
+    
+    
+    function createKernelTable(g=1) {
+      let size = parseInt(kernelSizeInput.value);
+      if(g){kernel = new Array(size).fill().map(() => new Array(size).fill(0));}
+      let tableHTML = '<table>';
+      for (let i = 0; i < size; i++) {
+        tableHTML += '<tr>';
+        for (let j = 0; j < size; j++) {
+          tableHTML += `<td><input type="number" id="kernel-${i}-${j}" value="${kernel[i][j]}" oninput="updateKernel(${i}, ${j})"></td>`;
+        }
+        tableHTML += '</tr>';
+      }
+      tableHTML += '</table>';
+      kernelTable.innerHTML = tableHTML;
+    }
+    // Initialize kernel table
+    
+    
+    
+    
+    createKernelTable();
+  </script>
+</body>
+</html>

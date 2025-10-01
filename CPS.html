@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Advanced CPS Counter</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #clickArea {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 3px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            margin: 0 auto 20px;
+            user-select: none;
+            background: #f0f0f0;
+        }
+        #graphArea {
+            width: 800px;
+            height: 400px;
+            margin: 20px auto;
+            position: relative;
+            border: 2px solid #333;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        #counters {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .counter-group {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .counter-group h3 {
+            margin-top: 0;
+            text-align: center;
+        }
+        .counter-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+        }
+        .color-box {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border: 1px solid #333;
+        }
+        .value {
+            font-family: monospace;
+            font-size: 16px;
+        }
+        #controls {
+            margin: 20px auto;
+            text-align: center;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            max-width: 800px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        label {
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        input {
+            width: 80px;
+            text-align: center;
+            padding: 5px;
+        }
+        .reference-line {
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            background: rgba(0,0,0,0.1);
+        }
+        .reference-label {
+            position: absolute;
+            font-size: 10px;
+            color: #666;
+            background: white;
+            padding: 0 3px;
+        }
+    </style>
+</head>
+<body>
+    <div id="clickArea">Click Here</div>
+    <div id="controls">
+        <div class="control-group">
+            <label for="historySize">History Size</label>
+            <input type="number" id="historySize" value="800" min="100" max="2000">
+        </div>
+        <div class="control-group">
+            <label for="updateInterval">Update (ms)</label>
+            <input type="number" id="updateInterval" value="10" min="1" max="200">
+        </div>
+        <div class="control-group">
+            <label for="normalizationSpeed">Normalization</label>
+            <input type="number" id="normalizationSpeed" value="0.2" min="0.01" max="1" step="0.01">
+        </div>
+        <div class="control-group">
+            <label for="amplification">Amplification</label>
+            <input type="number" id="amplification" value="0.5" min="0.1" max="5" step="0.1">
+        </div>
+        <div class="control-group">
+            <label for="scrollSpeed">Scroll Speed</label>
+            <input type="number" id="scrollSpeed" value="2" min="0.1" max="5" step="0.1">
+        </div>
+        <div class="control-group">
+            <label for="borderSize">Border Size</label>
+            <input type="number" id="borderSize" value="2" min="0" max="10">
+        </div>
+    </div>
+    <div id="graphArea">
+        <canvas id="graphCanvas" width="800" height="400"></canvas>
+        <div id="referenceLines"></div>
+    </div>
+    <div id="counters"></div>
+
+<script>
+// Configuration
+const config = {
+    historySize: 800,
+    updateInterval: 10,
+    normalizationSpeed: 0.2,
+    scrollSpeed: 2,
+    amplification: 0.5,
+    borderSize: 2,
+    maxHoldValue: 1000,
+    maxVarianceValue: 500,
+    autoScaleWindow: 5000,
+    referenceLines: 5
+};
+
+// DOM Elements
+const elements = {
+    clickArea: document.getElementById('clickArea'),
+    graphCanvas: document.getElementById('graphCanvas'),
+    graphCtx: document.getElementById('graphCanvas').getContext('2d'),
+    countersContainer: document.getElementById('counters'),
+    referenceLinesContainer: document.getElementById('referenceLines'),
+    historySizeInput: document.getElementById('historySize'),
+    updateIntervalInput: document.getElementById('updateInterval'),
+    normalizationSpeedInput: document.getElementById('normalizationSpeed'),
+    amplificationInput: document.getElementById('amplification'),
+    scrollSpeedInput: document.getElementById('scrollSpeed'),
+    borderSizeInput: document.getElementById('borderSize')
+};
+
+// Update config from inputs
+function updateConfig() {
+    config.historySize = Math.min(
+        parseInt(elements.historySizeInput.value),
+        elements.graphCanvas.width
+    );
+    config.updateInterval = parseInt(elements.updateIntervalInput.value);
+    config.normalizationSpeed = parseFloat(elements.normalizationSpeedInput.value);
+    config.scrollSpeed = parseFloat(elements.scrollSpeedInput.value);
+    config.amplification = parseFloat(elements.amplificationInput.value);
+    config.borderSize = parseInt(elements.borderSizeInput.value);
+    //elements.graphArea.style.borderWidth = `${config.borderSize}px`;
+}
+
+['historySize', 'updateInterval', 'normalizationSpeed', 'amplification', 'scrollSpeed', 'borderSize'].forEach(id => {
+    document.getElementById(id).addEventListener('change', updateConfig);
+});
+
+// Color Definitions
+const colorGroups = {
+    grey: {
+        name: "Grey Shades (CPS)",
+        colors: [
+            { name: "Light Grey (1s)", value: "#d3d3d3" },
+            { name: "Grey (2s)", value: "#808080" },
+            { name: "Dark Grey (3s)", value: "#a9a9a9" },
+            { name: "Dark Slate (4s)", value: "#2f4f4f" },
+            { name: "Black (5s)", value: "#000000" }
+        ],
+        min: 0, max: 1, autoMin: 0, autoMax: 1
+    },
+    blue: {
+        name: "Blue Shades (Avg CPS)",
+        colors: [
+            { name: "Light Blue (1)", value: "#add8e6" },
+            { name: "Blue (2)", value: "#0000ff" },
+            { name: "Dark Blue (3)", value: "#00008b" },
+            { name: "Navy (4)", value: "#000080" },
+            { name: "Indigo (5)", value: "#4b0082" }
+        ],
+        min: 0, max: 1, autoMin: 0, autoMax: 1
+    },
+    red: {
+        name: "Red Shades (Hold Balance)",
+        colors: [
+            { name: "Light Red (1s)", value: "#ffcccb" },
+            { name: "Red (2s)", value: "#ff0000" },
+            { name: "Dark Red (3s)", value: "#8b0000" },
+            { name: "Crimson (4s)", value: "#dc143c" },
+            { name: "Mahogany (5s)", value: "#800000" }
+        ],
+        min: -1, max: 1, autoMin: -1, autoMax: 1,
+        centerZero: true
+    },
+    green: {
+        name: "Green Shades (Click Variance)",
+        colors: [
+            { name: "Light Green (1s)", value: "#90ee90" },
+            { name: "Green (2s)", value: "#008000" },
+            { name: "Dark Green (3s)", value: "#006400" },
+            { name: "Pthalho (4s)", value: "#00ff00" },
+            { name: "Sacremanto (5s)", value: "#00ff7f" }
+        ],
+        min: -1, max: 1, autoMin: -1, autoMax: 1,
+        centerZero: true
+    },
+    magenta: {
+        name: "Magenta (Hold Motion)",
+        colors: [
+            { name: "Pink (1s)", value: "#ffc0cb", speed: 0.2*9 },
+            { name: "Hot Pink (2s)", value: "#ff69b4", speed: 0.4*9 },
+            { name: "Deep Pink (3s)", value: "#ff1493", speed: 0.6*9 },
+            { name: "Medium Violet (4s)", value: "#c71585", speed: 0.8*9 },
+            { name: "Dark Magenta (5s)", value: "#8b008b", speed: 1.0*9 }
+        ],
+        min: -1, max: 1,
+        centerZero: true,
+        bounded: true,
+        physics: true
+    },
+    yellow: {
+        name: "Yellow (Bounce Motion)",
+        colors: [
+            { name: "Light Yellow (1s)", value: "#ffffe0", speed: 0.3*8, accel: 0.2 *4*8 },
+            { name: "Lemon (2s)", value: "#fff700", speed: 0.5*8, accel: 0.3*4*8 },
+            { name: "Gold (3s)", value: "#ffd700", speed: 0.7*8, accel: 0.4*4 *8},
+            { name: "Orange (4s)", value: "#ffa500", speed: 0.9*8, accel: 0.5*4*8 },
+            { name: "Dark Orange (5s)", value: "#ff8c00", speed: 1.1*8, accel: 0.6*4*8 }
+        ],
+        min: -1, max: 1,
+        centerZero: true,
+        bounded: true,
+        physics: true
+    },
+    cyan: {
+        name: "Cyan (Click Motion)",
+        colors: [
+            { name: "Light Cyan (1s)", value: "#e0ffff", speed: 0.3*9 },
+            { name: "Pale Turquoise (2s)", value: "#afeeee", speed: 0.5*9 },
+            { name: "Aqua (3s)", value: "#00ffff", speed: 0.7*9 },
+            { name: "Turquoise (4s)", value: "#40e0d0", speed: 0.9*9},
+            { name: "Dark Cyan (5s)", value: "#008b8b", speed: 1.1*9 }
+        ],
+        min: -1, max: 1,
+        centerZero: true,
+        bounded: true,
+        physics: true
+    }
+};
+
+// Data Storage
+const clickData = {
+    timestamps: [], positions: [], holdTimes: [],
+    lastReleaseTime: null, isHolding: false,
+    cyanDirection: 1 // 1 for up, -1 for down
+};
+
+// Physics state for motion graphs
+const physicsState = {
+    magenta: [ { pos: 0, vel: 0 }, { pos: 0, vel: 0 }, { pos: 0, vel: 0 }, { pos: 0, vel: 0 }, { pos: 0, vel: 0 } ],
+    yellow: [ { pos: 0, vel: 0, accelDir: 1 }, { pos: 0, vel: 0, accelDir: 1 }, { pos: 0, vel: 0, accelDir: 1 }, { pos: 0, vel: 0, accelDir: 1 }, { pos: 0, vel: 0, accelDir: 1 } ],
+    cyan: [ { pos: 0, vel: 0 }, { pos: 0, vel: 0 }, { pos: 0, vel: 0 }, { pos: 0, vel: 0 }, { pos: 0, vel: 0 } ]
+};
+
+const graphData = {
+    grey: [[0], [0], [0], [0], [0]],
+    blue: [[0], [0], [0], [0], [0]],
+    red: [[0], [0], [0], [0], [0]],
+    green: [[0], [0], [0], [0], [0]],
+    magenta: [[0], [0], [0], [0], [0]],
+    yellow: [[0], [0], [0], [0], [0]],
+    cyan: [[0], [0], [0], [0], [0]]
+};
+
+// Time-based data tracking
+let lastDataUpdateTime = Date.now();
+let dataPointsAdded = 0;
+
+// Initialize UI
+function initializeCounters() {
+    elements.countersContainer.innerHTML = '';
+    for (const [groupKey, group] of Object.entries(colorGroups)) {
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'counter-group';
+        groupDiv.innerHTML = `<h3>${group.name}</h3>`;
+        
+        group.colors.forEach((color, index) => {
+            const item = document.createElement('div');
+            item.className = 'counter-item';
+            item.innerHTML = `
+                <div class="color-box" style="background:${color.value}"></div>
+                <span class="name">${color.name}:</span>
+                <span class="value" data-group="${groupKey}" data-index="${index}">0.00</span>
+            `;
+            groupDiv.appendChild(item);
+        });
+        
+        elements.countersContainer.appendChild(groupDiv);
+    }
+}
+
+// Create reference lines
+function createReferenceLines() {
+    elements.referenceLinesContainer.innerHTML = '';
+    const groupHeight = elements.graphCanvas.height / (Object.keys(colorGroups).length);
+    
+    Object.entries(colorGroups).forEach(([_, group], groupIndex) => {
+        const baseY = groupIndex * groupHeight;
+        const graphHeight = groupHeight;
+        
+        for (let i = 0; i <= config.referenceLines; i++) {
+            const ratio = i / config.referenceLines;
+            const value = group.min + (group.max - group.min) * ratio;
+            const y = baseY + graphHeight * (1 - ratio);
+            
+            const line = document.createElement('div');
+            line.className = 'reference-line';
+            line.style.top = `${y}px`;
+            elements.referenceLinesContainer.appendChild(line);
+            
+            const label = document.createElement('div');
+            label.className = 'reference-label';
+            label.textContent = value.toFixed(1);
+            label.style.top = `${y - 8}px`;
+            label.style.left = '5px';
+            elements.referenceLinesContainer.appendChild(label);
+        }
+    });
+}
+
+// Event Handlers
+elements.clickArea.addEventListener('click', function(e) {
+    const now = Date.now();
+    clickData.timestamps.push(now);
+    clickData.positions.push({ x: e.offsetX, y: e.offsetY });
+    clickData.cyanDirection *= -1; // Reverse direction on click
+    
+    if (clickData.timestamps.length >= 3) {
+        const t0 = clickData.timestamps[clickData.timestamps.length-3];
+        const t1 = clickData.timestamps[clickData.timestamps.length-2];
+        const t2 = clickData.timestamps[clickData.timestamps.length-1];
+        const variance = (t1 - t0) - (t2 - t1);
+        updateGraphData('green', variance * config.amplification);
+    }
+    
+    // Update cyan physics on click
+    for (let i = 0; i < 5; i++) {
+        physicsState.cyan[i].vel = colorGroups.cyan.colors[i].speed * clickData.cyanDirection * config.amplification;
+    }
+});
+
+elements.clickArea.addEventListener('mousedown', function() {
+    clickData.isHolding = true;
+    clickData.holdStartTime = Date.now();
+    if (clickData.lastReleaseTime) {
+        const nonHoldDuration = clickData.holdStartTime - clickData.lastReleaseTime;
+        updateGraphData('red', -Math.min(nonHoldDuration, config.maxHoldValue) * config.amplification);
+    }
+    
+    // Update magenta physics on hold
+    for (let i = 0; i < 5; i++) {
+        physicsState.magenta[i].vel = colorGroups.magenta.colors[i].speed * config.amplification;
+    }
+    
+    // Update yellow acceleration direction on hold
+    for (let i = 0; i < 5; i++) {
+        physicsState.yellow[i].accelDir = 1; // Positive acceleration when holding
+    }
+});
+
+elements.clickArea.addEventListener('mouseup', function() {
+    if (clickData.isHolding) {
+        const holdDuration = Date.now() - clickData.holdStartTime;
+        clickData.holdTimes.push(holdDuration);
+        clickData.lastReleaseTime = Date.now();
+        updateGraphData('red', Math.min(holdDuration, config.maxHoldValue) * config.amplification);
+        clickData.isHolding = false;
+    }
+    
+    // Update magenta physics on release
+    for (let i = 0; i < 5; i++) {
+        physicsState.magenta[i].vel = -colorGroups.magenta.colors[i].speed * config.amplification;
+    }
+    
+    // Update yellow acceleration direction on release
+    for (let i = 0; i < 5; i++) {
+        physicsState.yellow[i].accelDir = -1; // Negative acceleration when released
+    }
+});
+
+// Physics update for motion graphs
+function updatePhysics() {
+    const deltaTime = config.updateInterval / 1000; // Convert to seconds
+    
+    // Update magenta (hold motion)
+    for (let i = 0; i < 5; i++) {
+        const state = physicsState.magenta[i];
+        state.pos += state.vel * deltaTime;
+        
+        // Boundary check
+        if (state.pos > colorGroups.magenta.max) {
+            state.pos = colorGroups.magenta.max;
+            state.vel = 0;
+        } else if (state.pos < colorGroups.magenta.min) {
+            state.pos = colorGroups.magenta.min;
+            state.vel = 0;
+        }
+        
+        graphData.magenta[i][graphData.magenta[i].length - 1] = state.pos;
+    }
+    
+    // Update yellow (bounce motion)
+    for (let i = 0; i < 5; i++) {
+        const state = physicsState.yellow[i];
+        const accel = colorGroups.yellow.colors[i].accel * config.amplification;
+        
+        // Apply acceleration based on hold state
+        state.vel += accel * state.accelDir * deltaTime;
+        
+        // Apply velocity
+        state.pos += state.vel * deltaTime;
+        
+        // Boundary check with bounce
+        if (state.pos > colorGroups.yellow.max) {
+            state.pos = colorGroups.yellow.max;
+            state.vel = 0; // Stop at boundary
+        } else if (state.pos < colorGroups.yellow.min) {
+            state.pos = colorGroups.yellow.min;
+            state.vel = 0; // Stop at boundary
+        }
+        
+        graphData.yellow[i][graphData.yellow[i].length - 1] = state.pos;
+    }
+    
+    // Update cyan (click motion)
+    for (let i = 0; i < 5; i++) {
+        const state = physicsState.cyan[i];
+        state.pos += state.vel * deltaTime;
+        
+        // Boundary check
+        if (state.pos > colorGroups.cyan.max) {
+            state.pos = colorGroups.cyan.max;
+            state.vel = 0;
+        } else if (state.pos < colorGroups.cyan.min) {
+            state.pos = colorGroups.cyan.min;
+            state.vel = 0;
+        }
+        
+        graphData.cyan[i][graphData.cyan[i].length - 1] = state.pos;
+    }
+}
+
+// Data Processing
+function updateAllData() {
+    const now = Date.now();
+    const timeSinceLastUpdate = now - lastDataUpdateTime;
+    const updatesNeeded = Math.floor(timeSinceLastUpdate / config.updateInterval);
+    
+    if (updatesNeeded > 0) {
+        lastDataUpdateTime = now;
+        
+        // Add null values for scrolling
+        const scrollSteps = Math.max(1, Math.floor(config.scrollSpeed * updatesNeeded));
+        for (let i = 0; i < scrollSteps; i++) {
+            addDataPoint(null);
+            dataPointsAdded++;
+        }
+        
+        // Update CPS data (grey)
+        for (let i = 0; i < 5; i++) {
+            const windowSize = (i + 1) * 1000;
+            const clicksInWindow = clickData.timestamps.filter(t => now - t <= windowSize).length;
+            const cps = clicksInWindow / (i + 1);
+            graphData.grey[i][graphData.grey[i].length - 1] = cps;
+        }
+        
+        // Calculate average CPS (blue)
+        for (let i = 0; i < 5; i++) {
+            const numClicks = i + 1;
+            if (clickData.timestamps.length >= numClicks + 1) {
+                const recentTimestamps = clickData.timestamps.slice(-(numClicks + 1));
+                const intervals = recentTimestamps.slice(1).map((t, j) => t - recentTimestamps[j]);
+                const avgCPS = 1000 / (intervals.reduce((a, b) => a + b, 0) / intervals.length) || 0;
+                graphData.blue[i][graphData.blue[i].length - 1] = avgCPS;
+            } else {
+                graphData.blue[i][graphData.blue[i].length - 1] = 0;
+            }
+        }
+        
+        // Update hold data (red) if not holding
+        if (!clickData.isHolding && clickData.lastReleaseTime) {
+            const nonHoldDuration = now - clickData.lastReleaseTime;
+            if (nonHoldDuration > config.updateInterval) {
+                const value = -Math.min(nonHoldDuration, config.maxHoldValue) * config.amplification;
+                for (let i = 0; i < 5; i++) {
+                    graphData.red[i][graphData.red[i].length - 1] = value / (i + 1);
+                }
+            }
+        }
+        
+        // Update physics-based graphs
+        updatePhysics();
+        
+        updateAutoScaling();
+        createReferenceLines(); // Update reference lines when scaling changes
+    }
+}
+
+function addDataPoint(value) {
+    Object.keys(graphData).forEach(group => {
+        for (let i = 0; i < 5; i++) {
+            graphData[group][i].push(value !== null ? value : null);
+            if (graphData[group][i].length > config.historySize) {
+                graphData[group][i].shift();
+            }
+        }
+    });
+}
+
+function updateGraphData(type, value) {
+    for (let i = 0; i < 5; i++) {
+        if (graphData[type][i].length > 0) {
+            let newValue = value / (i + 1);
+            if (colorGroups[type].bounded) {
+                newValue = Math.max(colorGroups[type].min, Math.min(colorGroups[type].max, newValue));
+            }
+            graphData[type][i][graphData[type][i].length - 1] = newValue;
+        }
+    }
+}
+
+function updateAutoScaling() {
+    Object.entries(colorGroups).forEach(([groupKey, group]) => {
+        if (group.bounded || group.physics) return; // Don't auto-scale bounded or physics graphs
+        
+        let minValues = [], maxValues = [];
+        
+        for (let i = 0; i < 5; i++) {
+            const data = graphData[groupKey][i].filter(v => v !== null);
+            if (data.length > 0) {
+                const recentPoints = data.slice(-Math.floor(config.autoScaleWindow / config.updateInterval));
+                if (recentPoints.length > 0) {
+                    minValues.push(Math.min(...recentPoints));
+                    maxValues.push(Math.max(...recentPoints));
+                }
+            }
+        }
+        
+        if (minValues.length > 0 && maxValues.length > 0) {
+            let newMin = Math.min(...minValues);
+            let newMax = Math.max(...maxValues);
+            
+            if (config.amplification !== 1) {
+                const center = (newMax + newMin) / 2;
+                newMin = center + (newMin - center) * config.amplification;
+                newMax = center + (newMax - center) * config.amplification;
+            }
+            
+            if (group.centerZero) {
+                const extreme = Math.max(Math.abs(newMin), Math.abs(newMax));
+                newMin = -extreme;
+                newMax = extreme;
+            }
+            
+            group.autoMin += (newMin - group.autoMin) * config.normalizationSpeed;
+            group.autoMax += (newMax - group.autoMax) * config.normalizationSpeed;
+            
+            const minRange = groupKey === 'grey' || groupKey === 'blue' ? 0.5 : 1;
+            if (group.autoMax - group.autoMin < minRange) {
+                const center = (group.autoMax + group.autoMin) / 2;
+                group.autoMin = center - minRange/2;
+                group.autoMax = center + minRange/2;
+            }
+            
+            if (groupKey === 'grey' || groupKey === 'blue') {
+                group.autoMin = Math.max(0, group.autoMin);
+            }
+            
+            group.min = group.autoMin;
+            group.max = group.autoMax;
+        }
+    });
+}
+
+// Drawing Functions
+function drawGraph() {
+    elements.graphCtx.clearRect(0, 0, elements.graphCanvas.width, elements.graphCanvas.height);
+    
+    const groupHeight = elements.graphCanvas.height / (Object.keys(colorGroups).length);
+    const groupPadding = 20;
+    
+    Object.entries(colorGroups).forEach(([groupKey, group], groupIndex) => {
+        const baseY = groupIndex * groupHeight + groupPadding;
+        const graphHeight = groupHeight - groupPadding * 2;
+        
+        // Draw group label
+        elements.graphCtx.fillStyle = '#333';
+        elements.graphCtx.font = '12px Arial';
+        elements.graphCtx.fillText(group.name, 10, baseY - 5);
+        
+        // Draw each color in the group
+        group.colors.forEach((color, colorIndex) => {
+            const data = graphData[groupKey][colorIndex];
+            if (data.length === 0) return;
+            
+            const scale = graphHeight / (group.max - group.min);
+            
+            elements.graphCtx.strokeStyle = color.value;
+            elements.graphCtx.lineWidth = 2;
+            elements.graphCtx.beginPath();
+            
+            let firstPoint = true;
+            for (let i = 0; i < data.length; i++) {
+                if (data[i] !== null) {
+                    const x = elements.graphCanvas.width - data.length + i;
+                    const y = baseY + graphHeight - (data[i] - group.min) * scale;
+                    if (firstPoint) {
+                        elements.graphCtx.moveTo(x, y);
+                        firstPoint = false;
+                    } else {
+                        elements.graphCtx.lineTo(x, y);
+                    }
+                }
+            }
+            
+            elements.graphCtx.stroke();
+        });
+    });
+    
+    updateCounterValues();
+}
+
+function updateCounterValues() {
+    Object.keys(colorGroups).forEach(groupKey => {
+        for (let i = 0; i < 5; i++) {
+            const data = graphData[groupKey][i];
+            const value = data.length > 0 ? 
+                (data[data.length - 1] !== null ? data[data.length - 1] : 0) : 0;
+            document.querySelector(`.value[data-group="${groupKey}"][data-index="${i}"]`).textContent = value.toFixed(2);
+        }
+    });
+}
+
+// Animation Loop
+function animate() {
+    updateConfig();
+    updateAllData();
+    drawGraph();
+    requestAnimationFrame(animate);
+}
+
+// Initialize and start
+initializeCounters();
+createReferenceLines();
+animate();
+</script>
+</body>
+</html>

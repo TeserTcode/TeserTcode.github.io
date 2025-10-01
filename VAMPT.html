@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>M. Prunescu Tile Expander</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; }
+    canvas {
+      border: 1px solid black;
+      width: 512px;
+      height: 512px;
+      image-rendering: pixelated;
+    }
+    .palette { margin-top: 10px; }
+    .palette button {
+      width: 30px; height: 30px; margin: 2px;
+      border: 2px solid black; cursor: pointer;
+    }
+    .palette button.selected { border: 3px solid red; }
+    .custom-rules {
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+    }
+    .rule-editor {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .rule-inputs {
+      display: flex;
+      flex-direction: column;
+      margin-left: 10px;
+    }
+    .rule-row {
+      display: flex;
+    }
+    .rule-cell {
+      width: 30px;
+      height: 30px;
+      border: 1px solid #999;
+      margin: 1px;
+      cursor: pointer;
+    }
+    .iteration-counter {
+      margin: 10px;
+      font-weight: bold;
+    }
+    .controls {
+      margin: 10px;
+    }
+    .auto-custom {
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .auto-custom input {
+      width: 50px;
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h2>M. Prunescu Tile Expander</h2>
+  <div class="iteration-counter">Iteration: 0</div>
+  <canvas id="canvas"></canvas>
+  <div class="controls">
+    <label>
+      Mode:
+      <select id="modeSelect" onchange="changeMode(this.value)">
+        <option value="vampire">Vampire</option>
+        <option value="mothman">Mothman</option>
+        <option value="treasure">Treasure</option>
+        <option value="openpeano">OpenPeano</option>
+        <option value="infinity">Infinity</option>
+        <option value="custom">Custom</option>
+        <option value="autocustom">AutoCustom</option>
+      </select>
+    </label>
+    <button onclick="iterate()">Iterate</button>
+    <button onclick="iterateTo(8)">Iterate to 8</button>
+    <button onclick="resetGrid()">Reset</button>
+  </div>
+  <div class="palette" id="palette"></div>
+
+  <div id="customRulesContainer" class="custom-rules" style="display: none;">
+    <h3>Custom Rules</h3>
+    <button onclick="addRule()">Add Rule</button>
+    <button onclick="deleteRule()">Delete Rule</button>
+    <div id="customRulesEditors"></div>
+    <button onclick="saveCustomRules()">Save Custom Rules</button>
+  </div>
+
+  <div id="autoCustomContainer" class="auto-custom" style="display: none;">
+    <h3>AutoCustom Mode</h3>
+    <p>Field F₄ = {0,1,w,w+1} where w² + w + 1 = 0 (w+1 = q)</p>
+    <div>
+      <label>Initial value for a(i,0) and a(0,j):</label>
+      <select id="initialValue">
+        <option value="0">0</option>
+        <option value="1">1</option>
+        <option value="w">w</option>
+        <option value="q">q (w+1)</option>
+      </select>
+    </div>
+    <div>
+      <label>Recurrence function f(x,y,z):</label>
+      <input type="text" id="recurrenceFunction" value="x*x+q*y*y+z" placeholder="e.g. x*x+q*y*y+z">
+    </div>
+    <button onclick="generateAutoCustom()">Generate</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    let grid = [[1]]; // Start with tile 1
+    let currentTile = 1;
+    let currentMode = "vampire";
+    let iterationCount = 0;
+    const MAX_ITERATIONS = 10;
+
+    // Transformation rules
+    const ruleSets = {
+      vampire: {
+        1:  [[1,6],[11,2]],
+        2:  [[3,8],[9,14]],
+        3:  [[3,12],[7,2]],
+        4:  [[0,1],[1,5]],
+        5:  [[5,14],[14,0]],
+        6:  [[6,6],[7,2]],
+        7:  [[13,4],[1,5]],
+        8:  [[6,10],[9,14]],
+        9:  [[11,8],[13,14]],
+        10: [[10,0],[14,0]],
+        11: [[11,12],[11,2]],
+        12: [[10,1],[4,5]],
+        13: [[13,14],[0,0]],
+        14: [[1,10],[13,14]],
+        0:  [[0,0],[0,0]]
+      },
+      mothman: {
+        1:  [[1,6],[11,3]],
+        2:  [[0,1],[0,11]],
+        3:  [[8,7],[9,3]],
+        4:  [[0,1],[1,4]],
+        5:  [[8,10],[15,5]],
+        6:  [[1,6],[2,3]],
+        7:  [[4,3],[14,6]],
+        8:  [[1,12],[2,5]],
+        9:  [[4,14],[3,11]],
+        10: [[8,7],[15,7]],
+        11: [[1,12],[11,9]],
+        12: [[0,0],[1,6]],
+        14: [[4,3],[3,0]],
+        15: [[8,10],[9,9]],
+        0:  [[0,0],[0,0]]
+      },
+      treasure: {
+        1:  [[1,5],[2,6]],
+        2:  [[4,10],[1,7]],
+        3:  [[8,4],[3,5]],
+        4:  [[2,3],[4,8]],
+        5:  [[9,1],[10,3]],
+        6:  [[6,8],[11,1]],
+        7:  [[8,7],[9,2]],
+        8:  [[7,6],[12,4]],
+        9:  [[5,9],[7,11]],
+        10: [[12,2],[5,10]],
+        11: [[3,12],[7,9]],
+        12: [[10,11],[8,12]],
+        0:  [[0,0],[0,0]]
+      },
+      openpeano: {
+        1:  [[2,5],[1,4]],
+        2:  [[2,6],[1,3]],
+        3:  [[1,0],[0,2]],
+        4:  [[3,6],[1,4]],
+        5:  [[0,1],[6,0]],
+        6:  [[2,6],[5,4]],
+        0:  [[0,0],[0,0]]
+      },
+      infinity: {
+        1:  [[1,4],[1,2]],
+        2:  [[0,3],[1,2]],
+        3:  [[1,2],[1,4]],
+        4:  [[1,4],[0,3]],
+        0:  [[0,0],[0,0]]
+      },
+      custom: {}
+    };
+
+    // Save rules to localStorage when changed
+    function saveRulesToStorage() {
+      localStorage.setItem('tileRules', JSON.stringify(ruleSets.custom));
+    }
+
+    // Load rules from localStorage
+    function loadRulesFromStorage() {
+      const savedRules = localStorage.getItem('tileRules');
+      if (savedRules) {
+        ruleSets.custom = JSON.parse(savedRules);
+      }
+    }
+
+    function getRules() {
+      return ruleSets[currentMode];
+    }
+
+    // Colors: dark for [1,2,3,6,8,9,11], light for others
+    const darkTiles = new Set([1, 2, 3, 6, 8, 9, 11]);
+    const colors = {};
+    for (let i = 0; i <= 15; i++) {
+      if (i === 0) {
+        colors[i] = "#ffffff";
+      } else {
+        const hue = (i * 31) % 360;
+        const lightness = darkTiles.has(i) ? 30 : 70;
+        colors[i] = `hsl(${hue}, 80%, ${lightness}%)`;
+      }
+    }
+
+    // Add special colors for AutoCustom mode
+    colors['w'] = '#ff0000';    // Red for w
+    colors['q'] = '#0000ff';    // Blue for q (w+1)
+
+    function draw() {
+      const size = grid.length;
+      const tileDrawSize = Math.floor(512 / size); // dynamic tile draw size
+      canvas.width = size * tileDrawSize;
+      canvas.height = size * tileDrawSize;
+
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const tile = grid[y][x];
+          ctx.fillStyle = colors[tile] || "#000000";
+          ctx.fillRect(x * tileDrawSize, y * tileDrawSize, tileDrawSize, tileDrawSize);
+        }
+      }
+    }
+
+    function iterate() {
+      if (iterationCount >= MAX_ITERATIONS) {
+        alert(`Maximum iterations (${MAX_ITERATIONS}) reached. Reset to continue.`);
+        return;
+      }
+      
+      const rules = getRules();
+      const oldSize = grid.length;
+      const newSize = oldSize * 2;
+      const newGrid = Array.from({length: newSize}, () => Array(newSize).fill(0));
+
+      for (let y = 0; y < oldSize; y++) {
+        for (let x = 0; x < oldSize; x++) {
+          const tile = grid[y][x];
+          const rule = rules[tile] || [[0,0],[0,0]];
+          newGrid[2*y][2*x]     = rule[0][0];
+          newGrid[2*y][2*x+1]   = rule[0][1];
+          newGrid[2*y+1][2*x]   = rule[1][0];
+          newGrid[2*y+1][2*x+1] = rule[1][1];
+        }
+      }
+      grid = newGrid;
+      iterationCount++;
+      document.querySelector('.iteration-counter').textContent = `Iteration: ${iterationCount}`;
+      draw();
+    }
+
+    function iterateTo(targetIteration) {
+      if (targetIteration > MAX_ITERATIONS) {
+        alert(`Cannot iterate beyond ${MAX_ITERATIONS}.`);
+        return;
+      }
+      
+      while (iterationCount < targetIteration) {
+        iterate();
+      }
+    }
+
+    function resetGrid() {
+      grid = [[1]];
+      iterationCount = 0;
+      document.querySelector('.iteration-counter').textContent = `Iteration: ${iterationCount}`;
+      draw();
+    }
+
+    function makePalette() {
+      const paletteDiv = document.getElementById("palette");
+      paletteDiv.innerHTML = "";
+      
+      // Add standard tiles (0-15)
+      for (let i = 0; i <= 15; i++) {
+        const btn = document.createElement("button");
+        btn.style.background = colors[i];
+        btn.title = `Tile ${i}`;
+        btn.onclick = () => {
+          currentTile = i;
+          document.querySelectorAll(".palette button").forEach(b => b.classList.remove("selected"));
+          btn.classList.add("selected");
+          if (currentMode === "custom") {
+            updateCustomRuleEditors();
+          }
+        };
+        if (i === 1) btn.classList.add("selected");
+        paletteDiv.appendChild(btn);
+      }
+      
+      // Add special tiles for AutoCustom mode
+      const specialTiles = ['w', 'q'];
+      specialTiles.forEach(tile => {
+        const btn = document.createElement("button");
+        btn.style.background = colors[tile];
+        btn.title = `Tile ${tile}`;
+        btn.textContent = tile;
+        btn.onclick = () => {
+          currentTile = tile;
+          document.querySelectorAll(".palette button").forEach(b => b.classList.remove("selected"));
+          btn.classList.add("selected");
+        };
+        paletteDiv.appendChild(btn);
+      });
+    }
+
+    function changeMode(mode) {
+      currentMode = mode;
+      const customRulesContainer = document.getElementById("customRulesContainer");
+      const autoCustomContainer = document.getElementById("autoCustomContainer");
+      
+      if (mode === "custom") {
+        customRulesContainer.style.display = "block";
+        autoCustomContainer.style.display = "none";
+        createCustomRuleEditors();
+      } else if (mode === "autocustom") {
+        customRulesContainer.style.display = "none";
+        autoCustomContainer.style.display = "block";
+      } else {
+        customRulesContainer.style.display = "none";
+        autoCustomContainer.style.display = "none";
+      }
+      
+      // Reset grid when changing modes
+      resetGrid();
+    }
+
+    function createCustomRuleEditors() {
+      const container = document.getElementById("customRulesEditors");
+      container.innerHTML = "";
+      
+      // Create editors for each tile type
+      for (let i = 0; i <= 15; i++) {
+        if (!ruleSets.custom[i] && i !== 0) continue;
+        
+        const editor = document.createElement("div");
+        editor.className = "rule-editor";
+        
+        const label = document.createElement("span");
+        label.textContent = `Tile ${i} →`;
+        label.style.marginRight = "10px";
+        
+        const colorBox = document.createElement("div");
+        colorBox.style.width = "30px";
+        colorBox.style.height = "30px";
+        colorBox.style.backgroundColor = colors[i];
+        colorBox.style.border = "1px solid black";
+        colorBox.style.display = "inline-block";
+        colorBox.style.marginRight = "10px";
+        
+        const inputs = document.createElement("div");
+        inputs.className = "rule-inputs";
+        
+        // Create two rows of two inputs each
+        for (let row = 0; row < 2; row++) {
+          const rowDiv = document.createElement("div");
+          rowDiv.className = "rule-row";
+          
+          for (let col = 0; col < 2; col++) {
+            const cell = document.createElement("div");
+            cell.className = "rule-cell";
+            cell.dataset.row = row;
+            cell.dataset.col = col;
+            cell.dataset.tile = i;
+            cell.style.backgroundColor = "#ffffff";
+            cell.onclick = function() {
+              // Set this cell to current tile
+              cell.style.backgroundColor = colors[currentTile];
+              cell.dataset.value = currentTile;
+              saveCustomRules(); // Auto-save changes
+            };
+            
+            // Initialize with existing rule if it exists
+            if (ruleSets.custom[i] && ruleSets.custom[i][row] && ruleSets.custom[i][row][col] !== undefined) {
+              cell.style.backgroundColor = colors[ruleSets.custom[i][row][col]];
+              cell.dataset.value = ruleSets.custom[i][row][col];
+            } else {
+              cell.style.backgroundColor = colors[0];
+              cell.dataset.value = 0;
+            }
+            
+            rowDiv.appendChild(cell);
+          }
+          inputs.appendChild(rowDiv);
+        }
+        
+        editor.appendChild(colorBox);
+        editor.appendChild(label);
+        editor.appendChild(inputs);
+        container.appendChild(editor);
+      }
+    }
+
+    function updateCustomRuleEditors() {
+      const cells = document.querySelectorAll(".rule-cell");
+      cells.forEach(cell => {
+        if (cell.dataset.value === currentTile.toString()) {
+          cell.style.border = "2px solid red";
+        } else {
+          cell.style.border = "1px solid #999";
+        }
+      });
+    }
+
+    function addRule() {
+      const tile = prompt("Enter tile number to add (0-15):");
+      if (tile === null) return;
+      
+      const tileNum = parseInt(tile);
+      if (isNaN(tileNum) || tileNum < 0 || tileNum > 15) {
+        alert("Please enter a number between 0 and 15");
+        return;
+      }
+      
+      if (!ruleSets.custom[tileNum]) {
+        ruleSets.custom[tileNum] = [[0, 0], [0, 0]];
+        saveRulesToStorage();
+        createCustomRuleEditors();
+      } else {
+        alert(`Tile ${tileNum} already has a rule.`);
+      }
+    }
+
+    function deleteRule() {
+      const tile = prompt("Enter tile number to delete (0-15):");
+      if (tile === null) return;
+      
+      const tileNum = parseInt(tile);
+      if (isNaN(tileNum) || tileNum < 0 || tileNum > 15) {
+        alert("Please enter a number between 0 and 15");
+        return;
+      }
+      
+      if (ruleSets.custom[tileNum]) {
+        delete ruleSets.custom[tileNum];
+        saveRulesToStorage();
+        createCustomRuleEditors();
+      } else {
+        alert(`Tile ${tileNum} doesn't have a custom rule.`);
+      }
+    }
+
+    function saveCustomRules() {
+      const cells = document.querySelectorAll(".rule-cell");
+      
+      // Update with custom rules
+      cells.forEach(cell => {
+        const tile = parseInt(cell.dataset.tile);
+        const row = parseInt(cell.dataset.row);
+        const col = parseInt(cell.dataset.col);
+        const value = cell.dataset.value;
+        
+        if (!isNaN(tile)) {
+          if (!ruleSets.custom[tile]) {
+            ruleSets.custom[tile] = [[0, 0], [0, 0]];
+          }
+          ruleSets.custom[tile][row][col] = value;
+        }
+      });
+      
+      saveRulesToStorage();
+    }
+
+// In the generateAutoCustom() function:
+function generateAutoCustom() {
+  const initialValue = document.getElementById("initialValue").value;
+  const functionText = document.getElementById("recurrenceFunction").value;
+  
+  // Validate input is one of our F₄ elements
+  const validValues = ['0', '1', 'w', 'q'];
+  if (!validValues.includes(initialValue)) {
+    alert("Initial value must be 0, 1, w, or q");
+    return;
+  }
+
+  // Generate the grid
+  const size = 16;
+  const newGrid = Array.from({length: size}, () => Array(size).fill('0')); // Initialize with '0'
+  
+  // Set edges to initial value
+  for (let i = 0; i < size; i++) {
+    newGrid[i][0] = initialValue;
+    newGrid[0][i] = initialValue;
+  }
+
+  // F₄ arithmetic functions
+  function f4_add(a, b) {
+    if (a === '0') return b;
+    if (b === '0') return a;
+    if (a === b) return '0';
+    if ((a === '1' && b === 'w') || (a === 'w' && b === '1')) return 'q';
+    if ((a === '1' && b === 'q') || (a === 'q' && b === '1')) return 'w';
+    if ((a === 'w' && b === 'q') || (a === 'q' && b === 'w')) return '1';
+    return '0';
+  }
+
+  function f4_mul(a, b) {
+    if (a === '0' || b === '0') return '0';
+    if (a === '1') return b;
+    if (b === '1') return a;
+    if (a === 'w' && b === 'w') return 'q';
+    if (a === 'q' && b === 'q') return 'w';
+    if ((a === 'w' && b === 'q') || (a === 'q' && b === 'w')) return '1';
+    return '0';
+  }
+
+  // Fill the grid
+  for (let i = 1; i < size; i++) {
+    for (let j = 1; j < size; j++) {
+      const x = newGrid[i][j-1];
+      const y = newGrid[i-1][j-1];
+      const z = newGrid[i-1][j];
+      
+      try {
+        // Evaluate the function safely
+        let result;
+        if (functionText === "x + y + z") {
+          result = f4_add(f4_add(x, y), z);
+        } 
+        else if (functionText === "x * y * z") {
+          result = f4_mul(f4_mul(x, y), z);
+        }
+        else {
+          // For custom expressions, use this safe evaluation:
+          result = evalFunction(x, y, z, functionText);
+        }
+        
+        // Validate the result is a valid F₄ element
+        newGrid[i][j] = validValues.includes(result) ? result : '0';
+      } catch (e) {
+        newGrid[i][j] = '0';
+      }
+    }
+  }
+
+  grid = newGrid.map(row => row.map(val => {
+    // Convert to numeric values for compatibility with existing draw function
+    if (val === 'w') return 'w';
+    if (val === 'q') return 'q';
+    return parseInt(val);
+  }));
+  
+  iterationCount = 0;
+  document.querySelector('.iteration-counter').textContent = `Iteration: 0 (AutoCustom)`;
+  draw();
+}
+
+function evalFunction(x, y, z, expr) {
+  // Replace operators with our F₄ functions
+  expr = expr.replace(/\+/g, 'f4_add')
+             .replace(/\*/g, 'f4_mul')
+             .replace(/([^a-z])w([^a-z])/g, '$1"w"$2') // Protect w
+             .replace(/([^a-z])q([^a-z])/g, '$1"q"$2'); // Protect q
+  
+  try {
+    return eval(`
+      (function(x, y, z) {
+        ${f4_add.toString()}
+        ${f4_mul.toString()}
+        return ${expr};
+      })('${x}', '${y}', '${z}')
+    `);
+  } catch (e) {
+    return '0';
+  }
+}
+    canvas.addEventListener("click", e => {
+      const rect = canvas.getBoundingClientRect();
+      const drawSize = canvas.width;
+      const tileCount = grid.length;
+      const tileSize = drawSize / tileCount;
+      const x = Math.floor((e.clientX - rect.left) / (rect.width / tileCount));
+      const y = Math.floor((e.clientY - rect.top) / (rect.height / tileCount));
+      if (y >= 0 && y < tileCount && x >= 0 && x < tileCount) {
+        grid[y][x] = currentTile;
+        draw();
+      }
+    });
+
+    // Initialize
+    loadRulesFromStorage();
+    makePalette();
+    draw();
+  </script>
+  <!--- Vampire
+Discovered by
+Prunescu, M.
+https://tilings.math.uni-bielefeld.de/substitution/vampire/ --->
+</body>
+</html>

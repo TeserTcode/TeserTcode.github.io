@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Spritesheet Unlinearizer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body style="font-family: sans-serif;">
+  <h2>Spritesheet Unlinearizer</h2>
+
+  <label>Upload PNG spritesheet: <input type="file" id="spritesheet" accept="image/png"></label><br><br>
+
+  <label>Sprite Width: <input type="number" id="spriteWidth" value="32" min="1"></label><br>
+  <label>Sprite Height: <input type="number" id="spriteHeight" value="32" min="1"></label><br><br>
+
+  <label>Background:
+    <select id="backgroundMode">
+      <option value="transparent">Don't change opacity</option>
+      <option value="black">Black</option>
+      <option value="white">White</option>
+      <option value="pink">Pink</option>
+    </select>
+  </label><br><br>
+
+  <label>Zoom:
+    <input type="range" id="zoomSlider" min="1" max="8" value="1" oninput="updateZoomLabel(this.value)">
+    <span id="zoomLabel">1×</span>
+  </label><br>
+
+  <label><input type="checkbox" id="showGrid"> Show grid overlay</label><br><br>
+
+  <button onclick="processSpritesheet()">Unlinearize</button>
+  <button onclick="downloadSprites()">Download All Sprites as ZIP</button>
+  <button onclick="analyzeColors()">Analyze Most Used Colors</button>
+
+  <h3>Preview:</h3>
+  <canvas id="previewCanvas" style="border:1px solid #ccc;"></canvas>
+
+  <h3>Most Used Colors:</h3>
+  <div id="colorPalette" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
+
+  <script>
+    let spriteImages = [];
+    let originalImage = null;
+
+    function updateZoomLabel(val) {
+      document.getElementById('zoomLabel').textContent = `${val}×`;
+      if (originalImage) processSpritesheet(); // re-render with zoom
+    }
+
+    function getBGColor(mode) {
+      switch (mode) {
+        case 'black': return '#000';
+        case 'white': return '#fff';
+        case 'pink':  return '#ff00ff';
+        default: return null;
+      }
+    }
+
+    function processSpritesheet() {
+      const fileInput = document.getElementById('spritesheet');
+      const spriteW = parseInt(document.getElementById('spriteWidth').value);
+      const spriteH = parseInt(document.getElementById('spriteHeight').value);
+      const bgMode = document.getElementById('backgroundMode').value;
+      const bgColor = getBGColor(bgMode);
+      const zoom = parseInt(document.getElementById('zoomSlider').value);
+      const showGrid = document.getElementById('showGrid').checked;
+
+      if (!fileInput.files[0]) return alert("Please upload a spritesheet.");
+      const file = fileInput.files[0];
+      const img = new Image();
+      img.onload = () => {
+        originalImage = img;
+        const cols = Math.floor(img.width / spriteW);
+        const rows = Math.floor(img.height / spriteH);
+        const total = cols * rows;
+        const squareCols = Math.ceil(Math.sqrt(total));
+        const squareRows = Math.ceil(total / squareCols);
+
+        // Final preview canvas
+        const canvas = document.getElementById('previewCanvas');
+        canvas.width = squareCols * spriteW * zoom;
+        canvas.height = squareRows * spriteH * zoom;
+        const ctx = canvas.getContext('2d');
+
+        spriteImages = [];
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = spriteW;
+        tempCanvas.height = spriteH;
+        const tempCtx = tempCanvas.getContext('2d');
+
+        for (let i = 0; i < total; i++) {
+          const sx = (i % cols) * spriteW;
+          const sy = Math.floor(i / cols) * spriteH;
+
+          tempCtx.clearRect(0, 0, spriteW, spriteH);
+          if (bgColor) {
+            tempCtx.fillStyle = bgColor;
+            tempCtx.fillRect(0, 0, spriteW, spriteH);
+          }
+
+          tempCtx.drawImage(img, sx, sy, spriteW, spriteH, 0, 0, spriteW, spriteH);
+          const dataURL = tempCanvas.toDataURL("image/png");
+          spriteImages.push(dataURL);
+
+          const dx = (i % squareCols) * spriteW * zoom;
+          const dy = Math.floor(i / squareCols) * spriteH * zoom;
+          const spriteImg = new Image();
+          spriteImg.src = dataURL;
+          spriteImg.onload = () => {
+            ctx.drawImage(spriteImg, dx, dy, spriteW * zoom, spriteH * zoom);
+
+            if (showGrid) {
+              ctx.strokeStyle = "rgba(0,0,0,0.3)";
+              ctx.strokeRect(dx, dy, spriteW * zoom, spriteH * zoom);
+            }
+          };
+        }
+      };
+      img.src = URL.createObjectURL(file);
+    }
+
+    function downloadSprites() {
+      if (!spriteImages.length) return alert("No sprites to download. Process the spritesheet first.");
+      const zip = new JSZip();
+      spriteImages.forEach((dataURL, i) => {
+        const base64 = dataURL.split(',')[1];
+        zip.file(`sprite_${i + 1}.png`, base64, { base64: true });
+      });
+      zip.generateAsync({ type: "blob" }).then(content => {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(content);
+        a.download = "sprites.zip";
+        a.click();
+      });
+    }
+
+    function analyzeColors() {
+      if (!originalImage) return alert("Process an image first.");
+      const spriteW = parseInt(document.getElementById('spriteWidth').value);
+      const spriteH = parseInt(document.getElementById('spriteHeight').value);
+      const canvas = document.createElement('canvas');
+      canvas.width = originalImage.width;
+      canvas.height = originalImage.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(originalImage, 0, 0);
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+
+      const colorMap = new Map();
+      for (let i = 0; i < imgData.length; i += 4) {
+        const a = imgData[i + 3];
+        if (a === 0) continue; // skip full transparent
+        const r = imgData[i];
+        const g = imgData[i + 1];
+        const b = imgData[i + 2];
+        const key = `#${[r, g, b].map(x => x.toString(16).padStart(2, '0')).join('')}`;
+        colorMap.set(key, (colorMap.get(key) || 0) + 1);
+      }
+
+      const sorted = Array.from(colorMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 20);
+      const paletteDiv = document.getElementById("colorPalette");
+      paletteDiv.innerHTML = '';
+      for (const [color, count] of sorted) {
+        const box = document.createElement("div");
+        box.style.width = "60px";
+        box.style.textAlign = "center";
+        box.innerHTML = `
+          <div style="width:30px; height:30px; background:${color}; margin:auto; border:1px solid #ccc;"></div>
+          <small>${color}<br>(${count})</small>
+        `;
+        paletteDiv.appendChild(box);
+      }
+    }
+  </script>
+</body>
+</html>
