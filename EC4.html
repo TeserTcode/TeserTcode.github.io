@@ -22,49 +22,22 @@
     </div>
     <div style="width:95%; display:flex; align-items:center; justify-content:center; margin:4px 0;">
       Calibration 1 (D–E):
-      <input type="range" id="calib1Slider" min="-180" max="180" value="-136" style="flex:1; margin:0 10px;">
-      <span id="calib1Value">-136°</span>
+      <input type="range" id="calib1Slider" min="-180" max="180" value="-15" style="flex:1; margin:0 10px;"> 
+      <span id="calib1Value">-15°</span> 
     </div>
     <div style="width:95%; display:flex; align-items:center; justify-content:center; margin:4px 0;">
       Calibration 2 (C–F):
-      <input type="range" id="calib2Slider" min="-180" max="180" value="159" style="flex:1; margin:0 10px;">
-      <span id="calib2Value">159°</span>
+      <input type="range" id="calib2Slider" min="-180" max="180" value="-92" style="flex:1; margin:0 10px;">
+      <span id="calib2Value">-92°</span>
     </div>
   </div>
 
   <script>
   let globalScale = 0.17;
-  let calibOffset1 = -136; // radians (E relative to D)
-  let calibOffset2 = 159; // radians (F relative to C)
+  let calibOffset1 = -15 * Math.PI/180;  // radians (E relative to D)
+  let calibOffset2 = -92 * Math.PI/180; // radians (F relative to C)
 
-  // Scale slider
-  const scaleSlider = document.getElementById("scaleSlider");
-  const scaleValue = document.getElementById("scaleValue");
-  scaleSlider.addEventListener("input", () => {
-    globalScale = scaleSlider.value/100;
-    scaleValue.textContent = scaleSlider.value + "%";
-  });
-
-  // Calibration 1 (D–E)
-  const calib1Slider = document.getElementById("calib1Slider");
-  const calib1Value = document.getElementById("calib1Value");
-  calib1Slider.addEventListener("input", () => {
-    calibOffset1 = calib1Slider.value * Math.PI/180;
-    calib1Value.textContent = calib1Slider.value + "°";
-    // immediately apply new offset
-    right.rots[2] = left.rots[3] + calibOffset1;
-  });
-
-  // Calibration 2 (C–F)
-  const calib2Slider = document.getElementById("calib2Slider");
-  const calib2Value = document.getElementById("calib2Value");
-  calib2Slider.addEventListener("input", () => {
-    calibOffset2 = calib2Slider.value * Math.PI/180;
-    calib2Value.textContent = calib2Slider.value + "°";
-    // immediately apply new offset
-    right.rots[0] = left.rots[0] + calibOffset2;
-  });
-
+  // Rotor class
   function Rotor(canvasId, imageFiles) {
     this.canvas = document.getElementById(canvasId);
     this.ctx = this.canvas.getContext('2d');
@@ -121,24 +94,9 @@
       if(delta<-Math.PI) delta+=2*Math.PI;
 
       this.rots[this.dragging]+=delta;
-
-      // Link D (index 3 left) <-> E (index 2 right)
-      if(this===left && this.dragging===3){
-        right.rots[2] = this.rots[3] + calibOffset1;
-      }
-      if(this===right && this.dragging===2){
-        left.rots[3] = this.rots[2] - calibOffset1;
-      }
-
-      // Link C (index 0 left) <-> F (index 0 right)
-      if(this===left && this.dragging===0){
-        right.rots[0] = this.rots[0] + calibOffset2;
-      }
-      if(this===right && this.dragging===0){
-        left.rots[0] = this.rots[0] - calibOffset2;
-      }
-
       this.lastAngle=angle;
+
+      applyCalibration(this, this.dragging);
     };
 
     const pointerUp=()=>{this.dragging=null;};
@@ -172,10 +130,61 @@
     draw();
   }
 
-  // right rotor (F, G, E)
-  const right=new Rotor("right",["F.png","G.png","E.png"]);
-  // left rotor (C, B, A, D)
-  const left=new Rotor("left",["C.png","B.png","A.png","D.png"]);
+  // Create rotors
+  const right=new Rotor("right",["F.png","G.png","E.png"]); // indices: F=0,G=1,E=2
+  const left=new Rotor("left",["C.png","B.png","A.png","D.png"]); // C=0,B=1,A=2,D=3
+
+  // Apply calibration offsets between linked discs
+  function applyCalibration(rotor, idx) {
+    // D (left[3]) <-> E (right[2])
+    if(rotor===left && idx===3){
+      right.rots[2] = -left.rots[3] + calibOffset1;
+    }
+    if(rotor===right && idx===2){
+      left.rots[3] = -right.rots[2] + calibOffset1;
+    }
+    // C (left[0]) <-> F (right[0])
+    if(rotor===left && idx===0){
+      right.rots[0] = -left.rots[0] + calibOffset2;
+    }
+    if(rotor===right && idx===0){
+      left.rots[0] = -right.rots[0] + calibOffset2;
+    }
+  }
+
+  // Init calibration on page load
+  function initCalibration() {
+    left.rots[0] = 0; // C
+    left.rots[3] = 0; // D
+    applyCalibration(left,0);
+    applyCalibration(left,3);
+  }
+  window.addEventListener("load", initCalibration);
+
+  // Scale slider
+  const scaleSlider = document.getElementById("scaleSlider");
+  const scaleValue = document.getElementById("scaleValue");
+  scaleSlider.addEventListener("input", () => {
+    globalScale = scaleSlider.value/100;
+    scaleValue.textContent = scaleSlider.value + "%";
+  });
+
+  // Calibration sliders
+  const calib1Slider = document.getElementById("calib1Slider");
+  const calib1Value = document.getElementById("calib1Value");
+  calib1Slider.addEventListener("input", () => {
+    calibOffset1 = calib1Slider.value * Math.PI/180;
+    calib1Value.textContent = calib1Slider.value + "°";
+    applyCalibration(left,3);
+  });
+
+  const calib2Slider = document.getElementById("calib2Slider");
+  const calib2Value = document.getElementById("calib2Value");
+  calib2Slider.addEventListener("input", () => {
+    calibOffset2 = calib2Slider.value * Math.PI/180;
+    calib2Value.textContent = calib2Slider.value + "°";
+    applyCalibration(left,0);
+  });
   </script>
 </body>
 </html>
