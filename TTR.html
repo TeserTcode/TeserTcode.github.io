@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            flex-direction: column;
+        }
+        #game-container {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        #controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-right: 20px;
+        }
+        .control-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .control-btn:active {
+            background: #555;
+        }
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(10, 20px);
+            grid-template-rows: repeat(20, 20px);
+            gap: 1px;
+        }
+        .cell {
+            width: 20px;
+            height: 20px;
+            background-color: #222;
+        }
+        #side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        #hold-panel, #next-panel {
+            border: 2px solid #444;
+            padding: 10px;
+            min-width: 100px;
+            min-height: 100px;
+        }
+        #stats {
+            margin-top: 20px;
+        }
+        #score, #level, #lines {
+            font-size: 24px;
+        }
+        #settings-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px;
+            background: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #settings-menu {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background: #333;
+            padding: 20px;
+            border-radius: 5px;
+            display: none;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+        .settings-group {
+            margin-bottom: 15px;
+            border-bottom: 1px solid #555;
+            padding-bottom: 15px;
+        }
+        .settings-group h3 {
+            margin-top: 0;
+        }
+        select, input {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 5px 10px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        #key-bindings {
+            margin-top: 20px;
+            padding: 10px;
+            background: #222;
+            border-radius: 5px;
+        }
+        
+        /* Color schemes */
+        .color-nes-1 { background-color: #ff0000; } /* Red */
+        .color-nes-2 { background-color: #00ff00; } /* Green */
+        .color-nes-3 { background-color: #0000ff; } /* Blue */
+        .color-nes-4 { background-color: #ffff00; } /* Yellow */
+        .color-nes-5 { background-color: #ff00ff; } /* Magenta */
+        .color-nes-6 { background-color: #00ffff; } /* Cyan */
+        .color-nes-7 { background-color: #ff8000; } /* Orange */
+        color-nes-8 { background-color: #888888; }
+        
+        .color-gb-1 { background-color: #e60000; } /* Red */
+        .color-gb-2 { background-color: #00a800; } /* Green */
+        .color-gb-3 { background-color: #0000e6; } /* Blue */
+        .color-gb-4 { background-color: #e6e600; } /* Yellow */
+        .color-gb-5 { background-color: #e600e6; } /* Magenta */
+        .color-gb-6 { background-color: #00e6e6; } /* Cyan */
+        .color-gb-7 { background-color: #e67300; } /* Orange */
+        .color-gb-8 { background-color: #808080; }
+        
+        .color-tgm-1 { background-color: #ff6666; } /* Red */
+        .color-tgm-2 { background-color: #66ff66; } /* Green */
+        .color-tgm-3 { background-color: #6666ff; } /* Blue */
+        .color-tgm-4 { background-color: #ffff66; } /* Yellow */
+        .color-tgm-5 { background-color: #ff66ff; } /* Magenta */
+        .color-tgm-6 { background-color: #66ffff; } /* Cyan */
+        .color-tgm-7 { background-color: #ff9966; } /* Orange */
+        .color-tgm-8 { background-color: #999999; }
+        
+        .color-modern-1 { background-color: #ff0d0d; } /* Red */
+        .color-modern-2 { background-color: #0acf00; } /* Green */
+        .color-modern-3 { background-color: #0d7bff; } /* Blue */
+        .color-modern-4 { background-color: #f7ff0d; } /* Yellow */
+        .color-modern-5 { background-color: #ff0df7; } /* Magenta */
+        .color-modern-6 { background-color: #00f7ff; } /* Cyan */
+        .color-modern-7 { background-color: #ff7b0d; } /* Orange */
+        .color-modern-8 { background-color: #b070f7; }
+    </style>
+</head>
+<body>
+    <button id="settings-btn">Settings</button>
+    <div id="settings-menu">
+        <div class="settings-group">
+            <h3>Game Variant</h3>
+            <select id="game-variant">
+                <option value="nes">NES Tetris</option>
+                <option value="modern">Modern Tetris</option>
+                <option value="tgm">TGM</option>
+                <option value="gb">Game Boy</option>
+            </select>
+        </div>
+        
+        <div class="settings-group">
+            <h3>Bag System</h3>
+            <select id="bag-system">
+                <option value="7bag">7-Bag (Standard)</option>
+                <option value="14bag">14-Bag (Double)</option>
+                <option value="35bag">35-Bag (5 Sets)</option>
+                <option value="nobagnobacktoback">No Bag (No Back-to-Back)</option>
+                <option value="nobagfullyrandom">No Bag (Fully Random)</option>
+            </select>
+        </div>
+        
+        <div class="settings-group">
+            <h3>Rotation System</h3>
+            <select id="rotation-system">
+                <option value="nes">NES (Original)</option>
+                <option value="srs">SRS (Modern)</option>
+                <option value="dtet">DTET (TGM)</option>
+            </select>
+        </div>
+        
+        <div class="settings-group">
+            <h3>Wall Push</h3>
+            <select id="wall-push">
+                <option value="0">No Wall Push</option>
+                <option value="1">1 Attempt</option>
+                <option value="2">2 Attempts</option>
+                <option value="3" selected>3 Attempts (Standard)</option>
+                <option value="5">5 Attempts</option>
+            </select>
+        </div>
+        
+        <div class="settings-group">
+            <h3>Hold Piece</h3>
+            <select id="hold-piece">
+                <option value="true">Enabled</option>
+                <option value="false">Disabled</option>
+            </select>
+        </div>
+        
+        <div class="settings-group">
+            <h3>Next Pieces Preview</h3>
+            <select id="next-pieces">
+                <option value="0">None</option>
+                <option value="1">1 Piece</option>
+                <option value="2">2 Pieces</option>
+                <option value="3" selected>3 Pieces</option>
+                <option value="5">5 Pieces</option>
+                <option value="7">7 Pieces</option>
+            </select>
+        </div>
+        
+        <div class="settings-group">
+            <h3>Color Scheme</h3>
+            <select id="color-scheme">
+                <option value="nes">NES</option>
+                <option value="gb">Game Boy</option>
+                <option value="tgm">TGM</option>
+                <option value="modern">Modern</option>
+            </select>
+        </div>
+        
+        <div class="settings-group">
+            <h3>Piece Types</h3>
+            <select id="piece-types">
+                <option value="tetramino">Tetramino (4 blocks)</option>
+                <option value="trimino">Trimino (3 blocks)</option>
+                <option value="pentomino">Pentomino (5 blocks)</option>
+                <option value="mixed">Mixed (1-5 blocks)</option>
+            </select>
+        </div>
+        
+        <button id="apply-settings">Apply Settings</button>
+        <button id="reset-settings">Reset to Default</button>
+        
+        <div id="key-bindings">
+            <h3>Key Bindings</h3>
+            <p>← → : Move Left/Right</p>
+            <p>↓ : Move Down</p>
+            <p>↑ : Rotate</p>
+            <p>Space : Hard Drop</p>
+            <p>Shift/Ctrl : Hold Piece</p>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <div id="controls">
+            <div class="control-row">
+                <button class="control-btn" id="rotate-btn">↑</button>
+            </div>
+            <div class="control-row">
+                <button class="control-btn" id="left-btn">←</button>
+                <button class="control-btn" id="down-btn">↓</button>
+                <button class="control-btn" id="right-btn">→</button>
+            </div>
+            <div class="control-row">
+                <button class="control-btn" id="hard-drop-btn">SPACE</button>
+            </div>
+            <div class="control-row">
+                <button class="control-btn" id="hold-btn">HOLD</button>
+            </div>
+        </div>
+        
+        <div id="hold-panel">
+            <h3>Hold</h3>
+            <div id="hold-display"></div>
+        </div>
+        
+        <div id="grid"></div>
+        
+        <div id="side-panel">
+            <div id="next-panel">
+                <h3>Next</h3>
+                <div id="next-display"></div>
+            </div>
+            <div id="stats">
+                <div id="score">Score: 0</div>
+                <div id="level">Level: 1</div>
+                <div id="lines">Lines: 0</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game constants
+        const GRID_WIDTH = 10;
+        const GRID_HEIGHT = 20;
+        const CELL_SIZE = 20;
+        
+        // Game state
+        let grid = Array.from({ length: GRID_HEIGHT }, () => Array(GRID_WIDTH).fill(0));
+        let currentPiece = null;
+        let nextPieces = [];
+        let holdPiece = null;
+        let canHold = true;
+        let score = 0;
+        let level = 1;
+        let lines = 0;
+        let fallSpeed = 1000;
+        let gameInterval = null;
+        let isGameOver = false;
+        
+        // Settings
+        let settings = {
+            variant: 'nes',
+            bagSystem: '7bag',
+            rotationSystem: 'nes',
+            wallPush: 3,
+            holdEnabled: true,
+            nextPiecesCount: 3,
+            colorScheme: 'nes',
+            pieceTypes: 'tetramino'
+        };
+        
+        // DOM elements
+        const gridElement = document.getElementById('grid');
+        const holdDisplay = document.getElementById('hold-display');
+        const nextDisplay = document.getElementById('next-display');
+        const scoreElement = document.getElementById('score');
+        const levelElement = document.getElementById('level');
+        const linesElement = document.getElementById('lines');
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsMenu = document.getElementById('settings-menu');
+        const applySettingsBtn = document.getElementById('apply-settings');
+        const resetSettingsBtn = document.getElementById('reset-settings');
+        
+        // Control buttons
+        const leftBtn = document.getElementById('left-btn');
+        const rightBtn = document.getElementById('right-btn');
+        const downBtn = document.getElementById('down-btn');
+        const rotateBtn = document.getElementById('rotate-btn');
+        const hardDropBtn = document.getElementById('hard-drop-btn');
+        const holdBtn = document.getElementById('hold-btn');
+        
+        // Tetrimino definitions
+        const TETRIMINOS = {
+            I: {
+                shape: [
+                    [0, 0, 0, 0],
+                    [1, 1, 1, 1],
+                    [0, 0, 0, 0],
+                    [0, 0, 0, 0]
+                ],
+                color: 6,
+                center: { x: 1.5, y: 1.5 }
+            },
+            O: {
+                shape: [
+                    [1, 1],
+                    [1, 1]
+                ],
+                color: 4,
+                center: { x: 0.5, y: 0.5 }
+            },
+            T: {
+                shape: [
+                    [0, 1, 0],
+                    [1, 1, 1],
+                    [0, 0, 0]
+                ],
+                color: 8,
+                center: { x: 1, y: 1 }
+            },
+            L: {
+                shape: [
+                    [0, 0, 1],
+                    [1, 1, 1],
+                    [0, 0, 0]
+                ],
+                color: 3,
+                center: { x: 1, y: 1 }
+            },
+            J: {
+                shape: [
+                    [1, 0, 0],
+                    [1, 1, 1],
+                    [0, 0, 0]
+                ],
+                color: 7,
+                center: { x: 1, y: 1 }
+            },
+            S: {
+                shape: [
+                    [0, 1, 1],
+                    [1, 1, 0],
+                    [0, 0, 0]
+                ],
+                color: 2,
+                center: { x: 1, y: 1 }
+            },
+            Z: {
+                shape: [
+                    [1, 1, 0],
+                    [0, 1, 1],
+                    [0, 0, 0]
+                ],
+                color: 1,
+                center: { x: 1, y: 1 }
+            }
+        };
+
+        // Trimino definitions (3 blocks)
+        const TRIMINOS = {
+            I3: {
+                shape: [
+                    [0, 0, 0],
+                    [1, 1, 1],
+                    [0, 0, 0]
+                ],
+                color: 6,
+                center: { x: 1, y: 1 }
+            },
+            L3: {
+                shape: [
+                    [1, 0, 0],
+                    [1, 1, 0],
+                    [0, 0, 0]
+                ],
+                color: 3,
+                center: { x: 1, y: 1 }
+            },
+            T3: {
+                shape: [
+                    [0, 1, 0],
+                    [1, 1, 0],
+                    [0, 0, 0]
+                ],
+                color: 8,
+                center: { x: 1, y: 1 }
+            }
+        };
+
+        // Pentomino definitions (5 blocks)
+        const PENTOMINOS = {
+            I5: {
+                shape: [
+                    [0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0],
+                    [1, 1, 1, 1, 1],
+                    [0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0]
+                ],
+                color: 6,
+                center: { x: 2, y: 2 }
+            },
+            P: {
+                shape: [
+                    [1, 1, 0],
+                    [1, 1, 0],
+                    [1, 0, 0]
+                ],
+                color: 4,
+                center: { x: 1, y: 1 }
+            },
+            W: {
+                shape: [
+                    [1, 0, 0],
+                    [1, 1, 0],
+                    [0, 1, 1]
+                ],
+                color: 2,
+                center: { x: 1, y: 1 }
+            }
+        };
+
+        // Monomino (1 block) and Domino (2 blocks)
+        const MINOS = {
+            M1: {
+                shape: [[1]],
+                color: 7,
+                center: { x: 0, y: 0 }
+            },
+            M2: {
+                shape: [[1, 1]],
+                color: 4,
+                center: { x: 0.5, y: 0 }
+            }
+        };
+        
+        // Rotation systems
+        const ROTATION_SYSTEMS = {
+            nes: {
+                // NES rotation rules (basic)
+                rotate: (piece) => {
+                    const rotated = piece.shape[0].map((_, i) =>
+                        piece.shape.map(row => row[i]).reverse()
+                    );
+                    return rotated;
+                },
+                wallKick: (piece, rotatedShape, grid) => {
+                    // NES has very limited wall kicks
+                    const tests = [
+                        { x: 0, y: 0 }, // Original position
+                        { x: -1, y: 0 }, // Left
+                        { x: 1, y: 0 },  // Right
+                        { x: 0, y: -1 }  // Up
+                    ];
+                    
+                    for (let test of tests) {
+                        piece.x += test.x;
+                        piece.y += test.y;
+                        piece.shape = rotatedShape;
+                        
+                        if (!checkCollision(piece)) {
+                            return true;
+                        }
+                        
+                        // Revert
+                        piece.x -= test.x;
+                        piece.y -= test.y;
+                        piece.shape = piece.shape[0].map((_, i) =>
+                            piece.shape.map(row => row[row.length - 1 - i])
+                        );
+                    }
+                    
+                    return false;
+                }
+            },
+            srs: {
+                // Super Rotation System (modern)
+                rotate: (piece) => {
+                    return piece.shape[0].map((_, i) =>
+                        piece.shape.map(row => row[i]).reverse()
+                    );
+                },
+                wallKick: (piece, rotatedShape, grid) => {
+                    // SRS has specific wall kick tests for each piece and rotation state
+                    const tests = [
+                        { x: 0, y: 0 },
+                        { x: -1, y: 0 },
+                        { x: 1, y: 0 },
+                        { x: 0, y: -1 },
+                        { x: -2, y: 0 },
+                        { x: 2, y: 0 }
+                    ];
+                    
+                    for (let test of tests) {
+                        piece.x += test.x;
+                        piece.y += test.y;
+                        piece.shape = rotatedShape;
+                        
+                        if (!checkCollision(piece)) {
+                            return true;
+                        }
+                        
+                        // Revert
+                        piece.x -= test.x;
+                        piece.y -= test.y;
+                        piece.shape = piece.shape[0].map((_, i) =>
+                            piece.shape.map(row => row[row.length - 1 - i])
+                        );
+                    }
+                    
+                    return false;
+                }
+            },
+            dtet: {
+                // DTET rotation system (TGM)
+                rotate: (piece) => {
+                    return piece.shape[0].map((_, i) =>
+                        piece.shape.map(row => row[i]).reverse()
+                    );
+                },
+                wallKick: (piece, rotatedShape, grid) => {
+                    // TGM has different wall kicks
+                    const tests = [
+                        { x: 0, y: 0 },
+                        { x: -1, y: 0 },
+                        { x: 1, y: 0 },
+                        { x: 0, y: 1 },
+                        { x: -1, y: 1 },
+                        { x: 1, y: 1 }
+                    ];
+                    
+                    for (let test of tests) {
+                        piece.x += test.x;
+                        piece.y += test.y;
+                        piece.shape = rotatedShape;
+                        
+                        if (!checkCollision(piece)) {
+                            return true;
+                        }
+                        
+                        // Revert
+                        piece.x -= test.x;
+                        piece.y -= test.y;
+                        piece.shape = piece.shape[0].map((_, i) =>
+                            piece.shape.map(row => row[row.length - 1 - i])
+                        );
+                    }
+                    
+                    return false;
+                }
+            }
+        };
+        
+        // Initialize the game
+        function initGame() {
+            // Initialize grid
+            grid = Array.from({ length: GRID_HEIGHT }, () => Array(GRID_WIDTH).fill(0));
+            
+            // Create grid cells
+            gridElement.innerHTML = '';
+            for (let y = 0; y < GRID_HEIGHT; y++) {
+                for (let x = 0; x < GRID_WIDTH; x++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    gridElement.appendChild(cell);
+                }
+            }
+            
+            // Reset game state
+            score = 0;
+            level = 1;
+            lines = 0;
+            fallSpeed = 1000;
+            isGameOver = false;
+            canHold = true;
+            holdPiece = null;
+            nextPieces = [];
+            
+            // Update UI
+            updateScore();
+            updateLevel();
+            updateLines();
+            updateHoldDisplay();
+            updateNextDisplay();
+            
+            // Initialize piece bag
+            initPieceBag();
+            
+            // Generate next pieces
+            for (let i = 0; i < Math.max(settings.nextPiecesCount, 1); i++) {
+                generateNextPiece();
+            }
+            
+            // Start with first piece
+            spawnPiece();
+            
+            // Start game loop
+            if (gameInterval) clearInterval(gameInterval);
+            gameInterval = setInterval(moveDown, fallSpeed);
+        }
+        
+        // Initialize piece bag based on settings
+        function initPieceBag() {
+            if (settings.bagSystem === 'nobagfullyrandom') return;
+            
+            let pieces = [];
+            
+            // Get pieces based on selected piece types
+            switch (settings.pieceTypes) {
+                case 'tetramino':
+                    pieces = ['I', 'O', 'T', 'L', 'J', 'S', 'Z'];
+                    break;
+                case 'trimino':
+                    pieces = ['I3', 'L3', 'T3'];
+                    break;
+                case 'pentomino':
+                    pieces = ['I5', 'P', 'W'];
+                    break;
+                case 'mixed':
+                    pieces = ['M1', 'M2', 'I3', 'L3', 'T3', 'I', 'O', 'T', 'L', 'J', 'S', 'Z', 'I5', 'P', 'W'];
+                    break;
+            }
+            
+            let bag = [];
+            
+            switch (settings.bagSystem) {
+                case '7bag':
+                    bag = [...pieces];
+                    shuffleArray(bag);
+                    break;
+                case '14bag':
+                    bag = [...pieces, ...pieces];
+                    shuffleArray(bag);
+                    break;
+                case '35bag':
+                    bag = [...pieces, ...pieces, ...pieces, ...pieces, ...pieces];
+                    shuffleArray(bag);
+                    break;
+                case 'nobagnobacktoback':
+                    // For no back-to-back, we just need to track last piece
+                    break;
+            }
+            
+            window.pieceBag = bag;
+        }
+        
+        // Generate next piece based on bag system
+        function generateNextPiece() {
+            let pieceType;
+            
+            switch (settings.bagSystem) {
+                case 'nobagfullyrandom':
+                    let pieces = [];
+                    
+                    switch (settings.pieceTypes) {
+                        case 'tetramino':
+                            pieces = ['I', 'O', 'T', 'L', 'J', 'S', 'Z'];
+                            break;
+                        case 'trimino':
+                            pieces = ['I3', 'L3', 'T3'];
+                            break;
+                        case 'pentomino':
+                            pieces = ['I5', 'P', 'W'];
+                            break;
+                        case 'mixed':
+                            pieces = ['M1', 'M2', 'I3', 'L3', 'T3', 'I', 'O', 'T', 'L', 'J', 'S', 'Z', 'I5', 'P', 'W'];
+                            break;
+                    }
+                    
+                    pieceType = pieces[Math.floor(Math.random() * pieces.length)];
+                    break;
+                
+                case 'nobagnobacktoback':
+                    let allPieces = [];
+                    
+                    switch (settings.pieceTypes) {
+                        case 'tetramino':
+                            allPieces = ['I', 'O', 'T', 'L', 'J', 'S', 'Z'];
+                            break;
+                        case 'trimino':
+                            allPieces = ['I3', 'L3', 'T3'];
+                            break;
+                        case 'pentomino':
+                            allPieces = ['I5', 'P', 'W'];
+                            break;
+                        case 'mixed':
+                            allPieces = ['M1', 'M2', 'I3', 'L3', 'T3', 'I', 'O', 'T', 'L', 'J', 'S', 'Z', 'I5', 'P', 'W'];
+                            break;
+                    }
+                    
+                    let lastPiece = nextPieces.length > 0 ? nextPieces[nextPieces.length - 1].type : null;
+                    
+                    do {
+                        pieceType = allPieces[Math.floor(Math.random() * allPieces.length)];
+                    } while (pieceType === lastPiece);
+                    break;
+                
+                default: // Bag systems
+                    if (window.pieceBag.length === 0) {
+                        initPieceBag();
+                    }
+                    pieceType = window.pieceBag.pop();
+                    break;
+            }
+            
+            let piece;
+            
+            // Get the piece definition based on its type
+            if (TETRIMINOS[pieceType]) {
+                piece = {
+                    ...TETRIMINOS[pieceType],
+                    type: pieceType
+                };
+            } else if (TRIMINOS[pieceType]) {
+                piece = {
+                    ...TRIMINOS[pieceType],
+                    type: pieceType
+                };
+            } else if (PENTOMINOS[pieceType]) {
+                piece = {
+                    ...PENTOMINOS[pieceType],
+                    type: pieceType
+                };
+            } else if (MINOS[pieceType]) {
+                piece = {
+                    ...MINOS[pieceType],
+                    type: pieceType
+                };
+            }
+            
+            nextPieces.push(piece);
+            return piece;
+        }
+        
+        // Spawn a new piece
+        function spawnPiece() {
+            if (nextPieces.length === 0) {
+                generateNextPiece();
+            }
+            
+            const nextPiece = nextPieces.shift();
+            
+            // Generate new next piece to maintain the count
+            if (nextPieces.length < settings.nextPiecesCount) {
+                generateNextPiece();
+            }
+            
+            currentPiece = {
+                ...nextPiece,
+                x: Math.floor(GRID_WIDTH / 2) - Math.floor(nextPiece.shape[0].length / 2),
+                y: 0
+            };
+            
+            // Check for game over
+            if (checkCollision(currentPiece)) {
+                gameOver();
+                return;
+            }
+            
+            canHold = true;
+            updateNextDisplay();
+            render();
+        }
+        
+        // Move piece down
+        function moveDown() {
+            if (isGameOver) return;
+            
+            currentPiece.y++;
+            
+            if (checkCollision(currentPiece)) {
+                currentPiece.y--;
+                lockPiece();
+                spawnPiece();
+            }
+            
+            render();
+        }
+        
+        // Move piece left
+        function moveLeft() {
+            currentPiece.x--;
+            
+            if (checkCollision(currentPiece)) {
+                currentPiece.x++;
+            }
+            
+            render();
+        }
+        
+        // Move piece right
+        function moveRight() {
+            currentPiece.x++;
+            
+            if (checkCollision(currentPiece)) {
+                currentPiece.x--;
+            }
+            
+            render();
+        }
+        
+        // Rotate piece
+        function rotatePiece() {
+            const originalShape = currentPiece.shape;
+            const rotationSystem = ROTATION_SYSTEMS[settings.rotationSystem];
+            
+            // Rotate the piece
+            const rotatedShape = rotationSystem.rotate(currentPiece);
+            currentPiece.shape = rotatedShape;
+            
+            // Check for collision and try wall kicks
+            if (checkCollision(currentPiece)) {
+                if (!rotationSystem.wallKick(currentPiece, rotatedShape, grid)) {
+                    // If wall kicks fail, revert rotation
+                    currentPiece.shape = originalShape;
+                }
+            }
+            
+            render();
+        }
+        
+        // Hard drop
+        function hardDrop() {
+            while (!checkCollision(currentPiece)) {
+                currentPiece.y++;
+            }
+            
+            currentPiece.y--;
+            lockPiece();
+            spawnPiece();
+            render();
+        }
+        
+        // Hold piece
+        function holdCurrentPiece() {
+            if (!canHold || !settings.holdEnabled) return;
+            
+            if (holdPiece) {
+                // Swap current piece with hold piece
+                const temp = {
+                    ...holdPiece,
+                    x: Math.floor(GRID_WIDTH / 2) - Math.floor(holdPiece.shape[0].length / 2),
+                    y: 0
+                };
+                
+                holdPiece = {
+                    ...currentPiece,
+                    type: currentPiece.type
+                };
+                
+                currentPiece = temp;
+            } else {
+                // Just hold the current piece
+                holdPiece = {
+                    ...currentPiece,
+                    type: currentPiece.type
+                };
+                spawnPiece();
+            }
+            
+            canHold = false;
+            updateHoldDisplay();
+            render();
+        }
+        
+        // Lock piece in place
+        function lockPiece() {
+            // Add piece to grid
+            for (let y = 0; y < currentPiece.shape.length; y++) {
+                for (let x = 0; x < currentPiece.shape[y].length; x++) {
+                    if (currentPiece.shape[y][x]) {
+                        const gridY = currentPiece.y + y;
+                        const gridX = currentPiece.x + x;
+                        
+                        if (gridY >= 0 && gridY < GRID_HEIGHT && gridX >= 0 && gridX < GRID_WIDTH) {
+                            grid[gridY][gridX] = currentPiece.color;
+                        }
+                    }
+                }
+            }
+            
+            // Check for completed lines
+            clearLines();
+        }
+        
+        // Check for collision
+        function checkCollision(piece) {
+            for (let y = 0; y < piece.shape.length; y++) {
+                for (let x = 0; x < piece.shape[y].length; x++) {
+                    if (piece.shape[y][x]) {
+                        const gridY = piece.y + y;
+                        const gridX = piece.x + x;
+                        
+                        if (gridY >= GRID_HEIGHT || gridX < 0 || gridX >= GRID_WIDTH || 
+                            (gridY >= 0 && grid[gridY][gridX])) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            
+            return false;
+        }
+        
+        // Clear completed lines
+        function clearLines() {
+            let linesCleared = 0;
+            
+            for (let y = GRID_HEIGHT - 1; y >= 0; y--) {
+                if (grid[y].every(cell => cell !== 0)) {
+                    // Remove the line
+                    grid.splice(y, 1);
+                    // Add new empty line at top
+                    grid.unshift(Array(GRID_WIDTH).fill(0));
+                    linesCleared++;
+                    y++; // Check the same row again
+                }
+            }
+            
+            if (linesCleared > 0) {
+                // Update score based on NES scoring
+                switch (linesCleared) {
+                    case 1:
+                        score += 100 * level;
+                        break;
+                    case 2:
+                        score += 300 * level;
+                        break;
+                    case 3:
+                        score += 500 * level;
+                        break;
+                    case 4:
+                        score += 800 * level;
+                        break;
+                }
+                
+                lines += linesCleared;
+                
+                // Update level (NES style: level up every 10 lines)
+                const newLevel = Math.floor(lines / 10) + 1;
+                if (newLevel > level) {
+                    level = newLevel;
+                    // Increase speed (simple NES-style speed curve)
+                    fallSpeed = Math.max(100, 1000 - (level - 1) * 100);
+                    
+                    // Reset game interval with new speed
+                    clearInterval(gameInterval);
+                    gameInterval = setInterval(moveDown, fallSpeed);
+                    
+                    updateLevel();
+                }
+                
+                updateScore();
+                updateLines();
+            }
+        }
+        
+        // Game over
+        function gameOver() {
+            isGameOver = true;
+            clearInterval(gameInterval);
+            alert(`Game Over! Score: ${score}`);
+        }
+        
+        // Render game
+        function render() {
+            // Clear grid display
+            const cells = document.querySelectorAll('#grid .cell');
+            cells.forEach(cell => {
+                // Clear all color classes
+                for (let i = 1; i <= 9; i++) {
+                    cell.classList.remove(`color-${i}`);
+                    cell.classList.remove(`color-nes-${i}`);
+                    cell.classList.remove(`color-gb-${i}`);
+                    cell.classList.remove(`color-tgm-${i}`);
+                    cell.classList.remove(`color-modern-${i}`);
+                }
+            });
+            
+            // Draw locked pieces
+            for (let y = 0; y < GRID_HEIGHT; y++) {
+                for (let x = 0; x < GRID_WIDTH; x++) {
+                    if (grid[y][x]) {
+                        const cellIndex = y * GRID_WIDTH + x;
+                        const colorClass = `color-${settings.colorScheme}-${grid[y][x]}`;
+                        cells[cellIndex].classList.add(colorClass);
+                    }
+                }
+            }
+            
+            // Draw current piece
+            if (currentPiece) {
+                for (let y = 0; y < currentPiece.shape.length; y++) {
+                    for (let x = 0; x < currentPiece.shape[y].length; x++) {
+                        if (currentPiece.shape[y][x]) {
+                            const gridY = currentPiece.y + y;
+                            const gridX = currentPiece.x + x;
+                            
+                            if (gridY >= 0 && gridY < GRID_HEIGHT && gridX >= 0 && gridX < GRID_WIDTH) {
+                                const cellIndex = gridY * GRID_WIDTH + gridX;
+                                const colorClass = `color-${settings.colorScheme}-${currentPiece.color}`;
+                                cells[cellIndex].classList.add(colorClass);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Update hold display
+        function updateHoldDisplay() {
+            holdDisplay.innerHTML = '';
+            
+            if (!settings.holdEnabled) {
+                holdDisplay.innerHTML = '<p>Disabled</p>';
+                return;
+            }
+            
+            if (!holdPiece) {
+                holdDisplay.innerHTML = '<p>Empty</p>';
+                return;
+            }
+            
+            // Create a mini grid for the hold piece
+            const holdGrid = document.createElement('div');
+            holdGrid.style.display = 'grid';
+            holdGrid.style.gridTemplateColumns = `repeat(${holdPiece.shape[0].length}, ${CELL_SIZE}px)`;
+            holdGrid.style.gridTemplateRows = `repeat(${holdPiece.shape.length}, ${CELL_SIZE}px)`;
+            holdGrid.style.gap = '1px';
+            
+            for (let y = 0; y < holdPiece.shape.length; y++) {
+                for (let x = 0; x < holdPiece.shape[y].length; x++) {
+                    const cell = document.createElement('div');
+                    cell.style.width = `${CELL_SIZE}px`;
+                    cell.style.height = `${CELL_SIZE}px`;
+                    
+                    if (holdPiece.shape[y][x]) {
+                        cell.classList.add(`color-${settings.colorScheme}-${holdPiece.color}`);
+                    } else {
+                        cell.style.backgroundColor = '#222';
+                    }
+                    
+                    holdGrid.appendChild(cell);
+                }
+            }
+            
+            holdDisplay.appendChild(holdGrid);
+        }
+        
+        // Update next pieces display
+        function updateNextDisplay() {
+            nextDisplay.innerHTML = '';
+            
+            if (settings.nextPiecesCount === 0) {
+                nextDisplay.innerHTML = '<p>Disabled</p>';
+                return;
+            }
+            
+            for (let i = 0; i < Math.min(settings.nextPiecesCount, nextPieces.length); i++) {
+                const piece = nextPieces[i];
+                const pieceContainer = document.createElement('div');
+                pieceContainer.style.marginBottom = '10px';
+                
+                const pieceGrid = document.createElement('div');
+                pieceGrid.style.display = 'grid';
+                pieceGrid.style.gridTemplateColumns = `repeat(${piece.shape[0].length}, ${CELL_SIZE}px)`;
+                pieceGrid.style.gridTemplateRows = `repeat(${piece.shape.length}, ${CELL_SIZE}px)`;
+                pieceGrid.style.gap = '1px';
+                
+                for (let y = 0; y < piece.shape.length; y++) {
+                    for (let x = 0; x < piece.shape[y].length; x++) {
+                        const cell = document.createElement('div');
+                        cell.style.width = `${CELL_SIZE}px`;
+                        cell.style.height = `${CELL_SIZE}px`;
+                        
+                        if (piece.shape[y][x]) {
+                            cell.classList.add(`color-${settings.colorScheme}-${piece.color}`);
+                        } else {
+                            cell.style.backgroundColor = '#222';
+                        }
+                        
+                        pieceGrid.appendChild(cell);
+                    }
+                }
+                
+                pieceContainer.appendChild(pieceGrid);
+                nextDisplay.appendChild(pieceContainer);
+            }
+        }
+        
+        // Update score display
+        function updateScore() {
+            scoreElement.textContent = `Score: ${score}`;
+        }
+        
+        // Update level display
+        function updateLevel() {
+            levelElement.textContent = `Level: ${level}`;
+        }
+        
+        // Update lines display
+        function updateLines() {
+            linesElement.textContent = `Lines: ${lines}`;
+        }
+        
+        // Helper function to shuffle array
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        
+        // Settings functions
+        function showSettingsMenu() {
+            settingsMenu.style.display = 'block';
+        }
+        
+        function hideSettingsMenu() {
+            settingsMenu.style.display = 'none';
+        }
+        
+        function applySettings() {
+            settings = {
+                variant: document.getElementById('game-variant').value,
+                bagSystem: document.getElementById('bag-system').value,
+                rotationSystem: document.getElementById('rotation-system').value,
+                wallPush: parseInt(document.getElementById('wall-push').value),
+                holdEnabled: document.getElementById('hold-piece').value === 'true',
+                nextPiecesCount: parseInt(document.getElementById('next-pieces').value),
+                colorScheme: document.getElementById('color-scheme').value,
+                pieceTypes: document.getElementById('piece-types').value
+            };
+            
+            hideSettingsMenu();
+            initGame();
+        }
+        
+        function resetSettings() {
+            document.getElementById('game-variant').value = 'nes';
+            document.getElementById('bag-system').value = '7bag';
+            document.getElementById('rotation-system').value = 'nes';
+            document.getElementById('wall-push').value = '3';
+            document.getElementById('hold-piece').value = 'true';
+            document.getElementById('next-pieces').value = '3';
+            document.getElementById('color-scheme').value = 'nes';
+            document.getElementById('piece-types').value = 'tetramino';
+            
+            applySettings();
+        }
+        
+        // Event listeners
+        document.addEventListener('keydown', (e) => {
+            if (isGameOver) return;
+            
+            switch (e.key) {
+                case 'ArrowLeft':
+                    moveLeft();
+                    break;
+                case 'ArrowRight':
+                    moveRight();
+                    break;
+                case 'ArrowDown':
+                    moveDown();
+                    break;
+                case 'ArrowUp':
+                    rotatePiece();
+                    break;
+                case ' ':
+                    hardDrop();
+                    break;
+                case 'Shift':
+                case 'Control':
+                    holdCurrentPiece();
+                    break;
+            }
+        });
+        
+        // Control button event listeners
+        leftBtn.addEventListener('click', moveLeft);
+        rightBtn.addEventListener('click', moveRight);
+        downBtn.addEventListener('click', moveDown);
+        rotateBtn.addEventListener('click', rotatePiece);
+        hardDropBtn.addEventListener('click', hardDrop);
+        holdBtn.addEventListener('click', holdCurrentPiece);
+        
+        settingsBtn.addEventListener('click', showSettingsMenu);
+        applySettingsBtn.addEventListener('click', applySettings);
+        resetSettingsBtn.addEventListener('click', resetSettings);
+        
+        // Initialize game
+        initGame();
+    </script>
+</body>
+</html>
