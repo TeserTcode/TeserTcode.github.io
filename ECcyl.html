@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<body style="margin:0;overflow:hidden">
+<input type="range" min="0.1" max="10" value="2" id="zoom" style="position:fixed;top:0;left:0">
+<div style="position:relative;top:0;left:0">
+  <img id="back" src="./othercal/back.png" style="position:absolute;top:0;left:0;z-index:0;user-select:none;pointer-events:none;transform:scale(0.02);transform-origin:top left">
+  <img id="front" src="./othercal/front.png" style="position:absolute;top:0;left:0;z-index:1;user-select:none;pointer-events:none;transform:scale(0.02);transform-origin:top left">
+</div>
+<div style="position:fixed;bottom:0;left:0;font-size:12px">
+  <a href="https://www.math.bas.bg/complan/valhrist/mystuff.htm">credits</a>
+</div>
+<script>
+let back=document.getElementById("back"),front=document.getElementById("front"),zoom=document.getElementById("zoom"),x=0,s=0.02,drag=false,dx=0
+zoom.oninput=()=>{s=zoom.value/100;back.style.transform=front.style.transform="scale("+s+")"}
+back.style.top="100px"
+front.style.top="100px"
+back.style.left=x+"px"
+document.addEventListener("mousedown",e=>{drag=true;dx=e.clientX-x})
+document.addEventListener("mouseup",()=>drag=false)
+document.addEventListener("mousemove",e=>{if(drag){x=e.clientX-dx;back.style.left=x+"px"}})
+</script>
+</body>
+</html>
