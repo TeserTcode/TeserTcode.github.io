@@ -27412,8 +27412,8 @@ function holtsmarkpdf(c,m,x){return div(integral( holtsmarkcf2k,-sqrt(bign),sqrt
 
 function astablecf(a,c,m,t){return exp(sub(mul(I,t,m),pow(sabs(mul(c,t)),a)))}
 function astablecf2(t,C){return exp(sub(mul(I,t,g(C,1)),pow(sabs(mul(g(C,0),t)),g(C,3))))}
-function astablecf2k(t,C){return mul(exp(mul(-1,I,t,g(C,2))), holtsmarkcf2(t,C))}
-function astablepdf(a,c,m,x){return div(integral( holtsmarkcf2k,-sqrt(bign),sqrt(bign),[c,m,x,a]),2,pi())}
+function astablecf2k(t,C){return mul(exp(mul(-1,I,t,g(C,2))), astablecf2(t,C))}
+function astablepdf(a,c,m,x){return div(integral( astablecf2k,-sqrt(bign),sqrt(bign),[c,m,x,a]),2,pi())}
 
 
 /*
