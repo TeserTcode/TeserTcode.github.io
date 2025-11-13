@@ -369,6 +369,18 @@ Variables:
   - modulartransformtq(t) = exp(mul(pi(), I, t))
   - Note: t cannot be used when making GIFs.
 
+2.01
+Shortcuts for autocomplete:
+  _: All functions,
+  #: Total functions count,
+  :: Random functions,
+  ?: Show help for all prefixes,
+  L: Long functions (>100 characters),
+  LL: Longer functions (>200 characters),
+  LLL: Sort by length,
+  S: Single-parameter functions,
+  D: Double-parameter functions
+
 2.1 - generate
 Generates domain coloring on the domain canvas.
 
@@ -751,6 +763,8 @@ Colors based on imag^2/real and real^2/imag.
             <option value="cielch">CIELCH</option>
 	      <option value="qhsv">qHSV</option>
             <option value="qhsl">qHSL</option>
+            <option value="phsv">pHSV</option>
+            <option value="phsl">pHSL</option>
             <option value="hqv">HQV</option>
               <option value="hsm">HSM</option>
                <option value="hsg">HSG</option>
@@ -820,7 +834,9 @@ Colors based on imag^2/real and real^2/imag.
     <div class="form-group">
         <label for="hue">Hue:</label>
         <input type="range" id="hue" name="hue" min="0" max="360" value="0">
-		<div class="button-group">
+	
+
+	<div class="button-group">
     <button id="btn-negative-positive">-+</button>
     <button id="btn-zero-positive">0+</button>
     <button id="btn-negative-one-positive-one">1</button>
@@ -832,7 +848,9 @@ Colors based on imag^2/real and real^2/imag.
 <button onclick="toggleMeshButtons()">Toggle Mesh Options</button>
 
 <div id="meshButtons" style="display:none; margin-top:10px;">
-    <button id="createMeshButton">Create Mesh</button>
+
+
+  <button id="createMeshButton">Create Mesh</button>
     <button id="createMeshButtonsph">Create Spherical Mesh</button>
     <button id="createMeshButtonstr">Create Stereographic Mesh</button>
     <button id="createMeshButtontor">Create Toroidal Mesh</button>
@@ -842,6 +860,14 @@ Colors based on imag^2/real and real^2/imag.
      <button id="createMeshButtonsphd">Create Spherical Density</button>
           <button id="createMeshButtond">Create Density</button>
 <!-- <button id="createMeshButtongnm">Create Gnomonic Mesh and Animate</button> --->
+
+    <label for="frames">#of frames gif</label>
+ <input type="range" id="frames" name="#of frames for gif" min="1" max="360" value="30">
+<label for="framesd">ms delay gif</label> 
+ <input type="range" id="framesd" name="delay ms for gif" min="1" max="1000" value="100">
+   
+
+
 </div>
 	</div>
     
@@ -909,6 +935,7 @@ Colors based on imag^2/real and real^2/imag.
 	
 	</div>
 	<button onclick="numerate()">Calculate</button>
+    <button onclick="numerate2()">Calculate Alt</button>
 	</div>
 </div>
     <div id="graphContainer">
@@ -917,6 +944,96 @@ Colors based on imag^2/real and real^2/imag.
     <input type="checkbox" id="parametricMode">
     <br>
     
+    
+    
+    
+    
+    
+<div id="graphControls" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: black; border: 2px solid #333; padding: 8px; z-index: 1000; font-family: Arial, sans-serif; font-size: 12px; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); display: none;">
+  <div style="margin-bottom: 5px; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 3px; display: flex; justify-content: space-between; align-items: center;">
+    <span>Graph Controls</span>
+    <button onclick="toggleControls()" style="background: #666; color: white; border: none; padding: 2px 6px; cursor: pointer;">X</button>
+  </div>
+  
+  <div style="display: grid; grid-template-columns: repeat(4, auto); gap: 3px; align-items: center;">
+    <label><input type="checkbox" id="showGrid" checked> Grid</label>
+    <label><input type="checkbox" id="showAxes" checked> Axes</label>
+    <label><input type="checkbox" id="showLabels" checked> Labels</label>
+    <label><input type="checkbox" id="fillCurve" checked> Fill</label>
+    
+    <label>LineW:<input type="number" id="lineWidth" value="2" min="1" max="10" step="0.5" style="width:35px"></label>
+    <label>Samples:<input type="number" id="numSamples" value="100" min="10" max="5000" style="width:45px"></label>
+    <label>Max:<input type="number" id="maximum" value="0" step="0.1" style="width:40px"></label>
+    
+    <label>X Scale:
+      <select id="xScaleMode" style="width:50px">
+  <option value="linear" selected>L</option>
+  <option value="log">log</option>
+  <option value="sqrt">√</option>
+  <option value="exp">exp</option>
+  <option value="sqr">x²</option>
+  <option value="w">W</option>
+  <option value="zex">zex</option>
+  
+  <option value="tanh">tanh</option>
+  <option value="sigmoid">σ</option>
+  <option value="asinh">asinh</option>
+  <option value="atan">atan</option>
+  
+  <option value="gauss">gauss</option>
+  <option value="lnln">lnln</option>
+  <option value="expexp">expexp</option>
+  
+  <option value="inv">x/S</option>
+  <option value="recip">1/</option>
+      </select>
+    </label>
+    <label>Y Scale:
+      <select id="yScaleMode" style="width:50px">
+  <option value="linear" selected>L</option>
+  <option value="log">log</option>
+  <option value="sqrt">√</option>
+  <option value="exp">exp</option>
+  <option value="sqr">x²</option>
+  <option value="w">W</option>
+  <option value="zex">zex</option>
+  
+  <option value="tanh">tanh</option>
+  <option value="sigmoid">σ</option>
+  <option value="asinh">asinh</option>
+  <option value="atan">atan</option>
+  
+  <option value="gauss">gauss</option>
+  <option value="lnln">lnln</option>
+  <option value="expexp">expexp</option>
+  
+  <option value="inv">x/S</option>
+  <option value="recip">1/</option>
+</select>
+      </select>
+    </label>
+    <label>Grid:
+      <select id="gridScale" style="width:60px">
+        <option value="decimal">Decimal</option>
+        <option value="integer">Integer</option>
+        <option value="power2">Power2</option>
+      </select>
+    </label>
+    <label>BG:<input type="color" id="bgColor" value="#000000" style="width:30px"></label>
+    <label>Re:<input type="color" id="realColor" value="#ff0000" style="width:30px"></label>
+    
+    <label>Im:<input type="color" id="imagColor" value="#0000ff" style="width:30px"></label>
+    <label>Grid:<input type="color" id="gridColor" value="#cccccc" style="width:30px"></label>
+    <label>Axis:<input type="color" id="axisColor" value="#ffffff" style="width:30px"></label>
+    <button id="savePNG" style="grid-column: span 2;">Save PNG</button>
+  </div>
+</div>
+
+<button onclick="toggleControls()" style="position: fixed; top: 150px; right: 10%; z-index: 999; background: #333; color: white; border: none; padding: 5px 10px; cursor: pointer;">Controls</button>
+    
+    
+    
+    
     </div>
 <button onclick="change()" style="position: fixed; top: 70%; right: 25%;">></button>
 <button onclick="change(1)" style="position: fixed; top: 75%; right: 20%;">Domain</button>
@@ -924,6 +1041,8 @@ Colors based on imag^2/real and real^2/imag.
 <button onclick="change(3)" style="position: fixed; top: 80%; right: 20%;">Heightmap</button>
 
 <button onclick="change(4)" style="position: fixed; top: 80%; right: 30%;">Numerical</button>
+
+
 
 <!-- <button onclick="change(3)" style="position: fixed; top: 80%; right: 20%;">Heightmap</button> --> 
 <!-- <button onclick="change(4)" style="position: fixed; top: 80%; right: 30%;">Spherical</button> --> 
@@ -945,9 +1064,11 @@ Colors based on imag^2/real and real^2/imag.
 <script src="https://cdn.jsdelivr.net/npm/ccapture.js@1.1.0/build/CCapture.all.min.js"></script>
 
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/exporters/STLExporter.js"></script>
+
+
 <script>
-	
-   
+
     /*
 "X.X...XXX...X.....X........X.X...XXX...XXX...X.X..."
 "X.X...X.....X.....X........X.X...X.....X.X...X.X..."
@@ -1723,7 +1844,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         if (container.children.length === 0) {
-            const labels = ['Start Real', 'Start Imaginary', 'End Real', 'End Imaginary','Maximum'];
+            const labels = ['Start Real', 'Start Imaginary', 'End Real', 'End Imaginary','maxa'];
             labels.forEach(label => {
                 const coordBox = document.createElement('div');
                 coordBox.classList.add('coordinate-box');
@@ -1804,203 +1925,243 @@ maximum = document.querySelectorAll('.end-input')[2];
 
 
 
-function plotGraph(point1, point2) {
-    const parametricMode = document.getElementById('parametricMode').checked;
- //   const maximum = parseFloat(document.getElementById('maximum').value); // Assuming you have an input for maximum
 
-    if (!parametricMode) {
-        const bmpheight = parseFloat(document.getElementById('bmp-height').value);
-        const bmpwidth = parseFloat(document.getElementById('bmp-width').value);
-        const canvas = document.getElementById('graphCanvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = bmpwidth * 5;
-        canvas.height = bmpheight * 5;
-        canvas.style.width = '300px';
-        canvas.style.height = '300px';
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        const numSamples = 1000;
-        const realValues = [];
-        const imagValues = [];
 
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        if (math.min(point1.imag, point2.imag) < 0 && math.max(point1.imag, point2.imag) > 0) {
-            const zeroY = (point1.imag) / (point2.imag - point1.imag) * canvas.height + canvas.height;
-            ctx.strokeStyle = 'DimGray';
-            ctx.beginPath();
-            ctx.moveTo(canvas.width - zeroY, 0);
-            ctx.lineTo(canvas.width - zeroY, canvas.height);
-            ctx.stroke();
-        }
-        if (math.min(point1.real, point2.real) < 0 && math.max(point1.real, point2.real) > 0) {
-            const zeroY = (point1.real) / (point2.real - point1.real) * canvas.height + canvas.height;
-            ctx.strokeStyle = 'black';
-            ctx.beginPath();
-            ctx.moveTo(canvas.width - zeroY, 0);
-            ctx.lineTo(canvas.width - zeroY, canvas.height);
-            ctx.stroke();
-        }
 
-        for (let i = 0; i <= numSamples; i++) {
-            const t = i / numSamples;
-            const real = point1.real + t * (point2.real - point1.real);
-            const imag = point1.imag + t * (point2.imag - point1.imag);
-            const z = math.complex(real, imag);
-            const fn = teth.evaluate(document.getElementById('function').value, { x: z });
 
-            if (!isNaN(fn.re) && !isNaN(fn.im) && isFinite(fn.re) && isFinite(fn.im)) {
-                realValues.push(fn.re);
-                imagValues.push(fn.im);
-            } else {
-                realValues.push(null);
-                imagValues.push(null);
-            }
-        }
 
-        ctx.lineWidth = Math.max(1, canvas.width / 100);
-        const graphWidth = canvas.width;
-        const graphHeight = canvas.height;
 
-        // Adjust min and max values based on the maximum variable
-        let maxValue, minValue;
-        if (maximum > 0) {
-            maxValue = Math.min(maximum, Math.max(...imagValues, ...realValues));
-            minValue = Math.max(-maximum, Math.min(...imagValues, ...realValues));
-        } else if (maximum < 0) {
-            maxValue = -maximum;
-            minValue = maximum;
-        } else {
-            maxValue = Math.max(...imagValues, ...realValues);
-            minValue = Math.min(...imagValues, ...realValues);
-        }
 
-        if (0 > minValue && 0 < maxValue) {
-            const zeroX = (-minValue) / (maxValue - minValue) * canvas.height;
-            ctx.strokeStyle = 'black';
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height - zeroX);
-            ctx.lineTo(canvas.width, canvas.height - zeroX);
-            ctx.stroke();
-        }
 
-        ctx.beginPath();
-        ctx.strokeStyle = 'red';
-        for (let i = 0; i < realValues.length; i++) {
-            const x = (i / numSamples) * graphWidth;
-            const y = graphHeight - ((realValues[i] - minValue) / (maxValue - minValue)) * graphHeight;
-            if (i === 0) {
-                ctx.moveTo(x, y);
-            } else {
-                ctx.lineTo(x, y);
-            }
-        }
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.strokeStyle = 'blue';
-        for (let i = 0; i < imagValues.length; i++) {
-            const x = (i / numSamples) * graphWidth;
-            const y = graphHeight - ((imagValues[i] - minValue) / (maxValue - minValue)) * graphHeight;
-            if (i === 0) {
-                ctx.moveTo(x, y);
-            } else {
-                ctx.lineTo(x, y);
-            }
-        }
-        ctx.stroke();
-    } else {
-        const bmpheight = parseFloat(document.getElementById('bmp-height').value);
-        const bmpwidth = parseFloat(document.getElementById('bmp-width').value);
-        const canvas = document.getElementById('graphCanvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = bmpwidth * 5;
-        canvas.height = bmpheight * 5;
-        canvas.style.width = '300px';
-        canvas.style.height = '300px';
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        const numSamples = 1000;
-        const realValues = [];
-        const imagValues = [];
-
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        for (let i = 0; i <= numSamples; i++) {
-            const t = i / numSamples;
-            const real = point1.real + t * (point2.real - point1.real);
-            const imag = point1.imag + t * (point2.imag - point1.imag);
-            const z = math.complex(real, imag);
-            const fn = teth.evaluate(document.getElementById('function').value, { x: z });
-
-            if (!isNaN(fn.re) && !isNaN(fn.im) && isFinite(fn.re) && isFinite(fn.im)) {
-                realValues.push(fn.re);
-                imagValues.push(fn.im);
-            } else {
-                realValues.push(null);
-                imagValues.push(null);
-            }
-        }
-
-        // Determine min/max values for scaling
-        let maxValueX, minValueX, maxValueY, minValueY;
-        if (maximum > 0) {
-            maxValueX = Math.min(maximum, Math.max(...realValues.filter(v => v !== null)));
-            minValueX = Math.max(-maximum, Math.min(...realValues.filter(v => v !== null)));
-            maxValueY = Math.min(maximum, Math.max(...imagValues.filter(v => v !== null)));
-            minValueY = Math.max(-maximum, Math.min(...imagValues.filter(v => v !== null)));
-        } else if (maximum < 0) {
-            maxValueX = -maximum;
-            minValueX = maximum;
-            maxValueY = -maximum;
-            minValueY = maximum;
-        } else {
-            maxValueX = Math.max(...realValues.filter(v => v !== null));
-            minValueX = Math.min(...realValues.filter(v => v !== null));
-            maxValueY = Math.max(...imagValues.filter(v => v !== null));
-            minValueY = Math.min(...imagValues.filter(v => v !== null));
-        }
-
-        ctx.lineWidth = Math.max(1, canvas.width / 100);
-
-        // Draw axes
-        if (0 > minValueX && 0 < maxValueX) {
-            const zeroX = (-minValueX) / (maxValueX - minValueX) * canvas.width;
-            ctx.strokeStyle = 'black';
-            ctx.beginPath();
-            ctx.moveTo(zeroX, 0);
-            ctx.lineTo(zeroX, canvas.height);
-            ctx.stroke();
-        }
-
-        if (0 > minValueY && 0 < maxValueY) {
-            const zeroY = (-minValueY) / (maxValueY - minValueY) * canvas.height;
-            ctx.strokeStyle = 'black';
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height - zeroY);
-            ctx.lineTo(canvas.width, canvas.height - zeroY);
-            ctx.stroke();
-        }
-
-        // Draw parametric curve
-        ctx.beginPath();
-        ctx.strokeStyle = 'red';
-        for (let i = 0; i < realValues.length; i++) {
-            if (realValues[i] !== null && imagValues[i] !== null) {
-                const x = ((realValues[i] - minValueX) / (maxValueX - minValueX)) * canvas.width;
-                const y = canvas.height - ((imagValues[i] - minValueY) / (maxValueY - minValueY)) * canvas.height;
-                if (i === 0) {
-                    ctx.moveTo(x, y);
-                } else {
-                    ctx.lineTo(x, y);
-                }
-            }
-        }
-        ctx.stroke();
-    }
+function toggleControls() { 
+  const controls = document.getElementById('graphControls'); 
+  controls.style.display = controls.style.display === 'none' ? 'block' : 'none'; 
 }
+
+function applyScale(value, scaleMode) { 
+  if (value === 0) return 0; 
+  switch (scaleMode) { 
+    case 'log': return Math.sign(value) * Math.log1p(Math.abs(value)); 
+    case 'sqrt': return Math.sign(value) * Math.sqrt(Math.abs(value)); 
+    case 'exp': return Math.sign(value) * (exp(Math.abs(value)-1)); 
+    case 'sqr': return Math.sign(value) * sqr(Math.abs(value)); 
+    
+    case 'w': return Math.sign(value) * lambertw(Math.abs(value)); 
+     case 'zex': return Math.sign(value) * zex(Math.abs(value)); 
+     
+     case 'tanh': return Math.tanh(value);
+    case 'sigmoid': return 1 / (1 + Math.exp(-value));
+    case 'asinh': return Math.asinh(value);
+    case 'atan': return Math.atan(value);
+    
+    case 'gauss': return Math.sign(value) * (1 - Math.exp(-value * value));
+    case 'lnln': return Math.sign(value) * Math.log1p(Math.log1p(Math.abs(value)));
+    case 'expexp': return Math.sign(value) * (exp(exp(value)-1)-1);
+    
+    case 'inv': return Math.sign(value) / (1 + Math.abs(value));
+    case 'recip': return value / (1 + value * value);
+    
+
+    
+    default: return value; 
+  }
+}
+
+function plotGraph(point1, point2) { 
+  const get = id => document.getElementById(id);
+  const ctrls = {
+    height: parseFloat(get('bmp-height').value),
+    width: parseFloat(get('bmp-width').value),
+    bgColor: get('bgColor').value, 
+    realColor: get('realColor').value, 
+    imagColor: get('imagColor').value, 
+    axisColor: get('axisColor').value, 
+    gridColor: get('gridColor').value, 
+    lineWidth: parseFloat(get('lineWidth').value), 
+    numSamples: parseInt(get('numSamples').value), 
+    xScaleMode: get('xScaleMode').value, 
+    yScaleMode: get('yScaleMode').value, 
+    gridScale: get('gridScale').value, 
+    showGrid: get('showGrid').checked, 
+    showAxes: get('showAxes').checked, 
+    showLabels: get('showLabels').checked, 
+    fillCurve: get('fillCurve').checked, 
+    parametricMode: get('parametricMode').checked,
+    maximum: maximum
+  };
+
+  const canvas = get('graphCanvas'); 
+  const ctx = canvas.getContext('2d'); 
+  const scale = 3;
+  canvas.width = ctrls.width * scale; 
+  canvas.height = ctrls.height * scale; 
+  ctx.fillStyle = ctrls.bgColor; 
+  ctx.fillRect(0, 0, canvas.width, canvas.height); 
+
+  const real = [], imag = [], domain = []; 
+  for (let i = 0; i <= ctrls.numSamples; i++) {
+    const t = i / ctrls.numSamples;
+    const x_real = point1.real + t * (point2.real - point1.real); 
+    const x_imag = point1.imag + t * (point2.imag - point1.imag); 
+    let z = math.complex(applyScale(x_real, ctrls.xScaleMode), applyScale(x_imag, ctrls.xScaleMode)); 
+ try {
+      const fn =math.complex(teth.evaluate(get('function').value, { x: z })); 
+      if (!isFinite(fn.re) || !isFinite(fn.im)) throw new Error(); 
+  real.push(applyScale(re(fn),ctrls.yScaleMode)); imag.push(applyScale(im(fn),ctrls.yScaleMode)); domain.push(x_real); 
+ //console.log(applyScale(re(fn),ctrs.yScaleMode))
+  } catch (e) {console.log(e)
+      real.push(null); imag.push(null); domain.push(null); 
+    }
+  }
+
+  const getRange = arr => {
+    const valid = arr.filter(v => v !== null);
+    return valid.length ? [Math.min(...valid), Math.max(...valid)] : [-1, 1]; 
+  };
+
+  let minX, maxX, minY, maxY;
+  if (ctrls.parametricMode) { 
+    [minX, maxX] = getRange(real); 
+    [minY, maxY] = getRange(imag); 
+  } else {
+    [minX, maxX] = getRange(domain); 
+    [minY, maxY] = getRange([...real, ...imag]); 
+  }
+
+  if (ctrls.maximum !== 0) {
+    const m = ctrls.maximum;
+    if (m > 0) { 
+        maxY = Math.min(maxY, m); minY = Math.max(minY, -m); 
+        if (ctrls.parametricMode) { maxX = Math.min(maxX, m); minX = Math.max(minX, -m); } 
+    } else {
+        maxY = -m; minY = m; 
+        if (ctrls.parametricMode) { maxX = -m; minX = m; } 
+    }
+  }
+  
+  if (maxX === minX) { maxX++; minX--; } 
+  if (maxY === minY) { maxY++; minY--; } 
+
+  const toCanvasX = val => ((val - minX) / (maxX - minX)) * canvas.width; 
+  const toCanvasY = val => canvas.height - ((val - minY) / (maxY - minY)) * canvas.height; 
+
+  const generateGridLines = (min, max, gridScale) => {
+    const lines = [];
+    if (gridScale === 'integer') { 
+        for (let i = Math.ceil(min); i <= Math.floor(max); i++) lines.push(i); 
+    } else if (gridScale === 'power2') { 
+        const minP = Math.ceil(Math.log2(Math.max(1e-9, Math.abs(min))));
+        const maxP = Math.floor(Math.log2(Math.max(1e-9, Math.abs(max)))); 
+        for (let p = minP; p <= maxP; p++) { 
+            const val = 2 ** p;
+            if (val >= min && val <= max) lines.push(val); 
+            if (-val >= min && -val <= max) lines.push(-val); 
+        }
+        if (0 >= min && 0 <= max) lines.push(0); 
+    } else {
+        const range = max - min; if (range === 0) return [];
+        const step = 10 ** Math.floor(Math.log10(range)) / 2; 
+        for (let v = Math.ceil(min / step) * step; v <= Math.floor(max / step) * step; v += step) { 
+            if (v >= min && v <= max) lines.push(v); 
+        }
+    }
+    return lines.sort((a, b) => a - b); 
+  };
+
+  const drawLine = (x1, y1, x2, y2) => { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }; 
+
+  if (ctrls.showGrid) { 
+    ctx.strokeStyle = ctrls.gridColor; ctx.lineWidth = 0.5; 
+    generateGridLines(minX, maxX, ctrls.gridScale).forEach(v => drawLine(toCanvasX(v), 0, toCanvasX(v), canvas.height)); 
+    generateGridLines(minY, maxY, ctrls.gridScale).forEach(v => drawLine(0, toCanvasY(v), canvas.width, toCanvasY(v))); 
+  }
+
+  if (ctrls.showAxes) { 
+    ctx.strokeStyle = ctrls.axisColor; ctx.lineWidth = 1; 
+    if (minY <= 0 && maxY >= 0) drawLine(0, toCanvasY(0), canvas.width, toCanvasY(0)); 
+    if (minX <= 0 && maxX >= 0) drawLine(toCanvasX(0), 0, toCanvasX(0), canvas.height); 
+  }
+  
+  ctx.lineWidth = ctrls.lineWidth;
+  const drawCurve = (xData, yData, color) => {
+    ctx.strokeStyle = color; ctx.beginPath(); 
+    let first = true;
+    xData.forEach((val, i) => {
+      if (val === null || yData[i] === null) { first = true; return; } 
+      const x = toCanvasX(val), y = toCanvasY(yData[i]); 
+      first ? ctx.moveTo(x, y) : ctx.lineTo(x, y); 
+      first = false;
+    });
+    ctx.stroke();
+  };
+
+  ctrls.parametricMode ? drawCurve(real, imag, ctrls.realColor) 
+                      : (drawCurve(domain, real, ctrls.realColor), drawCurve(domain, imag, ctrls.imagColor));
+
+  if (ctrls.fillCurve) {
+    ctx.globalAlpha = 0.2; 
+    const fillShape = (xData, yData, color) => {
+      ctx.fillStyle = color; ctx.beginPath(); 
+      const points = [];
+      xData.forEach((val, i) => { if (val !== null && yData[i] !== null) points.push({x: toCanvasX(val), y: toCanvasY(yData[i])}); }); 
+      if (!points.length) return;
+      ctx.moveTo(points[0].x, points[0].y); 
+      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y); 
+      
+      if (ctrls.parametricMode) {
+        ctx.lineTo(toCanvasX(0), toCanvasY(0)); 
+      } else {
+        const y0 = toCanvasY(0); 
+        for (let i = xData.length - 1; i >= 0; i--) {
+            if (xData[i] !== null && yData[i] !== null) ctx.lineTo(toCanvasX(xData[i]), y0); 
+        }
+      }
+      ctx.closePath(); ctx.fill();
+    };
+
+    ctrls.parametricMode ? fillShape(real, imag, ctrls.realColor)
+                         : (fillShape(domain, real, ctrls.realColor), fillShape(domain, imag, ctrls.imagColor));
+    ctx.globalAlpha = 1; 
+  }
+
+  if (ctrls.showLabels) { 
+    ctx.fillStyle = ctrls.axisColor; ctx.font = "10px monospace"; 
+    const label = (text, x, y, align = "center") => { ctx.textAlign = align; ctx.fillText(text, x, y); }; 
+    label(minX.toFixed(2), 20, canvas.height - 5); 
+    label(maxX.toFixed(2), canvas.width - 20, canvas.height - 5); 
+    label(minY.toFixed(2), 5, canvas.height - 20, "left"); 
+    label(maxY.toFixed(2), 5, 15, "left"); 
+    if (minX < 0 && maxX > 0) label("0", toCanvasX(0) + 8, canvas.height - 5); 
+    if (minY < 0 && maxY > 0) label("0", 5, toCanvasY(0) - 5, "left"); 
+  }
+
+  get('savePNG').onclick = () => { 
+    const a = document.createElement('a');
+    a.download = 'graph.png'; 
+    a.href = canvas.toDataURL('image/png'); 
+    a.click();
+  };
+}
+
+document.addEventListener('DOMContentLoaded', () => { 
+  document.getElementById('graphControls').style.display = 'none'; 
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         document.getElementById('color-mode').addEventListener('change', function() {
@@ -2125,34 +2286,119 @@ const xxx = math.complex(xre,xim);
   document.getElementById("outputBoxa").value = funcValue;
  
 }
- function renderBMP() {
+  function numerate2() {
 		
-            const width = parseInt(document.getElementById('bmp-width').value);
-            const height = parseInt(document.getElementById('bmp-height').value);
-            const minReal = parseFloat(document.getElementById('min-real').value);
-            const maxReal = parseFloat(document.getElementById('max-real').value);
-            const minImag = parseFloat(document.getElementById('min-imag').value);
-            const maxImag = parseFloat(document.getElementById('max-imag').value);
-            const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
-            const colorMode = document.getElementById('color-mode').value;
-            const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
-            const lightness = parseInt(document.getElementById('lightness').value);
-            const hue = parseInt(document.getElementById('hue').value);
-
+          
+            const xre = parseFloat(document.getElementById('numericalxre').value);
+              const xim = parseFloat(document.getElementById('numericalxim').value);
+const xxx = math.complex(xre,xim);
             const funcStr = document.getElementById('function').value.trim();
-            const canvas = document.getElementById('bmpCanvas');
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            const imageData = ctx.createImageData(width, height);
-
-            const reStep = (maxReal - minReal) / width;
-            const imStep = (maxImag - minImag) / height;
-			let thick = parseFloat(document.getElementById('thick').value);
+ const funcValue = teth.evaluate(funcStr, { x: xxx});
+  document.getElementById("outputBoxa").value = funcValue;
+ 
+}
 
 
 
-            for (let x = 0; x < width; x++) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function renderBMP() {
+    const width = parseInt(document.getElementById('bmp-width').value);
+    const height = parseInt(document.getElementById('bmp-height').value);
+    const minReal = parseFloat(document.getElementById('min-real').value);
+    const maxReal = parseFloat(document.getElementById('max-real').value);
+    const minImag = parseFloat(document.getElementById('min-imag').value);
+    const maxImag = parseFloat(document.getElementById('max-imag').value);
+    const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+    const lightness = parseInt(document.getElementById('lightness').value);
+    const funcStr = document.getElementById('function').value.trim();
+    const thick = parseFloat(document.getElementById('thick').value);
+
+    const canvas = document.getElementById('bmpCanvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.createImageData(width, height);
+    const data = imageData.data;
+
+    const reStep = (maxReal - minReal) / width;
+    const imStep = (maxImag - minImag) / height;
+
+    const reValues = new Float64Array(width);
+    const imValues = new Float64Array(height);
+
+    for (let x = 0; x < width; x++) reValues[x] = minReal + x * reStep;
+    for (let y = 0; y < height; y++) imValues[y] = maxImag - y * imStep;
+
+    const memoValues = new Array(width).fill(0);
+ const funcTree = teth.parse(teth.tokenize(funcStr));
+    // Draw in blocks of lines to avoid blocking UI but stay fast
+    const blockSize = 32; // can tweak for performance
+    for (let yStart = 0; yStart < height; yStart += blockSize) {
+        const yEnd = Math.min(yStart + blockSize, height);
+        for (let x = 0; x < width; x++) {
+            const re = reValues[x];
+            let memo = memoValues[x];
+
+            for (let y = yStart; y < yEnd; y++) {
+                const im = imValues[y];
+                const complexValue = math.complex(re, im);
+                const q = math.exp(math.multiply(math.complex(0, Math.PI), complexValue));
+
+                const funcValue = teth.evaluateTree(funcTree, { x: complexValue, q,xx:re,yy:im });
+                const color = complexToColor(
+                    complexValue,
+                    funcValue,
+                    magnitudeToLightnessExpr,
+                    colorMode,
+                    saturationChroma,
+                    lightness,
+                    paletteImageData,
+                    thick,
+                    math.divide(math.subtract(funcValue, memo), imStep)
+                );
+
+                const index = (y * width + x) * 4;
+                data[index] = color[0];
+                data[index + 1] = color[1];
+                data[index + 2] = color[2];
+                data[index + 3] = 255;
+
+                memo = funcValue;
+            }
+
+            memoValues[x] = memo; // save for next block
+        }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    scaleCanvas();
+}
+
+
+
+
+
+
+
+
+//const fastFunc = tethf.compile(funcStr, ["x"]);
+
+        /*    for (let x = 0; x < width; x++) {
 			let memo = 0;
                 for (let y = 0; y < height; y++) {
 				 
@@ -2162,11 +2408,18 @@ const xxx = math.complex(xre,xim);
                     let color = [0, 0, 0];
                     try {
 					const complexValue = math.complex(re, im);
-                    const funcValue = teth.evaluate(funcStr,  { x: complexValue , z: complexValue ,xx: re ,yy: im ,q:exp(mul(I,pi(),complexValue)),t:modulartransformqt(complexValue) });
+                   // const funcValue = teth.evaluate(funcStr,  { x: complexValue , z: complexValue ,xx: re ,yy: im ,q:exp(mul(I,pi(),complexValue)),t:modulartransformqt(complexValue) });
                      //  const funcValue = teth.evaluate(funcStr, { x: complexValue , z: complexValue ,xx: re ,yy: im ,q:exp(mul(I,pi(),complexValue)) });
-                  //        const funcValue = teth.evaluate(funcStr, { x: complexValue, q:exp(mul(I,pi(),complexValue)) });
+                        const funcValue = teth.evaluate(funcStr, { x: complexValue, q:exp(mul(I,pi(),complexValue)) });
 				//console.log(funcValue);
-				
+	
+    
+
+// Now you can call it quickly with variable values
+//const funcValue = fastFunc({x:complexValue});
+                
+                
+                
 						color = complexToColor(complexValue, funcValue, magnitudeToLightnessExpr, colorMode, saturationChroma, lightness, paletteImageData,thick, math.divide(math.subtract(funcValue,memo),imStep));
                 memo = funcValue;
 				} catch (e) {
@@ -2180,19 +2433,10 @@ const xxx = math.complex(xre,xim);
                     imageData.data[index + 3] = 255;
                 }
                 
-            }
-            ctx.putImageData(imageData, 0, 0);
-			
-;
- scaleCanvas();
-        }
-
-
-
-
-
-
-
+            }*/
+            
+            
+            
 
 
 
@@ -2535,9 +2779,7 @@ function renderBMPt(t) {
 ;
  scaleCanvas();
         }
-
-        async function renderBMPmap() {
-  // Get parameters from HTML inputs
+async function renderBMPmap() {
     const width = parseInt(document.getElementById('bmp-width').value);
     const height = parseInt(document.getElementById('bmp-height').value);
     const minReal = parseFloat(document.getElementById('min-real').value);
@@ -2552,162 +2794,194 @@ function renderBMPt(t) {
     const thick = Math.max(0.5, Math.min(5, parseInt(document.getElementById('saturation-chroma').value)/20));
     const funcStr = document.getElementById('function').value.trim();
 
-    const canvas = document.getElementById('bmpCanvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    
-    // Clear canvas
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, width, height);
+    const SPARSITY_FACTOR = 1;
+    const PHI = (1 + Math.sqrt(5)) / 2;
 
-    // Coordinate conversion functions
+    const canvas = document.getElementById('bmpCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = width; canvas.height = height;
+    ctx.fillStyle = 'white'; ctx.fillRect(0, 0, width, height);
+
     const toCanvasX = (re) => width * (re - minReal) / (maxReal - minReal);
     const toCanvasY = (im) => height * (1 - (im - minImag) / (maxImag - minImag));
 
-    // Draw thick black axes first (so other lines appear on top)
+    // High quality x=0 and y=0 axes in black (less thick)
     ctx.beginPath();
-    // X-axis (y=0)
-    for (let x = minReal; x <= maxReal; x += (maxReal - minReal)/100) {
-        const canvasX = toCanvasX(x);
-        const canvasY = toCanvasY(0);
-        if (x === minReal) ctx.moveTo(canvasX, canvasY);
-        else ctx.lineTo(canvasX, canvasY);
+    for (let x = minReal; x <= maxReal; x += (maxReal - minReal)/1000) {
+        const z = math.complex(x, 0);
+        const fz = teth.evaluate(funcStr, {
+            x: z, z: z, xx: x, yy: 0,
+            q: math.exp(math.multiply(math.i, math.pi, z)),
+            t: modulartransformqt(z)
+        });
+        const canvasX = toCanvasX(fz.re), canvasY = toCanvasY(fz.im);
+        x === minReal ? ctx.moveTo(canvasX, canvasY) : ctx.lineTo(canvasX, canvasY);
     }
-    // Y-axis (x=0)
-    for (let y = minImag; y <= maxImag; y += (maxImag - minImag)/100) {
-        const canvasX = toCanvasX(0);
-        const canvasY = toCanvasY(y);
-        if (y === minImag) ctx.moveTo(canvasX, canvasY);
-        else ctx.lineTo(canvasX, canvasY);
+    ctx.strokeStyle = 'black'; ctx.lineWidth = thick * 2; ctx.stroke();
+
+    ctx.beginPath();
+    for (let y = minImag; y <= maxImag; y += (maxImag - minImag)/1000) {
+        const z = math.complex(0, y);
+        const fz = teth.evaluate(funcStr, {
+            x: z, z: z, xx: 0, yy: y,
+            q: math.exp(math.multiply(math.i, math.pi, z)),
+            t: modulartransformqt(z)
+        });
+        const canvasX = toCanvasX(fz.re), canvasY = toCanvasY(fz.im);
+        y === minImag ? ctx.moveTo(canvasX, canvasY) : ctx.lineTo(canvasX, canvasY);
     }
-    ctx.strokeStyle = 'black';
-    ctx.lineWidth = thick * 3; // Extra thick axes
-    ctx.stroke();
+    ctx.strokeStyle = 'black'; ctx.lineWidth = thick * 2; ctx.stroke();
 
-    // Parameters for line drawing
-    const xStep = (maxReal - minReal) / 50 
-    const yStep = (maxImag - minImag) / 50 
-    const maxGap = Math.max(width, height) / 20; // Maximum allowed gap between points
+    // Grey x=±100 and y=±100 lines
+    ctx.beginPath();
+    for (let x = minReal; x <= maxReal; x += (maxReal - minReal)/1000) {
+        const z = math.complex(x, 100);
+        const fz = teth.evaluate(funcStr, {
+            x: z, z: z, xx: x, yy: 100,
+            q: math.exp(math.multiply(math.i, math.pi, z)),
+            t: modulartransformqt(z)
+        });
+        const canvasX = toCanvasX(fz.re), canvasY = toCanvasY(fz.im);
+        x === minReal ? ctx.moveTo(canvasX, canvasY) : ctx.lineTo(canvasX, canvasY);
+    }
+    ctx.strokeStyle = '#888'; ctx.lineWidth = thick; ctx.stroke();
 
-    // Draw horizontal lines (fixed y)
-    for (let y = -15*yStep*exrtr; y<= 16*yStep*exrtr; y += yStep) {
-       
+    ctx.beginPath();
+    for (let x = minReal; x <= maxReal; x += (maxReal - minReal)/1000) {
+        const z = math.complex(x, -100);
+        const fz = teth.evaluate(funcStr, {
+            x: z, z: z, xx: x, yy: -100,
+            q: math.exp(math.multiply(math.i, math.pi, z)),
+            t: modulartransformqt(z)
+        });
+        const canvasX = toCanvasX(fz.re), canvasY = toCanvasY(fz.im);
+        x === minReal ? ctx.moveTo(canvasX, canvasY) : ctx.lineTo(canvasX, canvasY);
+    }
+    ctx.strokeStyle = '#888'; ctx.lineWidth = thick; ctx.stroke();
+
+    ctx.beginPath();
+    for (let y = minImag; y <= maxImag; y += (maxImag - minImag)/1000) {
+        const z = math.complex(100, y);
+        const fz = teth.evaluate(funcStr, {
+            x: z, z: z, xx: 100, yy: y,
+            q: math.exp(math.multiply(math.i, math.pi, z)),
+            t: modulartransformqt(z)
+        });
+        const canvasX = toCanvasX(fz.re), canvasY = toCanvasY(fz.im);
+        y === minImag ? ctx.moveTo(canvasX, canvasY) : ctx.lineTo(canvasX, canvasY);
+    }
+    ctx.strokeStyle = '#888'; ctx.lineWidth = thick; ctx.stroke();
+
+    ctx.beginPath();
+    for (let y = minImag; y <= maxImag; y += (maxImag - minImag)/1000) {
+        const z = math.complex(-100, y);
+        const fz = teth.evaluate(funcStr, {
+            x: z, z: z, xx: -100, yy: y,
+            q: math.exp(math.multiply(math.i, math.pi, z)),
+            t: modulartransformqt(z)
+        });
+        const canvasX = toCanvasX(fz.re), canvasY = toCanvasY(fz.im);
+        y === minImag ? ctx.moveTo(canvasX, canvasY) : ctx.lineTo(canvasX, canvasY);
+    }
+    ctx.strokeStyle = '#888'; ctx.lineWidth = thick; ctx.stroke();
+
+    const maxGap = Math.max(width, height) / 20;
+    
+    const generatePhiCoords = (center, rangeScale) => {
+        const coords = new Set();
+        coords.add(center);
         
-        let previousPoint = null;
-        let pathStarted = false;
-        
-        for (let x = -15*xStep*exrtr; x <= 16*xStep*exrtr; x += xStep/5) { // Denser sampling
-            try {
-                const z = math.complex(x, y);
-                const fz = teth.evaluate(funcStr, {
-                    x: z, z: z,
-                    xx: x, yy: y,
-                    q: math.exp(math.multiply(math.i, math.pi, z))
-                    ,t:modulartransformqt(z)
-                });
-                
-                const canvasX = toCanvasX(fz.re);
-                const canvasY = toCanvasY(fz.im);
-                const currentPoint = {x: canvasX, y: canvasY};
-                
-                // Check if we should start new segment
-                if (previousPoint && 
-                    Math.hypot(currentPoint.x - previousPoint.x, currentPoint.y - previousPoint.y) > maxGap) {
-                    pathStarted = false;
-                }
-                        if (pathStarted) {
-            const color = complexToColor(
-                 z, 
-                 z, 
-                magnitudeToLightnessExpr,
-                colorMode,
-                saturationChroma,
-                lightness,
-                null,
-                thick,
-                math.complex(0, 0)
-            );
-            ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.7)`;
-            ctx.lineWidth = thick;
-            ctx.stroke();
+        for (let n = 1; n <= 10; n++) {
+            const phiPower = Math.pow(PHI, n * SPARSITY_FACTOR);
+            coords.add(center + rangeScale / phiPower);
+            coords.add(center + rangeScale * phiPower);
+            coords.add(center - rangeScale / phiPower);
+            coords.add(center - rangeScale * phiPower);
         }
-                if (!pathStarted) {
-                    ctx.beginPath();
-                    ctx.moveTo(canvasX, canvasY);
-                    pathStarted = true;
-                } else {
-                    ctx.lineTo(canvasX, canvasY);
-                }
-                
-                previousPoint = currentPoint;
-            } catch (e) {
-                pathStarted = false;
+        
+        return Array.from(coords).sort((a, b) => a - b);
+    };
+
+    const generateDenseSampling = (sparseCoords) => {
+        const denseCoords = [];
+        for (let i = 0; i < sparseCoords.length - 1; i++) {
+            const start = sparseCoords[i];
+            const end = sparseCoords[i + 1];
+            const step = (end - start) / (10 - SPARSITY_FACTOR * 2);
+            denseCoords.push(start);
+            for (let j = 1; j < (10 - SPARSITY_FACTOR * 2); j++) {
+                denseCoords.push(start + j * step);
             }
         }
-        
+        if (sparseCoords.length > 0) denseCoords.push(sparseCoords[sparseCoords.length - 1]);
+        return denseCoords;
+    };
 
-    }
+    const drawPath = (path, isPeripheral) => {
+        if (path.length < 2) return;
+        ctx.beginPath();
+        ctx.moveTo(path[0].x, path[0].y);
+        for (let i = 1; i < path.length; i++) ctx.lineTo(path[i].x, path[i].y);
+        const midPoint = path[Math.floor(path.length / 2)];
+        const sat = isPeripheral ? saturationChroma / 2 : saturationChroma;
+        const color = complexToColor(midPoint.z, midPoint.z, magnitudeToLightnessExpr, colorMode, 
+            sat, lightness, null, thick, math.complex(0, 0));
+        ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.7)`;
+        ctx.lineWidth = thick;
+        ctx.stroke();
+    };
 
-    // Draw vertical lines (fixed x)
-    for (let x = -15*xStep*exrtr; x <= 16*xStep*exrtr; x += xStep) {
-       
+    const drawLines = (isHorizontal) => {
+        const rangeScale = isHorizontal ? (maxReal - minReal) : (maxImag - minImag);
+        const center = 0;
+        const fixedParams = generatePhiCoords(center, rangeScale * exrtr);
         
-        let previousPoint = null;
-        let pathStarted = false;
-        
-        for (let y = -15*yStep*exrtr; y <= 16*yStep*exrtr; y += yStep/5) { // Denser sampling
-            try {
-                const z = math.complex(x, y);
-                const fz = teth.evaluate(funcStr, {
-                    x: z, z: z,
-                    xx: x, yy: y,
-                    q: math.exp(math.multiply(math.i, math.pi, z))
-                    ,t:modulartransformqt(complexValue)
-                });
+        for (const fixedParam of fixedParams) {
+            let previousPoint = null;
+            let currentPath = [];
+            const isPeripheral = Math.abs(fixedParam) > rangeScale * 0.1;
+            
+            const sparseVaryingParams = generatePhiCoords(center, rangeScale * exrtr);
+            const varyingParams = generateDenseSampling(sparseVaryingParams);
+            
+            for (const varyingParam of varyingParams) {
+                const x = isHorizontal ? varyingParam : fixedParam;
+                const y = isHorizontal ? fixedParam : varyingParam;
                 
-                const canvasX = toCanvasX(fz.re);
-                const canvasY = toCanvasY(fz.im);
-                const currentPoint = {x: canvasX, y: canvasY};
-                
-                // Check for discontinuity
-                if (previousPoint && 
-                    Math.hypot(currentPoint.x - previousPoint.x, currentPoint.y - previousPoint.y) > maxGap) {
-                    pathStarted = false;
+                try {
+                    const z = math.complex(x, y);
+                    const fz = teth.evaluate(funcStr, {
+                        x: z, z: z, xx: x, yy: y,
+                        q: math.exp(math.multiply(math.i, math.pi, z)),
+                        t: modulartransformqt(z)
+                    });
+                    
+                    const canvasX = toCanvasX(fz.re), canvasY = toCanvasY(fz.im);
+                    const isDrawable = canvasX > -width * 5 && canvasX < width * 6 && 
+                                     canvasY > -height * 5 && canvasY < height * 6;
+                    
+                    if (isDrawable) {
+                        const currentPoint = {x: canvasX, y: canvasY, z: z};
+                        if (previousPoint && Math.hypot(currentPoint.x - previousPoint.x, currentPoint.y - previousPoint.y) > maxGap) {
+                            if (currentPath.length > 1) drawPath(currentPath, isPeripheral);
+                            currentPath = [currentPoint];
+                        } else currentPath.push(currentPoint);
+                        previousPoint = currentPoint;
+                    } else if (currentPath.length > 1) {
+                        drawPath(currentPath, isPeripheral);
+                        currentPath = [];
+                    }
+                } catch (e) {
+                    if (currentPath.length > 1) drawPath(currentPath, isPeripheral);
+                    currentPath = [];
                 }
-                 if (pathStarted) {
-            const color = complexToColor(
-                  z, 
-                 z, 
-                magnitudeToLightnessExpr,
-                colorMode,
-                saturationChroma,
-                lightness,
-                null,
-                thick,
-                math.complex(0, 0)
-            );
-            ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.7)`;
-            ctx.lineWidth = thick;
-            ctx.stroke();
-        }
-                if (!pathStarted) {
-                    ctx.beginPath();
-                    ctx.moveTo(canvasX, canvasY);
-                    pathStarted = true;
-                } else {
-                    ctx.lineTo(canvasX, canvasY);
-                }
-                
-                previousPoint = currentPoint;
-            } catch (e) {
-                pathStarted = false;
             }
+            if (currentPath.length > 1) drawPath(currentPath, isPeripheral);
         }
-        
+    };
 
-    }
-
+    drawLines(true);
+    drawLines(false);
     scaleCanvas();
 }
         
@@ -3168,8 +3442,9 @@ const workerUrl = URL.createObjectURL(workerBlob);
 document.getElementById('captureGIFBtn').addEventListener('click', async function () {
     const mode = document.getElementById('gifModeSelect').value;
     const frames = [];
-    const totalFrames = 30;
-    const delay = 100;
+    const totalFrames = parseInt(document.getElementById('frames').value);
+    //const totalFrames = 30;
+    const delay = parseInt(document.getElementById('framesd').value);;
 
     const originalPosition = camera.position.clone();
     const originalRotation = camera.rotation.clone();
@@ -3260,7 +3535,7 @@ case 'spherical':
 
     const gif = new GIF({
         workers: 2,
-        quality: 10,
+        quality: 1,
         width: frames[0].image.width,
         height: frames[0].image.height,
         workerScript: workerUrl // Make sure this is defined elsewhere
@@ -3309,28 +3584,40 @@ document.getElementById('domaingifbtn').addEventListener('click', async function
   
 
     const frames = [];
-    const totalFrames = 30;
-    const delay = 100; // ms between frames
+     const totalFrames = parseInt(document.getElementById('frames').value);
+    //const totalFrames = 30;
+    const delay = parseInt(document.getElementById('framesd').value);;
     
     // Store original camera state
     const originalPosition = camera.position.clone();
     const originalRotation = camera.rotation.clone();
     
-    for (let i = 0; i < totalFrames; i++) {
-        
-          renderBMPt(i/totalFrames);
-           const frameCanvas = document.createElement('canvas');
-        frameCanvas.width = canvas.width;
-        frameCanvas.height = canvas.height;
-        frameCanvas.getContext('2d').drawImage(canvas, 0, 0);
-        frames.push({
-             image: frameCanvas,
-            delay: delay
-        });
-        
-        // Small delay between frames
-        await new Promise(resolve => setTimeout(resolve, delay));
-    }
+ const SCALE = 4; // each original pixel becomes 4x4
+
+for (let i = 0; i < totalFrames; i++) {
+    renderBMPt(i / totalFrames);
+
+    const frameCanvas = document.createElement('canvas');
+    frameCanvas.width = canvas.width * SCALE;
+    frameCanvas.height = canvas.height * SCALE;
+    const ctx = frameCanvas.getContext('2d');
+
+    // Draw the original canvas scaled up, no smoothing
+    ctx.imageSmoothingEnabled = false; 
+    ctx.drawImage(
+        canvas, 
+        0, 0, canvas.width, canvas.height,  // source
+        0, 0, canvas.width * SCALE, canvas.height * SCALE // destination
+    );
+
+    frames.push({
+        image: frameCanvas,
+        delay: delay
+    });
+
+    await new Promise(resolve => setTimeout(resolve, delay));
+}
+
     
     // Restore camera
     camera.position.copy(originalPosition);
@@ -3339,7 +3626,7 @@ document.getElementById('domaingifbtn').addEventListener('click', async function
     // Create GIF using gif.js
     const gif = new GIF({
         workers: 2,
-        quality: 10,
+        quality: 1,
         width: frames[0].image.width,
         height: frames[0].image.height,
         workerScript: workerUrl
@@ -3363,6 +3650,65 @@ document.getElementById('domaingifbtn').addEventListener('click', async function
 
 
 
+// Floyd–Steinberg dither function
+function floydSteinbergDither(imageData, width, height) {
+    const data = imageData.data;
+
+    function clamp(v) {
+        return Math.max(0, Math.min(255, v));
+    }
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const idx = (y * width + x) * 4;
+
+            const oldR = data[idx];
+            const oldG = data[idx + 1];
+            const oldB = data[idx + 2];
+
+            // quantize to 8-bit
+            const newR = Math.round(oldR / 255) * 255;
+            const newG = Math.round(oldG / 255) * 255;
+            const newB = Math.round(oldB / 255) * 255;
+
+            const errR = oldR - newR;
+            const errG = oldG - newG;
+            const errB = oldB - newB;
+
+            data[idx] = newR;
+            data[idx + 1] = newG;
+            data[idx + 2] = newB;
+
+            // distribute error
+            if (x + 1 < width) {
+                const i = (y * width + (x + 1)) * 4;
+                data[i] += errR * 7 / 16;
+                data[i + 1] += errG * 7 / 16;
+                data[i + 2] += errB * 7 / 16;
+            }
+            if (x - 1 >= 0 && y + 1 < height) {
+                const i = ((y + 1) * width + (x - 1)) * 4;
+                data[i] += errR * 3 / 16;
+                data[i + 1] += errG * 3 / 16;
+                data[i + 2] += errB * 3 / 16;
+            }
+            if (y + 1 < height) {
+                const i = ((y + 1) * width + x) * 4;
+                data[i] += errR * 5 / 16;
+                data[i + 1] += errG * 5 / 16;
+                data[i + 2] += errB * 5 / 16;
+            }
+            if (x + 1 < width && y + 1 < height) {
+                const i = ((y + 1) * width + (x + 1)) * 4;
+                data[i] += errR * 1 / 16;
+                data[i + 1] += errG * 1 / 16;
+                data[i + 2] += errB * 1 / 16;
+            }
+        }
+    }
+
+    return imageData;
+}
 
 
 

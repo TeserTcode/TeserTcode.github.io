@@ -2294,7 +2294,45 @@ let v=vv/100;
     Math.round(b * 255)
   ];
 }
+function phsvToRgb(h, ss, vv) {
+  let r, g, b;
+let s=ss/100;
+let v=vv/100;
 
+  // Normalize hue
+  h = ((h % 360) + 360) % 360;
+  let t = (h % 90) / 90; // fractional position in sector
+
+  if (h < 90) {          // R → G
+    r = (1 - t) * v;
+    g = t * v;
+    b = 0;
+  } else if (h < 180) {  // G → B
+    r = 0;
+    g = (1 - t) * v;
+    b = t * v;
+  } else if (h < 270) {  // B → purp
+    r = t * v * 0.5;     // fade blue into gray (equal RGB)
+    g = 0;
+    b = v * (1 - 0.5 * t);
+  } else {               // prup → R
+    r = v * (0.5 + 0.5 * t);
+    g =0;
+    b = v * (0.5 - 0.5 * t);
+  }
+
+  // Apply saturation (mix towards v,v,v = gray)
+  let gray = v;
+  r = r * s + gray * (1 - s);
+  g = g * s + gray * (1 - s);
+  b = b * s + gray * (1 - s);
+
+  return [
+    Math.round(r * 255),
+    Math.round(g * 255),
+    Math.round(b * 255)
+  ];
+}
 
 
 // r,g,b: 0–255
@@ -2339,7 +2377,7 @@ function rgbToQhsv(r, g, b) {
 // cycle: R → G → B → Gray → R
 function qhslToRgb(h, ss, ll) {
     let s=ss/100;
-let v=vv/100;
+let v=ll/100;let l=ll/100;
   h = ((h % 360) + 360) % 360;
   let t = (h % 90) / 90; // 0..1 within a sector
   let r, g, b;
@@ -2385,6 +2423,53 @@ let v=vv/100;
   ];
 }
 
+function phslToRgb(h, ss, ll) {
+    let s=ss/100;
+let v=ll/100;let l=ll/100;
+  h = ((h % 360) + 360) % 360;
+  let t = (h % 90) / 90; // 0..1 within a sector
+  let r, g, b;
+
+  if (h < 90) {          // R → G
+    r = 1 - t;
+    g = t;
+    b = 0;
+  } else if (h < 180) {  // G → B
+    r = 0;
+    g = 1 - t;
+    b = t;
+  } else if (h < 270) {  // B → PRUP
+    r = 0.5 * t;
+    g = (t)/2;
+    b = 1 - 0.5 * t;
+  } else {               // PURP → R
+    r = 0.5 + 0.5 * t;
+    g = (1-t)/2;
+    b = 0.5 - 0.5 * t;
+  }
+
+  // Apply saturation (blend towards gray=0.5)
+  r = (r - 0.5) * s + 0.5;
+  g = (g - 0.5) * s + 0.5;
+  b = (b - 0.5) * s + 0.5;
+
+  // Apply lightness (standard HSL adjust)
+  if (l < 0.5) {
+    r *= 2 * l;
+    g *= 2 * l;
+    b *= 2 * l;
+  } else {
+    r = r + (1 - r) * (2 * l - 1);
+    g = g + (1 - g) * (2 * l - 1);
+    b = b + (1 - b) * (2 * l - 1);
+  }
+
+  return [
+    Math.round(r * 255),
+    Math.round(g * 255),
+    Math.round(b * 255)
+  ];
+}
 
 // r,g,b: 0–255
 // returns [h, s, l]
@@ -2946,7 +3031,11 @@ return [
             ? qhsvToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted)
             : qhslToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted);
     }
-
+if (colorMode === 'phsv' || colorMode === 'phsl') {
+        return colorMode === 'phsv'
+            ? phsvToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted)
+            : phslToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted);
+    }
     if (colorMode === 'hcl' || colorMode === 'cielch') {
         return colorMode === 'hcl'
             ? hclToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted)

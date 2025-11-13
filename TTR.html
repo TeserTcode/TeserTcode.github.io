@@ -97,19 +97,35 @@
             max-height: 80vh;
             overflow-y: auto;
             z-index: 100;
+            width: 450px;
         }
+        
+        #settings-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
         .settings-group {
-            margin-bottom: 15px;
+            margin-bottom: 5px;
             border-bottom: 1px solid #555;
-            padding-bottom: 15px;
+            padding-bottom: 10px;
         }
         .settings-group h3 {
             margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        label {
+            font-size: 12px;
+            display: block;
+            margin-bottom: 3px;
         }
         select, input {
             width: 100%;
             padding: 5px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
+            box-sizing: border-box; /* Ensures padding doesn't affect width */
         }
         button {
             padding: 5px 10px;
@@ -117,10 +133,15 @@
             cursor: pointer;
         }
         #key-bindings {
-            margin-top: 20px;
+            margin-top: 15px;
             padding: 10px;
             background: #222;
             border-radius: 5px;
+            grid-column: 1 / -1; /* Span both columns */
+            font-size: 12px;
+        }
+        #key-bindings p {
+            margin: 5px 0;
         }
         
         /* Color schemes */
@@ -164,85 +185,119 @@
 <body>
     <button id="settings-btn">Settings</button>
     <div id="settings-menu">
-        <div class="settings-group">
-            <h3>Game Variant</h3>
-            <select id="game-variant">
-                <option value="nes">NES Tetris</option>
-                <option value="modern">Modern Tetris</option>
-                <option value="tgm">TGM</option>
-                <option value="gb">Game Boy</option>
-            </select>
-        </div>
-        
-        <div class="settings-group">
-            <h3>Bag System</h3>
-            <select id="bag-system">
-                <option value="7bag">7-Bag (Standard)</option>
-                <option value="14bag">14-Bag (Double)</option>
-                <option value="35bag">35-Bag (5 Sets)</option>
-                <option value="nobagnobacktoback">No Bag (No Back-to-Back)</option>
-                <option value="nobagfullyrandom">No Bag (Fully Random)</option>
-            </select>
-        </div>
-        
-        <div class="settings-group">
-            <h3>Rotation System</h3>
-            <select id="rotation-system">
-                <option value="nes">NES (Original)</option>
-                <option value="srs">SRS (Modern)</option>
-                <option value="dtet">DTET (TGM)</option>
-            </select>
-        </div>
-        
-        <div class="settings-group">
-            <h3>Wall Push</h3>
-            <select id="wall-push">
-                <option value="0">No Wall Push</option>
-                <option value="1">1 Attempt</option>
-                <option value="2">2 Attempts</option>
-                <option value="3" selected>3 Attempts (Standard)</option>
-                <option value="5">5 Attempts</option>
-            </select>
-        </div>
-        
-        <div class="settings-group">
-            <h3>Hold Piece</h3>
-            <select id="hold-piece">
-                <option value="true">Enabled</option>
-                <option value="false">Disabled</option>
-            </select>
-        </div>
-        
-        <div class="settings-group">
-            <h3>Next Pieces Preview</h3>
-            <select id="next-pieces">
-                <option value="0">None</option>
-                <option value="1">1 Piece</option>
-                <option value="2">2 Pieces</option>
-                <option value="3" selected>3 Pieces</option>
-                <option value="5">5 Pieces</option>
-                <option value="7">7 Pieces</option>
-            </select>
-        </div>
-        
-        <div class="settings-group">
-            <h3>Color Scheme</h3>
-            <select id="color-scheme">
-                <option value="nes">NES</option>
-                <option value="gb">Game Boy</option>
-                <option value="tgm">TGM</option>
-                <option value="modern">Modern</option>
-            </select>
-        </div>
-        
-        <div class="settings-group">
-            <h3>Piece Types</h3>
-            <select id="piece-types">
-                <option value="tetramino">Tetramino (4 blocks)</option>
-                <option value="trimino">Trimino (3 blocks)</option>
-                <option value="pentomino">Pentomino (5 blocks)</option>
-                <option value="mixed">Mixed (1-5 blocks)</option>
-            </select>
+        <div id="settings-container">
+            <div class="settings-group">
+                <h3>Game Variant (Preset)</h3>
+                <select id="game-variant">
+                    <option value="nes">NES Tetris</option>
+                    <option value="modern">Modern Tetris</option>
+                    <option value="tgm">TGM</option>
+                    <option value="gb">Game Boy</option>
+                    <option value="custom">Custom</option>
+                </select>
+            </div>
+            
+            <div class="settings-group">
+                <h3>Bag System</h3>
+                <select id="bag-system">
+                    <option value="7bag">7-Bag (Standard)</option>
+                    <option value="14bag">14-Bag (Double)</option>
+                    <option value="35bag">35-Bag (5 Sets)</option>
+                    <option value="nobagnobacktoback">No Bag (No Back-to-Back)</option>
+                    <option value="nobagfullyrandom">No Bag (Fully Random)</option>
+                </select>
+            </div>
+            
+            <div class="settings-group">
+                <h3>Rotation System</h3>
+                <select id="rotation-system">
+                    <option value="nes">NES (Original)</option>
+                    <option value="srs">SRS (Modern)</option>
+                    <option value="dtet">DTET (TGM)</option>
+                </select>
+            </div>
+            
+            <div class="settings-group">
+                <h3>Hold Piece</h3>
+                <select id="hold-piece">
+                    <option value="true">Enabled</option>
+                    <option value="false">Disabled</option>
+                </select>
+            </div>
+            
+            <div class="settings-group">
+                <h3>Next Pieces Preview</h3>
+                <select id="next-pieces">
+                    <option value="0">None</option>
+                    <option value="1">1 Piece</option>
+                    <option value="2">2 Pieces</option>
+                    <option value="3">3 Pieces</option>
+                    <option value="5">5 Pieces</option>
+                    <option value="7">7 Pieces</option>
+                </select>
+            </div>
+            
+            <div class="settings-group">
+                <h3>Color Scheme</h3>
+                <select id="color-scheme">
+                    <option value="nes">NES</option>
+                    <option value="gb">Game Boy</option>
+                    <option value="tgm">TGM</option>
+                    <option value="modern">Modern</option>
+                </select>
+            </div>
+            
+            <div class="settings-group">
+                <h3>Piece Types</h3>
+                <select id="piece-types">
+                    <option value="tetramino">Tetramino (4 blocks)</option>
+                    <option value="trimino">Trimino (3 blocks)</option>
+                    <option value="pentomino">Pentomino (5 blocks)</option>
+                    <option value="mixed">Mixed (1-5 blocks)</option>
+                </select>
+            </div>
+
+            <div class="settings-group">
+                <h3>Starting Level</h3>
+                <input type="number" id="start-level" value="1" min="1">
+            </div>
+
+            <div class="settings-group">
+                <h3>Starting Clutter</h3>
+                <label for="clutter-height">Clutter Height (0-15)</label>
+                <input type="number" id="clutter-height" value="0" min="0" max="15">
+            </div>
+            
+            <div class="settings-group">
+                <h3>Speed Curve</h3>
+                <select id="speed-curve">
+                    <option value="level">Level-Based (NES)</option>
+                    <option value="fixed">Fixed Speed</option>
+                </select>
+                <div id="fixed-speed-group" style="display: none;">
+                    <label for="fixed-speed">Fixed Speed (ms)</label>
+                    <input type="number" id="fixed-speed" value="1000" min="50">
+                </div>
+            </div>
+            
+            <div class="settings-group">
+                <h3>Handling (Movement)</h3>
+                <label for="das">DAS (ms)</label>
+                <input type="number" id="das" value="160" min="0">
+                <label for="arr">ARR (ms)</label>
+                <input type="number" id="arr" value="50" min="0">
+            </div>
+
+            <div class="settings-group">
+                <h3>Wall Push</h3>
+                <select id="wall-push">
+                    <option value="0">No Wall Push</option>
+                    <option value="1">1 Attempt</option>
+                    <option value="2">2 Attempts</option>
+                    <option value="3">3 Attempts (Standard)</option>
+                    <option value="5">5 Attempts</option>
+                </select>
+            </div>
         </div>
         
         <button id="apply-settings">Apply Settings</button>
@@ -250,9 +305,9 @@
         
         <div id="key-bindings">
             <h3>Key Bindings</h3>
-            <p>← → : Move Left/Right</p>
-            <p>↓ : Move Down</p>
-            <p>↑ : Rotate</p>
+            <p>← → / A D : Move Left/Right</p>
+            <p>↓ / S : Move Down (Soft Drop)</p>
+            <p>↑ / W : Rotate</p>
             <p>Space : Hard Drop</p>
             <p>Shift/Ctrl : Hold Piece</p>
         </div>
@@ -324,8 +379,22 @@
             holdEnabled: true,
             nextPiecesCount: 3,
             colorScheme: 'nes',
-            pieceTypes: 'tetramino'
+            pieceTypes: 'tetramino',
+            startingLevel: 1,
+            clutterHeight: 0,
+            speedCurve: 'level',
+            fixedSpeed: 1000,
+            das: 160,
+            arr: 50
         };
+        
+        // DAS/ARR state
+        let moveLeftTimer = null;
+        let moveRightTimer = null;
+        let moveDownTimer = null;
+        let isMovingLeft = false;
+        let isMovingRight = false;
+        let isMovingDown = false;
         
         // DOM elements
         const gridElement = document.getElementById('grid');
@@ -347,155 +416,53 @@
         const hardDropBtn = document.getElementById('hard-drop-btn');
         const holdBtn = document.getElementById('hold-btn');
         
+        // Settings elements
+        const gameVariantSelect = document.getElementById('game-variant');
+        const speedCurveSelect = document.getElementById('speed-curve');
+        const fixedSpeedGroup = document.getElementById('fixed-speed-group');
+        
         // Tetrimino definitions
         const TETRIMINOS = {
-            I: {
-                shape: [
-                    [0, 0, 0, 0],
-                    [1, 1, 1, 1],
-                    [0, 0, 0, 0],
-                    [0, 0, 0, 0]
-                ],
-                color: 6,
-                center: { x: 1.5, y: 1.5 }
-            },
-            O: {
-                shape: [
-                    [1, 1],
-                    [1, 1]
-                ],
-                color: 4,
-                center: { x: 0.5, y: 0.5 }
-            },
-            T: {
-                shape: [
-                    [0, 1, 0],
-                    [1, 1, 1],
-                    [0, 0, 0]
-                ],
-                color: 8,
-                center: { x: 1, y: 1 }
-            },
-            L: {
-                shape: [
-                    [0, 0, 1],
-                    [1, 1, 1],
-                    [0, 0, 0]
-                ],
-                color: 3,
-                center: { x: 1, y: 1 }
-            },
-            J: {
-                shape: [
-                    [1, 0, 0],
-                    [1, 1, 1],
-                    [0, 0, 0]
-                ],
-                color: 7,
-                center: { x: 1, y: 1 }
-            },
-            S: {
-                shape: [
-                    [0, 1, 1],
-                    [1, 1, 0],
-                    [0, 0, 0]
-                ],
-                color: 2,
-                center: { x: 1, y: 1 }
-            },
-            Z: {
-                shape: [
-                    [1, 1, 0],
-                    [0, 1, 1],
-                    [0, 0, 0]
-                ],
-                color: 1,
-                center: { x: 1, y: 1 }
-            }
+            I: { shape: [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]], color: 6 },
+            O: { shape: [[1, 1], [1, 1]], color: 4 },
+            T: { shape: [[0, 1, 0], [1, 1, 1], [0, 0, 0]], color: 8 },
+            L: { shape: [[0, 0, 1], [1, 1, 1], [0, 0, 0]], color: 3 },
+            J: { shape: [[1, 0, 0], [1, 1, 1], [0, 0, 0]], color: 7 },
+            S: { shape: [[0, 1, 1], [1, 1, 0], [0, 0, 0]], color: 2 },
+            Z: { shape: [[1, 1, 0], [0, 1, 1], [0, 0, 0]], color: 1 }
         };
 
         // Trimino definitions (3 blocks)
         const TRIMINOS = {
-            I3: {
-                shape: [
-                    [0, 0, 0],
-                    [1, 1, 1],
-                    [0, 0, 0]
-                ],
-                color: 6,
-                center: { x: 1, y: 1 }
-            },
-            L3: {
-                shape: [
-                    [1, 0, 0],
-                    [1, 1, 0],
-                    [0, 0, 0]
-                ],
-                color: 3,
-                center: { x: 1, y: 1 }
-            },
-            T3: {
-                shape: [
-                    [0, 1, 0],
-                    [1, 1, 0],
-                    [0, 0, 0]
-                ],
-                color: 8,
-                center: { x: 1, y: 1 }
-            }
+            I3: { shape: [[0, 0, 0], [1, 1, 1], [0, 0, 0]], color: 6 },
+            L3: { shape: [[1, 0, 0], [1, 1, 0], [0, 0, 0]], color: 3 }
         };
 
         // Pentomino definitions (5 blocks)
         const PENTOMINOS = {
-            I5: {
-                shape: [
-                    [0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0],
-                    [1, 1, 1, 1, 1],
-                    [0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0]
-                ],
-                color: 6,
-                center: { x: 2, y: 2 }
-            },
-            P: {
-                shape: [
-                    [1, 1, 0],
-                    [1, 1, 0],
-                    [1, 0, 0]
-                ],
-                color: 4,
-                center: { x: 1, y: 1 }
-            },
-            W: {
-                shape: [
-                    [1, 0, 0],
-                    [1, 1, 0],
-                    [0, 1, 1]
-                ],
-                color: 2,
-                center: { x: 1, y: 1 }
-            }
+            I5: { shape: [[0,0,0,0,0],[0,0,0,0,0],[1,1,1,1,1],[0,0,0,0,0],[0,0,0,0,0]], color: 6 },
+            P:  { shape: [[0,0,0,0,0],[0,1,1,0,0],[0,1,1,0,0],[0,1,0,0,0],[0,0,0,0,0]], color: 4 },
+            W:  { shape: [[0,0,0,0,0],[0,1,0,0,0],[0,1,1,0,0],[0,0,1,1,0],[0,0,0,0,0]], color: 2 },
+            F:  { shape: [[0,0,0,0,0],[0,0,1,1,0],[0,1,1,0,0],[0,0,1,0,0],[0,0,0,0,0]], color: 1 },
+            L5: { shape: [[0,0,0,0,0],[0,1,0,0,0],[0,1,0,0,0],[0,1,0,0,0],[0,1,1,0,0]], color: 3 },
+            N:  { shape: [[0,0,0,0,0],[0,0,1,1,0],[0,1,1,0,0],[0,1,0,0,0],[0,0,0,0,0]], color: 5 },
+            T5: { shape: [[0,0,0,0,0],[0,1,1,1,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,0,0,0]], color: 8 },
+            U:  { shape: [[0,0,0,0,0],[0,1,0,1,0],[0,1,1,1,0],[0,0,0,0,0],[0,0,0,0,0]], color: 7 },
+            V:  { shape: [[0,0,0,0,0],[0,1,0,0,0],[0,1,0,0,0],[0,1,1,1,0],[0,0,0,0,0]], color: 5 },
+            X:  { shape: [[0,0,0,0,0],[0,0,1,0,0],[0,1,1,1,0],[0,0,1,0,0],[0,0,0,0,0]], color: 7 },
+            Y:  { shape: [[0,0,0,0,0],[0,0,1,0,0],[0,1,1,0,0],[0,0,1,0,0],[0,0,1,0,0]], color: 3 },
+            Z5: { shape: [[0,0,0,0,0],[0,1,1,0,0],[0,0,1,0,0],[0,0,1,1,0],[0,0,0,0,0]], color: 2 }
         };
 
         // Monomino (1 block) and Domino (2 blocks)
         const MINOS = {
-            M1: {
-                shape: [[1]],
-                color: 7,
-                center: { x: 0, y: 0 }
-            },
-            M2: {
-                shape: [[1, 1]],
-                color: 4,
-                center: { x: 0.5, y: 0 }
-            }
+            M1: { shape: [[1]], color: 7 },
+            M2: { shape: [[1, 1]], color: 4 }
         };
         
         // Rotation systems
         const ROTATION_SYSTEMS = {
             nes: {
-                // NES rotation rules (basic)
                 rotate: (piece) => {
                     const rotated = piece.shape[0].map((_, i) =>
                         piece.shape.map(row => row[i]).reverse()
@@ -503,107 +470,59 @@
                     return rotated;
                 },
                 wallKick: (piece, rotatedShape, grid) => {
-                    // NES has very limited wall kicks
-                    const tests = [
-                        { x: 0, y: 0 }, // Original position
-                        { x: -1, y: 0 }, // Left
-                        { x: 1, y: 0 },  // Right
-                        { x: 0, y: -1 }  // Up
-                    ];
-                    
+                    const tests = [{ x: 0, y: 0 }, { x: -1, y: 0 }, { x: 1, y: 0 }];
                     for (let test of tests) {
                         piece.x += test.x;
                         piece.y += test.y;
-                        piece.shape = rotatedShape;
-                        
-                        if (!checkCollision(piece)) {
+                        if (!checkCollision(piece, rotatedShape)) {
+                            piece.shape = rotatedShape;
                             return true;
                         }
-                        
-                        // Revert
                         piece.x -= test.x;
                         piece.y -= test.y;
-                        piece.shape = piece.shape[0].map((_, i) =>
-                            piece.shape.map(row => row[row.length - 1 - i])
-                        );
                     }
-                    
                     return false;
                 }
             },
             srs: {
-                // Super Rotation System (modern)
                 rotate: (piece) => {
                     return piece.shape[0].map((_, i) =>
                         piece.shape.map(row => row[i]).reverse()
                     );
                 },
                 wallKick: (piece, rotatedShape, grid) => {
-                    // SRS has specific wall kick tests for each piece and rotation state
-                    const tests = [
-                        { x: 0, y: 0 },
-                        { x: -1, y: 0 },
-                        { x: 1, y: 0 },
-                        { x: 0, y: -1 },
-                        { x: -2, y: 0 },
-                        { x: 2, y: 0 }
-                    ];
-                    
+                    const tests = [{ x: 0, y: 0 }, { x: -1, y: 0 }, { x: 1, y: 0 }, { x: 0, y: -1 }, { x: -2, y: 0 }, { x: 2, y: 0 }];
                     for (let test of tests) {
                         piece.x += test.x;
                         piece.y += test.y;
-                        piece.shape = rotatedShape;
-                        
-                        if (!checkCollision(piece)) {
+                        if (!checkCollision(piece, rotatedShape)) {
+                            piece.shape = rotatedShape;
                             return true;
                         }
-                        
-                        // Revert
                         piece.x -= test.x;
                         piece.y -= test.y;
-                        piece.shape = piece.shape[0].map((_, i) =>
-                            piece.shape.map(row => row[row.length - 1 - i])
-                        );
                     }
-                    
                     return false;
                 }
             },
             dtet: {
-                // DTET rotation system (TGM)
                 rotate: (piece) => {
                     return piece.shape[0].map((_, i) =>
                         piece.shape.map(row => row[i]).reverse()
                     );
                 },
                 wallKick: (piece, rotatedShape, grid) => {
-                    // TGM has different wall kicks
-                    const tests = [
-                        { x: 0, y: 0 },
-                        { x: -1, y: 0 },
-                        { x: 1, y: 0 },
-                        { x: 0, y: 1 },
-                        { x: -1, y: 1 },
-                        { x: 1, y: 1 }
-                    ];
-                    
+                    const tests = [{ x: 0, y: 0 }, { x: -1, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 1 }, { x: -1, y: 1 }, { x: 1, y: 1 }];
                     for (let test of tests) {
                         piece.x += test.x;
                         piece.y += test.y;
-                        piece.shape = rotatedShape;
-                        
-                        if (!checkCollision(piece)) {
+                        if (!checkCollision(piece, rotatedShape)) {
+                            piece.shape = rotatedShape;
                             return true;
                         }
-                        
-                        // Revert
                         piece.x -= test.x;
                         piece.y -= test.y;
-                        piece.shape = piece.shape[0].map((_, i) =>
-                            piece.shape.map(row => row[row.length - 1 - i])
-                        );
                     }
-                    
                     return false;
                 }
             }
@@ -613,6 +532,11 @@
         function initGame() {
             // Initialize grid
             grid = Array.from({ length: GRID_HEIGHT }, () => Array(GRID_WIDTH).fill(0));
+            
+            // Add starting clutter
+            if (settings.clutterHeight > 0) {
+                addClutter(settings.clutterHeight);
+            }
             
             // Create grid cells
             gridElement.innerHTML = '';
@@ -626,13 +550,19 @@
             
             // Reset game state
             score = 0;
-            level = 1;
+            level = settings.startingLevel;
             lines = 0;
-            fallSpeed = 1000;
             isGameOver = false;
             canHold = true;
             holdPiece = null;
             nextPieces = [];
+            
+            // Set initial fall speed
+            if (settings.speedCurve === 'fixed') {
+                fallSpeed = settings.fixedSpeed;
+            } else {
+                fallSpeed = Math.max(100, 1000 - (level - 1) * 100);
+            }
             
             // Update UI
             updateScore();
@@ -657,6 +587,24 @@
             gameInterval = setInterval(moveDown, fallSpeed);
         }
         
+        // Add starting clutter (B-Type)
+        function addClutter(height) {
+            const clutterHeight = Math.min(height, 15);
+            for (let y = GRID_HEIGHT - 1; y >= GRID_HEIGHT - clutterHeight; y--) {
+                for (let x = 0; x < GRID_WIDTH; x++) {
+                    if (Math.random() < 0.4) {
+                        grid[y][x] = 8; // Use a neutral color
+                    }
+                }
+                
+                // Ensure no full lines are created
+                if (grid[y].every(cell => cell !== 0)) {
+                    const emptyIndex = Math.floor(Math.random() * GRID_WIDTH);
+                    grid[y][emptyIndex] = 0;
+                }
+            }
+        }
+        
         // Initialize piece bag based on settings
         function initPieceBag() {
             if (settings.bagSystem === 'nobagfullyrandom') return;
@@ -666,23 +614,28 @@
             // Get pieces based on selected piece types
             switch (settings.pieceTypes) {
                 case 'tetramino':
-                    pieces = ['I', 'O', 'T', 'L', 'J', 'S', 'Z'];
+                    pieces = Object.keys(TETRIMINOS);
                     break;
                 case 'trimino':
-                    pieces = ['I3', 'L3', 'T3'];
+                    pieces = Object.keys(TRIMINOS);
                     break;
                 case 'pentomino':
-                    pieces = ['I5', 'P', 'W'];
+                    pieces = Object.keys(PENTOMINOS);
                     break;
                 case 'mixed':
-                    pieces = ['M1', 'M2', 'I3', 'L3', 'T3', 'I', 'O', 'T', 'L', 'J', 'S', 'Z', 'I5', 'P', 'W'];
+                    pieces = [
+                        ...Object.keys(MINOS),
+                        ...Object.keys(TRIMINOS),
+                        ...Object.keys(TETRIMINOS),
+                        ...Object.keys(PENTOMINOS)
+                    ];
                     break;
             }
             
             let bag = [];
             
             switch (settings.bagSystem) {
-                case '7bag':
+                case '7bag': // or equivalent
                     bag = [...pieces];
                     shuffleArray(bag);
                     break;
@@ -695,96 +648,71 @@
                     shuffleArray(bag);
                     break;
                 case 'nobagnobacktoback':
-                    // For no back-to-back, we just need to track last piece
                     break;
             }
             
             window.pieceBag = bag;
         }
         
+        // Get all piece definitions
+        function getAllPieceDefs() {
+            return {
+                ...TETRIMINOS,
+                ...TRIMINOS,
+                ...PENTOMINOS,
+                ...MINOS
+            };
+        }
+        
+        // Get available piece types
+        function getAvailablePieceKeys() {
+            switch (settings.pieceTypes) {
+                case 'tetramino': return Object.keys(TETRIMINOS);
+                case 'trimino': return Object.keys(TRIMINOS);
+                case 'pentomino': return Object.keys(PENTOMINOS);
+                case 'mixed': return [...Object.keys(MINOS), ...Object.keys(TRIMINOS), ...Object.keys(TETRIMINOS), ...Object.keys(PENTOMINOS)];
+                default: return Object.keys(TETRIMINOS);
+            }
+        }
+        
         // Generate next piece based on bag system
         function generateNextPiece() {
             let pieceType;
+            const allPieceDefs = getAllPieceDefs();
+            const availablePieces = getAvailablePieceKeys();
             
             switch (settings.bagSystem) {
                 case 'nobagfullyrandom':
-                    let pieces = [];
-                    
-                    switch (settings.pieceTypes) {
-                        case 'tetramino':
-                            pieces = ['I', 'O', 'T', 'L', 'J', 'S', 'Z'];
-                            break;
-                        case 'trimino':
-                            pieces = ['I3', 'L3', 'T3'];
-                            break;
-                        case 'pentomino':
-                            pieces = ['I5', 'P', 'W'];
-                            break;
-                        case 'mixed':
-                            pieces = ['M1', 'M2', 'I3', 'L3', 'T3', 'I', 'O', 'T', 'L', 'J', 'S', 'Z', 'I5', 'P', 'W'];
-                            break;
-                    }
-                    
-                    pieceType = pieces[Math.floor(Math.random() * pieces.length)];
+                    pieceType = availablePieces[Math.floor(Math.random() * availablePieces.length)];
                     break;
                 
                 case 'nobagnobacktoback':
-                    let allPieces = [];
-                    
-                    switch (settings.pieceTypes) {
-                        case 'tetramino':
-                            allPieces = ['I', 'O', 'T', 'L', 'J', 'S', 'Z'];
-                            break;
-                        case 'trimino':
-                            allPieces = ['I3', 'L3', 'T3'];
-                            break;
-                        case 'pentomino':
-                            allPieces = ['I5', 'P', 'W'];
-                            break;
-                        case 'mixed':
-                            allPieces = ['M1', 'M2', 'I3', 'L3', 'T3', 'I', 'O', 'T', 'L', 'J', 'S', 'Z', 'I5', 'P', 'W'];
-                            break;
-                    }
-                    
                     let lastPiece = nextPieces.length > 0 ? nextPieces[nextPieces.length - 1].type : null;
-                    
                     do {
-                        pieceType = allPieces[Math.floor(Math.random() * allPieces.length)];
+                        pieceType = availablePieces[Math.floor(Math.random() * availablePieces.length)];
                     } while (pieceType === lastPiece);
                     break;
                 
                 default: // Bag systems
-                    if (window.pieceBag.length === 0) {
+                    if (!window.pieceBag || window.pieceBag.length === 0) {
                         initPieceBag();
                     }
                     pieceType = window.pieceBag.pop();
                     break;
             }
             
-            let piece;
-            
-            // Get the piece definition based on its type
-            if (TETRIMINOS[pieceType]) {
-                piece = {
-                    ...TETRIMINOS[pieceType],
-                    type: pieceType
-                };
-            } else if (TRIMINOS[pieceType]) {
-                piece = {
-                    ...TRIMINOS[pieceType],
-                    type: pieceType
-                };
-            } else if (PENTOMINOS[pieceType]) {
-                piece = {
-                    ...PENTOMINOS[pieceType],
-                    type: pieceType
-                };
-            } else if (MINOS[pieceType]) {
-                piece = {
-                    ...MINOS[pieceType],
-                    type: pieceType
-                };
+            let pieceDef = allPieceDefs[pieceType];
+            if (!pieceDef) {
+                // Fallback if something went wrong
+                pieceType = 'I';
+                pieceDef = TETRIMINOS.I;
             }
+            
+            const piece = {
+                ...pieceDef,
+                shape: pieceDef.shape.map(row => [...row]), // Deep copy shape
+                type: pieceType
+            };
             
             nextPieces.push(piece);
             return piece;
@@ -810,7 +738,7 @@
             };
             
             // Check for game over
-            if (checkCollision(currentPiece)) {
+            if (checkCollision(currentPiece, currentPiece.shape)) {
                 gameOver();
                 return;
             }
@@ -822,14 +750,20 @@
         
         // Move piece down
         function moveDown() {
-            if (isGameOver) return;
+            if (isGameOver || !currentPiece) return;
             
             currentPiece.y++;
             
-            if (checkCollision(currentPiece)) {
+            if (checkCollision(currentPiece, currentPiece.shape)) {
                 currentPiece.y--;
                 lockPiece();
                 spawnPiece();
+            }
+            
+            // Reset gravity timer if soft dropping
+            if (isMovingDown) {
+               clearInterval(gameInterval);
+               gameInterval = setInterval(moveDown, fallSpeed);
             }
             
             render();
@@ -837,41 +771,36 @@
         
         // Move piece left
         function moveLeft() {
+            if (isGameOver || !currentPiece) return;
             currentPiece.x--;
-            
-            if (checkCollision(currentPiece)) {
+            if (checkCollision(currentPiece, currentPiece.shape)) {
                 currentPiece.x++;
             }
-            
             render();
         }
         
         // Move piece right
         function moveRight() {
+            if (isGameOver || !currentPiece) return;
             currentPiece.x++;
-            
-            if (checkCollision(currentPiece)) {
+            if (checkCollision(currentPiece, currentPiece.shape)) {
                 currentPiece.x--;
             }
-            
             render();
         }
         
         // Rotate piece
         function rotatePiece() {
+            if (isGameOver || !currentPiece) return;
+            
             const originalShape = currentPiece.shape;
             const rotationSystem = ROTATION_SYSTEMS[settings.rotationSystem];
-            
-            // Rotate the piece
             const rotatedShape = rotationSystem.rotate(currentPiece);
-            currentPiece.shape = rotatedShape;
             
-            // Check for collision and try wall kicks
-            if (checkCollision(currentPiece)) {
-                if (!rotationSystem.wallKick(currentPiece, rotatedShape, grid)) {
-                    // If wall kicks fail, revert rotation
-                    currentPiece.shape = originalShape;
-                }
+            // Try wall kicks
+            if (!rotationSystem.wallKick(currentPiece, rotatedShape, grid)) {
+                // If wall kicks fail, revert shape
+                currentPiece.shape = originalShape;
             }
             
             render();
@@ -879,7 +808,8 @@
         
         // Hard drop
         function hardDrop() {
-            while (!checkCollision(currentPiece)) {
+            if (isGameOver || !currentPiece) return;
+            while (!checkCollision(currentPiece, currentPiece.shape)) {
                 currentPiece.y++;
             }
             
@@ -891,28 +821,26 @@
         
         // Hold piece
         function holdCurrentPiece() {
-            if (!canHold || !settings.holdEnabled) return;
+            if (isGameOver || !canHold || !settings.holdEnabled) return;
+            
+            const allPieceDefs = getAllPieceDefs();
             
             if (holdPiece) {
-                // Swap current piece with hold piece
-                const temp = {
-                    ...holdPiece,
-                    x: Math.floor(GRID_WIDTH / 2) - Math.floor(holdPiece.shape[0].length / 2),
+                const tempType = holdPiece.type;
+                const tempDef = { ...allPieceDefs[tempType] };
+                
+                holdPiece = { ...allPieceDefs[currentPiece.type], type: currentPiece.type };
+                
+                currentPiece = {
+                    ...tempDef,
+                    type: tempType,
+                    shape: tempDef.shape.map(row => [...row]),
+                    x: Math.floor(GRID_WIDTH / 2) - Math.floor(tempDef.shape[0].length / 2),
                     y: 0
                 };
                 
-                holdPiece = {
-                    ...currentPiece,
-                    type: currentPiece.type
-                };
-                
-                currentPiece = temp;
             } else {
-                // Just hold the current piece
-                holdPiece = {
-                    ...currentPiece,
-                    type: currentPiece.type
-                };
+                holdPiece = { ...allPieceDefs[currentPiece.type], type: currentPiece.type };
                 spawnPiece();
             }
             
@@ -937,15 +865,16 @@
                 }
             }
             
+            currentPiece = null;
             // Check for completed lines
             clearLines();
         }
         
         // Check for collision
-        function checkCollision(piece) {
-            for (let y = 0; y < piece.shape.length; y++) {
-                for (let x = 0; x < piece.shape[y].length; x++) {
-                    if (piece.shape[y][x]) {
+        function checkCollision(piece, shape) {
+            for (let y = 0; y < shape.length; y++) {
+                for (let x = 0; x < shape[y].length; x++) {
+                    if (shape[y][x]) {
                         const gridY = piece.y + y;
                         const gridX = piece.x + x;
                         
@@ -956,7 +885,6 @@
                     }
                 }
             }
-            
             return false;
         }
         
@@ -966,44 +894,33 @@
             
             for (let y = GRID_HEIGHT - 1; y >= 0; y--) {
                 if (grid[y].every(cell => cell !== 0)) {
-                    // Remove the line
                     grid.splice(y, 1);
-                    // Add new empty line at top
                     grid.unshift(Array(GRID_WIDTH).fill(0));
                     linesCleared++;
-                    y++; // Check the same row again
+                    y++;
                 }
             }
             
             if (linesCleared > 0) {
-                // Update score based on NES scoring
                 switch (linesCleared) {
-                    case 1:
-                        score += 100 * level;
-                        break;
-                    case 2:
-                        score += 300 * level;
-                        break;
-                    case 3:
-                        score += 500 * level;
-                        break;
-                    case 4:
-                        score += 800 * level;
-                        break;
+                    case 1: score += 100 * level; break;
+                    case 2: score += 300 * level; break;
+                    case 3: score += 500 * level; break;
+                    case 4: score += 800 * level; break;
+                    default: score += 1000 * level; // For pentominoes etc.
                 }
                 
                 lines += linesCleared;
                 
-                // Update level (NES style: level up every 10 lines)
-                const newLevel = Math.floor(lines / 10) + 1;
+                const newLevel = Math.floor(lines / 10) + settings.startingLevel;
                 if (newLevel > level) {
                     level = newLevel;
-                    // Increase speed (simple NES-style speed curve)
-                    fallSpeed = Math.max(100, 1000 - (level - 1) * 100);
                     
-                    // Reset game interval with new speed
-                    clearInterval(gameInterval);
-                    gameInterval = setInterval(moveDown, fallSpeed);
+                    if (settings.speedCurve === 'level') {
+                        fallSpeed = Math.max(100, 1000 - (level - 1) * 100);
+                        clearInterval(gameInterval);
+                        gameInterval = setInterval(moveDown, fallSpeed);
+                    }
                     
                     updateLevel();
                 }
@@ -1017,31 +934,27 @@
         function gameOver() {
             isGameOver = true;
             clearInterval(gameInterval);
+            // Clear DAS/ARR timers
+            clearAllMovementTimers();
             alert(`Game Over! Score: ${score}`);
         }
         
         // Render game
         function render() {
-            // Clear grid display
-            const cells = document.querySelectorAll('#grid .cell');
-            cells.forEach(cell => {
-                // Clear all color classes
-                for (let i = 1; i <= 9; i++) {
-                    cell.classList.remove(`color-${i}`);
-                    cell.classList.remove(`color-nes-${i}`);
-                    cell.classList.remove(`color-gb-${i}`);
-                    cell.classList.remove(`color-tgm-${i}`);
-                    cell.classList.remove(`color-modern-${i}`);
-                }
-            });
+            const cells = gridElement.children;
             
             // Draw locked pieces
             for (let y = 0; y < GRID_HEIGHT; y++) {
                 for (let x = 0; x < GRID_WIDTH; x++) {
-                    if (grid[y][x]) {
-                        const cellIndex = y * GRID_WIDTH + x;
-                        const colorClass = `color-${settings.colorScheme}-${grid[y][x]}`;
-                        cells[cellIndex].classList.add(colorClass);
+                    const cellIndex = y * GRID_WIDTH + x;
+                    const cell = cells[cellIndex];
+                    const colorVal = grid[y][x];
+                    
+                    // Clear previous colors
+                    cell.className = 'cell';
+                    
+                    if (colorVal) {
+                        cell.classList.add(`color-${settings.colorScheme}-${colorVal}`);
                     }
                 }
             }
@@ -1079,30 +992,7 @@
                 return;
             }
             
-            // Create a mini grid for the hold piece
-            const holdGrid = document.createElement('div');
-            holdGrid.style.display = 'grid';
-            holdGrid.style.gridTemplateColumns = `repeat(${holdPiece.shape[0].length}, ${CELL_SIZE}px)`;
-            holdGrid.style.gridTemplateRows = `repeat(${holdPiece.shape.length}, ${CELL_SIZE}px)`;
-            holdGrid.style.gap = '1px';
-            
-            for (let y = 0; y < holdPiece.shape.length; y++) {
-                for (let x = 0; x < holdPiece.shape[y].length; x++) {
-                    const cell = document.createElement('div');
-                    cell.style.width = `${CELL_SIZE}px`;
-                    cell.style.height = `${CELL_SIZE}px`;
-                    
-                    if (holdPiece.shape[y][x]) {
-                        cell.classList.add(`color-${settings.colorScheme}-${holdPiece.color}`);
-                    } else {
-                        cell.style.backgroundColor = '#222';
-                    }
-                    
-                    holdGrid.appendChild(cell);
-                }
-            }
-            
-            holdDisplay.appendChild(holdGrid);
+            drawMiniPiece(holdPiece, holdDisplay);
         }
         
         // Update next pieces display
@@ -1118,32 +1008,39 @@
                 const piece = nextPieces[i];
                 const pieceContainer = document.createElement('div');
                 pieceContainer.style.marginBottom = '10px';
-                
-                const pieceGrid = document.createElement('div');
-                pieceGrid.style.display = 'grid';
-                pieceGrid.style.gridTemplateColumns = `repeat(${piece.shape[0].length}, ${CELL_SIZE}px)`;
-                pieceGrid.style.gridTemplateRows = `repeat(${piece.shape.length}, ${CELL_SIZE}px)`;
-                pieceGrid.style.gap = '1px';
-                
-                for (let y = 0; y < piece.shape.length; y++) {
-                    for (let x = 0; x < piece.shape[y].length; x++) {
-                        const cell = document.createElement('div');
-                        cell.style.width = `${CELL_SIZE}px`;
-                        cell.style.height = `${CELL_SIZE}px`;
-                        
-                        if (piece.shape[y][x]) {
-                            cell.classList.add(`color-${settings.colorScheme}-${piece.color}`);
-                        } else {
-                            cell.style.backgroundColor = '#222';
-                        }
-                        
-                        pieceGrid.appendChild(cell);
-                    }
-                }
-                
-                pieceContainer.appendChild(pieceGrid);
+                drawMiniPiece(piece, pieceContainer);
                 nextDisplay.appendChild(pieceContainer);
             }
+        }
+        
+        // Helper to draw a piece in hold/next
+        function drawMiniPiece(piece, container) {
+            const pieceGrid = document.createElement('div');
+            pieceGrid.style.display = 'grid';
+            
+            const shape = piece.shape;
+            const size = shape.length;
+            const cellSize = CELL_SIZE * 0.75; // Smaller cells for preview
+            
+            pieceGrid.style.gridTemplateColumns = `repeat(${size}, ${cellSize}px)`;
+            pieceGrid.style.gridTemplateRows = `repeat(${size}, ${cellSize}px)`;
+            pieceGrid.style.gap = '1px';
+            
+            for (let y = 0; y < size; y++) {
+                for (let x = 0; x < size; x++) {
+                    const cell = document.createElement('div');
+                    cell.style.width = `${cellSize}px`;
+                    cell.style.height = `${cellSize}px`;
+                    
+                    if (shape[y] && shape[y][x]) {
+                        cell.classList.add(`color-${settings.colorScheme}-${piece.color}`);
+                    } else {
+                        cell.style.backgroundColor = 'transparent';
+                    }
+                    pieceGrid.appendChild(cell);
+                }
+            }
+            container.appendChild(pieceGrid);
         }
         
         // Update score display
@@ -1187,7 +1084,13 @@
                 holdEnabled: document.getElementById('hold-piece').value === 'true',
                 nextPiecesCount: parseInt(document.getElementById('next-pieces').value),
                 colorScheme: document.getElementById('color-scheme').value,
-                pieceTypes: document.getElementById('piece-types').value
+                pieceTypes: document.getElementById('piece-types').value,
+                startingLevel: parseInt(document.getElementById('start-level').value) || 1,
+                clutterHeight: parseInt(document.getElementById('clutter-height').value) || 0,
+                speedCurve: document.getElementById('speed-curve').value,
+                fixedSpeed: parseInt(document.getElementById('fixed-speed').value) || 1000,
+                das: parseInt(document.getElementById('das').value) || 160,
+                arr: parseInt(document.getElementById('arr').value) || 50
             };
             
             hideSettingsMenu();
@@ -1195,33 +1098,135 @@
         }
         
         function resetSettings() {
-            document.getElementById('game-variant').value = 'nes';
-            document.getElementById('bag-system').value = '7bag';
-            document.getElementById('rotation-system').value = 'nes';
-            document.getElementById('wall-push').value = '3';
-            document.getElementById('hold-piece').value = 'true';
-            document.getElementById('next-pieces').value = '3';
-            document.getElementById('color-scheme').value = 'nes';
-            document.getElementById('piece-types').value = 'tetramino';
-            
+            setPreset('nes');
             applySettings();
         }
         
-        // Event listeners
-        document.addEventListener('keydown', (e) => {
+        // Handle preset changes
+        function setPreset(variant) {
+            document.getElementById('game-variant').value = variant;
+            switch (variant) {
+                case 'nes':
+                    document.getElementById('bag-system').value = 'nobagnobacktoback';
+                    document.getElementById('rotation-system').value = 'nes';
+                    document.getElementById('hold-piece').value = 'false';
+                    document.getElementById('next-pieces').value = '1';
+                    document.getElementById('color-scheme').value = 'nes';
+                    document.getElementById('piece-types').value = 'tetramino';
+                    document.getElementById('speed-curve').value = 'level';
+                    document.getElementById('das').value = '160';
+                    document.getElementById('arr').value = '50';
+                    break;
+                case 'modern':
+                    document.getElementById('bag-system').value = '7bag';
+                    document.getElementById('rotation-system').value = 'srs';
+                    document.getElementById('hold-piece').value = 'true';
+                    document.getElementById('next-pieces').value = '5';
+                    document.getElementById('color-scheme').value = 'modern';
+                    document.getElementById('piece-types').value = 'tetramino';
+                    document.getElementById('speed-curve').value = 'level';
+                    document.getElementById('das').value = '100';
+                    document.getElementById('arr').value = '30';
+                    break;
+                case 'tgm':
+                    document.getElementById('bag-system').value = '7bag';
+                    document.getElementById('rotation-system').value = 'dtet';
+                    document.getElementById('hold-piece').value = 'true';
+                    document.getElementById('next-pieces').value = '3';
+                    document.getElementById('color-scheme').value = 'tgm';
+                    document.getElementById('piece-types').value = 'tetramino';
+                    document.getElementById('speed-curve').value = 'level';
+                    document.getElementById('das').value = '140';
+                    document.getElementById('arr').value = '40';
+                    break;
+                case 'gb':
+                    document.getElementById('bag-system').value = 'nobagfullyrandom';
+                    document.getElementById('rotation-system').value = 'nes';
+                    document.getElementById('hold-piece').value = 'false';
+                    document.getElementById('next-pieces').value = '1';
+                    document.getElementById('color-scheme').value = 'gb';
+                    document.getElementById('piece-types').value = 'tetramino';
+                    document.getElementById('speed-curve').value = 'level';
+                    document.getElementById('das').value = '170';
+                    document.getElementById('arr').value = '60';
+                    break;
+                case 'custom':
+                    // Don't change anything
+                    break;
+            }
+            
+            // Update UI based on new settings
+            toggleFixedSpeedInput();
+        }
+        
+        function toggleFixedSpeedInput() {
+            if (speedCurveSelect.value === 'fixed') {
+                fixedSpeedGroup.style.display = 'block';
+            } else {
+                fixedSpeedGroup.style.display = 'none';
+            }
+        }
+        
+        // Movement Handlers (DAS/ARR)
+        function clearAllMovementTimers() {
+            clearTimeout(moveLeftTimer);
+            clearTimeout(moveRightTimer);
+            clearTimeout(moveDownTimer);
+            clearInterval(moveLeftTimer);
+            clearInterval(moveRightTimer);
+            clearInterval(moveDownTimer);
+            moveLeftTimer = null;
+            moveRightTimer = null;
+            moveDownTimer = null;
+        }
+
+        function handleMovementStart(key) {
             if (isGameOver) return;
             
-            switch (e.key) {
+            switch (key) {
                 case 'ArrowLeft':
+                case 'a':
+                case 'A':
+                    if (isMovingLeft) return;
+                    isMovingLeft = true;
                     moveLeft();
+                    moveLeftTimer = setTimeout(() => {
+                        moveLeftTimer = setInterval(() => {
+                            moveLeft();
+                        }, settings.arr);
+                    }, settings.das);
                     break;
+                
                 case 'ArrowRight':
+                case 'd':
+                case 'D':
+                    if (isMovingRight) return;
+                    isMovingRight = true;
                     moveRight();
+                    moveRightTimer = setTimeout(() => {
+                        moveRightTimer = setInterval(() => {
+                            moveRight();
+                        }, settings.arr);
+                    }, settings.das);
                     break;
+                
                 case 'ArrowDown':
+                case 's':
+                case 'S':
+                    if (isMovingDown) return;
+                    isMovingDown = true;
                     moveDown();
+                    moveDownTimer = setTimeout(() => {
+                        moveDownTimer = setInterval(() => {
+                            moveDown();
+                        }, settings.arr);
+                    }, settings.das);
                     break;
+                    
+                // Non-repeating keys
                 case 'ArrowUp':
+                case 'w':
+                case 'W':
                     rotatePiece();
                     break;
                 case ' ':
@@ -1232,6 +1237,46 @@
                     holdCurrentPiece();
                     break;
             }
+        }
+        
+        function handleMovementEnd(key) {
+            switch (key) {
+                case 'ArrowLeft':
+                case 'a':
+                case 'A':
+                    clearTimeout(moveLeftTimer);
+                    clearInterval(moveLeftTimer);
+                    moveLeftTimer = null;
+                    isMovingLeft = false;
+                    break;
+                
+                case 'ArrowRight':
+                case 'd':
+                case 'D':
+                    clearTimeout(moveRightTimer);
+                    clearInterval(moveRightTimer);
+                    moveRightTimer = null;
+                    isMovingRight = false;
+                    break;
+                
+                case 'ArrowDown':
+                case 's':
+                case 'S':
+                    clearTimeout(moveDownTimer);
+                    clearInterval(moveDownTimer);
+                    moveDownTimer = null;
+                    isMovingDown = false;
+                    break;
+            }
+        }
+        
+        // Event listeners
+        document.addEventListener('keydown', (e) => {
+            handleMovementStart(e.key);
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            handleMovementEnd(e.key);
         });
         
         // Control button event listeners
@@ -1245,6 +1290,15 @@
         settingsBtn.addEventListener('click', showSettingsMenu);
         applySettingsBtn.addEventListener('click', applySettings);
         resetSettingsBtn.addEventListener('click', resetSettings);
+        
+        gameVariantSelect.addEventListener('change', (e) => {
+            setPreset(e.target.value);
+        });
+        
+        speedCurveSelect.addEventListener('change', toggleFixedSpeedInput);
+        
+        // Set default preset UI
+        setPreset('nes');
         
         // Initialize game
         initGame();
