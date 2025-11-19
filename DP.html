@@ -69,14 +69,17 @@ void main(){
     if(i>=steps) break;
     vec2 a=deriv(s);
     vec2 a2=deriv(s2);
+
     s+=vec4(s.y,a.x,s.w,a.y)*dt;
     s2+=vec4(s2.y,a2.x,s2.w,a2.y)*dt;
-    if(((i+1)%renormEvery)==0){
+
+    if (mod(float(i+1), float(renormEvery)) == 0.0) {
       float d=length(s2-s);
-      lce+=log(d/sep);
-      s2=s+(s2-s)/d*sep;
+      lce += log(d/sep);
+      s2 = s + (s2 - s) / d * sep;
     }
-  }
+}
+
   lce/=float(steps/renormEvery);
   float v=clamp(lce*5.0,0.0,1.0);
   vec3 col;
