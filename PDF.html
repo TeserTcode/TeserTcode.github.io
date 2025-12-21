@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Distribution Visualizer</title>
+
+  <!-- Plotly + Math -->
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+
+  <!-- Your function files -->
+  <script src="clrspc.js"></script>
+  <script src="mthfnc.js"></script>
+
+  <style>
+    body {
+      background-color: #111;
+      color: #eee;
+      font-family: monospace;
+      padding: 1em;
+    }
+    #plot {
+      width: 90vw;
+      height: 70vh;
+      margin-top: 1em;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #222;
+    }
+    .slider-container {
+      display: flex;
+      align-items: center;
+      margin: 8px 0;
+      width: 80vw;
+    }
+    .slider-container label {
+      width: 70px;
+      text-align: right;
+      margin-right: 10px;
+    }
+    .slider-container input[type="range"] {
+      flex: 1;
+      margin-right: 10px;
+    }
+    .slider-value {
+      width: 110px;
+      text-align: left;
+    }
+  </style>
+</head>
+
+<body>
+  <h2>Distribution Visualizer</h2>
+
+  <label>Distribution:</label>
+  <select id="distSelect"></select>
+
+  <label style="margin-left:1em">CDF cutoff:</label>
+  <select id="cdfLimitSelect">
+    <option value="1e-2">1e-2</option>
+    <option value="1e-3">1e-3</option>
+    <option value="1e-4">1e-4</option>
+    <option value="1e-5" selected>1e-5</option>
+    <option value="1e-6">1e-6</option>
+  </select>
+
+  <label style="margin-left:1em">PMF x-mapping:</label>
+  <select id="pmfXMapSelect">
+    <option value="identity">x</option>
+    <option value="round" selected>round(x)</option>
+    <option value="floor">floor(x)</option>
+    <option value="ceil">ceil(x)</option>
+  </select>
+
+  <div id="paramSliders"></div>
+  <div id="plot"></div>
+
+<script>
+(() => {
+
+  /* =======================
+     DISTRIBUTION DISCOVERY
+     ======================= */
+
+  const distSet = new Set();
+  for (const key in window) {
+    if (typeof window[key] === 'function') {
+      if (key.endsWith('pdf') || key.endsWith('pmf')) {
+        distSet.add(key.replace(/(pdf|pmf)$/, ''));
+      }
+    }
+  }
+
+  const distSel = document.getElementById('distSelect');
+  [...distSet].sort().forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d;
+    opt.textContent = d;
+    distSel.appendChild(opt);
+  });
+
+  const sliderDiv = document.getElementById('paramSliders');
+  const cdfCutoffSel = document.getElementById('cdfLimitSelect');
+  const pmfXMapSel = document.getElementById('pmfXMapSelect');
+
+  /* =======================
+     UTILITIES
+     ======================= */
+
+  function safeEval(fnName, ...args) {
+    try {
+      if (typeof window[fnName] === 'function') {
+        return re(window[fnName](...args));
+      }
+    } catch {}
+    return NaN;
+  }
+
+  function tanMap(x) {
+    return Math.tan(Math.PI * x / 2);
+  }
+
+  function mapPMFx(x, mode) {
+    switch (mode) {
+      case 'round': return Math.round(x);
+      case 'floor': return Math.floor(x);
+      case 'ceil':  return Math.ceil(x);
+      default:      return x;
+    }
+  }
+
+  /* =======================
+     PARAMETER SLIDERS
+     ======================= */
+
+  function createSliders(paramCount, names = []) {
+    sliderDiv.innerHTML = '';
+    const sliders = [];
+
+    for (let i = 0; i < paramCount; i++) {
+      const row = document.createElement('div');
+      row.className = 'slider-container';
+
+      const label = document.createElement('label');
+      label.textContent = names[i] || `p${i + 1}`;
+
+      const input = document.createElement('input');
+      input.type = 'range';
+      input.min = -0.9999;
+      input.max = 0.9999;
+      input.step = 0.001;
+      input.value = 0;
+
+      const valSpan = document.createElement('span');
+      valSpan.className = 'slider-value';
+      valSpan.textContent = '0.0000';
+
+      row.append(label, input, valSpan);
+      sliderDiv.appendChild(row);
+
+      sliders.push({ input, valSpan });
+    }
+
+    return sliders;
+  }
+
+  let sliders = [];
+
+  function getArgs() {
+    return sliders.map(s => {
+      const v = tanMap(parseFloat(s.input.value));
+      s.valSpan.textContent = v.toFixed(4);
+      return v;
+    });
+  }
+
+  /* =======================
+     DRAW
+     ======================= */
+
+  function draw() {
+    const dist = distSel.value;
+
+    const pdfName = dist + 'pdf';
+    const pmfName = dist + 'pmf';
+    const cdfName = dist + 'cdf';
+
+    const hasPDF = typeof window[pdfName] === 'function';
+    const hasPMF = typeof window[pmfName] === 'function';
+
+    if (!hasPDF && !hasPMF) return;
+
+    const valueFn = hasPDF ? pdfName : pmfName;
+    const isPMF = !hasPDF && hasPMF;
+
+    const args = getArgs();
+    const pmfMode = pmfXMapSel.value;
+    const cutoff = parseFloat(cdfCutoffSel.value);
+
+    const xmin = -10, xmax = 10;
+    const N = 400;
+    const step = (xmax - xmin) / N;
+    const xs = Array.from({ length: N }, (_, i) => xmin + i * step);
+
+    const vals = xs.map(x => {
+      const xx = isPMF ? mapPMFx(x, pmfMode) : x;
+      return safeEval(valueFn, ...args, xx);
+    });
+
+    const cdfVals = typeof window[cdfName] === 'function'
+      ? xs.map(x => safeEval(cdfName, ...args, x))
+      : [];
+
+    const data = [
+      {
+        x: xs,
+        y: vals,
+        name: isPMF ? 'PMF' : 'PDF',
+        mode: 'lines',
+        line: { color: 'orange' }
+      }
+    ];
+
+    if (cdfVals.length) {
+      data.push({
+        x: xs,
+        y: cdfVals,
+        name: 'CDF',
+        mode: 'lines',
+        line: { color: 'cyan' }
+      });
+    }
+
+    Plotly.newPlot('plot', data, {
+      title: `${dist} distribution`,
+      paper_bgcolor: '#111',
+      plot_bgcolor: '#111',
+      font: { color: 'white' },
+      xaxis: {
+        range: [xmin, xmax],
+        zeroline: true,
+        mirror: true,
+        gridcolor: '#333'
+      },
+      yaxis: {
+        zeroline: true,
+        mirror: true,
+        gridcolor: '#333'
+      },
+      margin: { t: 40, l: 50, r: 20, b: 50 },
+      dragmode: 'pan'
+    }, { scrollZoom: true });
+  }
+
+  /* =======================
+     EVENTS
+     ======================= */
+
+  distSel.addEventListener('change', () => {
+    const dist = distSel.value;
+    const fn =
+      window[dist + 'pdf'] ||
+      window[dist + 'pmf'];
+
+    const paramCount = Math.max(fn.length - 1, 0);
+
+    const argNames = fn.toString()
+      .match(/\(([^)]*)\)/)?.[1]
+      ?.split(',')
+      .slice(0, paramCount)
+      .map(s => s.trim()) || [];
+
+    sliders = createSliders(paramCount, argNames);
+    sliders.forEach(s => s.input.oninput = draw);
+    draw();
+  });
+
+  cdfCutoffSel.addEventListener('change', draw);
+  pmfXMapSel.addEventListener('change', draw);
+
+  distSel.selectedIndex = 0;
+  distSel.dispatchEvent(new Event('change'));
+
+})();
+</script>
+
+</body>
+</html>

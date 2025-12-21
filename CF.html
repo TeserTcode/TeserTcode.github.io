@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confusion Matrix Metrics Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+             background: url("cfbglg.png") no-repeat center center fixed;
+            background-size: cover;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        .metric {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: center;
+            position: relative;
+            background: #eee;
+        }
+        .metric:hover .tooltip {
+            visibility: visible;
+        }
+        .tooltip {
+            visibility: hidden;
+            width: 200px;
+            background-color: black;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0.9;
+        }
+        input {
+            width: 100px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Confusion Matrix Metrics Calculator</h1>
+    <label for="tp">True Positive (tp):</label>
+    <input type="number" id="tp" value="0"><br>
+    <label for="fp">False Positive (fp):</label>
+    <input type="number" id="fp" value="0"><br>
+    <label for="tn">True Negative (tn):</label>
+    <input type="number" id="tn" value="0"><br>
+    <label for="fn">False Negative (fn):</label>
+    <input type="number" id="fn" value="0"><br>
+    <button onclick="calculateMetrics()">Calculate</button>
+
+    <div class="grid" id="metricsGrid"></div>
+
+    <script>
+        function add(...args) {
+            return args.reduce((a, b) => a + b, 0);
+        }
+        function sub(a, b) {
+            return a - b;
+        }
+        function mul(...args) {
+            return args.reduce((a, b) => a * b, 1);
+        }
+        function div(a, b) {
+            return b === 0 ? 0 : a / b;
+        }
+        function sqrt(a) {
+            return Math.sqrt(a);
+        }
+function cum(x){return x*x*x}
+        function CMtotal(tp, fp, tn, fn) { return add(tp, fn, fp, tn); }
+        function CMprevalance(tp, fp, tn, fn) { return div(CMp(tp, fp, tn, fn), add(CMn(tp, fp, tn, fn), CMp(tp, fp, tn, fn))); }
+        function CMacc(tp, fp, tn, fn) { return div(add(tp, tn), CMtotal(tp, fp, tn, fn)); }
+        function CMba(tp, fp, tn, fn) { return div(add(CMtnr(tp, fp, tn, fn), CMtpr(tp, fp, tn, fn)), 2); }
+        function CMf1(tp, fp, tn, fn) { return div(add(tp, tp), add(tp, tp, fp, fn)); }
+        function CMfm(tp, fp, tn, fn) { return sqrt(mul(CMtpr(tp, fp, tn, fn), CMppv(tp, fp, tn, fn))); }
+        function CMmcc(tp, fp, tn, fn) { return sub(sqrt(mul(CMtpr(tp, fp, tn, fn), CMtnr(tp, fp, tn, fn), CMppv(tp, fp, tn, fn), CMnpv(tp, fp, tn, fn))), sqrt(mul(CMfnr(tp, fp, tn, fn), CMfpr(tp, fp, tn, fn), CMfor(tp, fp, tn, fn), CMfdr(tp, fp, tn, fn)))); }
+        function CMcsi(tp, fp, tn, fn) { return div(tp, add(tp, fn, fp)); }
+        function CMdor(tp, fp, tn, fn) { return div(CMlrp(tp, fp, tn, fn), CMlrn(tp, fp, tn, fn)); }
+
+        function CMp(tp, fp, tn, fn) { return add(tp, fn); }
+        function CMn(tp, fp, tn, fn) { return add(fp, tn); }
+        function CMpp(tp, fp, tn, fn) { return add(tp, fp); }
+        function CMpn(tp, fp, tn, fn) { return add(tn, fn); }
+
+        function CMppv(tp, fp, tn, fn) { return div(tp, add(tp, fp)); }
+        function CMfdr(tp, fp, tn, fn) { return div(fp, add(tp, fp)); }
+        function CMfor(tp, fp, tn, fn) { return div(fn, add(tn, fn)); }
+        function CMnpv(tp, fp, tn, fn) { return div(tn, add(tn, fn)); }
+        function CMtpr(tp, fp, tn, fn) { return div(tp, CMp(tp, fp, tn, fn)); }
+        function CMfpr(tp, fp, tn, fn) { return div(fp, CMn(tp, fp, tn, fn)); }
+        function CMtnr(tp, fp, tn, fn) { return div(tn, CMp(tp, fp, tn, fn)); }
+        function CMfnr(tp, fp, tn, fn) { return div(fn, CMn(tp, fp, tn, fn)); }
+        function CMbm(tp, fp, tn, fn) { return add(CMtpr(tp, fp, tn, fn), CMtnr(tp, fp, tn, fn), -1); }
+        function CMpt(tp, fp, tn, fn) { return div(sub(sqrt(mul(CMtpr(tp, fp, tn, fn), CMfpr(tp, fp, tn, fn))), CMfpr(tp, fp, tn, fn)), sub(CMtpr(tp, fp, tn, fn), CMfpr(tp, fp, tn, fn))); }
+        function CMlrp(tp, fp, tn, fn) { return div(CMtpr(tp, fp, tn, fn), CMfpr(tp, fp, tn, fn)); }
+        function CMlrn(tp, fp, tn, fn) { return div(CMfnr(tp, fp, tn, fn), CMtnr(tp, fp, tn, fn)); }
+        function CMmk(tp, fp, tn, fn) { return add(CMppv(tp, fp, tn, fn), CMnpv(tp, fp, tn, fn), -1); }
+
+        function CMsen(tp, fp, tn, fn) { return div(tp, CMp(tp, fp, tn, fn)); }
+
+        function CMor(fp, fn, tp, tn) { return div(mul(fp, tn), fn, tp); }
+function CMrr(fp, fn, tp, tn) { return div(div(fp, add(fp, tn)), div(fn, add(fn, tp))); }
+function CMrd(fp, fn, tp, tn) { return sub(div(fp, add(fp, fn)), div(tn, add(tn, tp))); }
+function CMserd(fp, fn, tp, tn) { return sqrt(add(div(mul(fp, fn), cum(add(fp, fn))), div(mul(tn, tp), cum(add(tn, tp))))); }
+function CMeer(fp, fn, tp, tn) { return div(fp, add(fp, fn)); }
+function CMcer(fp, fn, tp, tn) { return div(tn, add(tn, tp)); }
+function CMarr(fp, fn, tp, tn) { return sub(CMcer(fp, fn, tp, tn), CMeer(fp, fn, tp, tn)); }
+function CMnnt(fp, fn, tp, tn) { return div(1, sub(CMcer(fp, fn, tp, tn), CMeer(fp, fn, tp, tn))); }
+function CMrrr(fp, fn, tp, tn) { return sub(1, CMrr(fp, fn, tp, tn)); }
+
+function CMari(fp, fn, tp, tn) { return sub(CMeer(fp, fn, tp, tn), CMcer(fp, fn, tp, tn)); }
+function CMnnh(fp, fn, tp, tn) { return div(1, sub(CMeer(fp, fn, tp, tn), CMcer(fp, fn, tp, tn))); }
+function CMrri(fp, fn, tp, tn) { return sub(CMrr(fp, fn, tp, tn), 1); }
+function CMafe(fp, fn, tp, tn) { return div(sub(CMeer(fp, fn, tp, tn), CMcer(fp, fn, tp, tn)), CMeer(fp, fn, tp, tn)); }
+
+        const metrics = [
+            { name: "Total", func: CMtotal, desc: "Total number of observations" },
+            { name: "Prevalence", func: CMprevalance, desc: "Proportion of positive cases in the dataset" },
+            { name: "Accuracy", func: CMacc, desc: "Proportion of true results among the total number of cases" },
+            { name: "Balanced Accuracy", func: CMba, desc: "Average of recall obtained on each class" },
+            { name: "F1 Score", func: CMf1, desc: "Harmonic mean of precision and recall" },
+            { name: "Fowlkes-Mallows Index", func: CMfm, desc: "Geometric mean of precision and recall" },
+            { name: "Matthews Correlation Coefficient", func: CMmcc, desc: "Correlation coefficient between observed and predicted binary classifications" },
+            { name: "Critical Success Index", func: CMcsi, desc: "Ratio of true positives to the sum of true positives, false negatives, and false positives" },
+            { name: "Diagnostic Odds Ratio", func: CMdor, desc: "Ratio of the odds of the test being positive if the subject has the disease relative to the odds of the test being positive if the subject does not have the disease" },
+            { name: "Positive Predictive Value", func: CMppv, desc: "Proportion of positive results that are true positives" },
+            { name: "False Discovery Rate", func: CMfdr, desc: "Proportion of false positives among all positive results" },
+            { name: "False Omission Rate", func: CMfor, desc: "Proportion of false negatives among all negative results" },
+            { name: "Negative Predictive Value", func: CMnpv, desc: "Proportion of negative results that are true negatives" },
+            { name: "True Positive Rate (Sensitivity)", func: CMtpr, desc: "Proportion of actual positives correctly identified" },
+            { name: "False Positive Rate", func: CMfpr, desc: "Proportion of actual negatives incorrectly identified as positives" },
+            { name: "True Negative Rate (Specificity)", func: CMtnr, desc: "Proportion of actual negatives correctly identified" },
+            { name: "False Negative Rate", func: CMfnr, desc: "Proportion of actual positives incorrectly identified as negatives" },
+            { name: "Informedness", func: CMbm, desc: "Probability of an informed decision" },
+            { name: "Prevalence Threshold", func: CMpt, desc: "Threshold at which the test is more likely to predict a positive result" },
+            { name: "Positive Likelihood Ratio", func: CMlrp, desc: "Ratio of the probability of a positive test result given the presence of the disease to the probability of a positive test result given the absence of the disease" },
+            { name: "Negative Likelihood Ratio", func: CMlrn, desc: "Ratio of the probability of a negative test result given the presence of the disease to the probability of a negative test result given the absence of the disease" },
+            { name: "Markedness", func: CMmk, desc: "Difference between precision and negative predictive value" },
+            { name: "Sensitivity", func: CMsen, desc: "Proportion of actual positives correctly identified" },
+            { name: "Odds Ratio (OR)", func: CMor, desc: "Ratio of the odds of an event occurring in one group to the odds of it occurring in another group" },
+            { name: "Relative Risk (RR)", func: CMrr, desc: "Ratio of the probability of an event occurring in one group to the probability of it occurring in another group" },
+            { name: "Risk Difference (RD)", func: CMrd, desc: "Difference between the probability of an event occurring in one group and the probability of it occurring in another group" },
+            { name: "Standard Error of Risk Difference (SERD)", func: CMserd, desc: "Standard error of the risk difference, measuring the variability in the risk difference estimate" },
+        //    { name: "Experimental Event Rate (EER)", func: CMeer, desc: "Proportion of events in the experimental group" },
+        //    { name: "Control Event Rate (CER)", func: CMcer, desc: "Proportion of events in the control group" },
+        //    { name: "Absolute Risk Reduction (ARR)", func: CMarr, desc: "Difference between the control event rate (CER) and the experimental event rate (EER)" },
+        //    { name: "Number Needed to Treat (NNT)", func: CMnnt, desc: "Number of patients who need to be treated to prevent one additional bad outcome" },
+         //   { name: "Relative Risk Reduction (RRR)", func: CMrrr, desc: "Reduction in risk relative to the control event rate (CER)" },
+        //    { name: "Absolute Risk Increase (ARI)", func: CMari, desc: "Increase in risk due to the intervention, calculated as the difference between the experimental event rate (EER) and the control event rate (CER)" },
+        //    { name: "Number Needed to Harm (NNH)", func: CMnnh, desc: "Number of patients who need to be treated to cause one additional harmful outcome" },
+       //     { name: "Relative Risk Increase (RRI)", func: CMrri, desc: "Increase in risk relative to the control event rate (CER)" },
+       //     { name: "Attributable Fraction in the Exposed (AFE)", func: CMafe, desc: "Proportion of events in the exposed group that can be attributed to the exposure" },
+        ];
+
+        function calculateMetrics() {
+            const tp = parseInt(document.getElementById('tp').value);
+            const fp = parseInt(document.getElementById('fp').value);
+            const tn = parseInt(document.getElementById('tn').value);
+            const fn = parseInt(document.getElementById('fn').value);
+
+            const grid = document.getElementById('metricsGrid');
+            grid.innerHTML = '';
+
+            metrics.forEach(metric => {
+                const value = metric.func(tp, fp, tn, fn);
+                const metricDiv = document.createElement('div');
+                metricDiv.className = 'metric';
+                metricDiv.innerHTML = `
+                    <span class="short">${metric.name}</span>
+                    <div class="tooltip">${metric.desc}</div>
+                    <div>${value.toFixed(2)}</div>
+                `;
+                grid.appendChild(metricDiv);
+            });
+        }
+    </script>
+</body>
+</html>

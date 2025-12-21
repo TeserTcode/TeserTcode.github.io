@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dirichlet–Multinomial Showcase</title>
+
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js"></script>
+
+<style>
+body {
+  font-family: system-ui, sans-serif;
+  margin: 20px;
+}
+input {
+  width: 70px;
+}
+.section {
+  margin-bottom: 30px;
+}
+code {
+  background: #f5f5f5;
+  padding: 2px 4px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Dirichlet–Multinomial Distribution</h1>
+
+<div class="section">
+<h2>Parameters</h2>
+
+n:
+<input id="n" type="number" value="10">
+
+<br><br>
+
+α vector:
+<input id="A" value="2,3,5">
+
+<br><br>
+
+X vector:
+<input id="X" value="3,4,3">
+
+<br><br>
+
+Monte Carlo limit:
+<input id="nk" type="number" value="1000">
+
+<br><br>
+
+<input type="checkbox" id="contn">
+<label for="contn">Allow non-integer n</label>
+
+<br><br>
+
+<button onclick="compute()">Compute</button>
+<button onclick="randomizeA()">Randomize A</button>
+<button onclick="randomizeX()">Randomize X</button>
+
+</div>
+
+<div class="section">
+<h2>Results</h2>
+<div id="results"></div>
+</div>
+
+<div class="section">
+<h2>Monte Carlo Sample</h2>
+<div id="plot"></div>
+</div>
+       <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+
+<script src="clrspc.js"></script>
+<script src="polyhedra.js"></script>
+<script src="mthfnc.js"></script>
+
+<script>
+
+
+function sum(v){ return v.reduce((s,x)=>add(s,x),0); }
+
+
+function dirichletSample(A){
+  let y = A.map(a=>-Math.log(Math.random())/a);
+  let s = y.reduce((a,b)=>a+b,0);
+  return y.map(v=>v/s);
+}
+
+function multinomialSample(n,p){
+  let X = Array(p.length).fill(0);
+  for(let i=0;i<n;i++){
+    let r = Math.random(), s=0;
+    for(let k=0;k<p.length;k++){
+      s+=p[k];
+      if(r<s){ X[k]++; break; }
+    }
+  }
+  return X;
+}
+
+// =========================
+// Randomize buttons
+// =========================
+
+function randomizeA(){
+  const k = document.getElementById("A").value.split(",").length;
+  const A = Array.from({length:k},()=>+(0.5+5*Math.random()).toFixed(2));
+  document.getElementById("A").value = A.join(",");
+}
+
+function randomizeX(){
+  const n = +document.getElementById("n").value;
+  const A = document.getElementById("A").value.split(",").map(Number);
+  const cont = document.getElementById("contn").checked;
+  const p = dirichletSample(A);
+
+  if(cont){
+    const X = p.map(pi=>(n*pi).toFixed(3));
+    document.getElementById("X").value = X.join(",");
+  } else {
+    const X = multinomialSample(Math.round(n),p);
+    document.getElementById("X").value = X.join(",");
+  }
+}
+
+// =========================
+// Compute & Plot
+// =========================
+
+function compute(){
+  const nk = +document.getElementById("nk").value;
+  const n = +document.getElementById("n").value;
+  const A = document.getElementById("A").value.split(",").map(Number);
+  const X = document.getElementById("X").value.split(",").map(Number);
+  const cont = document.getElementById("contn").checked;
+
+  if(!cont && Math.round(n)!==n){
+    alert("n must be integer unless non-integer mode is enabled");
+    return;
+  }
+
+  if(!cont && gsum(X)!=n){
+    alert("Constraint violated: sum X_i must equal n");
+ //   return;
+  }
+
+  // Display PMF and moments
+  let html = "";
+  html += "<b>PMF:</b> " + multinomialdirichletpdf(n,A,X) + "<br><br>";
+
+  html += "<b>Means:</b><br>";
+  A.forEach((_,i)=>html+=`E[X${i}] = ${multinomialdirichletmean(n,A,i)}<br>`);
+
+  html += "<br><b>Variances:</b><br>";
+  A.forEach((_,i)=>html+=`Var[X${i}] = ${multinomialdirichletvar(n,A,i)}<br>`);
+
+  html += "<br><b>Covariances:</b><br>";
+  for(let i=0;i<A.length;i++)
+    for(let j=i+1;j<A.length;j++)
+      html+=`Cov[X${i},X${j}] = ${multinomialdirichletcovar(n,A,i,j)}<br>`;
+
+  document.getElementById("results").innerHTML = html;
+
+  // Monte Carlo samples
+  let samples = [];
+  for(let k=0;k<nk;k++){
+    const p = dirichletSample(A);
+    if(cont){
+      samples.push(p.map(pi=>n*pi));
+    } else {
+      samples.push(multinomialSample(Math.round(n),p));
+    }
+  }
+
+  // Histogram traces
+  let traces = samples[0].map((_,i)=>({
+    x: samples.map(s=>s[i]),
+    type: "histogram",
+    name: "X"+i,
+    opacity: 0.6
+  }));
+
+  // Expected value lines
+  const evlines = samples[0].map((_,i)=>{
+    const mean = re(multinomialdirichletmean(n,A,i));
+	console.log(mean);
+    return {
+      x:[mean, mean],
+      y:[0,nk/2],
+      type:"scatter",
+      mode:"lines",
+      line:{color:"black", dash:"dash"},
+      name:"E[X"+i+"]"
+    };
+  });
+
+  Plotly.newPlot("plot",
+    traces,
+    { barmode:"overlay", title:"Monte Carlo marginals with expected values" }
+  );
+}
+</script>
+
+</body>
+</html>

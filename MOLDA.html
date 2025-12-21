@@ -1,0 +1,897 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Neural Image Approximator — configurable network with backprop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    /* Readable, non-compact CSS as requested */
+
+    :root {
+      --ui-bg: #f5f7fb;
+      --panel-bg: #ffffff;
+      --muted: #666;
+      --accent: #2b7cff;
+      --danger: #d9534f;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg, #f0f4fb 0%, #ffffff 100%);
+      color: #222;
+    }
+
+    .wrap {
+      display: grid;
+      grid-template-columns: 420px 1fr 360px;
+      gap: 18px;
+      padding: 18px;
+      align-items: start;
+      max-width: 1400px;
+      margin: 12px auto;
+    }
+
+    .panel {
+      background: var(--panel-bg);
+      border-radius: 10px;
+      box-shadow: 0 6px 18px rgba(40,40,80,0.06);
+      padding: 14px;
+    }
+
+    h2 {
+      margin: 6px 0 12px 0;
+      font-size: 18px;
+    }
+
+    label {
+      display: block;
+      margin: 8px 0 4px 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    input[type="number"], input[type="range"], select, button, input[type="text"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #d6dbe9;
+      background: #fff;
+      font-size: 14px;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .row > * {
+      flex: 1 1 0;
+    }
+
+    .btn {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn.ghost {
+      background: transparent;
+      border: 1px solid #d6dbe9;
+      color: #333;
+    }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      background: #111;
+      border-radius: 8px;
+      display: block;
+    }
+
+    .small {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .log {
+      height: 240px;
+      overflow: auto;
+      white-space: pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+      font-size: 13px;
+      background: #fbfcff;
+      border: 1px solid #eef2fb;
+      padding: 8px;
+      border-radius: 6px;
+    }
+
+    .footer-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    /* network layer editor */
+    .layers-editor {
+      display: flex;
+      gap: 8px;
+      flex-direction: column;
+    }
+
+    .layer-item {
+      display: flex;
+      gap: 8px;
+    }
+
+    .layer-item input[type=number] { width: 84px; }
+
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+  <!-- Left panel: configuration -->
+  <div class="panel">
+    <h2>Network configuration</h2>
+
+    <label>Input size (image will be scaled to width × height)</label>
+    <div class="row">
+      <input id="imgW" type="number" min="8" max="256" value="32">
+      <input id="imgH" type="number" min="8" max="256" value="32">
+    </div>
+
+    <label>Layers (including input and output). Use + / - to add/remove hidden layers</label>
+    <div class="layers-editor" id="layersEditor"></div>
+
+    <div style="margin-top:10px;" class="row">
+      <button id="addLayer" class="btn ghost">+ Add hidden layer</button>
+      <button id="remLayer" class="btn ghost">- Remove hidden layer</button>
+    </div>
+
+    <label>Activation</label>
+    <select id="activation">
+      <option value="tanh">tanh</option>
+      <option value="sigmoid">sigmoid</option>
+      <option value="relu">relu</option>
+    </select>
+
+    <label>Learning rate</label>
+    <input id="lr" type="number" step="0.0001" value="0.02" min="0.00001">
+
+    <label>Batch size</label>
+    <input id="batch" type="number" step="1" value="32" min="1">
+
+    <label>Training steps per click (mini-epochs)</label>
+    <input id="steps" type="number" step="1" value="50" min="1">
+
+    <label>Loss display smoothing</label>
+    <input id="smooth" type="range" min="0" max="1" step="0.01" value="0.9">
+    <div class="footer-note">Use the controls below to initialize, load an image and train. The network learns to map (x,y) coordinates → grayscale value of the loaded image.</div>
+  </div>
+
+  <!-- Middle panel: canvases and controls -->
+  <div class="panel">
+    <h2>Image & Training</h2>
+
+    <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px;">
+      <div style="flex:1">
+        <label>Load image</label>
+        <input id="fileInput" type="file" accept="image/*">
+      </div>
+      <div style="width:140px">
+        <label>Scale preview</label>
+        <input id="scale" type="number" value="2" min="1" max="8">
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+      <div>
+        <label>Original (scaled)</label>
+        <canvas id="origCanvas"></canvas>
+      </div>
+      <div>
+        <label>Reconstruction</label>
+        <canvas id="reconCanvas"></canvas>
+      </div>
+    </div>
+
+    <div style="margin-top:10px; display:flex; gap:8px;">
+      <button id="initNet" class="btn">Init network</button>
+      <button id="trainStep" class="btn">Train steps</button>
+      <button id="reset" class="btn ghost">Reset</button>
+      <button id="export" class="btn ghost">Export weights</button>
+    </div>
+
+    <h2 style="margin-top:14px;">Live metrics</h2>
+    <div class="row">
+      <div>
+        <label>Current loss (MSE)</label>
+        <input id="loss" type="text" readonly value="-">
+      </div>
+      <div>
+        <label>Epochs run</label>
+        <input id="epoch" type="text" readonly value="0">
+      </div>
+    </div>
+
+    <div style="margin-top:12px;">
+      <label>Training log</label>
+      <div id="log" class="log"></div>
+    </div>
+  </div>
+
+  <!-- Right panel: extra parameters and help with mapping to original C -->
+  <div class="panel">
+    <h2>Extra parameters & original C mapping</h2>
+
+    <label>Extra: weight init scale</label>
+    <input id="initScale" type="number" step="0.1" value="1.0">
+
+    <label>Extra: use bias (checkbox)</label>
+    <div style="margin-bottom:8px;">
+      <input id="useBias" type="checkbox" checked> Use bias terms
+    </div>
+
+    <label>Extra: regularization (L2)</label>
+    <input id="l2" type="number" step="0.0001" value="0.0">
+
+    <h3 style="margin-top:12px;">Original C snippet (for reference)</h3>
+    <div class="small">
+      The following is the original C program you provided. After it we explain where the JS differs.
+    </div>
+    <pre class="small" style="background:#f6f8fc; padding:8px; border-radius:6px; border:1px solid #eef2fb; overflow:auto; max-height:240px;">
+#include &lt;iostream&gt;
+
+/* run this program using the console pauser or add your own getch, system("pause") or input loop */
+
+int main(int argc, char** argv) {
+srand(31);
+int best=0;
+int memspace[3]={2,4,1};
+int memspacel=0;
+int nodel=0;
+int nodenum=sizeof(memspace);
+double node[nodenum];
+for(int memspacelc=0;memspacelc<nodenum-1;memspacelc++) 
+{
+	memspacel+=memspace[memspacelc]*memspace[memspacelc+1];
+}
+for(int memspacelc=0;memspacelc<nodenum;memspacelc++) 
+{
+	nodel+=memspace[memspacelc];
+}
+int type[nodenum];
+double weight[memspacel];
+double bias[memspacel];
+
+for(int typec=0;typec<nodenum;typec++) {
+	type[typec]=1;
+}
+for(int weightc=0;weightc<memspacel;weightc++) {
+	weight[weightc]=(double)(rand()%200)/50.0-2;
+	bias[weightc]=(double)(rand()%200)/50.0-2;
+}
+
+while(true){
+	for(int nodein=0;nodein<memspace[0];nodein++){
+		node[nodein]=(double)(rand()%200)/50.0-2;
+	}
+	int cntn=0;
+	int xpos=0;
+	int ypos=0;
+	for(int cnta=memspace[0];cnta<nodel;cnta++){
+		if(cnta<6){xpos=8; 		}else{ 	xpos=4; 	}
+		cnta+=xpos;
+	for(int cntb=ypos;cntb<xpos+ypos;cntb++){
+	if(cnta<6){
+	node[cnta]+=(node[0]*weight[cntb]+bias[cntb])+(node[1]*weight[cntb+1]+bias[cntb+1]);
+	cntb++;
+	
+	}else{
+	node[cnta]+=(node[2]*weight[cntb]+bias[cntb])+(node[3]*weight[cntb+1]+bias[cntb+1])
+			   +(node[4]*weight[cntb+1]+bias[cntb+1])+(node[5]*weight[cntb+1]+bias[cntb+1]);
+	cntb++;	cntb++;	cntb++;
+	
+	}
+		
+	}
+		ypos+=xpos;
+	}
+	
+	if(node[6]>best){
+	best=node[6];
+	std::cout<<node[6]<<std::endl;
+
+		weight[rand()%memspacel]+=(double)(rand()%100)/100-0.5;
+	  bias[rand()%memspacel]+=(double)(rand()%100)/100-0.5;
+	  
+
+}
+}
+for(int nodelc=0;nodelc<nodel;nodelc++){
+	node[nodelc]=0;
+}
+
+
+
+return weight[4];
+}
+    </pre>
+
+    <h3>Mapping notes (what changed)</h3>
+    <div class="small">
+      1) The original code used ad-hoc arrays <code>memspace</code>, <code>weight</code>, and a loop that combined random inputs and random weight tweaks (hillclimbing). The JS implementation replaces that with a proper layered neural network (class <code>Network</code>) supporting any number of layers and neurons per layer.
+
+      2) You asked for backpropagation. The C code does not implement backprop; it only mutates weights when a better scalar <code>node[6]</code> is found. The JS implements forward + backward (gradient descent with optional L2) and trains on a supervised mapping: (x,y) → pixel intensity.
+
+      3) Image support: the JS loads an image, rescales it to the configured width/height and uses pixel values as targets. The original used random input values.
+
+      4) Biases, activation choices, learning rate, batch size and L2 regularization are exposed as parameters in the UI.
+
+      5) The network weight initialization uses a seeded random generator similar in spirit to <code>srand(31)</code>.
+
+      6) The original program returned <code>weight[4]</code> at the end — not meaningful for JS. The page instead lets you export weights as JSON.
+    </div>
+
+    <div style="margin-top:14px;" class="small">
+      Scroll inside the code area above to view the full original C program. Use the controls to configure layers, load an image and run training. The reconstruction canvas shows the network's predicted grayscale values after each training step.
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==========================
+   Neural network implementation
+   - Feedforward fully connected network
+   - Backpropagation with SGD
+   - Simple seeded RNG to be deterministic like srand(31)
+   ========================== */
+
+// Simple deterministic RNG (LCG) so experiments are repeatable similar to srand(31)
+function makeRNG(seed) {
+  let s = seed >>> 0;
+  return function() {
+    // constants from Numerical Recipes
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return (s & 0x7fffffff) / 0x80000000;
+  };
+}
+
+class Network {
+  constructor(sizes, opts={rngSeed:31, activation:'tanh', useBias:true, initScale:1.0, l2:0.0}) {
+    this.sizes = sizes.slice(); // array of layer sizes (including input and output)
+    this.depth = sizes.length;
+    this.useBias = !!opts.useBias;
+    this.activation = opts.activation || 'tanh';
+    this.l2 = opts.l2 || 0.0;
+    this.rng = makeRNG(opts.rngSeed || 31);
+    this.initScale = opts.initScale || 1.0;
+    this.initWeights();
+  }
+
+  initWeights() {
+    this.weights = [];
+    this.biases  = [];
+    for (let i = 0; i < this.depth - 1; i++) {
+      const inN = this.sizes[i];
+      const outN = this.sizes[i+1];
+      // Xavier-like init scaled by initScale
+      const limit = Math.sqrt(6 / (inN + outN)) * this.initScale;
+      const W = new Float32Array(inN * outN);
+      const B = new Float32Array(outN);
+      for (let j = 0; j < W.length; j++) {
+        W[j] = (this.rng()*2 - 1) * limit;
+      }
+      for (let j = 0; j < B.length; j++) {
+        B[j] = (this.rng()*2 - 1) * limit;
+      }
+      this.weights.push(W);
+      this.biases.push(B);
+    }
+  }
+
+  // Activation helpers
+  act(x) {
+    if (this.activation === 'tanh') return Math.tanh(x);
+    if (this.activation === 'sigmoid') return 1 / (1 + Math.exp(-x));
+    if (this.activation === 'relu') return Math.max(0, x);
+    return Math.tanh(x);
+  }
+  actPrime(x) {
+    if (this.activation === 'tanh') {
+      const t = Math.tanh(x);
+      return 1 - t*t;
+    }
+    if (this.activation === 'sigmoid') {
+      const s = 1 / (1 + Math.exp(-x));
+      return s * (1 - s);
+    }
+    if (this.activation === 'relu') {
+      return x > 0 ? 1 : 0;
+    }
+    const t = Math.tanh(x);
+    return 1 - t*t;
+  }
+
+  // forward pass: returns {activations: [], zs: []}
+  forward(input) {
+    const activations = [input.slice()]; // copy
+    const zs = [];
+    for (let layer = 0; layer < this.depth - 1; layer++) {
+      const inA = activations[layer];
+      const W = this.weights[layer];
+      const B = this.biases[layer];
+      const outN = this.sizes[layer+1];
+      const inN = this.sizes[layer];
+      const out = new Float32Array(outN);
+      const z = new Float32Array(outN);
+      for (let j = 0; j < outN; j++) {
+        let s = 0.0;
+        // compute dot
+        for (let i = 0; i < inN; i++) {
+          s += inA[i] * W[j*inN + i];
+        }
+        if (this.useBias) s += B[j];
+        z[j] = s;
+        out[j] = this.act(s);
+      }
+      zs.push(z);
+      activations.push(out);
+    }
+    return {activations, zs};
+  }
+
+  // single-sample backprop, returns gradients dW and dB (matching shapes)
+  backprop(x, y) {
+    const {activations, zs} = this.forward(x);
+    const nablaW = this.weights.map(w => new Float32Array(w.length));
+    const nablaB = this.biases.map(b => new Float32Array(b.length));
+
+    // compute output error (MSE derivative for linear output after activation)
+    const L = this.depth - 1; // last layer index
+    const out = activations[L];
+    const zL = zs[L-1];
+    const delta = new Float32Array(this.sizes[L]);
+    for (let k = 0; k < delta.length; k++) {
+      // dC/dA * dA/dZ ; for MSE, dC/dA = 2*(A - y)/N, but we'll divide by batch size outside
+      const dCdA = 2*(out[k] - y[k]);
+      delta[k] = dCdA * this.actPrime(zL[k]);
+    }
+
+    // nabla for last layer
+    const prevAct = activations[L-1];
+    for (let j = 0; j < delta.length; j++) {
+      for (let i = 0; i < prevAct.length; i++) {
+        nablaW[L-1][j*prevAct.length + i] = delta[j] * prevAct[i];
+      }
+      nablaB[L-1][j] = delta[j];
+    }
+
+    // backpropagate through earlier layers
+    let deltaPrev = delta;
+    for (let ll = L-2; ll >= 0; ll--) {
+      const z = zs[ll];
+      const sp = new Float32Array(z.length);
+      for (let i = 0; i < z.length; i++) sp[i] = this.actPrime(z[i]);
+
+      const nextW = this.weights[ll+1];
+      const curDelta = new Float32Array(this.sizes[ll+1]);
+
+      // compute delta for this layer (size = sizes[ll+1])
+      for (let j = 0; j < curDelta.length; j++) {
+        let s = 0.0;
+        for (let k = 0; k < deltaPrev.length; k++) {
+          s += deltaPrev[k] * nextW[k*this.sizes[ll+1] + j];
+        }
+        curDelta[j] = s * sp[j];
+      }
+
+      // compute nabla for weights connecting layer ll -> ll+1
+      const prevA = activations[ll];
+      for (let j = 0; j < curDelta.length; j++) {
+        for (let i = 0; i < prevA.length; i++) {
+          nablaW[ll][j*prevA.length + i] = curDelta[j] * prevA[i];
+        }
+        nablaB[ll][j] = curDelta[j];
+      }
+
+      deltaPrev = curDelta;
+    }
+
+    return {nablaW, nablaB};
+  }
+
+  // apply gradients (SGD) with batch averaging; grads is an array of {nablaW, nablaB}
+  applyGradients(sumGrad, lr, batchSize) {
+    for (let l = 0; l < this.weights.length; l++) {
+      const W = this.weights[l];
+      const dW = sumGrad.nablaW[l];
+      const B = this.biases[l];
+      const dB = sumGrad.nablaB[l];
+      const scale = lr / batchSize;
+      // L2 regularization
+      const reg = 1 - lr * this.l2;
+      for (let i = 0; i < W.length; i++) {
+        W[i] = W[i] * reg - dW[i] * scale;
+      }
+      for (let i = 0; i < B.length; i++) {
+        B[i] = B[i] - dB[i] * scale;
+      }
+    }
+  }
+
+  // compute MSE on dataset (xs, ys arrays of Float32Array)
+  computeMSE(xs, ys) {
+    let s = 0;
+    for (let i = 0; i < xs.length; i++) {
+      const out = this.forward(xs[i]).activations.slice(-1)[0];
+      for (let k = 0; k < out.length; k++) {
+        const d = out[k] - ys[i][k];
+        s += d*d;
+      }
+    }
+    return s / xs.length;
+  }
+
+  // Convenience: predict single input
+  predict(x) {
+    const out = this.forward(x).activations.slice(-1)[0];
+    return out;
+  }
+}
+
+/* ==========================
+   UI wiring and training loop
+   ========================== */
+
+const layersEditor = document.getElementById('layersEditor');
+const addLayerBtn = document.getElementById('addLayer');
+const remLayerBtn = document.getElementById('remLayer');
+const imgWInput = document.getElementById('imgW');
+const imgHInput = document.getElementById('imgH');
+const activationInput = document.getElementById('activation');
+const lrInput = document.getElementById('lr');
+const batchInput = document.getElementById('batch');
+const stepsInput = document.getElementById('steps');
+const smoothInput = document.getElementById('smooth');
+const fileInput = document.getElementById('fileInput');
+const initNetBtn = document.getElementById('initNet');
+const trainStepBtn = document.getElementById('trainStep');
+const resetBtn = document.getElementById('reset');
+const exportBtn = document.getElementById('export');
+const origCanvas = document.getElementById('origCanvas');
+const reconCanvas = document.getElementById('reconCanvas');
+const scaleInput = document.getElementById('scale');
+const lossField = document.getElementById('loss');
+const epochField = document.getElementById('epoch');
+const logBox = document.getElementById('log');
+const initScaleInput = document.getElementById('initScale');
+const useBiasInput = document.getElementById('useBias');
+const l2Input = document.getElementById('l2');
+
+let layers = [/* sizes */];
+let net = null;
+let dataset = {xs: [], ys: []};
+let epochs = 0;
+let lastLoss = null;
+let displayLoss = null;
+let imgLoaded = false;
+let origImageData = null;
+
+function addLayer(size) {
+  const div = document.createElement('div');
+  div.className = 'layer-item';
+  const lbl = document.createElement('div');
+  lbl.style.width = '56px';
+  lbl.style.fontSize = '13px';
+  lbl.style.alignSelf = 'center';
+  lbl.textContent = layers.length===0 ? 'Input' : (layers.length===1 ? 'Output' : 'Hidden');
+  const inp = document.createElement('input');
+  inp.type = 'number';
+  inp.min = '1';
+  inp.value = size || 8;
+  inp.addEventListener('change', () => updateLayersFromUI());
+  const help = document.createElement('div');
+  help.style.alignSelf = 'center';
+  help.style.fontSize = '12px';
+  help.style.color = '#666';
+  help.textContent = 'neurons';
+  div.appendChild(lbl);
+  div.appendChild(inp);
+  div.appendChild(help);
+  layersEditor.appendChild(div);
+  layers.push(parseInt(inp.value,10));
+}
+
+function rebuildLayersUI() {
+  layersEditor.innerHTML = '';
+  const saved = layers.slice();
+  layers = [];
+  for (let i = 0; i < saved.length; i++) addLayer(saved[i]);
+}
+
+function updateLayersFromUI() {
+  const items = layersEditor.querySelectorAll('input[type=number]');
+  layers = Array.from(items).map(i=>Math.max(1,parseInt(i.value,10)||1));
+}
+
+// initialize default layers: input 2 (x,y), output 1 (grayscale). We'll show hidden layers in between.
+function initDefaultLayers() {
+  layers = [2, 32, 16, 1];
+  rebuildLayersUI();
+}
+
+initDefaultLayers();
+
+addLayerBtn.addEventListener('click', () => {
+  // add one hidden layer with 16 neurons before the output
+  const out = layers.pop();
+  addLayer(16);
+  addLayer(out);
+  rebuildLayersUI();
+});
+remLayerBtn.addEventListener('click', () => {
+  // remove one hidden layer if exists
+  if (layers.length <= 2) return;
+  // remove the penultimate element (a hidden layer)
+  layers.splice(layers.length-2, 1);
+  rebuildLayersUI();
+});
+
+fileInput.addEventListener('change', (ev) => {
+  const f = ev.target.files[0];
+  if (!f) return;
+  const img = new Image();
+  const url = URL.createObjectURL(f);
+  img.onload = () => {
+    URL.revokeObjectURL(url);
+    loadImageToCanvas(img);
+  };
+  img.src = url;
+});
+
+function loadImageToCanvas(img) {
+  const w = parseInt(imgWInput.value,10);
+  const h = parseInt(imgHInput.value,10);
+  const s = parseInt(scaleInput.value,10) || 2;
+  origCanvas.width = w * s;
+  origCanvas.height = h * s;
+  reconCanvas.width = w * s;
+  reconCanvas.height = h * s;
+  const ctx = origCanvas.getContext('2d');
+  // draw scaled image into an offscreen canvas with target size w x h
+  const off = document.createElement('canvas');
+  off.width = w;
+  off.height = h;
+  const offCtx = off.getContext('2d');
+  offCtx.drawImage(img, 0, 0, w, h);
+  const imd = offCtx.getImageData(0,0,w,h);
+  origImageData = imd; // store original resized image
+
+  // show bigger preview
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0,0,origCanvas.width, origCanvas.height);
+  // draw the resized image scaled up by s
+  ctx.putImageData(imd, 0, 0);
+  // scale up visually
+  const preview = document.createElement('canvas');
+  preview.width = w * s;
+  preview.height = h * s;
+  const pctx = preview.getContext('2d');
+  pctx.imageSmoothingEnabled = false;
+  pctx.drawImage(off, 0, 0, preview.width, preview.height);
+  origCanvas.getContext('2d').clearRect(0,0,origCanvas.width, origCanvas.height);
+  origCanvas.getContext('2d').drawImage(preview, 0, 0);
+
+  prepareDatasetFromImage(imd);
+  imgLoaded = true;
+  log('Image loaded: ' + w + '×' + h + '\nSamples: ' + dataset.xs.length);
+}
+
+function prepareDatasetFromImage(imageData) {
+  const w = imageData.width, h = imageData.height;
+  dataset.xs = [];
+  dataset.ys = [];
+  // normalize inputs to [-1,1], outputs to [0,1]
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const idx = (y*w + x)*4;
+      const r = imageData.data[idx];
+      const g = imageData.data[idx+1];
+      const b = imageData.data[idx+2];
+      const gray = (0.299*r + 0.587*g + 0.114*b)/255.0; // 0..1
+      const nx = (x / (w-1))*2 - 1;
+      const ny = (y / (h-1))*2 - 1;
+      const xin = new Float32Array([nx, ny]);
+      const yin = new Float32Array([gray]);
+      dataset.xs.push(xin);
+      dataset.ys.push(yin);
+    }
+  }
+}
+
+initNetBtn.addEventListener('click', () => {
+  // build network sizes from UI: first input is 2, last output 1
+  updateLayersFromUI();
+  // however users might set input dimensions; we force input size = 2 and output = 1
+  // User-configured list should include input and output, but if not, fix.
+  if (layers.length < 2) {
+    alert('Layers must include at least input and output.');
+    return;
+  }
+  // Enforce first layer is size 2 (x,y) and last is 1 (grayscale)
+  layers[0] = 2;
+  layers[layers.length-1] = 1;
+  net = new Network(layers, {rngSeed:31, activation: activationInput.value, useBias: useBiasInput.checked, initScale: parseFloat(initScaleInput.value), l2: parseFloat(l2Input.value)});
+  epochs = 0;
+  lastLoss = null;
+  displayLoss = null;
+  epochField.value = '0';
+  lossField.value = '-';
+  log('Network initialized. Layers: ' + layers.join(' → '));
+  if (imgLoaded) renderReconstruction();
+});
+
+trainStepBtn.addEventListener('click', async () => {
+  if (!net) { alert('Initialize network first.'); return; }
+  if (!imgLoaded) { alert('Load an image first.'); return; }
+
+  const lr = parseFloat(lrInput.value);
+  const batch = Math.max(1, parseInt(batchInput.value,10));
+  const steps = Math.max(1, parseInt(stepsInput.value,10));
+  const smooth = parseFloat(smoothInput.value);
+
+  // perform `steps` mini-epochs where each mini-epoch shuffles dataset and trains in batches
+  for (let s = 0; s < steps; s++) {
+    // shuffle indices
+    const N = dataset.xs.length;
+    const idx = new Uint32Array(N);
+    for (let i = 0; i < N; i++) idx[i] = i;
+    // Fisher-Yates shuffle
+    for (let i = N-1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i+1));
+      const t = idx[i]; idx[i] = idx[j]; idx[j] = t;
+    }
+
+    // iterate in batches; accumulate grads
+    for (let start = 0; start < N; start += batch) {
+      const end = Math.min(N, start + batch);
+      // initialize sum grads
+      const sumGrad = {nablaW: net.weights.map(w => new Float32Array(w.length)), nablaB: net.biases.map(b => new Float32Array(b.length))};
+      for (let i = start; i < end; i++) {
+        const k = idx[i];
+        const g = net.backprop(dataset.xs[k], dataset.ys[k]);
+        // accumulate
+        for (let l = 0; l < g.nablaW.length; l++) {
+          const dst = sumGrad.nablaW[l];
+          const src = g.nablaW[l];
+          for (let z = 0; z < dst.length; z++) dst[z] += src[z];
+        }
+        for (let l = 0; l < g.nablaB.length; l++) {
+          const dst = sumGrad.nablaB[l];
+          const src = g.nablaB[l];
+          for (let z = 0; z < dst.length; z++) dst[z] += src[z];
+        }
+      }
+      // apply gradients averaged over batch
+      net.applyGradients(sumGrad, lr, (end-start));
+    }
+
+    epochs += 1;
+  }
+
+  // compute loss and update UI
+  const mse = net.computeMSE(dataset.xs, dataset.ys);
+  lastLoss = mse;
+  displayLoss = displayLoss === null ? mse : (smooth * displayLoss + (1-smooth)*mse);
+  lossField.value = displayLoss.toFixed(6);
+  epochField.value = epochs.toString();
+  log('Trained ' + steps + ' steps. Epochs: ' + epochs + ' — loss: ' + mse.toFixed(6));
+  renderReconstruction();
+});
+
+resetBtn.addEventListener('click', () => {
+  net = null;
+  dataset = {xs: [], ys: []};
+  imgLoaded = false;
+  origImageData = null;
+  layers = [];
+  initDefaultLayers();
+  layersEditor.scrollTop = 0;
+  log('Reset complete.');
+  origCanvas.getContext('2d').clearRect(0,0,origCanvas.width, origCanvas.height);
+  reconCanvas.getContext('2d').clearRect(0,0,reconCanvas.width, reconCanvas.height);
+});
+
+exportBtn.addEventListener('click', () => {
+  if (!net) { alert('Initialize network first.'); return; }
+  const payload = {
+    sizes: net.sizes,
+    weights: net.weights.map(w => Array.from(w)),
+    biases: net.biases.map(b => Array.from(b))
+  };
+  const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(payload));
+  const a = document.createElement('a');
+  a.href = dataStr;
+  a.download = 'network_weights.json';
+  a.click();
+});
+
+function renderReconstruction() {
+  if (!imgLoaded || !net) return;
+  const w = parseInt(imgWInput.value,10);
+  const h = parseInt(imgHInput.value,10);
+  const s = parseInt(scaleInput.value,10) || 2;
+  reconCanvas.width = w * s;
+  reconCanvas.height = h * s;
+  const off = document.createElement('canvas');
+  off.width = w;
+  off.height = h;
+  const ctx = off.getContext('2d');
+  const imd = ctx.createImageData(w,h);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const nx = (x / (w-1))*2 - 1;
+      const ny = (y / (h-1))*2 - 1;
+      const out = net.predict(new Float32Array([nx, ny]));
+      const v = Math.max(0, Math.min(1, out[0]));
+      const idx = (y*w + x)*4;
+      const val = Math.round(v * 255);
+      imd.data[idx] = val;
+      imd.data[idx+1] = val;
+      imd.data[idx+2] = val;
+      imd.data[idx+3] = 255;
+    }
+  }
+  ctx.putImageData(imd, 0, 0);
+  // scale up for preview without smoothing
+  const pctx = reconCanvas.getContext('2d');
+  pctx.imageSmoothingEnabled = false;
+  pctx.clearRect(0,0,reconCanvas.width, reconCanvas.height);
+  pctx.drawImage(off, 0, 0, reconCanvas.width, reconCanvas.height);
+}
+
+function log(s) {
+  logBox.textContent = (new Date()).toISOString() + ' — ' + s + '\n' + logBox.textContent;
+}
+
+// Initialize UI with sensible defaults and a small synthetic image so page is usable
+(function bootstrap() {
+  // seed a small demo: a gradient image if user does not load one
+  const w = parseInt(imgWInput.value,10);
+  const h = parseInt(imgHInput.value,10);
+  const off = document.createElement('canvas');
+  off.width = w;
+  off.height = h;
+  const ctx = off.getContext('2d');
+  const imd = ctx.createImageData(w,h);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const idx = (y*w + x)*4;
+      const v = Math.round(255 * (x / (w-1)) * (1 - y/(h-1)));
+      imd.data[idx] = v;
+      imd.data[idx+1] = v;
+      imd.data[idx+2] = v;
+      imd.data[idx+3] = 255;
+    }
+  }
+  ctx.putImageData(imd,0,0);
+  loadImageToCanvas(off);
+})();
+
+</script>
+</body>
+</html>

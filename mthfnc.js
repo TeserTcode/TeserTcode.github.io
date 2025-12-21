@@ -637,11 +637,11 @@ function stereopdjhonson(n, x, a = 0, rot = [0, 0, 0], trans = [0, 0, 0], h = 2)
 function stereoptetrahedron(x, a=0,h=2) {return div(pow(stereotetrahedron(x,a,h),3),pow(stereodtetrahedron(x,a,h),3));}
 function stereopcube(x,a=0,h=2){return div(pow(stereocube(x,a,h),3),pow(stereooctahedron(x,a,h),4))}
 function stereopoctahedron(x,a=0,h=2){return div(1,div(pow(stereocube(x,a,h),3),pow(stereooctahedron(x,a,h),4)))}
-//function stereopoctahedron(x,a=0,h=2){return div(1,div(pow(stereocube(x,a,h),3),pow(stereooctahedron(x,a,h),4)))}
+
 function stereopdodecahedron(x,a=0,h=2){return div(pow(stereododecahedron(x,a,h),3),pow(stereoicosahedron(x,a,h),5))}
 function stereopicosahedron(x,a=0,h=2){return div(1,div(pow(stereododecahedron(x,a,h),3),pow(stereoicosahedron(x,a,h),5)))}
 
-
+//function stereopoctahedron(x,a=0,h=2){return div(1,div(pow(stereocube(x,a,h),3),pow(stereooctahedron(x,a,h),4)))}
 
 //(1-((i*-sqrt(stereopicosahedron(x)-1)-1)+1))^-1-0.5
 
@@ -966,8 +966,17 @@ function Chalfcirc(r) {
     }
     return new contour(points);
 }
-function transpose(matrix) {
-  return matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]));
+function transpose(A){
+  if(!Array.isArray(A)) return A;          // scalar
+
+  if(!Array.isArray(A[0]))                 // vector
+    return A.map(x=>[x]);                  // row → column
+
+  const n=leng(A), m=leng(g(A,0));
+  if(n===1) return g(A,0);                 // row → vector
+  if(m===1) return A.map(r=>r[0]);         // column → vector
+
+  return A[0].map((_,j)=>A.map(r=>r[j]));
 }
 
 
@@ -3617,669 +3626,31 @@ function integralold(func, initial, end, input, N = bign) {
        
        
        
-       function invfouriertransform(func, input, N = bign) {
-    function simpsonsRule(a, b, n) {
-		
-        const h = div(sub(b, a), n);
-		
-        let sum = math.complex(0,0); 
-        for (let i = 1; i < n; i += 2) {
-            sum = add(sum, mul(math.complex(4,0),mul( func(add(a, mul(math.complex(i), h)), input) , exp(mul(I,2,pi(),add(a, mul(math.complex(i), h)),input))  )));
-        }
-        for (let i = 2; i < n - 1; i += 2) {
-            sum = add(sum, mul(math.complex(2,0),mul( func(add(a, mul(math.complex(i), h)), input) ,exp(mul(I,2,pi(),add(a, mul(math.complex(i), h)),input))  )));
-        }
-        return mul(div(h, math.complex(3,0)), sum);
-    }
-          return simpsonsRule(sub(0,bign),bign, N);
-       }
-       
-function laplacetransform(func, s, input = null, N = bign, tMax=sqrt(bign*8)) {
-    function simpsonsRule(a, b, n) {
-        const h = div(sub(b, a), n);
-        let sum = math.complex(0, 0);
+   
+function fastTransform(kernel, func, xMax, p, N = bign*2) { const h = xMax * 2 / N; let sum = math.complex(0, 0); for (let i = 1; i < N; i += 2) { let x = -xMax + i * h; sum = add(sum, mul(4, mul(evale(func, {x: x, p: p}), kernel(x)))); } for (let i = 2; i < N - 1; i += 2) { let x = -xMax + i * h; sum = add(sum, mul(2, mul(evale(func, {x: x, p: p}), kernel(x)))); } return mul(h / 3, sum); }
 
-        for (let i = 1; i < n; i += 2) {
-            let t = add(a, mul(math.complex(i), h));
-            let fval = input === null ? func(t) : func(t, input);
-            sum = add(sum, mul(math.complex(4, 0), mul(fval, math.exp(mul(math.complex(-1, 0), mul(s, t))))));
-        }
-        for (let i = 2; i < n - 1; i += 2) {
-            let t = add(a, mul(math.complex(i), h));
-            let fval = input === null ? func(t) : func(t, input);
-            sum = add(sum, mul(math.complex(2, 0), mul(fval, math.exp(mul(math.complex(-1, 0), mul(s, t))))));
-        }
-        return mul(div(h, math.complex(3, 0)), sum);
-    }
 
-    return simpsonsRule(math.complex(0, 0), tMax, N);
-}
 
-  function bilaterallaplacetransform(func, s, input = null, N = bign, tMax=sqrt(bign*4)) {
-    function simpsonsRule(a, b, n) {
-        const h = div(sub(b, a), n);
-        let sum = math.complex(0, 0);
 
-        for (let i = 1; i < n; i += 2) {
-            let t = add(a, mul(math.complex(i), h));
-            let fval = input === null ? func(t) : func(t, input);
-            sum = add(sum, mul(math.complex(4, 0), mul(fval, math.exp(mul(math.complex(-1, 0), mul(s, t))))));
-        }
-        for (let i = 2; i < n - 1; i += 2) {
-            let t = add(a, mul(math.complex(i), h));
-            let fval = input === null ? func(t) : func(t, input);
-            sum = add(sum, mul(math.complex(2, 0), mul(fval, math.exp(mul(math.complex(-1, 0), mul(s, t))))));
-        }
-        return mul(div(h, math.complex(3, 0)), sum);
-    }
-
-    return simpsonsRule(sub(0,tMax), tMax, N);
-}     
- function inverselaplacetransform(F, t, sigma = 1, wMax = sqrt(bign*8), N = bign) {
-    function simpsonsRule(a, b, n) {
-        const h = div(sub(b, a), n);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < n; i += 2) {
-            let w = add(a, mul(math.complex(i), h));
-            let s = math.add(math.complex(sigma, 0), math.multiply(math.complex(0, 1), w));
-            let Fval = F(s);
-            sum = add(sum, mul(math.complex(4, 0), mul(Fval, math.exp(mul(s, t)))));
-        }
-        for (let i = 2; i < n - 1; i += 2) {
-            let w = add(a, mul(math.complex(i), h));
-            let s = math.add(math.complex(sigma, 0), math.multiply(math.complex(0, 1), w));
-            let Fval = F(s);
-            sum = add(sum, mul(math.complex(2, 0), mul(Fval, math.exp(mul(s, t)))));
-        }
-        return mul(div(h, math.complex(3, 0)), sum);
-    }
-
-    let integral = simpsonsRule(math.complex(-wMax, 0), math.complex(wMax, 0), N);
-    return mul(div(integral, math.complex(2 * Math.PI, 0)), math.complex(1, 0));
-}
-      function laguerreTransform(f, n, a, xMax = sqrt(bign * 8), N = bign) {
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), nn);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < nn; i += 2) {
-            let x = add(a, mul(math.complex(i), h));
-            let Lval = laguerrepoly(a, n, x);
-            let fval = f(x);
-            sum = add(sum, mul(math.complex(4, 0), mul(Lval, mul(fval, mul(math.exp(math.multiply(-1, x)), math.pow(x, a))))));
-        }
-        for (let i = 2; i < nn - 1; i += 2) {
-            let x = add(a, mul(math.complex(i), h));
-            let Lval = laguerrepoly(a,n, x);
-            let fval = f(x);
-            sum = add(sum, mul(math.complex(2, 0), mul(Lval, mul(fval, mul(math.exp(math.multiply(-1, x)), math.pow(x, a))))));
-        }
-        return mul(div(h, math.complex(3, 0)), sum);
-    }
-
-    return simpsonsRule(math.complex(0, 0), xMax, N);
-}
-function inverseLaguerreTransform(Fn, a, x, N = bign) {
+function fastTransform2(kernel, func, xMin, xMax, p, N = mul(bign, 2)) {
+    // h = (xMax - xMin) * 2 / N
+    const h = div(mul(sub(xMax, xMin), 2), N);
     let sum = math.complex(0, 0);
 
-    for (let n = 0; n < N; n++) {
-        let Lval = laguerrepoly(a, n, x);
-        let coeff = div(Fn(n), mul(ncr(add(n, a), n), math.factorial(a)));
-        sum = add(sum, mul(coeff, Lval));
+    // odd indices
+    for (let i = 1; i < N; i = add(i, 2)) {
+        let x = add(xMin, mul(i, h));
+        sum = add(sum, mul(4, mul(evale(func, {x: x, p: p}), kernel(x))));
     }
 
-    return sum;
+    // even indices
+    for (let i = 2; i < sub(N, 1); i = add(i, 2)) {
+        let x = add(xMin, mul(i, h));
+        sum = add(sum, mul(2, mul(evale(func, {x: x, p: p}), kernel(x))));
+    }
+
+    return mul(div(h, 3), sum);
 }
-
-       function legendreTransform(f, nn, N = bign) {
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), n);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < nn; i += 2) {
-            let x = add(a, mul(math.complex(i), h));
-            let fval = f(x);
-            let Pn = legendrepoly(n, x);
-            sum = add(sum, mul(math.complex(4, 0), mul(Pn, fval)));
-        }
-        for (let i = 2; i < nn - 1; i += 2) {
-            let x = add(a, mul(math.complex(i), h));
-            let fval = f(x);
-            let Pn = legendrepoly(n, x);
-            sum = add(sum, mul(math.complex(2, 0), mul(Pn, fval)));
-        }
-        return mul(div(h, math.complex(3, 0)), sum);
-    }
-
-    return simpsonsRule(math.complex(-1, 0), math.complex(1, 0), N);
-}
-
-     function inverseLegendreTransform(F, x, N = bign) {
-    let sum = math.complex(0, 0);
-
-    for (let n = 0; n <= N; n++) {
-        let Pn = legendrepoly(n, x); // Compute Legendre polynomial P_n(x)
-        let Fn = F(n); // Get the coefficient F_n
-        let coeff = div(math.complex(2 * n + 1, 0), math.complex(2, 0));
-        sum = add(sum, mul(coeff, mul(Fn, Pn)));
-    }
-
-    return sum;
-}
-  
-       function jacobiTransform(f, a, b, n, N = bign) {
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), nn);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < nn; i += 2) {
-            let x = add(a, mul(math.complex(i), h));
-            let jacobiPoly = jacobipoly(n, a, b, x); // Compute Jacobi polynomial P_n^(a,b)(x)
-            let fval = f(x);
-            sum = add(sum, mul(math.complex(4, 0), mul(fval, mul(pow(sub(math.complex(1, 0), x), a), pow(add(math.complex(1, 0), x), b)), jacobiPoly)));
-        }
-
-        for (let i = 2; i <nn - 1; i += 2) {
-            let x = add(a, mul(math.complex(i), h));
-            let jacobiPoly = jacobipoly(n, a, b, x);
-            let fval = f(x);
-            sum = add(sum, mul(math.complex(2, 0), mul(fval, mul(pow(sub(math.complex(1, 0), x), a), pow(add(math.complex(1, 0), x), b)), jacobiPoly)));
-        }
-
-        return mul(div(h, math.complex(3, 0)), sum);
-    }
-
-    return simpsonsRule(math.complex(-1, 0), math.complex(1, 0), N);
-}
-
-    function hilbertTransform(u, t, N = bign) {
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), nn);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < nn; i += 2) {
-            let tau = add(a, mul(math.complex(i), h));
-            let uVal = u(add(t, mul(math.complex(-1, 0), tau))); // u(t - tau)
-            let uValPlus = u(add(t, tau)); // u(t + tau)
-            sum = add(sum, sub(uVal, uValPlus)); // u(t - tau) - u(t + tau)
-        }
-
-        for (let i = 2; i < nn - 1; i += 2) {
-            let tau = add(a, mul(math.complex(i), h));
-            let uVal = u(add(t, mul(math.complex(-1, 0), tau))); // u(t - tau)
-            let uValPlus = u(add(t, tau)); // u(t + tau)
-            sum = add(sum, sub(uVal, uValPlus)); // u(t - tau) - u(t + tau)
-        }
-
-        return mul(div(h, math.complex(Math.PI, 0)), sum); // Apply the factor 2/pi
-    }
-
-    return simpsonsRule(math.complex(0, 0), math.complex(bign, 0), N);
-}
-     function inverseHilbertTransform(u, t, N = bign) {
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), nn);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < nn; i += 2) {
-            let tau = add(a, mul(math.complex(i), h));
-            let uVal = u(add(t, mul(math.complex(-1, 0), tau))); // u(t - tau)
-            let uValPlus = u(add(t, tau)); // u(t + tau)
-            sum = add(sum, sub(uVal, uValPlus)); // u(t - tau) - u(t + tau)
-        }
-
-        for (let i = 2; i < nn - 1; i += 2) {
-            let tau = add(a, mul(math.complex(i), h));
-            let uVal = u(add(t, mul(math.complex(-1, 0), tau))); // u(t - tau)
-            let uValPlus = u(add(t, tau)); // u(t + tau)
-            sum = add(sum, sub(uVal, uValPlus)); // u(t - tau) - u(t + tau)
-        }
-
-        return mul(div(h, math.complex(Math.PI, 0)), sum); // Apply the factor 2/pi
-    }
-
-    return sub(0,simpsonsRule(math.complex(0, 0), math.complex(bign, 0), N));
-}
-     
-  function hermiteTransform(f, n, N = bign) {
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), nn);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < nn; i += 2) {
-            let x = add(a, mul(math.complex(i), h));
-            let hermitePoly = hermitepoly(n, x); // Compute Hermite polynomial H_n(x)
-            let fval = f(x);
-            sum = add(sum, mul(math.complex(4, 0), mul(fval, mul(math.exp(mul(math.complex(-1, 0), mul(x, x))), hermitePoly))));
-        }
-
-        for (let i = 2; i < nn - 1; i += 2) {
-            let x = add(a, mul(math.complex(i), h));
-            let hermitePoly = hermitepoly(n, x);
-            let fval = f(x);
-            sum = add(sum, mul(math.complex(2, 0), mul(fval, mul(math.exp(mul(math.complex(-1, 0), mul(x, x))), hermitePoly))));
-        }
-
-        return mul(div(h, math.complex(3, 0)), sum);
-    }
-
-    return simpsonsRule(math.complex(-bign, 0), math.complex(bign, 0), N);
-}
-    function inverseHermiteTransform(F, x, maxN = bign) {
-
-    let sum = math.complex(0, 0);
-
-    for (let n = 0; n < maxN; n++) {
-        let F_n = F(n);  // Function F(n) must be provided
-        let H_n_x = hermitepoly(n, x);  // Hermite polynomial H_n(x)
-        let factor = math.divide(1, math.multiply(math.sqrt(math.complex(Math.PI, 0)), math.multiply(math.pow(2, n), math.factorial(n))));
-        sum = math.add(sum, math.multiply(factor, math.multiply(F_n, H_n_x)));
-    }
-
-    return sum;
-}
- 
-       function hartleyTransform(f, w, N = bign) {
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), nn);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < nn; i += 2) {
-            let t = add(a, mul(math.complex(i), h));
-            let fval = f(t);
-        let casValue = cas(mul(w, t)); // cas(wt) = cos(wt) + sin(wt)
-            sum = add(sum, mul(math.complex(4, 0), mul(fval, casValue)));
-        }
-
-        for (let i = 2; i < nn - 1; i += 2) {
-            let t = add(a, mul(math.complex(i), h));
-            let fval = f(t);
-            let casValue = math.add(math.cos(mul(w, t)), math.sin(mul(w, t)));
-            sum = add(sum, mul(math.complex(2, 0), mul(fval, casValue)));
-        }
-
-        return mul(div(h, math.complex(Math.sqrt(2 * Math.PI), 0)), sum); // Apply the normalization factor 1/sqrt(2pi)
-    }
-
-    return simpsonsRule(math.complex(-sqrt(bign), 0), math.complex(sqrt(bign), 0), N*5);
-}
-function hankelTransform(f, v, k, N = bign) {
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), nn);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < nn; i += 2) {
-            let r = add(a, mul(math.complex(i), h));
-            let fval = f(r); // Evaluate f(r)
-            let besselVal = besselj(v, mul(k, r)); // Bessel function of order v
-            sum = add(sum, mul(math.complex(4, 0), mul(fval, mul(besselVal, r))));
-        }
-
-        for (let i = 2; i < nn - 1; i += 2) {
-            let r = add(a, mul(math.complex(i), h));
-            let fval = f(r); // Evaluate f(r)
-            let besselVal = besselj(v, mul(k, r)); // Bessel function of order v
-            sum = add(sum, mul(math.complex(2, 0), mul(fval, mul(besselVal, r))));
-        }
-
-        return mul(div(h, math.complex(3, 0)), sum); // Final scaling factor
-    }
-
-    return simpsonsRule(math.complex(0, 0), math.complex(bign, 0), N); // Evaluate the integral
-}
-function inverseHankelTransform(Fv, v, r, N = bign, kMax = sqrt(bign * 8)) {
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), nn);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < nn; i += 2) {
-            let k = add(a, mul(math.complex(i), h));
-            let besselVal = besselj(v, mul(k, r)); // Compute J_v(k*r)
-            sum = add(sum, mul(math.complex(4, 0), mul(Fv(k), mul(k, besselVal))));
-        }
-
-        for (let i = 2; i < nn - 1; i += 2) {
-            let k = add(a, mul(math.complex(i), h));
-            let besselVal = besselj(v, mul(k, r));
-            sum = add(sum, mul(math.complex(2, 0), mul(Fv(k), mul(k, besselVal))));
-        }
-
-        return mul(div(h, math.complex(3, 0)), sum);
-    }
-
-    return simpsonsRule(math.complex(0, 0), math.complex(kMax, 0), N);
-}
-
-function mellinTransform(f, k, N = bign, xMax = sqrt(bign * 8)) {
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), nn);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < nn; i += 2) {
-            let x = add(a, mul(math.complex(i), h));
-            let fval = f(x);
-            sum = add(sum, mul(math.complex(4, 0), mul(pow(x, sub(k, math.complex(1, 0))), fval)));
-        }
-
-        for (let i = 2; i < nn - 1; i += 2) {
-            let x = add(a, mul(math.complex(i), h));
-            let fval = f(x);
-            sum = add(sum, mul(math.complex(2, 0), mul(pow(x, sub(k, math.complex(1, 0))), fval)));
-        }
-
-        return mul(div(h, math.complex(3, 0)), sum);
-    }
-
-    return simpsonsRule(math.complex(0, 0), math.complex(xMax, 0), N);
-}
-function inverseMellinTransform(F, x, c=1, N = bign, sMax = sqrt(bign * 8)) {
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), nn);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < nn; i += 2) {
-            let s = add(c, mul(math.complex(0, 1), mul(math.complex(i), h))); // s = c + i*y
-            let Fval = F(s);
-            sum = add(sum, mul(math.complex(4, 0), mul(Fval, pow(x, math.neg(s)))));
-        }
-
-        for (let i = 2; i < nn - 1; i += 2) {
-            let s = add(c, mul(math.complex(0, 1), mul(math.complex(i), h)));
-            let Fval = F(s);
-            sum = add(sum, mul(math.complex(2, 0), mul(Fval, pow(x, math.neg(s)))));
-        }
-
-        return mul(div(h, math.complex(3, 0)), sum);
-    }
-
-    let integral = simpsonsRule(mul(-1,sMax), mul(sMax), N);
-    return div(integral, mul(math.complex(2, Math.PI), math.complex(0, 1))); // Divide by 2πi
-}
-
-function poissonTransform(f, x, y, N = bign, tMax = sqrt(bign * 8)) {
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), nn);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < nn; i += 2) {
-            let t = add(a, mul(math.complex(i), h));
-            let kernel = div(y, add(pow(sub(x, t), 2), pow(y, 2)));
-            sum = add(sum, mul(math.complex(4 / Math.PI, 0), mul(kernel, f(t))));
-        }
-
-        for (let i = 2; i < nn - 1; i += 2) {
-            let t = add(a, mul(math.complex(i), h));
-            let kernel = div(y, add(pow(sub(x, t), 2), pow(y, 2)));
-            sum = add(sum, mul(math.complex(2 / Math.PI, 0), mul(kernel, f(t))));
-        }
-
-        return mul(div(h, math.complex(3, 0)), sum);
-    }
-
-    return simpsonsRule(math.complex(-tMax, 0), math.complex(tMax, 0), N);
-}
-       
-  function radonTransform(f, a, s, N = bign, zMax = sqrt(bign * 8)) {
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), nn);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < nn; i += 2) {
-            let z = add(a, mul(math.complex(i), h));
-            let x = add(mul(z, math.sin(a)), mul(s, math.cos(a)));
-            let y = sub(mul(-z, math.cos(a)), mul(s, math.sin(a)));
-            sum = add(sum, mul(math.complex(4, 0), f(x, y)));
-        }
-
-        for (let i = 2; i < nn - 1; i += 2) {
-            let z = add(a, mul(math.complex(i), h));
-            let x = add(mul(z, math.sin(a)), mul(s, math.cos(a)));
-            let y = sub(mul(-z, math.cos(a)), mul(s, math.sin(a)));
-            sum = add(sum, mul(math.complex(2, 0), f(x, y)));
-        }
-
-        return mul(div(h, math.complex(3, 0)), sum);
-    }
-
-    return simpsonsRule(math.complex(-zMax, 0), math.complex(zMax, 0), N);
-}
-function xRayTransform(f, x, theta, N = bign, tMax = sqrt(bign * 8)) {
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), nn);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < nn; i += 2) {
-            let t = add(a, mul(math.complex(i), h));
-            let fval = f(add(x, mul(t, theta)));
-            sum = add(sum, mul(math.complex(4, 0), fval));
-        }
-
-        for (let i = 2; i < nn - 1; i += 2) {
-            let t = add(a, mul(math.complex(i), h));
-            let fval = f(add(x, mul(t, theta)));
-            sum = add(sum, mul(math.complex(2, 0), fval));
-        }
-
-        return mul(div(h, math.complex(3, 0)), sum);
-    }
-
-    return simpsonsRule(math.complex(-tMax, 0), math.complex(tMax, 0), N);
-}
-     
-      function weierstrassTransform(f, x, N = bign, yMax = sqrt(bign * 8)) {
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), nn);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < nn; i += 2) {
-            let y = add(a, mul(math.complex(i), h));
-            let kernel = math.exp(div(math.pow(sub(x, y), 2), math.complex(-4, 0)));
-            sum = add(sum, mul(math.complex(4, 0), mul(f(y), kernel)));
-        }
-
-        for (let i = 2; i < nn - 1; i += 2) {
-            let y = add(a, mul(math.complex(i), h));
-            let kernel = math.exp(div(math.pow(sub(x, y), 2), math.complex(-4, 0)));
-            sum = add(sum, mul(math.complex(2, 0), mul(f(y), kernel)));
-        }
-
-        return mul(div(h, math.complex(3, 0)), sum);
-    }
-
-    let integral = simpsonsRule(math.complex(-yMax, 0), math.complex(yMax, 0), N);
-    return div(integral, math.sqrt(math.complex(4 * Math.PI, 0))); // 1/sqrt(4π) factor
-} 
- function abelTransform(f, y, N = bign, rMax = sqrt(bign * 8)) {
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), nn);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < nn; i += 2) {
-            let r = add(a, mul(math.complex(i), h));
-            let kernel = div(mul(r, f(r)), sqrt(sub(pow(r, 2), pow(y, 2))));
-            sum = add(sum, mul(math.complex(4, 0), kernel));
-        }
-
-        for (let i = 2; i < nn - 1; i += 2) {
-            let r = add(a, mul(math.complex(i), h));
-            let kernel = div(mul(r, f(r)), sqrt(sub(pow(r, 2), pow(y, 2))));
-            sum = add(sum, mul(math.complex(2, 0), kernel));
-        }
-
-        return mul(div(h, math.complex(3, 0)), sum);
-    }
-
-    return mul(math.complex(2, 0), simpsonsRule(y, rMax, N));
-}
-    function inverseAbelTransform(F, x, N = bign, yMax = sqrt(bign * 8)) {
-    function numericalDerivative(g, y, h = math.complex(1e-5, 0)) {
-        return div(sub(g(add(y, h)), g(sub(y, h))), mul(math.complex(2, 0), h));
-    }
-
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), nn);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < nn; i += 2) {
-            let y = add(a, mul(math.complex(i), h));
-            let kernel = div(numericalDerivative(F, y), sqrt(sub(pow(y, 2), pow(x, 2))));
-            sum = add(sum, mul(math.complex(4, 0), kernel));
-        }
-
-        for (let i = 2; i < nn - 1; i += 2) {
-            let y = add(a, mul(math.complex(i), h));
-            let kernel = div(numericalDerivative(F, y), sqrt(sub(pow(y, 2), pow(x, 2))));
-            sum = add(sum, mul(math.complex(2, 0), kernel));
-        }
-
-        return mul(div(h, math.complex(3, 0)), sum);
-    }
-
-    return mul(math.complex(-1 / Math.PI, 0), simpsonsRule(x, yMax, N));
-}
-  function associatedLegendreTransform(f, n, m, N = bign) {
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), nn);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < nn; i += 2) {
-            let x = add(a, mul(math.complex(i), h));
-            let legendreVal = associatedlegendre(n, m, x); // Compute P_n^m(x)
-            let weight = pow(sub(math.complex(1, 0), pow(x, 2)), div(math.complex(-m, 0), math.complex(2, 0)));
-            sum = add(sum, mul(math.complex(4, 0), mul(f(x), mul(weight, legendreVal))));
-        }
-
-        for (let i = 2; i < nn - 1; i += 2) {
-            let x = add(a, mul(math.complex(i), h));
-            let legendreVal = associatedlegendre(n, m, x);
-            let weight = pow(sub(math.complex(1, 0), pow(x, 2)), div(math.complex(-m, 0), math.complex(2, 0)));
-            sum = add(sum, mul(math.complex(2, 0), mul(f(x), mul(weight, legendreVal))));
-        }
-
-        return mul(div(h, math.complex(3, 0)), sum);
-    }
-
-    return simpsonsRule(math.complex(-1, 0), math.complex(1, 0), N);
-}
-function inverseAssociatedLegendre(F, m, x, N = bign) {
-    let sum = math.complex(0, 0);
-
-    for (let n = 0; n <= N; n++) {
-        let legendreVal = associatedlegendre(n, m, x); // Compute P_n^m(x)
-        let weight = pow(sub(1, pow(x, 2)), div(m, 2));
-        let coefficient = div(mul(div(add(mul(2, n), 1), 2), factorial(sub(n, m))), factorial(add(n, m)));
-        sum = add(sum, mul(coefficient, mul(F(n, m), mul(weight, legendreVal))));
-    }
-
-    return sum;
-}
-
-function fourierSineTransform(f, k, N = bign*2, xMax = sqrt(bign * 16)) {
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), nn);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < nn; i += 2) {
-            let x = add(a, mul(math.complex(i), h));
-            sum = add(sum, mul(math.complex(4, 0), mul(f(x), math.sin(mul(k, x)))));
-        }
-
-        for (let i = 2; i < nn - 1; i += 2) {
-            let x = add(a, mul(math.complex(i), h));
-            sum = add(sum, mul(math.complex(2, 0), mul(f(x), math.sin(mul(k, x)))));
-        }
-
-        return mul(div(h, math.complex(3, 0)), sum);
-    }
-
-    return simpsonsRule(math.complex(0, 0), xMax, N);
-}
-function inverseFourierSineTransform(Fs, x, N = bign *2, kMax = sqrt(bign * 16)) {
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), nn);
-        let sum = math.complex(0, 0);
-        
-        for (let i = 1; i < nn; i += 2) {
-            let k = add(a, mul(math.complex(i), h));
-            sum = add(sum, mul(math.complex(4, 0), mul(Fs(k), math.sin(mul(k, x)))));
-        }
-
-        for (let i = 2; i < nn - 1; i += 2) {
-            let k = add(a, mul(math.complex(i), h));
-            sum = add(sum, mul(math.complex(2, 0), mul(Fs(k), math.sin(mul(k, x)))));
-        }
-
-        return mul(div(math.complex(2 / Math.PI, 0), mul(h, div(math.complex(3, 0), sum))));
-    }
-
-    return simpsonsRule(math.complex(0, 0), kMax, N);
-}
-function fourierCosineTransform(f, k, N = bign*2, xMax = sqrt(bign *16)) {
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), nn);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < nn; i += 2) {
-            let x = add(a, mul(math.complex(i), h));
-            sum = add(sum, mul(math.complex(4, 0), mul(f(x), math.cos(mul(k, x)))));
-        }
-
-        for (let i = 2; i < nn - 1; i += 2) {
-            let x = add(a, mul(math.complex(i), h));
-            sum = add(sum, mul(math.complex(2, 0), mul(f(x), math.cos(mul(k, x)))));
-        }
-
-        return mul(div(h, math.complex(3, 0)), sum);
-    }
-
-    return simpsonsRule(math.complex(0, 0), xMax, N);
-}
-function fourierTransform(f, k, N = bign*2, xMax = sqrt(bign * 16)) {
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), nn);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < nn; i += 2) {
-            let x = add(a, mul(math.complex(i), h));
-            sum = add(sum, mul(math.complex(4, 0), mul(f(x), math.exp(mul(math.complex(-1, 0), mul(k, x))))));
-        }
-
-        for (let i = 2; i < nn - 1; i += 2) {
-            let x = add(a, mul(math.complex(i), h));
-            sum = add(sum, mul(math.complex(2, 0), mul(f(x), math.exp(mul(math.complex(-1, 0), mul(k, x))))));
-        }
-
-        return mul(div(h, math.complex(3, 0)), sum);
-    }
-
-    return simpsonsRule(math.complex(-xMax, 0), math.complex(xMax, 0), N);
-}
-function fourierBesselTransform(f, k, nu, N = bign*2, rMax = sqrt(bign * 16)) {
-    function simpsonsRule(a, b, nn) {
-        const h = div(sub(b, a), nn);
-        let sum = math.complex(0, 0);
-
-        for (let i = 1; i < nn; i += 2) {
-            let r = add(a, mul(math.complex(i), h));
-            sum = add(sum, mul(math.complex(4, 0), mul(f(r), mul(r, besselj(nu, mul(k, r))))));
-        }
-
-        for (let i = 2; i < nn - 1; i += 2) {
-            let r = add(a, mul(math.complex(i), h));
-            sum = add(sum, mul(math.complex(2, 0), mul(f(r), mul(r, besselj(nu, mul(k, r))))));
-        }
-
-        return mul(div(h, math.complex(3, 0)), sum);
-    }
-
-    return simpsonsRule(math.complex(0, 0), rMax, N);
-}
-
-
-
-
-
 
 
 
@@ -4660,6 +4031,12 @@ function cosc(z) {
     }
     return div(cos(z), z);
 }
+function coscn(z) {
+    if (mag(z) == 0) {
+        return complex(0, 0);
+    }
+    return sub(div(cos(z), z),div(1,x));
+}
 
 function tanc(z) {
     if (mag(z) == 0) {
@@ -4677,9 +4054,15 @@ function cscc(z) {
 
 function secc(z) {
     if (mag(z) == 0) {
-        return complex(1, 0);
+        return complex(0, 0);
     }
     return div(sec(z), z);
+}
+function seccn(z) {
+    if (mag(z) == 0) {
+        return complex(1, 0);
+    }
+    return sub(div(sec(z), z),div(1,z));
 }
 
 function cotc(z) {
@@ -4962,6 +4345,38 @@ function inversecontinued(x){//unr
     return continuedfraction(inversearray(gettonthbit(x,0,floor(bign/2))))
 }
 
+
+
+//https://eprints.nottingham.ac.uk/10641/1/alkauskas_thesis.pdf ADD
+function alkauskasb(n,z){}
+function alkauskash(n,z){return div(alkauskasb(n,z),pow(sub(z,2),add(n,1)))}
+
+function alkauskasd(n,z){}
+function alkauskasq(n,z){return div(mul(alkauskasd(n,z),add(z,1),sub(z,1)),pow(sub(z,0),add(n,1)))}
+
+function alkauskasc(n){return div(alkauskasm(sub(mul(1,log(2)),mul(2,pi(),I,n))),sub(mul(2,log(2)),mul(4,pi(),I,n)))}
+function alkauskasr(n){return add(log(2),mul(2,pi(),I,n))}
+
+function alkauskaszeta(s){/*dyadic zeta*/let fi=0;for(let n=-bign;n<=bign;n++)fi=add(fi,div(alkauskasc(n),pow(alkauskasr(n),s)));return fi;}
+function alkauskaspsif(x){let fi=0;for(let n=-bign;n<=bign;n++)fi=add(fi,mul(alkauskasc(n),exp(mul(2,pi(),I,n,x))));return fi;}
+function alkauskaspsi(x){/*periodic function*/return add(1,sub(x,minkowskiquestionmark(x)))}
+function alkauskasm(s){}//return mul(sub(integral(alkauskasmd,0,sqrt(bign),sub(0,s)),),sqrt(sub(0,s)))}
+//function alkauskasmd(t,s){return div(besselj(1,mul(2,sqrt(mul(s,t)))),sqrt(t9)}
+function alkauskascm(n){/*generating fun of moıment*/return }
+
+function alkauskaszetat(s){/*z_T*/return div(mul(12,cos(mul(pi(),s,0.5)),gamma(s),zeta(s),zeta(add(1,s))),pi(),pi(),2,pow(pi(),s))}
+
+function alkauskasd(n){return div(pow(-1,n),sub(pow(2,add(n,1)),1))}
+function alkauskasa(n){return }
+function alkauskasp(n,y){let fi=0;for(let i=0;i<n;i++)fi=add(fi,mul(alkauskasa(n),pow(y,i)));return add(pow(y,n),fi)}
+
+function alkauskassq(x,t){return sub(mul(sub(2,exp(t)),exp(mul(x,t))),mul(sub(mul(2,exp(t)),1),exp(mul(-1,x,t))))}
+function alkauskascq(n,x){return add(mul(2,pow(x,n)),mul(-1,pow(add(x,1),n)),mul(-2,pow(sub(1,x),n)),pow(sub(0,x),n))}
+
+function alkauskase(n){return div(add(pow(2,n),mul(2,pow(-1,n))),3)}
+function alkauskaso(n){return div(add(pow(2,sub(n,1)),mul(2,pow(-1,sub(n,1)))),3)}
+
+
 function cantor(x,n=bign){
 	if(n==0)return re(x);
 	if(re(x)<=0)return sub(1,cantor(sub(1,x),n))
@@ -4976,6 +4391,17 @@ function cantorcgf(t){let fi=exp(div(t,2));for(let k=1;k<bign;k++)fi=mul(fi,cosh
 function cantorcf(ti){const t=mul(ti,I);let fi=exp(div(t,2));for(let k=1;k<bign;k++)fi=mul(fi,cosh(div(t,pow(3,k))));return fi}
 function cantorpgf(z){const t=log(z);let fi=exp(div(t,2));for(let k=1;k<bign;k++)fi=mul(fi,cosh(div(t,pow(3,k))));return fi}
 function cantorcentralmoment(m){const n=div(m,2);return div(mul(pow(2,add(n,n,-1)),sub(pow(2,mul(2,n)),1),bernoulli(mul(2,n))),n,sub(pow(3,mul(2,n)),1))}
+
+
+
+
+
+
+
+
+
+
+
 
 
 //generalizedcantor(x,3)
@@ -5303,6 +4729,9 @@ function dist(a, b) {
 // Function for 'hypot'
 function hypot(a, b) {
     return sqrt(add(mul(a, a), mul(b, b)));
+}
+function hypoth(a, b) {
+    return sqrt(sub(mul(a, a), mul(b, b)));
 }
 function halfangle(x){return sin(div(x,))}
 function apothem(x,a=1){return mul(2,sqrt(sub(sqr(r),sqr(a))))}
@@ -6716,15 +6145,11 @@ function sqlatticetan(x,d=0.5){
     return mul(fi,exp(div(x,2)));
 }
 function sqqlatticetan(x,d=0.5,dd=0.5){
-    let big = sqrt(bign)
-    let fi=1
-    for(let m=-big;m<=big;m++)
-    for(let n=-big;n<=big;n++)
-    {let c=add(m,mul(I,n))
-    fi=div(mul(fi,sqr(sub(mul(pi(),c))),x)),sub(mul(pi(),add(c,d),x)),sub(mul(pi(),add(c,mul(I,dd)),x))  }
-    return mul(fi,exp(div(x,2)));
+return sqlatticetan(sub(x,mul(dd,add(1,I))),d)
 }
-
+function sqlatticetansqr(x,d=0.5,dd=0.5){
+return mul(sqqlatticetan(x,d,dd),sqqlatticetan(mul(x,I),d,dd))
+}
 
 function whyregeneralizedsin(n,z){
     let fi=z;
@@ -7111,11 +6536,35 @@ function polygonaly0(b,n){return add(mul(-1,polygonalx0(b,n),cos(div(mul(2,pi(),
 function polygonalcos(x,b){return div(polygonaly0(b,rfloor(div(mul(x,b),2,pi()))),sub(tan(x),polygonalx0(b,rfloor(div(mul(x,b),2,pi())))))}
 function polygonalsin(x,b){return div(polygonaly0(b,sub(mul(0.75,b),1,rfloor(div(mul(x,b),2,pi())))),sub(cot(x),polygonalx0(b,sub(mul(0.75,b),1,rfloor(div(mul(x,b),2,pi()))))),-1)}
 function polygonalam(x,b){return hypot(polygonalcos(x,b),polygonalsin(x,b))}
+function polygonalamp(x,b){return hypoth(polygonalcos(x,b),polygonalsin(x,b))}
 function polygonalsec(x,b){return div(1,polygonalcos(x,b))};
 function polygonalcsc(x,b){return div(1,polygonalsin(x,b))};
 function polygonaltan(x,b){return div(olygonalsin(x,b),olygonalcos(x,b))}
 function polygonalcot(x,b){return div(olygonalcos(x,b),olygonalsin(x,b))}
 
+function polygonalcis(x,b){return add(polygonalcos(x,b),mul(I,polygonalsin(x,b)))};
+function polygonalcas(x,b){return add(polygonalcos(x,b),mul(1,polygonalsin(x,b)))};
+//polygonalcosh(x,6)
+
+function polygonalg0h(x,b){return div(sub(sinh(div(mul(2,pi(),sub(rceil(div(mul(x,b),2,pi())),0)),b)),sinh(div(mul(2,pi(),sub(rceil(div(mul(x,b),2,pi())),1)),b))),sub(cosh(div(mul(2,pi(),sub(rceil(div(mul(x,b),2,pi())),0)),b)),cosh(div(mul(2,pi(),sub(rceil(div(mul(x,b),2,pi())),1)),b))))}
+function polygonalf0h(x,y,b){return add(mul(polygonalg0h(x,b),sub(y,sinh(div(mul(2,pi(),sub(rceil(div(mul(x,b),2,pi())),1)),b)))),sinh(div(mul(2,pi(),sub(rceil(div(mul(x,b),2,pi())),1)),b)))}
+    
+    
+function polygonalcosh(x,b){return div(add(mul(-1,polygonalg0h(x,b),cosh(div(mul(2,pi(),sub(rceil(div(mul(x,b),2,pi())),1)),b))),sinh(div(mul(2,pi(),sub(rceil(div(mul(x,b),2,pi())),1)),b))),sub(tanh(x),polygonalg0h(x,b)))}
+function polygonalsinh(x,b){return add(mul(polygonalg0h(x,b),sub(polygonalcosh(x,b),cosh(div(mul(2,pi(),sub(rceil(div(mul(x,b),2,pi())),1)),b)))),sinh(div(mul(2,pi(),sub(rceil(div(mul(x,b),2,pi())),1)),b)))}
+
+function polygonalamh(x,b){return hypot(polygonalcosh(x,b),polygonalsinh(x,b))}
+function polygonalamph(x,b){return hypoth(polygonalcosh(x,b),polygonalsinh(x,b))}
+function polygonalsech(x,b){return div(1,polygonalcosh(x,b))}
+function polygonalcsch(x,b){return div(1,polygonalsinh(x,b))}
+function polygonaltanh(x,b){return div(polygonalsinh(x,b),polygonalcosh(x,b))}
+function polygonalcoth(x,b){return div(polygonalcosh(x,b),polygonalsinh(x,b))}
+function polygonalcish(x,b){return add(polygonalcosh(x,b),mul(I,polygonalsinh(x,b)))}
+function polygonalcash(x,b){return add(polygonalcosh(x,b),mul(1,polygonalsinh(x,b)))}
+
+
+//(polygonalcash(x,5)-polygonalcis(x/i,5))/e^x
+function polygonalamm(x,b){return div(sub(polygonalcash(x,b),polygonalcis(div(x,I),b)),exp(x))}
 
 
 
@@ -8640,13 +8089,13 @@ function rcsignumapply(x,p){
 }
 
 // Complex operations
-function dot(a, b) {
+function dotc(a, b) {
     const aComp = math.complex(a);
     const bComp = math.complex(b);
     return add(mul(aComp.re, bComp.re), mul(aComp.im, bComp.im));
 }
 
-function cross(a, b) {
+function crossc(a, b) {
     const aComp = math.complex(a);
     const bComp = math.complex(b);
     return sub(mul(aComp.re, bComp.im), mul(aComp.im, bComp.re));
@@ -9095,6 +8544,19 @@ function escapetime(func,z,p=z,limit=10,itlim=5){
 		return sub(itlim,-1,div(log(log(mag(x))),log(2)))
 		return 0;
 }
+function escapetimep(func,z,p=z,par=0,limit=10,itlim=bign){
+	let x=z;
+	for(let i=0;i<itlim;i++)
+		{
+			  if(typeof func === "function")  x = func(x,p);
+        else
+			 x = math.evaluate(func,{z:x,c:p,x:x,p:p,n:i,t:par});
+			 if(mag(x)>limit)
+			return sub(mul(i,1),1,div(log(log(mag(x))),log(2)))
+		}
+		return sub(itlim,-1,div(log(log(mag(x))),log(2)))
+		return 0;
+}
 
 
  function warp(x, w1, w2) {
@@ -9318,6 +8780,9 @@ function real(b) {
     return math.complex(b).re;
 }
 
+
+
+
 function imag(b) {
     return math.complex(b).im;
 }
@@ -9379,21 +8844,6 @@ function randcomp() {
     return math.complex(Math.random(),Math.random()) // Generates a random float between 0 and 1
 }
 // Main operations
-function sqr(b) {
-    return mul(b, b);
-}
-
-function sqrm(b) {
-    return sub(mul(b, b), 1.0);
-}
-
-function cum(b) {
-    return mul(b, mul(b, b));
-}
-
-function cumm(b) {
-    return sub(mul(b, mul(b, b)), 1.0);
-}
 
 
 function qnum(a, b) {
@@ -10178,6 +9628,11 @@ function zeromosaic(b, a) {
 function zeromosaic(z,w=1) {
 	const wr = mul(w,round(div(z,w)));
     return mul(pow(sub(z,wr),wr),pow(div(w,2),sub(0,wr)));
+}
+function hexmosaic(z, l=1.76663875) {
+    const h = hexmod(z, l);           // remainder relative to hex lattice
+    const zc = sub(z, h);             // nearest hex center
+    return mul(pow(sub(z, zc), zc), pow(div(l, 2), sub(0, zc)));
 }
 
 
@@ -13333,10 +12788,59 @@ function hurwitznum(x){return nthderiv(,,x)}
    function superellipsed(x){return div(sqrt(add(pow(x,4),1)),pow(add(pow(x,4),1),0.25))}
    
 
+function sqr(x){return mul(x,x);}
+function sqrm(x){return sub(mul(x,x),1);}
+function sqrp(x){return add(mul(x,x),1);}
+
+function cum(x){return mul(x,mul(x,x));}
+function cumm(x){return sub(mul(x,mul(x,x)),1);}
+function cump(x){return add(mul(x,mul(x,x)),1);}
+
+function pcum(x){return mul(add(x,1),mul(add(x,1),add(x,1)));}
+function mcum(x){return mul(sub(x,1),mul(sub(x,1),sub(x,1)));}
+
 function tesseract(x){return mul(mul(x,x),mul(x,x));}
-function tesseractroot(x){return pow(x,0.25)};
+function tesseractm(x){return sub(tesseract(x),1);}
+function tesseractp(x){return add(tesseract(x),1);}
+function tesseractroot(x){return pow(x,0.25);}
+function tsrt(x){return pow(x,0.25);}
+function tsrtm(x){return sub(pow(x,0.25),1);}
+function tsrtp(x){return add(pow(x,0.25),1);}
+
 function penteract(x){return mul(mul(x,x),mul(x,x),x);}
-function penteractroot(x){return pow(x,0.2)};
+function penteractm(x){return sub(penteract(x),1);}
+function penteractp(x){return add(penteract(x),1);}
+function penteractroot(x){return pow(x,0.2);}
+function ptrt(x){return pow(x,0.2);}
+function ptrtm(x){return sub(pow(x,0.2),1);}
+function ptrtp(x){return add(pow(x,0.2),1);}
+
+function hexaract(x){return pow(x,6);}
+function hexaractm(x){return sub(pow(x,6),1);}
+function hexaractp(x){return add(pow(x,6),1);}
+function hexaractroot(x){return pow(x,1/6);}
+
+function heptaract(x){return pow(x,7);}
+function heptaractm(x){return sub(pow(x,7),1);}
+function heptaractp(x){return add(pow(x,7),1);}
+function heptaractroot(x){return pow(x,1/7);}
+
+function octaract(x){return pow(x,8);}
+function octaractm(x){return sub(pow(x,8),1);}
+function octaractp(x){return add(pow(x,8),1);}
+function octaractroot(x){return pow(x,1/8);}
+
+function nonaract(x){return pow(x,9);}
+function nonaractm(x){return sub(pow(x,9),1);}
+function nonaractp(x){return add(pow(x,9),1);}
+function nonaractroot(x){return pow(x,1/9);}
+
+function decaract(x){return pow(x,10);}
+function decaractm(x){return sub(pow(x,10),1);}
+function decaractp(x){return add(pow(x,10),1);}
+function decaractroot(x){return pow(x,0.1);}
+
+
 
 function plex(x){return pow(10,x);}
 function minex(x){return pow(10,sub(0,x));}
@@ -13402,6 +12906,22 @@ function unumilli(x){return mul(1.001,x);}
 function unidecamilli(x){return mul(1.01,x);}
 function unihectomilli(x){return mul(1.1,x);}
 function unipentohectomilli(x){return mul(1.5,x);}
+
+
+
+function duble(x){return mul(2,x);}
+function triple(x){return mul(3,x);}
+function quadruple(x){return mul(4,x);}
+function quintuple(x){return mul(5,x);}
+function sextuple(x){return mul(6,x);}
+function septuple(x){return mul(7,x);}
+function octuple(x){return mul(8,x);}
+function nonuple(x){return mul(9,x);}
+function decuple(x){return mul(10,x);}
+
+
+
+
 function deca(x){return mul(pow(10,1),x);}
 function hecto(x){return mul(pow(10,2),x);}
 function kilo(x){return mul(pow(10,3),x);}
@@ -13941,6 +13461,38 @@ function trigamma(b, epsilon=1e-5) {
     const m3 = math.log(gamma(add(add(b , epsilon) , epsilon)));
     return div(sub(sub(m3, m2), sub(m2, m1)), epsilon*epsilon);
 }
+function tetragamma(b, epsilon = 1e-5) {
+    return polygamma(2,b)
+    const m0 = math.log(gamma(b));
+    const m1 = math.log(gamma(add(b, epsilon)));
+    const m2 = math.log(gamma(add(b, mul(2, epsilon))));
+    const m3 = math.log(gamma(add(b, mul(3, epsilon))));
+    return div(
+        add(
+            sub(add(m3, mul(-3, m2)), add(mul(-3, m1), m0))
+        ),
+        Math.pow(epsilon, 3)
+    );
+}function pentagamma(b, epsilon = 1e-5) {
+     return polygamma(3,b)
+    const m0 = math.log(gamma(b));
+    const m1 = math.log(gamma(add(b, epsilon)));
+    const m2 = math.log(gamma(add(b, mul(2, epsilon))));
+    const m3 = math.log(gamma(add(b, mul(3, epsilon))));
+    const m4 = math.log(gamma(add(b, mul(4, epsilon))));
+    return div(
+        add(
+            add(
+                sub(m4, mul(4, m3)),
+                sub(mul(6, m2), mul(4, m1))
+            ),
+            m0
+        ),
+        Math.pow(epsilon, 4)
+    );
+}
+
+
 function ellipticmodulus(a, b) {
     return pow(div(jacobitheta2(a, b) , jacobitheta1(a, b)), math.complex(2));
 }
@@ -14795,18 +14347,42 @@ function hexmoda(x,l=1.76663875){
 	fi=mul(fi,w);
 	fi=sub(l,modc(add(fi,l),mul(l,2)));
 	fi=mul(fi,w);
-	fi=sub(l,modc(add(fi,l),mul(l,2)));
+    fi=sub(l,modc(add(fi,l),mul(l,2)));
 	fi=mul(fi,w);
-	fi=sub(l,modc(add(fi,l),mul(l,2)));
+    fi=sub(l,modc(add(fi,l),mul(l,2)));
 	fi=mul(fi,w);
-	fi=sub(l,modc(add(fi,l),mul(l,2)));
-	fi=mul(fi,w);
-	fi=sub(l,modc(add(fi,l),mul(l,2)));
 	return sub(0,fi);
 }
 function hexmod(x,l=1.76663875){
 	const w=exp(div(mul(pi(),I),6));
-return div(hexmoda(mul(x,w),l),w)
+return div(hexmoda(mul(modc(div(modc(mul(x,I),mul(l,4)),I),mul(l,sqrt(3),2)),w),l),w)
+}
+
+function hexround(x, l=1.76663875){
+    const y = hexmod(x, l);
+    return sub(x, y);
+}
+
+function hexfloor(x, l=1.76663875){
+    const y = hexmod(x, l);
+    const w = exp(div(pi(), 6).mul(I));
+    // subtract remainder, round towards -∞ along hex grid
+    return sub(x, y).sub(0.5); 
+}
+
+function hexceil(x, l=1.76663875){
+    const y = hexmod(x, l);
+    const w = exp(div(pi(), 6).mul(I));
+    // add remainder, round towards +∞ along hex grid
+    return sub(x, y).add(0.5);
+}
+
+function hexwall(x, l=1.76663875){
+    const y = hexmod(x, l);
+    // project to nearest hexagonal "wall" line
+    const w = exp(div(pi(), 6).mul(I));
+    const z = sub(x, y);
+    return mul(z, w);
 }
 /*
 function trilinemod(x,l=1.76663875)
@@ -15389,23 +14965,92 @@ function besselj(a, b) {
 
 
 const besseljzeroCache = new Map();
-
+function besseljbraid(x,m){return besselj(m,x)}
 function besseljzero(v, m) {
     const key = `${v},${m}`;
     if (besseljzeroCache.has(key)) {
         return besseljzeroCache.get(key);
     }
 
-    const result = newtoninvfp(besselj, 0, mul(add(m, div(v, 2), -0.25), pi()), v);
+    const result = newtoninvfp(besseljbraid, 0, mul(add(m, div(v, 2), -0.25), pi()), v,1e-5,20);
     besseljzeroCache.set(key, result);
     return result;
 }
 
-function circularmembrane(m,n,r,th,t,a=1,c=1,aa=1,bb=0,cc=1,dd=0)
-{const l=div(besseljzero(m,n),a);
-    return mul(add(mul(aa,cos(mul(c,l,t))),mul(bb,sin(mul(c,l,t)))),besselj(m,mul(l,r)),add(mul(cc,cos(mul(m,th))),mul(dd,sin(mul(m,th)))))
+const mathieuZeroCache = new Map();
+function mathieuZeroGuess(m, n, mu0) {
+    const jmn = besseljzero(n, m);
+    return div(pow(jmn, 2), mul(4, pow(sinh(mu0), 2)),100);
+}
+function mathieuradial(q, m, mu0, parity=0) {
+    // parity = 0 → even (cm1)
+    // parity = 1 → odd  (cm2)
+    if (parity === 1) return mathieucm1(q, mu0, m);
+    return mathieucm2(q, mu0, m);
+}
+
+function mathieuzero(m, n, mu0, parity=0) {
+    const key = `${m},${n},${mu0},${parity}`;
+    if (mathieuZeroCache.has(key)) {
+        return mathieuZeroCache.get(key);
     }
 
+    const q0 = mathieuZeroGuess(m, n, mu0);
+//return q0;
+    const f = (q) => mathieuradial(q, m, mu0, parity);
+
+    const result = newtoninvfp(
+        f,          // function
+        q0,         // initial guess
+        1e-6,       // step for derivative
+        1e-8,       // tolerance
+        5          // max iterations
+    );
+
+    mathieuZeroCache.set(key, result);
+    return result;
+}
+
+
+
+
+function circularmembrane(m,n,r,th,t,a=1,c=1,aa=1,bb=0,cc=1,dd=0)
+{const l=div(besseljzero(m,n),1);
+    return mul(add(mul(aa,cos(mul(c,l,t))),mul(bb,sin(mul(c,l,t)))),besselj(m,mul(l,r)),add(mul(cc,cos(mul(m,th))),mul(dd,sin(mul(m,th)))))
+    }
+    //ellipticalmembrane(3,2,re(x),im(x),2,1,1,1)
+    //ellipticalmembrane(4,2,re(x),im(x),2,1,1,1)
+    
+    
+/*    
+function ellipticalmembranea(m,n,x,y,t,a=2,b=1,c=1,amplitude=1,mod=0){
+    const mu0 = (sqrt(sub(sqr(a),sqr(b))) > 0) ? Math.acosh(div(a,sqrt(sub(sqr(a),sqr(b))))) : 0;
+    let mu,th;
+    if(sqrt(sub(sqr(a),sqr(b)))==0){mu=0;th=atan2(y,x)}else{mu=acosh(div(add(sqrt(add(sqr(add(div(x,sqrt(sub(sqr(a),sqr(b)))),1)),sqr(div(y,sqrt(sub(sqr(a),sqr(b))))))),sqrt(add(sqr(sub(div(x,sqrt(sub(sqr(a),sqr(b)))),1)),sqr(div(y,sqrt(sub(sqr(a),sqr(b)))))))),2));th=atan2(div(y,sqrt(sub(sqr(a),sqr(b)))),div(x,sqrt(sub(sqr(a),sqr(b)))))}
+    const q=mul(m,m,0.25,add(1,mul(0.5,sqr(div(sqrt(sub(sqr(a),sqr(b))),a)))))//mul(m,m,0.25,add(1,mul(1,0.5,sqr(add(sqr(div(x,a)),sqr(div(y,b)))))))
+    const angular=(mod==0)?mathieuce(q, th, m):mathieuse(q, th, m)
+    const radial=(mod==0)?mathieucce(q, mu, m):mathieucse(q, mu, m)
+    return mul(amplitude,angular,radial,maxc(0,sub(1,pow(div(mu,mu0),2))),cos(mul(2,pi(),t,sqrt(sabs(q)),div(c,sqrt(sub(sqr(a),sqr(b)))))))
+}
+//ellipticalmembrane(2,2,re(x),im(x),1,2,1)
+function ellipticalmembrane(m,n,x,y,t,a=2,b=1,mode=1,rmode=1,amplitude=1,tension=1,density=1){
+    const f=sqrt(sub(sqr(a),sqr(b)));
+    const mu0=acosh(div(a,f));
+    const c=sqrt(div(tension,density))
+   
+    const rp=sqrt(add(sqr(add(x,f)),sqr(y)))
+    const rm=sqrt(add(sqr(sub(x,f)),sqr(y)))
+    const mu=acosh(div(add(rp,rm),2,f))
+    const v=acos(div(sub(rp,rm),2,f))
+     const q = mathieuzero(m, n, mu0, rmode);
+     const l = mul(4, q);
+    const theta= (mode)?mathieucce(q,mu,m):mathieucse(q,mu,m);
+    const rr= (rmode)?mathieucm1(q,mu,n):mathieucm2(q,mu,n);
+    const w=div(mul(c,sqrt(l)),f)
+   // return rr;
+    return mul(amplitude,rr,theta,cos(mul(w,t)))
+}
+*/
 
 function jinc(x){return div(besselj(1,x),x);}
 function somb(x,y=0){let p = mul(sqrt(add(mul(x,x),mul(y,y))),pi()); return div(besselj(1,p),p,0.5);}
@@ -18181,7 +17826,29 @@ if(startq!==-12341234)fix=add(startq,math.complex(1e-7,1e-7));else  fix = newton
     }
 }
 
+function superfunctionregitff(funcStr, arcfuncStr, a, bf, initialGuess=1,globalc=2, bignc=bign, startq=-12341234, ffgh = 1) {
+     let bs = bf;
+    try {let fi = (bs);if (ffgh) {fi = (bs);} else {fi = (a);}let fix = 12;
+if(startq!==-12341234)fix=add(startq,math.complex(1e-7,1e-7));else  fix = newtonfixe(funcStr, add(bf,math.complex(0.2,0.2)));
+        const globalcd = derv(funcStr, fix);
+        
+        for (let i = 0; i < bignc-1; i++) {
+        fi = funcStr(fi);
+            }
+        
+    //fi= sub(,)
+       fi =math.divide(math.log(math.subtract(fix,fi)),math.log(globalcd))
+fi = math.subtract(fix,pow(globalcd,math.add(1,bf,fi)));
+        
+        for (let i = 0; i < bignc; i++) {
+        fi = arcfuncStr(fi);
+            }
 
+        return fi;
+    } catch (error) {
+        throw new Error('Calculation error: ' + error.message);
+    }
+}
 
 function superfunctionf2(funcStr, a, bf, initialGuess=1,globalc=2, bignc=bign, startq=-12341234, ffgh = 1) {
     let bs = bf;
@@ -18606,7 +18273,9 @@ return ((div(sub(evale(func, { x: add(input,1e-7),y:p }),evale(func, { x: input,
 function derve1(func,input,c){
 return ((div(sub(evale(func, { x: add(input,1e-7),c:c }),math.evaluate(func, { x: input,c:c })),1e-7)));
 }
-
+function kderv(func,input,k){//kaniadakis
+return mul(derv(func,input),sqrt(add(1,k,k,input,input)));
+}
 function qderv(func,input,q){
 return ((div(sub(evale(func, { x: mul(input,q),q:q  }),evale(func, { x: input,q:q  })),sub(mul(q,input),input))));
 }
@@ -18633,13 +18302,21 @@ function qdiffe(func,input,q){return sub(evale(func, { x: mul(input,q),q:q  }),e
 function hdiffe(func,input,h){return sub(evale(func, { x: add(input,h),h:h  }),evale(func, { x: input,h:h  }))}
 function qhdiffe(func,input,q,h){return sub(evale(func, { x: mul(q,add(input,h)),h:h,q:q  }),evale(func, { x: input,h:h,q:q  }))}
 
-
-function qintegral(func,q,b,a=0,N=bign){
+function kintegral(func,k,b,a=0,N=bign){
 	let fi=math.complex(0,0);
 	for(let i=0;i<N;i++)
 	{
 	let xx=add(mul(pow(q,i),a),mul(sub(1,pow(q,i)),b));
 	fi=add(fi,mul(pow(q,i),evale(func,{x:xx,q:q})))
+	}
+	return mul(sub(1,q),sub(b,a),fi);
+}
+function qintegral(func,q,b,a=0,N=bign){
+	let fi=math.complex(0,0);
+	for(let i=0;i<N;i++)
+	{
+	let xx=add(a,mul(sub(b,a),div(i,N)));
+	fi=add(fi,div(evale(func,{x:xx,k:k}),sqrt(add(1,mul(k,k,xx,xx)))))
 	}
 	return mul(sub(1,q),sub(b,a),fi);
 }
@@ -21067,13 +20744,13 @@ function hypergeometricaleph(Al,Bl,Cl,Dl,Tl,Z){
 */
 
 //file:///C:/Users/eserc/Downloads/Certain_integrals_involving_Aleph_function_and_Wri.pdf
-function hypergeımetriclambda(E,V,F,P,k,a){
+function hypergeometriclambda(E,V,F,P,k,a){
 let fi=1;for(let i=0;i<leng(E);i++)fi=mul(fi,add(g(E,i),mul(g(V,i),k)))
          for(let i=0;i<leng(F);i++)fi=div(fi,add(g(F,i),mul(g(P,i),k)))
          return mul(fi,div(pow(a,k),factorial(k)))
 }
 
-function hypergeımetrici1lambda(E,V,F,P,a,z,t,p,d,c,n){
+function hypergeometrici1lambda(E,V,F,P,a,z,t,p,d,c,n){
 let fi=0;
 for(let u=0;u<bign;u++)
 for(let k=0;k<=u;k++)
@@ -21081,13 +20758,13 @@ fi=add(fi,div(mul(hypergeımetriclambda(E,V,F,P,k,a),pow(z,sub(u,k)),pow(t,add(u
 return mul(fi,exp(mul(-1,z,t)),pow(t,add(p,d,-1)))
 }
 
-function hypergeımetrictheta(E,F,k,a){
+function hypergeometrictheta(E,F,k,a){
 let fi=1;for(let i=0;i<leng(E);i++)fi=mul(fi,add(g(E,i),1,k))
          for(let i=0;i<leng(F);i++)fi=div(fi,add(g(F,i),1,k))
          return mul(fi,div(pow(a,k),factorial(k)))
 }
 
-function hypergeımetrici1theta(E,F,a,z,t,p,d,c,n){
+function hypergeometrici1theta(E,F,a,z,t,p,d,c,n){
 let fi=0;
 for(let u=0;u<bign;u++)
 for(let k=0;k<=u;k++)
@@ -22043,8 +21720,7 @@ function schwarztriangle(a,b,c,z){
 	let aa = div(sub(1,a,b,c),2);
 	let bb = div(sub(add(1,b),a,c),2);
 	let cc = sub(1,a);
-	return mul(pow(z,a),div(hypergeometric([add(1,sub(aa,cc)),add(1,sub(bb,cc))],[sub(2,cc)],z),hypergeometric([aa,bb],[cc],z)));
-}
+	return mul(pow(z,a),div(hypergeometric([add(1,sub(aa,cc)),add(1,sub(bb,cc))],[sub(2,cc)],z),hypergeometric([aa,bb],[cc],z)));}
 function schwarztrianglestandartizer(a,b,c){
 		let aa = div(sub(b,a,c,-1),2);
 	let bb = div(sub(1,b,c,a),2);
@@ -22751,7 +22427,7 @@ function bezoutmatrix(P,Q){
   return B;
 }
 
-function transferMatrix(P) {
+function transfermatrix(P) {
   const n = sub(leng(P), 1);
   const a_n = g(P, n);
   const T = Array.from({ length: n }, () => Array(n).fill(0));
@@ -22827,7 +22503,7 @@ function matrixexchange(M) {
   }
   return R;
 }
-function bidiagonal(U, M) {
+function bidiagonalmatrixmatrix(U, M) {
   const n = leng(M);
   const B = Array.from({ length: n }, () => Array(n).fill(0));
   for (let i = 0; i < n; i++) {
@@ -22836,7 +22512,7 @@ function bidiagonal(U, M) {
   }
   return B;
 }
-function lowerbidiagonal(M, D) {
+function lowerbidiagonalmatrix(M, D) {
   const n = leng(M);
   const B = Array.from({ length: n }, () => Array(n).fill(0));
   for (let i = 0; i < n; i++) {
@@ -22845,7 +22521,7 @@ function lowerbidiagonal(M, D) {
   }
   return B;
 }
-function tridiagonal(U, M, D) {
+function tridiagonalmatrix(U, M, D) {
   const n = leng(M);
   const T = Array.from({ length: n }, () => Array(n).fill(0));
   for (let i = 0; i < n; i++) {
@@ -22856,6 +22532,105 @@ function tridiagonal(U, M, D) {
   return T;
 }
 
+function symmetricmatrix(A) {
+  const n = leng(A);
+  const S = Array.from({ length: n }, () => Array(n).fill(0));
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j <= i; j++) {
+      g(S, i)[j] = g(S, j)[i] = g(A, i)[j];
+    }
+  }
+  return S;
+}
+function antisymmetricmatrix(A) {
+  const n = leng(A);
+  const S = Array.from({ length: n }, () => Array(n).fill(0));
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      if (i === j) g(S, i)[j] = 0;
+      else g(S, i)[j] = sub(0, g(A, j)[i]);
+    }
+  }
+  return S;
+}
+function bisymmetricmatrix(A) {
+  const n = leng(A);
+  const B = symmetric(A);
+  const BS = Array.from({ length: n }, () => Array(n).fill(0));
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      g(BS, i)[j] = g(B, sub(n, add(i, 1)))[sub(n, add(j, 1))];
+    }
+  }
+  return symmetric(BS);
+}
+function centrosymmetricmatrix(A) {
+  const n = leng(A);
+  const C = Array.from({ length: n }, () => Array(n).fill(0));
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      g(C, i)[j] = g(A, sub(n, add(i, 1)))[sub(n, add(j, 1))];
+    }
+  }
+  return C;
+}
+function persymmetricmatrix(A) {
+  const n = leng(A);
+  const P = Array.from({ length: n }, () => Array(n).fill(0));
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      g(P, i)[j] = g(A, sub(n, add(j, 1)))[sub(n, add(i, 1))];
+    }
+  }
+  return P;
+}
+//gmul(transpose(orthogonalmatrix([[1,2],[3,4]])),orthogonalmatrix([[1,2],[3,4]]))
+function orthogonalmatrix(A) {
+  const n = leng(A);
+  const Q = Array.from({ length: n }, () => Array(n).fill(0));
+
+  for (let j = 0; j < n; j++) {
+    // Copy column j from A
+    for (let i = 0; i < n; i++) g(Q, i)[j] = g(A, i)[j];
+
+    // Subtract projections onto previous columns
+    for (let k = 0; k < j; k++) {
+      let dot = 0;
+      for (let i = 0; i < n; i++) dot = add(dot, mul(g(Q, i)[j], g(Q, i)[k]));
+      for (let i = 0; i < n; i++) g(Q, i)[j] = sub(g(Q, i)[j], mul(dot, g(Q, i)[k]));
+    }
+
+    // Normalize column
+    let norm = 0;
+    for (let i = 0; i < n; i++) norm = add(norm, pow(g(Q, i)[j], 2));
+    norm = pow(norm, div(1, 2));
+    for (let i = 0; i < n; i++) g(Q, i)[j] = div(g(Q, i)[j], norm);
+  }
+
+  return Q;
+}
+function semiorthogonalmatrix(A) {
+  const m = leng(A);
+  const n = leng(g(A,0));
+  const Q = Array.from({ length: m }, () => Array(n).fill(0));
+
+  for (let j = 0; j < n; j++) {
+    for (let i = 0; i < m; i++) g(Q, i)[j] = g(A, i)[j];
+
+    for (let k = 0; k < j; k++) {
+      let dot = 0;
+      for (let i = 0; i < m; i++) dot = add(dot, mul(g(Q, i)[j], g(Q, i)[k]));
+      for (let i = 0; i < m; i++) g(Q, i)[j] = sub(g(Q, i)[j], mul(dot, g(Q, i)[k]));
+    }
+
+    let norm = 0;
+    for (let i = 0; i < m; i++) norm = add(norm, pow(g(Q, i)[j], 2));
+    norm = pow(norm, div(1, 2));
+    for (let i = 0; i < m; i++) g(Q, i)[j] = div(g(Q, i)[j], norm);
+  }
+
+  return Q;
+}
 
 
 
@@ -22870,19 +22645,295 @@ function tridiagonal(U, M, D) {
 
 
 
+/*
+function matrixadd(A, B) {
+  const n = leng(A);
+  const m = leng(g(A, 0));
+  const C = Array.from({ length: n }, () => Array(m).fill(0));
+  for (let i = 0; i < n; i++)
+    for (let j = 0; j < m; j++)
+      g(C, i)[j] = add(g(A, i)[j], g(B, i)[j]);
+  return C;
+}
+
+}
+function matrixmul(A, B) {
+  const n = leng(A);
+  const m = leng(g(B, 0));
+  const p = leng(g(A, 0));
+  const C = Array.from({ length: n }, () => Array(m).fill(0));
+  for (let i = 0; i < n; i++)
+    for (let j = 0; j < m; j++) {
+      let sum = 0;
+      for (let k = 0; k < p; k++) sum = add(sum, mul(g(A, i)[k], g(B, k)[j]));
+      g(C, i)[j] = sum;
+    }
+  return C;
+}*/
+function matrixadd(A,B){
+  // lift scalars to 1x1 matrices
+  if(!Array.isArray(A)) A=[[A]];
+  else if(!Array.isArray(A[0])) A=[A];  // row vector
+
+  if(!Array.isArray(B)) B=[[B]];
+  else if(!Array.isArray(B[0])) B=[B];  // row vector
+
+  const n=leng(A), m=leng(g(A,0));
+  const C=Array.from({length:n},()=>Array(m).fill(0));
+
+  for(let i=0;i<n;i++)
+    for(let j=0;j<m;j++)
+      g(C,i)[j]=add(g(A,i)[j],g(B,i)[j]);
+
+  // demote to original type
+  if(n===1 && m===1) return g(C,0)[0];      // scalar
+  if(n===1) return g(C,0);                  // row vector
+  if(m===1) return C.map(r=>r[0]);          // column vector
+  return C;                                 // matrix
+}
+
+function matrixmul(A,B){
+  const AisVec = Array.isArray(A) && !Array.isArray(A[0]);
+  const BisVec = Array.isArray(B) && !Array.isArray(B[0]);
+
+  // scalar lifting
+  if(!Array.isArray(A)) A=[[A]];
+  if(!Array.isArray(B)) B=[[B]];
+
+  // dot product cases
+  if(AisVec && BisVec){
+    let s=0;
+    for(let i=0;i<leng(A);i++)
+      s=add(s,mul(A[i],B[i]));
+    return s;
+  }
+
+  if(Array.isArray(A) && Array.isArray(A[0]) && leng(A[0])===1 && BisVec){
+    let s=0;
+    for(let i=0;i<leng(A);i++)
+      s=add(s,mul(A[i][0],B[i]));
+    return s;
+  }
+
+  // lift vectors for matrix rules
+  if(AisVec) A=[A];              // row
+  if(BisVec) B=B.map(x=>[x]);    // column
+
+  const n=leng(A), m=leng(g(B,0)), p=leng(g(A,0));
+  const C=Array.from({length:n},()=>Array(m).fill(0));
+
+  for(let i=0;i<n;i++)
+    for(let j=0;j<m;j++){
+      let s=0;
+      for(let k=0;k<p;k++)
+        s=add(s,mul(g(A,i)[k],g(B,k)[j]));
+      g(C,i)[j]=s;
+    }
+
+  if(n===1&&m===1) return g(C,0)[0];
+  if(n===1) return g(C,0);
+  if(m===1) return C.map(r=>r[0]);
+  return C;
+}
+
+
+
+function matrixsub(A, B) {
+return matrixadd(A,matrixscal(B,-1))}
+function matrixdiv(A, B) {
+  return matrixmul(A, matrixinverse(B));
+}
+function transposed(A) {
+  const n = leng(A);
+  const m = leng(g(A, 0));
+  const T = Array.from({ length: m }, () => Array(n).fill(0));
+  for (let i = 0; i < n; i++)
+    for (let j = 0; j < m; j++)
+      g(T, j)[i] = g(A, i)[j];
+  return T;
+}
+function matrixadjugate(A) {
+  const n = leng(A);
+  const Adj = Array.from({ length: n }, () => Array(n).fill(0));
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      const M = Array.from({ length: n-1 }, () => Array(n-1).fill(0));
+      let r = 0;
+      for (let row = 0; row < n; row++) {
+        if (row === i) continue;
+        let c = 0;
+        for (let col = 0; col < n; col++) {
+          if (col === j) continue;
+          g(M, r)[c] = g(A, row)[col];
+          c = add(c, 1);
+        }
+        r = add(r, 1);
+      }
+      g(Adj, j)[i] = mul(pow(-1, add(i, j)), determinant(M)); // transpose
+    }
+  }
+  return Adj;
+}
+function matrixinverse(A){
+  if(!Array.isArray(A)) return div(1,A);
+
+  const detA = determinant(A);
+  if(detA === 0) return matrixadjugate(A);
+  return matrixscal(matrixadjugate(A), div(1, detA));
+}
+
+function matrixpoweri(A, k) {
+  let n = leng(A);
+  let R = identity(n);
+  let i = 0;
+  while (i < k) {
+    R = matrixmul(R, A);
+    i = add(i, 1);
+  }
+  return R;
+}
+function matrixpower(A, k) {
+return matrixexp(matrixscal(A,k))
+}
+function matrixcofactor(A) {
+  const n = leng(A);
+  const C = Array.from({ length: n }, () => Array(n).fill(0));
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      const M = Array.from({ length: sub(n, 1) }, () => Array(sub(n, 1)).fill(0));
+      let r = 0;
+      for (let row = 0; row < n; row++) {
+        if (row === i) continue;
+        let c = 0;
+        for (let col = 0; col < n; col++) {
+          if (col === j) continue;
+          g(M, r)[c] = g(A, row)[col];
+          c = add(c, 1);
+        }
+        r = add(r, 1);
+      }
+      g(C, i)[j] = mul(pow(-1, add(i, j)), determinant(M));
+    }
+  }
+  return C;
+}
+
+function matrixexp(A) {
+  const n = leng(A);
+  const m = leng(g(A, 0));
+
+  // identity matrix
+  const I = Array.from({ length: n }, (_, i) =>
+    Array.from({ length: m }, (_, j) => (i === j ? 1 : 0))
+  );
+  let result = matrixcopy(I);
+  let term   = matrixcopy(I); // A^0 / 0!
+  let kfact  = 1;
+
+  for (let k = 1; k <= bign; k++) {
+    term = matrixmul(term, A);      // A^k
+    kfact = mul(kfact, k);          // k!
+    const addterm = matrixscal(term, div(1, kfact));
+    result = matrixadd(result, addterm);
+  }
+
+  return result;
+}
+  // make a copy
+  function matrixcopy(X) {
+    const n = leng(X);
+    const m = leng(g(X, 0));
+    const Y = Array.from({ length: n }, () => Array(m).fill(0));
+    for (let i = 0; i < n; i++)
+      for (let j = 0; j < m; j++)
+        g(Y, i)[j] = g(X, i)[j];
+    return Y;
+  }
+function matrixscal(A, s){
+  // scalar case
+  if(!Array.isArray(A)) return mul(A, s);
+
+  // vector case
+  if(!Array.isArray(A[0])) return A.map(x=>mul(x,s));
+
+  // matrix case
+  const n=leng(A), m=leng(g(A,0));
+  const C=Array.from({length:n},()=>Array(m).fill(0));
+  for(let i=0;i<n;i++)
+    for(let j=0;j<m;j++)
+      g(C,i)[j]=mul(g(A,i)[j], s);
+
+  return C;
+}
 
 
 
 
+function vectorscal(v, s) {
+  return v.map(x => mul(x, s));
+}
+function vectoradd(a, b) {
+  return a.map((x, i) => add(x, g(b, i)));
+}
+function vectorsub(a, b) {
+  return a.map((x, i) => sub(x, g(b, i)));
+}
+function vectordot(a, b) {
+  return a.reduce((r, x, i) => add(r, mul(x, g(b, i))), 0);
+}
+function vectornorm(v) {
+  return sqrt(vectordot(v, v));
+}
 
+function vectorcos(a, b) {
+  return div(
+    vectordot(a, b),
+    mul(vectornorm(a), vectornorm(b))
+  );
+}
+function vectorangle(a, b) {
+  return acos(vectorcos(a, b));
+}
 
+function vectorwedge(a, b) {
+  const n = leng(a);
+  const B = Array.from({ length: n }, () => Array(n).fill(0));
 
+  for (let i = 0; i < n; i++)
+    for (let j = i + 1; j < n; j++) {
+      const v = sub(mul(g(a,i), g(b,j)), mul(g(a,j), g(b,i)));
+      g(B,i)[j] = v;
+      g(B,j)[i] = sub(0, v);   // antisymmetry
+    }
 
+  return B;
+}
+function vectorwedgeflat(a, b) {
+  const n = leng(a);
+  const out = [];
+  for (let i = 0; i < n; i++)
+    for (let j = i + 1; j < n; j++)
+      out.push(sub(mul(g(a,i), g(b,j)), mul(g(a,j), g(b,i))));
+  return out;
+}
 
+function vectormap(func, X) {
+  return X.map((_, i) => evale(func, { x: g(X, i) }));
+}
+function polyvectormap(func, ...X) {
+  const n = leng(g(X, 0));
+  return Array.from({ length: n }, (_, i) => {
+    const scope = { x: g(g(X,0), i) };
+    for (let k = 1; k < X.length; k++)
+      scope["x" + k] = g(g(X,k), i);
+    return evaluate(func, scope);
+  });
+}
+    function dot(v1, v2) {
+        return v1.reduce((sum, x, i) => add(sum , mul(x ,v2[i])), 0);
+    }
 
-
-
-
+//ADD HOGE
 
 function slogm(xk){
 	const x = (math.complex(-mag(re(xk)),(-3.367676/2+math.mod(math.complex(xk).im+3.367676/2,3.367676))));
@@ -24347,6 +24398,80 @@ function spheroidall(n, m, gg, isrealnt = 0) {
 }
 
 
+function dominanteigenvector(A, iters = 1000) {
+    const n = A.length;
+
+    // random complex vector
+    let v = Array.from({length:n},()=>({re:Math.random(), im:0}));
+
+    for (let k=0; k<iters; k++) {
+
+        // compute Av
+        let Av = Array(n).fill(0).map(()=>({re:0,im:0}));
+
+        for (let i=0;i<n;i++){
+            for (let j=0;j<n;j++){
+                Av[i] = add(Av[i], mul(A[i][j], v[j]));
+            }
+        }
+
+        // compute norm = sqrt(sum |Av[i]|^2)
+        let s = 0;
+        for (let i=0;i<n;i++){
+            s = add(s, mul(mag(Av[i]), mag(Av[i])));
+        }
+        let norm = Math.sqrt(s);  // real scalar so normal JS sqrt ok
+
+        // normalize: v = Av / norm
+        for (let i=0;i<n;i++){
+            v[i] = div(Av[i], norm);
+        }
+    }
+
+    return v;
+}
+function dominanteigenvalue(A, iters = 1000){
+    let v = dominanteigenvector(A, iters);
+
+    // compute Av
+    let Av = Array(v.length).fill(0).map(()=>({re:0,im:0}));
+    for (let i=0;i<A.length;i++){
+        for (let j=0;j<A.length;j++){
+            Av[i] = add(Av[i], mul(A[i][j], v[j]));
+        }
+    }
+
+    // numerator = v* · (Av)
+    let num = {re:0, im:0};
+    for (let i=0;i<v.length;i++){
+        num = add(num, mul(v[i], Av[i]));
+    }
+
+    // denominator = v* · v  (should be 1 because normalized, but keep general)
+    let den = 0;
+    for (let i=0;i<v.length;i++){
+        den = add(den, mul(mag(v[i]), mag(v[i])));
+    }
+
+    return div(num, den);
+}
+function dominanteigenvectorindex(A){
+    let v = dominanteigenvector(A);
+    let idx = 0;
+    let m = mag(v[0]);
+    for (let i=1;i<v.length;i++){
+        let a = mag(v[i]);
+        if (a > m){
+            m = a;
+            idx = i;
+        }
+    }
+    return idx;
+}
+function dominanteigenvectorvalue(A){
+    let v = dominanteigenvector(A);
+    return v[dominanteigenvectorindex(A)];
+}
 
 function findEigenvectors(matrix, tolerance = 1e-10, maxIterations = 1000) {
     const n = matrix.length;
@@ -25291,7 +25416,32 @@ function slogs2(x){return arctetrregit(sqrt(2),x)}
 function pents2a(x,a=1,N=bign){return superfunctionf(slogs2,tetrs2,a,sub(0,x),0,3,N,1.75,0)}
 function pents2(x,a=1,N=bign){return superfunctionf(slogs2,tetrs2,a,sub(0,x),0,3,N,-2.71,0)}
 
+function rin(x){return superasin(-0.5,x)}
+function crin(x){return superasin(-1/3,x)}
+function qin(x){return superasin(-0.25,x)}
+function arin(x){return superasin(0.5,x)}
+function acrin(x){return superasin(1/3,x)}
+function aqin(x){return superasin(0.25,x)}
 
+function ros(x){return supercos(0.5,x,10)}
+function qos(x){return supercos(0.25,x,10)}
+function cros(x){return supercos(1/3,x,10)}
+function aros(x){return supercos(-0.5,x,10)}
+function acros(x){return supercos(-1/3,x,10)}
+function aqos(x){return supercos(-0.25,x,10)}
+
+function ran(x){return supertan(0.5,x,10)}
+function qan(x){return supertan(0.25,x,10)}
+function cran(x){return supertan(1/3,x,10)}
+function aran(x){return supertan(-0.5,x,10)}
+function acran(x){return supertan(-1/3,x,10)}
+function aqan(x){return supertan(-0.25,x,10)}
+
+function rina(x){return supersin(0.5,asin(sin(x)))}
+function qina(x){return supersin(0.25,asin(sin(x)))}
+
+function rinb(x){return div(add(conj(rina(conj(x))),rina(x)),2)}
+function qinb(x){return div(add(conj(qina(conj(x))),qina(x)),2)}
 
 function supersin(x,a=1,N=bign*5){return superfunctionf(sin,asin,a,x,0,3,N,0,0)}
 
@@ -25305,6 +25455,8 @@ function supersec(x,a=-3.45,N=bign*4){return superfunctionf(sec,asecalt,a,x,0,3,
 function supercos(x,a=0,N=bign,parity=0){if(parity==1)return yconjn(superfunctionregitff(cos,acos,a,conj(iabs(x)),1,3,N,0.73909,0),x);return zconjn(superfunctionregitff(cos,acos,a,iabs(x),1,3,N,0.73909,0),x)}
 function supercosalt(x,a=1,N=bign){return superfunctionrsp("acos(x)",a,mul(-0.5,x),N)}
 
+function superacos(x,a=0,N=bign){return superfunctionf(acos,cos,a,x,0,3,N,0.739085,0)}
+//function supercos(x,a=0,N=bign){return superfunctionf(cos,acos,a,x,0,3,N,0.739085,0)}
 
 function supercot(x,a=1,N=bign*5){return superfunctionf(cot,acot,a,x,0,3,N,0.86033,0)}
 function superacot(x,a=1,N=bign*5){return superfunctionf(acot,cot,a,x,0,3,N,0.86033,0)}
@@ -25319,7 +25471,7 @@ function superzex(x,a=1,N=bign/2){return superfunctionf(zex,lambertw,a,x,0,3,N,0
 
 function superfactorial(x,a=3,N=bign*1.5){return superfunctionf(factorial,arcfactorial,a,x,2,2,N,2,0)}
 function superbarnesg(x,a=5,N=bign/2){return superfunctionf(barnesg,arcbarnesg,a,x,4.54552,4.54552,N,4.54552,0)}//x≈4.54552
-function supergamma(x,a=4,N=bign*1){return superfunctionf(gamma,arcgamma,a,x,3.56238,3.56238,N,3.56238,0)}
+function supergamma(x,a=4,N=bign/2){return superfunctionf(gamma,arcgamma,a,x,3.56238,3.56238,N,3.56238,0)}
 function superfz(x,a=2,N=bign/2){return superfunctionf(fz,arcfz,a,x,0.5,3,N,1,0)}
 
 //https://googology.fandom.com/wiki/User_blog:KyogreRJ/I_named_a_notation_after_my_cat_:D
@@ -25436,6 +25588,77 @@ function sheldontetr(x){return 2}
 
 function supermersenne(x,a=2,N=bign){return superfunctionf(mersenne,arcmersenne,a,x,0,3,N,0,0)}
 
+
+
+
+function dendrite(x){return add(sqr(x),I)}
+function arcdendrite(x){return sqrt(sub(x,I))}
+function basilica(x){return add(sqr(x),-1)}
+function arcbasilica(x){return sqrt(sub(x,-1))}
+function douady(x){return add(sqr(x),add(-0.123,mul(0.745,I)))}
+function arcdouady(x){return sqrt(sub(x,add(-0.123,mul(0.745,I))))}
+function fatrabbit(x){return add(sqr(x),add(-0.12565651,mul(0.6572,I)))}
+function arcfatrabbit(x){return sqrt(sub(x,add(-0.12565651,mul(0.6572,I))))}
+function rabbitsshadow(x){return add(sqr(x),add(-1.1409,mul(-0.2409,I)))}
+function arcrabbitsshadow(x){return ssqrt(sub(x,add(-1.1409,mul(-0.2409,I))))}
+function dragon(x){return add(sqr(x),add(0.353,mul(0.1025,I)))}
+function arcdragon(x){return sqrt(sub(x,add(0.353,mul(0.1025,I))))}
+function siegeldisc(x){return add(sqr(x),add(-0.390541,mul(-0.586788,I)))}
+function arcsiegeldisc(x){return sqrt(sub(x,add(-0.390541,mul(-0.586788,I))))}
+function airplane(x){return add(sqr(x),-1.756)}
+function arcairplane(x){return sqrt(sub(x,-1.756))}
+function cauliflower(x){return add(sqr(x),0.25)}
+function arccauliflower(x){return sqrt(sub(x,0.25))}
+function sanmarcobasilica(x){return add(sqr(x),-0.75)}
+function arcsanmarcobasilica(x){return sqrt(sub(x,-0.75))}
+function sanmarcoshadow(x){return add(sqr(x),-1.75)}
+function arcsanmarcoshadow(x){return sqrt(sub(x,-1.75))}
+
+
+
+
+
+function superdendrite(x,a=1,N=bign){return superfunctionf(dendrite,arcdendrite,a,x,0,3,N,math.complex(1,2),0)}
+function superbasilica(x,a=1,N=bign){return superfunctionf(basilica,arcbasilica,a,x,0,3,N,math.complex(1.61803398874989,0),0)}
+function superdouady(x,a=1,N=bign){return superfunctionf(douady,arcdouady,a,x,0,3,N,math.complex(0.5615,0.6646),0)}
+function superfatrabbit(x,a=1,N=bign){return superfunctionf(fatrabbit,arcfatrabbit,a,x,0,3,N,math.complex(0.8991,0.3657),0)}
+function superrabbitsshadow(x,a=1,N=bign){return superfunctionf(rabbitsshadow,arcrabbitsshadow,a,x,0,3,N,math.complex(-0.1559,-0.6022),0)}
+function superdragon(x,a=1,N=bign){return superfunctionf(dragon,arcdragon,a,x,0,3,N,math.complex(0.5933,0.0864),0)}
+function supersiegeldisc(x,a=1,N=bign){return superfunctionf(siegeldisc,arcsiegeldisc,a,x,0,3,N,math.complex(-0.2486,-0.5341),0)}
+function superairplane(x,a=1,N=bign){return superfunctionf(airplane,arcairplane,a,x,0,3,N,math.complex(0.4271,0),0)}
+function supercauliflower(x,a=1,N=bign){return superfunctionf(cauliflower,arccauliflower,a,x,0,3,N,math.complex(0.5,0),0)}
+function supersanmarcobasilica(x,a=1,N=bign){return superfunctionf(sanmarcobasilica,arcsanmarcobasilica,a,x,0,3,N,math.complex(0.5,0),0)}
+function supersanmarcoshadow(x,a=1,N=bign){return superfunctionf(sanmarcoshadow,arcsanmarcoshadow,a,x,0,3,N,math.complex(0.38196601125,0),0)}
+
+
+
+
+
+function aasd(x){
+    return fastnewtonzero(
+        z => add(pow(z,3), 1),          // f(z) = z^3 + 1
+        z => mul(3, pow(z,2)),          // f'(z) = 3 z^2
+        x,
+        1
+    );
+}
+
+
+function fastnewtonzero(func, deri, xx, N = 5) {
+    let x=xx;
+    for (let i = 0; i < N; i++) {
+        x = sub(x, div(evale(func, x), evale(deri, x)));
+    }
+    return x;
+}
+
+function aasd2(xx) {
+    let x=xx;
+    for (let i = 0; i < 20; i++) {
+        x = sub(x, div(cump(x), mul(3,sqr(x))));
+    }
+    return x;
+}
 
 
 
@@ -25724,6 +25947,7 @@ function kernelbessel(u,z=1,v=1){return besselj(v,sub(u,z))}
 function kernelfaddeev(u,w=1){return div(sub(exp(mul(I,z)),exp(mul(I,w))),sub(u,w))}
 function kernelselberg(u,z=1){return 1}
 function kernellagrange(u,w=1){return div(1,sqr(sub(u,w)))}
+
 //???
 function kernellognormal(u){return div(exp(neg(sqr(log(abs(u))))),mul(abs(u),sqrt(2),pi()))}
 function kernelepan2(u){return div(mul(3,sqr(sub(1,sqr(u)))),4)}
@@ -25777,13 +26001,343 @@ function kernelmatern52(u){return mul(add(1,mul(sqrt(5),u),div(mul(5,sqr(u)),3))
 function kernelquadraticinverse(u){return div(1,add(1,sqr(u)))}
 function kernellogistic2(u){return div(1,add(1,exp(neg(u))))}
 function kernelcosh(u){return div(1,cosh(u))}
-function kernelcubic(u){return pow(sub(1,abs(u)),3)}
-function kernelinverseexpo(u){return exp(neg(abs(u)))}
+function kernelcubic(u){return pow(sub(1,sabs(u)),3)}
+function kernelinverseexpo(u){return exp(neg(sabs(u)))}
 
 
 
 
 
+
+//fouriertransform(sinc,x)+acc(20)
+//fourierTransform(sinc,x)+acc(20)
+
+
+/*
+function fouriertransform(f, k, p=0, N = bign, xMax = sqrt(bign)*5) {
+const kernel = (x) => math.exp(mul(math.complex(0, -1), k , x));
+return fastTransform(kernel, f, xMax, p, N);
+}
+
+// Fourier–Bessel transform: kernel = r * J_nu(k r)
+function fourierbesseltransform(f, k, nu, p=0, N = bign, rMax = sqrt(bign)) {
+const kernel = (r) => mul(r, besselj(nu, k * r));
+return fastTransform(kernel, f, rMax, p, N);
+}
+
+function coshtransform(f, k, p=0, N = bign, xMax = sqrt(bign)) {return fastTransform((x)=>kernelcosh(mul(x,k)), f, xMax, p, N)}
+function cubictransform(f, k, p=0, N = bign, xMax = sqrt(bign)) {return fastTransform((x)=>kernelcubic(mul(x,k)), f, xMax, p, N)}
+*/
+
+////!bateman
+
+function fouriertransform(f,k,p=0,N=bign,xMax=sqrt(bign)){
+  return fastTransform(x=>exp(mul(complex(0,-1),k,x)),f,xMax,p,N)
+}
+
+function inversefouriertransform(f,k,p=0,N=bign,xMax=sqrt(bign)){
+  return fastTransform(x=>exp(mul(complex(0,1),k,x)),f,xMax,p,N)
+}
+
+function cosinefouriertransform(f,k,p=0,N=bign,xMax=sqrt(bign)){
+  return fastTransform(x=>cos(mul(k,x)),f,xMax,p,N)
+}
+
+function sinefouriertransform(f,k,p=0,N=bign,xMax=sqrt(bign)){
+  return fastTransform(x=>sin(mul(k,x)),f,xMax,p,N)
+}
+function laplacetransform(f,s,p=0,N=bign,xMax=sqrt(bign)){
+  return fastTransform(x=>exp(mul(-1,s,x)),f,xMax,p,N)
+}
+
+function inverselaplacetransform(f,s,p=0,N=bign,xMax=sqrt(bign)){
+  return fastTransform(x=>exp(mul(s,x)),f,xMax,p,N)
+}
+
+function bilateralLaplacetransform(f,s,p=0,N=bign,xMax=sqrt(bign)){
+  return fastTransform(x=>exp(mul(-1,s,abs(x))),f,xMax,p,N)
+}
+function mellintransform(f,s,p=0,N=bign,xMax=sqrt(bign)){
+  return fastTransform(x=>pow(x,sub(s,1)),f,xMax,p,N)
+}
+
+function logfouriertransform(f,k,p=0,N=bign,xMax=sqrt(bign)){
+  return fastTransform(x=>exp(mul(complex(0,-1),k,log(x))),f,xMax,p,N)
+}
+function hankeltransform(f,k,nu,p=0,N=bign,rMax=sqrt(bign)){
+  return fastTransform(r=>mul(r,besselj(nu,mul(k,r))),f,rMax,p,N)
+}
+
+function fourierbesseltransform(f,k,nu,p=0,N=bign,rMax=sqrt(bign)){
+  return fastTransform(r=>mul(r,besselj(nu,mul(k,r))),f,rMax,p,N)
+}
+function coshtransform(f,k,p=0,N=bign,xMax=sqrt(bign)){
+  return fastTransform(x=>cosh(mul(k,x)),f,xMax,p,N)
+}
+
+function sinhtransform(f,k,p=0,N=bign,xMax=sqrt(bign)){
+  return fastTransform(x=>sinh(mul(k,x)),f,xMax,p,N)
+}
+
+function airytransform(f,k,p=0,N=bign,xMax=sqrt(bign)){
+  return fastTransform(x=>airy(mul(k,x)),f,xMax,p,N)
+}
+function fractionalfouriertransform(f,a,p=0,N=bign,xMax=sqrt(bign)){
+  return fastTransform(x=>exp(mul(complex(0,-1),pi,a,sqr(x))),f,xMax,p,N)
+}
+
+function chirptransform(f,k,p=0,N=bign,xMax=sqrt(bign)){
+  return fastTransform(x=>exp(mul(complex(0,-1),k,sqr(x))),f,xMax,p,N)
+}
+function powertransform(f,k,p=0,N=bign,xMax=sqrt(bign)){
+  return fastTransform(x=>pow(x,k),f,xMax,p,N)
+}
+
+function cubictransform(f,k,p=0,N=bign,xMax=sqrt(bign)){
+  return fastTransform(x=>kernelcubic(mul(k,x)),f,xMax,p,N)
+}
+function mexicanhattransform(f,k,p=0,N=bign,xMax=sqrt(bign)){
+  return fastTransform(x=>mul(sub(1,sqr(mul(k,x))),exp(mul(-0.5,sqr(mul(k,x))))),f,xMax,p,N)
+}
+
+function morlettransform(f,k,p=0,N=bign,xMax=sqrt(bign)){
+  return fastTransform(x=>mul(exp(mul(complex(0,1),k,x)),exp(mul(-0.5,sqr(x)))),f,xMax,p,N)
+}
+function abeltransform(f,r,p=0,N=bign,xMax=sqrt(bign)){
+  return fastTransform(x=>div(x,sqrt(sub(sqr(x),sqr(r)))),f,xMax,p,N)
+}
+
+function radontransform(f,k,p=0,N=bign,xMax=sqrt(bign)){
+  return fastTransform(x=>delta(sub(x,k)),f,xMax,p,N)
+}
+
+function xraytransform(f,s,p=0,N=bign*2,xMin=-sqrt(bign),xMax=sqrt(bign)){
+  return fastTransform2(x=>delta(sub(x,s)),f,xMin,xMax,p,N)
+}
+
+function poissontransform(f,r,p=0,N=bign*2,xMin=-pi,xMax=pi){
+  return fastTransform2(t=>div(sub(1,sqr(r)),add(1,sub(sqr(r),mul(2,r,cos(t))))),f,xMin,xMax,p,N)
+}
+
+function hermitetransform(f,n,p=0,N=bign*2,xMin=-sqrt(bign),xMax=sqrt(bign)){
+  return fastTransform2(x=>mul(hermitepoly(n,x),exp(mul(-1,sqr(x)))),f,xMin,xMax,p,N)
+}
+
+function hilberttransform(f,p=0,N=bign*2,xMin=-sqrt(bign),xMax=sqrt(bign)){
+  return fastTransform2(x=>div(1,pi,x),f,xMin,xMax,p,N)
+}
+function laguerretransform(f,n,a,p=0,N=bign*2,xMin=0,xMax=bign){
+  return fastTransform2(x=>mul(exp(mul(-1,x)),pow(x,a),laguerrepoly(n,a,x)),f,xMin,xMax,p,N)
+}
+function hartleytransform(f,k,p=0,N=bign*2,xMin=-sqrt(bign),xMax=sqrt(bign)){
+  return fastTransform2(x=>add(cos(mul(k,x)),sin(mul(k,x))),f,xMin,xMax,p,N)
+}
+function abeltransform(f,r,p=0,N=bign*2,xMin=r,xMax=bign){
+  return fastTransform2(x=>div(x,sqrt(sub(sqr(x),sqr(r)))),f,xMin,xMax,p,N)
+}
+function associatedlegendretransform(f,n,m,p=0,N=bign*2,xMin=-1,xMax=1){
+  return fastTransform2(x=>associatedlegendre(n,m,x),f,xMin,xMax,p,N)
+}
+function monolaterallaplacetransform(f,s,p=0,N=bign*2,xMin=0,xMax=bign){
+  return fastTransform2(x=>exp(mul(-1,s,x)),f,xMin,xMax,p,N)
+}
+
+function bilaterallaplacetransform(f,s,p=0,N=bign*2,xMin=-bign,xMax=bign){
+  return fastTransform2(x=>exp(mul(-1,s,abs(x))),f,xMin,xMax,p,N)
+}
+
+function uniformtransform(f,k,p=0,N=bign,xMax=sqrt(bign)){ return fastTransform(x=>kerneluniform(mul(k,x)),f,xMax,p,N) }
+
+function triangulartransform(f,k,p=0,N=bign,xMax=sqrt(bign)){ return fastTransform(x=>kerneltriangular(mul(k,x)),f,xMax,p,N) }
+
+function epanechnikovtransform(f,k,p=0,N=bign,xMax=sqrt(bign)){ return fastTransform(x=>kernelepanechnikov(mul(k,x)),f,xMax,p,N) }
+
+function quartictransform(f,k,p=0,N=bign,xMax=sqrt(bign)){ return fastTransform(x=>kernelquartic(mul(k,x)),f,xMax,p,N) }
+
+function triweighttransform(f,k,p=0,N=bign,xMax=sqrt(bign)){ return fastTransform(x=>kerneltriweight(mul(k,x)),f,xMax,p,N) }
+
+function tricubetransform(f,k,p=0,N=bign,xMax=sqrt(bign)){ return fastTransform(x=>kerneltricube(mul(k,x)),f,xMax,p,N) }
+
+function gaussiantransform(f,k,p=0,N=bign,xMax=sqrt(bign)){ return fastTransform(x=>kernelgaussian(mul(k,x)),f,xMax,p,N) }
+
+function cosinetransform(f,k,p=0,N=bign,xMax=sqrt(bign)){ return fastTransform(x=>kernelcosine(mul(k,x)),f,xMax,p,N) }
+
+function logistictransform(f,k,p=0,N=bign,xMax=sqrt(bign)){ return fastTransform(x=>kernellogistic(mul(k,x)),f,xMax,p,N) }
+
+function sigmoidtransform(f,k,p=0,N=bign,xMax=sqrt(bign)){ return fastTransform(x=>kernelsigmoid(mul(k,x)),f,xMax,p,N) }
+
+function silvermantransform(f,k,p=0,N=bign,xMax=sqrt(bign)){ return fastTransform(x=>kernelsilverman(mul(k,x)),f,xMax,p,N) }
+
+
+
+
+
+//https://en.wikipedia.org/wiki/Loss_functions_for_classification
+
+function exponentialloss(x){return exp(sub(0,x))}
+function exponentiallossc(x){return mul(2,sqrt(mul(x,sub(1,x))))}
+function exponentiallossf(x){return div(sqr(exp(x9),add(1,sqr(exp(x)))))}
+function exponentiallossarcf(x){return div(log(div(x,sub(1,x))),2)}
+
+function logisticloss(x){return div(log(add(1,exp(sub(0,x)))),log(2))}
+function logisticlossc(x){return div(sub(mul(-1,x,log(x)),mul(sub(1,x),log(sub(1,x)))),log(2))}
+function logisticlossf(x){return div(exp(x),add(1,exp(x)))}
+function logisticlossarcf(x){return div(log(div(x,sub(1,x))),1)}
+
+function squareloss(x){return sqr(sub(1,x))}
+function squarelossc(x){return mul(4,x,sub(1,x))}
+function squarelossf(x){return div(add(x,1),2)}
+function squarelossarcf(x){return add(x,x,-1)}
+
+function savageloss(x){return div(1,sqr(add(1,exp(x))))}
+function savagelossc(x){return mul(x,sub(1,x))}
+function savagelossf(x){return div(exp(x),add(1,exp(x)))}
+function savagelossarcf(x){return div(log(div(x,sub(1,x))),1)}
+
+function tangentloss(x){return sqr(sub(mul(2,atan(x)),1))}
+function tangentlossc(x){return mul(4,x,sub(1,x))}
+function tangentlossf(x){return add(0.5,atan(x))}
+function tangentlossarcf(x){return tan(sub(x,0.5))}
+
+function hingeloss(x){return relu(sub(1,x))}
+function hingelossc(x){return mul(2, min(x, sub(1,x)))}
+function hingelossf(x){return sub(mul(2,step(x)),1)}
+function hingelossarcf(x){return add(0.5, mul(0.5, signum(x)))}
+
+//ls
+
+function sqhingeloss(x){ return sqr(relu(sub(1,x))) }
+function sqhingelossc(x){ return sqr(sub(1,abs(sub(mul(2,x),1)))) }
+function sqhingelossf(x){ return sub(mul(2,x),1) }
+function sqhingelossarcf(x){ return div(add(x,1),2) }
+
+function zeroneloss(x){ return step(sub(0,x)) }
+function zeronelossc(x){ return min(x,sub(1,x)) }
+function zeronelossf(x){ return sub(mul(2,x),1) }
+function zeronelossarcf(x){ return div(add(x,1),2) }
+
+
+
+//scoring funcs https://en.wikipedia.org/wiki/Scoring_rule
+
+function logarithmicscore(P,i){return log(g(P,i))}
+function generalizedlogarithmicscore(a,P,i){return div(log(g(P,i)),log(a))}
+function quadraticscore(P,i=0){return sub(mul(2,g(P,i)),vectordot(P,P))}
+function brierscore(P,Y){let Pp=vectorsub(Y,P);return vectordot(Pp,Pp)}
+function sphericalscore(P,i=0){return div(g(P,i),vectornorm(P))}
+function generalizedsphericalscore(a,P,i=0){return div(pow(g(P,i),sub(a,1)),pow(gsum(vectormap("x^("+a+")",P)),div(sub(a,1),a)))}
+function rankedprobabilityscore(P,Y,i){let fi=0;for(let k=0;k<=leng(P);k++){let fid=0;for(let j=0;j<k;j++)fid=add(fid,sub(g(P,j),g(Y,j)));fi=add(fi,sqr(fid));}}
+function pseudosphericalscore(a,P,i){return div(pow(g(P,i),sub(a,1)),gsum(vectormap("x^("+a+")",P)))}
+
+
+function squarederror(x,y){return sqr(sub(x,y))}
+function intervalerror(a,l,x,y){return add(sub(x,l),((re(y)<re(l))?div(sub(l,y),0.5,a):0),((re(y)>re(u))?div(sub(y,x),0.5,a):0))}
+function normalizedintervalerror(a,l,u,y){return div(intervalerror(a,l,u,y),sub(u,l))}
+function absoluteerror(x,y){ return mag(sub(x,y)) }
+function hubererror(d,x,y){ return add(mul(0.5,sqr(min(abs(sub(x,y)),d))),mul(d,sub(abs(sub(x,y)),min(abs(sub(x,y)),d)))) }
+function logcosherror(x,y){ return log(cosh(sub(x,y))) }
+function quantileerror(t,x,y){ return mul(sub(y,x),sub(t,step(sub(y,x)))) }
+function tiltederror(t,x,y){ return mul(abs(sub(y,x)),sub(t,step(sub(x,y)))) }
+
+//ADD ESTİMATORS maybe idk idc kill me already
+
+
+
+
+function tsallisqexp(q,x){
+    if(q==1)return exp(x)
+    if(re(add(1,mul(x,sub(1,q))))>0)return pow(add(1,mul(x,sub(1,q))),div(1,sub(1,q)))
+    if(div(1,sub(1,q))==0)return 1
+    return 0    
+}
+function tsallisqlog(q,x){
+    if(q==1)return log(x)
+     return   div(sub(pow(x,sub(1,q)),1),sub(1,q))
+    
+}
+//kaniadakis
+function kexp(k,x){
+    if(k==0)return exp(x)
+    return pow(add(sqrt(add(1,mul(k,k,x,x))),mul(k,x)),div(1,k))}
+
+
+function klog(k,x){
+    if(k==0)return log(x)
+    return div(sub(pow(x,k),pow(x,sub(0,k))),2,k)}
+
+function ksum(x,k,y){return add(mul(x,sqrt(add(1,mul(k,k,y,y)))),mul(y,sqrt(add(1,mul(k,k,x,x)))))}
+function kprod(x,k,y){return div(sinh(div(mul(asinh(mul(k,x)),asinh(mul(k,y))),k)),k)}
+function ksin(k,x){return div(sub(kexp(k,mul(1,I,x)),kexp(k,mul(-1,I,x))),2,I)}
+function kcos(k,x){return div(add(kexp(k,mul(1,I,x)),kexp(k,mul(-1,I,x))),2)}
+function ktan(k,x){return div(ksin(k,x),kcos(k,x))}
+function kcot(k,x){return div(kcos(k,x),ksin(k,x))}
+function ksec(k,x){return div(1,kcos(k,x))}
+function kcsc(k,x){return div(1,ksin(k,x))}
+
+function kasin(k,x){return mul(-1,I,klog(k,add(sqrt(sub(1,sqr(x))),mul(I,x))))}
+function kacos(k,x){return mul(-1,I,klog(k,add(sqrt(sub(sqr(x),1)),mul(I,x))))}
+function katan(k,x){return mul(i,klog(k,sqrt(div(sub(1,mul(I,x)),add(1,mul(I,x))))))}
+function kacsc(k,x){return mul(-1,I,klog(k,add(sqrt(sub(1,sqr(div(1,x)))),mul(I,div(1,x)))))}
+function kasec(k,x){return mul(-1,I,klog(k,add(sqrt(sub(sqr(div(1,x)),1)),mul(I,div(1,x)))))}
+function kacot(k,x){return mul(i,klog(k,sqrt(div(sub(1,mul(I,div(1,x))),add(1,mul(I,div(1,x)))))))}
+
+function ksinh(k,x){return div(sub(kexp(k,mul(1,x)),kexp(k,mul(-1,x))),2)}
+function kcosh(k,x){return div(add(kexp(k,mul(1,x)),kexp(k,mul(-1,x))),2)}
+function ktanh(k,x){return div(ksinh(k,x),kcosh(k,x))}
+function kcoth(k,x){return div(kcosh(k,x),ksinh(k,x))}
+function ksech(k,x){return div(1,kcosh(k,x))}
+function kcsch(k,x){return div(1,ksinh(k,x))}
+
+function kasinh(k,x){return klog(k,add(sqrt(add(1,sqr(x))),x))}
+function kacosh(k,x){return klog(k,add(sqrt(sub(sqr(x),1)),x))}
+function katanh(k,x){return klog(k,sqrt(add(1,x),sub(1,x)))}
+function kacsch(k,x){return klog(k,add(sqrt(add(1,sqr(div(1,x)))),div(1,x)))}
+function kasech(k,x){return klog(k,add(sqrt(sub(sqr(div(1,x)),1)),div(1,x)))}
+function kacoth(k,x){return klog(k,sqrt(add(1,div(1,x)),sub(1,div(1,x))))}
+
+
+
+function tsallisqsin(q,x){return div(sub(tsallisqexp(q,mul(I,x)),tsallisqexp(q,mul(-1,I,x))),mul(2,I))}
+function tsallisqcos(q,x){return div(add(tsallisqexp(q,mul(I,x)),tsallisqexp(q,mul(-1,I,x))),2)}
+function tsallisqtan(q,x){return div(tsallisqsin(q,x),tsallisqcos(q,x))}
+function tsallisqcot(q,x){return div(tsallisqcos(q,x),tsallisqsin(q,x))}
+function tsallisqsec(q,x){return div(1,tsallisqcos(q,x))}
+function tsallisqcsc(q,x){return div(1,tsallisqsin(q,x))}
+
+//function tsallisqasin(q,x){return mul(-1,I,tsallisqlog(q,add(sqrt(sub(1,sqr(x))),mul(I,x))))}
+//function tsallisqacos(q,x){return mul(-1,I,tsallisqlog(q,add(mul(I,sqrt(sub(1,sqr(x)))),x)))}
+//function tsallisqatan(q,x){return mul(I,tsallisqlog(q,sqrt(div(sub(1,mul(I,x)),add(1,mul(I,x))))))}
+//function tsallisqacsc(q,x){return mul(-1,I,tsallisqlog(q,add(sqrt(sub(1,sqr(div(1,x)))),mul(I,div(1,x)))))}
+//function tsallisqasec(q,x){return mul(-1,I,tsallisqlog(q,add(mul(I,sqrt(sub(1,sqr(div(1,x))))),div(1,x))))}
+//function tsallisqacot(q,x){return mul(I,tsallisqlog(q,sqrt(div(sub(1,mul(I,div(1,x))),add(1,mul(I,div(1,x)))))))}
+
+function tsallisqsinh(q,x){return div(sub(tsallisqexp(q,x),tsallisqexp(q,mul(-1,x))),2)}
+function tsallisqcosh(q,x){return div(add(tsallisqexp(q,x),tsallisqexp(q,mul(-1,x))),2)}
+function tsallisqtanh(q,x){return div(tsallisqsinh(q,x),tsallisqcosh(q,x))}
+function tsallisqcoth(q,x){return div(tsallisqcosh(q,x),tsallisqsinh(q,x))}
+function tsallisqsech(q,x){return div(1,tsallisqcosh(q,x))}
+function tsallisqcsch(q,x){return div(1,tsallisqsinh(q,x))}
+
+//function tsallisqasinh(q,x){return tsallisqlog(q,add(x,sqrt(add(1,sqr(x)))))}
+//function tsallisqacosh(q,x){return tsallisqlog(q,add(x,sqrt(sub(sqr(x),1))))}
+//function tsallisqatanh(q,x){return tsallisqlog(q,sqrt(div(add(1,x),sub(1,x))))}
+//function tsallisqacsch(q,x){return tsallisqlog(q,add(div(1,x),sqrt(add(1,sqr(div(1,x))))))}
+//function tsallisqasech(q,x){return tsallisqlog(q,add(div(1,x),sqrt(sub(sqr(div(1,x)),1))))}
+//function tsallisqacoth(q,x){return tsallisqlog(q,sqrt(div(add(1,div(1,x)),sub(1,div(1,x)))))}
+
+
+
+
+
+
+
+function crystalballa(x,a,n,xx,s){return mul(pow(div(n,sabs(a)),n),exp(div(sqr(a),-2)))}
+function crystalballb(x,a,n,xx,s){return sub(div(n,sabs(a)),sabs(a));}
+function crystalballn(x,a,n,xx,s){return div(1,s,add(crystalballc(x,a,n,xx,s),crystalballd(x,a,n,xx,s)))}
+function crystalballc(x,a,n,xx,s){return div(mul(n,exp(div(sqr(a),-1))),sabs(a),sub(n,1))}
+function crystalballd(x,a,n,xx,s){return mul(sqrt(div(pi(),2)),add(1,erf(div(sabs(a),sqrt(2)))))}
+
+function crystalball(x,a,n,xx,s){return (re(div(sub(x,xx),s))>re(sub(0,a)))?mul(crystalballn(x,a,n,xx,s),exp(div(sqr(sub(x,xx)),-2,s,s))):mul(crystalballn(x,a,n,xx,s),crystalballa(x,a,n,xx,s),pow(sub(crystalballb(x,a,n,xx,s),div(sub(x,xx),s)),sub(0,n))) }
 
 
 
@@ -25915,11 +26469,12 @@ function arcregincbeta(x,a,b){return newtoninv("regincbeta(x,"+a+","+b+")",x,div
 //VM VARİANCETOMEANRAİTO VAR/mean
 //V2 SECOND ORDER COEFVAR SQRT(VAR/(VAR+MEAN^2))
 //Z STANDART SCORE Z=(X-MEAN)/STANDART
+//qdf = quantile derivative 
 
 //FANO CAFTIR 
 //STUDENTİZED RESİDUAL
 //MAHALANOBİS DİSTACE
-/*Coefficient of variation
+/*
 Information coefficient
 Jensen's alpha
 Modern portfolio theory
@@ -25930,7 +26485,7 @@ Sortino ratio
 Sterling ratio
 Treynor ratio
 Upside potential ratio
-V2 ratio*/
+*/
 
 //https://en.wikipedia.org/wiki/Residence_time_(statistics)
 //https://en.wikipedia.org/wiki/Mean_time_between_failures
@@ -25979,13 +26534,17 @@ function skewnormaldistmgf(c,w,a,t){return mul(2,exp(add(mul(c,t),mul(w,w,t,t,0.
 function skewnormaldistmgf(c,w,a,t){return mul(exp(sub(mul(I,t,c),mul(t,t,w,w,0.5))),add(1,mul(I,erfi(div(mul(d,w,t),sqrt(2))))))}
 function skewnormaldistpgf(c,w,a,z){return mul(2,exp(add(mul(c,log(z)),mul(w,w,log(z),log(z),0.5))),ncdf(mul(w,d,log(z))))}
 
-//ADD EASY https://en.wikipedia.org/wiki/Log-normal_distribution
+function crystallballpdf(a,n,m,s,x){return crystalball(x,a,n,m,s)}
+function doublelomaxpdf(x){return div(1,2,sqr(add(1,sabs(x))))}
+function doublelomaxcdf(x){return (re(x)>0)?sub(1,div(2,add(1,x))):div(1,2,sub(1,x))}
+function doublelomaxrawmoment(a){return mul(gamma(add(1,a)),gamma(sub(1,a)))}
+//ADD EASY 
 //https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution
 
 //ADD https://en.wikipedia.org/wiki/Complex_normal_distribution
 //ADD https://en.wikipedia.org/wiki/Complex_Wishart_distribution
 //https://en.wikipedia.org/wiki/Ratio_distribution#Complex_normal_ratio
-//https://en.wikipedia.org/wiki/Wishart_distribution
+
 
 function betadistpdf(a,b,x){return div(mul(pow(x,sub(a,1)),pow(sub(1,x),sub(b,1))),beta(a,b))}
 //function betadistpdf4(a,b,aa,c,y){const x=div(sub(y,a),sub(c,a));return div( div(mul(pow(x,sub(a,1)),pow(sub(1,x),sub(b,1))),beta(a,b)),sub(aa,c))}
@@ -26369,6 +26928,27 @@ function conwaymaxwellpoissoncf(l,v,t){return div(conwaymaxwellpoissonz(mul(l,ex
 function conwaymaxwellpoissonpgf(l,v,z){return div(conwaymaxwellpoissonz(mul(l,z),v),conwaymaxwellpoissonz(l,v))}
 function conwaymaxwellpoissonmoment(l,v,m){return div(mul(pow(l,div(m,2)),besseli(m,mul(2,sqrt(l)))),besseli(0,mul(2,sqrt(l))))}
 function conwaymaxwellpoissonmaxlike(l,v,X){const s1=gsum(X);const s2=glogfactorialsum(X);return mul(pow(l,s1),exp(mul(-1,v,s2)),pow(conwaymaxwellpoissonz(l,v),sub(0,n)))}
+
+function maxwellboltzmannpdf(a,x){return mul(sqrt(div(2,pi())),div(cum(x),a,a,a),exp(div(sqr(x),-2,a,a)))}
+function maxwellboltzmanncdf(a,x){return sub(erf(div(x,sqr(2),a)),mul(sqrt(div(2,pi())),div(x,a),exp(div(sqr(x),-2,a,a))))}
+function maxwellboltzmannmean(a){return mul(2,a,sqrt(div(2,pi())))}
+function maxwellboltzmannmode(a){return mul(2,a,sqrt(div(2,pi())))}
+function maxwellboltzmannvar(a){return mul(2,a,sqrt(div(2,pi())))}
+function maxwellboltzmannskew(a){return mul(2,a,sqrt(div(2,pi())))}
+function maxwellboltzmannexcesskurtosis(a){return mul(2,a,sqrt(div(2,pi())))}
+function maxwellboltzmannkurtosis(a){return mul(2,a,sqrt(div(2,pi())))}
+function maxwellboltzmannentropy(a){return add(log(mul(a,sqrt(mul(2,pi)))),0.5772156649,-0.5)}
+
+//ADD more in terms pf energy etc https://en.wikipedia.org/wiki/Maxwell%E2%80%93Boltzmann_distribution
+
+function logarithmicdistpmf(p,x){return div(pow(p,k),-1,log(sub(1,p)),k)}
+function logarithmicdistcdf(p,x){return add(1,div(incbeta(p,add(k,1),0),log(sub(1,p))))}
+
+function logarithmicdistcf(p,x){return div(log(sub(1,mul(p,exp(I,t)))),log(sub(1,p)))}
+function logarithmicdistcgf(p,x){return log(div(log(sub(1,mul(p,exp(1,t)))),log(sub(1,p))))}
+function logarithmicdistmgf(p,x){return div(log(sub(1,mul(p,exp(1,t)))),log(sub(1,p)))}
+function logarithmicdistpgf(p,x){return div(log(sub(1,mul(p,log(t)))),log(sub(1,p)))}
+
 
 function hermitedistpmf(a1,a2,x){let fi=math.complex(0,0);for(let j=0;j<=div(x,2);j++)fi=add(fi,div(mul(pow(a1,sub(x,j,j)),pow(a2,j)),factorial(sub(x,j,j)),factorial(j)));return mul(fi,exp(sub(0,a1,a2)));}
 function hermitedistcdf(a1,a2,x){let fi=math.complex(0,0);for(let j=0;j<=div(x,1);j++)fi=add(fi,div(hermitedistpmf(a1,a2,j),exp(sub(0,a1,a2))));return mul(fi,exp(sub(a2,a1)));}
@@ -26796,7 +27376,7 @@ function kolmogorovdistpdfm(x){return derv(kolmogorovdistcdfc,x)}
 //https://www.youtube.com/watch?v=YTQKbgxbtiw
 function kolmogorovdistrawmoment(s){return mul(s,pow(2,div(s,-2)),sub(1,pow(2,sub(1,s))),gamma(div(s,2)),zeta(s))}
 
-
+//kuiperdistpdf(sqrt(x/i))
 function kuiperdistpdf(x){let fi=0;for(let n=1;n<bign*5;n++)fi=add(fi,mul(n,n,sub(3,mul(4,n,n,x,x)),exp(mul(-2,n,n,x,x))));return mul(-8,x,fi)}
 
 function kuiperdistrawmoment(s){return mul(zeta(s),pow(2,div(s,-2)),s,sub(s,1),gamma(div(s,2)))}
@@ -27033,9 +27613,36 @@ function fisherszmode(d1,d2){return 0}
  function fisherszmean(d1,d2){return div(sub(div(1,d2),div(1,d1)),2)} 
 function fisherszvar(d1,d2){return div(add(div(1,d1),div(1,d2)),2)} 
 
- 
-//ADD https://en.wikipedia.org/wiki/Hypoexponential_distribution
-//https://en.wikipedia.org/wiki/Phase-type_distribution#Coxian_distribution
+function exponentialpdf(l,x){return mul(l,exp(mul(-1,x)))}
+function exponentialpdf(l,x){return sub(1,exp(mul(-1,l,x)));}
+function exponentialquantile(l,x){return div(log(sub(1,x)),-1,l)}
+function exponentialmean(l){return div(1,l)}
+function exponentialmedian(l){return div(log(2),l)}
+function exponentialmode(l){return 0}
+function exponentialvar(l){return div(1,l,l)}
+function exponentialskew(l){return 2}
+function exponentialexcesskurtosis(l){return 6}
+function exponentialkurtosis(l){return 9}
+function exponentialentropy(l){return sub(1,log(l))}
+function exponentialmgf(l,t){return div(l,sub(l,t))}
+function exponentialcgf(l,t){return log(div(l,sub(l,t)))}
+function exponentialcf(l,t){return div(l,sub(l,mul(I,t)))}
+function exponentialpgf(l,t){return div(l,sub(l,log(t)))}
+function exponentialfisherinfo(l){return div(1,l,l)}
+function exponentialfisherkullbackleiblerdiv(l0,l){return add(log(div(l0,l)),div(l,l0),-1)}
+function exponentialexpectedshprtfall(l){return div(sub(1,log(sub(1,p))),l)}
+
+
+function hyperexponentialpdf(L,P,x){let fi=0;for(let i=0;i<leng(L);i++)fi=add(fi,div(mul(exponentialpdf(g(L,i),x),g(P,i)),gsum(P)))}
+function hyperexponentialcdf(L,P,x){let fi=0;for(let i=0;i<leng(L);i++)fi=add(fi,div(mul(exponentialcdf(g(L,i),x),g(P,i)),gsum(P)))}
+function hyperexponentialmean(L,P){let fi=0;for(let i=0;i<leng(L);i++)fi=add(fi,div(g(P,i),g(L,i),gsum(P)));return fi;}
+function hyperexponentialvar(L,P){let fi=0;for(let i=0;i<leng(L);i++)fi=add(fi,div(g(P,i),g(L,i),gsum(P)));return sqr(fi);}
+  
+function hypoexponentialpdf(L,x){let fi=0;for(let i;i<leng(L);i++){let fid=1;for(let j=1;j<leng(L);j++)if(i!=j)fid=mul(fid,div(g(L,j),sub(g(L,j),g(L,i))));fi=add(fi,mul(fid,g(L,i),exp(mul(-1,x,g(L,i)))))};return fi}
+function hypoexponentialmean(L,x){let fi=0;for(let i;i<leng(L);i++)fi=add(fi,div(1,g(L,i)));return fi}
+function hypoexponentialvar(L,x){let fi=0;for(let i;i<leng(L);i++)fi=add(fi,div(1,sqr(g(L,i))));return fi}
+function hypoexponentialskew(L,x){let fi=0;for(let i;i<leng(L);i++)fi=add(fi,div(1,sqr(g(L,i))));let fid=0;for(let i;i<leng(L);i++)fid=add(fid,div(1,cum(g(L,i))));return mul(2,div(fid,pow(fi,1.5)))}
+
 
 function fdistpdf(d1,d2,x){return div(sqrt(div(mul(pow(mul(d1,x),d1),pow(d2,d2)),pow(add(mul(d1,x),d2),add(d1,d2)))),x,beta(div(d1,2),div(d2,2)))}
 function fdistcdf(d1,d2,x){return regincbeta(div(mul(d1,x),add(mul(d1,x),d2)),div(d1,2),div(d2,2))}
@@ -27409,11 +28016,275 @@ function holtsmarkcf(c,m,t){return exp(sub(mul(I,t,m),pow(sabs(mul(c,t)),1.5)))}
 function holtsmarkcf2(t,C){return exp(sub(mul(I,t,g(C,1)),pow(sabs(mul(g(C,0),t)),1.5)))}
 function holtsmarkcf2k(t,C){return mul(exp(mul(-1,I,t,g(C,2))), holtsmarkcf2(t,C))}
 function holtsmarkpdf(c,m,x){return div(integral( holtsmarkcf2k,-sqrt(bign),sqrt(bign),[c,m,x]),2,pi())}
+function holtsmarkcf(c,m,t){return exp(sub(mul(t,m),pow(sabs(mul(c,div(t,I))),1.5)))}
+function holtsmarkmgf(c,m,t){return exp(sub(mul(t,m),pow(sabs(mul(c,div(t,I))),1.5)))}
+function holtsmarkcgf(c,m,t){return (sub(mul(t,m),pow(sabs(mul(c,div(t,I))),1.5)))}
+function holtsmarkpgf(c,m,t){return exp(sub(mul(log(t),m),pow(sabs(mul(c,div(log(t),I))),1.5)))}
 
 function astablecf(a,c,m,t){return exp(sub(mul(I,t,m),pow(sabs(mul(c,t)),a)))}
 function astablecf2(t,C){return exp(sub(mul(I,t,g(C,1)),pow(sabs(mul(g(C,0),t)),g(C,3))))}
 function astablecf2k(t,C){return mul(exp(mul(-1,I,t,g(C,2))), astablecf2(t,C))}
 function astablepdf(a,c,m,x){return div(integral( astablecf2k,-sqrt(bign),sqrt(bign),[c,m,x,a]),2,pi())}
+function astablemgf(a,c,m,t){return exp(sub(mul(t,m),pow(sabs(mul(c,div(t,I))),a)))}
+function astablecgf(a,c,m,t){return (sub(mul(t,m),pow(sabs(mul(c,div(t,I))),a)))}
+function astablepgf(a,c,m,t){return exp(sub(mul(log(t),m),pow(sabs(mul(c,div(log(t),I))),a)))}
+
+function stablecf(a,b,c,m,t){return exp(sub(mul(I,t,m),mul(pow(sabs(mul(c,t)),a),sub(1,mul(I,b,signum(t),tan(mul(a,pi(),0.5)))))))}
+function stablecf2(t,C){return exp(sub(mul(I,t,g(C,3)),mul(pow(sabs(mul(g(C,2),t)),g(C,0)),sub(1,mul(I,g(C,1),signum(t),tan(mul(g(C,0),pi(),0.5)))))))}
+function stablecf2k(t,C){return mul(exp(mul(-1,I,t,g(C,4))), stablecf2(t,C))}
+function stablepdf(a,b,c,m,x){return div(integral( stablecf2k,-sqrt(bign),sqrt(bign),[a,b,c,m]),2,pi())}
+function stablemgf(a,b,c,m,t){return exp(sub(mul(I,div(t,I),m),mul(pow(sabs(mul(c,div(t,I))),a),sub(1,mul(I,b,signum(div(t,I)),tan(mul(a,pi(),0.5)))))))}
+function stablecgf(a,b,c,m,t){return (sub(mul(I,div(t,I),m),mul(pow(sabs(mul(c,div(t,I))),a),sub(1,mul(I,b,signum(div(t,I)),tan(mul(a,pi(),0.5)))))))}
+function stablepgf(a,b,c,m,t){return exp(sub(mul(I,div(log(t),I),m),mul(pow(sabs(mul(c,div(log(t),I))),a),sub(1,mul(I,b,signum(div(log(t),I)),tan(mul(a,pi(),0.5)))))))}
+
+//geometricstablepdf(1.45,1.72,1.21,1.02,x)
+function geometricstablecf(a,b,l,m,t){return div(1,add(1,mul(pow(l,     a),pow(sabs(t),a     ),sub(1,mul(I,b     ,tan(div(mul(a     ,pi()),2)),signum(t)))),mul(t,I,m     )))}
+function geometricstablecf2(t,C){     return div(1,add(1,mul(pow(g(C,2),g(C,0)),pow(sabs(t),g(C,0)),sub(1,mul(I,g(C,1),tan(div(mul(g(C,0),pi()),2)),signum(t)))),mul(t,I,g(C,3))))}
+function geometricstablecf2k(t,C){return mul(exp(mul(-1,I,t,g(C,4))), geometricstablecf2(t,C))}
+function geometricstablepdf(a,b,l,m,x){return div(integral( geometricstablecf2k,-sqrt(bign),sqrt(bign),[a,b,l,m,x]),2,pi())}
+function geometricstablemgf(a,b,l,m,t){return div(1,add(1,mul(pow(l,     a),pow(sabs(div(t,I)),a     ),sub(1,mul(I,b     ,tan(div(mul(a     ,pi()),2)),signum(div(t,I))))),mul(div(t,I),I,m     )))}
+function geometricstablecgf(a,b,l,m,t){return log(div(1,add(1,mul(pow(l,     a),pow(sabs(div(t,I)),a     ),sub(1,mul(I,b     ,tan(div(mul(a     ,pi()),2)),signum(div(t,I))))),mul(div(t,I),I,m     ))))}
+function geometricstablepgf(a,b,l,m,t){return div(1,add(1,mul(pow(l,     a),pow(sabs(div(log(t),I)),a     ),sub(1,mul(I,b     ,tan(div(mul(a     ,pi()),2)),signum(div(log(t),I))))),mul(div(log(t),I),I,m     )))}
+
+function linnikcf(a,b,l,t){let m=0;return div(1,add(1,mul(pow(l,     a),pow(sabs(t),a     ),sub(1,mul(I,b     ,tan(div(mul(a     ,pi()),2)),signum(t)))),mul(t,I,m     )))}
+function linnikcf2(t,C){     return div(1,add(1,mul(pow(g(C,2),g(C,0)),pow(sabs(t),g(C,0)),sub(1,mul(I,g(C,1),tan(div(mul(g(C,0),pi()),2)),signum(t)))),mul(t,I,g(C,3))))}
+function linnikcf2k(t,C){return mul(exp(mul(-1,I,t,g(C,4))), linnikcf2(t,C))}
+function linnikpdf(a,b,l,x){let m=0;return div(integral( linnikcf2k,-sqrt(bign),sqrt(bign),[a,b,l,m,x]),2,pi())}
+function linnikmgf(a,b,l,t){let m=0;return div(1,add(1,mul(pow(l,     a),pow(sabs(div(t,I)),a     ),sub(1,mul(I,b     ,tan(div(mul(a     ,pi()),2)),signum(div(t,I))))),mul(div(t,I),I,m     )))}
+function linnikcgf(a,b,l,t){let m=0;return log(div(1,add(1,mul(pow(l,     a),pow(sabs(div(t,I)),a     ),sub(1,mul(I,b     ,tan(div(mul(a     ,pi()),2)),signum(div(t,I))))),mul(div(t,I),I,m     ))))}
+function linnikpgf(a,b,l,t){let m=0;return div(1,add(1,mul(pow(l,     a),pow(sabs(div(log(t),I)),a     ),sub(1,mul(I,b     ,tan(div(mul(a     ,pi()),2)),signum(div(log(t),I))))),mul(div(log(t),I),I,m     )))}
+
+function generalizedchisqrcf(W,K,L,s,m,t){let fid=1;for(let j=0;j<leng(W);j++)fid=mul(fi,pow(sub(1,mul(2,I,g(W,j),t)),div(g(K,2),2)));let fi=0;for(let j=0;j<leng(W);j++)fi=add(fi,div(mul(g(W,j),g(L,j)),sub(1,mul(2,g(W,j),t))));return div(exp(add(mul(t,add(m,fi)),div(mul(x,x,t,t),2))),fid)}
+function generalizedchisqrcf2(t,A){return generalizedchisqrcf(g(A,0),g(A,1),g(A,2),g(A,3),g(A,4),t)}
+function generalizedchisqrcf2k(t,A){return mul(exp(mul(-1,I,t,g(A,5))), generalizedchisqrcf2(t,A))}
+function generalizedchisqrpdf(W,K,L,s,m,x){return div(integral( generalizedchisqrcf2k,-sqrt(bign),sqrt(bign),[W,K,L,s,m,x]),2,pi())}
+function generalizedchisqrmgf(W,K,L,s,m,t){return generalizedchisqrcf(W,K,L,s,m,div(t,I))}
+function generalizedchisqrpgf(W,K,L,s,m,t){return generalizedchisqrmgf(W,K,L,s,m,log(t))}
+function generalizedchisqrcgf(W,K,L,s,m,t){return log(generalizedchisqrmgf(W,K,L,s,m,t))}
+function generalizedchisqrmean(W,K,L,s,m){let fi=0;for(let j=0;j<leng(W);j++);fi=add(fi,mul(g(W,j),add(g(L,j),g(K,j))));return add(fi,m)}
+function generalizedchisqrvar(W,K,L,s,m){let fi=0;for(let j=0;j<leng(W);j++);fi=add(fi,mul(g(W,j),g(W,j),add(g(L,j),g(L,j),g(K,j))));return add(fi,fi,sqr(s))}
+
+function wilkslambdacf(A,B,t){let fi=1;for(let i=0;i<leng(A);i++)fi=mul(fi,div(beta(add(g(A,i),mul(I,t)),g(B,i)),beta(g(A,i),g(B,i))));return fi}
+function wilkslambdacf2(C,t){return wilkslambdacf(g(C,0),g(C,1),t)}
+function wilkslambdacf2k(C,t){return mul(exp(mul(-1,I,t,g(C,2))), wilkslambdacf2(t,A))}
+function wilkslambdapdf(A,B,t){return div(integral( wilkslambdacf2k,-sqrt(bign),sqrt(bign),[A,B]),2,pi())}
+function wilkslambdacf2c(C,t){return mul(-1,div(mul(exp(mul(-1,t,g(C,2))),wilkslambdacf2(C,t)),t))}
+function wilkslambdacf2r(C,t){return div(add(wilkslambdacf2c(C,t),conj(wilkslambdacf2c(C,conj(t)))),2)}
+function wilkslambdacdf(A,B,t){return sub(0.5,div(integral( wilkslambdacf2r,-sqrt(bign),sqrt(bign),[A,B]),pi()))}
+
+function studentstpdf(v,x){return div(mul(gamma(div(add(v,1),2)),pow(add(1,div(sqr(x),v)))),sqrt(v),sqrt(pi()),gamma(div(v,2)))}
+function studentstcdf(v,x){return add(0.5,div(mul(gamma(div(add(v,1),2)),hypg21(0.5,div(add(v,1),2),1.5,div(sqr(x),-1,v))),sqrt(pi()),sqrt(v),gamma(div(v,2))))}
+function studentstmean(v){return 0}
+function studentstmode(v){return 0}
+function studentstmedian(v){return 0}
+function studentstskew(v){return 0}
+function studentstvar(v){return div(1,sub(v,2))}
+function studentstexcesskurtosis(v){return div(6,sub(v,4))}
+function studentstkurtosis(v){return add(3,div(6,sub(v,4)))}
+function studentstentropy(v){return add(div(mul(add(v,1),sub(digamma(div(add(v,1),2)),digamma(div(v,2)))),2),log(mul(sqrt(v),beta(div(v,2),0.5))))}
+function studentstcf(v,t){return div(mul(pow(mul(sqrt(v),sabs(t)),div(v,2)),besselk(div(v,2),mul(sqrt(v),sabs(t)))),gamma(div(v,2)),pow(2,sub(div(v,2),1)))}
+function studentstmgf(v,t){return div(mul(pow(mul(sqrt(v),sabs(div(t,I))),div(v,2)),besselk(div(v,2),mul(sqrt(v),sabs(div(t,I))))),gamma(div(v,2)),pow(2,sub(div(v,2),1)))}
+function studentstcgf(v,t){return log(div(mul(pow(mul(sqrt(v),sabs(div(t,I))),div(v,2)),besselk(div(v,2),mul(sqrt(v),sabs(div(t,I))))),gamma(div(v,2)),pow(2,sub(div(v,2),1))))}
+function studentstpgf(v,t){return div(mul(pow(mul(sqrt(v),sabs(div(log(t),I))),div(v,2)),besselk(div(v,2),mul(sqrt(v),sabs(div(log(t),I))))),gamma(div(v,2)),pow(2,sub(div(v,2),1)))}
+function studentstrawmoment(v,k){return div(mul(gamma(div(add(k,1),2)),gamma(div(sub(v,k),2)),pow(v,div(k,2))),sqrt(pi(),gamma(div(v,2))))}
+
+function lsstpdf(m,s,v,x){return div(studentstpdf(v,div(sub(x,m),s)),s)}
+function lsstcdf(m,s,v,x){return studentstcdf(v,div(sub(x,m),s))}
+function lsstquant(m,s,v,p){return add(m,mul(s,studentstquant(v,p)))}
+function lsstmean(m,s,v){return m}
+function lsstmedian(m,s,v){return m}
+function lsstmode(m,s,v){return m}
+function lsstvar(m,s,v){return mul(s,s,studentstvar(v))}
+function lsstskew(m,s,v){return 0}
+function lsstexcesskurtosis(m,s,v){return studentstexcesskurtosis(v)}
+function lsstkurtosis(m,s,v){return studentstkurtosis(v)}
+function lsstcf(m,s,v,t){return mul(exp(mul(I,m,t)),studentstcf(v,mul(s,t)))}
+function lsstmgf(m,s,v,t){return mul(exp(mul(m,t)),studentstmgf(v,mul(s,t)))}
+function lsstcgf(m,s,v,t){return add(mul(m,t),studentstcgf(v,mul(s,t)))}
+function lsstpgf(m,s,v,t){return studentstpgf(v,pow(t,s))}
+function lsstrawmoment(m,s,v,k){return add(mul(s,k,studentstrawmoment(v,k)),m)}
+
+function wishartpdf(v,S,X){let p=rows(S);let a=div(v,2);let mg=Array.from({length:p},(_,j)=>gamma(sub(a,div(j,2)))).reduce((u,w)=>u*w,1);mg=mul(mg,pow(pi(),mul(p,div(sub(p,1),4))));return div(mul(pow(determinant(X),div(sub(v,p,1),2)),exp(div(mul(-1,trace(mul(inv(S),X))),2))),mul(pow(2,mul(v,div(p,2))),pow(determinant(S),a),mg))}
+function wishartlogpdf(v,S,X){let p=rows(S);let a=div(v,2);let lg=mul(div(p,4),mul(p,sub(p,1)));let sumg=Array.from({length:p},(_,j)=>log(gamma(sub(a,div(j,2))))).reduce((u,w)=>u+w,0);return add(mul(div(sub(v,p,1),2),log(determinant(X))),mul(-0.5,trace(mul(inv(S),X))),mul(-mul(div(v,2),mul(p,log(2))),1),mul(-mul(a,log(determinant(S))),1),mul(-1,add(lg,sumg)))}
+function wishartmean(v,S){return mul(v,S)}
+function wishartmode(v,S){return mul(sub(v,add(rows(S),1)),S)}
+
+function noncentraltcdfhat(v,m,x){let fi=0;for(let j=0;j<bign;j++)fi = add(fi,mul(div(mul(exp(div(sqr(m),-2)),pow(div(sqr(m),2),j)),factorial(j)),regincbeta(div(sqr(x),add(sqr(x),v)),div(sqr(x),add(sqr(x),v)),add(j,0.5),div(v,2))),mul(div(mul(m,exp(div(sqr(m),-2)),pow(div(sqr(m),2),j)),sqrt(2),gamma(add(j,1.5))),regincbeta(add(j,1),div(v,2))));return add(ncdf(sub(0,m)),div(fi,2))}
+function noncentraltcdf(v,m,x){return (re(x)<0)?(sub(1,noncentraltcdfhat(v,sub(0,m),x))):(noncentraltcdfhat(v,m,x))}
+function noncentraltpdf(v,m,x){return mul(studentstpdf(v,x),exp(div(sqr(m),-2)),add(hypg11(div(add(v,1),2),0.5,div(mul(m,m,x,x),2,add(sqr(x),v))),div(mul(sqrt(2),m,x,gamma(add(div(v,2),1)),hypg11(add(div(v,2),1),1.5,div(mul(m,m,x,x),2,add(v,sqr(x))))),sqrt(add(sqr(x),v)),gamma(div(add(v,1),2)))))}
+
+
+function kgaussianz(b,k){return mul(sqrt(div(mul(2,b,k),pi())),add(1,div(k,2)),div(gamma(add(div(1,2,k),0.25)),gamma(sub(div(1,2,k),0.25))))}
+function kexpmsqr(x,k){return kexp(k,mul(-1,x,x))}
+function kerf(k,x){return mul(sqrt(div(k,0.5,pi())),add(k,2),div(gamma(add(div(1,2,k),0.25)),gamma(sub(div(1,2,k),0.25))),integral(kexpmsqr,0,x,k))}
+
+function kgaussianpdf(k,b,x){return mul(kgaussianz(b,k),kexp(k,mul(-1,x,x,b)))}
+function kgaussiancdf(k,b,x){return add(0.5,div(kerf(k,mul(sqrt(b),x)),2))}
+function kgaussianmean(k,b){return 0}
+function kgaussianmedian(k,b){return 0}
+function kgaussianmode(k,b){return 0}
+function kgaussianskew(k,b){return 0}
+function kgaussianvar(k,b){return div(mul(add(2,k),4,k,sqr(gamma(add(div(1,2,k),0.25)))),b,sub(2,k),sub(4,mul(9,k,k)),sqr(gamma(sub(div(1,2,k),0.25))))}
+function kgaussianexcesskurtosis(k,b){return mul(3,sub(div(mul(sqrt(pi()),kgaussianz(b,k),pow(mul(2,k),-2.5),gamma(sub(div(1,2,k),1.25))),2,pow(b,div(2,3)),add(1,div(k,2,0.2)),gamma(add(div(1,2,k),1.25))),1))}
+function kgaussiankurtosis(k,b){return mul(3,sub(div(mul(sqrt(pi()),kgaussianz(b,k),pow(mul(2,k),-2.5),gamma(sub(div(1,2,k),1.25))),2,pow(b,div(2,3)),add(1,div(k,2,0.2)),gamma(add(div(1,2,k),1.25))),0))}
+
+function klogisticpdf(k,a,b,l,x){return div(mul(l,a,b,pow(x,sub(a,1)),kexp(k,mul(-1,b,pow(x,a)))),sqrt(add(1,mul(k,k,b,b,pow(x,mul(2,a))))),sqr(add(1,mul(sub(l,1),kexp(K,mul(-1,b,pow(x,a)))))))}
+function klogisticcdf(k,a,b,l,x){return div(sub(1,kexp(k,mul(-1,b,pow(x,a)))),add(1,mul(sub(l,1),kexp(k,mul(-1,b,pow(x,a))))))}
+
+//function tsallisqc(q){let fi=0;for(let m=0;m<bign;m++)fi=add(fi)}
+function agaussianqpdf(q,b,x){return mul(div(sqrt(mul(b,sub(1,q))),beta(0.5,add(div(1,sub(1,q)),1))),pow(sub(1,mul(sub(1,q),mul(b,x,x))),div(1,sub(1,q))))}
+function agaussianqpdf2(x,Q){return gaussianqpdf(g(Q,0),g(Q,1),x)}
+function agaussianqcdf(q,b,x){return add(0.5, integral(gaussianqpdf2,0,x,[q,b]))}//return add(0.5,mul(0.5,signum(re(x)),regincbeta(div(mul(x,x,mul(b,sub(q,1))),add(1,mul(x,x,mul(b,sub(q,1))))),0.5,sub(div(1,sabs(sub(q,1))),0.5))))}
+
+function cond(c,t,f){return c? t:f}
+
+function qgaussianpdf(q,b,x){return mul(tsallisqexp(q,(mul(-1,b,x,x))),cond(lt(q,1),div(sqrt(mul(b,sub(1,q))),beta(0.5,add(div(1,sub(1,q)),1))),mul(sqrt(mul(b,sub(q,1))),div(gamma(div(1,sub(q,1))),mul(sqrt(pi()),gamma(sub(div(1,sub(q,1)),0.5)))))))}
+function qgaussiancdf(q,b,x){return add(0.5,div(mul(sqrt(sub(q,1)),gamma(div(1,sub(q,1))),x,sqrt(b),hypg21(0.5,div(1,sub(q,1)),1.5,mul(-1,b,x,x,sub(q,1)))),sqrt(pi()),gamma(div(sub(3,q),2,sub(q,1)))))}
+
+
+function gaussianqpdf(q,x){let nu=div(1,sqrt(sub(1,q)));if(re(x)<neg(nu)||re(x)>nu)return 0;let fi=0;for(let i=0;i<bign;i++)fi=add(fi,mul(pow(q,i*(i+1)),pow(sub(q,1),i),pow(x,add(mul(2,i),1)),div(1,mul(sub(1,pow(q,add(2*i+1))),qnum(q,0)))));return div(qexp(mul(q,q),neg(mul(mul(q,q),x,x,div(1,qnum(q,2))))),mul(2,sqrt(sub(1,q)),fi))}
+function gaussianqcdf(q,x){let nu=div(1,sqrt(sub(1,q)));if(re(x)<neg(nu))return 0;if(re(x)>nu)return 1;let fi=0;for(let i=0;i<bign;i++)fi=add(fi,mul(pow(q,i*(i+1)),pow(sub(q,1),i),pow(x,add(mul(2,i),1)),div(1,mul(sub(1,pow(q,add(2*i+1))),qnum(q,0)))));return add(0.5,mul(sub(1,q),div(fi,mul(2,sqrt(sub(1,q))))))}
+
+function generalizedlogistic1pdf(a,x){return div(mul(a,exp(sub(0,x))),pow(add(1,exp(sub(0,x))),add(1,a)))}
+function generalizedlogistic1cdf(a,x){return div(1,pow(add(1,exp(sub(0,x))),a))}
+
+function generalizedlogistic2pdf(a,x){return div(mul(a,exp(mul(-1,a,x))),pow(add(1,exp(sub(0,x))),add(1,a)))}
+function generalizedlogistic2cdf(a,x){return sub(1,div(1,pow(add(1,exp(mul(-1,a,x))),a)))}
+
+function generalizedlogistic3pdf(a,x){return div(mul(a,exp(mul(-1,a,x))),pow(add(1,exp(sub(0,x))),add(a,a)),beta(a,a))}
+function generalizedlogistic3cdf(a,x){return div(mul(add(exp(x),1),gamma(a),exp(mul(-1,a,x)),pow(add(exp(sub(0,x)),1),mul(-2,a)),reghypg21(1,sub(1,a),add(a,1),mul(-1,exp(x)))),beta(a,a))}
+function generalizedlogistic3mgf(a,t){return div(mul(gamma(sub(a,t)),gamma(add(a,t))),gamma(a),gamma(a))}
+function generalizedlogistic3cf(a,t){return div(mul(gamma(sub(a,mul(I,t))),gamma(add(a,mul(I,t)))),gamma(a),gamma(a))}
+function generalizedlogistic3cgf(a,t){return log(div(mul(gamma(sub(a,t)),gamma(add(a,t))),gamma(a),gamma(a)))}
+function generalizedlogistic3pgf(a,t){return div(mul(gamma(sub(a,log(t))),gamma(add(a,log(t)))),gamma(a),gamma(a))}
+
+function generalizedlogistic4pdf(a,b,x){return div(mul(a,exp(mul(-1,b,x))),pow(add(1,exp(sub(0,x))),add(a,b)),beta(a,b))}
+function generalizedlogistic4cdf(a,b,x){return div(mul(add(exp(x),1),gamma(a),exp(mul(-1,b,x)),pow(add(exp(sub(0,x)),1),sub(0,b,a)),reghypg21(1,sub(1,b),add(a,1),mul(-1,exp(x)))),beta(a,a))}
+function generalizedlogistic4mean(a,b){return sub(digamma(a),digamma(b))}
+function generalizedlogistic4var(a,b){return add(trigamma(a),trigamma(b))}
+function generalizedlogistic4skew(a,b){return div(sub(tetragamma(a),tetragamma(a)),cum(add(trigamma(a),trigamma(b))))}
+function generalizedlogistic4mgf(a,b,t){return div(mul(gamma(sub(b,t)),gamma(add(a,t))),gamma(b),gamma(a))}
+function generalizedlogistic4cf(a,b,t){return div(mul(gamma(sub(b,mul(I,t))),gamma(add(a,mul(I,t)))),gamma(b),gamma(a))}
+function generalizedlogistic4cgf(a,b,t){return log(div(mul(gamma(sub(b,t)),gamma(add(a,t))),gamma(b),gamma(a)))}
+function generalizedlogistic4pgf(a,b,t){return div(mul(gamma(sub(b,log(t))),gamma(add(a,log(t)))),gamma(b),gamma(a))}
+
+
+function kaniadakisexppdf(k,b,x){return mul(sub(1,sqr(k)),b,kexp(k,mul(-1,b,x)))}
+function kaniadakisexpcdf(k,b,x){return sub(1,mul(add(sqrt(add(1,mul(k,k,b,b,x,x))),mul(k,k,b,x)),kexp(k,mul(-1,b,x))))}
+function kaniadakisexpmean(k,b){return div(sub(1,sqr(k)),b,sub(1,mul(4,k,k)))}
+function kaniadakisexpvar(k,b){return div(sub(mul(2,sqr(sub(1,mul(4,k,k)))),mul(sqr(sub(1,sqr(k))),sub(1,mul(9,k,k)))),b,b,sqr(sub(1,mul(4,k,k))),sub(1,mul(9,k,k)))}
+function kaniadakisexpstandartdeviation(k,b){return sqrt(div(sub(mul(2,sqr(sub(1,mul(4,k,k)))),mul(sqr(sub(1,sqr(k))),sub(1,mul(9,k,k)))),b,b,sqr(sub(1,mul(4,k,k))),sub(1,mul(9,k,k))))}
+function kaniadakisexpskew(k,b){return div(mul(2,sub(1,sqr(k)),add(mul(144,k,k,k,k,k,k,k,k),mul(23,k,k,k,k,k,k),mul(27,k,k,k,k),mul(-6,k,k),1)),b,b,b,cum(kaniadakisexpstandartdeviation(k,b)),cum(sub(mul(4,k,k),1)),sub(mul(144,k,k,k,k),mul(25,k,k),-1))}
+function kaniadakisexpexcesskurtosis(k,b){return sub(div(mul(9,add(mul(1200,pow(k,14)),mul(-6123,pow(k,12)),mul(562,pow(k,10)),mul(1539,pow(k,8)),mul(-544,pow(k,6)),mul(143,k,k,k,k),mul(-18,k),1)),b,b,b,b,tesseract(kaniadakisexpstandartdeviation(k,b)),pow(sub(1,sqr(k)),-1),tesseract(sub(1,mul(4,k,k))),add(mul(3600,k,k,k,k,k,k,k,k),mul(-4369,k,k,k,k,k,k),mul(819,k,k,k,k),mul(-51,k,k),1)),3)}
+function kaniadakisexpkurtosis(k,b){return sub(div(mul(9,add(mul(1200,pow(k,14)),mul(-6123,pow(k,12)),mul(562,pow(k,10)),mul(1539,pow(k,8)),mul(-544,pow(k,6)),mul(143,k,k,k,k),mul(-18,k),1)),b,b,b,b,tesseract(kaniadakisexpstandartdeviation(k,b)),pow(sub(1,sqr(k)),-1),tesseract(sub(1,mul(4,k,k))),add(mul(3600,k,k,k,k,k,k,k,k),mul(-4369,k,k,k,k,k,k),mul(819,k,k,k,k),mul(-51,k,k),1)))}
+
+function kaniadakisexp2pdf(k,b,x){return div(mul(b,kexp(k,mul(-1,b,x))),sqrt(add(1,mul(k,k,b,b,x,x))))}
+function kaniadakisexp2cdf(k,b,x){return sub(1,kexkp(mul(-b,x)))}
+function kaniadakisexp2quantile(k,b,x){return dib(klog(k,div(1,sub(1,x))),b)}
+function kaniadakisexpmean(k,b){return div(1,b,sub(1,sqr(k)))}
+function kaniadakisexpmedian(k,b){return div(klog(k,2),b)}
+function kaniadakisexpmode(k,b){return div(1,k,b,sqrt(mul(2,sub(1,sqr(k)))))}
+function kaniadakisexpvar(k,b){return div(add(1,mul(2,k,k)),b,b,sub(1,mul(4,k,k)),sqr(sub(1,sqr(k))))}
+function kaniadakisexskew(k,b){return mul(sqrt(div(sub(1,mul(4,k,k)),add(1,mul(2,k,k,k,k)))),div(mul(2,add(mul(15,k,k,k,k,k,k),mul(6,k,k,k,k),mul(2,k,k),1)),sub(1,mul(9,k,k)),add(mul(2,k,k,k,k),1)))}
+function kaniadakisexpexcesskurtosis(k,b){return div(mul(3,add(mul(72,pow(k,10)),mul(-360,k,k,k,k,k,k,k,k),mul(-44,k,k,k,k,k,k),mul(-32,k,k,k,k),mul(7,k,k),-3)),div(mul(sub(mul(144,k,k,k,k),mul(25,k,k),-1),sqr(add(mul(2,k,k,k,k),1))),sub(mul(4,k,k),1)))}
+function kaniadakisexpkurtosis(k,b){return add(3,div(mul(3,add(mul(72,pow(k,10)),mul(-360,k,k,k,k,k,k,k,k),mul(-44,k,k,k,k,k,k),mul(-32,k,k,k,k),mul(7,k,k),-3)),div(mul(sub(mul(144,k,k,k,k),mul(25,k,k),-1),sqr(add(mul(2,k,k,k,k),1))),sub(mul(4,k,k),1))))}
+function kaniadakisexplorenzcurve(k,b,x){return sub(div(mul(sub(1,k),pow(sub(1,x),add(1,k))),2,k),-1,div(mul(add(1,k),pow(sub(1,x),sub(1,k))),2,k))}
+
+function kaniadakisgammapdf(k,a,b,v,x){return div(mul(add(1,mul(v,k)),pow(mul(2,k),v),gamma(add(div(1,2,k),div(v,2))),a,pow(b,v),pow(x,sub(mul(a,v),1)),kexp(mul(-1,b,pow(x,a)))),gamma(v),gamma(sub(div(1,mul(2,k)),div(v,2))))}
+function kaniadakisgammazd(z,KABVX){return mul(pow(z,sub(mul(g(KABVX,1),g(KABVX,3)),1)),kexp(g(KABVX,0),mul(-1,g(KABVX,2),pow(z,g(KABVX,1)))))}
+function kaniadakisgammaz(k,a,b,v,z){return integral(kaniadakisgammazd,0,z,[k,a,b,v,z])}
+function kaniadakisgammacdf(k,a,b,v,x){return div(mul(add(1,mul(v,k)),pow(mul(2,k),v),gamma(add(div(1,2,k),div(v,2))),a,pow(b,v),kaniadakisgammaz(k,a,b,v,z)),gamma(v),gamma(sub(div(1,mul(2,k)),div(v,2))))}
+function kaniadakismode(k,a,b,v){return mul(pow(b,div(-1,a)),pow(sub(v,div(1,a)),div(1,a)),pow(sub(1,sqr(mul(k,sub(v,div(1,a))))),div(-1,2,a)))}
+// ADD function kaniadakisgammarawmoment(k,a,b,v,z){return integral(kaniadakisgammazd,0,z,[k,a,b,v,z])}
+
+function kaniadakiserlangpdf(k,n,x){let fi=1;for(let m=0;m<=n;m++)fi=mul(fi,div(mul(add(1,mul(k,sub(mul(2,m),n))),pow(x,sub(n,1)),kexp(k,sub(0,x))),factorial(sub(n,1))));return fi;}
+function kaniadakiserlangcdf(k,n,x){let fi=1;for(let m=0;m<=n;m++)fi=mul(fi,div(mul(add(1,mul(k,sub(mul(2,m),n))),kaniadakisgammaz(k,1,1,n,z)),factorial(sub(n,1))));return fi;}
+
+function kaniadakisweibullpdf(k,a,b,x){return div(mul(a,b,pow(x,sub(a,1)),kexp(k,mul(-1,b,pow(x,a)))),sqrt(add(1,mul(k,k,b,b,pow(x,mul(2,a))))))}
+function kaniadakisweibullcdf(k,a,b,x){return sub(1,kexp(k,mul(-1,b,pow(x,a))))}
+function kaniadakisweibullquantile(k,a,b,x){return div(pow(klog(k,div(1,sub(1,x))),div(1,a)),pow(b,div(1,a)))}
+function kaniadakisweibullmedian(k,a,b){return div(pow(klog(k,klog(k,2)),div(1,a)),pow(b,div(1,a)))}
+function kaniadakisweibullrawmoment(k,a,b,m){return div(mul(pow(mul(2,k,b),div(m,a,-1)),gamma(sub(div(1,2,k),div(m,2,a)))),add(1,div(mul(k,m),a)),gamma(add(div(1,2,k),div(m,2,a))))}
+
+//tukeylambdacdf(0.5,x)
+function tukeylambdaquantile(l,p){if(l==0)return log(div(p,sub(1,p)));return div(sub(pow(p,l),pow(sub(1,p),l)),l)}
+function tukeylambdaqdf(p,l){if(l==0)return log(div(p,sub(1,p)));return div(sub(pow(p,l),pow(sub(1,p),l)),l)}
+function tukeylambdaq(l,p){if(l==0)return add(pow(p,sub(l,1)),pow(sub(1,p),sub(l,1)))}
+function tukeylambdacdf(l,x){return newtoninvfp(tukeylambdaqdf,x,sigm(x),l)}
+function tukeylambdac(x,l){return newtoninvfp(tukeylambdaqdf,x,sigm(x),l)}
+function tukeylambdapdf(l,x){return derve2(tukeylambdac,x,l)}
+function tukeylambdamean(l){return 0}
+function tukeylambdamedian(l){return 0}
+function tukeylambdamode(l){return 0}
+function tukeylambdavar(l){return div(sub(div(1,add(1,l,l)),div(sqr(gamma(add(l,1))),gamma(add(l,l,2)))),l,l)}
+function tukeylambdaskew(l){return 0}
+function tukeylambdaexcesskurtosis(l){return xsub(function tukeylambdaexcesskurtosis(l){return div(mul(sqr(add(l,l,1)),sqr(gamma(add(l,l,1))),add(mul(3,sqr(gamma(add(l,l,1)))),mul(-4,gamma(add(l,1)),gamma(add(l,l,l,1))),gamma(add(l,l,l,l,1)))),add(l,l,l,l,l,l,l,l,2),gamma(add(l,l,l,l,1)),sqr(sub(sqr(gamma(add(l,q))),gamma(add(l,l,1)))))},3)}
+function tukeylambdakurtosis(l){return div(mul(sqr(add(l,l,1)),sqr(gamma(add(l,l,1))),add(mul(3,sqr(gamma(add(l,l,1)))),mul(-4,gamma(add(l,1)),gamma(add(l,l,l,1))),gamma(add(l,l,l,l,1)))),add(l,l,l,l,l,l,l,l,2),gamma(add(l,l,l,l,1)),sqr(sub(sqr(gamma(add(l,q))),gamma(add(l,l,1)))))}
+
+
+
+function generalizedtukeylambdaquantile(l1,l2,l3,l4,p){return add(l1,div(sub(pow(p,l3),pow(sub(1,p),l4)),l2))}
+function generalizedtukeylambdaqdf(L,p){return add(g(L,0),div(sub(pow(p,g(L,2)),pow(sub(1,p),g(L,3))),g(L,1)))}
+
+function generalizedtukeylambdacdf(l1,l2,l3,l4,x){return newtoninvfp(generalizedtukeylambdaqdf,x,sigm(x),[l1,l2,l3,l4])}
+function generalizedtukeylambdac(x,L){return newtoninvfp(generalizedtukeylambdaqdf,x,sigm(x),L)}
+function generalizedtukeylambdapdf(l1,l2,l3,l4,x){return derve2(tukeylambdac,x,[l1,l2,l3,l4])}
+
+function complementtsallisq(q){return div(1,sub(2,q))}
+function complementtsallisl(l,q=1,k=1){return div(l,pow(sub(2,q),div(1,k)))}
+
+
+function qweibullpdf(q,l,k,x){return mul(sub(2,q),div(k,l),pow(div(x,l),sub(k,1)),tsallisqexp(q,mul(-1,pow(div(x,l),k))))}
+function qweibullcdf(q,l,k,x){return sub(1,tsallisqexp(div(1,sub(2,q)),mul(-1,pow(div(x,div(l,pow(sub(2,q),div(1,k)))),k))))}
+
+function qexponentialpdf(q,l,x){return mul(sub(2,q),l,tsallisqexp(q,mul(-1,l,x)))}
+function qexponentialcdf(q,l,x){return sub(1,tsallisqexp(div(1,sub(2,q)),div(mul(-1,l,x),div(sub(2,q)))))}
+function qexponentialmean(q,l){return div(1,l,sub(3,q,q))}
+function qexponentialmode(q,l){return 0}
+function qexponentialmedian(q,l){return dib(tsallisqlog(div(1,sub(2,q)),0.5),l,-1,sub(2,q))}
+function qexponentialmode(q,l){return 0}
+function qexponentialvar(q,l){return div(sub(q,2),sqr(add(q,q,-3)),sqr(l),sub(mul(3,q),4))}
+function qexponentialskew(q,l){return div(sqrt(div(add(q,q,q,-4),sub(q,2))),0.5,sub(5,q,q,q,q))}
+function qexponentialkurtosis(q,l){return div(mul(6,add(mul(-4,q,q,q),mul(17,q,q),mul(-20,q),6)),sub(q,2),add(q,q,q,q,-5),add(q,q,q,q,q,-6))}
+
+function colmatrix(arr) {
+  const n = leng(arr);
+  const C = Array.from({ length: n }, () => [0]);
+  for (let i = 0; i < n; i++) {
+    g(C, i)[0] = g(arr, i);   // 1 column
+  }
+  return C;
+}
+function rowmatrix(arr) {
+  const n = leng(arr);
+  const R = [ Array(n).fill(0) ];
+  for (let j = 0; j < n; j++) {
+    R[0][j] = g(arr, j);
+  }
+  return R;
+}
+
+//phasetypepdf([[-3,3],[0,-2]],[1,0],x)
+//phasetypemgf([[-3,3],[0,-2]],[1,0],x)
+//phasetypemgftest([[-3,3],[0,-2]],[1,0],x)
+function phasetypepdf(S,A,x){return g(g(matrixmul(rowmatrix(A),matrixmul(matrixexp(matrixscal(S,x)),matrixscal(matrixmul(S,colmatrix(Array(leng(S)).fill(1))),-1))),0),0)}
+function phasetypecdf(S,A,x){return sub(1,g(g(matrixmul(rowmatrix(A),matrixmul(matrixexp(matrixscal(S,x)),colmatrix(Array(leng(S)).fill(1)))),0),0))}
+function phasetypemean(S,A){return g(g(matrixscal(matrixmul(rowmatrix(A),matrixmul(matrixinverse(S),colmatrix(Array(leng(S)).fill(1)))),-1),0),0)}
+function phasetypevar(S,A){return sub(mul(2,g(g(matrixmul(rowmatrix(A),matrixmul(matrixmul(matrixinverse(S),matrixinverse(S)),colmatrix(Array(leng(S)).fill(1)))),0),0)),sqr(matrixmul(rowmatrix(A),matrixmul(matrixinverse(S),colmatrix(Array(leng(S)).fill(1))))))}
+function phasetypemgf(S,A,t,a0=0){return add(g(g(matrixscal(matrixmul(rowmatrix(A),matrixmul(matrixinverse(matrixadd(diagonalmatrix(Array(leng(S)).fill(t)),S)),((matrixscal(matrixmul(S,colmatrix(Array(leng(S)).fill(1))),-1))))),-1),0),0),a0)}
+function phasetypecf(S,A,t,a0=0){return add(g(g(matrixscal(matrixmul(rowmatrix(A),matrixmul(matrixinverse(matrixadd(diagonalmatrix(Array(leng(S)).fill(mul(I,t))),S)),matrixscal(matrixmul(S,colmatrix(Array(leng(S)).fill(1))),-1))),-1),0),0),a0)}
+function phasetypecgf(S,A,t,a0=0){return log(add(g(g(matrixscal(matrixmul(rowmatrix(A),matrixmul(matrixinverse(matrixadd(diagonalmatrix(Array(leng(S)).fill(t)),S)),matrixscal(matrixmul(S,colmatrix(Array(leng(S)).fill(1))),-1))),-1),0),0),a0))}
+function phasetypepgf(S,A,t,a0=0){return add(g(g(matrixscal(matrixmul(rowmatrix(A),matrixmul(matrixinverse(matrixadd(diagonalmatrix(Array(leng(S)).fill(log(t))),S)),matrixscal(matrixmul(S,colmatrix(Array(leng(S)).fill(1))),-1))),-1),0),0),a0)}
+
+function matrixexponentialpdf(A,T,S,x){return g(g(matrixmul(rowmatrix(A),matrixmul(matrixexp(matrixscal(T,x)),colmatrix(S))),0),0)}
+function matrixexponentialcdf(A,T,S,x){return add(1,g(g(matrixmul(rowmatrix(A),matrixmul(matrixexp(matrixscal(T,x)),matrixmul(matrixinverse(T),colmatrix(S)))),0),0))}
+//function matrixexponentialmoment(A,T,S,k){return mul(pow(-1,add(k,1)),factorial(k),g(g(,0),0))}
+
+function polyweibullpdf(B,T,x){let fi=0;for(let i=0;i<leng(B);i++)fi=add(fi,div(mul(g(B,i),pow(x,sub(g(B,i),1))),pow(g(T,i),g(B,i))));let fid=0;for(let i=0;i<leng(B);i++)fid=add(fid,pow(div(t,g(T,i)),g(B,i)));return mul(fi,exp(sub(0,fid)))}
+
+
+function discretephasetypecdf(TA,T,x){return sub(1,matrixmul(rowmatrix(TA),matrixmul(matrixpower(T,k),colmatrix(Array(leng(T)).fill(1)))))}
+function discretephasetypepmf(TA,T,x){return matrixmul(TA,matrixmul(matrixpower(T,sub(k,1)),matrixadd(colmatrix(Array(leng(T)).fill(1)),matrixscal(matrixmul(T,colmatrix(Array(leng(T)).fill(1))),-1))))}
 
 
 /*
@@ -27458,6 +28329,1597 @@ function inversechicdf(v,x){return div(incgamma(div(v,2),div(1,2,x)),gamma(div(v
 
 
 
+////MULTIVARIATE
+
+//function multinomialpdf(N,k,P,X){let fi=0;for(let i=0;i<leng(X);i++)fi=add(fi,);return fi}
+//^this is uh templemplste
+
+
+//A_j is number of allels size j
+function ewenspdf(t,A){let fi=0;for(let j=0;j<leng(A);j++)fi=add(fi,div(pow(t,g(A,j)),pow(j,g(A,j)),factorial(g(A,j))));return div(mul(fi,factorial(leng(A))),pochammer(t,leng(A)))}
+
+
+
+
+function multinomialpdf(N,k,P,X){let fi=1;for(let i=0;i<leng(P);i++)fi=mul(fi,div(pow(g(P,i),g(X,i)),factorial(g(X,i))));return mul(fi,factorial(leng(P)))}
+function multinomialvar(N,k,P,X,i){return mul(leng(P),g(P,i),sub(1,g(P,i)))}
+function multinomialcovar(N,k,P,X,i,j){return mul(leng(P),g(P,i),g(P,j),-1)}
+function multinomialmean(N,k,P,X,i){return mul(leng(P),g(P,i))}
+function multinomialentropy(N,k,P,X){let fi=1;for(let i=0;i<leng(P);i++)fi=add(fi,mul(g(P,i),log(g(P,i))));let fid=0;for(let i=0;i<leng(P);i++){let fidd=0;for(let x=0;x<=leng(P);x++)fidd=add(fidd,ncr(n,g(X,i)),mul(pow(g(P,i),x),pow(sub(1,g(P,i)),sub(leng(P),x)),log(factorial(x))));fid=add(fi,fid)}return sub(fid,log(factorial(n)),mul(n,fi))}
+function multinomialmgf(N,k,P,X,t,i){let fi=0;for(let j=0;j<leng(P);j++);fi=add(fi,mul(g(P,j),exp(mul(1,t))));return pow(fi,leng(P))}
+function multinomialcf(N,k,P,X,t,i){let fi=0;for(let j=0;j<leng(P);j++);fi=add(fi,mul(g(P,j),exp(mul(I,t))));return pow(fi,leng(P))}
+function multinomialcgf(N,k,P,X,t,i){let fi=0;for(let j=0;j<leng(P);j++);fi=add(fi,mul(g(P,j),exp(mul(1,t))));return log(pow(fi,leng(P)))}
+function multinomialpgf(N,k,P,X,t,i){let fi=0;for(let j=0;j<leng(P);j++);fi=add(fi,mul(g(P,j),exp(mul(1,log(t)))));return pow(fi,leng(P))}
+
+function multinomialdirichletpdf(n,A,X){let a=gsum(A);let fi=1;for(let i=0;i<leng(X);i++)fi=mul(fi,div(gamma(add(g(X,i),g(A,i))),gamma(g(A,i)),gamma(add(g(X,i),1))));return div(mul(fi,gamma(a),factorial(n)),gamma(add(n,a)))}
+function multinomialdirichletmean(n,A,i){let a=gsum(A);return div(mul(n,g(A,i)),a)}
+function multinomialdirichletvar(n,A,i){let a=gsum(A);return mul(n,div(g(A,i),a),sub(1,div(g(A,i),a)),div(add(n,a),add(1,a)))}
+function multinomialdirichletcovar(n,A,i,j){let a=gsum(A);return mul(-1,n,div(A[i],a),div(A[j],a),div(add(n,a),add(a,1)));}
+function multinomialdirichletd(n,A,T){let a=gsum(A);if(n<=0)return 1;let fi=0;for(let u=1;u<=n;u++){let fid=0;for(let k=0;k<leng(A);k++)fid=add(fid,mul(g(A,k),exp(mul(g(T,k),u))));fi=add(fi,mul(fid,multinomialdirichletd(sub(n,1),a,A)))}return fi;}
+function multinomialdirichletmgf(n,A,T){let a=gsum(A);return div(mul(gamma(a),factorial(n),multinomialdirichletd(n,a,A,T)),gamma(add(n,a)))}
+function multinomialdirichletcf(n,A,T){let a=gsum(A);return multinomialdirichletmgf(n,a,A,vectorscal(T,I))}
+function multinomialdirichletcgf(n,A,T){let a=gsum(A);return log(multinomialdirichletmgf(n,a,A,T))}
+function multinomialdirichletpgf(n,A,T){let a=gsum(A);return multinomialdirichletmgf(n,a,A,vectormap(log,T))}
+
+ 
+    
+////MATRIX MULTIVALURD
+
+
+//LKJ
+function lewandowskikurowickajoepdf(n,R){let fid=0;let fi=1;for(let k=0;k<leng(R);k++)fid=add(fid,mul(add(n,n,-2,d,sub(-1,k)),sub(d,k,1)));for(let i=0;i<leng(R);i++)fi=mul(fi,pow(beta(add(n,div(sub(d,k),2)),add(n,div(sub(d,k),2))),sub(d,k,1)));return mul(pow(2,fid),fi,pow(determinant(R),sub(n,1)))}
+
+function matrixnormalpdf(M,U,V,X){let p=leng(V);let n=leng(U);return div(exp(mul(-0.5,trace(matrixmul(matrixmul(matrixinverse(V),transpose(matrixsub(X,M))),matrixmul(matrixinverse(U),matrixsub(X,M)))))),pow(determinant(V),div(n,2)),pow(determinant(U),div(p,2)),pow(mul(2,pi()),mul(0.5,p,n)))}
+function matrixnormalmean(M,U,V){return M;}
+function matrixnormalmeani(M,U,V,n,p){return g(n,p);}
+function matrixnormalvarrow(M,U,V){return U;}
+function matrixnormalvarcol(M,U,V){return V;}
+
+function multivariatenormalpdf(M,S,X){return mul(pow(mul(2,pi()),div(leng(M),-2)),pow(determinant(S),-0.5),exp(mul(-0.5,matrixmul(transpose(matrixsub(X,M)),matrixmul(matrixinverse(S),matrixsub(X,M))))))}
+function multivariatenormalmean(M,S){return M}
+function multivariatenormalmode(M,S){return M}
+function multivariatenormalvar(M,S){return S}
+function multivariatenormalentropy(M,S){return add(div(mul(leng(M),log(mul(2,pi(),eulerc()))),2),div(log(det(S)),2))}
+function multivariatenormalmgf(M,S,T){return exp(add(matrixmul(transpose(M),T),div(matrixmul(transpose(T),matrixmul(S,T)),2)))}  
+  
+  
+  //multivariatenormalmgf([4,2],[[1,2],[3,4]],[5,6])  
+
+//END MULTIVARIATE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*THIS PART SLOP*//*THIS PART SLOP*//*THIS PART SLOP*//*THIS PART SLOP*/
+/*THIS PART SLOP*//*THIS PART SLOP*//*THIS PART SLOP*//*THIS PART SLOP*/
+/*THIS PART SLOP*/
+/*THIS PART SLOP*/
+/*THIS PART SLOP*/
+/*THIS PART SLOP*/
+/*THIS PART SLOP*/
+/*THIS PART SLOP*/
+/*THIS PART SLOP*/
+/*THIS PART SLOP*//*THIS PART SLOP*//*THIS PART SLOP*//*THIS PART SLOP*/
+/*THIS PART SLOP*//*THIS PART SLOP*//*THIS PART SLOP*//*THIS PART SLOP*/
+/*THIS PART SLOP*/
+/*THIS PART SLOP*/
+/*THIS PART SLOP*/
+/*THIS PART SLOP*/
+/*THIS PART SLOP*/
+/*THIS PART SLOP*/
+/*THIS PART SLOP*/
+
+function sechsurvival(x) { return sub(1,sechcdf(x)); }
+function sechhazard(x) { return div(sechpdf(x),sechsurvival(x)); }
+function sechchazard(x) { return -log(sechsurvival(x)); }
+function sechfailrate(x) { return div(sechcdf(x),x); }
+function hyperbolasticsurvival(x) { return sub(1,hyperbolasticcdf(x)); }
+function hyperbolastichazard(x) { return div(hyperbolasticpdf(x),hyperbolasticsurvival(x)); }
+function hyperbolasticchazard(x) { return -log(hyperbolasticsurvival(x)); }
+function hyperbolasticfailrate(x) { return div(hyperbolasticcdf(x),x); }
+function normalsurvival(m,ss,x) { return sub(1,normalcdf(m,ss,x)); }
+function normalhazard(m,ss,x) { return div(normalpdf(m,ss,x),normalsurvival(m,ss,x)); }
+function normalchazard(m,ss,x) { return -log(normalsurvival(m,ss,x)); }
+function normalfailrate(m,ss,x) { return div(normalcdf(m,ss,x),x); }
+function nsurvival(x,m=0,ss=1) { return sub(1,ncdf(x,m=0,ss=1)); }
+function nhazard(x,m=0,ss=1) { return div(npdf(x,m=0,ss=1),nsurvival(x,m=0,ss=1)); }
+function nchazard(x,m=0,ss=1) { return -log(nsurvival(x,m=0,ss=1)); }
+function nfailrate(x,m=0,ss=1) { return div(ncdf(x,m=0,ss=1),x); }
+function normaldistsurvival(m,ss,x) { return sub(1,normaldistcdf(m,ss,x)); }
+function normaldisthazard(m,ss,x) { return div(normaldistpdf(m,ss,x),normaldistsurvival(m,ss,x)); }
+function normaldistchazard(m,ss,x) { return -log(normaldistsurvival(m,ss,x)); }
+function normaldistfailrate(m,ss,x) { return div(normaldistcdf(m,ss,x),x); }
+
+function normaldist2cf(m,ss,t) { return log(normaldistcf(m,ss,t)); }
+function skewnormaldistsurvival(c,w,a,x) { return sub(1,skewnormaldistcdf(c,w,a,x)); }
+function skewnormaldisthazard(c,w,a,x) { return div(skewnormaldistpdf(c,w,a,x),skewnormaldistsurvival(c,w,a,x)); }
+function skewnormaldistchazard(c,w,a,x) { return -log(skewnormaldistsurvival(c,w,a,x)); }
+function skewnormaldistfailrate(c,w,a,x) { return div(skewnormaldistcdf(c,w,a,x),x); }
+function skewnormaldiststandartdeviation(c,w,a) { return sqrt(skewnormaldistvar(c,w,a)); }
+function skewnormaldistcov(c,w,a) { return div(skewnormaldiststandartdeviation(c,w,a),skewnormaldistmean(c,w,a)); }
+function skewnormaldistcov2(c,w,a) { return sqrt(div(skewnormaldistvar(c,w,a),add(skewnormaldistvar(c,w,a),sqr(skewnormaldistmean(c,w,a))))); }
+function skewnormaldisteff(c,w,a) { return div(skewnormaldistvar(c,w,a),sqr(skewnormaldistmean(c,w,a))); }
+// skewnormaldistvmr missing
+function skewnormaldistzscore(c,w,a) { return div(sub(x,skewnormaldistmean(c,w,a)),skewnormaldiststandartdeviation(c,w,a)); }
+// skewnormaldistcgf missing, add manually
+// skewnormaldistcf missing, add manually
+function skewnormaldist2cf(c,w,a,t) { return log(skewnormaldistcf(c,w,a,t)); }
+function betadistsurvival(a,b,x) { return sub(1,betadistcdf(a,b,x)); }
+function betadisthazard(a,b,x) { return div(betadistpdf(a,b,x),betadistsurvival(a,b,x)); }
+function betadistchazard(a,b,x) { return -log(betadistsurvival(a,b,x)); }
+function betadistfailrate(a,b,x) { return div(betadistcdf(a,b,x),x); }
+function betadiststandartdeviation(a,b) { return sqrt(betadistvar(a,b)); }
+function betadistcov(a,b) { return div(betadiststandartdeviation(a,b),betadistmean(a,b)); }
+function betadistcov2(a,b) { return sqrt(div(betadistvar(a,b),add(betadistvar(a,b),sqr(betadistmean(a,b))))); }
+function betadisteff(a,b) { return div(betadistvar(a,b),sqr(betadistmean(a,b))); }
+// betadistvmr missing
+function betadistzscore(a,b) { return div(sub(x,betadistmean(a,b)),betadiststandartdeviation(a,b)); }
+// betadistcgf missing, add manually
+// betadistpgf missing, add manually
+function betadist2cf(a,b,t) { return log(betadistcf(a,b,t)); }
+function maxwelljuttnersurvival(t,x) { return sub(1,maxwelljuttnercdf(t,x)); }
+function maxwelljuttnerhazard(t,x) { return div(maxwelljuttnerpdf(t,x),maxwelljuttnersurvival(t,x)); }
+function maxwelljuttnerchazard(t,x) { return -log(maxwelljuttnersurvival(t,x)); }
+function maxwelljuttnerfailrate(t,x) { return div(maxwelljuttnercdf(t,x),x); }
+function mittaglefflersurvival(a,x) { return sub(1,mittaglefflercdf(a,x)); }
+function mittaglefflerhazard(a,x) { return div(mittaglefflerpdf(a,x),mittaglefflersurvival(a,x)); }
+function mittaglefflerchazard(a,x) { return -log(mittaglefflersurvival(a,x)); }
+function mittaglefflerfailrate(a,x) { return div(mittaglefflercdf(a,x),x); }
+function loglaplacesurvival(m,b,x) { return sub(1,loglaplacecdf(m,b,x)); }
+function loglaplacehazard(m,b,x) { return div(loglaplacepdf(m,b,x),loglaplacesurvival(m,b,x)); }
+function loglaplacechazard(m,b,x) { return -log(loglaplacesurvival(m,b,x)); }
+function loglaplacefailrate(m,b,x) { return div(loglaplacecdf(m,b,x),x); }
+function lognormalsurvival(m,s,x) { return sub(1,lognormalcdf(m,s,x)); }
+function lognormalhazard(m,s,x) { return div(lognormalpdf(m,s,x),lognormalsurvival(m,s,x)); }
+function lognormalchazard(m,s,x) { return -log(lognormalsurvival(m,s,x)); }
+function lognormalfailrate(m,s,x) { return div(lognormalcdf(m,s,x),x); }
+function lognormalstandartdeviation(m,s) { return sqrt(lognormalvar(m,s)); }
+function lognormalcov(m,s) { return div(lognormalstandartdeviation(m,s),lognormalmean(m,s)); }
+function lognormalcov2(m,s) { return sqrt(div(lognormalvar(m,s),add(lognormalvar(m,s),sqr(lognormalmean(m,s))))); }
+function lognormaleff(m,s) { return div(lognormalvar(m,s),sqr(lognormalmean(m,s))); }
+// lognormalvmr missing
+function lognormalzscore(m,s) { return div(sub(x,lognormalmean(m,s)),lognormalstandartdeviation(m,s)); }
+
+function lognormal2cf(m,s,t) { return log(lognormalcf(m,s,t)); }
+function lomaxsurvival(a,l,x) { return sub(1,lomaxcdf(a,l,x)); }
+function lomaxhazard(a,l,x) { return div(lomaxpdf(a,l,x),lomaxsurvival(a,l,x)); }
+function lomaxchazard(a,l,x) { return -log(lomaxsurvival(a,l,x)); }
+function lomaxfailrate(a,l,x) { return div(lomaxcdf(a,l,x),x); }
+function lomaxstandartdeviation(a,l) { return sqrt(lomaxvar(a,l)); }
+function lomaxcov(a,l) { return div(lomaxstandartdeviation(a,l),lomaxmean(a,l)); }
+function lomaxcov2(a,l) { return sqrt(div(lomaxvar(a,l),add(lomaxvar(a,l),sqr(lomaxmean(a,l))))); }
+function lomaxeff(a,l) { return div(lomaxvar(a,l),sqr(lomaxmean(a,l))); }
+// lomaxvmr missing
+function lomaxzscore(a,l) { return div(sub(x,lomaxmean(a,l)),lomaxstandartdeviation(a,l)); }
+
+function lomax2cf(a,l,t) { return log(lomaxcf(a,l,t)); }
+function fourbetadiststandartdeviation(a,b,aa,c) { return sqrt(fourbetadistvar(a,b,aa,c)); }
+function fourbetadistcov(a,b,aa,c) { return div(fourbetadiststandartdeviation(a,b,aa,c),fourbetadistmean(a,b,aa,c)); }
+function fourbetadistcov2(a,b,aa,c) { return sqrt(div(fourbetadistvar(a,b,aa,c),add(fourbetadistvar(a,b,aa,c),sqr(fourbetadistmean(a,b,aa,c))))); }
+function fourbetadisteff(a,b,aa,c) { return div(fourbetadistvar(a,b,aa,c),sqr(fourbetadistmean(a,b,aa,c))); }
+// fourbetadistvmr missing
+function fourbetadistzscore(a,b,aa,c) { return div(sub(x,fourbetadistmean(a,b,aa,c)),fourbetadiststandartdeviation(a,b,aa,c)); }
+function arcsindistsurvival(x) { return sub(1,arcsindistcdf(x)); }
+function arcsindisthazard(x) { return div(arcsindistpdf(x),arcsindistsurvival(x)); }
+function arcsindistchazard(x) { return -log(arcsindistsurvival(x)); }
+function arcsindistfailrate(x) { return div(arcsindistcdf(x),x); }
+// arcsindistcgf missing, add manually
+function arcsindist2cf(t) { return log(arcsindistcf(t)); }
+function arcsinboundeddistsurvival(a,b,x) { return sub(1,arcsinboundeddistcdf(a,b,x)); }
+function arcsinboundeddisthazard(a,b,x) { return div(arcsinboundeddistpdf(a,b,x),arcsinboundeddistsurvival(a,b,x)); }
+function arcsinboundeddistchazard(a,b,x) { return -log(arcsinboundeddistsurvival(a,b,x)); }
+function arcsinboundeddistfailrate(a,b,x) { return div(arcsinboundeddistcdf(a,b,x),x); }
+function arcsinboundeddiststandartdeviation(a,b) { return sqrt(arcsinboundeddistvar(a,b)); }
+function arcsinboundeddistcov(a,b) { return div(arcsinboundeddiststandartdeviation(a,b),arcsinboundeddistmean(a,b)); }
+function arcsinboundeddistcov2(a,b) { return sqrt(div(arcsinboundeddistvar(a,b),add(arcsinboundeddistvar(a,b),sqr(arcsinboundeddistmean(a,b))))); }
+function arcsinboundeddisteff(a,b) { return div(arcsinboundeddistvar(a,b),sqr(arcsinboundeddistmean(a,b))); }
+// arcsinboundeddistvmr missing
+function arcsinboundeddistzscore(a,b) { return div(sub(x,arcsinboundeddistmean(a,b)),arcsinboundeddiststandartdeviation(a,b)); }
+// arcsinboundeddistcgf missing, add manually
+function arcsinboundeddist2cf(a,b,t) { return log(arcsinboundeddistcf(a,b,t)); }
+function pertdistsurvival(a,b,c,x) { return sub(1,pertdistcdf(a,b,c,x)); }
+function pertdisthazard(a,b,c,x) { return div(pertdistpdf(a,b,c,x),pertdistsurvival(a,b,c,x)); }
+function pertdistchazard(a,b,c,x) { return -log(pertdistsurvival(a,b,c,x)); }
+function pertdistfailrate(a,b,c,x) { return div(pertdistcdf(a,b,c,x),x); }
+function pertdiststandartdeviation(a,b,c) { return sqrt(pertdistvar(a,b,c)); }
+function pertdistcov(a,b,c) { return div(pertdiststandartdeviation(a,b,c),pertdistmean(a,b,c)); }
+function pertdistcov2(a,b,c) { return sqrt(div(pertdistvar(a,b,c),add(pertdistvar(a,b,c),sqr(pertdistmean(a,b,c))))); }
+function pertdisteff(a,b,c) { return div(pertdistvar(a,b,c),sqr(pertdistmean(a,b,c))); }
+// pertdistvmr missing
+function pertdistzscore(a,b,c) { return div(sub(x,pertdistmean(a,b,c)),pertdiststandartdeviation(a,b,c)); }
+function batesdiststandartdeviation(n,a,b) { return sqrt(batesdistvar(n,a,b)); }
+function batesdistcov(n,a,b) { return div(batesdiststandartdeviation(n,a,b),batesdistmean(n,a,b)); }
+function batesdistcov2(n,a,b) { return sqrt(div(batesdistvar(n,a,b),add(batesdistvar(n,a,b),sqr(batesdistmean(n,a,b))))); }
+function batesdisteff(n,a,b) { return div(batesdistvar(n,a,b),sqr(batesdistmean(n,a,b))); }
+// batesdistvmr missing
+function batesdistzscore(n,a,b) { return div(sub(x,batesdistmean(n,a,b)),batesdiststandartdeviation(n,a,b)); }
+// batesdistcgf missing, add manually
+function batesdist2cf(n,a,b,t) { return log(batesdistcf(n,a,b,t)); }
+function logitnormaldistsurvival(m,s,x) { return sub(1,logitnormaldistcdf(m,s,x)); }
+function logitnormaldisthazard(m,s,x) { return div(logitnormaldistpdf(m,s,x),logitnormaldistsurvival(m,s,x)); }
+function logitnormaldistchazard(m,s,x) { return -log(logitnormaldistsurvival(m,s,x)); }
+function logitnormaldistfailrate(m,s,x) { return div(logitnormaldistcdf(m,s,x),x); }
+function kumaraswamydistsurvival(a,b,x) { return sub(1,kumaraswamydistcdf(a,b,x)); }
+function kumaraswamydisthazard(a,b,x) { return div(kumaraswamydistpdf(a,b,x),kumaraswamydistsurvival(a,b,x)); }
+function kumaraswamydistchazard(a,b,x) { return -log(kumaraswamydistsurvival(a,b,x)); }
+function kumaraswamydistfailrate(a,b,x) { return div(kumaraswamydistcdf(a,b,x),x); }
+
+function raisedcosdistsurvival(m,s,x) { return sub(1,raisedcosdistcdf(m,s,x)); }
+function raisedcosdisthazard(m,s,x) { return div(raisedcosdistpdf(m,s,x),raisedcosdistsurvival(m,s,x)); }
+function raisedcosdistchazard(m,s,x) { return -log(raisedcosdistsurvival(m,s,x)); }
+function raisedcosdistfailrate(m,s,x) { return div(raisedcosdistcdf(m,s,x),x); }
+function raisedcosdiststandartdeviation(m,s) { return sqrt(raisedcosdistvar(m,s)); }
+// raisedcosdistcgf missing, add manually
+function raisedcosdist2cf(m,s,t) { return log(raisedcosdistcf(m,s,t)); }
+function reciprocaldistsurvival(a,b,x) { return sub(1,reciprocaldistcdf(a,b,x)); }
+function reciprocaldisthazard(a,b,x) { return div(reciprocaldistpdf(a,b,x),reciprocaldistsurvival(a,b,x)); }
+function reciprocaldistchazard(a,b,x) { return -log(reciprocaldistsurvival(a,b,x)); }
+function reciprocaldistfailrate(a,b,x) { return div(reciprocaldistcdf(a,b,x),x); }
+function reciprocaldiststandartdeviation(a,b) { return sqrt(reciprocaldistvar(a,b)); }
+function reciprocaldistcov(a,b) { return div(reciprocaldiststandartdeviation(a,b),reciprocaldistmean(a,b)); }
+function reciprocaldistcov2(a,b) { return sqrt(div(reciprocaldistvar(a,b),add(reciprocaldistvar(a,b),sqr(reciprocaldistmean(a,b))))); }
+function reciprocaldisteff(a,b) { return div(reciprocaldistvar(a,b),sqr(reciprocaldistmean(a,b))); }
+// reciprocaldistvmr missing
+function reciprocaldistzscore(a,b) { return div(sub(x,reciprocaldistmean(a,b)),reciprocaldiststandartdeviation(a,b)); }
+function uquadradicdistsurvival(a,b,x) { return sub(1,uquadradicdistcdf(a,b,x)); }
+function uquadradicdisthazard(a,b,x) { return div(uquadradicdistpdf(a,b,x),uquadradicdistsurvival(a,b,x)); }
+function uquadradicdistchazard(a,b,x) { return -log(uquadradicdistsurvival(a,b,x)); }
+function uquadradicdistfailrate(a,b,x) { return div(uquadradicdistcdf(a,b,x),x); }
+function uquadradicdiststandartdeviation(a,b) { return sqrt(uquadradicdistvar(a,b)); }
+function uquadradicdistcov(a,b) { return div(uquadradicdiststandartdeviation(a,b),uquadradicdistmean(a,b)); }
+function uquadradicdistcov2(a,b) { return sqrt(div(uquadradicdistvar(a,b),add(uquadradicdistvar(a,b),sqr(uquadradicdistmean(a,b))))); }
+function uquadradicdisteff(a,b) { return div(uquadradicdistvar(a,b),sqr(uquadradicdistmean(a,b))); }
+// uquadradicdistvmr missing
+function uquadradicdistzscore(a,b) { return div(sub(x,uquadradicdistmean(a,b)),uquadradicdiststandartdeviation(a,b)); }
+// uquadradicdistcgf missing, add manually
+function uquadradicdist2cf(a,b,t) { return log(uquadradicdistcf(a,b,t)); }
+function continuousbernoullidistsurvival(l,x) { return sub(1,continuousbernoullidistcdf(l,x)); }
+function continuousbernoullidisthazard(l,x) { return div(continuousbernoullidistpdf(l,x),continuousbernoullidistsurvival(l,x)); }
+function continuousbernoullidistchazard(l,x) { return -log(continuousbernoullidistsurvival(l,x)); }
+function continuousbernoullidistfailrate(l,x) { return div(continuousbernoullidistcdf(l,x),x); }
+function continuousbernoullidiststandartdeviation(l) { return sqrt(continuousbernoullidistvar(l)); }
+function continuousbernoullidistcov(l) { return div(continuousbernoullidiststandartdeviation(l),continuousbernoullidistmean(l)); }
+function continuousbernoullidistcov2(l) { return sqrt(div(continuousbernoullidistvar(l),add(continuousbernoullidistvar(l),sqr(continuousbernoullidistmean(l))))); }
+function continuousbernoullidisteff(l) { return div(continuousbernoullidistvar(l),sqr(continuousbernoullidistmean(l))); }
+// continuousbernoullidistvmr missing
+function continuousbernoullidistzscore(l) { return div(sub(x,continuousbernoullidistmean(l)),continuousbernoullidiststandartdeviation(l)); }
+function wignersemicircledistsurvival(r,x) { return sub(1,wignersemicircledistcdf(r,x)); }
+function wignersemicircledisthazard(r,x) { return div(wignersemicircledistpdf(r,x),wignersemicircledistsurvival(r,x)); }
+function wignersemicircledistchazard(r,x) { return -log(wignersemicircledistsurvival(r,x)); }
+function wignersemicircledistfailrate(r,x) { return div(wignersemicircledistcdf(r,x),x); }
+function wignersemicirclediststandartdeviation(r) { return sqrt(wignersemicircledistvar(r)); }
+// wignersemicircledistcgf missing, add manually
+function wignersemicircledist2cf(r,t) { return log(wignersemicircledistcf(r,t)); }
+function metalogdiststandartdeviation(a1,a2,a3,a4) { return sqrt(metalogdistvar(a1,a2,a3,a4)); }
+function metalogdistcov(a1,a2,a3,a4) { return div(metalogdiststandartdeviation(a1,a2,a3,a4),metalogdistmean(a1,a2,a3,a4)); }
+function metalogdistcov2(a1,a2,a3,a4) { return sqrt(div(metalogdistvar(a1,a2,a3,a4),add(metalogdistvar(a1,a2,a3,a4),sqr(metalogdistmean(a1,a2,a3,a4))))); }
+function metalogdisteff(a1,a2,a3,a4) { return div(metalogdistvar(a1,a2,a3,a4),sqr(metalogdistmean(a1,a2,a3,a4))); }
+// metalogdistvmr missing
+function metalogdistzscore(a1,a2,a3,a4) { return div(sub(x,metalogdistmean(a1,a2,a3,a4)),metalogdiststandartdeviation(a1,a2,a3,a4)); }
+
+function triangulardistsurvival(a,b,c,x) { return sub(1,triangulardistcdf(a,b,c,x)); }
+function triangulardisthazard(a,b,c,x) { return div(triangulardistpdf(a,b,c,x),triangulardistsurvival(a,b,c,x)); }
+function triangulardistchazard(a,b,c,x) { return -log(triangulardistsurvival(a,b,c,x)); }
+function triangulardistfailrate(a,b,c,x) { return div(triangulardistcdf(a,b,c,x),x); }
+function triangulardiststandartdeviation(a,b,c) { return sqrt(triangulardistvar(a,b,c)); }
+function triangulardistcov(a,b,c) { return div(triangulardiststandartdeviation(a,b,c),triangulardistmean(a,b,c)); }
+function triangulardistcov2(a,b,c) { return sqrt(div(triangulardistvar(a,b,c),add(triangulardistvar(a,b,c),sqr(triangulardistmean(a,b,c))))); }
+function triangulardisteff(a,b,c) { return div(triangulardistvar(a,b,c),sqr(triangulardistmean(a,b,c))); }
+// triangulardistvmr missing
+function triangulardistzscore(a,b,c) { return div(sub(x,triangulardistmean(a,b,c)),triangulardiststandartdeviation(a,b,c)); }
+// triangulardistcgf missing, add manually
+function triangulardist2cf(a,b,c,t) { return log(triangulardistcf(a,b,c,t)); }
+function irwinhalldistsurvival(n,x) { return sub(1,irwinhalldistcdf(n,x)); }
+function irwinhalldisthazard(n,x) { return div(irwinhalldistpdf(n,x),irwinhalldistsurvival(n,x)); }
+function irwinhalldistchazard(n,x) { return -log(irwinhalldistsurvival(n,x)); }
+function irwinhalldistfailrate(n,x) { return div(irwinhalldistcdf(n,x),x); }
+function irwinhalldiststandartdeviation(n) { return sqrt(irwinhalldistvar(n)); }
+function irwinhalldistcov(n) { return div(irwinhalldiststandartdeviation(n),irwinhalldistmean(n)); }
+function irwinhalldistcov2(n) { return sqrt(div(irwinhalldistvar(n),add(irwinhalldistvar(n),sqr(irwinhalldistmean(n))))); }
+function irwinhalldisteff(n) { return div(irwinhalldistvar(n),sqr(irwinhalldistmean(n))); }
+// irwinhalldistvmr missing
+function irwinhalldistzscore(n) { return div(sub(x,irwinhalldistmean(n)),irwinhalldiststandartdeviation(n)); }
+// irwinhalldistcgf missing, add manually
+function irwinhalldist2cf(n,t) { return log(irwinhalldistcf(n,t)); }
+function vonmisesdistsurvival(m,k,x) { return sub(1,vonmisesdistcdf(m,k,x)); }
+function vonmisesdisthazard(m,k,x) { return div(vonmisesdistpdf(m,k,x),vonmisesdistsurvival(m,k,x)); }
+function vonmisesdistchazard(m,k,x) { return -log(vonmisesdistsurvival(m,k,x)); }
+function vonmisesdistfailrate(m,k,x) { return div(vonmisesdistcdf(m,k,x),x); }
+function vonmisesdiststandartdeviation(m,k) { return sqrt(vonmisesdistvar(m,k)); }
+function vonmisesdist2cf(m,k,t) { return log(vonmisesdistcf(m,k,t)); }
+function logisticsurvival(m,s,x) { return sub(1,logisticcdf(m,s,x)); }
+function logistichazard(m,s,x) { return div(logisticpdf(m,s,x),logisticsurvival(m,s,x)); }
+function logisticchazard(m,s,x) { return -log(logisticsurvival(m,s,x)); }
+function logisticfailrate(m,s,x) { return div(logisticcdf(m,s,x),x); }
+function logisticstandartdeviation(m,s) { return sqrt(logisticvar(m,s)); }
+function logisticcov(m,s) { return div(logisticstandartdeviation(m,s),logisticmean(m,s)); }
+function logisticcov2(m,s) { return sqrt(div(logisticvar(m,s),add(logisticvar(m,s),sqr(logisticmean(m,s))))); }
+function logisticeff(m,s) { return div(logisticvar(m,s),sqr(logisticmean(m,s))); }
+// logisticvmr missing
+function logisticzscore(m,s) { return div(sub(x,logisticmean(m,s)),logisticstandartdeviation(m,s)); }
+
+function logistic2cf(m,s,t) { return log(logisticcf(m,s,t)); }
+function argusdistsurvival(c,h,x) { return sub(1,argusdistcdf(c,h,x)); }
+function argusdisthazard(c,h,x) { return div(argusdistpdf(c,h,x),argusdistsurvival(c,h,x)); }
+function argusdistchazard(c,h,x) { return -log(argusdistsurvival(c,h,x)); }
+function argusdistfailrate(c,h,x) { return div(argusdistcdf(c,h,x),x); }
+function argusdiststandartdeviation(c,h) { return sqrt(argusdistvar(c,h)); }
+function argusdistcov(c,h) { return div(argusdiststandartdeviation(c,h),argusdistmean(c,h)); }
+function argusdistcov2(c,h) { return sqrt(div(argusdistvar(c,h),add(argusdistvar(c,h),sqr(argusdistmean(c,h))))); }
+function argusdisteff(c,h) { return div(argusdistvar(c,h),sqr(argusdistmean(c,h))); }
+// argusdistvmr missing
+function argusdistzscore(c,h) { return div(sub(x,argusdistmean(c,h)),argusdiststandartdeviation(c,h)); }
+function generalizedargusdistsurvival(c,h,p,x) { return sub(1,generalizedargusdistcdf(c,h,p,x)); }
+function generalizedargusdisthazard(c,h,p,x) { return div(generalizedargusdistpdf(c,h,p,x),generalizedargusdistsurvival(c,h,p,x)); }
+function generalizedargusdistchazard(c,h,p,x) { return -log(generalizedargusdistsurvival(c,h,p,x)); }
+function generalizedargusdistfailrate(c,h,p,x) { return div(generalizedargusdistcdf(c,h,p,x),x); }
+function generalizedargusdiststandartdeviation(c,h,p) { return sqrt(generalizedargusdistvar(c,h,p)); }
+function generalizedargusdistcov(c,h,p) { return div(generalizedargusdiststandartdeviation(c,h,p),generalizedargusdistmean(c,h,p)); }
+function generalizedargusdistcov2(c,h,p) { return sqrt(div(generalizedargusdistvar(c,h,p),add(generalizedargusdistvar(c,h,p),sqr(generalizedargusdistmean(c,h,p))))); }
+function generalizedargusdisteff(c,h,p) { return div(generalizedargusdistvar(c,h,p),sqr(generalizedargusdistmean(c,h,p))); }
+// generalizedargusdistvmr missing
+function generalizedargusdistzscore(c,h,p) { return div(sub(x,generalizedargusdistmean(c,h,p)),generalizedargusdiststandartdeviation(c,h,p)); }
+function baldingnicholsdistsurvival(f,p,x) { return sub(1,baldingnicholsdistcdf(f,p,x)); }
+function baldingnicholsdisthazard(f,p,x) { return div(baldingnicholsdistpdf(f,p,x),baldingnicholsdistsurvival(f,p,x)); }
+function baldingnicholsdistchazard(f,p,x) { return -log(baldingnicholsdistsurvival(f,p,x)); }
+function baldingnicholsdistfailrate(f,p,x) { return div(baldingnicholsdistcdf(f,p,x),x); }
+function baldingnicholsdiststandartdeviation(f,p) { return sqrt(baldingnicholsdistvar(f,p)); }
+function baldingnicholsdistcov(f,p) { return div(baldingnicholsdiststandartdeviation(f,p),baldingnicholsdistmean(f,p)); }
+function baldingnicholsdistcov2(f,p) { return sqrt(div(baldingnicholsdistvar(f,p),add(baldingnicholsdistvar(f,p),sqr(baldingnicholsdistmean(f,p))))); }
+function baldingnicholsdisteff(f,p) { return div(baldingnicholsdistvar(f,p),sqr(baldingnicholsdistmean(f,p))); }
+// baldingnicholsdistvmr missing
+function baldingnicholsdistzscore(f,p) { return div(sub(x,baldingnicholsdistmean(f,p)),baldingnicholsdiststandartdeviation(f,p)); }
+function baldingnicholsdist2cf(f,p,x) { return log(baldingnicholsdistcf(f,p,x)); }
+// expgeneralizedbetadistcgf missing, add manually
+function expgeneralizedbetadist2cf(d,s,c,p,q,ti) { return log(expgeneralizedbetadistcf(d,s,c,p,q,ti)); }
+function generalizedgammadistsurvival(a,d,p,x) { return sub(1,generalizedgammadistcdf(a,d,p,x)); }
+function generalizedgammadisthazard(a,d,p,x) { return div(generalizedgammadistpdf(a,d,p,x),generalizedgammadistsurvival(a,d,p,x)); }
+function generalizedgammadistchazard(a,d,p,x) { return -log(generalizedgammadistsurvival(a,d,p,x)); }
+function generalizedgammadistfailrate(a,d,p,x) { return div(generalizedgammadistcdf(a,d,p,x),x); }
+function generalizedgammadiststandartdeviation(a,d,p) { return sqrt(generalizedgammadistvar(a,d,p)); }
+function generalizedgammadistcov(a,d,p) { return div(generalizedgammadiststandartdeviation(a,d,p),generalizedgammadistmean(a,d,p)); }
+function generalizedgammadistcov2(a,d,p) { return sqrt(div(generalizedgammadistvar(a,d,p),add(generalizedgammadistvar(a,d,p),sqr(generalizedgammadistmean(a,d,p))))); }
+function generalizedgammadisteff(a,d,p) { return div(generalizedgammadistvar(a,d,p),sqr(generalizedgammadistmean(a,d,p))); }
+// generalizedgammadistvmr missing
+function generalizedgammadistzscore(a,d,p) { return div(sub(x,generalizedgammadistmean(a,d,p)),generalizedgammadiststandartdeviation(a,d,p)); }
+function rayleighdistsurvival(s,x) { return sub(1,rayleighdistcdf(s,x)); }
+function rayleighdisthazard(s,x) { return div(rayleighdistpdf(s,x),rayleighdistsurvival(s,x)); }
+function rayleighdistchazard(s,x) { return -log(rayleighdistsurvival(s,x)); }
+function rayleighdistfailrate(s,x) { return div(rayleighdistcdf(s,x),x); }
+function rayleighdiststandartdeviation(s) { return sqrt(rayleighdistvar(s)); }
+function rayleighdistcov(s) { return div(rayleighdiststandartdeviation(s),rayleighdistmean(s)); }
+function rayleighdistcov2(s) { return sqrt(div(rayleighdistvar(s),add(rayleighdistvar(s),sqr(rayleighdistmean(s))))); }
+function rayleighdisteff(s) { return div(rayleighdistvar(s),sqr(rayleighdistmean(s))); }
+// rayleighdistvmr missing
+function rayleighdistzscore(s) { return div(sub(x,rayleighdistmean(s)),rayleighdiststandartdeviation(s)); }
+
+// rayleighdistcgf missing, add manually
+function rayleighdist2cf(s,ti) { return log(rayleighdistcf(s,ti)); }
+function ricedistsurvival(v,s,x) { return sub(1,ricedistcdf(v,s,x)); }
+function ricedisthazard(v,s,x) { return div(ricedistpdf(v,s,x),ricedistsurvival(v,s,x)); }
+function ricedistchazard(v,s,x) { return -log(ricedistsurvival(v,s,x)); }
+function ricedistfailrate(v,s,x) { return div(ricedistcdf(v,s,x),x); }
+function ricediststandartdeviation(v,s) { return sqrt(ricedistvar(v,s)); }
+function ricedistcov(v,s) { return div(ricediststandartdeviation(v,s),ricedistmean(v,s)); }
+function ricedistcov2(v,s) { return sqrt(div(ricedistvar(v,s),add(ricedistvar(v,s),sqr(ricedistmean(v,s))))); }
+function ricedisteff(v,s) { return div(ricedistvar(v,s),sqr(ricedistmean(v,s))); }
+// ricedistvmr missing
+function ricedistzscore(v,s) { return div(sub(x,ricedistmean(v,s)),ricediststandartdeviation(v,s)); }
+// ricedistcgf missing, add manually
+// ricedistmgf missing, add manually
+// ricedistpgf missing, add manually
+function ricedist2cf(v,k,t) { return log(ricedistcf(v,k,t)); }
+function nakagamidistsurvival(m,w,x) { return sub(1,nakagamidistcdf(m,w,x)); }
+function nakagamidisthazard(m,w,x) { return div(nakagamidistpdf(m,w,x),nakagamidistsurvival(m,w,x)); }
+function nakagamidistchazard(m,w,x) { return -log(nakagamidistsurvival(m,w,x)); }
+function nakagamidistfailrate(m,w,x) { return div(nakagamidistcdf(m,w,x),x); }
+function nakagamidiststandartdeviation(m,w) { return sqrt(nakagamidistvar(m,w)); }
+function nakagamidistcov(m,w) { return div(nakagamidiststandartdeviation(m,w),nakagamidistmean(m,w)); }
+function nakagamidistcov2(m,w) { return sqrt(div(nakagamidistvar(m,w),add(nakagamidistvar(m,w),sqr(nakagamidistmean(m,w))))); }
+function nakagamidisteff(m,w) { return div(nakagamidistvar(m,w),sqr(nakagamidistmean(m,w))); }
+// nakagamidistvmr missing
+function nakagamidistzscore(m,w) { return div(sub(x,nakagamidistmean(m,w)),nakagamidiststandartdeviation(m,w)); }
+function weibulldistsurvival(l,k,x) { return sub(1,weibulldistcdf(l,k,x)); }
+function weibulldisthazard(l,k,x) { return div(weibulldistpdf(l,k,x),weibulldistsurvival(l,k,x)); }
+function weibulldistchazard(l,k,x) { return -log(weibulldistsurvival(l,k,x)); }
+function weibulldistfailrate(l,k,x) { return div(weibulldistcdf(l,k,x),x); }
+function weibulldiststandartdeviation(l,k) { return sqrt(weibulldistvar(l,k)); }
+function weibulldistcov(l,k) { return div(weibulldiststandartdeviation(l,k),weibulldistmean(l,k)); }
+function weibulldistcov2(l,k) { return sqrt(div(weibulldistvar(l,k),add(weibulldistvar(l,k),sqr(weibulldistmean(l,k))))); }
+function weibulldisteff(l,k) { return div(weibulldistvar(l,k),sqr(weibulldistmean(l,k))); }
+// weibulldistvmr missing
+function weibulldistzscore(l,k) { return div(sub(x,weibulldistmean(l,k)),weibulldiststandartdeviation(l,k)); }
+
+// weibulldistcgf missing, add manually
+function weibulldist2cf(l,k,t) { return log(weibulldistcf(l,k,t)); }
+function frechetdistsurvival(a,s,m,x) { return sub(1,frechetdistcdf(a,s,m,x)); }
+function frechetdisthazard(a,s,m,x) { return div(frechetdistpdf(a,s,m,x),frechetdistsurvival(a,s,m,x)); }
+function frechetdistchazard(a,s,m,x) { return -log(frechetdistsurvival(a,s,m,x)); }
+function frechetdistfailrate(a,s,m,x) { return div(frechetdistcdf(a,s,m,x),x); }
+function frechetdiststandartdeviation(a,s,m) { return sqrt(frechetdistvar(a,s,m)); }
+function frechetdistcov(a,s,m) { return div(frechetdiststandartdeviation(a,s,m),frechetdistmean(a,s,m)); }
+function frechetdistcov2(a,s,m) { return sqrt(div(frechetdistvar(a,s,m),add(frechetdistvar(a,s,m),sqr(frechetdistmean(a,s,m))))); }
+function frechetdisteff(a,s,m) { return div(frechetdistvar(a,s,m),sqr(frechetdistmean(a,s,m))); }
+// frechetdistvmr missing
+function frechetdistzscore(a,s,m) { return div(sub(x,frechetdistmean(a,s,m)),frechetdiststandartdeviation(a,s,m)); }
+
+function gumbeldistsurvival(m,b,x) { return sub(1,gumbeldistcdf(m,b,x)); }
+function gumbeldisthazard(m,b,x) { return div(gumbeldistpdf(m,b,x),gumbeldistsurvival(m,b,x)); }
+function gumbeldistchazard(m,b,x) { return -log(gumbeldistsurvival(m,b,x)); }
+function gumbeldistfailrate(m,b,x) { return div(gumbeldistcdf(m,b,x),x); }
+function gumbeldiststandartdeviation(m,b) { return sqrt(gumbeldistvar(m,b)); }
+function gumbeldistcov(m,b) { return div(gumbeldiststandartdeviation(m,b),gumbeldistmean(m,b)); }
+function gumbeldistcov2(m,b) { return sqrt(div(gumbeldistvar(m,b),add(gumbeldistvar(m,b),sqr(gumbeldistmean(m,b))))); }
+function gumbeldisteff(m,b) { return div(gumbeldistvar(m,b),sqr(gumbeldistmean(m,b))); }
+// gumbeldistvmr missing
+function gumbeldistzscore(m,b) { return div(sub(x,gumbeldistmean(m,b)),gumbeldiststandartdeviation(m,b)); }
+
+// gumbeldistcgf missing, add manually
+function gumbeldist2cf(m,b,t) { return log(gumbeldistcf(m,b,t)); }
+function paretodistsurvival(m,a,x) { return sub(1,paretodistcdf(m,a,x)); }
+function paretodisthazard(m,a,x) { return div(paretodistpdf(m,a,x),paretodistsurvival(m,a,x)); }
+function paretodistchazard(m,a,x) { return -log(paretodistsurvival(m,a,x)); }
+function paretodistfailrate(m,a,x) { return div(paretodistcdf(m,a,x),x); }
+function paretodiststandartdeviation(m,a) { return sqrt(paretodistvar(m,a)); }
+function paretodistcov(m,a) { return div(paretodiststandartdeviation(m,a),paretodistmean(m,a)); }
+function paretodistcov2(m,a) { return sqrt(div(paretodistvar(m,a),add(paretodistvar(m,a),sqr(paretodistmean(m,a))))); }
+function paretodisteff(m,a) { return div(paretodistvar(m,a),sqr(paretodistmean(m,a))); }
+// paretodistvmr missing
+function paretodistzscore(m,a) { return div(sub(x,paretodistmean(m,a)),paretodiststandartdeviation(m,a)); }
+
+// paretodistcgf missing, add manually
+function paretodist2cf(m,a,t) { return log(paretodistcf(m,a,t)); }
+function boundedparetodistsurvival(l,h,a,x) { return sub(1,boundedparetodistcdf(l,h,a,x)); }
+function boundedparetodisthazard(l,h,a,x) { return div(boundedparetodistpdf(l,h,a,x),boundedparetodistsurvival(l,h,a,x)); }
+function boundedparetodistchazard(l,h,a,x) { return -log(boundedparetodistsurvival(l,h,a,x)); }
+function boundedparetodistfailrate(l,h,a,x) { return div(boundedparetodistcdf(l,h,a,x),x); }
+function boundedparetodiststandartdeviation(l,h,a) { return sqrt(boundedparetodistvar(l,h,a)); }
+function boundedparetodistcov(l,h,a) { return div(boundedparetodiststandartdeviation(l,h,a),boundedparetodistmean(l,h,a)); }
+function boundedparetodistcov2(l,h,a) { return sqrt(div(boundedparetodistvar(l,h,a),add(boundedparetodistvar(l,h,a),sqr(boundedparetodistmean(l,h,a))))); }
+function boundedparetodisteff(l,h,a) { return div(boundedparetodistvar(l,h,a),sqr(boundedparetodistmean(l,h,a))); }
+// boundedparetodistvmr missing
+function boundedparetodistzscore(l,h,a) { return div(sub(x,boundedparetodistmean(l,h,a)),boundedparetodiststandartdeviation(l,h,a)); }
+function symmetricparetodistrawmomentsurvival(p,a,x) { return sub(1,symmetricparetodistrawmomentcdf(p,a,x)); }
+function symmetricparetodistrawmomenthazard(p,a,x) { return div(symmetricparetodistrawmomentpdf(p,a,x),symmetricparetodistrawmomentsurvival(p,a,x)); }
+function symmetricparetodistrawmomentchazard(p,a,x) { return -log(symmetricparetodistrawmomentsurvival(p,a,x)); }
+function symmetricparetodistrawmomentfailrate(p,a,x) { return div(symmetricparetodistrawmomentcdf(p,a,x),x); }
+function kolmogorovdistsurvival(x) { return sub(1,kolmogorovdistcdf(x)); }
+function kolmogorovdisthazard(x) { return div(kolmogorovdistpdf(x),kolmogorovdistsurvival(x)); }
+function kolmogorovdistchazard(x) { return -log(kolmogorovdistsurvival(x)); }
+function kolmogorovdistfailrate(x) { return div(kolmogorovdistcdf(x),x); }
+function wrappednormaldiststandartdeviation(m,s) { return sqrt(wrappednormaldistvar(m,s)); }
+// wrappednormaldistcgf missing, add manually
+function wrappednormaldist2cf(m,s,n) { return log(wrappednormaldistcf(m,s,n)); }
+function wrappedcauchydiststandartdeviation(m,c) { return sqrt(wrappedcauchydistvar(m,c)); }
+// wrappedcauchydistcgf missing, add manually
+function wrappedcauchydist2cf(m,c,n) { return log(wrappedcauchydistcf(m,c,n)); }
+function cauchydistsurvival(x0,c,x) { return sub(1,cauchydistcdf(x0,c,x)); }
+function cauchydisthazard(x0,c,x) { return div(cauchydistpdf(x0,c,x),cauchydistsurvival(x0,c,x)); }
+function cauchydistchazard(x0,c,x) { return -log(cauchydistsurvival(x0,c,x)); }
+function cauchydistfailrate(x0,c,x) { return div(cauchydistcdf(x0,c,x),x); }
+
+// cauchydistcgf missing, add manually
+function cauchydist2cf(x0,c,t) { return log(cauchydistcf(x0,c,t)); }
+function laplacedistsurvival(m,b,x) { return sub(1,laplacedistcdf(m,b,x)); }
+function laplacedisthazard(m,b,x) { return div(laplacedistpdf(m,b,x),laplacedistsurvival(m,b,x)); }
+function laplacedistchazard(m,b,x) { return -log(laplacedistsurvival(m,b,x)); }
+function laplacedistfailrate(m,b,x) { return div(laplacedistcdf(m,b,x),x); }
+function laplacediststandartdeviation(m,b,z) { return sqrt(laplacedistvar(m,b,z)); }
+function laplacedistcov(m,b,z) { return div(laplacediststandartdeviation(m,b,z),laplacedistmean(m,b,z)); }
+function laplacedistcov2(m,b,z) { return sqrt(div(laplacedistvar(m,b,z),add(laplacedistvar(m,b,z),sqr(laplacedistmean(m,b,z))))); }
+function laplacedisteff(m,b,z) { return div(laplacedistvar(m,b,z),sqr(laplacedistmean(m,b,z))); }
+// laplacedistvmr missing
+function laplacedistzscore(m,b,z) { return div(sub(x,laplacedistmean(m,b,z)),laplacediststandartdeviation(m,b,z)); }
+
+function asymmetriclaplacedistsurvival(m,l,k,x) { return sub(1,asymmetriclaplacedistcdf(m,l,k,x)); }
+function asymmetriclaplacedisthazard(m,l,k,x) { return div(asymmetriclaplacedistpdf(m,l,k,x),asymmetriclaplacedistsurvival(m,l,k,x)); }
+function asymmetriclaplacedistchazard(m,l,k,x) { return -log(asymmetriclaplacedistsurvival(m,l,k,x)); }
+function asymmetriclaplacedistfailrate(m,l,k,x) { return div(asymmetriclaplacedistcdf(m,l,k,x),x); }
+function asymmetriclaplacediststandartdeviation(m,l,k) { return sqrt(asymmetriclaplacedistvar(m,l,k)); }
+function asymmetriclaplacedistcov(m,l,k) { return div(asymmetriclaplacediststandartdeviation(m,l,k),asymmetriclaplacedistmean(m,l,k)); }
+function asymmetriclaplacedistcov2(m,l,k) { return sqrt(div(asymmetriclaplacedistvar(m,l,k),add(asymmetriclaplacedistvar(m,l,k),sqr(asymmetriclaplacedistmean(m,l,k))))); }
+function asymmetriclaplacedisteff(m,l,k) { return div(asymmetriclaplacedistvar(m,l,k),sqr(asymmetriclaplacedistmean(m,l,k))); }
+// asymmetriclaplacedistvmr missing
+function asymmetriclaplacedistzscore(m,l,k) { return div(sub(x,asymmetriclaplacedistmean(m,l,k)),asymmetriclaplacediststandartdeviation(m,l,k)); }
+function chidistsurvival(k,x) { return sub(1,chidistcdf(k,x)); }
+function chidisthazard(k,x) { return div(chidistpdf(k,x),chidistsurvival(k,x)); }
+function chidistchazard(k,x) { return -log(chidistsurvival(k,x)); }
+function chidistfailrate(k,x) { return div(chidistcdf(k,x),x); }
+function chidistcov(k) { return div(chidiststandartdeviation(k),chidistmean(k)); }
+function chidistcov2(k) { return sqrt(div(chidistvar(k),add(chidistvar(k),sqr(chidistmean(k))))); }
+function chidisteff(k) { return div(chidistvar(k),sqr(chidistmean(k))); }
+// chidistvmr missing
+function chidistzscore(k) { return div(sub(x,chidistmean(k)),chidiststandartdeviation(k)); }
+// chidistcgf missing, add manually
+function chidist2cf(k,ti) { return log(chidistcf(k,ti)); }
+function chisquareddistsurvival(k,x) { return sub(1,chisquareddistcdf(k,x)); }
+function chisquareddisthazard(k,x) { return div(chisquareddistpdf(k,x),chisquareddistsurvival(k,x)); }
+function chisquareddistchazard(k,x) { return -log(chisquareddistsurvival(k,x)); }
+function chisquareddistfailrate(k,x) { return div(chisquareddistcdf(k,x),x); }
+function chisquareddiststandartdeviation(k) { return sqrt(chisquareddistvar(k)); }
+function chisquareddistcov(k) { return div(chisquareddiststandartdeviation(k),chisquareddistmean(k)); }
+function chisquareddistcov2(k) { return sqrt(div(chisquareddistvar(k),add(chisquareddistvar(k),sqr(chisquareddistmean(k))))); }
+function chisquareddisteff(k) { return div(chisquareddistvar(k),sqr(chisquareddistmean(k))); }
+// chisquareddistvmr missing
+function chisquareddistzscore(k) { return div(sub(x,chisquareddistmean(k)),chisquareddiststandartdeviation(k)); }
+// chisquareddistcgf missing, add manually
+function chisquareddist2cf(k,t) { return log(chisquareddistcf(k,t)); }
+function noncentralchisquareddistsurvival(k,l,x) { return sub(1,noncentralchisquareddistcdf(k,l,x)); }
+function noncentralchisquareddisthazard(k,l,x) { return div(noncentralchisquareddistpdf(k,l,x),noncentralchisquareddistsurvival(k,l,x)); }
+function noncentralchisquareddistchazard(k,l,x) { return -log(noncentralchisquareddistsurvival(k,l,x)); }
+function noncentralchisquareddistfailrate(k,l,x) { return div(noncentralchisquareddistcdf(k,l,x),x); }
+function noncentralchisquareddiststandartdeviation(k,l) { return sqrt(noncentralchisquareddistvar(k,l)); }
+function noncentralchisquareddistcov(k,l) { return div(noncentralchisquareddiststandartdeviation(k,l),noncentralchisquareddistmean(k,l)); }
+function noncentralchisquareddistcov2(k,l) { return sqrt(div(noncentralchisquareddistvar(k,l),add(noncentralchisquareddistvar(k,l),sqr(noncentralchisquareddistmean(k,l))))); }
+function noncentralchisquareddisteff(k,l) { return div(noncentralchisquareddistvar(k,l),sqr(noncentralchisquareddistmean(k,l))); }
+// noncentralchisquareddistvmr missing
+function noncentralchisquareddistzscore(k,l) { return div(sub(x,noncentralchisquareddistmean(k,l)),noncentralchisquareddiststandartdeviation(k,l)); }
+// noncentralchisquareddistcgf missing, add manually
+function noncentralchisquareddist2cf(k,l,t) { return log(noncentralchisquareddistcf(k,l,t)); }
+function noncentralchidistsurvival(k,l,x) { return sub(1,noncentralchidistcdf(k,l,x)); }
+function noncentralchidisthazard(k,l,x) { return div(noncentralchidistpdf(k,l,x),noncentralchidistsurvival(k,l,x)); }
+function noncentralchidistchazard(k,l,x) { return -log(noncentralchidistsurvival(k,l,x)); }
+function noncentralchidistfailrate(k,l,x) { return div(noncentralchidistcdf(k,l,x),x); }
+function noncentralchidiststandartdeviation(k,l) { return sqrt(noncentralchidistvar(k,l)); }
+function noncentralchidistcov(k,l) { return div(noncentralchidiststandartdeviation(k,l),noncentralchidistmean(k,l)); }
+function noncentralchidistcov2(k,l) { return sqrt(div(noncentralchidistvar(k,l),add(noncentralchidistvar(k,l),sqr(noncentralchidistmean(k,l))))); }
+function noncentralchidisteff(k,l) { return div(noncentralchidistvar(k,l),sqr(noncentralchidistmean(k,l))); }
+// noncentralchidistvmr missing
+function noncentralchidistzscore(k,l) { return div(sub(x,noncentralchidistmean(k,l)),noncentralchidiststandartdeviation(k,l)); }
+function betaprimedistsurvival(a,b,x) { return sub(1,betaprimedistcdf(a,b,x)); }
+function betaprimedisthazard(a,b,x) { return div(betaprimedistpdf(a,b,x),betaprimedistsurvival(a,b,x)); }
+function betaprimedistchazard(a,b,x) { return -log(betaprimedistsurvival(a,b,x)); }
+function betaprimedistfailrate(a,b,x) { return div(betaprimedistcdf(a,b,x),x); }
+function betaprimediststandartdeviation(a,b) { return sqrt(betaprimedistvar(a,b)); }
+function betaprimedistcov(a,b) { return div(betaprimediststandartdeviation(a,b),betaprimedistmean(a,b)); }
+function betaprimedistcov2(a,b) { return sqrt(div(betaprimedistvar(a,b),add(betaprimedistvar(a,b),sqr(betaprimedistmean(a,b))))); }
+function betaprimedisteff(a,b) { return div(betaprimedistvar(a,b),sqr(betaprimedistmean(a,b))); }
+// betaprimedistvmr missing
+function betaprimedistzscore(a,b) { return div(sub(x,betaprimedistmean(a,b)),betaprimediststandartdeviation(a,b)); }
+function birnbaumsaundersdistsurvival(a,m,b,x) { return sub(1,birnbaumsaundersdistcdf(a,m,b,x)); }
+function birnbaumsaundersdisthazard(a,m,b,x) { return div(birnbaumsaundersdistpdf(a,m,b,x),birnbaumsaundersdistsurvival(a,m,b,x)); }
+function birnbaumsaundersdistchazard(a,m,b,x) { return -log(birnbaumsaundersdistsurvival(a,m,b,x)); }
+function birnbaumsaundersdistfailrate(a,m,b,x) { return div(birnbaumsaundersdistcdf(a,m,b,x),x); }
+function birnbaumsaundersdiststandartdeviation(a,m,b) { return sqrt(birnbaumsaundersdistvar(a,m,b)); }
+function birnbaumsaundersdistcov(a,m,b) { return div(birnbaumsaundersdiststandartdeviation(a,m,b),birnbaumsaundersdistmean(a,m,b)); }
+function birnbaumsaundersdistcov2(a,m,b) { return sqrt(div(birnbaumsaundersdistvar(a,m,b),add(birnbaumsaundersdistvar(a,m,b),sqr(birnbaumsaundersdistmean(a,m,b))))); }
+function birnbaumsaundersdisteff(a,m,b) { return div(birnbaumsaundersdistvar(a,m,b),sqr(birnbaumsaundersdistmean(a,m,b))); }
+// birnbaumsaundersdistvmr missing
+function birnbaumsaundersdistzscore(a,m,b) { return div(sub(x,birnbaumsaundersdistmean(a,m,b)),birnbaumsaundersdiststandartdeviation(a,m,b)); }
+
+function standartfatiguelifedistsurvival(a,x) { return sub(1,standartfatiguelifedistcdf(a,x)); }
+function standartfatiguelifedisthazard(a,x) { return div(standartfatiguelifedistpdf(a,x),standartfatiguelifedistsurvival(a,x)); }
+function standartfatiguelifedistchazard(a,x) { return -log(standartfatiguelifedistsurvival(a,x)); }
+function standartfatiguelifedistfailrate(a,x) { return div(standartfatiguelifedistcdf(a,x),x); }
+function standartfatiguelifediststandartdeviation(a) { return sqrt(standartfatiguelifedistvar(a)); }
+function standartfatiguelifedistcov(a) { return div(standartfatiguelifediststandartdeviation(a),standartfatiguelifedistmean(a)); }
+function standartfatiguelifedistcov2(a) { return sqrt(div(standartfatiguelifedistvar(a),add(standartfatiguelifedistvar(a),sqr(standartfatiguelifedistmean(a))))); }
+function standartfatiguelifedisteff(a) { return div(standartfatiguelifedistvar(a),sqr(standartfatiguelifedistmean(a))); }
+// standartfatiguelifedistvmr missing
+function standartfatiguelifedistzscore(a) { return div(sub(x,standartfatiguelifedistmean(a)),standartfatiguelifediststandartdeviation(a)); }
+
+function inversechisquareddistsurvival(v,x) { return sub(1,inversechisquareddistcdf(v,x)); }
+function inversechisquareddisthazard(v,x) { return div(inversechisquareddistpdf(v,x),inversechisquareddistsurvival(v,x)); }
+function inversechisquareddistchazard(v,x) { return -log(inversechisquareddistsurvival(v,x)); }
+function inversechisquareddistfailrate(v,x) { return div(inversechisquareddistcdf(v,x),x); }
+function inversechisquareddiststandartdeviation(v) { return sqrt(inversechisquareddistvar(v)); }
+function inversechisquareddistcov(v) { return div(inversechisquareddiststandartdeviation(v),inversechisquareddistmean(v)); }
+function inversechisquareddistcov2(v) { return sqrt(div(inversechisquareddistvar(v),add(inversechisquareddistvar(v),sqr(inversechisquareddistmean(v))))); }
+function inversechisquareddisteff(v) { return div(inversechisquareddistvar(v),sqr(inversechisquareddistmean(v))); }
+// inversechisquareddistvmr missing
+function inversechisquareddistzscore(v) { return div(sub(x,inversechisquareddistmean(v)),inversechisquareddiststandartdeviation(v)); }
+// inversechisquareddistcgf missing, add manually
+function inversechisquareddist2cf(v,t) { return log(inversechisquareddistcf(v,t)); }
+function scaledinversechisquareddistsurvival(v,tt,x) { return sub(1,scaledinversechisquareddistcdf(v,tt,x)); }
+function scaledinversechisquareddisthazard(v,tt,x) { return div(scaledinversechisquareddistpdf(v,tt,x),scaledinversechisquareddistsurvival(v,tt,x)); }
+function scaledinversechisquareddistchazard(v,tt,x) { return -log(scaledinversechisquareddistsurvival(v,tt,x)); }
+function scaledinversechisquareddistfailrate(v,tt,x) { return div(scaledinversechisquareddistcdf(v,tt,x),x); }
+function scaledinversechisquareddiststandartdeviation(v,tt) { return sqrt(scaledinversechisquareddistvar(v,tt)); }
+function scaledinversechisquareddistcov(v,tt) { return div(scaledinversechisquareddiststandartdeviation(v,tt),scaledinversechisquareddistmean(v,tt)); }
+function scaledinversechisquareddistcov2(v,tt) { return sqrt(div(scaledinversechisquareddistvar(v,tt),add(scaledinversechisquareddistvar(v,tt),sqr(scaledinversechisquareddistmean(v,tt))))); }
+function scaledinversechisquareddisteff(v,tt) { return div(scaledinversechisquareddistvar(v,tt),sqr(scaledinversechisquareddistmean(v,tt))); }
+// scaledinversechisquareddistvmr missing
+function scaledinversechisquareddistzscore(v,tt) { return div(sub(x,scaledinversechisquareddistmean(v,tt)),scaledinversechisquareddiststandartdeviation(v,tt)); }
+// scaledinversechisquareddistcgf missing, add manually
+function scaledinversechisquareddist2cf(v,tt,t) { return log(scaledinversechisquareddistcf(v,tt,t)); }
+function hyperbolicdiststandartdeviation(m,a,b,d) { return sqrt(hyperbolicdistvar(m,a,b,d)); }
+function hyperbolicdistcov(m,a,b,d) { return div(hyperbolicdiststandartdeviation(m,a,b,d),hyperbolicdistmean(m,a,b,d)); }
+function hyperbolicdistcov2(m,a,b,d) { return sqrt(div(hyperbolicdistvar(m,a,b,d),add(hyperbolicdistvar(m,a,b,d),sqr(hyperbolicdistmean(m,a,b,d))))); }
+function hyperbolicdisteff(m,a,b,d) { return div(hyperbolicdistvar(m,a,b,d),sqr(hyperbolicdistmean(m,a,b,d))); }
+// hyperbolicdistvmr missing
+function hyperbolicdistzscore(m,a,b,d) { return div(sub(x,hyperbolicdistmean(m,a,b,d)),hyperbolicdiststandartdeviation(m,a,b,d)); }
+// hyperbolicdistcgf missing, add manually
+function hyperbolicdist2cf(m,a,b,d,zz) { return log(hyperbolicdistcf(m,a,b,d,zz)); }
+function dagumdistsurvival(p,a,b,x) { return sub(1,dagumdistcdf(p,a,b,x)); }
+function dagumdisthazard(p,a,b,x) { return div(dagumdistpdf(p,a,b,x),dagumdistsurvival(p,a,b,x)); }
+function dagumdistchazard(p,a,b,x) { return -log(dagumdistsurvival(p,a,b,x)); }
+function dagumdistfailrate(p,a,b,x) { return div(dagumdistcdf(p,a,b,x),x); }
+function dagumdiststandartdeviation(p,a,b) { return sqrt(dagumdistvar(p,a,b)); }
+function dagumdistcov(p,a,b) { return div(dagumdiststandartdeviation(p,a,b),dagumdistmean(p,a,b)); }
+function dagumdistcov2(p,a,b) { return sqrt(div(dagumdistvar(p,a,b),add(dagumdistvar(p,a,b),sqr(dagumdistmean(p,a,b))))); }
+function dagumdisteff(p,a,b) { return div(dagumdistvar(p,a,b),sqr(dagumdistmean(p,a,b))); }
+// dagumdistvmr missing
+function dagumdistzscore(p,a,b) { return div(sub(x,dagumdistmean(p,a,b)),dagumdiststandartdeviation(p,a,b)); }
+
+function exponentiallogarithmicdistsurvival(p,b,x) { return sub(1,exponentiallogarithmicdistcdf(p,b,x)); }
+function exponentiallogarithmicdisthazard(p,b,x) { return div(exponentiallogarithmicdistpdf(p,b,x),exponentiallogarithmicdistsurvival(p,b,x)); }
+function exponentiallogarithmicdistchazard(p,b,x) { return -log(exponentiallogarithmicdistsurvival(p,b,x)); }
+function exponentiallogarithmicdistfailrate(p,b,x) { return div(exponentiallogarithmicdistcdf(p,b,x),x); }
+function exponentiallogarithmicdiststandartdeviation(p,b) { return sqrt(exponentiallogarithmicdistvar(p,b)); }
+function exponentiallogarithmicdistcov(p,b) { return div(exponentiallogarithmicdiststandartdeviation(p,b),exponentiallogarithmicdistmean(p,b)); }
+function exponentiallogarithmicdistcov2(p,b) { return sqrt(div(exponentiallogarithmicdistvar(p,b),add(exponentiallogarithmicdistvar(p,b),sqr(exponentiallogarithmicdistmean(p,b))))); }
+function exponentiallogarithmicdisteff(p,b) { return div(exponentiallogarithmicdistvar(p,b),sqr(exponentiallogarithmicdistmean(p,b))); }
+// exponentiallogarithmicdistvmr missing
+function exponentiallogarithmicdistzscore(p,b) { return div(sub(x,exponentiallogarithmicdistmean(p,b)),exponentiallogarithmicdiststandartdeviation(p,b)); }
+// exponentiallogarithmicdistcgf missing, add manually
+function exponentiallogarithmicdist2cf(p,b,t) { return log(exponentiallogarithmicdistcf(p,b,t)); }
+function exponentialpowersurvival(m,a,b,x) { return sub(1,exponentialpowercdf(m,a,b,x)); }
+function exponentialpowerhazard(m,a,b,x) { return div(exponentialpowerpdf(m,a,b,x),exponentialpowersurvival(m,a,b,x)); }
+function exponentialpowerchazard(m,a,b,x) { return -log(exponentialpowersurvival(m,a,b,x)); }
+function exponentialpowerfailrate(m,a,b,x) { return div(exponentialpowercdf(m,a,b,x),x); }
+function exponentialpowerstandartdeviation(m,a,b) { return sqrt(exponentialpowervar(m,a,b)); }
+function exponentialpowercov(m,a,b) { return div(exponentialpowerstandartdeviation(m,a,b),exponentialpowermean(m,a,b)); }
+function exponentialpowercov2(m,a,b) { return sqrt(div(exponentialpowervar(m,a,b),add(exponentialpowervar(m,a,b),sqr(exponentialpowermean(m,a,b))))); }
+function exponentialpowereff(m,a,b) { return div(exponentialpowervar(m,a,b),sqr(exponentialpowermean(m,a,b))); }
+// exponentialpowervmr missing
+function exponentialpowerzscore(m,a,b) { return div(sub(x,exponentialpowermean(m,a,b)),exponentialpowerstandartdeviation(m,a,b)); }
+function fisherszstandartdeviation(d1,d2) { return sqrt(fisherszvar(d1,d2)); }
+function fisherszcov(d1,d2) { return div(fisherszstandartdeviation(d1,d2),fisherszmean(d1,d2)); }
+function fisherszcov2(d1,d2) { return sqrt(div(fisherszvar(d1,d2),add(fisherszvar(d1,d2),sqr(fisherszmean(d1,d2))))); }
+function fisherszeff(d1,d2) { return div(fisherszvar(d1,d2),sqr(fisherszmean(d1,d2))); }
+// fisherszvmr missing
+function fisherszzscore(d1,d2) { return div(sub(x,fisherszmean(d1,d2)),fisherszstandartdeviation(d1,d2)); }
+function exponentialstandartdeviation(l) { return sqrt(exponentialvar(l)); }
+function exponentialcov(l) { return div(exponentialstandartdeviation(l),exponentialmean(l)); }
+function exponentialcov2(l) { return sqrt(div(exponentialvar(l),add(exponentialvar(l),sqr(exponentialmean(l))))); }
+function exponentialeff(l) { return div(exponentialvar(l),sqr(exponentialmean(l))); }
+// exponentialvmr missing
+function exponentialzscore(l) { return div(sub(x,exponentialmean(l)),exponentialstandartdeviation(l)); }
+
+function exponential2cf(l,t) { return log(exponentialcf(l,t)); }
+function hyperexponentialsurvival(L,P,x) { return sub(1,hyperexponentialcdf(L,P,x)); }
+function hyperexponentialhazard(L,P,x) { return div(hyperexponentialpdf(L,P,x),hyperexponentialsurvival(L,P,x)); }
+function hyperexponentialchazard(L,P,x) { return -log(hyperexponentialsurvival(L,P,x)); }
+function hyperexponentialfailrate(L,P,x) { return div(hyperexponentialcdf(L,P,x),x); }
+function hyperexponentialstandartdeviation(L,P) { return sqrt(hyperexponentialvar(L,P)); }
+function hyperexponentialcov(L,P) { return div(hyperexponentialstandartdeviation(L,P),hyperexponentialmean(L,P)); }
+function hyperexponentialcov2(L,P) { return sqrt(div(hyperexponentialvar(L,P),add(hyperexponentialvar(L,P),sqr(hyperexponentialmean(L,P))))); }
+function hyperexponentialeff(L,P) { return div(hyperexponentialvar(L,P),sqr(hyperexponentialmean(L,P))); }
+// hyperexponentialvmr missing
+function hyperexponentialzscore(L,P) { return div(sub(x,hyperexponentialmean(L,P)),hyperexponentialstandartdeviation(L,P)); }
+function hypoexponentialstandartdeviation(L,x) { return sqrt(hypoexponentialvar(L,x)); }
+function hypoexponentialcov(L,x) { return div(hypoexponentialstandartdeviation(L,x),hypoexponentialmean(L,x)); }
+function hypoexponentialcov2(L,x) { return sqrt(div(hypoexponentialvar(L,x),add(hypoexponentialvar(L,x),sqr(hypoexponentialmean(L,x))))); }
+function hypoexponentialeff(L,x) { return div(hypoexponentialvar(L,x),sqr(hypoexponentialmean(L,x))); }
+// hypoexponentialvmr missing
+function hypoexponentialzscore(L,x) { return div(sub(x,hypoexponentialmean(L,x)),hypoexponentialstandartdeviation(L,x)); }
+function fdistsurvival(d1,d2,x) { return sub(1,fdistcdf(d1,d2,x)); }
+function fdisthazard(d1,d2,x) { return div(fdistpdf(d1,d2,x),fdistsurvival(d1,d2,x)); }
+function fdistchazard(d1,d2,x) { return -log(fdistsurvival(d1,d2,x)); }
+function fdistfailrate(d1,d2,x) { return div(fdistcdf(d1,d2,x),x); }
+function fdiststandartdeviation(d1,d2) { return sqrt(fdistvar(d1,d2)); }
+function fdistcov(d1,d2) { return div(fdiststandartdeviation(d1,d2),fdistmean(d1,d2)); }
+function fdistcov2(d1,d2) { return sqrt(div(fdistvar(d1,d2),add(fdistvar(d1,d2),sqr(fdistmean(d1,d2))))); }
+function fdisteff(d1,d2) { return div(fdistvar(d1,d2),sqr(fdistmean(d1,d2))); }
+// fdistvmr missing
+function fdistzscore(d1,d2) { return div(sub(x,fdistmean(d1,d2)),fdiststandartdeviation(d1,d2)); }
+function hotellingstsqrsurvival(p,n,tt) { return sub(1,hotellingstsqrcdf(p,n,tt)); }
+function hotellingstsqrhazard(p,n,tt) { return div(hotellingstsqrpdf(p,n,tt),hotellingstsqrsurvival(p,n,tt)); }
+function hotellingstsqrchazard(p,n,tt) { return -log(hotellingstsqrsurvival(p,n,tt)); }
+function hotellingstsqrfailrate(p,n,tt) { return div(hotellingstsqrcdf(p,n,tt),x); }
+function hotellingstsqrstandartdeviation(p,n) { return sqrt(hotellingstsqrvar(p,n)); }
+function hotellingstsqrcov(p,n) { return div(hotellingstsqrstandartdeviation(p,n),hotellingstsqrmean(p,n)); }
+function hotellingstsqrcov2(p,n) { return sqrt(div(hotellingstsqrvar(p,n),add(hotellingstsqrvar(p,n),sqr(hotellingstsqrmean(p,n))))); }
+function hotellingstsqreff(p,n) { return div(hotellingstsqrvar(p,n),sqr(hotellingstsqrmean(p,n))); }
+// hotellingstsqrvmr missing
+function hotellingstsqrzscore(p,n) { return div(sub(x,hotellingstsqrmean(p,n)),hotellingstsqrstandartdeviation(p,n)); }
+function noncentralfdistsurvival(d1,d2,l,x) { return sub(1,noncentralfdistcdf(d1,d2,l,x)); }
+function noncentralfdisthazard(d1,d2,l,x) { return div(noncentralfdistpdf(d1,d2,l,x),noncentralfdistsurvival(d1,d2,l,x)); }
+function noncentralfdistchazard(d1,d2,l,x) { return -log(noncentralfdistsurvival(d1,d2,l,x)); }
+function noncentralfdistfailrate(d1,d2,l,x) { return div(noncentralfdistcdf(d1,d2,l,x),x); }
+function noncentralfdiststandartdeviation(v1,v2,l) { return sqrt(noncentralfdistvar(v1,v2,l)); }
+function noncentralfdistcov(v1,v2,l) { return div(noncentralfdiststandartdeviation(v1,v2,l),noncentralfdistmean(v1,v2,l)); }
+function noncentralfdistcov2(v1,v2,l) { return sqrt(div(noncentralfdistvar(v1,v2,l),add(noncentralfdistvar(v1,v2,l),sqr(noncentralfdistmean(v1,v2,l))))); }
+function noncentralfdisteff(v1,v2,l) { return div(noncentralfdistvar(v1,v2,l),sqr(noncentralfdistmean(v1,v2,l))); }
+// noncentralfdistvmr missing
+function noncentralfdistzscore(v1,v2,l) { return div(sub(x,noncentralfdistmean(v1,v2,l)),noncentralfdiststandartdeviation(v1,v2,l)); }
+function loglogisticdistsurvival(a,b,x) { return sub(1,loglogisticdistcdf(a,b,x)); }
+function loglogisticdisthazard(a,b,x) { return div(loglogisticdistpdf(a,b,x),loglogisticdistsurvival(a,b,x)); }
+function loglogisticdistchazard(a,b,x) { return -log(loglogisticdistsurvival(a,b,x)); }
+function loglogisticdistfailrate(a,b,x) { return div(loglogisticdistcdf(a,b,x),x); }
+function loglogisticdiststandartdeviation(a,b) { return sqrt(loglogisticdistvar(a,b)); }
+function loglogisticdistcov(a,b) { return div(loglogisticdiststandartdeviation(a,b),loglogisticdistmean(a,b)); }
+function loglogisticdistcov2(a,b) { return sqrt(div(loglogisticdistvar(a,b),add(loglogisticdistvar(a,b),sqr(loglogisticdistmean(a,b))))); }
+function loglogisticdisteff(a,b) { return div(loglogisticdistvar(a,b),sqr(loglogisticdistmean(a,b))); }
+// loglogisticdistvmr missing
+function loglogisticdistzscore(a,b) { return div(sub(x,loglogisticdistmean(a,b)),loglogisticdiststandartdeviation(a,b)); }
+
+function loglogisticdist2cf(a,b,t) { return log(loglogisticdistcf(a,b,t)); }
+function shiftedloglogisticsurvival(m,s,c,x) { return sub(1,shiftedloglogisticcdf(m,s,c,x)); }
+function shiftedloglogistichazard(m,s,c,x) { return div(shiftedloglogisticpdf(m,s,c,x),shiftedloglogisticsurvival(m,s,c,x)); }
+function shiftedloglogisticchazard(m,s,c,x) { return -log(shiftedloglogisticsurvival(m,s,c,x)); }
+function shiftedloglogisticfailrate(m,s,c,x) { return div(shiftedloglogisticcdf(m,s,c,x),x); }
+function shiftedloglogisticstandartdeviation(m,s,c) { return sqrt(shiftedloglogisticvar(m,s,c)); }
+function shiftedloglogisticcov(m,s,c) { return div(shiftedloglogisticstandartdeviation(m,s,c),shiftedloglogisticmean(m,s,c)); }
+function shiftedloglogisticcov2(m,s,c) { return sqrt(div(shiftedloglogisticvar(m,s,c),add(shiftedloglogisticvar(m,s,c),sqr(shiftedloglogisticmean(m,s,c))))); }
+function shiftedloglogisticeff(m,s,c) { return div(shiftedloglogisticvar(m,s,c),sqr(shiftedloglogisticmean(m,s,c))); }
+// shiftedloglogisticvmr missing
+function shiftedloglogisticzscore(m,s,c) { return div(sub(x,shiftedloglogisticmean(m,s,c)),shiftedloglogisticstandartdeviation(m,s,c)); }
+function foldednormaldistsurvival(m,s,x) { return sub(1,foldednormaldistcdf(m,s,x)); }
+function foldednormaldisthazard(m,s,x) { return div(foldednormaldistpdf(m,s,x),foldednormaldistsurvival(m,s,x)); }
+function foldednormaldistchazard(m,s,x) { return -log(foldednormaldistsurvival(m,s,x)); }
+function foldednormaldistfailrate(m,s,x) { return div(foldednormaldistcdf(m,s,x),x); }
+function foldednormaldiststandartdeviation(m,s) { return sqrt(foldednormaldistvar(m,s)); }
+function foldednormaldistcov(m,s) { return div(foldednormaldiststandartdeviation(m,s),foldednormaldistmean(m,s)); }
+function foldednormaldistcov2(m,s) { return sqrt(div(foldednormaldistvar(m,s),add(foldednormaldistvar(m,s),sqr(foldednormaldistmean(m,s))))); }
+function foldednormaldisteff(m,s) { return div(foldednormaldistvar(m,s),sqr(foldednormaldistmean(m,s))); }
+// foldednormaldistvmr missing
+function foldednormaldistzscore(m,s) { return div(sub(x,foldednormaldistmean(m,s)),foldednormaldiststandartdeviation(m,s)); }
+function foldednormaldist2cf(m,t) { return log(foldednormaldistcf(m,t)); }
+function halfnormalsurvival(s,x) { return sub(1,halfnormalcdf(s,x)); }
+function halfnormalhazard(s,x) { return div(halfnormalpdf(s,x),halfnormalsurvival(s,x)); }
+function halfnormalchazard(s,x) { return -log(halfnormalsurvival(s,x)); }
+function halfnormalfailrate(s,x) { return div(halfnormalcdf(s,x),x); }
+
+function halfnormal2cf(s,t) { return log(halfnormalcf(s,t)); }
+function modifiedhalfnormalsurvival(a,b,c,x) { return sub(1,modifiedhalfnormalcdf(a,b,c,x)); }
+function modifiedhalfnormalhazard(a,b,c,x) { return div(modifiedhalfnormalpdf(a,b,c,x),modifiedhalfnormalsurvival(a,b,c,x)); }
+function modifiedhalfnormalchazard(a,b,c,x) { return -log(modifiedhalfnormalsurvival(a,b,c,x)); }
+function modifiedhalfnormalfailrate(a,b,c,x) { return div(modifiedhalfnormalcdf(a,b,c,x),x); }
+function modifiedhalfnormalstandartdeviation(a,b,c) { return sqrt(modifiedhalfnormalvar(a,b,c)); }
+function modifiedhalfnormalcov(a,b,c) { return div(modifiedhalfnormalstandartdeviation(a,b,c),modifiedhalfnormalmean(a,b,c)); }
+function modifiedhalfnormalcov2(a,b,c) { return sqrt(div(modifiedhalfnormalvar(a,b,c),add(modifiedhalfnormalvar(a,b,c),sqr(modifiedhalfnormalmean(a,b,c))))); }
+function modifiedhalfnormaleff(a,b,c) { return div(modifiedhalfnormalvar(a,b,c),sqr(modifiedhalfnormalmean(a,b,c))); }
+// modifiedhalfnormalvmr missing
+function modifiedhalfnormalzscore(a,b,c) { return div(sub(x,modifiedhalfnormalmean(a,b,c)),modifiedhalfnormalstandartdeviation(a,b,c)); }
+function modifiedhalfnormal2cf(a,b,c,t) { return log(modifiedhalfnormalcf(a,b,c,t)); }
+function truncatednormalsurvival(m,s,a,b,x) { return sub(1,truncatednormalcdf(m,s,a,b,x)); }
+function truncatednormalhazard(m,s,a,b,x) { return div(truncatednormalpdf(m,s,a,b,x),truncatednormalsurvival(m,s,a,b,x)); }
+function truncatednormalchazard(m,s,a,b,x) { return -log(truncatednormalsurvival(m,s,a,b,x)); }
+function truncatednormalfailrate(m,s,a,b,x) { return div(truncatednormalcdf(m,s,a,b,x),x); }
+function truncatednormalstandartdeviation(m,s,a,b) { return sqrt(truncatednormalvar(m,s,a,b)); }
+function truncatednormalcov(m,s,a,b) { return div(truncatednormalstandartdeviation(m,s,a,b),truncatednormalmean(m,s,a,b)); }
+function truncatednormalcov2(m,s,a,b) { return sqrt(div(truncatednormalvar(m,s,a,b),add(truncatednormalvar(m,s,a,b),sqr(truncatednormalmean(m,s,a,b))))); }
+function truncatednormaleff(m,s,a,b) { return div(truncatednormalvar(m,s,a,b),sqr(truncatednormalmean(m,s,a,b))); }
+// truncatednormalvmr missing
+function truncatednormalzscore(m,s,a,b) { return div(sub(x,truncatednormalmean(m,s,a,b)),truncatednormalstandartdeviation(m,s,a,b)); }
+function truncatednormal2cf(m,s,a,b,z) { return log(truncatednormalcf(m,s,a,b,z)); }
+function levydistsurvival(m,c,x) { return sub(1,levydistcdf(m,c,x)); }
+function levydisthazard(m,c,x) { return div(levydistpdf(m,c,x),levydistsurvival(m,c,x)); }
+function levydistchazard(m,c,x) { return -log(levydistsurvival(m,c,x)); }
+function levydistfailrate(m,c,x) { return div(levydistcdf(m,c,x),x); }
+function levydist2cf(m,c,t) { return log(levydistcf(m,c,t)); }
+function gompertzdistsurvival(n,b,x) { return sub(1,gompertzdistcdf(n,b,x)); }
+function gompertzdisthazard(n,b,x) { return div(gompertzdistpdf(n,b,x),gompertzdistsurvival(n,b,x)); }
+function gompertzdistchazard(n,b,x) { return -log(gompertzdistsurvival(n,b,x)); }
+function gompertzdistfailrate(n,b,x) { return div(gompertzdistcdf(n,b,x),x); }
+function gompertzdiststandartdeviation(n,b) { return sqrt(gompertzdistvar(n,b)); }
+function gompertzdistcov(n,b) { return div(gompertzdiststandartdeviation(n,b),gompertzdistmean(n,b)); }
+function gompertzdistcov2(n,b) { return sqrt(div(gompertzdistvar(n,b),add(gompertzdistvar(n,b),sqr(gompertzdistmean(n,b))))); }
+function gompertzdisteff(n,b) { return div(gompertzdistvar(n,b),sqr(gompertzdistmean(n,b))); }
+// gompertzdistvmr missing
+function gompertzdistzscore(n,b) { return div(sub(x,gompertzdistmean(n,b)),gompertzdiststandartdeviation(n,b)); }
+function gompertzdist2cf(n,b,t) { return log(gompertzdistcf(n,b,t)); }
+function generalizedinversegaussianstandartdeviation(a,b,p) { return sqrt(generalizedinversegaussianvar(a,b,p)); }
+function generalizedinversegaussiancov(a,b,p) { return div(generalizedinversegaussianstandartdeviation(a,b,p),generalizedinversegaussianmean(a,b,p)); }
+function generalizedinversegaussiancov2(a,b,p) { return sqrt(div(generalizedinversegaussianvar(a,b,p),add(generalizedinversegaussianvar(a,b,p),sqr(generalizedinversegaussianmean(a,b,p))))); }
+function generalizedinversegaussianeff(a,b,p) { return div(generalizedinversegaussianvar(a,b,p),sqr(generalizedinversegaussianmean(a,b,p))); }
+// generalizedinversegaussianvmr missing
+function generalizedinversegaussianzscore(a,b,p) { return div(sub(x,generalizedinversegaussianmean(a,b,p)),generalizedinversegaussianstandartdeviation(a,b,p)); }
+function generalizedinversegaussian2cf(a,b,p,z) { return log(generalizedinversegaussiancf(a,b,p,z)); }
+function erlangdistsurvival(k,l,x) { return sub(1,erlangdistcdf(k,l,x)); }
+function erlangdisthazard(k,l,x) { return div(erlangdistpdf(k,l,x),erlangdistsurvival(k,l,x)); }
+function erlangdistchazard(k,l,x) { return -log(erlangdistsurvival(k,l,x)); }
+function erlangdistfailrate(k,l,x) { return div(erlangdistcdf(k,l,x),x); }
+function erlangdiststandartdeviation(k,l) { return sqrt(erlangdistvar(k,l)); }
+function erlangdistcov(k,l) { return div(erlangdiststandartdeviation(k,l),erlangdistmean(k,l)); }
+function erlangdistcov2(k,l) { return sqrt(div(erlangdistvar(k,l),add(erlangdistvar(k,l),sqr(erlangdistmean(k,l))))); }
+function erlangdisteff(k,l) { return div(erlangdistvar(k,l),sqr(erlangdistmean(k,l))); }
+// erlangdistvmr missing
+function erlangdistzscore(k,l) { return div(sub(x,erlangdistmean(k,l)),erlangdiststandartdeviation(k,l)); }
+// erlangdistcgf missing, add manually
+function erlangdist2cf(k,l,t) { return log(erlangdistcf(k,l,t)); }
+function benktander1distsurvival(a,b,x) { return sub(1,benktander1distcdf(a,b,x)); }
+function benktander1disthazard(a,b,x) { return div(benktander1distpdf(a,b,x),benktander1distsurvival(a,b,x)); }
+function benktander1distchazard(a,b,x) { return -log(benktander1distsurvival(a,b,x)); }
+function benktander1distfailrate(a,b,x) { return div(benktander1distcdf(a,b,x),x); }
+function benktander1diststandartdeviation(a,b) { return sqrt(benktander1distvar(a,b)); }
+function benktander1distcov(a,b) { return div(benktander1diststandartdeviation(a,b),benktander1distmean(a,b)); }
+function benktander1distcov2(a,b) { return sqrt(div(benktander1distvar(a,b),add(benktander1distvar(a,b),sqr(benktander1distmean(a,b))))); }
+function benktander1disteff(a,b) { return div(benktander1distvar(a,b),sqr(benktander1distmean(a,b))); }
+// benktander1distvmr missing
+function benktander1distzscore(a,b) { return div(sub(x,benktander1distmean(a,b)),benktander1diststandartdeviation(a,b)); }
+function benktander2distsurvival(a,b,x) { return sub(1,benktander2distcdf(a,b,x)); }
+function benktander2disthazard(a,b,x) { return div(benktander2distpdf(a,b,x),benktander2distsurvival(a,b,x)); }
+function benktander2distchazard(a,b,x) { return -log(benktander2distsurvival(a,b,x)); }
+function benktander2distfailrate(a,b,x) { return div(benktander2distcdf(a,b,x),x); }
+function benktander2diststandartdeviation(a,b) { return sqrt(benktander2distvar(a,b)); }
+function benktander2distcov(a,b) { return div(benktander2diststandartdeviation(a,b),benktander2distmean(a,b)); }
+function benktander2distcov2(a,b) { return sqrt(div(benktander2distvar(a,b),add(benktander2distvar(a,b),sqr(benktander2distmean(a,b))))); }
+function benktander2disteff(a,b) { return div(benktander2distvar(a,b),sqr(benktander2distmean(a,b))); }
+// benktander2distvmr missing
+function benktander2distzscore(a,b) { return div(sub(x,benktander2distmean(a,b)),benktander2diststandartdeviation(a,b)); }
+function halflogisticsurvival(k) { return sub(1,halflogisticcdf(k)); }
+function halflogistichazard(k) { return div(halflogisticpdf(k),halflogisticsurvival(k)); }
+function halflogisticchazard(k) { return -log(halflogisticsurvival(k)); }
+function halflogisticfailrate(k) { return div(halflogisticcdf(k),x); }
+function beninidiststandartdeviation(a,b,s) { return sqrt(beninidistvar(a,b,s)); }
+function beninidistcov(a,b,s) { return div(beninidiststandartdeviation(a,b,s),beninidistmean(a,b,s)); }
+function beninidistcov2(a,b,s) { return sqrt(div(beninidistvar(a,b,s),add(beninidistvar(a,b,s),sqr(beninidistmean(a,b,s))))); }
+function beninidisteff(a,b,s) { return div(beninidistvar(a,b,s),sqr(beninidistmean(a,b,s))); }
+// beninidistvmr missing
+function beninidistzscore(a,b,s) { return div(sub(x,beninidistmean(a,b,s)),beninidiststandartdeviation(a,b,s)); }
+function benini2diststandartdeviation(b,s) { return sqrt(benini2distvar(b,s)); }
+function benini2distcov(b,s) { return div(benini2diststandartdeviation(b,s),benini2distmean(b,s)); }
+function benini2distcov2(b,s) { return sqrt(div(benini2distvar(b,s),add(benini2distvar(b,s),sqr(benini2distmean(b,s))))); }
+function benini2disteff(b,s) { return div(benini2distvar(b,s),sqr(benini2distmean(b,s))); }
+// benini2distvmr missing
+function benini2distzscore(b,s) { return div(sub(x,benini2distmean(b,s)),benini2diststandartdeviation(b,s)); }
+
+function chisurvival(k,x) { return sub(1,chicdf(k,x)); }
+function chihazard(k,x) { return div(chipdf(k,x),chisurvival(k,x)); }
+function chichazard(k,x) { return -log(chisurvival(k,x)); }
+function chifailrate(k,x) { return div(chicdf(k,x),x); }
+function chicov(k) { return div(chistandartdeviation(k),chimean(k)); }
+function chicov2(k) { return sqrt(div(chivar(k),add(chivar(k),sqr(chimean(k))))); }
+function chieff(k) { return div(chivar(k),sqr(chimean(k))); }
+// chivmr missing
+function chizscore(k) { return div(sub(x,chimean(k)),chistandartdeviation(k)); }
+// chicgf missing, add manually
+function chi2cf(k,t) { return log(chicf(k,t)); }
+function voigtsurvival(s,d,x) { return sub(1,voigtcdf(s,d,x)); }
+function voigthazard(s,d,x) { return div(voigtpdf(s,d,x),voigtsurvival(s,d,x)); }
+function voigtchazard(s,d,x) { return -log(voigtsurvival(s,d,x)); }
+function voigtfailrate(s,d,x) { return div(voigtcdf(s,d,x),x); }
+function voigt2cf(s,d,t) { return log(voigtcf(s,d,t)); }
+function voigtuncenteredsurvival(s,d,mg,ml,x) { return sub(1,voigtuncenteredcdf(s,d,mg,ml,x)); }
+function voigtuncenteredhazard(s,d,mg,ml,x) { return div(voigtuncenteredpdf(s,d,mg,ml,x),voigtuncenteredsurvival(s,d,mg,ml,x)); }
+function voigtuncenteredchazard(s,d,mg,ml,x) { return -log(voigtuncenteredsurvival(s,d,mg,ml,x)); }
+function voigtuncenteredfailrate(s,d,mg,ml,x) { return div(voigtuncenteredcdf(s,d,mg,ml,x),x); }
+function voigtuncentered2cf(s,d,mg,ml,t) { return log(voigtuncenteredcf(s,d,mg,ml,t)); }
+function variancegammastandartdeviation(m,a,b,l) { return sqrt(variancegammavar(m,a,b,l)); }
+function variancegammacov(m,a,b,l) { return div(variancegammastandartdeviation(m,a,b,l),variancegammamean(m,a,b,l)); }
+function variancegammacov2(m,a,b,l) { return sqrt(div(variancegammavar(m,a,b,l),add(variancegammavar(m,a,b,l),sqr(variancegammamean(m,a,b,l))))); }
+function variancegammaeff(m,a,b,l) { return div(variancegammavar(m,a,b,l),sqr(variancegammamean(m,a,b,l))); }
+// variancegammavmr missing
+function variancegammazscore(m,a,b,l) { return div(sub(x,variancegammamean(m,a,b,l)),variancegammastandartdeviation(m,a,b,l)); }
+function variancegamma2cf(m,a,b,l,t) { return log(variancegammacf(m,a,b,l,t)); }
+function sechdistsurvival(x) { return sub(1,sechdistcdf(x)); }
+function sechdisthazard(x) { return div(sechdistpdf(x),sechdistsurvival(x)); }
+function sechdistchazard(x) { return -log(sechdistsurvival(x)); }
+function sechdistfailrate(x) { return div(sechdistcdf(x),x); }
+function sechdiststandartdeviation() { return sqrt(sechdistvar()); }
+function sechdistcov() { return div(sechdiststandartdeviation(),sechdistmean()); }
+function sechdistcov2() { return sqrt(div(sechdistvar(),add(sechdistvar(),sqr(sechdistmean())))); }
+function sechdisteff() { return div(sechdistvar(),sqr(sechdistmean())); }
+// sechdistvmr missing
+function sechdistzscore() { return div(sub(x,sechdistmean()),sechdiststandartdeviation()); }
+function sechdist2cf(x) { return log(sechdistcf(x)); }
+function skewsechdistsurvival(a,b,x) { return sub(1,skewsechdistcdf(a,b,x)); }
+function skewsechdisthazard(a,b,x) { return div(skewsechdistpdf(a,b,x),skewsechdistsurvival(a,b,x)); }
+function skewsechdistchazard(a,b,x) { return -log(skewsechdistsurvival(a,b,x)); }
+function skewsechdistfailrate(a,b,x) { return div(skewsechdistcdf(a,b,x),x); }
+function skewsechdiststandartdeviation(a,b) { return sqrt(skewsechdistvar(a,b)); }
+function skewsechdistcov(a,b) { return div(skewsechdiststandartdeviation(a,b),skewsechdistmean(a,b)); }
+function skewsechdistcov2(a,b) { return sqrt(div(skewsechdistvar(a,b),add(skewsechdistvar(a,b),sqr(skewsechdistmean(a,b))))); }
+function skewsechdisteff(a,b) { return div(skewsechdistvar(a,b),sqr(skewsechdistmean(a,b))); }
+// skewsechdistvmr missing
+function skewsechdistzscore(a,b) { return div(sub(x,skewsechdistmean(a,b)),skewsechdiststandartdeviation(a,b)); }
+function skewsechdist2cf(a,b,t) { return log(skewsechdistcf(a,b,t)); }
+function jhonsonsusurvival(g,c,d,l,x) { return sub(1,jhonsonsucdf(g,c,d,l,x)); }
+function jhonsonsuhazard(g,c,d,l,x) { return div(jhonsonsupdf(g,c,d,l,x),jhonsonsusurvival(g,c,d,l,x)); }
+function jhonsonsuchazard(g,c,d,l,x) { return -log(jhonsonsusurvival(g,c,d,l,x)); }
+function jhonsonsufailrate(g,c,d,l,x) { return div(jhonsonsucdf(g,c,d,l,x),x); }
+function jhonsonsustandartdeviation(g,c,d,l) { return sqrt(jhonsonsuvar(g,c,d,l)); }
+function jhonsonsucov(g,c,d,l) { return div(jhonsonsustandartdeviation(g,c,d,l),jhonsonsumean(g,c,d,l)); }
+function jhonsonsucov2(g,c,d,l) { return sqrt(div(jhonsonsuvar(g,c,d,l),add(jhonsonsuvar(g,c,d,l),sqr(jhonsonsumean(g,c,d,l))))); }
+function jhonsonsueff(g,c,d,l) { return div(jhonsonsuvar(g,c,d,l),sqr(jhonsonsumean(g,c,d,l))); }
+// jhonsonsuvmr missing
+function jhonsonsuzscore(g,c,d,l) { return div(sub(x,jhonsonsumean(g,c,d,l)),jhonsonsustandartdeviation(g,c,d,l)); }
+function jhonsonsbsurvival(g,c,d,l,x) { return sub(1,jhonsonsbcdf(g,c,d,l,x)); }
+function jhonsonsbhazard(g,c,d,l,x) { return div(jhonsonsbpdf(g,c,d,l,x),jhonsonsbsurvival(g,c,d,l,x)); }
+function jhonsonsbchazard(g,c,d,l,x) { return -log(jhonsonsbsurvival(g,c,d,l,x)); }
+function jhonsonsbfailrate(g,c,d,l,x) { return div(jhonsonsbcdf(g,c,d,l,x),x); }
+function generalizednormalsurvival(m,a,b,x) { return sub(1,generalizednormalcdf(m,a,b,x)); }
+function generalizednormalhazard(m,a,b,x) { return div(generalizednormalpdf(m,a,b,x),generalizednormalsurvival(m,a,b,x)); }
+function generalizednormalchazard(m,a,b,x) { return -log(generalizednormalsurvival(m,a,b,x)); }
+function generalizednormalfailrate(m,a,b,x) { return div(generalizednormalcdf(m,a,b,x),x); }
+function generalizednormalstandartdeviation(m,a,b) { return sqrt(generalizednormalvar(m,a,b)); }
+function generalizednormalcov(m,a,b) { return div(generalizednormalstandartdeviation(m,a,b),generalizednormalmean(m,a,b)); }
+function generalizednormalcov2(m,a,b) { return sqrt(div(generalizednormalvar(m,a,b),add(generalizednormalvar(m,a,b),sqr(generalizednormalmean(m,a,b))))); }
+function generalizednormaleff(m,a,b) { return div(generalizednormalvar(m,a,b),sqr(generalizednormalmean(m,a,b))); }
+// generalizednormalvmr missing
+function generalizednormalzscore(m,a,b) { return div(sub(x,generalizednormalmean(m,a,b)),generalizednormalstandartdeviation(m,a,b)); }
+function asymmetricgeneralizednormalsurvival(c,a,k,x) { return sub(1,asymmetricgeneralizednormalcdf(c,a,k,x)); }
+function asymmetricgeneralizednormalhazard(c,a,k,x) { return div(asymmetricgeneralizednormalpdf(c,a,k,x),asymmetricgeneralizednormalsurvival(c,a,k,x)); }
+function asymmetricgeneralizednormalchazard(c,a,k,x) { return -log(asymmetricgeneralizednormalsurvival(c,a,k,x)); }
+function asymmetricgeneralizednormalfailrate(c,a,k,x) { return div(asymmetricgeneralizednormalcdf(c,a,k,x),x); }
+function asymmetricgeneralizednormalstandartdeviation(c,a,k) { return sqrt(asymmetricgeneralizednormalvar(c,a,k)); }
+function asymmetricgeneralizednormalcov(c,a,k) { return div(asymmetricgeneralizednormalstandartdeviation(c,a,k),asymmetricgeneralizednormalmean(c,a,k)); }
+function asymmetricgeneralizednormalcov2(c,a,k) { return sqrt(div(asymmetricgeneralizednormalvar(c,a,k),add(asymmetricgeneralizednormalvar(c,a,k),sqr(asymmetricgeneralizednormalmean(c,a,k))))); }
+function asymmetricgeneralizednormaleff(c,a,k) { return div(asymmetricgeneralizednormalvar(c,a,k),sqr(asymmetricgeneralizednormalmean(c,a,k))); }
+// asymmetricgeneralizednormalvmr missing
+function asymmetricgeneralizednormalzscore(c,a,k) { return div(sub(x,asymmetricgeneralizednormalmean(c,a,k)),asymmetricgeneralizednormalstandartdeviation(c,a,k)); }
+function landau2cf(c,m,t) { return log(landaucf(c,m,t)); }
+function generalizedhyperbolicstandartdeviation(l,a,b,d,m) { return sqrt(generalizedhyperbolicvar(l,a,b,d,m)); }
+function generalizedhyperboliccov(l,a,b,d,m) { return div(generalizedhyperbolicstandartdeviation(l,a,b,d,m),generalizedhyperbolicmean(l,a,b,d,m)); }
+function generalizedhyperboliccov2(l,a,b,d,m) { return sqrt(div(generalizedhyperbolicvar(l,a,b,d,m),add(generalizedhyperbolicvar(l,a,b,d,m),sqr(generalizedhyperbolicmean(l,a,b,d,m))))); }
+function generalizedhyperboliceff(l,a,b,d,m) { return div(generalizedhyperbolicvar(l,a,b,d,m),sqr(generalizedhyperbolicmean(l,a,b,d,m))); }
+// generalizedhyperbolicvmr missing
+function generalizedhyperboliczscore(l,a,b,d,m) { return div(sub(x,generalizedhyperbolicmean(l,a,b,d,m)),generalizedhyperbolicstandartdeviation(l,a,b,d,m)); }
+function generalizedhyperbolic2cf(l,a,b,d,m,t) { return log(generalizedhyperboliccf(l,a,b,d,m,t)); }
+function slashsurvival(x) { return sub(1,slashcdf(x)); }
+function slashhazard(x) { return div(slashpdf(x),slashsurvival(x)); }
+function slashchazard(x) { return -log(slashsurvival(x)); }
+function slashfailrate(x) { return div(slashcdf(x),x); }
+function slash2cf(t) { return log(slashcf(t)); }
+function holtsmark2cf(c,m,t) { return log(holtsmarkcf(c,m,t)); }
+function astable2cf(a,c,m,t) { return log(astablecf(a,c,m,t)); }
+function stable2cf(a,b,c,m,t) { return log(stablecf(a,b,c,m,t)); }
+function geometricstable2cf(a,b,l,m,t) { return log(geometricstablecf(a,b,l,m,t)); }
+function linnik2cf(a,b,l,t) { return log(linnikcf(a,b,l,t)); }
+function generalizedchisqrstandartdeviation(W,K,L,s,m) { return sqrt(generalizedchisqrvar(W,K,L,s,m)); }
+function generalizedchisqrcov(W,K,L,s,m) { return div(generalizedchisqrstandartdeviation(W,K,L,s,m),generalizedchisqrmean(W,K,L,s,m)); }
+function generalizedchisqrcov2(W,K,L,s,m) { return sqrt(div(generalizedchisqrvar(W,K,L,s,m),add(generalizedchisqrvar(W,K,L,s,m),sqr(generalizedchisqrmean(W,K,L,s,m))))); }
+function generalizedchisqreff(W,K,L,s,m) { return div(generalizedchisqrvar(W,K,L,s,m),sqr(generalizedchisqrmean(W,K,L,s,m))); }
+// generalizedchisqrvmr missing
+function generalizedchisqrzscore(W,K,L,s,m) { return div(sub(x,generalizedchisqrmean(W,K,L,s,m)),generalizedchisqrstandartdeviation(W,K,L,s,m)); }
+function generalizedchisqr2cf(W,K,L,s,m,t) { return log(generalizedchisqrcf(W,K,L,s,m,t)); }
+function wilkslambdasurvival(A,B,t) { return sub(1,wilkslambdacdf(A,B,t)); }
+function wilkslambdahazard(A,B,t) { return div(wilkslambdapdf(A,B,t),wilkslambdasurvival(A,B,t)); }
+function wilkslambdachazard(A,B,t) { return -log(wilkslambdasurvival(A,B,t)); }
+function wilkslambdafailrate(A,B,t) { return div(wilkslambdacdf(A,B,t),x); }
+// wilkslambdacgf missing, add manually
+// wilkslambdamgf missing, add manually
+// wilkslambdapgf missing, add manually
+function wilkslambda2cf(A,B,t) { return log(wilkslambdacf(A,B,t)); }
+function studentstsurvival(v,x) { return sub(1,studentstcdf(v,x)); }
+function studentsthazard(v,x) { return div(studentstpdf(v,x),studentstsurvival(v,x)); }
+function studentstchazard(v,x) { return -log(studentstsurvival(v,x)); }
+function studentstfailrate(v,x) { return div(studentstcdf(v,x),x); }
+function studentststandartdeviation(v) { return sqrt(studentstvar(v)); }
+function studentstcov(v) { return div(studentststandartdeviation(v),studentstmean(v)); }
+function studentstcov2(v) { return sqrt(div(studentstvar(v),add(studentstvar(v),sqr(studentstmean(v))))); }
+function studentsteff(v) { return div(studentstvar(v),sqr(studentstmean(v))); }
+// studentstvmr missing
+function studentstzscore(v) { return div(sub(x,studentstmean(v)),studentststandartdeviation(v)); }
+function studentst2cf(v,t) { return log(studentstcf(v,t)); }
+function lsstsurvival(m,s,v,x) { return sub(1,lsstcdf(m,s,v,x)); }
+function lssthazard(m,s,v,x) { return div(lsstpdf(m,s,v,x),lsstsurvival(m,s,v,x)); }
+function lsstchazard(m,s,v,x) { return -log(lsstsurvival(m,s,v,x)); }
+function lsstfailrate(m,s,v,x) { return div(lsstcdf(m,s,v,x),x); }
+function lsststandartdeviation(m,s,v) { return sqrt(lsstvar(m,s,v)); }
+function lsstcov(m,s,v) { return div(lsststandartdeviation(m,s,v),lsstmean(m,s,v)); }
+function lsstcov2(m,s,v) { return sqrt(div(lsstvar(m,s,v),add(lsstvar(m,s,v),sqr(lsstmean(m,s,v))))); }
+function lssteff(m,s,v) { return div(lsstvar(m,s,v),sqr(lsstmean(m,s,v))); }
+// lsstvmr missing
+function lsstzscore(m,s,v) { return div(sub(x,lsstmean(m,s,v)),lsststandartdeviation(m,s,v)); }
+function lsst2cf(m,s,v,t) { return log(lsstcf(m,s,v,t)); }
+function noncentraltsurvival(v,m,x) { return sub(1,noncentraltcdf(v,m,x)); }
+function noncentralthazard(v,m,x) { return div(noncentraltpdf(v,m,x),noncentraltsurvival(v,m,x)); }
+function noncentraltchazard(v,m,x) { return -log(noncentraltsurvival(v,m,x)); }
+function noncentraltfailrate(v,m,x) { return div(noncentraltcdf(v,m,x),x); }
+function kgaussiansurvival(k,b,x) { return sub(1,kgaussiancdf(k,b,x)); }
+function kgaussianhazard(k,b,x) { return div(kgaussianpdf(k,b,x),kgaussiansurvival(k,b,x)); }
+function kgaussianchazard(k,b,x) { return -log(kgaussiansurvival(k,b,x)); }
+function kgaussianfailrate(k,b,x) { return div(kgaussiancdf(k,b,x),x); }
+function kgaussianstandartdeviation(k,b) { return sqrt(kgaussianvar(k,b)); }
+function kgaussiancov(k,b) { return div(kgaussianstandartdeviation(k,b),kgaussianmean(k,b)); }
+function kgaussiancov2(k,b) { return sqrt(div(kgaussianvar(k,b),add(kgaussianvar(k,b),sqr(kgaussianmean(k,b))))); }
+function kgaussianeff(k,b) { return div(kgaussianvar(k,b),sqr(kgaussianmean(k,b))); }
+// kgaussianvmr missing
+function kgaussianzscore(k,b) { return div(sub(x,kgaussianmean(k,b)),kgaussianstandartdeviation(k,b)); }
+function klogisticsurvival(k,a,b,l,x) { return sub(1,klogisticcdf(k,a,b,l,x)); }
+function klogistichazard(k,a,b,l,x) { return div(klogisticpdf(k,a,b,l,x),klogisticsurvival(k,a,b,l,x)); }
+function klogisticchazard(k,a,b,l,x) { return -log(klogisticsurvival(k,a,b,l,x)); }
+function klogisticfailrate(k,a,b,l,x) { return div(klogisticcdf(k,a,b,l,x),x); }
+function agaussianqsurvival(q,b,x) { return sub(1,agaussianqcdf(q,b,x)); }
+function agaussianqhazard(q,b,x) { return div(agaussianqpdf(q,b,x),agaussianqsurvival(q,b,x)); }
+function agaussianqchazard(q,b,x) { return -log(agaussianqsurvival(q,b,x)); }
+function agaussianqfailrate(q,b,x) { return div(agaussianqcdf(q,b,x),x); }
+function qgaussiansurvival(q,b,x) { return sub(1,qgaussiancdf(q,b,x)); }
+function qgaussianhazard(q,b,x) { return div(qgaussianpdf(q,b,x),qgaussiansurvival(q,b,x)); }
+function qgaussianchazard(q,b,x) { return -log(qgaussiansurvival(q,b,x)); }
+function qgaussianfailrate(q,b,x) { return div(qgaussiancdf(q,b,x),x); }
+function gaussianqsurvival(q,x) { return sub(1,gaussianqcdf(q,x)); }
+function gaussianqhazard(q,x) { return div(gaussianqpdf(q,x),gaussianqsurvival(q,x)); }
+function gaussianqchazard(q,x) { return -log(gaussianqsurvival(q,x)); }
+function gaussianqfailrate(q,x) { return div(gaussianqcdf(q,x),x); }
+function generalizedlogistic1survival(a,x) { return sub(1,generalizedlogistic1cdf(a,x)); }
+function generalizedlogistic1hazard(a,x) { return div(generalizedlogistic1pdf(a,x),generalizedlogistic1survival(a,x)); }
+function generalizedlogistic1chazard(a,x) { return -log(generalizedlogistic1survival(a,x)); }
+function generalizedlogistic1failrate(a,x) { return div(generalizedlogistic1cdf(a,x),x); }
+function generalizedlogistic2survival(a,x) { return sub(1,generalizedlogistic2cdf(a,x)); }
+function generalizedlogistic2hazard(a,x) { return div(generalizedlogistic2pdf(a,x),generalizedlogistic2survival(a,x)); }
+function generalizedlogistic2chazard(a,x) { return -log(generalizedlogistic2survival(a,x)); }
+function generalizedlogistic2failrate(a,x) { return div(generalizedlogistic2cdf(a,x),x); }
+function generalizedlogistic3survival(a,x) { return sub(1,generalizedlogistic3cdf(a,x)); }
+function generalizedlogistic3hazard(a,x) { return div(generalizedlogistic3pdf(a,x),generalizedlogistic3survival(a,x)); }
+function generalizedlogistic3chazard(a,x) { return -log(generalizedlogistic3survival(a,x)); }
+function generalizedlogistic3failrate(a,x) { return div(generalizedlogistic3cdf(a,x),x); }
+function generalizedlogistic32cf(a,t) { return log(generalizedlogistic3cf(a,t)); }
+function generalizedlogistic4survival(a,b,x) { return sub(1,generalizedlogistic4cdf(a,b,x)); }
+function generalizedlogistic4hazard(a,b,x) { return div(generalizedlogistic4pdf(a,b,x),generalizedlogistic4survival(a,b,x)); }
+function generalizedlogistic4chazard(a,b,x) { return -log(generalizedlogistic4survival(a,b,x)); }
+function generalizedlogistic4failrate(a,b,x) { return div(generalizedlogistic4cdf(a,b,x),x); }
+function generalizedlogistic4standartdeviation(a,b) { return sqrt(generalizedlogistic4var(a,b)); }
+function generalizedlogistic4cov(a,b) { return div(generalizedlogistic4standartdeviation(a,b),generalizedlogistic4mean(a,b)); }
+function generalizedlogistic4cov2(a,b) { return sqrt(div(generalizedlogistic4var(a,b),add(generalizedlogistic4var(a,b),sqr(generalizedlogistic4mean(a,b))))); }
+function generalizedlogistic4eff(a,b) { return div(generalizedlogistic4var(a,b),sqr(generalizedlogistic4mean(a,b))); }
+// generalizedlogistic4vmr missing
+function generalizedlogistic4zscore(a,b) { return div(sub(x,generalizedlogistic4mean(a,b)),generalizedlogistic4standartdeviation(a,b)); }
+function generalizedlogistic42cf(a,b,t) { return log(generalizedlogistic4cf(a,b,t)); }
+function kaniadakisexpsurvival(k,b,x) { return sub(1,kaniadakisexpcdf(k,b,x)); }
+function kaniadakisexphazard(k,b,x) { return div(kaniadakisexppdf(k,b,x),kaniadakisexpsurvival(k,b,x)); }
+function kaniadakisexpchazard(k,b,x) { return -log(kaniadakisexpsurvival(k,b,x)); }
+function kaniadakisexpfailrate(k,b,x) { return div(kaniadakisexpcdf(k,b,x),x); }
+function kaniadakisexpcov(k,b) { return div(kaniadakisexpstandartdeviation(k,b),kaniadakisexpmean(k,b)); }
+function kaniadakisexpcov2(k,b) { return sqrt(div(kaniadakisexpvar(k,b),add(kaniadakisexpvar(k,b),sqr(kaniadakisexpmean(k,b))))); }
+function kaniadakisexpeff(k,b) { return div(kaniadakisexpvar(k,b),sqr(kaniadakisexpmean(k,b))); }
+// kaniadakisexpvmr missing
+function kaniadakisexpzscore(k,b) { return div(sub(x,kaniadakisexpmean(k,b)),kaniadakisexpstandartdeviation(k,b)); }
+function kaniadakisexp2survival(k,b,x) { return sub(1,kaniadakisexp2cdf(k,b,x)); }
+function kaniadakisexp2hazard(k,b,x) { return div(kaniadakisexp2pdf(k,b,x),kaniadakisexp2survival(k,b,x)); }
+function kaniadakisexp2chazard(k,b,x) { return -log(kaniadakisexp2survival(k,b,x)); }
+function kaniadakisexp2failrate(k,b,x) { return div(kaniadakisexp2cdf(k,b,x),x); }
+
+function kaniadakisgammasurvival(k,a,b,v,x) { return sub(1,kaniadakisgammacdf(k,a,b,v,x)); }
+function kaniadakisgammahazard(k,a,b,v,x) { return div(kaniadakisgammapdf(k,a,b,v,x),kaniadakisgammasurvival(k,a,b,v,x)); }
+function kaniadakisgammachazard(k,a,b,v,x) { return -log(kaniadakisgammasurvival(k,a,b,v,x)); }
+function kaniadakisgammafailrate(k,a,b,v,x) { return div(kaniadakisgammacdf(k,a,b,v,x),x); }
+function kaniadakiserlangsurvival(k,n,x) { return sub(1,kaniadakiserlangcdf(k,n,x)); }
+function kaniadakiserlanghazard(k,n,x) { return div(kaniadakiserlangpdf(k,n,x),kaniadakiserlangsurvival(k,n,x)); }
+function kaniadakiserlangchazard(k,n,x) { return -log(kaniadakiserlangsurvival(k,n,x)); }
+function kaniadakiserlangfailrate(k,n,x) { return div(kaniadakiserlangcdf(k,n,x),x); }
+function kaniadakisweibullsurvival(k,a,b,x) { return sub(1,kaniadakisweibullcdf(k,a,b,x)); }
+function kaniadakisweibullhazard(k,a,b,x) { return div(kaniadakisweibullpdf(k,a,b,x),kaniadakisweibullsurvival(k,a,b,x)); }
+function kaniadakisweibullchazard(k,a,b,x) { return -log(kaniadakisweibullsurvival(k,a,b,x)); }
+function kaniadakisweibullfailrate(k,a,b,x) { return div(kaniadakisweibullcdf(k,a,b,x),x); }
+
+function tukeylambdasurvival(l,x) { return sub(1,tukeylambdacdf(l,x)); }
+function tukeylambdahazard(l,x) { return div(tukeylambdapdf(l,x),tukeylambdasurvival(l,x)); }
+function tukeylambdachazard(l,x) { return -log(tukeylambdasurvival(l,x)); }
+function tukeylambdafailrate(l,x) { return div(tukeylambdacdf(l,x),x); }
+function tukeylambdastandartdeviation(l) { return sqrt(tukeylambdavar(l)); }
+function tukeylambdacov(l) { return div(tukeylambdastandartdeviation(l),tukeylambdamean(l)); }
+function tukeylambdacov2(l) { return sqrt(div(tukeylambdavar(l),add(tukeylambdavar(l),sqr(tukeylambdamean(l))))); }
+function tukeylambdaeff(l) { return div(tukeylambdavar(l),sqr(tukeylambdamean(l))); }
+// tukeylambdavmr missing
+function tukeylambdazscore(l) { return div(sub(x,tukeylambdamean(l)),tukeylambdastandartdeviation(l)); }
+function generalizedtukeylambdasurvival(l1,l2,l3,l4,x) { return sub(1,generalizedtukeylambdacdf(l1,l2,l3,l4,x)); }
+function generalizedtukeylambdahazard(l1,l2,l3,l4,x) { return div(generalizedtukeylambdapdf(l1,l2,l3,l4,x),generalizedtukeylambdasurvival(l1,l2,l3,l4,x)); }
+function generalizedtukeylambdachazard(l1,l2,l3,l4,x) { return -log(generalizedtukeylambdasurvival(l1,l2,l3,l4,x)); }
+function generalizedtukeylambdafailrate(l1,l2,l3,l4,x) { return div(generalizedtukeylambdacdf(l1,l2,l3,l4,x),x); }
+function qweibullsurvival(q,l,k,x) { return sub(1,qweibullcdf(q,l,k,x)); }
+function qweibullhazard(q,l,k,x) { return div(qweibullpdf(q,l,k,x),qweibullsurvival(q,l,k,x)); }
+function qweibullchazard(q,l,k,x) { return -log(qweibullsurvival(q,l,k,x)); }
+function qweibullfailrate(q,l,k,x) { return div(qweibullcdf(q,l,k,x),x); }
+function qexponentialsurvival(q,l,x) { return sub(1,qexponentialcdf(q,l,x)); }
+function qexponentialhazard(q,l,x) { return div(qexponentialpdf(q,l,x),qexponentialsurvival(q,l,x)); }
+function qexponentialchazard(q,l,x) { return -log(qexponentialsurvival(q,l,x)); }
+function qexponentialfailrate(q,l,x) { return div(qexponentialcdf(q,l,x),x); }
+function qexponentialstandartdeviation(q,l) { return sqrt(qexponentialvar(q,l)); }
+function qexponentialcov(q,l) { return div(qexponentialstandartdeviation(q,l),qexponentialmean(q,l)); }
+function qexponentialcov2(q,l) { return sqrt(div(qexponentialvar(q,l),add(qexponentialvar(q,l),sqr(qexponentialmean(q,l))))); }
+function qexponentialeff(q,l) { return div(qexponentialvar(q,l),sqr(qexponentialmean(q,l))); }
+// qexponentialvmr missing
+function qexponentialzscore(q,l) { return div(sub(x,qexponentialmean(q,l)),qexponentialstandartdeviation(q,l)); }
+function phasetypesurvival(S,A,x) { return sub(1,phasetypecdf(S,A,x)); }
+function phasetypehazard(S,A,x) { return div(phasetypepdf(S,A,x),phasetypesurvival(S,A,x)); }
+function phasetypechazard(S,A,x) { return -log(phasetypesurvival(S,A,x)); }
+function phasetypefailrate(S,A,x) { return div(phasetypecdf(S,A,x),x); }
+function phasetypestandartdeviation(S,A) { return sqrt(phasetypevar(S,A)); }
+function phasetypecov(S,A) { return div(phasetypestandartdeviation(S,A),phasetypemean(S,A)); }
+function phasetypecov2(S,A) { return sqrt(div(phasetypevar(S,A),add(phasetypevar(S,A),sqr(phasetypemean(S,A))))); }
+function phasetypeeff(S,A) { return div(phasetypevar(S,A),sqr(phasetypemean(S,A))); }
+// phasetypevmr missing
+function phasetypezscore(S,A) { return div(sub(x,phasetypemean(S,A)),phasetypestandartdeviation(S,A)); }
+function phasetype2cf(S,A,t,a0=0) { return log(phasetypecf(S,A,t,a0=0)); }
+function matrixexponentialsurvival(A,T,S,x) { return sub(1,matrixexponentialcdf(A,T,S,x)); }
+function matrixexponentialhazard(A,T,S,x) { return div(matrixexponentialpdf(A,T,S,x),matrixexponentialsurvival(A,T,S,x)); }
+function matrixexponentialchazard(A,T,S,x) { return -log(matrixexponentialsurvival(A,T,S,x)); }
+function matrixexponentialfailrate(A,T,S,x) { return div(matrixexponentialcdf(A,T,S,x),x); }
+function skewnormaldistvmr(x) { return div(skewnormaldistvar(x),skewnormaldistmean(x)); }
+// skewnormaldistcgf missing, add manually
+// skewnormaldistcf missing, add manually
+function betadistvmr(x) { return div(betadistvar(x),betadistmean(x)); }
+// betadistcgf missing, add manually
+// betadistpgf missing, add manually
+function lognormalvmr(x) { return div(lognormalvar(x),lognormalmean(x)); }
+function lomaxvmr(x) { return div(lomaxvar(x),lomaxmean(x)); }
+function fourbetadistvmr(x) { return div(fourbetadistvar(x),fourbetadistmean(x)); }
+// arcsindistcgf missing, add manually
+function arcsinboundeddistvmr(x) { return div(arcsinboundeddistvar(x),arcsinboundeddistmean(x)); }
+// arcsinboundeddistcgf missing, add manually
+function pertdistvmr(x) { return div(pertdistvar(x),pertdistmean(x)); }
+function batesdistvmr(x) { return div(batesdistvar(x),batesdistmean(x)); }
+// batesdistcgf missing, add manually
+// raisedcosdistcgf missing, add manually
+function reciprocaldistvmr(x) { return div(reciprocaldistvar(x),reciprocaldistmean(x)); }
+function uquadradicdistvmr(x) { return div(uquadradicdistvar(x),uquadradicdistmean(x)); }
+// uquadradicdistcgf missing, add manually
+function continuousbernoullidistvmr(x) { return div(continuousbernoullidistvar(x),continuousbernoullidistmean(x)); }
+// wignersemicircledistcgf missing, add manually
+function metalogdistvmr(x) { return div(metalogdistvar(x),metalogdistmean(x)); }
+function triangulardistvmr(x) { return div(triangulardistvar(x),triangulardistmean(x)); }
+// triangulardistcgf missing, add manually
+function irwinhalldistvmr(x) { return div(irwinhalldistvar(x),irwinhalldistmean(x)); }
+// irwinhalldistcgf missing, add manually
+function logisticvmr(x) { return div(logisticvar(x),logisticmean(x)); }
+function argusdistvmr(x) { return div(argusdistvar(x),argusdistmean(x)); }
+function generalizedargusdistvmr(x) { return div(generalizedargusdistvar(x),generalizedargusdistmean(x)); }
+function baldingnicholsdistvmr(x) { return div(baldingnicholsdistvar(x),baldingnicholsdistmean(x)); }
+// expgeneralizedbetadistcgf missing, add manually
+function generalizedgammadistvmr(x) { return div(generalizedgammadistvar(x),generalizedgammadistmean(x)); }
+function rayleighdistvmr(x) { return div(rayleighdistvar(x),rayleighdistmean(x)); }
+// rayleighdistcgf missing, add manually
+function ricedistvmr(x) { return div(ricedistvar(x),ricedistmean(x)); }
+// ricedistcgf missing, add manually
+// ricedistmgf missing, add manually
+// ricedistpgf missing, add manually
+function nakagamidistvmr(x) { return div(nakagamidistvar(x),nakagamidistmean(x)); }
+function weibulldistvmr(x) { return div(weibulldistvar(x),weibulldistmean(x)); }
+// weibulldistcgf missing, add manually
+function frechetdistvmr(x) { return div(frechetdistvar(x),frechetdistmean(x)); }
+function gumbeldistvmr(x) { return div(gumbeldistvar(x),gumbeldistmean(x)); }
+// gumbeldistcgf missing, add manually
+function paretodistvmr(x) { return div(paretodistvar(x),paretodistmean(x)); }
+// paretodistcgf missing, add manually
+function boundedparetodistvmr(x) { return div(boundedparetodistvar(x),boundedparetodistmean(x)); }
+// wrappednormaldistcgf missing, add manually
+// wrappedcauchydistcgf missing, add manually
+// cauchydistcgf missing, add manually
+function laplacedistvmr(x) { return div(laplacedistvar(x),laplacedistmean(x)); }
+function asymmetriclaplacedistvmr(x) { return div(asymmetriclaplacedistvar(x),asymmetriclaplacedistmean(x)); }
+function chidistvmr(x) { return div(chidistvar(x),chidistmean(x)); }
+// chidistcgf missing, add manually
+function chisquareddistvmr(x) { return div(chisquareddistvar(x),chisquareddistmean(x)); }
+// chisquareddistcgf missing, add manually
+function noncentralchisquareddistvmr(x) { return div(noncentralchisquareddistvar(x),noncentralchisquareddistmean(x)); }
+// noncentralchisquareddistcgf missing, add manually
+function noncentralchidistvmr(x) { return div(noncentralchidistvar(x),noncentralchidistmean(x)); }
+function betaprimedistvmr(x) { return div(betaprimedistvar(x),betaprimedistmean(x)); }
+function birnbaumsaundersdistvmr(x) { return div(birnbaumsaundersdistvar(x),birnbaumsaundersdistmean(x)); }
+function standartfatiguelifedistvmr(x) { return div(standartfatiguelifedistvar(x),standartfatiguelifedistmean(x)); }
+function inversechisquareddistvmr(x) { return div(inversechisquareddistvar(x),inversechisquareddistmean(x)); }
+// inversechisquareddistcgf missing, add manually
+function scaledinversechisquareddistvmr(x) { return div(scaledinversechisquareddistvar(x),scaledinversechisquareddistmean(x)); }
+// scaledinversechisquareddistcgf missing, add manually
+function hyperbolicdistvmr(x) { return div(hyperbolicdistvar(x),hyperbolicdistmean(x)); }
+// hyperbolicdistcgf missing, add manually
+function dagumdistvmr(x) { return div(dagumdistvar(x),dagumdistmean(x)); }
+function exponentiallogarithmicdistvmr(x) { return div(exponentiallogarithmicdistvar(x),exponentiallogarithmicdistmean(x)); }
+// exponentiallogarithmicdistcgf missing, add manually
+function exponentialpowervmr(x) { return div(exponentialpowervar(x),exponentialpowermean(x)); }
+function fisherszvmr(x) { return div(fisherszvar(x),fisherszmean(x)); }
+function exponentialvmr(x) { return div(exponentialvar(x),exponentialmean(x)); }
+function hyperexponentialvmr(x) { return div(hyperexponentialvar(x),hyperexponentialmean(x)); }
+function hypoexponentialvmr(x) { return div(hypoexponentialvar(x),hypoexponentialmean(x)); }
+function fdistvmr(x) { return div(fdistvar(x),fdistmean(x)); }
+function hotellingstsqrvmr(x) { return div(hotellingstsqrvar(x),hotellingstsqrmean(x)); }
+function noncentralfdistvmr(x) { return div(noncentralfdistvar(x),noncentralfdistmean(x)); }
+function loglogisticdistvmr(x) { return div(loglogisticdistvar(x),loglogisticdistmean(x)); }
+function shiftedloglogisticvmr(x) { return div(shiftedloglogisticvar(x),shiftedloglogisticmean(x)); }
+function foldednormaldistvmr(x) { return div(foldednormaldistvar(x),foldednormaldistmean(x)); }
+function modifiedhalfnormalvmr(x) { return div(modifiedhalfnormalvar(x),modifiedhalfnormalmean(x)); }
+function truncatednormalvmr(x) { return div(truncatednormalvar(x),truncatednormalmean(x)); }
+function gompertzdistvmr(x) { return div(gompertzdistvar(x),gompertzdistmean(x)); }
+function generalizedinversegaussianvmr(x) { return div(generalizedinversegaussianvar(x),generalizedinversegaussianmean(x)); }
+function erlangdistvmr(x) { return div(erlangdistvar(x),erlangdistmean(x)); }
+// erlangdistcgf missing, add manually
+function benktander1distvmr(x) { return div(benktander1distvar(x),benktander1distmean(x)); }
+function benktander2distvmr(x) { return div(benktander2distvar(x),benktander2distmean(x)); }
+function beninidistvmr(x) { return div(beninidistvar(x),beninidistmean(x)); }
+function benini2distvmr(x) { return div(benini2distvar(x),benini2distmean(x)); }
+function chivmr(x) { return div(chivar(x),chimean(x)); }
+// chicgf missing, add manually
+function variancegammavmr(x) { return div(variancegammavar(x),variancegammamean(x)); }
+function sechdistvmr(x) { return div(sechdistvar(x),sechdistmean(x)); }
+function skewsechdistvmr(x) { return div(skewsechdistvar(x),skewsechdistmean(x)); }
+function jhonsonsuvmr(x) { return div(jhonsonsuvar(x),jhonsonsumean(x)); }
+function generalizednormalvmr(x) { return div(generalizednormalvar(x),generalizednormalmean(x)); }
+function asymmetricgeneralizednormalvmr(x) { return div(asymmetricgeneralizednormalvar(x),asymmetricgeneralizednormalmean(x)); }
+function generalizedhyperbolicvmr(x) { return div(generalizedhyperbolicvar(x),generalizedhyperbolicmean(x)); }
+function generalizedchisqrvmr(x) { return div(generalizedchisqrvar(x),generalizedchisqrmean(x)); }
+// wilkslambdacgf missing, add manually
+// wilkslambdamgf missing, add manually
+// wilkslambdapgf missing, add manually
+function studentstvmr(x) { return div(studentstvar(x),studentstmean(x)); }
+function lsstvmr(x) { return div(lsstvar(x),lsstmean(x)); }
+function kgaussianvmr(x) { return div(kgaussianvar(x),kgaussianmean(x)); }
+function generalizedlogistic4vmr(x) { return div(generalizedlogistic4var(x),generalizedlogistic4mean(x)); }
+function kaniadakisexpvmr(x) { return div(kaniadakisexpvar(x),kaniadakisexpmean(x)); }
+function tukeylambdavmr(x) { return div(tukeylambdavar(x),tukeylambdamean(x)); }
+function qexponentialvmr(x) { return div(qexponentialvar(x),qexponentialmean(x)); }
+function phasetypevmr(x) { return div(phasetypevar(x),phasetypemean(x)); }
+
+//slop 2&&
+function normaldistqdf(m,ss,x) { return div(sub(normaldistquantile(add(x,1e-5)),normaldistquantile(sub(x,1e-5))),2e-5); }
+// skewnormaldistcgf missing
+// skewnormaldistcf missing
+function doublelomaxsurvival(x) { return sub(1,doublelomaxcdf(x)); }
+function doublelomaxhazard(x) { return div(doublelomaxpdf(x),doublelomaxsurvival(x)); }
+function doublelomaxchazard(x) { return -log(doublelomaxsurvival(x)); }
+function doublelomaxfailrate(x) { return div(doublelomaxcdf(x),x); }
+// betadistcgf missing
+// betadistpgf missing
+function betanegativebinomialstandartdeviation(a,b,r,k) { return sqrt(betanegativebinomialvar(a,b,r,k)); }
+function betanegativebinomialcov(a,b,r,k) { return div(betanegativebinomialstandartdeviation(a,b,r,k),betanegativebinomialmean(a,b,r,k)); }
+function betanegativebinomialcov2(a,b,r,k) { return sqrt(div(betanegativebinomialvar(a,b,r,k),add(betanegativebinomialvar(a,b,r,k),sqr(betanegativebinomialmean(a,b,r,k))))); }
+function betanegativebinomialeff(a,b,r,k) { return div(betanegativebinomialvar(a,b,r,k),sqr(betanegativebinomialmean(a,b,r,k))); }
+function betanegativebinomialvmr(a,b,r,k) { return div(betanegativebinomialvar(a,b,r,k),betanegativebinomialmean(a,b,r,k)); }
+function betanegativebinomialzscore(a,b,r,k) { return div(sub(x,betanegativebinomialmean(a,b,r,k)),betanegativebinomialstandartdeviation(a,b,r,k)); }
+// betanegativebinomialcgf missing
+// betanegativebinomialmgf missing
+function betanegativebinomial2cf(a,b,r,k) { return log(betanegativebinomialcf(a,b,r,k)); }
+function binomialdistsurvival(n,p,k) { return sub(1,binomialdistcdf(n,p,k)); }
+function binomialdisthazard(n,p,k) { return div(binomialdistpdf(n,p,k),binomialdistsurvival(n,p,k)); }
+function binomialdistchazard(n,p,k) { return -log(binomialdistsurvival(n,p,k)); }
+function binomialdistfailrate(n,p,k) { return div(binomialdistcdf(n,p,k),x); }
+// binomialdistcgf missing
+function binomialdist2cf(n,p,k) { return log(binomialdistcf(n,p,k)); }
+function negativebinomialsurvival(r,p,k) { return sub(1,negativebinomialcdf(r,p,k)); }
+function negativebinomialhazard(r,p,k) { return div(negativebinomialpdf(r,p,k),negativebinomialsurvival(r,p,k)); }
+function negativebinomialchazard(r,p,k) { return -log(negativebinomialsurvival(r,p,k)); }
+function negativebinomialfailrate(r,p,k) { return div(negativebinomialcdf(r,p,k),x); }
+function negativebinomialstandartdeviation(r,p,k) { return sqrt(negativebinomialvar(r,p,k)); }
+function negativebinomialcov(r,p,k) { return div(negativebinomialstandartdeviation(r,p,k),negativebinomialmean(r,p,k)); }
+function negativebinomialcov2(r,p,k) { return sqrt(div(negativebinomialvar(r,p,k),add(negativebinomialvar(r,p,k),sqr(negativebinomialmean(r,p,k))))); }
+function negativebinomialeff(r,p,k) { return div(negativebinomialvar(r,p,k),sqr(negativebinomialmean(r,p,k))); }
+function negativebinomialvmr(r,p,k) { return div(negativebinomialvar(r,p,k),negativebinomialmean(r,p,k)); }
+function negativebinomialzscore(r,p,k) { return div(sub(x,negativebinomialmean(r,p,k)),negativebinomialstandartdeviation(r,p,k)); }
+// negativebinomialcgf missing
+function negativebinomial2cf(r,p,k) { return log(negativebinomialcf(r,p,k)); }
+// extendednegativebinomialcgf missing
+function extendednegativebinomial2cf(m,r,p,k) { return log(extendednegativebinomialcf(m,r,p,k)); }
+function betabinomialsurvival(n,a,b,x) { return sub(1,betabinomialcdf(n,a,b,x)); }
+function betabinomialhazard(n,a,b,x) { return div(betabinomialpdf(n,a,b,x),betabinomialsurvival(n,a,b,x)); }
+function betabinomialchazard(n,a,b,x) { return -log(betabinomialsurvival(n,a,b,x)); }
+function betabinomialfailrate(n,a,b,x) { return div(betabinomialcdf(n,a,b,x),x); }
+// betabinomialcgf missing
+function betabinomial2cf(n,a,b,x) { return log(betabinomialcf(n,a,b,x)); }
+function bernoullidistsurvival(p,k) { return sub(1,bernoullidistcdf(p,k)); }
+function bernoullidisthazard(p,k) { return div(bernoullidistpdf(p,k),bernoullidistsurvival(p,k)); }
+function bernoullidistchazard(p,k) { return -log(bernoullidistsurvival(p,k)); }
+function bernoullidistfailrate(p,k) { return div(bernoullidistcdf(p,k),x); }
+function bernoullidiststandartdeviation(p,k) { return sqrt(bernoullidistvar(p,k)); }
+function bernoullidistcov(p,k) { return div(bernoullidiststandartdeviation(p,k),bernoullidistmean(p,k)); }
+function bernoullidistcov2(p,k) { return sqrt(div(bernoullidistvar(p,k),add(bernoullidistvar(p,k),sqr(bernoullidistmean(p,k))))); }
+function bernoullidisteff(p,k) { return div(bernoullidistvar(p,k),sqr(bernoullidistmean(p,k))); }
+function bernoullidistvmr(p,k) { return div(bernoullidistvar(p,k),bernoullidistmean(p,k)); }
+function bernoullidistzscore(p,k) { return div(sub(x,bernoullidistmean(p,k)),bernoullidiststandartdeviation(p,k)); }
+// bernoullidistcgf missing
+function bernoullidist2cf(p,k) { return log(bernoullidistcf(p,k)); }
+function lognormalqdf(m,s,x) { return div(sub(lognormalquantile(add(x,1e-5)),lognormalquantile(sub(x,1e-5))),2e-5); }
+function lomaxqdf(a,l,x) { return div(sub(lomaxquantile(add(x,1e-5)),lomaxquantile(sub(x,1e-5))),2e-5); }
+function hypergeometricdistsurvival(nn,kk,n,k) { return sub(1,hypergeometricdistcdf(nn,kk,n,k)); }
+function hypergeometricdisthazard(nn,kk,n,k) { return div(hypergeometricdistpdf(nn,kk,n,k),hypergeometricdistsurvival(nn,kk,n,k)); }
+function hypergeometricdistchazard(nn,kk,n,k) { return -log(hypergeometricdistsurvival(nn,kk,n,k)); }
+function hypergeometricdistfailrate(nn,kk,n,k) { return div(hypergeometricdistcdf(nn,kk,n,k),x); }
+function hypergeometricdiststandartdeviation(nn,kk,n,k) { return sqrt(hypergeometricdistvar(nn,kk,n,k)); }
+function hypergeometricdistcov(nn,kk,n,k) { return div(hypergeometricdiststandartdeviation(nn,kk,n,k),hypergeometricdistmean(nn,kk,n,k)); }
+function hypergeometricdistcov2(nn,kk,n,k) { return sqrt(div(hypergeometricdistvar(nn,kk,n,k),add(hypergeometricdistvar(nn,kk,n,k),sqr(hypergeometricdistmean(nn,kk,n,k))))); }
+function hypergeometricdisteff(nn,kk,n,k) { return div(hypergeometricdistvar(nn,kk,n,k),sqr(hypergeometricdistmean(nn,kk,n,k))); }
+function hypergeometricdistvmr(nn,kk,n,k) { return div(hypergeometricdistvar(nn,kk,n,k),hypergeometricdistmean(nn,kk,n,k)); }
+function hypergeometricdistzscore(nn,kk,n,k) { return div(sub(x,hypergeometricdistmean(nn,kk,n,k)),hypergeometricdiststandartdeviation(nn,kk,n,k)); }
+// hypergeometricdistcgf missing
+function hypergeometricdist2cf(nn,kk,n,k) { return log(hypergeometricdistcf(nn,kk,n,k)); }
+function multihypergeometricdiststandartdeviation(KK,n,K) { return sqrt(multihypergeometricdistvar(KK,n,K)); }
+function multihypergeometricdistcov2(KK,n,K) { return sqrt(div(multihypergeometricdistvar(KK,n,K),add(multihypergeometricdistvar(KK,n,K),sqr(multihypergeometricdistmean(KK,n,K))))); }
+function multihypergeometricdisteff(KK,n,K) { return div(multihypergeometricdistvar(KK,n,K),sqr(multihypergeometricdistmean(KK,n,K))); }
+function multihypergeometricdistvmr(KK,n,K) { return div(multihypergeometricdistvar(KK,n,K),multihypergeometricdistmean(KK,n,K)); }
+function multihypergeometricdistzscore(KK,n,K) { return div(sub(x,multihypergeometricdistmean(KK,n,K)),multihypergeometricdiststandartdeviation(KK,n,K)); }
+function negativehypergeometricdiststandartdeviation(nn,kk,r,k) { return sqrt(negativehypergeometricdistvar(nn,kk,r,k)); }
+function negativehypergeometricdistcov(nn,kk,r,k) { return div(negativehypergeometricdiststandartdeviation(nn,kk,r,k),negativehypergeometricdistmean(nn,kk,r,k)); }
+function negativehypergeometricdistcov2(nn,kk,r,k) { return sqrt(div(negativehypergeometricdistvar(nn,kk,r,k),add(negativehypergeometricdistvar(nn,kk,r,k),sqr(negativehypergeometricdistmean(nn,kk,r,k))))); }
+function negativehypergeometricdisteff(nn,kk,r,k) { return div(negativehypergeometricdistvar(nn,kk,r,k),sqr(negativehypergeometricdistmean(nn,kk,r,k))); }
+function negativehypergeometricdistvmr(nn,kk,r,k) { return div(negativehypergeometricdistvar(nn,kk,r,k),negativehypergeometricdistmean(nn,kk,r,k)); }
+function negativehypergeometricdistzscore(nn,kk,r,k) { return div(sub(x,negativehypergeometricdistmean(nn,kk,r,k)),negativehypergeometricdiststandartdeviation(nn,kk,r,k)); }
+function discreteuniformdistsurvival(a,b,k) { return sub(1,discreteuniformdistcdf(a,b,k)); }
+function discreteuniformdisthazard(a,b,k) { return div(discreteuniformdistpdf(a,b,k),discreteuniformdistsurvival(a,b,k)); }
+function discreteuniformdistchazard(a,b,k) { return -log(discreteuniformdistsurvival(a,b,k)); }
+function discreteuniformdistfailrate(a,b,k) { return div(discreteuniformdistcdf(a,b,k),x); }
+function discreteuniformdiststandartdeviation(a,b,k) { return sqrt(discreteuniformdistvar(a,b,k)); }
+function discreteuniformdistcov(a,b,k) { return div(discreteuniformdiststandartdeviation(a,b,k),discreteuniformdistmean(a,b,k)); }
+function discreteuniformdistcov2(a,b,k) { return sqrt(div(discreteuniformdistvar(a,b,k),add(discreteuniformdistvar(a,b,k),sqr(discreteuniformdistmean(a,b,k))))); }
+function discreteuniformdisteff(a,b,k) { return div(discreteuniformdistvar(a,b,k),sqr(discreteuniformdistmean(a,b,k))); }
+function discreteuniformdistvmr(a,b,k) { return div(discreteuniformdistvar(a,b,k),discreteuniformdistmean(a,b,k)); }
+function discreteuniformdistzscore(a,b,k) { return div(sub(x,discreteuniformdistmean(a,b,k)),discreteuniformdiststandartdeviation(a,b,k)); }
+// discreteuniformdistcgf missing
+function discreteuniformdist2cf(a,b,k) { return log(discreteuniformdistcf(a,b,k)); }
+function rademacherdistsurvival(k) { return sub(1,rademacherdistcdf(k)); }
+function rademacherdisthazard(k) { return div(rademacherdistpdf(k),rademacherdistsurvival(k)); }
+function rademacherdistchazard(k) { return -log(rademacherdistsurvival(k)); }
+function rademacherdistfailrate(k) { return div(rademacherdistcdf(k),x); }
+// rademacherdistcgf missing
+function rademacherdist2cf(k) { return log(rademacherdistcf(k)); }
+function zetadistsurvival(s,k) { return sub(1,zetadistcdf(s,k)); }
+function zetadisthazard(s,k) { return div(zetadistpdf(s,k),zetadistsurvival(s,k)); }
+function zetadistchazard(s,k) { return -log(zetadistsurvival(s,k)); }
+function zetadistfailrate(s,k) { return div(zetadistcdf(s,k),x); }
+function zetadiststandartdeviation(s,k) { return sqrt(zetadistvar(s,k)); }
+function zetadistcov(s,k) { return div(zetadiststandartdeviation(s,k),zetadistmean(s,k)); }
+function zetadistcov2(s,k) { return sqrt(div(zetadistvar(s,k),add(zetadistvar(s,k),sqr(zetadistmean(s,k))))); }
+function zetadisteff(s,k) { return div(zetadistvar(s,k),sqr(zetadistmean(s,k))); }
+function zetadistvmr(s,k) { return div(zetadistvar(s,k),zetadistmean(s,k)); }
+function zetadistzscore(s,k) { return div(sub(x,zetadistmean(s,k)),zetadiststandartdeviation(s,k)); }
+// zetadistcgf missing
+function zetadist2cf(s,k) { return log(zetadistcf(s,k)); }
+function zipfdistsurvival(s,n,k) { return sub(1,zipfdistcdf(s,n,k)); }
+function zipfdisthazard(s,n,k) { return div(zipfdistpdf(s,n,k),zipfdistsurvival(s,n,k)); }
+function zipfdistchazard(s,n,k) { return -log(zipfdistsurvival(s,n,k)); }
+function zipfdistfailrate(s,n,k) { return div(zipfdistcdf(s,n,k),x); }
+function zipfdiststandartdeviation(s,n,k) { return sqrt(zipfdistvar(s,n,k)); }
+function zipfdistcov(s,n,k) { return div(zipfdiststandartdeviation(s,n,k),zipfdistmean(s,n,k)); }
+function zipfdistcov2(s,n,k) { return sqrt(div(zipfdistvar(s,n,k),add(zipfdistvar(s,n,k),sqr(zipfdistmean(s,n,k))))); }
+function zipfdisteff(s,n,k) { return div(zipfdistvar(s,n,k),sqr(zipfdistmean(s,n,k))); }
+function zipfdistvmr(s,n,k) { return div(zipfdistvar(s,n,k),zipfdistmean(s,n,k)); }
+function zipfdistzscore(s,n,k) { return div(sub(x,zipfdistmean(s,n,k)),zipfdiststandartdeviation(s,n,k)); }
+// zipfdistcgf missing
+function zipfdist2cf(s,n,k) { return log(zipfdistcf(s,n,k)); }
+function zipfmandelbrotdistsurvival(n,q,s,k) { return sub(1,zipfmandelbrotdistcdf(n,q,s,k)); }
+function zipfmandelbrotdisthazard(n,q,s,k) { return div(zipfmandelbrotdistpdf(n,q,s,k),zipfmandelbrotdistsurvival(n,q,s,k)); }
+function zipfmandelbrotdistchazard(n,q,s,k) { return -log(zipfmandelbrotdistsurvival(n,q,s,k)); }
+function zipfmandelbrotdistfailrate(n,q,s,k) { return div(zipfmandelbrotdistcdf(n,q,s,k),x); }
+function poissonbinomialsurvival(P,k) { return sub(1,poissonbinomialcdf(P,k)); }
+function poissonbinomialhazard(P,k) { return div(poissonbinomialpdf(P,k),poissonbinomialsurvival(P,k)); }
+function poissonbinomialchazard(P,k) { return -log(poissonbinomialsurvival(P,k)); }
+function poissonbinomialfailrate(P,k) { return div(poissonbinomialcdf(P,k),x); }
+function poissonbinomialcov(P,k) { return div(poissonbinomialstandartdeviation(P,k),poissonbinomialmean(P,k)); }
+function poissonbinomialzscore(P,k) { return div(sub(x,poissonbinomialmean(P,k)),poissonbinomialstandartdeviation(P,k)); }
+// poissonbinomialcgf missing
+function poissonbinomial2cf(P,k) { return log(poissonbinomialcf(P,k)); }
+function fishernoncentralhypergeometricdiststandartdeviation(m1,m2,n,w,x) { return sqrt(fishernoncentralhypergeometricdistvar(m1,m2,n,w,x)); }
+function fishernoncentralhypergeometricdistcov(m1,m2,n,w,x) { return div(fishernoncentralhypergeometricdiststandartdeviation(m1,m2,n,w,x),fishernoncentralhypergeometricdistmean(m1,m2,n,w,x)); }
+function fishernoncentralhypergeometricdistcov2(m1,m2,n,w,x) { return sqrt(div(fishernoncentralhypergeometricdistvar(m1,m2,n,w,x),add(fishernoncentralhypergeometricdistvar(m1,m2,n,w,x),sqr(fishernoncentralhypergeometricdistmean(m1,m2,n,w,x))))); }
+function fishernoncentralhypergeometricdisteff(m1,m2,n,w,x) { return div(fishernoncentralhypergeometricdistvar(m1,m2,n,w,x),sqr(fishernoncentralhypergeometricdistmean(m1,m2,n,w,x))); }
+function fishernoncentralhypergeometricdistvmr(m1,m2,n,w,x) { return div(fishernoncentralhypergeometricdistvar(m1,m2,n,w,x),fishernoncentralhypergeometricdistmean(m1,m2,n,w,x)); }
+function fishernoncentralhypergeometricdistzscore(m1,m2,n,w,x) { return div(sub(x,fishernoncentralhypergeometricdistmean(m1,m2,n,w,x)),fishernoncentralhypergeometricdiststandartdeviation(m1,m2,n,w,x)); }
+function walleniusnoncentralhypergeometricdiststandartdeviation(m1,m2,n,w,x) { return sqrt(walleniusnoncentralhypergeometricdistvar(m1,m2,n,w,x)); }
+function walleniusnoncentralhypergeometricdistcov(m1,m2,n,w,x) { return div(walleniusnoncentralhypergeometricdiststandartdeviation(m1,m2,n,w,x),walleniusnoncentralhypergeometricdistmean(m1,m2,n,w,x)); }
+function walleniusnoncentralhypergeometricdistcov2(m1,m2,n,w,x) { return sqrt(div(walleniusnoncentralhypergeometricdistvar(m1,m2,n,w,x),add(walleniusnoncentralhypergeometricdistvar(m1,m2,n,w,x),sqr(walleniusnoncentralhypergeometricdistmean(m1,m2,n,w,x))))); }
+function walleniusnoncentralhypergeometricdisteff(m1,m2,n,w,x) { return div(walleniusnoncentralhypergeometricdistvar(m1,m2,n,w,x),sqr(walleniusnoncentralhypergeometricdistmean(m1,m2,n,w,x))); }
+function walleniusnoncentralhypergeometricdistvmr(m1,m2,n,w,x) { return div(walleniusnoncentralhypergeometricdistvar(m1,m2,n,w,x),walleniusnoncentralhypergeometricdistmean(m1,m2,n,w,x)); }
+function walleniusnoncentralhypergeometricdistzscore(m1,m2,n,w,x) { return div(sub(x,walleniusnoncentralhypergeometricdistmean(m1,m2,n,w,x)),walleniusnoncentralhypergeometricdiststandartdeviation(m1,m2,n,w,x)); }
+// hardydistcgf missing
+function hardydist2cf(p,q,m,x) { return log(hardydistcf(p,q,m,x)); }
+function yulesimondistsurvival(p,k) { return sub(1,yulesimondistcdf(p,k)); }
+function yulesimondisthazard(p,k) { return div(yulesimondistpdf(p,k),yulesimondistsurvival(p,k)); }
+function yulesimondistchazard(p,k) { return -log(yulesimondistsurvival(p,k)); }
+function yulesimondistfailrate(p,k) { return div(yulesimondistcdf(p,k),x); }
+function yulesimondiststandartdeviation(p,k) { return sqrt(yulesimondistvar(p,k)); }
+function yulesimondistcov(p,k) { return div(yulesimondiststandartdeviation(p,k),yulesimondistmean(p,k)); }
+function yulesimondistcov2(p,k) { return sqrt(div(yulesimondistvar(p,k),add(yulesimondistvar(p,k),sqr(yulesimondistmean(p,k))))); }
+function yulesimondisteff(p,k) { return div(yulesimondistvar(p,k),sqr(yulesimondistmean(p,k))); }
+function yulesimondistvmr(p,k) { return div(yulesimondistvar(p,k),yulesimondistmean(p,k)); }
+function yulesimondistzscore(p,k) { return div(sub(x,yulesimondistmean(p,k)),yulesimondiststandartdeviation(p,k)); }
+// yulesimondistcgf missing
+function yulesimondist2cf(p,k) { return log(yulesimondistcf(p,k)); }
+function skellamdiststandartdeviation(m1,m2,k) { return sqrt(skellamdistvar(m1,m2,k)); }
+function skellamdistcov(m1,m2,k) { return div(skellamdiststandartdeviation(m1,m2,k),skellamdistmean(m1,m2,k)); }
+function skellamdistcov2(m1,m2,k) { return sqrt(div(skellamdistvar(m1,m2,k),add(skellamdistvar(m1,m2,k),sqr(skellamdistmean(m1,m2,k))))); }
+function skellamdisteff(m1,m2,k) { return div(skellamdistvar(m1,m2,k),sqr(skellamdistmean(m1,m2,k))); }
+function skellamdistvmr(m1,m2,k) { return div(skellamdistvar(m1,m2,k),skellamdistmean(m1,m2,k)); }
+function skellamdistzscore(m1,m2,k) { return div(sub(x,skellamdistmean(m1,m2,k)),skellamdiststandartdeviation(m1,m2,k)); }
+// skellamdistcgf missing
+function skellamdist2cf(m1,m2,k) { return log(skellamdistcf(m1,m2,k)); }
+function boreldiststandartdeviation(m,n) { return sqrt(boreldistvar(m,n)); }
+function boreldistcov(m,n) { return div(boreldiststandartdeviation(m,n),boreldistmean(m,n)); }
+function boreldistcov2(m,n) { return sqrt(div(boreldistvar(m,n),add(boreldistvar(m,n),sqr(boreldistmean(m,n))))); }
+function boreldisteff(m,n) { return div(boreldistvar(m,n),sqr(boreldistmean(m,n))); }
+function boreldistvmr(m,n) { return div(boreldistvar(m,n),boreldistmean(m,n)); }
+function boreldistzscore(m,n) { return div(sub(x,boreldistmean(m,n)),boreldiststandartdeviation(m,n)); }
+function panjerdiststandartdeviation(a,l,k) { return sqrt(panjerdistvar(a,l,k)); }
+function panjerdistcov(a,l,k) { return div(panjerdiststandartdeviation(a,l,k),panjerdistmean(a,l,k)); }
+function panjerdistcov2(a,l,k) { return sqrt(div(panjerdistvar(a,l,k),add(panjerdistvar(a,l,k),sqr(panjerdistmean(a,l,k))))); }
+function panjerdisteff(a,l,k) { return div(panjerdistvar(a,l,k),sqr(panjerdistmean(a,l,k))); }
+function panjerdistvmr(a,l,k) { return div(panjerdistvar(a,l,k),panjerdistmean(a,l,k)); }
+function panjerdistzscore(a,l,k) { return div(sub(x,panjerdistmean(a,l,k)),panjerdiststandartdeviation(a,l,k)); }
+// panjerdistcgf missing
+function panjerdist2cf(a,l,k) { return log(panjerdistcf(a,l,k)); }
+function logdistsurvival(p,k) { return sub(1,logdistcdf(p,k)); }
+function logdisthazard(p,k) { return div(logdistpdf(p,k),logdistsurvival(p,k)); }
+function logdistchazard(p,k) { return -log(logdistsurvival(p,k)); }
+function logdistfailrate(p,k) { return div(logdistcdf(p,k),x); }
+function logdiststandartdeviation(p,k) { return sqrt(logdistvar(p,k)); }
+function logdistcov(p,k) { return div(logdiststandartdeviation(p,k),logdistmean(p,k)); }
+function logdistcov2(p,k) { return sqrt(div(logdistvar(p,k),add(logdistvar(p,k),sqr(logdistmean(p,k))))); }
+function logdisteff(p,k) { return div(logdistvar(p,k),sqr(logdistmean(p,k))); }
+function logdistvmr(p,k) { return div(logdistvar(p,k),logdistmean(p,k)); }
+function logdistzscore(p,k) { return div(sub(x,logdistmean(p,k)),logdiststandartdeviation(p,k)); }
+// logdistcgf missing
+function logdist2cf(p,k) { return log(logdistcf(p,k)); }
+function geometricdistsurvival(p,k) { return sub(1,geometricdistcdf(p,k)); }
+function geometricdisthazard(p,k) { return div(geometricdistpdf(p,k),geometricdistsurvival(p,k)); }
+function geometricdistchazard(p,k) { return -log(geometricdistsurvival(p,k)); }
+function geometricdistfailrate(p,k) { return div(geometricdistcdf(p,k),x); }
+function geometricdiststandartdeviation(p,k) { return sqrt(geometricdistvar(p,k)); }
+function geometricdistcov(p,k) { return div(geometricdiststandartdeviation(p,k),geometricdistmean(p,k)); }
+function geometricdistcov2(p,k) { return sqrt(div(geometricdistvar(p,k),add(geometricdistvar(p,k),sqr(geometricdistmean(p,k))))); }
+function geometricdisteff(p,k) { return div(geometricdistvar(p,k),sqr(geometricdistmean(p,k))); }
+function geometricdistvmr(p,k) { return div(geometricdistvar(p,k),geometricdistmean(p,k)); }
+function geometricdistzscore(p,k) { return div(sub(x,geometricdistmean(p,k)),geometricdiststandartdeviation(p,k)); }
+// geometricdistcgf missing
+function geometricdist2cf(p,k) { return log(geometricdistcf(p,k)); }
+function geometric0distsurvival(p,k) { return sub(1,geometric0distcdf(p,k)); }
+function geometric0disthazard(p,k) { return div(geometric0distpdf(p,k),geometric0distsurvival(p,k)); }
+function geometric0distchazard(p,k) { return -log(geometric0distsurvival(p,k)); }
+function geometric0distfailrate(p,k) { return div(geometric0distcdf(p,k),x); }
+function geometric0diststandartdeviation(p,k) { return sqrt(geometric0distvar(p,k)); }
+function geometric0distcov(p,k) { return div(geometric0diststandartdeviation(p,k),geometric0distmean(p,k)); }
+function geometric0distcov2(p,k) { return sqrt(div(geometric0distvar(p,k),add(geometric0distvar(p,k),sqr(geometric0distmean(p,k))))); }
+function geometric0disteff(p,k) { return div(geometric0distvar(p,k),sqr(geometric0distmean(p,k))); }
+function geometric0distvmr(p,k) { return div(geometric0distvar(p,k),geometric0distmean(p,k)); }
+function geometric0distzscore(p,k) { return div(sub(x,geometric0distmean(p,k)),geometric0diststandartdeviation(p,k)); }
+// geometric0distcgf missing
+function geometric0dist2cf(p,k) { return log(geometric0distcf(p,k)); }
+function gausskuzmindistsurvival(k) { return sub(1,gausskuzmindistcdf(k)); }
+function gausskuzmindisthazard(k) { return div(gausskuzmindistpdf(k),gausskuzmindistsurvival(k)); }
+function gausskuzmindistchazard(k) { return -log(gausskuzmindistsurvival(k)); }
+function gausskuzmindistfailrate(k) { return div(gausskuzmindistcdf(k),x); }
+function gfloryschulzdistsurvival(a,k) { return sub(1,gfloryschulzdistcdf(a,k)); }
+function gfloryschulzdisthazard(a,k) { return div(gfloryschulzdistpdf(a,k),gfloryschulzdistsurvival(a,k)); }
+function gfloryschulzdistchazard(a,k) { return -log(gfloryschulzdistsurvival(a,k)); }
+function gfloryschulzdistfailrate(a,k) { return div(gfloryschulzdistcdf(a,k),x); }
+function gfloryschulzdiststandartdeviation(a,k) { return sqrt(gfloryschulzdistvar(a,k)); }
+function gfloryschulzdistcov(a,k) { return div(gfloryschulzdiststandartdeviation(a,k),gfloryschulzdistmean(a,k)); }
+function gfloryschulzdistcov2(a,k) { return sqrt(div(gfloryschulzdistvar(a,k),add(gfloryschulzdistvar(a,k),sqr(gfloryschulzdistmean(a,k))))); }
+function gfloryschulzdisteff(a,k) { return div(gfloryschulzdistvar(a,k),sqr(gfloryschulzdistmean(a,k))); }
+function gfloryschulzdistvmr(a,k) { return div(gfloryschulzdistvar(a,k),gfloryschulzdistmean(a,k)); }
+function gfloryschulzdistzscore(a,k) { return div(sub(x,gfloryschulzdistmean(a,k)),gfloryschulzdiststandartdeviation(a,k)); }
+// gfloryschulzdistcgf missing
+function gfloryschulzdist2cf(a,k) { return log(gfloryschulzdistcf(a,k)); }
+function conwaymaxwellpoissonsurvival(l,v,x) { return sub(1,conwaymaxwellpoissoncdf(l,v,x)); }
+function conwaymaxwellpoissonhazard(l,v,x) { return div(conwaymaxwellpoissonpdf(l,v,x),conwaymaxwellpoissonsurvival(l,v,x)); }
+function conwaymaxwellpoissonchazard(l,v,x) { return -log(conwaymaxwellpoissonsurvival(l,v,x)); }
+function conwaymaxwellpoissonfailrate(l,v,x) { return div(conwaymaxwellpoissoncdf(l,v,x),x); }
+function conwaymaxwellpoissoncov(l,v,x) { return div(conwaymaxwellpoissonstandartdeviation(l,v,x),conwaymaxwellpoissonmean(l,v,x)); }
+function conwaymaxwellpoissoncov2(l,v,x) { return sqrt(div(conwaymaxwellpoissonvar(l,v,x),add(conwaymaxwellpoissonvar(l,v,x),sqr(conwaymaxwellpoissonmean(l,v,x))))); }
+function conwaymaxwellpoissoneff(l,v,x) { return div(conwaymaxwellpoissonvar(l,v,x),sqr(conwaymaxwellpoissonmean(l,v,x))); }
+function conwaymaxwellpoissonvmr(l,v,x) { return div(conwaymaxwellpoissonvar(l,v,x),conwaymaxwellpoissonmean(l,v,x)); }
+function conwaymaxwellpoissonzscore(l,v,x) { return div(sub(x,conwaymaxwellpoissonmean(l,v,x)),conwaymaxwellpoissonstandartdeviation(l,v,x)); }
+// conwaymaxwellpoissoncgf missing
+function conwaymaxwellpoisson2cf(l,v,x) { return log(conwaymaxwellpoissoncf(l,v,x)); }
+function maxwellboltzmannsurvival(a,x) { return sub(1,maxwellboltzmanncdf(a,x)); }
+function maxwellboltzmannhazard(a,x) { return div(maxwellboltzmannpdf(a,x),maxwellboltzmannsurvival(a,x)); }
+function maxwellboltzmannchazard(a,x) { return -log(maxwellboltzmannsurvival(a,x)); }
+function maxwellboltzmannfailrate(a,x) { return div(maxwellboltzmanncdf(a,x),x); }
+function maxwellboltzmannstandartdeviation(a,x) { return sqrt(maxwellboltzmannvar(a,x)); }
+function maxwellboltzmanncov(a,x) { return div(maxwellboltzmannstandartdeviation(a,x),maxwellboltzmannmean(a,x)); }
+function maxwellboltzmanncov2(a,x) { return sqrt(div(maxwellboltzmannvar(a,x),add(maxwellboltzmannvar(a,x),sqr(maxwellboltzmannmean(a,x))))); }
+function maxwellboltzmanneff(a,x) { return div(maxwellboltzmannvar(a,x),sqr(maxwellboltzmannmean(a,x))); }
+function maxwellboltzmannvmr(a,x) { return div(maxwellboltzmannvar(a,x),maxwellboltzmannmean(a,x)); }
+function maxwellboltzmannzscore(a,x) { return div(sub(x,maxwellboltzmannmean(a,x)),maxwellboltzmannstandartdeviation(a,x)); }
+function logarithmicdistsurvival(p,x) { return sub(1,logarithmicdistcdf(p,x)); }
+function logarithmicdisthazard(p,x) { return div(logarithmicdistpdf(p,x),logarithmicdistsurvival(p,x)); }
+function logarithmicdistchazard(p,x) { return -log(logarithmicdistsurvival(p,x)); }
+function logarithmicdistfailrate(p,x) { return div(logarithmicdistcdf(p,x),x); }
+function logarithmicdist2cf(p,x) { return log(logarithmicdistcf(p,x)); }
+function hermitedistsurvival(a1,a2,x) { return sub(1,hermitedistcdf(a1,a2,x)); }
+function hermitedisthazard(a1,a2,x) { return div(hermitedistpdf(a1,a2,x),hermitedistsurvival(a1,a2,x)); }
+function hermitedistchazard(a1,a2,x) { return -log(hermitedistsurvival(a1,a2,x)); }
+function hermitedistfailrate(a1,a2,x) { return div(hermitedistcdf(a1,a2,x),x); }
+function hermitediststandartdeviation(a1,a2,x) { return sqrt(hermitedistvar(a1,a2,x)); }
+function hermitedistcov(a1,a2,x) { return div(hermitediststandartdeviation(a1,a2,x),hermitedistmean(a1,a2,x)); }
+function hermitedistcov2(a1,a2,x) { return sqrt(div(hermitedistvar(a1,a2,x),add(hermitedistvar(a1,a2,x),sqr(hermitedistmean(a1,a2,x))))); }
+function hermitedisteff(a1,a2,x) { return div(hermitedistvar(a1,a2,x),sqr(hermitedistmean(a1,a2,x))); }
+function hermitedistvmr(a1,a2,x) { return div(hermitedistvar(a1,a2,x),hermitedistmean(a1,a2,x)); }
+function hermitedistzscore(a1,a2,x) { return div(sub(x,hermitedistmean(a1,a2,x)),hermitediststandartdeviation(a1,a2,x)); }
+// hermitedistcgf missing
+function hermitedist2cf(a1,a2,x) { return log(hermitedistcf(a1,a2,x)); }
+function delaportedistsurvival(l,a,b,k) { return sub(1,delaportedistcdf(l,a,b,k)); }
+function delaportedisthazard(l,a,b,k) { return div(delaportedistpdf(l,a,b,k),delaportedistsurvival(l,a,b,k)); }
+function delaportedistchazard(l,a,b,k) { return -log(delaportedistsurvival(l,a,b,k)); }
+function delaportedistfailrate(l,a,b,k) { return div(delaportedistcdf(l,a,b,k),x); }
+function delaportediststandartdeviation(l,a,b,k) { return sqrt(delaportedistvar(l,a,b,k)); }
+function delaportedistcov(l,a,b,k) { return div(delaportediststandartdeviation(l,a,b,k),delaportedistmean(l,a,b,k)); }
+function delaportedistcov2(l,a,b,k) { return sqrt(div(delaportedistvar(l,a,b,k),add(delaportedistvar(l,a,b,k),sqr(delaportedistmean(l,a,b,k))))); }
+function delaportedisteff(l,a,b,k) { return div(delaportedistvar(l,a,b,k),sqr(delaportedistmean(l,a,b,k))); }
+function delaportedistvmr(l,a,b,k) { return div(delaportedistvar(l,a,b,k),delaportedistmean(l,a,b,k)); }
+function delaportedistzscore(l,a,b,k) { return div(sub(x,delaportedistmean(l,a,b,k)),delaportediststandartdeviation(l,a,b,k)); }
+// delaportedistcgf missing
+function delaportedist2cf(l,a,b,k) { return log(delaportedistcf(l,a,b,k)); }
+function poissondistsurvival(l,k) { return sub(1,poissondistcdf(l,k)); }
+function poissondisthazard(l,k) { return div(poissondistpdf(l,k),poissondistsurvival(l,k)); }
+function poissondistchazard(l,k) { return -log(poissondistsurvival(l,k)); }
+function poissondistfailrate(l,k) { return div(poissondistcdf(l,k),x); }
+function poissondiststandartdeviation(l,k) { return sqrt(poissondistvar(l,k)); }
+function poissondistcov(l,k) { return div(poissondiststandartdeviation(l,k),poissondistmean(l,k)); }
+function poissondistcov2(l,k) { return sqrt(div(poissondistvar(l,k),add(poissondistvar(l,k),sqr(poissondistmean(l,k))))); }
+function poissondisteff(l,k) { return div(poissondistvar(l,k),sqr(poissondistmean(l,k))); }
+function poissondistvmr(l,k) { return div(poissondistvar(l,k),poissondistmean(l,k)); }
+function poissondistzscore(l,k) { return div(sub(x,poissondistmean(l,k)),poissondiststandartdeviation(l,k)); }
+// poissondistcgf missing
+function poissondist2cf(l,k) { return log(poissondistcf(l,k)); }
+function displacedpoissondiststandartdeviation(l,r,n) { return sqrt(displacedpoissondistvar(l,r,n)); }
+function displacedpoissondistcov(l,r,n) { return div(displacedpoissondiststandartdeviation(l,r,n),displacedpoissondistmean(l,r,n)); }
+function displacedpoissondistcov2(l,r,n) { return sqrt(div(displacedpoissondistvar(l,r,n),add(displacedpoissondistvar(l,r,n),sqr(displacedpoissondistmean(l,r,n))))); }
+function displacedpoissondisteff(l,r,n) { return div(displacedpoissondistvar(l,r,n),sqr(displacedpoissondistmean(l,r,n))); }
+function displacedpoissondistvmr(l,r,n) { return div(displacedpoissondistvar(l,r,n),displacedpoissondistmean(l,r,n)); }
+function displacedpoissondistzscore(l,r,n) { return div(sub(x,displacedpoissondistmean(l,r,n)),displacedpoissondiststandartdeviation(l,r,n)); }
+// displacedpoissondistcgf missing
+function displacedpoissondist2cf(l,r,n) { return log(displacedpoissondistcf(l,r,n)); }
+function zerotruncatedpoissondiststandartdeviation(l,k) { return sqrt(zerotruncatedpoissondistvar(l,k)); }
+function zerotruncatedpoissondistcov(l,k) { return div(zerotruncatedpoissondiststandartdeviation(l,k),zerotruncatedpoissondistmean(l,k)); }
+function zerotruncatedpoissondistcov2(l,k) { return sqrt(div(zerotruncatedpoissondistvar(l,k),add(zerotruncatedpoissondistvar(l,k),sqr(zerotruncatedpoissondistmean(l,k))))); }
+function zerotruncatedpoissondisteff(l,k) { return div(zerotruncatedpoissondistvar(l,k),sqr(zerotruncatedpoissondistmean(l,k))); }
+function zerotruncatedpoissondistvmr(l,k) { return div(zerotruncatedpoissondistvar(l,k),zerotruncatedpoissondistmean(l,k)); }
+function zerotruncatedpoissondistzscore(l,k) { return div(sub(x,zerotruncatedpoissondistmean(l,k)),zerotruncatedpoissondiststandartdeviation(l,k)); }
+// arcsindistcgf missing
+// arcsinboundeddistcgf missing
+// batesdistcgf missing
+function kumaraswamydistqdf(a,b,x) { return div(sub(kumaraswamydistquantile(add(x,1e-5)),kumaraswamydistquantile(sub(x,1e-5))),2e-5); }
+// raisedcosdistcgf missing
+// uquadradicdistcgf missing
+// wignersemicircledistcgf missing
+function metalogdistqdf(Aa,y) { return div(sub(metalogdistquantile(add(x,1e-5)),metalogdistquantile(sub(x,1e-5))),2e-5); }
+function sptmetalogdistqdf(a1,a2,a3,y) { return div(sub(sptmetalogdistquantile(add(x,1e-5)),sptmetalogdistquantile(sub(x,1e-5))),2e-5); }
+// triangulardistcgf missing
+// irwinhalldistcgf missing
+function logisticqdf(m,s,x) { return div(sub(logisticquantile(add(x,1e-5)),logisticquantile(sub(x,1e-5))),2e-5); }
+// expgeneralizedbetadistcgf missing
+function rayleighdistqdf(s,x) { return div(sub(rayleighdistquantile(add(x,1e-5)),rayleighdistquantile(sub(x,1e-5))),2e-5); }
+// rayleighdistcgf missing
+// ricedistcgf missing
+// ricedistmgf missing
+// ricedistpgf missing
+function weibulldistqdf(l,k,x) { return div(sub(weibulldistquantile(add(x,1e-5)),weibulldistquantile(sub(x,1e-5))),2e-5); }
+// weibulldistcgf missing
+function frechetdistqdf(a,s,m,x) { return div(sub(frechetdistquantile(add(x,1e-5)),frechetdistquantile(sub(x,1e-5))),2e-5); }
+function gumbeldistqdf(m,b,x) { return div(sub(gumbeldistquantile(add(x,1e-5)),gumbeldistquantile(sub(x,1e-5))),2e-5); }
+// gumbeldistcgf missing
+function paretodistqdf(m,a,x) { return div(sub(paretodistquantile(add(x,1e-5)),paretodistquantile(sub(x,1e-5))),2e-5); }
+// paretodistcgf missing
+// wrappednormaldistcgf missing
+// wrappedcauchydistcgf missing
+function cauchydistqdf(x0,c,x) { return div(sub(cauchydistquantile(add(x,1e-5)),cauchydistquantile(sub(x,1e-5))),2e-5); }
+// cauchydistcgf missing
+function laplacedistqdf(m,b,x) { return div(sub(laplacedistquantile(add(x,1e-5)),laplacedistquantile(sub(x,1e-5))),2e-5); }
+// chidistcgf missing
+// chisquareddistcgf missing
+// noncentralchisquareddistcgf missing
+function birnbaumsaundersdistqdf(g,m,b,x) { return div(sub(birnbaumsaundersdistquantile(add(x,1e-5)),birnbaumsaundersdistquantile(sub(x,1e-5))),2e-5); }
+function standartfatiguelifedistqdf(g,x) { return div(sub(standartfatiguelifedistquantile(add(x,1e-5)),standartfatiguelifedistquantile(sub(x,1e-5))),2e-5); }
+// inversechisquareddistcgf missing
+// scaledinversechisquareddistcgf missing
+// hyperbolicdistcgf missing
+function dagumdistqdf(p,a,b,x) { return div(sub(dagumdistquantile(add(x,1e-5)),dagumdistquantile(sub(x,1e-5))),2e-5); }
+// exponentiallogarithmicdistcgf missing
+function exponentialqdf(l,x) { return div(sub(exponentialquantile(add(x,1e-5)),exponentialquantile(sub(x,1e-5))),2e-5); }
+function loglogisticdistqdf(a,b,x) { return div(sub(loglogisticdistquantile(add(x,1e-5)),loglogisticdistquantile(sub(x,1e-5))),2e-5); }
+function halfnormalqdf(s,x) { return div(sub(halfnormalquantile(add(x,1e-5)),halfnormalquantile(sub(x,1e-5))),2e-5); }
+// erlangdistcgf missing
+function benini2distqdf(b,s,x) { return div(sub(benini2distquantile(add(x,1e-5)),benini2distquantile(sub(x,1e-5))),2e-5); }
+// chicgf missing
+// wilkslambdacgf missing
+// wilkslambdamgf missing
+// wilkslambdapgf missing
+function kaniadakisexp2qdf(k,b,x) { return div(sub(kaniadakisexp2quantile(add(x,1e-5)),kaniadakisexp2quantile(sub(x,1e-5))),2e-5); }
+function kaniadakisweibullqdf(k,a,b,x) { return div(sub(kaniadakisweibullquantile(add(x,1e-5)),kaniadakisweibullquantile(sub(x,1e-5))),2e-5); }
+function discretephasetypesurvival(TA,T,x) { return sub(1,discretephasetypecdf(TA,T,x)); }
+function discretephasetypehazard(TA,T,x) { return div(discretephasetypepdf(TA,T,x),discretephasetypesurvival(TA,T,x)); }
+function discretephasetypechazard(TA,T,x) { return -log(discretephasetypesurvival(TA,T,x)); }
+function discretephasetypefailrate(TA,T,x) { return div(discretephasetypecdf(TA,T,x),x); }
+
+
 
 
 
@@ -27474,7 +29936,7 @@ function inversechicdf(v,x){return div(incgamma(div(v,2),div(1,2,x)),gamma(div(v
 //ADD  Beta-Birnbaum-Saunders 
 //ADD Kumaraswamy-Birnbaum-Saunders
 //ADD https://en.wikipedia.org/wiki/Erlang_(unit)#Erlang_B_formula
-//ADD https://en.wikipedia.org/wiki/Hyperexponential_distribution
+
 //https://en.wikipedia.org/wiki/Hyper-Erlang_distribution
 //https://en.wikipedia.org/wiki/Phase-type_distribution
 

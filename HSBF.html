@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Hofstadter Butterfly — Harper's equation (Canvas)</title>
+<style>
+  body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;display:flex;gap:12px;padding:12px}
+  #controls{width:360px;max-height:90vh;overflow:auto;padding:10px;border:1px solid #ddd;border-radius:8px}
+  label{display:block;margin-top:8px;font-size:13px}
+  input[type=number]{width:100%}
+  .row{display:flex;gap:8px}
+  canvas{border:1px solid #222;background:#000}
+  select,input[type=range]{width:100%}
+  .small{font-size:12px;color:#555}
+  button{margin-top:8px}
+</style>
+</head>
+<body>
+  <div id="controls">
+    <h3>Hofstadter Butterfly — Harper's equation</h3>
+    <div class="small">This viewer uses a transfer-matrix spectral test for the almost-Mathieu / Harper model (λ=1). For each (φ, E) we compute the monodromy trace for a periodic approximation p/q and check <code>|tr| ≤ 2</code> across sampled Bloch phases k. The pixel color encodes how close the point is to the band.</div>
+
+    <label>Canvas width (px)
+      <input id="w" type="number" value="800" min="100" max="2000" step="1">
+    </label>
+    <label>Canvas height (px)
+      <input id="h" type="number" value="600" min="100" max="1500" step="1">
+    </label>
+
+    <label>Flux (φ) range
+      <div class="row"><input id="phiMin" type="number" value="0" step="0.001"><input id="phiMax" type="number" value="0.5" step="0.001"></div>
+      <div class="small">Usually φ in [0,1]. Commonly only 0..0.5 is shown because symmetry.</div>
+    </label>
+
+    <label>Energy (E) range
+      <div class="row"><input id="eMin" type="number" value="-4" step="0.01"><input id="eMax" type="number" value="4" step="0.01"></div>
+    </label>
+
+    <label>Max denominator for rational approximation (q_max)
+      <input id="qmax" type="number" value="80" min="1" max="600">
+    </label>
+
+    <label>k samples per (φ,E)
+      <input id="kSamples" type="number" value="6" min="1" max="32">
+    </label>
+
+    <label>Color method
+      <select id="colorMethod">
+        <option value="grayscale">Grayscale (band intensity)</option>
+        <option value="hue">Hue mapping (rainbow)</option>
+        <option value="trace">Trace-signed (two-sided diff)</option>
+      </select>
+    </label>
+
+    <label>Contrast <span id="contrastVal">1.0</span>
+      <input id="contrast" type="range" min="0" max="3" step="0.01" value="1">
+    </label>
+
+    <label>Brightness <span id="brightnessVal">0.0</span>
+      <input id="brightness" type="range" min="-1" max="1" step="0.01" value="0">
+    </label>
+
+    <label>Value transfer (gamma) <span id="gammaVal">1.0</span>
+      <input id="gamma" type="range" min="0.1" max="3" step="0.01" value="1">
+    </label>
+
+    <label>Render method
+      <select id="renderMode"><option value="full">Full render (every pixel)</option><option value="fast">Fast scanline (approx)</option></select>
+    </label>
+
+    <button id="renderBtn">Render</button>
+    <button id="saveBtn">Save PNG</button>
+
+    <hr>
+    <div class="small">Notes: the viewer approximates irrational flux by best rational with denominator ≤ q_max. Increasing q_max and kSamples improves accuracy but costs CPU. Try smaller canvas sizes for quick previews.</div>
+  </div>
+
+  <div style="flex:1">
+    <canvas id="c"></canvas>
+  </div>
+
+<script>
+(function(){
+  // DOM refs
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  const controls = ['w','h','phiMin','phiMax','eMin','eMax','qmax','kSamples','colorMethod','contrast','brightness','gamma','renderMode'];
+  const els = {};
+  controls.forEach(id=>els[id]=document.getElementById(id));
+  const renderBtn = document.getElementById('renderBtn');
+  const saveBtn = document.getElementById('saveBtn');
+  const contrastVal = document.getElementById('contrastVal');
+  const brightnessVal = document.getElementById('brightnessVal');
+  const gammaVal = document.getElementById('gammaVal');
+
+  function updateDisplayVals(){ contrastVal.textContent = els.contrast.value; brightnessVal.textContent = els.brightness.value; gammaVal.textContent = els.gamma.value; }
+  ['contrast','brightness','gamma'].forEach(id=>document.getElementById(id).addEventListener('input', updateDisplayVals));
+  updateDisplayVals();
+
+  function setCanvasSize(){ canvas.width = parseInt(els.w.value,10); canvas.height = parseInt(els.h.value,10); }
+  ['w','h'].forEach(id=>els[id].addEventListener('change', ()=>{ setCanvasSize(); }));
+  setCanvasSize();
+
+  // math helpers
+  function clamp(x,min,max){ return Math.max(min,Math.min(max,x)); }
+  function hsv2rgb(h,s,v){ // h in [0,1]
+    let i = Math.floor(h*6); let f = h*6 - i; let p = v*(1-s); let q = v*(1 - f*s); let t = v*(1 - (1-f)*s);
+    switch(i%6){case 0: return [v,t,p]; case 1: return [q,v,p]; case 2: return [p,v,t]; case 3: return [p,q,v]; case 4: return [t,p,v]; case 5: return [v,p,q];}
+  }
+
+  // Best rational approximation with denominator <= qmax (simple brute force)
+  function bestRational(phi,qmax){
+    let best = {p:0,q:1,err:Math.abs(phi-0)};
+    for(let q=1;q<=qmax;q++){
+      let p = Math.round(phi*q);
+      let err = Math.abs(phi - p/q);
+      if(err < best.err){ best = {p:p,q:q,err:err}; }
+    }
+    // reduce
+    const g = (a,b)=>b?g(b,a%b):a; let gg = g(best.p,best.q); if(gg>1){best.p/=gg; best.q/=gg}
+    return best;
+  }
+
+  // Transfer matrix at site with phase theta and energy E: maps [psi_n; psi_{n-1}] -> [psi_{n+1}; psi_n]
+  function siteMatrix(E,theta){ const v = E - 2*Math.cos(theta); return [[v,-1],[1,0]]; }
+
+  // Multiply 2x2 matrices
+  function matMul(A,B){ return [[A[0][0]*B[0][0]+A[0][1]*B[1][0], A[0][0]*B[0][1]+A[0][1]*B[1][1]],[A[1][0]*B[0][0]+A[1][1]*B[1][0], A[1][0]*B[0][1]+A[1][1]*B[1][1]]]; }
+
+  // Compute monodromy matrix product for period q and Bloch phase k
+  function monodromy(phi,p,q,E,k){ // phi ~ p/q
+    // product T_{q-1} ... T_1 T_0
+    let M = [[1,0],[0,1]];
+    for(let n=0;n<q;n++){
+      const theta = 2*Math.PI*((n*phi)) + k; // phi in real
+      const T = siteMatrix(E,theta);
+      M = matMul(T,M);
+    }
+    return M;
+  }
+
+  // For a given (phi,E) compute minimal |tr| across k samples
+  function minTraceAbsForPoint(phi,E,qmax,ksamples){
+    const {p,q} = bestRational(phi,qmax);
+    let minAbs = Infinity; let bestTr = null; let bestK=0;
+    for(let ki=0; ki<ksamples; ki++){
+      const k = 2*Math.PI*ki/ksamples;
+      const M = monodromy(phi,p,q,E,k);
+      const tr = M[0][0] + M[1][1];
+      const a = Math.abs(tr);
+      if(a < minAbs){ minAbs = a; bestTr=tr; bestK=k; }
+    }
+    return {minAbs, bestTr, q};
+  }
+
+  // color mapping
+  function colorForValue(val,method,traceSign,contrast,brightness,gamma){
+    // val in [0,1] : 1 means deep inside band (|tr|<<2); 0 means far
+    // apply contrast/brightness/gamma
+    let v = Math.pow(clamp((val-0.5)*contrast+0.5+parseFloat(brightness),0,1), parseFloat(gamma));
+    if(method==='grayscale'){
+      const c = Math.round(255*v);
+      return [c,c,c,255];
+    }else if(method==='hue'){
+      const h = 0.7*(1-v); // blue->red
+      const rgb = hsv2rgb(clamp(h,0,1), 1, clamp(v,0,1));
+      return [Math.round(255*rgb[0]), Math.round(255*rgb[1]), Math.round(255*rgb[2]), 255];
+    }else{ // trace
+      // traceSign indicates sign of bestTr; map positive/negative to two hues
+      const base = v;
+      const hue = (traceSign>=0)?0.02:0.66; // warm vs cool
+      const rgb = hsv2rgb(hue, clamp(0.4+base*0.6,0,1), clamp(0.2+base*0.8,0,1));
+      return [Math.round(255*rgb[0]), Math.round(255*rgb[1]), Math.round(255*rgb[2]), 255];
+    }
+  }
+
+  // Render function
+  async function render(){
+    setCanvasSize();
+    const W = canvas.width, H = canvas.height;
+    const phiMin = parseFloat(els.phiMin.value), phiMax = parseFloat(els.phiMax.value);
+    const eMin = parseFloat(els.eMin.value), eMax = parseFloat(els.eMax.value);
+    const qmax = parseInt(els.qmax.value,10);
+    const ksamples = parseInt(els.kSamples.value,10);
+    const method = els.colorMethod.value;
+    const contrast = parseFloat(els.contrast.value), brightness = parseFloat(els.brightness.value), gamma = parseFloat(els.gamma.value);
+    const img = ctx.createImageData(W,H);
+    const renderMode = els.renderMode.value;
+
+    // iterate columns for phi
+    for(let x=0;x<W;x++){
+      const phi = phiMin + (x/(W-1))*(phiMax-phiMin);
+      // optionally early progress display
+      if(x%16===0){ ctx.putImageData(img,0,0); await new Promise(r=>setTimeout(r,0)); }
+      for(let y=0;y<H;y++){
+        const E = eMax - (y/(H-1))*(eMax-eMin);
+        // compute spectral indicator
+        const {minAbs, bestTr, q} = minTraceAbsForPoint(phi,E,qmax,ksamples);
+        // the spectral condition is |tr| ≤ 2 -> minAbs <= 2
+        // define intensity value: how deep inside band: val = clamp((2 - minAbs)/2,0,1)
+        const rawVal = clamp((2 - minAbs)/2, 0, 1);
+        // To make bands thinner, sharpen using q: larger q -> thinner bands. We'll modulate
+        const val = Math.pow(rawVal, 0.7);
+        const color = colorForValue(val, method, bestTr, contrast, brightness, gamma);
+        const idx = 4*(y*W + x);
+        img.data[idx]=color[0]; img.data[idx+1]=color[1]; img.data[idx+2]=color[2]; img.data[idx+3]=color[3];
+      }
+    }
+    ctx.putImageData(img,0,0);
+  }
+
+  renderBtn.addEventListener('click', ()=>{ render(); });
+  saveBtn.addEventListener('click', ()=>{ const a = document.createElement('a'); a.href = canvas.toDataURL(); a.download = 'hofstadter_butterfly.png'; a.click(); });
+
+  // initial render
+  render();
+})();
+</script>
+</body>
+</html>

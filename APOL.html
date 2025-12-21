@@ -1,0 +1,548 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>Apollonian Scanner — final extended</title>
+<style>
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin: 10px; color:#111; }
+  .toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:8px; background:#f1f1f1; border-radius:8px; }
+  label{font-size:13px; color:#333; margin-right:4px}
+  input[type=number], select, input[type=color], button { padding:6px 8px; font-size:13px; }
+  #wrap { display:flex; gap:12px; margin-top:10px; align-items:flex-start; }
+  #canvasWrap { position:relative; }
+  canvas { background: #ffffff; border:1px solid #bbb; display:block; }
+  #progress { position:absolute; right:6px; top:6px; width:18px; pointer-events:none; background:transparent; }
+  #status { font-size:13px; margin-left:8px; min-width:160px; }
+  #kVal.invalid { background:#ffd6d6; border:1px solid #ff6b6b; color:#800; }
+  .colblock { display:inline-flex; gap:6px; align-items:center; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label>W</label><input id="W" type="number" value="300" min="64" style="width:72px">
+  <label>H</label><input id="H" type="number" value="300" min="64" style="width:72px">
+
+  <label>Container</label>
+  <select id="shape">
+    <option>circle</option><option>square</option><option>triangle</option><option>pentagon</option>
+    <option>hexagon</option><option>heptagon</option><option>octagon</option><option>star</option><option>ellipse</option>
+  </select>
+
+  <label>Object shape</label>
+  <select id="objShape">
+    <option>circle</option><option>square</option><option>triangle</option><option>pentagon</option>
+    <option>hexagon</option><option>star</option><option>ellipse</option>
+  </select>
+
+  <label>Start r</label><input id="r0" type="number" value="100" min="1" style="width:84px">
+  <label>Start X</label><input id="startX" type="number" value="160" style="width:72px">
+  <label>Start Y</label><input id="startY" type="number" value="160" style="width:72px">
+
+  <label>Accuracy q</label><input id="q" type="number" value="2" min="1" style="width:64px">
+  <label>Edge p</label><input id="p" type="number" value="1" min="0" style="width:64px">
+
+  <label>Color mode</label>
+  <select id="colormode" style="width:160px">
+    <option value="uniform">Uniform</option>
+    <option value="random">Random per object</option>
+    <option value="byRadius">By radius</option>
+    <option value="byOrder">By order</option>
+    <option value="byDist">By distance</option>
+    <option value="byAngle">By angle</option>
+    <option value="palette">Palette cycle</option>
+  </select>
+
+  <span class="colblock">
+    <label>Fill</label><input id="fillCol" type="color" value="#aaaaaa">
+    <label>Stroke</label><input id="strokeCol" type="color" value="#000000">
+    <label>Container</label><input id="containerCol" type="color" value="#eeeeee">
+    <label>BG</label><input id="bgCol" type="color" value="#ffffff">
+  </span>
+
+  <label>Composition</label>
+  <select id="compMode" style="width:120px">
+    <option value="source-over">source-over</option>
+    <option value="multiply">multiply</option>
+    <option value="screen">screen</option>
+    <option value="overlay">overlay</option>
+    <option value="darken">darken</option>
+    <option value="lighten">lighten</option>
+  </select>
+
+  <label>White→transparent</label><input id="whiteTransparent" type="checkbox">
+
+  <label>Overlay</label><input id="overlayToggle" type="checkbox">
+  <label>k</label><input id="kVal" type="number" value="3" min="1" style="width:54px">
+
+  <button id="go">Generate</button>
+  <button id="pause">Pause</button>
+  <div id="status">ready</div>
+</div>
+
+<div id="wrap">
+  <div id="canvasWrap">
+    <canvas id="can"></canvas>
+    <canvas id="progress"></canvas>
+  </div>
+</div>
+
+<script>
+(() => {
+  // DOM
+  const can = document.getElementById('can'), ctx = can.getContext('2d');
+  const progCan = document.getElementById('progress'), pctx = progCan.getContext('2d');
+  const Winp = document.getElementById('W'), Hinp = document.getElementById('H');
+  const shapeSel = document.getElementById('shape'), objShapeSel = document.getElementById('objShape');
+  const r0inp = document.getElementById('r0'), startXinp = document.getElementById('startX'), startYinp = document.getElementById('startY');
+  const qinp = document.getElementById('q'), pinp = document.getElementById('p');
+  const goBtn = document.getElementById('go'), pauseBtn = document.getElementById('pause');
+  const statusDiv = document.getElementById('status');
+  const fillColInp = document.getElementById('fillCol'), strokeColInp = document.getElementById('strokeCol');
+  const containerColInp = document.getElementById('containerCol'), bgColInp = document.getElementById('bgCol');
+  const colormodeSel = document.getElementById('colormode');
+  const compModeSel = document.getElementById('compMode'), whiteTransChk = document.getElementById('whiteTransparent');
+  const overlayToggle = document.getElementById('overlayToggle'), kVal = document.getElementById('kVal');
+
+  // state
+  let W=300,H=300,CX,CY,containerRadius,containerPoly = null;
+  let placed = []; // {x,y,r,color}
+  let savedForOverlay = []; // saved circles (r>2)
+  let r, step, edgeP, accQ;
+  let running=false, paused=false;
+  let overlayCanvas = null;
+  let maxSaved = 20000;
+
+  function setCanvasSize(){
+    W = Math.max(64, +Winp.value); H = Math.max(64, +Hinp.value);
+    can.width = W; can.height = H;
+    progCan.width = 22; progCan.height = H;
+    CX = W/2; CY = H/2;
+  }
+  setCanvasSize();
+
+  // ======= Geometry helpers =======
+  // Build container polygon for polygon shapes (regular, star)
+  function buildContainer(shape){
+    const Rcirc = Math.min(W,H) * 0.45;
+    containerRadius = Rcirc;
+    containerPoly = null;
+    if(['square','triangle','pentagon','hexagon','heptagon','octagon','star'].includes(shape)){
+      if(shape === 'star'){
+        const pts = [];
+        for(let i=0;i<10;i++){
+          const a = -Math.PI/2 + i*Math.PI/5;
+          const R = i%2? Rcirc*0.45 : Rcirc;
+          pts.push([CX + R*Math.cos(a), CY + R*Math.sin(a)]);
+        }
+        containerPoly = pts;
+      } else {
+        const nmap = { square:4, triangle:3, pentagon:5, hexagon:6, heptagon:7, octagon:8 };
+        const n = nmap[shape];
+        const pts = [];
+        for(let i=0;i<n;i++){
+          const a = -Math.PI/2 + i*2*Math.PI/n;
+          pts.push([CX + Rcirc*Math.cos(a), CY + Rcirc*Math.sin(a)]);
+        }
+        containerPoly = pts;
+      }
+    }
+  }
+
+  // point-in-polygon (ray casting)
+  function pointInPoly(x,y,poly){
+    let inside=false;
+    for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+      const xi=poly[i][0], yi=poly[i][1], xj=poly[j][0], yj=poly[j][1];
+      const intersect = ((yi>y)!==(yj>y)) && (x < (xj-xi)*(y-yi)/(yj-yi) + xi);
+      if(intersect) inside = !inside;
+    }
+    return inside;
+  }
+
+  // convex polygon: ensure circle of radius R fits by checking signed distances to each edge
+  function pointFullyInsideConvexPoly(x,y,R,poly){
+    for(let i=0;i<poly.length;i++){
+      const xi=poly[i][0], yi=poly[i][1], j=(i+1)%poly.length;
+      const xj=poly[j][0], yj=poly[j][1];
+      const edgeLen = Math.hypot(xj-xi, yj-yi) || 1;
+      const sd = ((x - xi)*(yj - yi) - (y - yi)*(xj - xi)) / edgeLen;
+      const sdCenter = ((CX - xi)*(yj - yi) - (CY - yi)*(xj - xi)) / edgeLen;
+      if(sdCenter >= 0){
+        if(sd < R - 1e-9) return false;
+      } else {
+        if(sd > -R + 1e-9) return false;
+      }
+    }
+    return true;
+  }
+
+  // nonconvex -> sample circle perimeter
+  function circleFullyInsidePolyBySampling(x,y,R,poly,samples=32){
+    for(let i=0;i<samples;i++){
+      const a = (i/samples)*Math.PI*2;
+      const px = x + R*Math.cos(a), py = y + R*Math.sin(a);
+      if(!pointInPoly(px,py,poly)) return false;
+    }
+    return true;
+  }
+
+  // container check: candidate circle (x,y,R) inside container
+  function circleInsideContainer(x,y,R){
+    if(!containerPoly){
+      const dx = x - CX, dy = y - CY;
+      return (dx*dx + dy*dy) <= (containerRadius - R + 1e-9)*(containerRadius - R + 1e-9);
+    }
+    const isNonConvex = (shapeSel.value === 'star');
+    if(!isNonConvex){
+      return pointFullyInsideConvexPoly(x,y,R,containerPoly);
+    } else {
+      return circleFullyInsidePolyBySampling(x,y,R,containerPoly,32);
+    }
+  }
+
+  // overlap (circle-based) — conservative for non-circular objects but safe
+  function overlapsAny(x,y,R){
+    for(let i=0;i<placed.length;i++){
+      const p = placed[i];
+      const dx = x - p.x, dy = y - p.y;
+      if(dx*dx + dy*dy < (R + p.r - 1e-9)*(R + p.r - 1e-9)) return true;
+    }
+    return false;
+  }
+
+  // ======= Drawing helpers =======
+  function clearMain(){
+    ctx.fillStyle = bgColInp.value; ctx.fillRect(0,0,W,H);
+  }
+
+  function drawContainer(){
+    ctx.fillStyle = containerColInp.value;
+    ctx.strokeStyle = strokeColInp.value;
+    ctx.lineWidth = Math.max(1, edgeP + 1);
+    if(!containerPoly){
+      ctx.beginPath(); ctx.arc(CX, CY, containerRadius, 0, Math.PI*2);
+      ctx.fill(); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.moveTo(containerPoly[0][0], containerPoly[0][1]);
+      for(let i=1;i<containerPoly.length;i++) ctx.lineTo(containerPoly[i][0], containerPoly[i][1]);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+  }
+
+  // draw a regular polygon with n sides (axis-aligned as requested; no rotation)
+  function drawRegularPolygon(x,y,R,n, fill, stroke){
+    ctx.beginPath();
+    for(let i=0;i<n;i++){
+      // keep first vertex at the top (-PI/2) to avoid rotation
+      const a = -Math.PI/2 + i*2*Math.PI/n;
+      const vx = x + R*Math.cos(a), vy = y + R*Math.sin(a);
+      if(i===0) ctx.moveTo(vx,vy); else ctx.lineTo(vx,vy);
+    }
+    ctx.closePath();
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.lineWidth = Math.max(1, edgeP + 1); ctx.strokeStyle = stroke; ctx.stroke();
+  }
+
+  // draw star (5 point) shape (centered) with outer radius R
+  function drawStar(x,y,R,fill,stroke){
+    ctx.beginPath();
+    for(let i=0;i<10;i++){
+      const a = -Math.PI/2 + i*Math.PI/5;
+      const rr = (i%2) ? R*0.45 : R;
+      const vx = x + rr*Math.cos(a), vy = y + rr*Math.sin(a);
+      if(i===0) ctx.moveTo(vx,vy); else ctx.lineTo(vx,vy);
+    }
+    ctx.closePath();
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.lineWidth = Math.max(1, edgeP + 1); ctx.strokeStyle = stroke; ctx.stroke();
+  }
+
+  function drawEllipse(x,y,R,fill,stroke){
+    ctx.beginPath();
+    ctx.ellipse(x,y,R,R*0.7,0,0,Math.PI*2);
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.lineWidth = Math.max(1, edgeP + 1); ctx.strokeStyle = stroke; ctx.stroke();
+  }
+
+  function drawPlacedObject(obj){
+    const t = obj.type;
+    if(t === 'circle'){
+      ctx.beginPath();
+      ctx.arc(obj.x, obj.y, obj.r, 0, Math.PI*2);
+      ctx.fillStyle = obj.color; ctx.fill();
+      ctx.lineWidth = Math.max(1, edgeP + 1); ctx.strokeStyle = strokeCol; ctx.stroke();
+      return;
+    }
+    if(t === 'square'){
+      // side length = sqrt(2) * r so bounding circle radius = r
+      const side = Math.SQRT2 * obj.r;
+      ctx.beginPath();
+      ctx.rect(obj.x - side/2, obj.y - side/2, side, side);
+      ctx.fillStyle = obj.color; ctx.fill();
+      ctx.lineWidth = Math.max(1, edgeP + 1); ctx.strokeStyle = strokeCol; ctx.stroke();
+      return;
+    }
+    if(t === 'triangle' || t === 'pentagon' || t === 'hexagon'){
+      const nmap = { triangle:3, pentagon:5, hexagon:6 };
+      drawRegularPolygon(obj.x, obj.y, obj.r, nmap[t], obj.color, strokeCol);
+      return;
+    }
+    if(t === 'pentagon') { drawRegularPolygon(obj.x,obj.y,obj.r,5,obj.color,strokeCol); return; }
+    if(t === 'star') { drawStar(obj.x,obj.y,obj.r,obj.color,strokeCol); return; }
+    if(t === 'ellipse') { drawEllipse(obj.x,obj.y,obj.r,obj.color,strokeCol); return; }
+    // fallback: draw polygon by name if appears
+    if(t.startsWith('n')) { // e.g., n7
+      const n = parseInt(t.slice(1))||5;
+      drawRegularPolygon(obj.x,obj.y,obj.r,n,obj.color,strokeCol); return;
+    }
+    // default fallback circle
+    ctx.beginPath();
+    ctx.arc(obj.x,obj.y,obj.r,0,Math.PI*2); ctx.fillStyle=obj.color; ctx.fill();
+    ctx.lineWidth = Math.max(1, edgeP + 1); ctx.strokeStyle = strokeCol; ctx.stroke();
+  }
+
+  // ======= Colors & palette =======
+  function hsvToRgb(h,s,v){
+    let c=v*s, hp=h/60, x=c*(1 - Math.abs(hp%2 -1)), r=0,g=0,b=0;
+    if(hp<1){r=c;g=x;b=0}else if(hp<2){r=x;g=c;b=0}else if(hp<3){r=0;g=c;b=x}
+    else if(hp<4){r=0;g=x;b=c}else if(hp<5){r=x;g=0;b=c}else{r=c;g=0;b=x}
+    let m=v-c; return '#' + [r+m,g+m,b+m].map(vv=>{let s = Math.round(vv*255).toString(16); return s.length==1?'0'+s:s }).join('');
+  }
+  function randomColor(){ return hsvToRgb(Math.random()*360, 0.7, 0.95); }
+
+  function pickColor(orderIdx,x,y,R){
+    const mode = colormodeSel.value;
+    if(mode === 'uniform') return fillColInp.value;
+    if(mode === 'random') return randomColor();
+    if(mode === 'byRadius'){
+      const minR=1, maxR=+r0inp.value || 100; const t = 1 - Math.min(1,(R-minR)/(maxR-minR+1e-9));
+      return hsvToRgb(240*t,0.8,0.9);
+    }
+    if(mode === 'byOrder'){
+      const t = (orderIdx % 200) / 200; return hsvToRgb(360*t,0.8,0.9);
+    }
+    if(mode === 'byDist'){
+      const d = Math.hypot(x - CX, y - CY); const t = Math.min(1, d/containerRadius); return hsvToRgb(300*t,0.8,0.9);
+    }
+    if(mode === 'byAngle'){
+      const a = Math.atan2(y - CY, x - CX); const deg = (a*180/Math.PI + 360) % 360; return hsvToRgb(deg,0.8,0.95);
+    }
+    if(mode === 'palette'){
+      const t = (orderIdx % 12)/12; const hue = 360*t; return hsvToRgb(hue,0.7,0.95);
+    }
+    return fillColInp.value;
+  }
+
+  // ======= Progress bar =======
+  function drawProgressBar(){
+    pctx.clearRect(0,0,progCan.width,progCan.height);
+    const w = progCan.width, h = progCan.height;
+    pctx.fillStyle = '#fff'; pctx.fillRect(0,0,w,h);
+    const maxD = +r0inp.value * 2; const curD = Math.max(0, r*2);
+    const hh = Math.round((curD/maxD) * h);
+    pctx.fillStyle = '#888'; pctx.fillRect(4, h - hh, w - 8, hh);
+  }
+
+  // ======= White->transparent processing =======
+  function makeWhiteTransparent(canvasEl, tolerance=10){
+    const w = canvasEl.width, h = canvasEl.height;
+    const ctx2 = canvasEl.getContext('2d');
+    const img = ctx2.getImageData(0,0,w,h);
+    const d = img.data;
+    for(let i=0;i<d.length;i+=4){
+      const r = d[i], g = d[i+1], b = d[i+2];
+      if(r >= 255 - tolerance && g >= 255 - tolerance && b >= 255 - tolerance){
+        d[i+3] = 0;
+      }
+    }
+    ctx2.putImageData(img, 0, 0);
+  }
+
+  // ======= Overlay iteration (container circle only behavior) =======
+  // Build Overlay0 = image of the container circle only (transparent elsewhere)
+  // For iter = 1..k:
+  //   for each saved circle Ci: draw Overlay(i-1) scaled to radius Ci.r centered at Ci, using composition mode
+  //   snapshot whole canvas -> Overlay(i)
+  async function runOverlayIterations(k){
+    if(shapeSel.value !== 'circle'){ statusDiv.textContent = 'overlay only supported when container is circle'; return; }
+    if(savedForOverlay.length === 0) { statusDiv.textContent = 'no saved circles for overlay'; return; }
+
+    // Build base: Overlay0 = container circle image on transparent background
+    const base = document.createElement('canvas'); base.width = W; base.height = H;
+    const bctx = base.getContext('2d');
+    bctx.clearRect(0,0,W,H);
+    // draw container only
+    bctx.fillStyle = containerColInp.value;
+    bctx.strokeStyle = strokeColInp.value;
+    bctx.lineWidth = Math.max(1, edgeP + 1);
+    bctx.beginPath(); bctx.arc(CX, CY, containerRadius, 0, Math.PI*2);
+    bctx.fill(); bctx.stroke();
+
+    // if user wants white->transparent, remove white background from base
+    if(whiteTransChk.checked){
+      makeWhiteTransparent(base, 12);
+    }
+
+    // overlayCanvas holds current overlay image (initially base)
+    overlayCanvas = document.createElement('canvas'); overlayCanvas.width = W; overlayCanvas.height = H;
+    overlayCanvas.getContext('2d').clearRect(0,0,W,H);
+    overlayCanvas.getContext('2d').drawImage(base, 0, 0);
+
+    // For each iteration
+    for(let iter=1; iter<=k; iter++){
+      statusDiv.textContent = `overlay iter ${iter}/${k}`;
+      // draw overlay(i-1) scaled into each saved cell
+      // choose composition mode
+      const compMode = whiteTransChk.checked ? 'source-over' : compModeSel.value;
+      ctx.save();
+      ctx.globalCompositeOperation = compMode;
+      ctx.globalAlpha = 0.5;
+      for(let target of savedForOverlay){
+        // scale factor so containerRadius -> target.r
+        const scale = (target.r / containerRadius);
+        ctx.save();
+        // move target center to origin, scale, then draw overlayCanvas with its container center aligned
+        ctx.translate(target.x, target.y);
+        ctx.scale(scale, scale);
+        // overlayCanvas's container center is at (CX,CY), so draw with top-left offset -CX,-CY
+        ctx.drawImage(overlayCanvas, -CX, -CY);
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1.0;
+      ctx.restore();
+
+      // snapshot entire canvas -> new overlayCanvas (but if white->transparent, convert white->alpha on snapshot)
+      const snap = ctx.getImageData(0,0,W,H);
+      overlayCanvas = document.createElement('canvas'); overlayCanvas.width = W; overlayCanvas.height = H;
+      const octx = overlayCanvas.getContext('2d'); octx.putImageData(snap, 0, 0);
+      if(whiteTransChk.checked) makeWhiteTransparent(overlayCanvas, 12);
+
+      // small yield so UI updates
+      await new Promise(rp => setTimeout(rp, 30));
+    }
+
+    statusDiv.textContent = 'overlay finished';
+  }
+
+  // ======= Main generator (one placement per frame) =======
+  function generateStep(){
+    if(!running || paused) return;
+    if(r < 1){
+      running = false;
+      statusDiv.textContent = `done — placed ${placed.length}`;
+      // perform overlay if enabled AND container==object shape
+      const shapesMatch = (shapeSel.value === objShapeSel.value);
+      if(overlayToggle.checked && shapesMatch){
+        runOverlayIterations(Math.max(1, +kVal.value || 3));
+      }
+      return;
+    }
+
+    const minX = Math.ceil(r), maxX = Math.floor(W - r);
+    const minY = Math.ceil(r), maxY = Math.floor(H - r);
+    const xSteps = Math.max(1, Math.floor((maxX - minX) / step) + 1);
+    const ySteps = Math.max(1, Math.floor((maxY - minY) / step) + 1);
+
+    let placedThisFrame = false;
+    outerLoop:
+    for(let ix=0; ix < xSteps; ix++){
+      const x = minX + ix * step;
+      for(let iy=0; iy < ySteps; iy++){
+        const y = minY + iy * step;
+        if(!circleInsideContainer(x,y,r)) continue;
+        if(overlapsAny(x,y,r)) continue;
+        // success: place object
+        const color = pickColor(placed.length, x, y, r);
+        const obj = { x:x, y:y, r:r, color: color, type: objShapeSel.value };
+        placed.push(obj);
+        if(r > 2 && savedForOverlay.length < maxSaved) savedForOverlay.push({ x:x, y:y, r:r });
+        // draw incremental
+        drawPlacedObject(obj);
+        // redraw container on top for crisp edge
+        drawContainer();
+        // redraw all placed to keep stroke ordering neat
+        for(let i=0;i<placed.length;i++) drawPlacedObject(placed[i]);
+        drawProgressBar();
+        placedThisFrame = true;
+        break outerLoop;
+      }
+    }
+
+    if(!placedThisFrame){
+      r = r - 1;
+      clearMain(); drawContainer();
+      for(let i=0;i<placed.length;i++) drawPlacedObject(placed[i]);
+      drawProgressBar();
+      statusDiv.textContent = `scanning r=${r} placed=${placed.length}`;
+    } else {
+      statusDiv.textContent = `placed=${placed.length} cur r=${r}`;
+    }
+    requestAnimationFrame(generateStep);
+  }
+
+  // ======= UI wiring =======
+  // update k color depending on match
+  function updateKValidity(){
+    const kEl = kVal;
+    if(shapeSel.value === objShapeSel.value){
+      kEl.classList.remove('invalid');
+    } else {
+      kEl.classList.add('invalid');
+    }
+  }
+  shapeSel.addEventListener('change', updateKValidity);
+  objShapeSel.addEventListener('change', updateKValidity);
+
+  // color inputs
+  let strokeCol = strokeColInp.value;
+  strokeColInp.onchange = () => { strokeCol = strokeColInp.value; };
+
+  goBtn.onclick = () => {
+    // init
+    setCanvasSize();
+    buildContainer(shapeSel.value);
+    edgeP = Math.max(0, +pinp.value || 1);
+    accQ = Math.max(1, +qinp.value || 1);
+    step = 1 / accQ;
+    r = Math.max(1, +r0inp.value || 100);
+    placed = [];
+    savedForOverlay = [];
+    overlayCanvas = null;
+    paused = false;
+    running = true;
+    strokeCol = strokeColInp.value;
+    clearMain(); drawContainer();
+    drawProgressBar();
+    statusDiv.textContent = 'running...';
+    // optionally seed with given starting shape (place once) if it fits
+    const sx = Math.max(1, Math.min(W-1, +startXinp.value || Math.round(W/2 + r/2)));
+    const sy = Math.max(1, Math.min(H-1, +startYinp.value || Math.round(H/2)));
+    const sr = Math.max(1, Math.min(r, +r0inp.value || r));
+    if(circleInsideContainer(sx,sy,sr) && !overlapsAny(sx,sy,sr)){
+      const color = pickColor(0, sx, sy, sr);
+      const seed = { x:sx, y:sy, r:sr, color: color, type: objShapeSel.value };
+      placed.push(seed);
+      if(sr > 2) savedForOverlay.push({x: sx, y: sy, r: sr});
+      drawPlacedObject(seed);
+      drawContainer();
+    }
+    requestAnimationFrame(generateStep);
+  };
+
+  pauseBtn.onclick = () => {
+    paused = !paused;
+    pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+    if(!paused && running) requestAnimationFrame(generateStep);
+  };
+
+  // initial draw
+  setCanvasSize(); buildContainer(shapeSel.value); clearMain(); drawContainer(); drawProgressBar();
+  updateKValidity();
+  statusDiv.textContent = 'ready';
+
+})();
+</script>
+
+</body>
+</html>

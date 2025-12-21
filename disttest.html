@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Distribution Function Coverage Map</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+<script src="clrspc.js"></script>
+<script src="mthfnc.js"></script>
+<script src="polyhedra.js"></script>
+
+<style>
+body { margin:0; font-family:Arial, sans-serif; overflow:hidden; }
+#gridWrapper { flex:1; overflow:auto; background:#f5f5f5; border-right:3px solid #888; min-width:150px; }
+#grid { display:grid; grid-auto-rows:40px; grid-auto-columns:120px; }
+.cell { border:1px solid #ddd; display:flex; align-items:center; justify-content:center; font-size:12px; cursor:pointer; user-select:none; }
+.header { background:#222; color:#fff; font-weight:bold; cursor:default; }
+.dist { background:#555; color:#fff; font-weight:bold; cursor:default; }
+.filled { background:#4caf50 !important; color:#fff; }
+.hfilled { background:#9caf50 !important; color:#fff; }
+.missing { background:#ffc107 !important; color:#000; font-weight:bold; }
+.error { background:#e53935 !important; color:#fff; font-weight:bold; }
+#codeView { flex:0.4; overflow:auto; padding:10px; background:#1e1e1e; color:#dcdcdc; font-family:monospace; font-size:13px; min-width:200px; }
+#slopContainer { padding:10px; background:#222; color:#fff; }
+#slopContainer button { padding:5px 10px; margin-bottom:5px; }
+#slopaddBox { width:100%; height:120px; font-family:monospace; }
+#divider { width:5px; cursor:col-resize; background:#888; }
+</style>
+</head>
+<body>
+
+<div style="display:flex; height:60vh; width:100%;">
+  <div id="gridWrapper"><div id="grid"></div></div>
+  <div id="divider"></div>
+  <div id="codeView"><pre>Click a cell to view code…</pre></div>
+</div>
+
+<div id="slopContainer">
+  <button id="slopaddBtn">Generate slopadd JS for missing functions</button>
+  <textarea id="slopaddBox"></textarea>
+</div>
+
+<script>
+window.addEventListener("load", function(){
+
+const baseSuffixes = [
+  "pdf","pmf","cdf","mean","median","mode",
+  "var","skew","kurtosis","excesskurtosis",
+  "survival","hazard","chazard","failrate",
+  "standartdeviation","cov","cov2",
+  "eff","vmr","zscore",
+  "quantile","qdf",
+  "cgf","mgf","cf","pgf","2cf"
+];
+
+// ---------------- helpers ----------------
+function getParams(func){
+  const m = func.toString().match(/\(([^)]*)\)/);
+  return (m && m[1].trim()) ? m[1].trim() : null;
+}
+
+// ---------------- scan window ----------------
+const globalNames = Object.getOwnPropertyNames(window);
+const densityNames = globalNames.filter(
+  n => (n.endsWith("pdf") || n.endsWith("pmf")) && window[n] instanceof Function
+);
+
+const distMap = {};
+densityNames.forEach(n=>{
+  const base = n.replace(/(pdf|pmf)$/,"");
+  distMap[base] = base;
+});
+
+const dists = Object.keys(distMap);
+if(dists.length===0){ alert("No pdf/pmf functions found."); return; }
+
+const grid = document.getElementById("grid");
+grid.style.gridTemplateColumns = "120px " + baseSuffixes.map(()=> "120px").join(" ");
+
+// ---------------- header ----------------
+grid.appendChild(makeCell("Distribution","header"));
+baseSuffixes.forEach(s=>grid.appendChild(makeCell(s,"header")));
+
+// ---------------- rows ----------------
+dists.forEach(dist=>{
+  const fn = s => (window[dist+s] instanceof Function);
+  const hasPdf = fn("pdf");
+  const hasPmf = fn("pmf");
+
+  const existing = new Set();
+  baseSuffixes.forEach(s=>{ if(fn(s)) existing.add(s); });
+
+  if(existing.has("cdf")) existing.add("survival");
+  if(existing.has("cdf") && (hasPdf || hasPmf)){
+    existing.add("hazard");
+    existing.add("failrate");
+    existing.add("chazard");
+  }
+  if(existing.has("var")) existing.add("standartdeviation");
+  if(existing.has("standartdeviation") && existing.has("mean")){
+    existing.add("cov"); existing.add("zscore");
+  }
+  if(existing.has("var") && existing.has("mean")){
+    existing.add("cov2"); existing.add("eff"); existing.add("vmr");
+  }
+  if(existing.has("quantile")) existing.add("qdf");
+
+  const cfGroup=["cf","mgf","pgf","cgf","2cf"];
+  if(cfGroup.some(x=>existing.has(x))) cfGroup.forEach(x=>existing.add(x));
+
+  grid.appendChild(makeCell(dist,"dist"));
+
+  baseSuffixes.forEach(suffix=>{
+    let cls="", txt="";
+
+    // -------- SPECIAL RULE: pdf / pmf --------
+    if(suffix==="pdf"){
+    if(hasPdf){
+        cls="filled"; txt="✔";
+    } else if(hasPmf){
+        cls="hfilled"; txt="✔";
+    } else {
+        cls="error"; txt="✖";
+    }
+} else if(suffix==="pmf"){
+    if(hasPmf){
+        cls="filled"; txt="✔";
+    } else if(hasPdf){
+        cls="hfilled"; txt="✔";
+    } else {
+        cls="error"; txt="✖";
+    }
+}
+
+    // -------- NORMAL RULES --------
+    else{
+      const real = fn(suffix);
+      const should = existing.has(suffix);
+      if(should && real){ cls="filled"; txt="✔"; }
+      else if(should && !real){ cls="missing"; txt="⚠"; }
+      else if(real){ cls="filled"; txt="✔"; }
+    }
+
+    const cell = makeCell(txt,cls,suffix,dist);
+    if(fn(suffix)) cell.onclick=()=>showCode(window[dist+suffix].toString());
+    grid.appendChild(cell);
+  });
+});
+
+// ---------------- UI helpers ----------------
+function makeCell(text,cls,suffix,base){
+  const d=document.createElement("div");
+  d.className="cell"+(cls?" "+cls:"");
+  d.textContent=text;
+  if(suffix) d.dataset.suffix=suffix;
+  if(base) d.dataset.base=base;
+  return d;
+}
+function showCode(code){
+  document.getElementById("codeView").innerHTML="<pre>"+code.replace(/</g,"&lt;")+"</pre>";
+}
+
+// ---------------- slopadd ----------------
+document.getElementById("slopaddBtn").onclick=function(){
+  const cells=[...grid.querySelectorAll(".cell.missing")];
+  const out=[];
+
+  cells.forEach(c=>{
+    const base=c.dataset.base;
+    const s=c.dataset.suffix;
+    let param="x";
+
+    const ref =
+      window[base+"pdf"] || window[base+"pmf"] ||
+      window[base+"cdf"] || window[base+"quantile"];
+
+    const p = ref ? getParams(ref) : null;
+    if(s==="quantile"||s==="qdf") param=p||"p";
+    else param=p||"x";
+
+switch(s){ 
+    case "survival": 
+        line = `function ${base}survival(${param}) { return sub(1,${base}cdf(${param})); }`; 
+        break;
+    case "hazard": 
+        line = `function ${base}hazard(${param}) { return div(${base}pdf(${param}),${base}survival(${param})); }`; 
+        break;
+    case "chazard": 
+        line = `function ${base}chazard(${param}) { return -log(${base}survival(${param})); }`; 
+        break;
+    case "cov": 
+        line = `function ${base}cov(${param}) { return div(${base}standartdeviation(${param}),${base}mean(${param})); }`; 
+        break;
+    case "eff": 
+        line = `function ${base}eff(${param}) { return div(${base}var(${param}),sqr(${base}mean(${param}))); }`; 
+        break;
+    case "cov2": 
+        line = `function ${base}cov2(${param}) { return sqrt(div(${base}var(${param}),add(${base}var(${param}),sqr(${base}mean(${param}))))); }`; 
+        break;
+    case "zscore": 
+        line = `function ${base}zscore(${param}) { return div(sub(x,${base}mean(${param})),${base}standartdeviation(${param})); }`; 
+        break;
+    case "qdf": 
+        line = `function ${base}qdf(${param}) { return div(sub(${base}quantile(add(x,1e-5)),${base}quantile(sub(x,1e-5))),2e-5); }`; 
+        break;
+    case "failrate": 
+        line = `function ${base}failrate(${param}) { return div(${base}cdf(${param}),x); }`; 
+        break;
+    case "cfailrate": 
+        line = `function ${base}cfailrate(${param}) { return div(${base}chazard(${param}),x); }`; 
+        break;
+    case "2cf": 
+        line = `function ${base}2cf(${param}) { return log(${base}cf(${param})); }`; 
+        break;
+    case "standartdeviation": 
+        line = `function ${base}standartdeviation(${param}) { return sqrt(${base}var(${param})); }`; 
+        break;
+    case "vmr": 
+        line = `function ${base}vmr(${param}) { return div(${base}var(${param}),${base}mean(${param})); }`; 
+        break;
+    default: 
+        line = `// ${base}${s} missing`; 
+        break; 
+}
+
+    out.push(line);
+  });
+
+  document.getElementById("slopaddBox").value=out.join("\n");
+};
+
+// ---------------- divider ----------------
+const divider=document.getElementById("divider");
+const L=document.getElementById("gridWrapper");
+const R=document.getElementById("codeView");
+let drag=false;
+divider.onmousedown=()=>{drag=true;document.body.style.cursor="col-resize";};
+window.onmousemove=e=>{
+  if(!drag) return;
+  let t=L.offsetWidth+R.offsetWidth+divider.offsetWidth;
+  let nl=Math.max(100,e.clientX);
+  let nr=Math.max(100,t-nl-divider.offsetWidth);
+  L.style.flex='0 0 ${nl}px';
+  R.style.flex='0 0 ${nr}px';
+};
+window.onmouseup=()=>{drag=false;document.body.style.cursor="default";};
+
+});
+</script>
+</body>
+</html>

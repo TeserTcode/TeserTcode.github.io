@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Newton Fractal — Root Editor (WebGL2)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root { --ui-bg: rgba(10,10,10,0.7); --ui-fg: #eee; --accent: #4ea3ff; }
+  html,body { height:100%; margin:0; font-family: system-ui,Segoe UI,Roboto,Helvetica,Arial; background:#111; color:var(--ui-fg); }
+  #container { position:relative; width:100%; height:100vh; overflow:hidden; }
+  canvas { display:block; width:100%; height:100%; }
+  #overlay { position:absolute; left:0; top:0; pointer-events:auto; }
+  #ui {
+    position: absolute; right: 12px; top: 12px; width: 360px;
+    background: var(--ui-bg); color:var(--ui-fg);
+    padding:12px;border-radius:10px; box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+    font-size:13px;
+  }
+  #ui h3 { margin:0 0 8px 0; font-size:15px; }
+  #controls { display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+  label { font-size:12px; display:inline-flex; align-items:center; gap:6px; }
+  input[type=range] { width:160px; vertical-align:middle; }
+  button { background:transparent; color:var(--ui-fg); border:1px solid rgba(255,255,255,0.08); padding:6px 8px; border-radius:6px; cursor:pointer; }
+  button:hover { border-color: rgba(255,255,255,0.16); }
+  #rootList { max-height:300px; overflow:auto; margin-top:8px; border-top:1px solid rgba(255,255,255,0.04); padding-top:8px; }
+  .rootRow { display:flex; gap:6px; align-items:center; margin-bottom:6px; }
+  .rootRow input[type=number] { width:80px; padding:4px; border-radius:6px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:var(--ui-fg); }
+  .rootIndex { width:20px; text-align:center; font-size:12px; color: #bbb; }
+  .small { font-size:12px; padding:4px 6px; }
+  .selected { outline: 2px solid rgba(78,163,255,0.22); border-radius:6px; }
+  .muted { color:#999; font-size:12px; }
+  .flex { display:flex; gap:6px; align-items:center; }
+  .full { width:100%; }
+  footer { margin-top:8px; font-size:12px; color:#9aa; }
+</style>
+</head>
+<body>
+<div id="container">
+  <canvas id="glcanvas"></canvas>
+  <canvas id="overlay"></canvas>
+
+  <div id="ui" role="region" aria-label="Controls">
+    <h3>Newton Fractal — Root Editor</h3>
+    <div id="controls">
+      <label>Iterations <span id="iterVal">60</span>
+        <input id="iter" type="range" min="8" max="500" step="1" value="60">
+      </label>
+      <button id="reset" title="Reset view & roots">Reset</button>
+    </div>
+
+    <div id="toggles" class="flex" style="margin-bottom:8px;">
+      <label><input id="showRoots" type="checkbox" checked> Show roots</label>
+      <label><input id="invertPan" type="checkbox" checked> Invert pan</label>
+      <label><input id="invertRootDrag" type="checkbox"> Invert root drag</label>
+    </div>
+
+    <div id="tools" class="flex">
+      <button id="addCenter">Add root @ center</button>
+      <button id="addRandom">Add random</button>
+      <button id="deleteSelected" class="small">Delete selected</button>
+    </div>
+
+    <div id="rootList" aria-live="polite"></div>
+
+    <footer>
+      Max roots: <span id="maxRoots">16</span>. Drag background to pan; wheel to zoom. Click root to select and drag to move it.
+    </footer>
+  </div>
+</div>
+
+<script>
+/* ========= Configuration ========= */
+const MAX_ROOTS = 16;
+
+/* ========= WebGL shader sources ========= */
+const vertexSrc = `#version 300 es
+in vec2 a_pos;
+out vec2 v_uv;
+void main(){
+  v_uv = a_pos * 0.5 + 0.5;
+  gl_Position = vec4(a_pos, 0.0, 1.0);
+}
+`;
+
+// Fragment shader: compute f(z) = ∏ (z - r_i), f'(z) = Σ_k ∏_{i≠k} (z - r_i)
+const fragmentSrc = `#version 300 es
+precision highp float;
+precision highp int;
+in vec2 v_uv;
+out vec4 outColor;
+
+uniform vec2 u_resolution;
+uniform vec2 u_pan;
+uniform float u_scale;
+uniform int u_iterations;
+uniform float u_time;
+
+uniform int u_rootCount;
+uniform vec2 u_roots[${MAX_ROOTS}];
+uniform vec3 u_rootColors[${MAX_ROOTS}];
+
+vec2 c_mul(vec2 a, vec2 b) { return vec2(a.x*b.x - a.y*b.y, a.x*b.y + a.y*b.x); }
+vec2 c_add(vec2 a, vec2 b) { return a + b; }
+vec2 c_sub(vec2 a, vec2 b) { return a - b; }
+vec2 c_div(vec2 a, vec2 b) {
+  float den = b.x*b.x + b.y*b.y + 1e-30;
+  return vec2((a.x*b.x + a.y*b.y)/den, (a.y*b.x - a.x*b.y)/den);
+}
+float c_abs2(vec2 a) { return dot(a,a); }
+float c_abs(vec2 a) { return sqrt(c_abs2(a)); }
+vec2 c_pow2(vec2 z) { return c_mul(z,z); }
+
+void main(){
+  vec2 res = u_resolution;
+  float aspect = res.x / res.y;
+  vec2 p = (v_uv - 0.5) * vec2(aspect * u_scale, u_scale) + u_pan;
+  vec2 z = p;
+
+  int maxIter = u_iterations;
+  int convergedRoot = -1;
+  float tol = 1e-6;
+  float smoothI = 0.0;
+
+  for(int iter=0; iter<1000; ++iter){
+    if(iter >= maxIter) break;
+
+    // compute f(z) = product (z - r_i)
+    vec2 f = vec2(1.0, 0.0);
+    for(int i=0; i<u_rootCount; ++i){
+      f = c_mul(f, c_sub(z, u_roots[i]));
+    }
+
+    // compute f'(z) = sum_k ( product_{i != k} (z - r_i) )
+    vec2 df = vec2(0.0, 0.0);
+    for(int k=0; k<u_rootCount; ++k){
+      vec2 term = vec2(1.0, 0.0);
+      for(int i=0; i<u_rootCount; ++i){
+        if(i==k) continue;
+        term = c_mul(term, c_sub(z, u_roots[i]));
+      }
+      df = c_add(df, term);
+    }
+
+    // Newton step: z = z - f/df
+    // avoid division by zero
+    vec2 delta = c_div(f, df);
+    z = c_sub(z, delta);
+
+    // check convergence to any root
+    float minDist = 1e20;
+    int minIdx = -1;
+    for(int i=0; i<u_rootCount; ++i){
+      float d2 = c_abs2(c_sub(z, u_roots[i]));
+      if(d2 < minDist){ minDist = d2; minIdx = i; }
+    }
+    if(minDist < tol*tol){
+      convergedRoot = minIdx;
+      smoothI = float(iter) + 1.0 - log2(log(max(c_abs(f), 1e-12)) + 1.0);
+      break;
+    }
+
+    // safety bailout
+    if(c_abs2(z) > 1e30) break;
+  }
+
+  vec3 color;
+  if(convergedRoot == -1 || u_rootCount == 0){
+    color = vec3(0.02, 0.02, 0.04) + 0.02 * sin(vec3(u_time, u_time*1.3, u_time*1.7));
+  } else {
+    vec3 base = u_rootColors[convergedRoot];
+    float itf = clamp(smoothI, 0.0, float(maxIter));
+    float t = itf / float(maxIter);
+    float brightness = 1.0 - pow(clamp(t, 0.0, 1.0), 0.6);
+    float shade = 0.35 + 0.65 * brightness;
+    float band = fract(itf * 0.25);
+    float contour = 1.0 - smoothstep(0.45, 0.55, band);
+    color = base * shade + 0.12 * contour;
+  }
+  color = pow(color, vec3(0.454545)); // gamma
+  outColor = vec4(color, 1.0);
+}
+`;
+
+/* ========= Utility functions ========= */
+function createShader(gl, type, src){
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
+    console.error(gl.getShaderInfoLog(s));
+    gl.deleteShader(s);
+    return null;
+  }
+  return s;
+}
+function createProgram(gl, vsSrc, fsSrc){
+  const vs = createShader(gl, gl.VERTEX_SHADER, vsSrc);
+  const fs = createShader(gl, gl.FRAGMENT_SHADER, fsSrc);
+  if(!vs || !fs) return null;
+  const p = gl.createProgram();
+  gl.attachShader(p, vs);
+  gl.attachShader(p, fs);
+  gl.linkProgram(p);
+  if(!gl.getProgramParameter(p, gl.LINK_STATUS)){
+    console.error(gl.getProgramInfoLog(p));
+    gl.deleteProgram(p);
+    return null;
+  }
+  return p;
+}
+
+/* ========= DOM & canvases ========= */
+const glCanvas = document.getElementById('glcanvas');
+const overlay = document.getElementById('overlay');
+const ui = {
+  iter: document.getElementById('iter'),
+  iterVal: document.getElementById('iterVal'),
+  reset: document.getElementById('reset'),
+  addCenter: document.getElementById('addCenter'),
+  addRandom: document.getElementById('addRandom'),
+  deleteSelected: document.getElementById('deleteSelected'),
+  showRoots: document.getElementById('showRoots'),
+  invertPan: document.getElementById('invertPan'),
+  invertRootDrag: document.getElementById('invertRootDrag'),
+  rootList: document.getElementById('rootList'),
+  maxRoots: document.getElementById('maxRoots'),
+};
+ui.maxRoots.textContent = MAX_ROOTS;
+
+/* ========= State ========= */
+let pixelRatio = Math.min(2, window.devicePixelRatio || 1);
+let gl = glCanvas.getContext('webgl2', {antialias:true});
+if(!gl) {
+  document.body.innerHTML = '<p style="color:white;padding:12px">WebGL2 not supported.</p>';
+  throw new Error('WebGL2 not supported');
+}
+const program = createProgram(gl, vertexSrc, fragmentSrc);
+gl.useProgram(program);
+
+// fullscreen quad
+const quad = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+const verts = new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]);
+gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
+const a_pos = gl.getAttribLocation(program, 'a_pos');
+gl.enableVertexAttribArray(a_pos);
+gl.vertexAttribPointer(a_pos, 2, gl.FLOAT, false, 0, 0);
+
+// uniform locations
+const u_resolution = gl.getUniformLocation(program, 'u_resolution');
+const u_pan = gl.getUniformLocation(program, 'u_pan');
+const u_scale = gl.getUniformLocation(program, 'u_scale');
+const u_iterations = gl.getUniformLocation(program, 'u_iterations');
+const u_time = gl.getUniformLocation(program, 'u_time');
+const u_rootCount = gl.getUniformLocation(program, 'u_rootCount');
+const u_roots = gl.getUniformLocation(program, 'u_roots');
+const u_rootColors = gl.getUniformLocation(program, 'u_rootColors');
+
+// view params
+let scale = 3.0; // vertical span in complex units
+let pan = {x:0.0, y:0.0};
+let iterations = parseInt(ui.iter.value, 10);
+
+// root data structure
+let roots = []; // each: {x,y,color}
+let selectedRoot = -1;
+
+/* ========= Helpers: complex <-> screen coords ========= */
+function resizeCanvases(){
+  pixelRatio = Math.min(2, window.devicePixelRatio || 1);
+  const cw = Math.floor(glCanvas.clientWidth * pixelRatio);
+  const ch = Math.floor(glCanvas.clientHeight * pixelRatio);
+  if(glCanvas.width !== cw || glCanvas.height !== ch){
+    glCanvas.width = cw; glCanvas.height = ch;
+    gl.viewport(0,0,cw,ch);
+  }
+  // overlay canvas sized same pixels
+  overlay.width = glCanvas.width;
+  overlay.height = glCanvas.height;
+  overlay.style.width = glCanvas.style.width || '100%';
+  overlay.style.height = glCanvas.style.height || '100%';
+}
+window.addEventListener('resize', resizeCanvases);
+resizeCanvases();
+
+function screenToComplex(px, py){
+  // px,py in canvas pixel coords (0..width-1)
+  const w = glCanvas.width, h = glCanvas.height;
+  const uvx = px / w, uvy = py / h;
+  const aspect = w / h;
+  const cx = (uvx - 0.5) * aspect * scale + pan.x;
+  const cy = (uvy - 0.5) * scale + pan.y;
+  return {x: cx, y: cy};
+}
+function complexToScreen(cx, cy){
+  const w = glCanvas.width, h = glCanvas.height;
+  const aspect = w / h;
+  const uvx = ( (cx - pan.x) / (aspect * scale) ) + 0.5;
+  const uvy = ( (cy - pan.y) / scale ) + 0.5;
+  return {x: uvx * w, y: uvy * h};
+}
+
+/* ========= Root UI rendering & syncing ========= */
+function clampRoots(){
+  if(roots.length > MAX_ROOTS) roots = roots.slice(0, MAX_ROOTS);
+}
+function rebuildRootListUI(){
+  const list = ui.rootList;
+  list.innerHTML = '';
+  roots.forEach((r, idx) => {
+    const row = document.createElement('div');
+    row.className = 'rootRow' + (idx===selectedRoot ? ' selected' : '');
+    row.dataset.idx = idx;
+
+    const idxLbl = document.createElement('div');
+    idxLbl.className = 'rootIndex';
+    idxLbl.textContent = idx;
+    row.appendChild(idxLbl);
+
+    const rx = document.createElement('input');
+    rx.type = 'number'; rx.step = '0.001'; rx.value = r.x.toFixed(4);
+    rx.title = 'Real part';
+    rx.addEventListener('change', (e) => { r.x = parseFloat(e.target.value); updateShaderRoots(); drawOverlay(); });
+    row.appendChild(rx);
+
+    const ry = document.createElement('input');
+    ry.type = 'number'; ry.step = '0.001'; ry.value = r.y.toFixed(4);
+    ry.title = 'Imag part';
+    ry.addEventListener('change', (e) => { r.y = parseFloat(e.target.value); updateShaderRoots(); drawOverlay(); });
+    row.appendChild(ry);
+
+    const color = document.createElement('input');
+    color.type = 'color';
+    // convert float rgb [0..1] to hex
+    const hex = rgbToHex(Math.round(r.color[0]*255), Math.round(r.color[1]*255), Math.round(r.color[2]*255));
+    color.value = hex;
+    color.title = 'Color for this root';
+    color.addEventListener('input', (e) => {
+      const c = hexToRgb(e.target.value);
+      r.color = [c.r/255, c.g/255, c.b/255];
+      updateShaderRoots();
+      drawOverlay();
+    });
+    row.appendChild(color);
+
+    const del = document.createElement('button');
+    del.textContent = 'Del';
+    del.className = 'small';
+    del.addEventListener('click', () => {
+      if(idx === selectedRoot) selectedRoot = -1;
+      roots.splice(idx,1);
+      clampRoots();
+      rebuildRootListUI(); updateShaderRoots(); drawOverlay();
+    });
+    row.appendChild(del);
+
+    row.addEventListener('click', (e) => {
+      selectedRoot = idx;
+      rebuildRootListUI();
+      drawOverlay();
+      e.stopPropagation();
+    });
+
+    list.appendChild(row);
+  });
+
+  // placeholder for no roots
+  if(roots.length === 0){
+    const p = document.createElement('div');
+    p.className = 'muted';
+    p.textContent = 'No roots defined. Click "Add root @ center" or "Add random".';
+    list.appendChild(p);
+  }
+}
+
+/* small utilities for color */
+function rgbToHex(r,g,b){
+  return '#'+[r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
+}
+function hexToRgb(hex){
+  const h = hex.replace('#','');
+  return { r: parseInt(h.substring(0,2),16), g: parseInt(h.substring(2,4),16), b: parseInt(h.substring(4,6),16) };
+}
+
+/* ========= Shader / uniforms update ========= */
+function updateShaderRoots(){
+  // send roots in vec2 array (length MAX_ROOTS), and colors as vec3 array
+  const rootCount = roots.length;
+  gl.useProgram(program);
+  gl.uniform1i(u_rootCount, rootCount);
+  // build Float32Array for u_roots
+  const rootsArr = new Float32Array(MAX_ROOTS * 2);
+  const colsArr = new Float32Array(MAX_ROOTS * 3);
+  for(let i=0;i<rootCount;i++){
+    rootsArr[i*2+0] = roots[i].x;
+    rootsArr[i*2+1] = roots[i].y;
+    colsArr[i*3+0] = roots[i].color[0];
+    colsArr[i*3+1] = roots[i].color[1];
+    colsArr[i*3+2] = roots[i].color[2];
+  }
+  // zero-fill remainder
+  gl.uniform2fv(u_roots, rootsArr);
+  gl.uniform3fv(u_rootColors, colsArr);
+}
+
+/* ========= Initial root helpers ========= */
+function addRoot(x,y,color){
+  if(roots.length >= MAX_ROOTS) return false;
+  roots.push({x:x, y:y, color: color || autoColor(roots.length)});
+  updateShaderRoots();
+  rebuildRootListUI();
+  drawOverlay();
+  return true;
+}
+function autoColor(i){
+  // pick hues around color wheel
+  const h = (i * 0.61803398875) % 1.0; // golden ratio spacing
+  // convert HSV to RGB
+  const s = 0.75, v = 0.9;
+  const c = v * s;
+  const hp = h * 6;
+  const x = c * (1 - Math.abs((hp % 2) - 1));
+  let r=0,g=0,b=0;
+  if(hp<1){ r=c; g=x; b=0; }
+  else if(hp<2){ r=x; g=c; b=0; }
+  else if(hp<3){ r=0; g=c; b=x; }
+  else if(hp<4){ r=0; g=x; b=c; }
+  else if(hp<5){ r=x; g=0; b=c; }
+  else { r=c; g=0; b=x; }
+  const m = v - c;
+  return [r+m, g+m, b+m];
+}
+
+/* ========= Overlay drawing (2D canvas) ========= */
+const octx = overlay.getContext('2d', { alpha:true });
+function drawOverlay(){
+  const w = overlay.width, h = overlay.height;
+  octx.clearRect(0,0,w,h);
+  if(!ui.showRoots.checked) return; // hide overlay
+  // draw faint crosshair center
+  octx.save();
+  octx.strokeStyle = 'rgba(255,255,255,0.04)';
+  octx.lineWidth = Math.max(1, Math.round(1 * pixelRatio));
+  octx.beginPath();
+  octx.moveTo(w/2-10*pixelRatio, h/2);
+  octx.lineTo(w/2+10*pixelRatio, h/2);
+  octx.moveTo(w/2, h/2-10*pixelRatio);
+  octx.lineTo(w/2, h/2+10*pixelRatio);
+  octx.stroke();
+  octx.restore();
+
+  // draw roots as circles
+  roots.forEach((r, idx) => {
+    const p = complexToScreen(r.x, r.y);
+    const radius = Math.max(6, 8 * pixelRatio);
+    // shadow
+    octx.beginPath();
+    octx.fillStyle = 'rgba(0,0,0,0.5)';
+    octx.arc(p.x+1*pixelRatio, p.y+1*pixelRatio, radius+2, 0, Math.PI*2);
+    octx.fill();
+    // main circle
+    const c = r.color.map(v => Math.round(v*255));
+    octx.beginPath();
+    octx.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},0.95)`;
+    octx.arc(p.x, p.y, radius, 0, Math.PI*2);
+    octx.fill();
+    // outline if selected
+    if(idx === selectedRoot){
+      octx.beginPath();
+      octx.lineWidth = Math.max(2, Math.round(2 * pixelRatio));
+      octx.strokeStyle = 'rgba(78,163,255,0.95)';
+      octx.arc(p.x, p.y, radius+2, 0, Math.PI*2);
+      octx.stroke();
+    }
+  });
+}
+
+/* ========= Input & interaction: pan, zoom, root dragging ========= */
+let draggingBackground = false;
+let lastPointer = {x:0,y:0};
+let draggingRoot = false;
+let dragRootIndex = -1;
+
+glCanvas.addEventListener('pointerdown', onPointerDown);
+overlay.addEventListener('pointerdown', onPointerDown);
+
+// pointerdown handles both overlay and background; overlay will be on top for root clicks
+function onPointerDown(e){
+  const rect = (e.target === overlay) ? overlay.getBoundingClientRect() : glCanvas.getBoundingClientRect();
+  const px = (e.clientX - rect.left) * pixelRatio;
+  const py = (e.clientY - rect.top) * pixelRatio;
+
+  // if overlay and showRoots on, check if clicking a root
+  if(ui.showRoots.checked && (e.target === overlay || e.target === glCanvas)){
+    const clicked = hitTestRoot(px, py);
+    if(clicked >= 0){
+      // start dragging that root
+      draggingRoot = true;
+      dragRootIndex = clicked;
+      selectedRoot = clicked;
+      rebuildRootListUI();
+      drawOverlay();
+      overlay.setPointerCapture(e.pointerId);
+      lastPointer.x = px; lastPointer.y = py;
+      return;
+    }
+  }
+
+  // otherwise start panning the background
+  draggingBackground = true;
+  lastPointer.x = px; lastPointer.y = py;
+  if(e.target.setPointerCapture) e.target.setPointerCapture(e.pointerId);
+}
+
+function hitTestRoot(px, py){
+  // return index of root hit, or -1
+  for(let i=roots.length-1;i>=0;i--){ // topmost first
+    const p = complexToScreen(roots[i].x, roots[i].y);
+    const dx = px - p.x, dy = py - p.y;
+    const r = Math.max(6, 8 * pixelRatio);
+    if(dx*dx + dy*dy <= r*r) return i;
+  }
+  return -1;
+}
+
+window.addEventListener('pointermove', (e) => {
+  if(!draggingBackground && !draggingRoot) return;
+  const rect = glCanvas.getBoundingClientRect();
+  const px = (e.clientX - rect.left) * pixelRatio;
+  const py = (e.clientY - rect.top) * pixelRatio;
+  const dx = px - lastPointer.x;
+  const dy = py - lastPointer.y;
+  lastPointer.x = px; lastPointer.y = py;
+
+  if(draggingRoot && dragRootIndex >= 0 && dragRootIndex < roots.length){
+    // convert pixel delta to complex delta
+    const w = glCanvas.width, h = glCanvas.height;
+    const aspect = w / h;
+    const dux = dx / w;
+    const duy = dy / h;
+    // change in complex coords
+    let cxDelta = dux * aspect * scale;
+    let cyDelta = duy * scale;
+    // optionally invert root dragging
+    if(ui.invertRootDrag.checked){
+      cxDelta = -cxDelta; cyDelta = -cyDelta;
+    }
+    roots[dragRootIndex].x += cxDelta;
+    roots[dragRootIndex].y += cyDelta;
+    updateShaderRoots();
+    rebuildRootListUI();
+    drawOverlay();
+    return;
+  }
+
+  if(draggingBackground){
+    const w = glCanvas.width, h = glCanvas.height;
+    const aspect = w / h;
+    const dux = dx / w;
+    const duy = dy / h;
+    // note: pan should move opposite to pointer by default when invertPan.checked (user wanted inverted panning)
+    let pxDelta = -dux * aspect * scale;
+    let pyDelta = -duy * scale;
+    // if invertPan unchecked, do normal mapping (drag right -> pan right)
+    if(!ui.invertPan.checked){
+      pxDelta = -pxDelta;
+      pyDelta = -pyDelta;
+    }
+    pan.x += pxDelta;
+    pan.y += pyDelta;
+  }
+});
+
+window.addEventListener('pointerup', (e) => {
+  draggingBackground = false;
+  if(draggingRoot && dragRootIndex >= 0){
+    overlay.releasePointerCapture && overlay.releasePointerCapture(e.pointerId);
+  }
+  draggingRoot = false;
+  dragRootIndex = -1;
+});
+
+/* wheel zoom centered on mouse */
+overlay.addEventListener('wheel', (e) => {
+  // prevent page scroll
+  e.preventDefault();
+  const rect = overlay.getBoundingClientRect();
+  const cx = (e.clientX - rect.left) * pixelRatio;
+  const cy = (e.clientY - rect.top) * pixelRatio;
+  const pre = screenToComplex(cx, cy);
+
+  const zoomIntensity = 0.12;
+  const delta = Math.sign(e.deltaY);
+  const factor = Math.exp(delta * zoomIntensity);
+  const newScale = scale * factor;
+
+  const w = glCanvas.width, h = glCanvas.height;
+  const aspect = w / h;
+  const uvx = cx / w;
+  const uvy = cy / h;
+  pan.x = pre.x - (uvx - 0.5) * aspect * newScale;
+  pan.y = pre.y - (uvy - 0.5) * newScale;
+  scale = newScale;
+}, { passive:false });
+
+/* double click: zoom in */
+overlay.addEventListener('dblclick', (e) => {
+  const rect = overlay.getBoundingClientRect();
+  const cx = (e.clientX - rect.left) * pixelRatio;
+  const cy = (e.clientY - rect.top) * pixelRatio;
+  const pre = screenToComplex(cx, cy);
+  const newScale = scale * 0.5;
+  const w = glCanvas.width, h = glCanvas.height;
+  const aspect = w / h;
+  const uvx = cx / w;
+  const uvy = cy / h;
+  pan.x = pre.x - (uvx - 0.5) * aspect * newScale;
+  pan.y = pre.y - (uvy - 0.5) * newScale;
+  scale = newScale;
+});
+
+/* ========= UI wiring ========= */
+ui.iter.addEventListener('input', (e) => {
+  iterations = parseInt(e.target.value, 10);
+  ui.iterVal.textContent = iterations;
+});
+ui.reset.addEventListener('click', () => {
+  // reset view & example roots
+  scale = 3.0; pan.x = 0.0; pan.y = 0.0;
+  // keep roots, but if none add default three roots
+  if(roots.length === 0){
+    addRoot(1.0, 0.0, autoColor(0));
+    addRoot(-0.5,  0.8660254, autoColor(1));
+    addRoot(-0.5, -0.8660254, autoColor(2));
+  }
+  updateShaderRoots();
+  drawOverlay();
+});
+ui.addCenter.addEventListener('click', () => {
+  const center = screenToComplex(glCanvas.width/2, glCanvas.height/2);
+  addRoot(center.x, center.y, autoColor(roots.length));
+});
+ui.addRandom.addEventListener('click', () => {
+  // place random near center
+  const r = (Math.random()-0.5) * scale * 0.8;
+  const i = (Math.random()-0.5) * scale * 0.8;
+  addRoot(pan.x + r, pan.y + i, autoColor(roots.length));
+});
+ui.deleteSelected.addEventListener('click', () => {
+  if(selectedRoot >= 0 && selectedRoot < roots.length){
+    roots.splice(selectedRoot, 1);
+    selectedRoot = -1;
+    updateShaderRoots();
+    rebuildRootListUI();
+    drawOverlay();
+  }
+});
+
+// clicking background clears selection
+overlay.addEventListener('click', (e) => {
+  if(!ui.showRoots.checked) return;
+  const rect = overlay.getBoundingClientRect();
+  const px = (e.clientX - rect.left) * pixelRatio;
+  const py = (e.clientY - rect.top) * pixelRatio;
+  const hit = hitTestRoot(px, py);
+  if(hit === -1){
+    selectedRoot = -1;
+    rebuildRootListUI();
+    drawOverlay();
+  }
+});
+
+// show/hide toggle updates overlay
+ui.showRoots.addEventListener('change', () => drawOverlay());
+
+/* ========= Render loop ========= */
+let startTime = performance.now();
+function render(){
+  resizeCanvases();
+
+  gl.useProgram(program);
+  gl.uniform2f(u_resolution, glCanvas.width, glCanvas.height);
+  gl.uniform2f(u_pan, pan.x, pan.y);
+  gl.uniform1f(u_scale, scale);
+  gl.uniform1i(u_iterations, iterations);
+  gl.uniform1f(u_time, (performance.now() - startTime) * 0.001);
+
+  updateShaderRoots(); // ensure uniforms in sync
+
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+  drawOverlay();
+  requestAnimationFrame(render);
+}
+requestAnimationFrame(render);
+
+/* ========= Initialize with 3 roots (like z^3 - 1) ========= */
+addRoot(1.0, 0.0, autoColor(0));
+addRoot(-0.5,  0.8660254, autoColor(1));
+addRoot(-0.5, -0.8660254, autoColor(2));
+rebuildRootListUI();
+updateShaderRoots();
+drawOverlay();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>2D Schrödinger Solver (Stationary)</title>
+</head>
+
+<body>
+
+<h3>2D Time-Independent Schrödinger Equation</h3>
+
+<canvas id="cv" width="100" height="100"></canvas><br><br>
+
+<label>Min X <input type="number" id="minX" value="-1" step="0.1"></label>
+<label>Max X <input type="number" id="maxX" value="1" step="0.1"></label><br>
+<label>Min Y <input type="number" id="minY" value="-1" step="0.1"></label>
+<label>Max Y <input type="number" id="maxY" value="1" step="0.1"></label><br>
+<label>Canvas Size <input type="number" id="N" value="100"></label><br>
+<label>Quality <input type="number" id="quality" value="5"></label><br>
+
+<label>V(x,y,r,t):
+<input type="text" id="Vexpr" value="0"></label><br>
+
+<label>Color Mode
+<select id="mode">
+<option value="abs">|ψ|</option>
+<option value="abs2">|ψ|²</option>
+<option value="re">Re(ψ)</option>
+<option value="re2">Re(ψ)²</option>
+<option value="domain">Domain</option>
+</select></label><br>
+
+<label>Gradient
+<select id="grad">
+<option value="gray">Grayscale</option>
+<option value="rb">Red-Blue</option>
+<option value="rainbow">Rainbow</option>
+<option value="gp">Green-Purple</option>
+</select></label><br><br>
+
+<button onclick="run()">Solve & Draw</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+<script src="clrspc.js"></script>
+<script src="mthfnc.js"></script>
+
+<script>
+let psi = [];
+let N = 0;
+
+/* ---------- INITIALIZE GRID ---------- */
+function initPsi(n){
+    N = n;
+    psi = new Array(N);
+    for(let i=0;i<N;i++){
+        psi[i]=new Array(N);
+        for(let j=0;j<N;j++){
+            psi[i][j]=math.complex(
+                0.01*(Math.random()-0.5),
+                0.01*(Math.random()-0.5)
+            );
+        }
+    }
+}
+
+/* ---------- BUILD POTENTIAL ---------- */
+function buildV(minX,maxX,minY,maxY,expr){
+    let V=new Array(N);
+    for(let i=0;i<N;i++){
+        V[i]=new Array(N);
+        for(let j=0;j<N;j++){
+            let x=minX+(maxX-minX)*i/(N-1);
+            let y=minY+(maxY-minY)*j/(N-1);
+            let r=Math.sqrt(x*x+y*y);
+            let t=Math.atan2(y,x);
+            try{
+                V[i][j]=teth.evaluate(expr,{x,y,r,t});
+            }catch(e){
+                V[i][j]=0;
+            }
+        }
+    }
+    return V;
+}
+
+/* ---------- APPLY HAMILTONIAN ---------- */
+function applyH(V,h){
+    let out=new Array(N);
+    for(let i=0;i<N;i++){
+        out[i]=new Array(N);
+        for(let j=0;j<N;j++){
+            if(i==0||j==0||i==N-1||j==N-1){
+                out[i][j]=math.complex(0,0);
+                continue;
+            }
+            let lap =
+                psi[i+1][j]
+                .add(psi[i-1][j])
+                .add(psi[i][j+1])
+                .add(psi[i][j-1])
+                .sub(psi[i][j].mul(4))
+                .div(h*h);
+
+            out[i][j]=lap.mul(-1).add(psi[i][j].mul(V[i][j]));
+        }
+    }
+    return out;
+}
+
+/* ---------- INVERSE ITERATION ---------- */
+function iterate(V,h,steps){
+    for(let s=0;s<steps;s++){
+        let Hpsi=applyH(V,h);
+        let norm=0;
+        for(let i=0;i<N;i++)
+            for(let j=0;j<N;j++)
+                norm+=math.abs(Hpsi[i][j])**2;
+
+        norm=Math.sqrt(norm);
+        for(let i=0;i<N;i++)
+            for(let j=0;j<N;j++)
+                psi[i][j]=Hpsi[i][j].div(norm);
+    }
+}
+
+/* ---------- COLOR MAP ---------- */
+function color(v,mode,grad){
+    if(mode!=="domain") v=Math.max(0,Math.min(1,v));
+
+    if(grad==="gray") return [255*v,255*v,255*v];
+    if(grad==="rb") return [255*v,0,255*(1-v)];
+    if(grad==="gp") return [255*v,0,255*v];
+
+    let h=360*v;
+    return hsl(h,1,0.5);
+}
+
+function hsl(h,s,l){
+    h/=360;
+    let a=s*Math.min(l,1-l);
+    function f(n){
+        let k=(n+h*12)%12;
+        return l-a*Math.max(-1,Math.min(k-3,9-k,1));
+    }
+    return [255*f(0),255*f(8),255*f(4)];
+}
+
+/* ---------- MAIN ---------- */
+function run(){
+    const cv=document.getElementById("cv");
+    const ctx=cv.getContext("2d");
+
+    const minX=+minXEl.value;
+    const maxX=+maxXEl.value;
+    const minY=+minYEl.value;
+    const maxY=+maxYEl.value;
+    const size=+document.getElementById("N").value;
+    const quality=+document.getElementById("quality").value;
+    const expr=document.getElementById("Vexpr").value;
+    const mode=document.getElementById("mode").value;
+    const grad=document.getElementById("grad").value;
+
+    cv.width=cv.height=size;
+
+    initPsi(size);
+    let V=buildV(minX,maxX,minY,maxY,expr);
+    let h=(maxX-minX)/(size-1);
+
+    iterate(V,h,quality*10);
+
+    let img=ctx.createImageData(size,size);
+    for(let i=0;i<size;i++){
+        for(let j=0;j<size;j++){
+            let p=psi[i][j];
+            let v=0;
+            if(mode==="abs") v=math.abs(p)*100;
+            if(mode==="abs2") v=math.abs(p)**2;
+            if(mode==="re") v=p.re*0.5+0.5;
+            if(mode==="re2") v=p.re*p.re;
+            if(mode==="domain") v=(Math.atan2(p.im,p.re)+Math.PI)/(2*Math.PI);
+
+            let c=color(v,mode,grad);
+            let k=(j*size+i)*4;
+            img.data[k]=c[0];
+            img.data[k+1]=c[1];
+            img.data[k+2]=c[2];
+            img.data[k+3]=255;
+        }
+    }
+    ctx.putImageData(img,0,0);
+}
+
+/* shortcuts */
+const minXEl=document.getElementById("minX");
+const maxXEl=document.getElementById("maxX");
+const minYEl=document.getElementById("minY");
+const maxYEl=document.getElementById("maxY");
+</script>
+
+</body>
+</html>

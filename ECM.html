@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Elliptical Membrane Vibration - Optimized</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #111; }
+    #controls { 
+      position: absolute; 
+      top: 10px; 
+      left: 10px; 
+      background: rgba(255, 255, 255, 0.95); 
+      padding: 15px; 
+      border-radius: 10px;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      max-width: 300px;
+    }
+    #controls h3 { margin-top: 0; color: #333; }
+    .control-group { margin-bottom: 15px; }
+    .control-group label { 
+      display: inline-block; 
+      width: 120px; 
+      margin-bottom: 5px; 
+      color: #333;
+      font-weight: bold;
+    }
+    .control-group input, .control-group select { 
+      width: 150px; 
+      padding: 6px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .slider-container { display: flex; align-items: center; }
+    .slider-value { 
+      margin-left: 10px; 
+      min-width: 40px;
+      font-weight: bold;
+    }
+    #info-panel {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 15px;
+      border-radius: 10px;
+      font-family: monospace;
+      max-width: 300px;
+      z-index: 100;
+    }
+    #performance-panel {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #2ecc71;
+      padding: 10px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 12px;
+      z-index: 100;
+    }
+    button {
+      background: #4a6fa5;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px 2px;
+      transition: background 0.3s;
+    }
+    button:hover { background: #385d8a; }
+    button.active { background: #2ecc71; }
+    .cache-indicator {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+    .cache-hit { background: #2ecc71; }
+    .cache-miss { background: #e74c3c; }
+  </style>
+</head>
+<body>
+  <!-- Controls -->
+  <div id="controls">
+    <h3>Elliptical Membrane - Optimized</h3>
+    
+    <!-- Shape Parameters -->
+    <div class="control-group">
+      <h4>Shape Parameters</h4>
+      <label for="a">Major Axis (a):</label>
+      <input type="number" id="a" value="1.5" step="0.1" min="0.5" max="3">
+      
+      <label for="b">Minor Axis (b):</label>
+      <input type="number" id="b" value="1.0" step="0.1" min="0.5" max="3">
+      
+      <label for="eccentricity">Eccentricity:</label>
+      <div class="slider-container">
+        <input type="range" id="eccentricity" min="0" max="0.9" step="0.01" value="0.5">
+        <span class="slider-value" id="ecc-value">0.75</span>
+      </div>
+    </div>
+    
+    <!-- Mode Parameters -->
+    <div class="control-group">
+      <h4>Mode Parameters</h4>
+      <label for="m">Angular Mode (m):</label>
+      <input type="number" id="m" value="2" min="0" max="8" step="1">
+      
+      <label for="n">Radial Mode (n):</label>
+      <input type="number" id="n" value="1" min="1" max="8" step="1">
+      
+      <label for="mode-type">Mode Type:</label>
+      <select id="mode-type">
+        <option value="even">Even (Ce/ce)</option>
+        <option value="odd">Odd (Se/se)</option>
+      </select>
+    </div>
+    
+    <!-- Cache Controls -->
+    <div class="control-group">
+      <h4>Cache Settings</h4>
+      <label for="cache-enabled">Enable Cache:</label>
+      <input type="checkbox" id="cache-enabled" checked>
+      
+      <label for="cache-size">Cache Size:</label>
+      <input type="number" id="cache-size" value="10000" min="1000" max="100000" step="1000">
+      
+      <label for="cache-precision">Precision (dec):</label>
+      <input type="number" id="cache-precision" value="4" min="1" max="8" step="1">
+    </div>
+    
+    <!-- Physical Parameters -->
+    <div class="control-group">
+      <h4>Physical Parameters</h4>
+      <label for="tension">Tension (T):</label>
+      <input type="number" id="tension" value="10.0" step="1" min="1" max="100">
+      
+      <label for="density">Density (σ):</label>
+      <input type="number" id="density" value="0.1" step="0.01" min="0.01" max="1">
+      
+      <label for="amplitude">Amplitude:</label>
+      <input type="number" id="amplitude" value="0.3" step="0.05" min="0.01" max="1">
+    </div>
+    
+    <!-- Animation Controls -->
+    <div class="control-group">
+      <h4>Animation</h4>
+      <label for="speed">Animation Speed:</label>
+      <input type="number" id="speed" value="1.0" step="0.1" min="0.1" max="5">
+      
+      <label for="time-scale">Time Scale:</label>
+      <input type="number" id="time-scale" value="1.0" step="0.1" min="0.1" max="10">
+      
+      <label for="quality">Mesh Quality:</label>
+      <input type="number" id="quality" value="60" min="20" max="150" step="5">
+    </div>
+    
+    <!-- Control Buttons -->
+    <div style="margin-top: 20px; text-align: center;">
+      <button id="animate-btn" class="active">Pause</button>
+      <button id="reset-btn">Reset View</button>
+      <button id="clear-cache-btn">Clear Cache</button>
+      <button id="precompute-btn">Precompute Mode</button>
+      <button id="test-vibration-btn">Test Vibration</button>
+    </div>
+  </div>
+  
+  <!-- Info Panel -->
+  <div id="info-panel">
+    <h4 style="margin-top:0;">Performance</h4>
+    <div>FPS: <span id="fps-display">0</span></div>
+    <div>Vertices: <span id="vertex-count">0</span></div>
+    <div>Cache Hit Rate: <span id="cache-hit-rate">0%</span></div>
+    <div>Cache Size: <span id="cache-size-display">0</span></div>
+    <div>Calc Time: <span id="calc-time">0ms</span></div>
+    <div>Frequency: <span id="freq-display">0.00</span> Hz</div>
+    <div>Time: <span id="time-display">0.00</span> s</div>
+  </div>
+  
+  <!-- Performance Panel -->
+  <div id="performance-panel">
+    <div><span id="cache-status-indicator" class="cache-indicator cache-hit"></span> Cache: <span id="cache-status">Ready</span></div>
+    <div>Mode: <span id="mode-display">(2,1) Even</span></div>
+    <div>Max Height: <span id="max-height">0.00</span></div>
+    <div>Normalization: <span id="norm-display">1.00</span></div>
+    <div>Vibration: <span id="vibration-status">Active</span></div>
+  </div>
+
+  <!-- THREE.js Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+  <!-- Your custom libraries -->
+  <script src="clrspc.js"></script>
+  <script src="mthfnc.js"></script>
+
+  <script>
+    // ==================== HIGH-PERFORMANCE CACHING SYSTEM ====================
+    
+    class MathieuCache {
+      constructor(maxSize = 10000, precision = 4) {
+        this.cacheCe = new Map();
+        this.cacheSe = new Map();
+        this.cacheCce = new Map();
+        this.cacheCse = new Map();
+        this.maxSize = maxSize;
+        this.precision = precision;
+        
+        this.hits = 0;
+        this.misses = 0;
+        this.totalCalculations = 0;
+        
+        this.lastCleanup = 0;
+        this.cleanupInterval = 5000;
+      }
+      
+      makeKey(q, z, m) {
+        const qKey = q.toFixed(this.precision);
+        const zKey = z.toFixed(this.precision);
+        return `${qKey}|${zKey}|${m}`;
+      }
+      
+      getCe(q, z, m) {
+        const key = this.makeKey(q, z, m);
+        
+        if (this.cacheCe.has(key)) {
+          this.hits++;
+          return this.cacheCe.get(key);
+        }
+        
+        this.misses++;
+        this.totalCalculations++;
+        const value = typeof mathieuce !== 'undefined' ? 
+                     mathieuce(q, z, m) : 
+                     Math.cos(m * z) * (1 - 0.05 * q * Math.sin(z));
+        
+        this.cacheCe.set(key, value);
+        this.cleanupIfNeeded(this.cacheCe);
+        return value;
+      }
+      
+      getSe(q, z, m) {
+        const key = this.makeKey(q, z, m);
+        
+        if (this.cacheSe.has(key)) {
+          this.hits++;
+          return this.cacheSe.get(key);
+        }
+        
+        this.misses++;
+        this.totalCalculations++;
+        const value = typeof mathieuse !== 'undefined' ? 
+                     mathieuse(q, z, m) : 
+                     Math.sin(m * z) * (1 - 0.05 * q * Math.sin(z));
+        
+        this.cacheSe.set(key, value);
+        this.cleanupIfNeeded(this.cacheSe);
+        return value;
+      }
+      
+      getCce(q, z, m) {
+        const key = this.makeKey(q, z, m);
+        
+        if (this.cacheCce.has(key)) {
+          this.hits++;
+          return this.cacheCce.get(key);
+        }
+        
+        this.misses++;
+        this.totalCalculations++;
+        const boundaryFactor = 1.0 - Math.abs(z) / 2.0;
+        const value = typeof mathieucce !== 'undefined' ? 
+                     mathieucce(q, z, m) : 
+                     (Math.cosh(m * z) * (1 - 0.05 * q * Math.sinh(z))) * boundaryFactor;
+        
+        this.cacheCce.set(key, value);
+        this.cleanupIfNeeded(this.cacheCce);
+        return value;
+      }
+      
+      getCse(q, z, m) {
+        const key = this.makeKey(q, z, m);
+        
+        if (this.cacheCse.has(key)) {
+          this.hits++;
+          return this.cacheCse.get(key);
+        }
+        
+        this.misses++;
+        this.totalCalculations++;
+        const boundaryFactor = 1.0 - Math.abs(z) / 2.0;
+        const value = typeof mathieucse !== 'undefined' ? 
+                     mathieucse(q, z, m) : 
+                     (Math.sinh(m * z) * (1 - 0.05 * q * Math.sinh(z))) * boundaryFactor;
+        
+        this.cacheCse.set(key, value);
+        this.cleanupIfNeeded(this.cacheCse);
+        return value;
+      }
+      
+      cleanupIfNeeded(cacheMap) {
+        if (cacheMap.size > this.maxSize) {
+          const keysToRemove = Array.from(cacheMap.keys()).slice(0, Math.floor(this.maxSize * 0.2));
+          keysToRemove.forEach(key => cacheMap.delete(key));
+          this.lastCleanup = this.totalCalculations;
+        }
+      }
+      
+      clear() {
+        this.cacheCe.clear();
+        this.cacheSe.clear();
+        this.cacheCce.clear();
+        this.cacheCse.clear();
+        this.hits = 0;
+        this.misses = 0;
+        this.totalCalculations = 0;
+      }
+      
+      getHitRate() {
+        const total = this.hits + this.misses;
+        return total > 0 ? (this.hits / total) * 100 : 0;
+      }
+      
+      getStats() {
+        return {
+          hits: this.hits,
+          misses: this.misses,
+          total: this.hits + this.misses,
+          hitRate: this.getHitRate(),
+          size: this.cacheCe.size + this.cacheSe.size + this.cacheCce.size + this.cacheCse.size,
+          calculations: this.totalCalculations
+        };
+      }
+    }
+    
+    // ==================== OPTIMIZED ELLIPTICAL MEMBRANE ====================
+    
+    class OptimizedEllipticalMembrane {
+      constructor() {
+        this.a = 1.5;
+        this.b = 1.0;
+        this.m = 2;
+        this.n = 1;
+        this.modeType = 'even';
+        this.tension = 10.0; // Increased for visible vibration
+        this.density = 0.1;
+        this.amplitude = 0.3;
+        this.normalizationFactor = 1.0;
+        this.maxModeValue = 1.0;
+        
+        this.waveSpeed = 0;
+        this.focalDistance = 0;
+        this.mu0 = 0;
+        this.q = 0;
+        this.frequency = 0;
+        this.timeScale = 1.0;
+        
+        // Precomputed mode shape grid
+        this.modeGrid = null;
+        this.gridSize = 50;
+        this.needsPrecompute = true;
+        
+        this.updatePhysicalParameters();
+      }
+      
+      updatePhysicalParameters() {
+        this.waveSpeed = Math.sqrt(this.tension / this.density);
+        this.focalDistance = Math.sqrt(this.a * this.a - this.b * this.b);
+        
+        if (this.focalDistance > 0) {
+          this.mu0 = Math.acosh(this.a / this.focalDistance);
+        } else {
+          this.mu0 = 0;
+        }
+        
+        // Calculate characteristic value with better physics
+        this.q = this.calculateCharacteristicValue();
+        
+        // Calculate frequency: ω = (2c/f)√q
+        if (this.focalDistance > 0) {
+          this.frequency = (2 * this.waveSpeed / this.focalDistance) * Math.sqrt(Math.abs(this.q));
+        } else {
+          // Circular membrane approximation
+          this.frequency = this.waveSpeed * this.m / this.a;
+        }
+        
+        this.needsPrecompute = true;
+      }
+      
+      calculateCharacteristicValue() {
+        // Better characteristic value calculation for Mathieu functions
+        const baseQ = (this.m * this.m) / 4.0;
+        const eccentricity = this.focalDistance / this.a;
+        
+        // Add radial mode influence
+        const radialFactor = 1.0 + (this.n - 1) * 0.5;
+        
+        return baseQ * radialFactor * (1 + 0.3 * eccentricity * eccentricity);
+      }
+      
+      cartesianToElliptical(x, y) {
+        const f = this.focalDistance;
+        if (f === 0) return { mu: 0, theta: Math.atan2(y, x) };
+        
+        const xp = x / f;
+        const yp = y / f;
+        
+        const r1 = Math.sqrt((xp + 1) * (xp + 1) + yp * yp);
+        const r2 = Math.sqrt((xp - 1) * (xp - 1) + yp * yp);
+        
+        const mu = Math.acosh((r1 + r2) / 2);
+        const theta = Math.atan2(yp, xp);
+        
+        return { mu, theta };
+      }
+      
+      // Precompute the entire mode shape for fast lookup
+      precomputeModeShape(cache, gridSize = 50) {
+        console.time('Precompute mode shape');
+        this.gridSize = gridSize;
+        this.modeGrid = new Float32Array(gridSize * gridSize);
+        
+        let maxValue = 0;
+        
+        for (let i = 0; i < gridSize; i++) {
+          const v = i / (gridSize - 1);
+          
+          for (let j = 0; j < gridSize; j++) {
+            const u = j / (gridSize - 1);
+            
+            const theta = u * 2 * Math.PI;
+            const r = v;
+            
+            const x = r * this.a * Math.cos(theta);
+            const y = r * this.b * Math.sin(theta);
+            
+            const modeValue = this.computeModeShapeAtPoint(x, y, cache);
+            const absValue = Math.abs(modeValue);
+            
+            this.modeGrid[i * gridSize + j] = modeValue;
+            
+            if (absValue > maxValue) {
+              maxValue = absValue;
+            }
+          }
+        }
+        
+        this.maxModeValue = maxValue || 1.0;
+        this.normalizationFactor = 1.0 / this.maxModeValue;
+        this.needsPrecompute = false;
+        
+        console.timeEnd('Precompute mode shape');
+        console.log(`Precomputed mode shape (${gridSize}x${gridSize}) with normalization ${this.normalizationFactor.toFixed(4)}`);
+        console.log(`Frequency: ${this.frequency.toFixed(3)} Hz, Wave speed: ${this.waveSpeed.toFixed(3)}`);
+        
+        // Update displays
+        this.updateDisplays();
+        
+        return this.normalizationFactor;
+      }
+      
+      updateDisplays() {
+        const normDisplay = document.getElementById('norm-display');
+        if (normDisplay) {
+          normDisplay.textContent = this.normalizationFactor.toFixed(4);
+        }
+        
+        const freqDisplay = document.getElementById('freq-display');
+        if (freqDisplay) {
+          freqDisplay.textContent = this.frequency.toFixed(3);
+        }
+        
+        const maxHeightDisplay = document.getElementById('max-height');
+        if (maxHeightDisplay) {
+          maxHeightDisplay.textContent = this.amplitude.toFixed(3);
+        }
+      }
+      
+      computeModeShapeAtPoint(x, y, cache) {
+        const ellipseValue = (x * x) / (this.a * this.a) + (y * y) / (this.b * this.b);
+        if (ellipseValue > 1.0) return 0;
+        
+        const { mu, theta } = this.cartesianToElliptical(x, y);
+        
+        let angularPart, radialPart;
+        
+        if (this.modeType === 'even') {
+          angularPart = cache.getCe(this.q, theta, this.m);
+          radialPart = cache.getCce(this.q, mu, this.m);
+        } else {
+          angularPart = cache.getSe(this.q, theta, this.m);
+          radialPart = cache.getCse(this.q, mu, this.m);
+        }
+        
+        // Strong boundary condition to ensure zero at edges
+        const boundaryFactor = Math.max(0, 1 - Math.pow(mu / this.mu0, 3));
+        
+        return angularPart * radialPart * boundaryFactor;
+      }
+      
+      // Fast lookup from precomputed grid
+      getModeShapeFast(x, y) {
+        if (!this.modeGrid || this.needsPrecompute) {
+          return 0;
+        }
+        
+        const r = Math.sqrt((x / this.a) ** 2 + (y / this.b) ** 2);
+        if (r > 1.0) return 0;
+        
+        const theta = Math.atan2(y / this.b, x / this.a);
+        const u = (theta + Math.PI) / (2 * Math.PI);
+        const v = r;
+        
+        const i = Math.min(this.gridSize - 2, Math.floor(v * (this.gridSize - 1)));
+        const j = Math.min(this.gridSize - 2, Math.floor(u * (this.gridSize - 1)));
+        
+        const idx1 = i * this.gridSize + j;
+        const idx2 = i * this.gridSize + j + 1;
+        const idx3 = (i + 1) * this.gridSize + j;
+        const idx4 = (i + 1) * this.gridSize + j + 1;
+        
+        const fracU = u * (this.gridSize - 1) - j;
+        const fracV = v * (this.gridSize - 1) - i;
+        
+        const val1 = this.modeGrid[idx1];
+        const val2 = this.modeGrid[idx2];
+        const val3 = this.modeGrid[idx3];
+        const val4 = this.modeGrid[idx4];
+        
+        const top = val1 * (1 - fracU) + val2 * fracU;
+        const bottom = val3 * (1 - fracU) + val4 * fracU;
+        const interpolated = top * (1 - fracV) + bottom * fracV;
+        
+        return interpolated * this.normalizationFactor;
+      }
+      
+      // Get displacement with time dependence - FIXED VERSION
+      getDisplacement(x, y, t, cache, useFastPath = true) {
+        let modeValue;
+        
+        if (useFastPath && this.modeGrid && !this.needsPrecompute) {
+          modeValue = this.getModeShapeFast(x, y);
+        } else {
+          modeValue = this.computeModeShapeAtPoint(x, y, cache) * this.normalizationFactor;
+        }
+        
+        // CRITICAL FIX: Proper time-dependent vibration
+        // Using cosine for oscillation, scaled by frequency and timeScale
+        const angularFrequency = 2 * Math.PI * this.frequency;
+        const timePart = Math.cos(angularFrequency * t * this.timeScale);
+        
+        return this.amplitude * modeValue * timePart;
+      }
+      
+      // Simple test vibration for debugging
+      getTestVibration(x, y, t) {
+        const r = Math.sqrt((x / this.a) ** 2 + (y / this.b) ** 2);
+        if (r > 1.0) return 0;
+        
+        // Simple standing wave pattern
+        const pattern = Math.sin(this.m * Math.atan2(y, x)) * Math.sin(this.n * Math.PI * r);
+        
+        // Boundary condition
+        const boundaryFactor = Math.max(0, 1 - r * r);
+        
+        // Time dependence
+        const timePart = Math.sin(2 * Math.PI * 2.0 * t); // 2 Hz vibration
+        
+        return this.amplitude * pattern * boundaryFactor * timePart;
+      }
+    }
+    
+    // ==================== HIGH-PERFORMANCE VISUALIZER ====================
+    
+    class HighPerformanceVisualizer {
+      constructor() {
+        this.membrane = new OptimizedEllipticalMembrane();
+        this.cache = new MathieuCache(10000, 4);
+        
+        this.mesh = null;
+        this.geometry = null;
+        this.material = null;
+        this.currentTime = 0;
+        this.isAnimating = true;
+        this.meshQuality = 60;
+        this.useFastPath = true;
+        this.testMode = false; // Flag for test vibration
+        
+        this.frameTimes = [];
+        this.lastStatsUpdate = 0;
+        
+        this.createMesh();
+        this.precomputeCurrentMode();
+      }
+      
+      createMesh() {
+        if (this.mesh) {
+          scene.remove(this.mesh);
+          if (this.geometry) this.geometry.dispose();
+        }
+        
+        const segments = this.meshQuality;
+        const vertexCount = (segments + 1) * (segments + 1);
+        
+        const positions = new Float32Array(vertexCount * 3);
+        const colors = new Float32Array(vertexCount * 3);
+        const indices = new Uint32Array(segments * segments * 6);
+        
+        let idx = 0;
+        for (let i = 0; i <= segments; i++) {
+          const v = i / segments;
+          
+          for (let j = 0; j <= segments; j++) {
+            const u = j / segments;
+            
+            const theta = u * 2 * Math.PI;
+            const r = v;
+            
+            const posIdx = (i * (segments + 1) + j) * 3;
+            positions[posIdx] = r * this.membrane.a * Math.cos(theta);
+            positions[posIdx + 1] = r * this.membrane.b * Math.sin(theta);
+            positions[posIdx + 2] = 0;
+            
+            colors[posIdx] = 0.3;
+            colors[posIdx + 1] = 0.3;
+            colors[posIdx + 2] = 0.8;
+          }
+        }
+        
+        let triIdx = 0;
+        for (let i = 0; i < segments; i++) {
+          for (let j = 0; j < segments; j++) {
+            const a = i * (segments + 1) + j;
+            const b = a + 1;
+            const c = (i + 1) * (segments + 1) + j;
+            const d = c + 1;
+            
+            indices[triIdx++] = a;
+            indices[triIdx++] = b;
+            indices[triIdx++] = d;
+            
+            indices[triIdx++] = a;
+            indices[triIdx++] = d;
+            indices[triIdx++] = c;
+          }
+        }
+        
+        this.geometry = new THREE.BufferGeometry();
+        this.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        this.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        this.geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+        
+        this.material = new THREE.MeshPhongMaterial({
+          vertexColors: THREE.VertexColors,
+          side: THREE.DoubleSide,
+          wireframe: false,
+          shininess: 30,
+          transparent: true,
+          opacity: 0.9
+        });
+        
+        this.mesh = new THREE.Mesh(this.geometry, this.material);
+        scene.add(this.mesh);
+        
+        this.addEllipseOutline();
+        
+        const vertexCountDisplay = document.getElementById('vertex-count');
+        if (vertexCountDisplay) {
+          vertexCountDisplay.textContent = vertexCount.toLocaleString();
+        }
+      }
+      
+      addEllipseOutline() {
+        const outlinePoints = [];
+        const segments = 100;
+        
+        for (let i = 0; i <= segments; i++) {
+          const theta = (i / segments) * 2 * Math.PI;
+          const x = this.membrane.a * Math.cos(theta);
+          const y = this.membrane.b * Math.sin(theta);
+          outlinePoints.push(new THREE.Vector3(x, y, 0.001));
+        }
+        
+        const outlineGeometry = new THREE.BufferGeometry().setFromPoints(outlinePoints);
+        const outlineMaterial = new THREE.LineBasicMaterial({ 
+          color: 0xffffff,
+          linewidth: 1
+        });
+        
+        const outline = new THREE.LineLoop(outlineGeometry, outlineMaterial);
+        this.mesh.add(outline);
+      }
+      
+      precomputeCurrentMode() {
+        const startTime = performance.now();
+        const qualityInput = document.getElementById('quality');
+        const gridSize = qualityInput ? parseInt(qualityInput.value) || 60 : 60;
+        
+        this.membrane.precomputeModeShape(this.cache, Math.min(gridSize, 100));
+        const precomputeTime = performance.now() - startTime;
+        
+        console.log(`Precompute mode shape: ${precomputeTime} ms`);
+        console.log(`Frequency: ${this.membrane.frequency.toFixed(3)} Hz`);
+        
+        const modeDisplay = document.getElementById('mode-display');
+        if (modeDisplay) {
+          const modeType = this.membrane.modeType === 'even' ? 'Even' : 'Odd';
+          modeDisplay.textContent = `(${this.membrane.m},${this.membrane.n}) ${modeType}`;
+        }
+        
+        const vibrationStatus = document.getElementById('vibration-status');
+        if (vibrationStatus) {
+          vibrationStatus.textContent = this.testMode ? 'Test Mode' : 'Mathieu Mode';
+          vibrationStatus.style.color = this.testMode ? '#e74c3c' : '#2ecc71';
+        }
+      }
+      
+      updateMesh() {
+        if (!this.mesh || !this.geometry) return;
+        
+        const startTime = performance.now();
+        const positions = this.geometry.attributes.position.array;
+        const colors = this.geometry.attributes.color.array;
+        const segments = this.meshQuality;
+        
+        this.updateMembraneFromControls();
+        
+        let maxDisplacement = 0;
+        const amplitude = this.membrane.amplitude;
+        const cacheEnabledInput = document.getElementById('cache-enabled');
+        const useCache = cacheEnabledInput ? cacheEnabledInput.checked : true;
+        const cache = useCache ? this.cache : null;
+        
+        // Update time display
+        const timeDisplay = document.getElementById('time-display');
+        if (timeDisplay) {
+          timeDisplay.textContent = this.currentTime.toFixed(2);
+        }
+        
+        if (this.testMode) {
+          // Use test vibration (simpler, guaranteed to work)
+          for (let i = 0; i <= segments; i++) {
+            const v = i / segments;
+            
+            for (let j = 0; j <= segments; j++) {
+              const u = j / segments;
+              
+              const idx = (i * (segments + 1) + j) * 3;
+              const theta = u * 2 * Math.PI;
+              const r = v;
+              
+              const x = r * this.membrane.a * Math.cos(theta);
+              const y = r * this.membrane.b * Math.sin(theta);
+              
+              let displacement = 0;
+              if (r < 0.999) {
+                displacement = this.membrane.getTestVibration(x, y, this.currentTime);
+                
+                if (r > 0.95) {
+                  displacement *= (1 - r) / 0.05;
+                }
+              }
+              
+              positions[idx + 2] = displacement;
+              this.updateVertexColor(colors, idx, displacement, amplitude);
+              
+              if (Math.abs(displacement) > maxDisplacement) {
+                maxDisplacement = Math.abs(displacement);
+              }
+            }
+          }
+        } else {
+          // Use Mathieu function-based vibration
+          if (this.useFastPath && this.membrane.modeGrid && !this.membrane.needsPrecompute) {
+            for (let i = 0; i <= segments; i++) {
+              const v = i / segments;
+              
+              for (let j = 0; j <= segments; j++) {
+                const u = j / segments;
+                
+                const idx = (i * (segments + 1) + j) * 3;
+                const theta = u * 2 * Math.PI;
+                const r = v;
+                
+                const x = r * this.membrane.a * Math.cos(theta);
+                const y = r * this.membrane.b * Math.sin(theta);
+                
+                let displacement = 0;
+                if (r < 0.999) {
+                  displacement = this.membrane.getDisplacement(x, y, this.currentTime, cache, true);
+                  
+                  if (r > 0.95) {
+                    displacement *= (1 - r) / 0.05;
+                  }
+                }
+                
+                positions[idx + 2] = displacement;
+                this.updateVertexColor(colors, idx, displacement, amplitude);
+                
+                if (Math.abs(displacement) > maxDisplacement) {
+                  maxDisplacement = Math.abs(displacement);
+                }
+              }
+            }
+          }
+        }
+        
+        this.geometry.attributes.position.needsUpdate = true;
+        this.geometry.attributes.color.needsUpdate = true;
+        this.geometry.computeVertexNormals();
+        
+        const calcTime = performance.now() - startTime;
+        this.frameTimes.push(calcTime);
+        
+        if (this.frameTimes.length > 60) {
+          this.frameTimes.shift();
+        }
+        
+        const now = performance.now();
+        if (now - this.lastStatsUpdate > 500) {
+          this.updatePerformanceStats(calcTime);
+          this.lastStatsUpdate = now;
+        }
+      }
+      
+      updateVertexColor(colors, idx, displacement, amplitude) {
+        const normalizedDisp = displacement / amplitude;
+        const t = (normalizedDisp + 1) / 2;
+        
+        if (t < 0.5) {
+          colors[idx] = t * 2;
+          colors[idx + 1] = 0;
+          colors[idx + 2] = 1 - t * 2;
+        } else {
+          colors[idx] = 1;
+          colors[idx + 1] = (t - 0.5) * 2;
+          colors[idx + 2] = 0;
+        }
+      }
+      
+      updatePerformanceStats(calcTime) {
+        const stats = this.cache.getStats();
+        
+        const hitRate = stats.hitRate;
+        const indicator = document.getElementById('cache-status-indicator');
+        if (indicator) {
+          indicator.className = 'cache-indicator ' + (hitRate > 70 ? 'cache-hit' : 'cache-miss');
+        }
+        
+        const cacheHitRateDisplay = document.getElementById('cache-hit-rate');
+        if (cacheHitRateDisplay) {
+          cacheHitRateDisplay.textContent = `${hitRate.toFixed(1)}%`;
+        }
+        
+        const cacheSizeDisplay = document.getElementById('cache-size-display');
+        if (cacheSizeDisplay) {
+          cacheSizeDisplay.textContent = stats.size.toLocaleString();
+        }
+        
+        const calcTimeDisplay = document.getElementById('calc-time');
+        if (calcTimeDisplay) {
+          calcTimeDisplay.textContent = `${calcTime.toFixed(2)}ms`;
+        }
+        
+        const cacheStatusDisplay = document.getElementById('cache-status');
+        if (cacheStatusDisplay) {
+          cacheStatusDisplay.textContent = `Hits: ${stats.hits.toLocaleString()} (${hitRate.toFixed(1)}%)`;
+        }
+      }
+      
+      updateMembraneFromControls() {
+        const oldM = this.membrane.m;
+        const oldN = this.membrane.n;
+        const oldType = this.membrane.modeType;
+        
+        const aInput = document.getElementById('a');
+        const bInput = document.getElementById('b');
+        const mInput = document.getElementById('m');
+        const nInput = document.getElementById('n');
+        const modeTypeInput = document.getElementById('mode-type');
+        const tensionInput = document.getElementById('tension');
+        const densityInput = document.getElementById('density');
+        const amplitudeInput = document.getElementById('amplitude');
+        const timeScaleInput = document.getElementById('time-scale');
+        
+        if (aInput) this.membrane.a = parseFloat(aInput.value);
+        if (bInput) this.membrane.b = parseFloat(bInput.value);
+        if (mInput) this.membrane.m = parseInt(mInput.value);
+        if (nInput) this.membrane.n = parseInt(nInput.value);
+        if (modeTypeInput) this.membrane.modeType = modeTypeInput.value;
+        if (tensionInput) this.membrane.tension = parseFloat(tensionInput.value);
+        if (densityInput) this.membrane.density = parseFloat(densityInput.value);
+        if (amplitudeInput) this.membrane.amplitude = parseFloat(amplitudeInput.value);
+        if (timeScaleInput) this.membrane.timeScale = parseFloat(timeScaleInput.value);
+        
+        this.membrane.updatePhysicalParameters();
+        
+        if (oldM !== this.membrane.m || oldN !== this.membrane.n || oldType !== this.membrane.modeType) {
+          this.membrane.needsPrecompute = true;
+        }
+      }
+      
+      toggleTestMode() {
+        this.testMode = !this.testMode;
+        const btn = document.getElementById('test-vibration-btn');
+        if (btn) {
+          btn.textContent = this.testMode ? 'Back to Mathieu' : 'Test Vibration';
+          btn.style.background = this.testMode ? '#e74c3c' : '#4a6fa5';
+        }
+        
+        const vibrationStatus = document.getElementById('vibration-status');
+        if (vibrationStatus) {
+          vibrationStatus.textContent = this.testMode ? 'Test Mode' : 'Mathieu Mode';
+          vibrationStatus.style.color = this.testMode ? '#e74c3c' : '#2ecc71';
+        }
+        
+        console.log(`Switched to ${this.testMode ? 'test' : 'Mathieu'} vibration mode`);
+      }
+      
+      animate(deltaTime) {
+        if (this.isAnimating) {
+          const speedInput = document.getElementById('speed');
+          const speed = speedInput ? parseFloat(speedInput.value) : 1.0;
+          this.currentTime += deltaTime * speed;
+        }
+        
+        this.updateMesh();
+      }
+    }
+    
+    // ==================== INITIALIZATION ====================
+    
+    // Initialize scene
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0a0a);
+    
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.body.appendChild(renderer.domElement);
+    
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(5, 10, 7);
+    scene.add(directionalLight);
+    
+    // Create visualizer
+    const visualizer = new HighPerformanceVisualizer();
+    
+    // Camera setup
+    camera.position.set(0, -2, 4);
+    camera.lookAt(0, 0, 0);
+    
+    // Animation loop
+    let lastTime = 0;
+    let fps = 0;
+    let frameCount = 0;
+    let lastFpsUpdate = 0;
+    let isMouseDown = false;
+    
+    function animate(currentTime) {
+      requestAnimationFrame(animate);
+      
+      const deltaTime = (currentTime - lastTime) / 1000;
+      lastTime = currentTime;
+      
+      // Update FPS
+      frameCount++;
+      if (currentTime - lastFpsUpdate >= 1000) {
+        fps = Math.round((frameCount * 1000) / (currentTime - lastFpsUpdate));
+        const fpsDisplay = document.getElementById('fps-display');
+        if (fpsDisplay) {
+          fpsDisplay.textContent = fps;
+        }
+        frameCount = 0;
+        lastFpsUpdate = currentTime;
+      }
+      
+      // Animate membrane
+      visualizer.animate(deltaTime);
+      
+      // Smooth camera rotation
+      if (!isMouseDown) {
+        const time = currentTime * 0.0005;
+        camera.position.x = 4 * Math.sin(time);
+        camera.position.z = 4 * Math.cos(time);
+        camera.lookAt(0, 0, 0);
+      }
+      
+      renderer.render(scene, camera);
+    }
+    
+    // ==================== EVENT HANDLERS ====================
+    
+    // Function to safely add event listeners
+    function safeAddEventListener(id, event, handler) {
+      const element = document.getElementById(id);
+      if (element) {
+        element.addEventListener(event, handler);
+      }
+    }
+    
+    // Control buttons
+    safeAddEventListener('animate-btn', 'click', function() {
+      visualizer.isAnimating = !visualizer.isAnimating;
+      this.textContent = visualizer.isAnimating ? 'Pause' : 'Resume';
+      this.classList.toggle('active');
+    });
+    
+    safeAddEventListener('reset-btn', 'click', function() {
+      camera.position.set(0, -2, 4);
+      camera.lookAt(0, 0, 0);
+    });
+    
+    safeAddEventListener('clear-cache-btn', 'click', function() {
+      visualizer.cache.clear();
+      visualizer.membrane.needsPrecompute = true;
+      this.textContent = 'Cache Cleared!';
+      setTimeout(() => { this.textContent = 'Clear Cache'; }, 1000);
+    });
+    
+    safeAddEventListener('precompute-btn', 'click', function() {
+      visualizer.precomputeCurrentMode();
+      this.textContent = 'Precomputed!';
+      setTimeout(() => { this.textContent = 'Precompute Mode'; }, 1000);
+    });
+    
+    safeAddEventListener('test-vibration-btn', 'click', function() {
+      visualizer.toggleTestMode();
+    });
+    
+    // Cache settings
+    safeAddEventListener('cache-size', 'change', function() {
+      visualizer.cache.maxSize = parseInt(this.value);
+    });
+    
+    safeAddEventListener('cache-precision', 'change', function() {
+      visualizer.cache.precision = parseInt(this.value);
+    });
+    
+    // Eccentricity slider
+    safeAddEventListener('eccentricity', 'input', function() {
+      const e = parseFloat(this.value);
+      const eccValueDisplay = document.getElementById('ecc-value');
+      if (eccValueDisplay) {
+        eccValueDisplay.textContent = e.toFixed(2);
+      }
+      
+      const a = 1.5;
+      const b = a * Math.sqrt(1 - e * e);
+      
+      const bInput = document.getElementById('b');
+      if (bInput) {
+        bInput.value = b.toFixed(2);
+      }
+      visualizer.membrane.b = b;
+      visualizer.membrane.needsPrecompute = true;
+    });
+    
+    // Parameter change handlers
+    const updateHandlers = [
+      { id: 'a', action: () => visualizer.membrane.needsPrecompute = true },
+      { id: 'b', action: () => visualizer.membrane.needsPrecompute = true },
+      { id: 'm', action: () => visualizer.membrane.needsPrecompute = true },
+      { id: 'n', action: () => visualizer.membrane.needsPrecompute = true },
+      { id: 'mode-type', action: () => visualizer.membrane.needsPrecompute = true },
+      { id: 'tension', action: () => visualizer.membrane.needsPrecompute = true },
+      { id: 'density', action: () => visualizer.membrane.needsPrecompute = true },
+      { id: 'amplitude', action: () => {} },
+      { id: 'time-scale', action: () => {} },
+      { id: 'speed', action: () => {} },
+      { id: 'quality', action: function() {
+          visualizer.meshQuality = parseInt(this.value);
+          visualizer.createMesh();
+        }
+      }
+    ];
+    
+    updateHandlers.forEach(item => {
+      safeAddEventListener(item.id, 'change', item.action);
+    });
+    
+    // Mouse controls
+    window.addEventListener('mousedown', (e) => {
+      isMouseDown = true;
+    });
+    
+    window.addEventListener('mouseup', () => {
+      isMouseDown = false;
+    });
+    
+    window.addEventListener('wheel', (e) => {
+      camera.position.z += e.deltaY * 0.01;
+      camera.position.z = Math.max(1, Math.min(10, camera.position.z));
+      camera.lookAt(0, 0, 0);
+    });
+    
+    // Window resize
+    window.addEventListener('resize', () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    });
+    
+    // Start animation
+    animate(0);
+    
+    // Initial precompute
+    setTimeout(() => {
+      visualizer.precomputeCurrentMode();
+      console.log('Animation started. Check parameters:');
+      console.log(`- Tension: ${visualizer.membrane.tension}`);
+      console.log(`- Density: ${visualizer.membrane.density}`);
+      console.log(`- Frequency: ${visualizer.membrane.frequency.toFixed(3)} Hz`);
+      console.log(`- Amplitude: ${visualizer.membrane.amplitude}`);
+    }, 100);
+  </script>
+</body>
+</html>

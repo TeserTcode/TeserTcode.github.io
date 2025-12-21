@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Henon–Heiles Projection & Period Map</title>
+</head>
+<body>
+
+<h3>Henon–Heiles Chaos / Period Visualization (GPU)</h3>
+
+Energy
+<input id="energy" type="number" step="0.01" value="0.125">
+
+Iterations
+<input id="iter" type="number" value="1200">
+
+<br><br>
+
+φ min
+<input id="phimin" type="number" step="0.01" value="0">
+φ max
+<input id="phimax" type="number" step="0.01" value="6.2831853">
+
+<br><br>
+
+r min
+<input id="rmin" type="number" step="0.01" value="0.0">
+r max
+<input id="rmax" type="number" step="0.01" value="1.0">
+
+<br><br>
+
+dt min
+<input id="dtmin" type="number" step="0.001" value="0.01">
+dt max
+<input id="dtmax" type="number" step="0.001" value="0.05">
+
+<br><br>
+
+IC radius
+<input id="icr" type="number" step="0.01" value="0.2">
+
+Velocity scale
+<input id="vscale" type="number" step="0.1" value="1.0">
+
+<br><br>
+
+Recurrence tol
+<input id="rtol" type="number" step="1e-6" value="0.02">
+
+Max period
+<input id="pmax" type="number" value="400">
+
+<br><br>
+
+Projection
+<select id="proj">
+  <option value="0">Rectangle</option>
+  <option value="1">Circle</option>
+  <option value="2">Annulus</option>
+</select>
+
+Initial condition
+<select id="ic">
+  <option value="0">Angle (x=y=0)</option>
+  <option value="1">Position scan</option>
+  <option value="2">Radial shell</option>
+  <option value="3">Mixed</option>
+</select>
+
+Measure
+<select id="measure">
+  <option value="0">Lyapunov</option>
+  <option value="1">Separation rate</option>
+  <option value="2">Stretch index</option>
+  <option value="3">Period length</option>
+</select>
+
+Coloring
+<select id="color">
+  <option value="0">Blue–Yellow</option>
+  <option value="1">Fire</option>
+  <option value="2">Ice</option>
+  <option value="3">Phase</option>
+  <option value="4">Log contrast</option>
+</select>
+
+<br><br>
+<button onclick="draw()">Draw</button>
+
+<br><br>
+<canvas id="gl" width="720" height="720"></canvas>
+
+<script>
+const gl = document.getElementById("gl").getContext("webgl");
+if(!gl) alert("WebGL not supported");
+
+const vs = `
+attribute vec2 p;
+void main(){ gl_Position=vec4(p,0,1); }
+`;
+
+const fs = `
+precision highp float;
+
+uniform vec2 res;
+uniform float E, PHIMIN, PHIMAX, DTMIN, DTMAX;
+uniform float RMIN, RMAX, ICR, VSCALE, RTOL;
+uniform int ITER, IC, MEAS, COL, PROJ, PMAX;
+
+vec4 deriv(vec4 s){
+  float x=s.x,y=s.y,px=s.z,py=s.w;
+  return vec4(px,py,-x-2.0*x*y,-y-x*x+y*y);
+}
+
+vec4 rk(vec4 s,float h){
+  vec4 k1=deriv(s);
+  vec4 k2=deriv(s+0.5*h*k1);
+  vec4 k3=deriv(s+0.5*h*k2);
+  vec4 k4=deriv(s+h*k3);
+  return s+(k1+2.0*k2+2.0*k3+k4)*h/6.0;
+}
+
+vec3 palette(float t){
+  t=clamp(t,0.0,1.0);
+  if(COL==0) return mix(vec3(0,0,0.5),vec3(1,1,0),t);
+  if(COL==1){
+    float r=clamp(1.5*t,0,1);
+    float g=clamp(1.2*t*t,0,1);
+    return vec3(r,g,t*t*t);
+  }
+  if(COL==2) return vec3(t*t,0.7*t,1.0);
+  if(COL==3) return 0.5+0.5*cos(6.283*(t+vec3(0,0.33,0.67)));
+  return vec3(log(1.0+8.0*t));
+}
+
+void main(){
+  vec2 uv = gl_FragCoord.xy/res;
+  vec2 p = uv*2.0-1.0;
+
+  float r, ang;
+  if(PROJ==0){
+    r = mix(RMIN,RMAX,uv.y);
+    ang = mix(PHIMIN,PHIMAX,uv.x);
+  } else {
+    r = length(p);
+    if(PROJ==2 && (r<RMIN||r>RMAX)){ gl_FragColor=vec4(0,0,0,1); return; }
+    if(PROJ==1 && r>1.0){ gl_FragColor=vec4(0,0,0,1); return; }
+    ang = atan(p.y,p.x); if(ang<0.0) ang+=6.2831853;
+    ang = mix(PHIMIN,PHIMAX,ang/6.2831853);
+  }
+
+  float dt = mix(DTMIN,DTMAX,r);
+  float v = VSCALE*sqrt(max(2.0*E,0.0));
+
+  vec4 s;
+  if(IC==0) s=vec4(0,0,v*cos(ang),v*sin(ang));
+  else if(IC==1) s=vec4(ICR*cos(ang),0,0,v);
+  else if(IC==2) s=vec4(ICR*cos(ang),ICR*sin(ang),0,0);
+  else s=vec4(ICR*cos(ang),ICR*sin(ang),v*cos(ang),v*sin(ang));
+
+  vec4 s0=s;
+  vec4 sp=s+vec4(1e-6,0,0,0);
+
+  float acc=0.0, stretch=0.0;
+  float period=-1.0;
+
+  for(int i=1;i<3000;i++){
+    if(i>=ITER) break;
+    s=rk(s,dt);
+    sp=rk(sp,dt);
+
+    if(MEAS==3 && period<0.0 && i<PMAX){
+      if(length(s-s0)<RTOL) period=float(i);
+    }
+
+    if(i==10||i==30||i==60||i==120||i==240){
+      vec4 d=sp-s;
+      float rr=length(d);
+      if(rr<1e-12||rr>1e6){ gl_FragColor=vec4(0,0,0,1); return; }
+      acc+=log(rr/1e-6);
+      stretch+=abs(d.x*d.y);
+      sp=s+d*(1e-6/rr);
+    }
+  }
+
+  float val;
+  if(MEAS==0) val=acc/(float(ITER)*dt);
+  else if(MEAS==1) val=acc/float(ITER);
+  else if(MEAS==2) val=stretch;
+  else {
+    if(period<0.0){ gl_FragColor=vec4(0,0,0,1); return; }
+    val=period/float(PMAX);
+  }
+
+  gl_FragColor=vec4(palette(val),1);
+}
+`;
+
+function compile(t,s){
+  let sh=gl.createShader(t);
+  gl.shaderSource(sh,s);
+  gl.compileShader(sh);
+  if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))
+    throw gl.getShaderInfoLog(sh);
+  return sh;
+}
+
+const prog=gl.createProgram();
+gl.attachShader(prog,compile(gl.VERTEX_SHADER,vs));
+gl.attachShader(prog,compile(gl.FRAGMENT_SHADER,fs));
+gl.linkProgram(prog);
+gl.useProgram(prog);
+
+const buf=gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([
+  -1,-1,1,-1,-1,1,-1,1,1,-1,1,1
+]),gl.STATIC_DRAW);
+
+const loc=gl.getAttribLocation(prog,"p");
+gl.enableVertexAttribArray(loc);
+gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+
+function draw(){
+  const U=n=>gl.getUniformLocation(prog,n);
+  gl.uniform2f(U("res"),720,720);
+  gl.uniform1f(U("E"),+energy.value);
+  gl.uniform1i(U("ITER"),+iter.value);
+  gl.uniform1f(U("PHIMIN"),+phimin.value);
+  gl.uniform1f(U("PHIMAX"),+phimax.value);
+  gl.uniform1f(U("DTMIN"),+dtmin.value);
+  gl.uniform1f(U("DTMAX"),+dtmax.value);
+  gl.uniform1f(U("RMIN"),+rmin.value);
+  gl.uniform1f(U("RMAX"),+rmax.value);
+  gl.uniform1f(U("ICR"),+icr.value);
+  gl.uniform1f(U("VSCALE"),+vscale.value);
+  gl.uniform1f(U("RTOL"),+rtol.value);
+  gl.uniform1i(U("PMAX"),+pmax.value);
+  gl.uniform1i(U("IC"),+ic.value);
+  gl.uniform1i(U("MEAS"),+measure.value);
+  gl.uniform1i(U("COL"),+color.value);
+  gl.uniform1i(U("PROJ"),+proj.value);
+  gl.drawArrays(gl.TRIANGLES,0,6);
+}
+
+draw();
+</script>
+
+</body>
+</html>

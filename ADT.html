@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Lyapunov of Circle Map Variants</title>
+</head>
+<body>
+
+<h2>Lyapunov of Circle Map Variants</h2>
+
+<div>
+  <label>f min <input id="fmin" type="number" value="0.1" step="0.01"></label>
+  <label>f max <input id="fmax" type="number" value="10" step="0.1"></label>
+
+  <label>θ min (deg) <input id="tmin" type="number" value="10"></label>
+  <label>θ max (deg) <input id="tmax" type="number" value="80"></label>
+
+  <label>Iterations <input id="iters" type="number" value="300"></label>
+
+  <label>Waveform
+    <select id="wave">
+      <option value="0">sin</option>
+      <option value="1">sin³</option>
+      <option value="2">sinc</option>
+      <option value="3">triangle</option>
+      <option value="4">square</option>
+      <option value="5">abs(sin)</option>
+      <option value="6">saw</option>
+      <option value="7">tanh(sin)</option>
+      <option value="8">sin⁵</option>
+      <option value="9">cos</option>
+      <option value="10">cos²</option>
+      <option value="11">saw²</option>
+      <option value="12">abs(cos)</option>
+      <option value="13">exp(-sin²)</option>
+    </select>
+  </label>
+
+  <label>k-function
+    <select id="kfunc">
+      <option value="0">cot</option>
+      <option value="1">cot²</option>
+      <option value="2">tan</option>
+      <option value="3">tan²</option>
+      <option value="4">sec</option>
+      <option value="5">sec²</option>
+      <option value="6">csc</option>
+      <option value="7">csc²</option>
+      <option value="8">cot³</option>
+      <option value="9">tan³</option>
+      <option value="10">sec³</option>
+      <option value="11">csc³</option>
+      <option value="12">tan⁴</option>
+    </select>
+  </label>
+
+  <label>Color scheme
+    <select id="scheme">
+      <option value="0">Blue-Yellow (bright contrast)</option>
+      <option value="1">Red-Green</option>
+      <option value="2">Cyan-Magenta</option>
+      <option value="3">Orange-Purple</option>
+      <option value="4">Rainbow</option>
+      <option value="5">Grayscale</option>
+    </select>
+  </label>
+
+  <button id="drawBtn">Draw</button>
+</div>
+
+<canvas id="glCanvas" width="900" height="500" style="border:1px solid black"></canvas>
+
+<script id="fragShader" type="x-shader/x-fragment">
+precision highp float;
+
+// WebGL does not have tanh, define manually
+float tanh(float x){
+    float e2x = exp(2.0*x);
+    return (e2x-1.0)/(e2x+1.0);
+}
+
+// waveforms
+float wave(float z, int w){
+    if(w==0) return sin(z);
+    if(w==1) return pow(sin(z),3.0);
+    if(w==2) return z==0.0?1.0:sin(z)/z;
+    if(w==3) return 2.0/3.14159265*asin(sin(z));
+    if(w==4) return tanh(5.0*sin(z));
+    if(w==5) return abs(sin(z));
+    if(w==6) return 2.0*(z/(2.0*3.14159265)-floor(0.5+z/(2.0*3.14159265)));
+    if(w==7) return tanh(sin(z));
+    if(w==8) return pow(sin(z),5.0);
+    if(w==9) return cos(z);
+    if(w==10) return pow(cos(z),2.0);
+    if(w==11) return pow(2.0*(z/(2.0*3.14159265)-floor(0.5+z/(2.0*3.14159265))),2.0);
+    if(w==12) return abs(cos(z));
+    if(w==13) return exp(-pow(sin(z),2.0));
+    return sin(z);
+}
+
+// derivative approximation
+float waveDeriv(float z,int w){
+    if(w==0) return cos(z);
+    if(w==1) return 3.0*pow(sin(z),2.0)*cos(z);
+    if(w==2) return z==0.0?0.0:(z*cos(z)-sin(z))/(z*z);
+    if(w==3) return 2.0/3.14159265*sign(cos(z));
+    if(w==4) return 5.0*cos(z)*(1.0-pow(tanh(5.0*sin(z)),2.0));
+    if(w==5) return sign(sin(z))*cos(z);
+    if(w==6) return 1.0/3.14159265;
+    if(w==7) return cos(z)*(1.0-pow(tanh(sin(z)),2.0));
+    if(w==8) return 5.0*pow(sin(z),4.0)*cos(z);
+    if(w==9) return -sin(z);
+    if(w==10) return -2.0*cos(z)*sin(z);
+    if(w==11) return 2.0*(2.0*(z/(2.0*3.14159265)-floor(0.5+z/(2.0*3.14159265))))/3.14159265;
+    if(w==12) return -sin(z)*sign(cos(z));
+    if(w==13) return -2.0*sin(z)*exp(-pow(sin(z),2.0));
+    return cos(z);
+}
+
+// k functions
+float kFunc(float theta,int kf){
+    float s=sin(theta),c=cos(theta);
+    if(kf==0) return c/s;
+    if(kf==1) return (c/s)*(c/s);
+    if(kf==2) return s/c;
+    if(kf==3) return (s/c)*(s/c);
+    if(kf==4) return 1.0/c;
+    if(kf==5) return 1.0/(c*c);
+    if(kf==6) return 1.0/s;
+    if(kf==7) return 1.0/(s*s);
+    if(kf==8) return pow(c/s,3.0);
+    if(kf==9) return pow(s/c,3.0);
+    if(kf==10) return pow(1.0/c,3.0);
+    if(kf==11) return pow(1.0/s,3.0);
+    if(kf==12) return pow(s/c,4.0);
+    return c/s;
+}
+
+// color schemes
+vec3 colorScheme(float lyap,int scheme){
+    if(lyap<0.0) return vec3(0.0,0.0,0.0); // mode locking black
+    float t = clamp(lyap/1.0,0.0,1.0);
+    if(scheme==0) return mix(vec3(0.0,0.0,0.5),vec3(1.0,1.0,0.0),t); // blue->yellow
+    if(scheme==1) return mix(vec3(0.0,0.5,0.0),vec3(1.0,0.0,0.0),t); // green->red
+    if(scheme==2) return mix(vec3(0.0,1.0,1.0),vec3(1.0,0.0,1.0),t); // cyan->magenta
+    if(scheme==3) return mix(vec3(1.0,0.5,0.0),vec3(0.5,0.0,1.0),t); // orange->purple
+    if(scheme==4) return vec3(t,0.5,1.0-t); // rainbow-ish
+    if(scheme==5) return vec3(t,t,t); // grayscale
+    return vec3(t,0.0,1.0-t);
+}
+
+uniform float uFmin;
+uniform float uFmax;
+uniform float uTmin;
+uniform float uTmax;
+uniform int uIterations;
+uniform int uWave;
+uniform int uKfunc;
+uniform int uScheme;
+uniform vec2 uResolution;
+
+void main(){
+    vec2 uv = gl_FragCoord.xy / uResolution;
+    float f = mix(uFmin,uFmax,uv.x);
+    float theta = mix(uTmax,uTmin,uv.y);
+
+    float x = fract(0.5+uv.x);
+    float k = kFunc(theta,uKfunc);
+    float lyap=0.0;
+
+    for(int i=0;i<1000;i++){
+        if(i>=uIterations) break;
+        float z = 6.2831853*f*x;
+        float d = abs(1.0 - 3.14159265*f*k*waveDeriv(z,uWave));
+        lyap += log(d+1e-12);
+        x = fract(x + k*(1.0 - wave(z,uWave))/2.0);
+    }
+    lyap /= float(uIterations);
+
+    vec3 col = colorScheme(lyap,uScheme);
+    gl_FragColor = vec4(col,1.0);
+}
+</script>
+
+<script>
+const canvas=document.getElementById("glCanvas");
+const gl=canvas.getContext("webgl");
+
+// Compile shaders
+function compileShader(type,src){
+    const sh=gl.createShader(type);
+    gl.shaderSource(sh,src);
+    gl.compileShader(sh);
+    if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(sh));
+    return sh;
+}
+const vertSrc=`attribute vec2 aPosition; void main(){gl_Position=vec4(aPosition,0,1);}`;
+const fragSrc=document.getElementById("fragShader").textContent;
+const vert=compileShader(gl.VERTEX_SHADER,vertSrc);
+const frag=compileShader(gl.FRAGMENT_SHADER,fragSrc);
+
+const program=gl.createProgram();
+gl.attachShader(program,vert);
+gl.attachShader(program,frag);
+gl.linkProgram(program);
+gl.useProgram(program);
+
+// Fullscreen quad
+const vertices=new Float32Array([-1,-1,1,-1,-1,1,1,1]);
+const buffer=gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+gl.bufferData(gl.ARRAY_BUFFER,vertices,gl.STATIC_DRAW);
+const posAttrib=gl.getAttribLocation(program,"aPosition");
+gl.enableVertexAttribArray(posAttrib);
+gl.vertexAttribPointer(posAttrib,2,gl.FLOAT,false,0,0);
+
+// Uniform locations
+const uniforms={
+    uFmin:gl.getUniformLocation(program,"uFmin"),
+    uFmax:gl.getUniformLocation(program,"uFmax"),
+    uTmin:gl.getUniformLocation(program,"uTmin"),
+    uTmax:gl.getUniformLocation(program,"uTmax"),
+    uIterations:gl.getUniformLocation(program,"uIterations"),
+    uWave:gl.getUniformLocation(program,"uWave"),
+    uKfunc:gl.getUniformLocation(program,"uKfunc"),
+    uScheme:gl.getUniformLocation(program,"uScheme"),
+    uResolution:gl.getUniformLocation(program,"uResolution")
+};
+
+function render(){
+    gl.uniform1f(uniforms.uFmin,+document.getElementById("fmin").value);
+    gl.uniform1f(uniforms.uFmax,+document.getElementById("fmax").value);
+    gl.uniform1f(uniforms.uTmin,+document.getElementById("tmin").value*Math.PI/180);
+    gl.uniform1f(uniforms.uTmax,+document.getElementById("tmax").value*Math.PI/180);
+    gl.uniform1i(uniforms.uIterations,+document.getElementById("iters").value);
+    gl.uniform1i(uniforms.uWave,+document.getElementById("wave").value);
+    gl.uniform1i(uniforms.uKfunc,+document.getElementById("kfunc").value);
+    gl.uniform1i(uniforms.uScheme,+document.getElementById("scheme").value);
+    gl.uniform2f(uniforms.uResolution,canvas.width,canvas.height);
+
+    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+}
+
+document.getElementById("drawBtn").onclick=render;
+render();
+</script>
+
+</body>
+</html>

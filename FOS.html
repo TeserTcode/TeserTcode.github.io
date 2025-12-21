@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Engineering Safety Calculator</title>
+    <style>
+     
+        .main-calc {
+            grid-column: span 2;
+        }
+        h2 {
+            color: #222222;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+            margin-top: 0;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+          
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #444444;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+           
+            cursor: pointer;
+            font-size: 16px;
+            
+        }
+        button:hover {
+            background-color: #222222;
+        }
+        .result {
+           
+            padding: 10px;
+            background-color: #888888;
+           
+            font-weight: bold;
+        }
+        .material-props {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+           
+        }
+        .beam-type {
+            display: none;
+        }
+        .active {
+            display: block;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        .tab {
+            padding: 8px 15px;
+            background-color: #eee;
+            cursor: pointer;
+            
+            
+        }
+        .tab.active {
+            background-color: #333333;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="calculator main-calc">
+            <h2>Factor of Safety Calculator</h2>
+            <h3>fos = strength / appliedStress</h3>
+            <div class="input-group">
+                <label for="material-type">Material Type</label>
+                <select id="material-type">
+                    <option value="ductile">Ductile (e.g., mild steel)</option>
+                    <option value="brittle">Brittle (e.g., cast iron)</option>
+                    <option value="composite">Composite</option>
+                    <option value="custom">Custom</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label for="material-preset">Material Preset</label>
+                <select id="material-preset">
+                    <option value="custom">Select or enter custom</option>
+                    <option value="mild_steel">Mild Steel</option>
+                    <option value="stainless_steel">Stainless Steel</option>
+                    <option value="cast_iron">Cast Iron</option>
+                    <option value="aluminum">Aluminum</option>
+                    <option value="copper">Copper</option>
+                    <option value="glass">Glass</option>
+                    <option value="hard_plastic">Hard Plastic</option>
+                    <option value="titanium">Titanium</option>
+                </select>
+            </div>
+            
+            <div class="material-props">
+                <div class="input-group">
+                    <label for="yield-strength">Yield Strength (MPa)</label>
+                    <input type="number" id="yield-strength" value="250">
+                </div>
+                <div class="input-group">
+                    <label for="ultimate-strength">Ultimate Strength (MPa)</label>
+                    <input type="number" id="ultimate-strength" value="400">
+                </div>
+                <div class="input-group">
+                    <label for="young-modulus">Young's Modulus (GPa)</label>
+                    <input type="number" id="young-modulus" value="200">
+                </div>
+                <div class="input-group">
+                    <label for="poisson-ratio">Poisson's Ratio</label>
+                    <input type="number" id="poisson-ratio" step="0.01" value="0.3">
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label for="applied-stress">Applied Stress (MPa)</label>
+                <input type="number" id="applied-stress" value="100">
+            </div>
+            
+            <div class="input-group">
+                <label for="safety-standard">Safety Standard</label>
+                <select id="safety-standard">
+                    <option value="general">General Machinery</option>
+                    <option value="aerospace">Aerospace</option>
+                    <option value="automotive">Automotive</option>
+                    <option value="construction">Construction</option>
+                    <option value="pressure_vessel">Pressure Vessel</option>
+                    <option value="custom_fos">Custom FOS</option>
+                </select>
+            </div>
+            
+            <div class="input-group" id="custom-fos-group" style="display:none;">
+                <label for="custom-fos">Custom Factor of Safety</label>
+                <input type="number" id="custom-fos" step="0.1" value="2.0">
+            </div>
+            
+            <button onclick="calculateFOS()">Calculate Factor of Safety</button>
+            
+            <div class="result" id="fos-result"></div>
+        </div>
+        
+        <div class="calculator">
+            <h2>Stress and Strain Calculator</h2>
+            <h3>stress = force / area</h3><br>
+            <h3>strain = (finalLength - initialLength) / initialLength</h3>
+            <div class="input-group">
+                <label for="force">Force (N)</label>
+                <input type="number" id="force" value="1000">
+            </div>
+            <div class="input-group">
+                <label for="area">Cross-sectional Area (mm²)</label>
+                <input type="number" id="area" value="50">
+            </div>
+            <div class="input-group">
+                <label for="initial-length">Initial Length (mm)</label>
+                <input type="number" id="initial-length" value="1000">
+            </div>
+            <div class="input-group">
+                <label for="final-length">Final Length (mm)</label>
+                <input type="number" id="final-length" value="1001">
+            </div>
+            <div class="input-group">
+                <label for="young-modulus-stress">Young's Modulus (GPa)</label>
+                <input type="number" id="young-modulus-stress" value="200">
+            </div>
+            <button onclick="calculateStressStrain()">Calculate Stress & Strain</button>
+            <div class="result" id="stress-strain-result"></div>
+        </div>
+        
+        <div class="calculator">
+            <h2>Bending Stress Calculator</h2>
+            <h3>bendingStress = bendingMoment / sectionModulus</h3>
+            <div class="input-group">
+                <label for="bending-moment">Bending Moment (N·mm)</label>
+                <input type="number" id="bending-moment" value="1000000">
+            </div>
+            <div class="input-group">
+                <label for="beam-type">Beam Type</label>
+                <select id="beam-type" onchange="showBeamParams()">
+                    <option value="rectangular">Rectangular</option>
+                    <option value="circular">Circular</option>
+                    <option value="I-beam">I-beam</option>
+                    <option value="H-beam">H-beam</option>
+                    <option value="pipe">Pipe</option>
+                    <option value="square-tube">Square Tube</option>
+                    <option value="hexagon">Hexagon</option>
+                    <option value="custom">Custom Section</option>
+                </select>
+            </div>
+            
+            <div id="rectangular-params" class="beam-type active">
+                <div class="input-group">
+                    <label for="rect-width">Width (mm)</label>
+                    <input type="number" id="rect-width" value="50">
+                </div>
+                <div class="input-group">
+                    <label for="rect-height">Height (mm)</label>
+                    <input type="number" id="rect-height" value="100">
+                </div>
+            </div>
+            
+            <div id="circular-params" class="beam-type">
+                <div class="input-group">
+                    <label for="circle-diameter">Diameter (mm)</label>
+                    <input type="number" id="circle-diameter" value="100">
+                </div>
+            </div>
+            
+            <div id="I-beam-params" class="beam-type">
+                <div class="input-group">
+                    <label for="I-height">Height (mm)</label>
+                    <input type="number" id="I-height" value="200">
+                </div>
+                <div class="input-group">
+                    <label for="I-width">Width (mm)</label>
+                    <input type="number" id="I-width" value="100">
+                </div>
+                <div class="input-group">
+                    <label for="I-web-thickness">Web Thickness (mm)</label>
+                    <input type="number" id="I-web-thickness" value="10">
+                </div>
+                <div class="input-group">
+                    <label for="I-flange-thickness">Flange Thickness (mm)</label>
+                    <input type="number" id="I-flange-thickness" value="15">
+                </div>
+            </div>
+            
+            <div id="H-beam-params" class="beam-type">
+                <div class="input-group">
+                    <label for="H-height">Height (mm)</label>
+                    <input type="number" id="H-height" value="200">
+                </div>
+                <div class="input-group">
+                    <label for="H-width">Width (mm)</label>
+                    <input type="number" id="H-width" value="200">
+                </div>
+                <div class="input-group">
+                    <label for="H-web-thickness">Web Thickness (mm)</label>
+                    <input type="number" id="H-web-thickness" value="10">
+                </div>
+                <div class="input-group">
+                    <label for="H-flange-thickness">Flange Thickness (mm)</label>
+                    <input type="number" id="H-flange-thickness" value="15">
+                </div>
+            </div>
+            
+            <div id="pipe-params" class="beam-type">
+                <div class="input-group">
+                    <label for="pipe-outer-diameter">Outer Diameter (mm)</label>
+                    <input type="number" id="pipe-outer-diameter" value="100">
+                </div>
+                <div class="input-group">
+                    <label for="pipe-thickness">Wall Thickness (mm)</label>
+                    <input type="number" id="pipe-thickness" value="5">
+                </div>
+            </div>
+            
+            <div id="square-tube-params" class="beam-type">
+                <div class="input-group">
+                    <label for="square-tube-side">Side Length (mm)</label>
+                    <input type="number" id="square-tube-side" value="100">
+                </div>
+                <div class="input-group">
+                    <label for="square-tube-thickness">Wall Thickness (mm)</label>
+                    <input type="number" id="square-tube-thickness" value="5">
+                </div>
+            </div>
+            
+            <div id="hexagon-params" class="beam-type">
+                <div class="input-group">
+                    <label for="hexagon-side">Side Length (mm)</label>
+                    <input type="number" id="hexagon-side" value="50">
+                </div>
+            </div>
+            
+            <div id="custom-params" class="beam-type">
+                <div class="input-group">
+                    <label for="custom-section-modulus">Section Modulus (mm³)</label>
+                    <input type="number" id="custom-section-modulus" value="100000">
+                </div>
+                <div class="input-group">
+                    <label for="custom-section-expr">Or enter expression (e.g., "b*h^2/6")</label>
+                    <input type="text" id="custom-section-expr" placeholder="Enter variables below">
+                </div>
+                <div class="input-group">
+                    <label for="custom-variables">Variables (e.g., "b=50,h=100")</label>
+                    <input type="text" id="custom-variables" placeholder="var1=value1,var2=value2,...">
+                </div>
+            </div>
+            
+            <button onclick="calculateBendingStress()">Calculate Bending Stress</button>
+            <div class="result" id="bending-stress-result"></div>
+        </div>
+        
+        <div class="calculator">
+            <h2>Internal Stress Calculator</h2>
+            <div class="tabs">
+                <div class="tab active" onclick="showStressTab('axial')">Axial</div>
+                <div class="tab" onclick="showStressTab('torsion')">Torsion</div>
+                <div class="tab" onclick="showStressTab('combined')">Combined</div>
+            </div>
+            
+            <div id="axial-stress" class="stress-tab active">
+                <div class="input-group">
+                    <label for="axial-force">Axial Force (N)</label>
+                    <input type="number" id="axial-force" value="1000">
+                </div>
+                <div class="input-group">
+                    <label for="axial-area">Cross-sectional Area (mm²)</label>
+                    <input type="number" id="axial-area" value="50">
+                </div>
+                <button onclick="calculateAxialStress()">Calculate Axial Stress</button>
+                <div class="result" id="axial-stress-result"></div>
+            </div>
+            
+            <div id="torsion-stress" class="stress-tab">
+                <div class="input-group">
+                    <label for="torque">Torque (N·mm)</label>
+                    <input type="number" id="torque" value="100000">
+                </div>
+                <div class="input-group">
+                    <label for="polar-moment">Polar Moment of Inertia (mm⁴)</label>
+                    <input type="number" id="polar-moment" value="9817477">
+                </div>
+                <div class="input-group">
+                    <label for="outer-radius">Outer Radius (mm)</label>
+                    <input type="number" id="outer-radius" value="50">
+                </div>
+                <button onclick="calculateTorsionStress()">Calculate Torsion Stress</button>
+                <div class="result" id="torsion-stress-result"></div>
+            </div>
+            
+            <div id="combined-stress" class="stress-tab">
+                <div class="input-group">
+                    <label for="normal-stress">Normal Stress (MPa)</label>
+                    <input type="number" id="normal-stress" value="50">
+                </div>
+                <div class="input-group">
+                    <label for="shear-stress">Shear Stress (MPa)</label>
+                    <input type="number" id="shear-stress" value="30">
+                </div>
+                <div class="input-group">
+                    <label for="stress-theory">Failure Theory</label>
+                    <select id="stress-theory">
+                        <option value="max-normal">Maximum Normal Stress</option>
+                        <option value="max-shear">Maximum Shear Stress (Tresca)</option>
+                        <option value="von-mises">Von Mises</option>
+                    </select>
+                </div>
+                <button onclick="calculateCombinedStress()">Calculate Equivalent Stress</button>
+                <div class="result" id="combined-stress-result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Material properties database
+        const materials = {
+            mild_steel: {
+                name: "Mild Steel",
+                yield: 250,
+                ultimate: 400,
+                young: 200,
+                poisson: 0.3,
+                hardness: "120-180 HB",
+                toughness: "High"
+            },
+            stainless_steel: {
+                name: "Stainless Steel",
+                yield: 205,
+                ultimate: 515,
+                young: 193,
+                poisson: 0.29,
+                hardness: "150-200 HB",
+                toughness: "High"
+            },
+            cast_iron: {
+                name: "Cast Iron",
+                yield: 150,
+                ultimate: 250,
+                young: 100,
+                poisson: 0.21,
+                hardness: "150-250 HB",
+                toughness: "Low"
+            },
+            aluminum: {
+                name: "Aluminum",
+                yield: 35,
+                ultimate: 90,
+                young: 69,
+                poisson: 0.33,
+                hardness: "20-30 HB",
+                toughness: "Medium"
+            },
+            copper: {
+                name: "Copper",
+                yield: 70,
+                ultimate: 220,
+                young: 117,
+                poisson: 0.34,
+                hardness: "40-100 HB",
+                toughness: "High"
+            },
+            glass: {
+                name: "Glass",
+                yield: 50,
+                ultimate: 50,
+                young: 70,
+                poisson: 0.23,
+                hardness: "500-600 HK",
+                toughness: "Very Low"
+            },
+            hard_plastic: {
+                name: "Hard Plastic",
+                yield: 40,
+                ultimate: 50,
+                young: 3,
+                poisson: 0.4,
+                hardness: "80-100 HRR",
+                toughness: "Medium"
+            },
+            titanium: {
+                name: "Titanium",
+                yield: 830,
+                ultimate: 900,
+                young: 116,
+                poisson: 0.32,
+                hardness: "250-350 HB",
+                toughness: "High"
+            },high_carbon_steel: {
+    name: "High Carbon Steel",
+    yield: 500,
+    ultimate: 750,
+    young: 200,
+    poisson: 0.29,
+    hardness: "200–300 HB",
+    toughness: "Medium"
+},
+
+tool_steel: {
+    name: "Tool Steel",
+    yield: 700,
+    ultimate: 900,
+    young: 210,
+    poisson: 0.30,
+    hardness: "500–700 HV",
+    toughness: "Medium"
+},
+
+brass: {
+    name: "Brass",
+    yield: 200,
+    ultimate: 350,
+    young: 100,
+    poisson: 0.34,
+    hardness: "80–150 HB",
+    toughness: "Medium"
+},
+
+bronze: {
+    name: "Bronze",
+    yield: 250,
+    ultimate: 400,
+    young: 110,
+    poisson: 0.34,
+    hardness: "90–200 HB",
+    toughness: "High"
+},
+
+magnesium: {
+    name: "Magnesium Alloy",
+    yield: 160,
+    ultimate: 250,
+    young: 45,
+    poisson: 0.35,
+    hardness: "60–100 HB",
+    toughness: "Low"
+},
+
+nickel_alloy: {
+    name: "Nickel Alloy",
+    yield: 400,
+    ultimate: 800,
+    young: 200,
+    poisson: 0.31,
+    hardness: "200–300 HB",
+    toughness: "High"
+},
+concrete: {
+    name: "Concrete",
+    yield: 5,
+    ultimate: 30,
+    young: 30,
+    poisson: 0.20,
+    hardness: "N/A",
+    toughness: "Very Low"
+},
+
+ceramic: {
+    name: "Engineering Ceramic",
+    yield: 300,
+    ultimate: 300,
+    young: 300,
+    poisson: 0.22,
+    hardness: "1000–2000 HV",
+    toughness: "Very Low"
+},
+polycarbonate: {
+    name: "Polycarbonate",
+    yield: 65,
+    ultimate: 75,
+    young: 2.3,
+    poisson: 0.37,
+    hardness: "70–75 HRR",
+    toughness: "High"
+},
+
+nylon: {
+    name: "Nylon",
+    yield: 80,
+    ultimate: 95,
+    young: 2.5,
+    poisson: 0.39,
+    hardness: "75–85 HRR",
+    toughness: "High"
+},
+
+rubber: {
+    name: "Rubber",
+    yield: 5,
+    ultimate: 25,
+    young: 0.01,
+    poisson: 0.49,
+    hardness: "30–80 Shore A",
+    toughness: "Very High"
+},
+carbon_fiber: {
+    name: "Carbon Fiber (CFRP)",
+    yield: 600,
+    ultimate: 1500,
+    young: 150,
+    poisson: 0.28,
+    hardness: "N/A",
+    toughness: "Medium"
+},
+
+fiberglass: {
+    name: "Fiberglass (GFRP)",
+    yield: 200,
+    ultimate: 600,
+    young: 40,
+    poisson: 0.25,
+    hardness: "N/A",
+    toughness: "Medium"
+},
+
+wood: {
+    name: "Structural Wood",
+    yield: 40,
+    ultimate: 80,
+    young: 10,
+    poisson: 0.35,
+    hardness: "N/A",
+    toughness: "Medium"
+},
+
+        };
+
+        // Safety standards
+        const safetyStandards = {
+            general: { min: 1.5, max: 2.5, name: "General Machinery" },
+            aerospace: { min: 1.2, max: 1.5, name: "Aerospace" },
+            automotive: { min: 1.3, max: 2.0, name: "Automotive" },
+            construction: { min: 2.0, max: 3.0, name: "Construction" },
+            pressure_vessel: { min: 3.0, max: 4.0, name: "Pressure Vessel" },
+      
+            mechanical_static: { min: 1.5, max: 3.0, name: "Mechanical (Static Load)" },
+mechanical_dynamic: { min: 2.0, max: 4.0, name: "Mechanical (Dynamic / Shock)" },
+fatigue_limited: { min: 1.3, max: 1.8, name: "Fatigue-Controlled Design" },
+
+steel_structures: { min: 1.5, max: 2.0, name: "Steel Structures" },
+concrete_structures: { min: 1.8, max: 3.0, name: "Reinforced Concrete" },
+bridges: { min: 2.0, max: 4.0, name: "Bridges" },
+offshore_structures: { min: 3.0, max: 5.0, name: "Offshore / Marine Structures" },
+
+            railway: { min: 1.5, max: 2.5, name: "Railway Systems" },
+ship_structures: { min: 2.0, max: 3.5, name: "Ship Structures" },
+
+pipelines: { min: 1.8, max: 3.0, name: "Pipelines" },
+boilers: { min: 3.0, max: 4.0, name: "Boilers" },
+nuclear: { min: 4.0, max: 10.0, name: "Nuclear Systems" },
+
+electrical_insulation: { min: 2.0, max: 4.0, name: "Electrical Insulation" },
+thermal_systems: { min: 1.5, max: 2.5, name: "Thermal Systems" },
+
+brittle_materials: { min: 3.0, max: 5.0, name: "Brittle Materials" },
+composites: { min: 2.0, max: 4.0, name: "Composite Materials" },
+corrosion_allowance: { min: 1.5, max: 3.0, name: "Corrosive Environments" },
+
+life_critical: { min: 5.0, max: 10.0, name: "Life-Critical Systems" },
+medical_devices: { min: 2.0, max: 6.0, name: "Medical Devices" },
+
+      };
+
+        // Initialize material presets
+        document.getElementById('material-preset').addEventListener('change', function() {
+            const preset = this.value;
+            if (preset !== 'custom' && materials[preset]) {
+                const mat = materials[preset];
+                document.getElementById('yield-strength').value = mat.yield;
+                document.getElementById('ultimate-strength').value = mat.ultimate;
+                document.getElementById('young-modulus').value = mat.young;
+                document.getElementById('poisson-ratio').value = mat.poisson;
+                document.getElementById('young-modulus-stress').value = mat.young;
+            }
+        });
+
+        // Initialize safety standard
+        document.getElementById('safety-standard').addEventListener('change', function() {
+            const standard = this.value;
+            if (standard === 'custom_fos') {
+                document.getElementById('custom-fos-group').style.display = 'block';
+            } else {
+                document.getElementById('custom-fos-group').style.display = 'none';
+            }
+        });
+
+        // Factor of Safety calculation
+        function calculateFOS() {
+            const materialType = document.getElementById('material-type').value;
+            const yieldStrength = parseFloat(document.getElementById('yield-strength').value);
+            const ultimateStrength = parseFloat(document.getElementById('ultimate-strength').value);
+            const appliedStress = parseFloat(document.getElementById('applied-stress').value);
+            const standard = document.getElementById('safety-standard').value;
+            const customFOS = parseFloat(document.getElementById('custom-fos').value);
+            
+            if (appliedStress <= 0) {
+                document.getElementById('fos-result').innerHTML = "Applied stress must be positive";
+                return;
+            }
+            
+            let fos, strength;
+            
+            if (materialType === 'ductile') {
+                strength = yieldStrength;
+            } else if (materialType === 'brittle') {
+                strength = ultimateStrength;
+            } else {
+                strength = Math.min(yieldStrength, ultimateStrength);
+            }
+            
+            fos = strength / appliedStress;
+            
+            let standardInfo = "";
+            if (standard !== 'custom_fos') {
+                const std = safetyStandards[standard];
+                standardInfo = `<br>Recommended FOS for ${std.name}: ${std.min} to ${std.max}`;
+                
+                if (fos < std.min) {
+                    standardInfo += "<br><span style='color:red;'>WARNING: FOS below recommended minimum</span>";
+                } else if (fos > std.max) {
+                    standardInfo += "<br><span style='color:orange;'>NOTE: FOS above recommended maximum (overdesign)</span>";
+                }
+            } else {
+                if (fos < customFOS) {
+                    standardInfo = `<br><span style='color:red;'>WARNING: FOS (${fos.toFixed(2)}) below required (${customFOS})</span>`;
+                } else {
+                    standardInfo = `<br>Required FOS (${customFOS}) achieved`;
+                }
+            }
+            
+            document.getElementById('fos-result').innerHTML = 
+                `Factor of Safety: <strong>${fos.toFixed(2)}</strong><br>
+                 Material ${materialType === 'ductile' ? 'Yield' : 'Ultimate'} Strength: ${strength} MPa${standardInfo}`;
+        }
+
+        // Stress and strain calculation
+        function calculateStressStrain() {
+            const force = parseFloat(document.getElementById('force').value);
+            const area = parseFloat(document.getElementById('area').value);
+            const initialLength = parseFloat(document.getElementById('initial-length').value);
+            const finalLength = parseFloat(document.getElementById('final-length').value);
+            const youngModulus = parseFloat(document.getElementById('young-modulus-stress').value) * 1000; // Convert GPa to MPa
+            
+            if (area <= 0 || initialLength <= 0) {
+                document.getElementById('stress-strain-result').innerHTML = "Area and initial length must be positive";
+                return;
+            }
+            
+            const stress = force / area;
+            const strain = (finalLength - initialLength) / initialLength;
+            const calculatedYoung = stress / strain;
+            
+            let youngComparison = "";
+            if (!isNaN(youngModulus)) {
+                const diff = Math.abs(calculatedYoung - youngModulus);
+                youngComparison = `<br>Calculated Young's Modulus: ${(calculatedYoung/1000).toFixed(2)} GPa (Difference: ${(diff/1000).toFixed(2)} GPa)`;
+            }
+            
+            document.getElementById('stress-strain-result').innerHTML = 
+                `Stress: <strong>${stress.toFixed(2)} MPa</strong><br>
+                 Strain: <strong>${strain.toFixed(6)}</strong> (${(strain*100).toFixed(4)}%)<br>
+                 Young's Modulus: ${youngModulus/1000} GPa${youngComparison}`;
+        }
+
+        // Show appropriate beam parameters
+        function showBeamParams() {
+            const beamType = document.getElementById('beam-type').value;
+            document.querySelectorAll('.beam-type').forEach(el => el.classList.remove('active'));
+            document.getElementById(`${beamType.replace('-', '_')}-params`).classList.add('active');
+        }
+
+        // Bending stress calculation
+        function calculateBendingStress() {
+            const bendingMoment = parseFloat(document.getElementById('bending-moment').value);
+            const beamType = document.getElementById('beam-type').value;
+            
+            let sectionModulus;
+            
+            if (beamType === 'custom') {
+                const customModulus = document.getElementById('custom-section-modulus').value;
+                const customExpr = document.getElementById('custom-section-expr').value;
+                const customVars = document.getElementById('custom-variables').value;
+                
+                if (customModulus && !isNaN(customModulus)) {
+                    sectionModulus = parseFloat(customModulus);
+                } else if (customExpr && customVars) {
+                    try {
+                        // Create variables from input
+                        const vars = {};
+                        customVars.split(',').forEach(pair => {
+                            const [name, value] = pair.split('=');
+                            vars[name.trim()] = parseFloat(value);
+                        });
+                        
+                        // Replace variables in expression
+                        let expr = customExpr;
+                        for (const [name, value] of Object.entries(vars)) {
+                            expr = expr.replace(new RegExp(name, 'g'), value);
+                        }
+                        
+                        // Evaluate expression
+                        sectionModulus = math.evaluate(expr);
+                    } catch (e) {
+                        document.getElementById('bending-stress-result').innerHTML = 
+                            `Error in custom expression: ${e.message}`;
+                        return;
+                    }
+                } else {
+                    document.getElementById('bending-stress-result').innerHTML = 
+                        "Please enter either a custom section modulus or a valid expression with variables";
+                    return;
+                }
+            } else {
+                // Calculate section modulus based on beam type
+                switch (beamType) {
+                    case 'rectangular':
+                        const width = parseFloat(document.getElementById('rect-width').value);
+                        const height = parseFloat(document.getElementById('rect-height').value);
+                        sectionModulus = (width * Math.pow(height, 2)) / 6;
+                        break;
+                    case 'circular':
+                        const diameter = parseFloat(document.getElementById('circle-diameter').value);
+                        sectionModulus = (Math.PI * Math.pow(diameter, 3)) / 32;
+                        break;
+                    case 'I-beam':
+                        const iHeight = parseFloat(document.getElementById('I-height').value);
+                        const iWidth = parseFloat(document.getElementById('I-width').value);
+                        const iWebThickness = parseFloat(document.getElementById('I-web-thickness').value);
+                        const iFlangeThickness = parseFloat(document.getElementById('I-flange-thickness').value);
+                        
+                        // Simplified I-beam section modulus calculation
+                        const iArea = iWidth * iFlangeThickness * 2 + iWebThickness * (iHeight - 2 * iFlangeThickness);
+                        const iCentroid = iHeight / 2;
+                        const iI = (iWidth * Math.pow(iHeight, 3) / 12) - 
+                                    ((iWidth - iWebThickness) * Math.pow(iHeight - 2 * iFlangeThickness, 3) / 12);
+                        sectionModulus = iI / iCentroid;
+                        break;
+                    case 'H-beam':
+                        const hHeight = parseFloat(document.getElementById('H-height').value);
+                        const hWidth = parseFloat(document.getElementById('H-width').value);
+                        const hWebThickness = parseFloat(document.getElementById('H-web-thickness').value);
+                        const hFlangeThickness = parseFloat(document.getElementById('H-flange-thickness').value);
+                        
+                        // Simplified H-beam section modulus calculation
+                        const hArea = hWidth * hFlangeThickness * 2 + hWebThickness * (hHeight - 2 * hFlangeThickness);
+                        const hCentroid = hHeight / 2;
+                        const hI = (hWidth * Math.pow(hHeight, 3) / 12) - 
+                                    ((hWidth - hWebThickness) * Math.pow(hHeight - 2 * hFlangeThickness, 3) / 12);
+                        sectionModulus = hI / hCentroid;
+                        break;
+                    case 'pipe':
+                        const outerDia = parseFloat(document.getElementById('pipe-outer-diameter').value);
+                        const thickness = parseFloat(document.getElementById('pipe-thickness').value);
+                        const innerDia = outerDia - 2 * thickness;
+                        sectionModulus = (Math.PI * (Math.pow(outerDia, 4) - Math.pow(innerDia, 4))) / (32 * outerDia);
+                        break;
+                    case 'square-tube':
+                        const side = parseFloat(document.getElementById('square-tube-side').value);
+                        const wallThickness = parseFloat(document.getElementById('square-tube-thickness').value);
+                        const innerSide = side - 2 * wallThickness;
+                        sectionModulus = (Math.pow(side, 4) - Math.pow(innerSide, 4)) / (6 * side);
+                        break;
+                    case 'hexagon':
+                        const hexSide = parseFloat(document.getElementById('hexagon-side').value);
+                        sectionModulus = (5 * Math.sqrt(3) * Math.pow(hexSide, 3)) / 16;
+                        break;
+                }
+            }
+            
+            if (sectionModulus <= 0) {
+                document.getElementById('bending-stress-result').innerHTML = "Section modulus must be positive";
+                return;
+            }
+            
+            const bendingStress = bendingMoment / sectionModulus;
+            
+            document.getElementById('bending-stress-result').innerHTML = 
+                `Bending Stress: <strong>${bendingStress.toFixed(2)} MPa</strong><br>
+                 Section Modulus: ${sectionModulus.toFixed(2)} mm³`;
+        }
+
+        // Show appropriate stress tab
+        function showStressTab(tabName) {
+            document.querySelectorAll('.stress-tab').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            document.getElementById(`${tabName}-stress`).classList.add('active');
+            document.querySelector(`.tab[onclick="showStressTab('${tabName}')"]`).classList.add('active');
+        }
+
+        // Axial stress calculation
+        function calculateAxialStress() {
+            const force = parseFloat(document.getElementById('axial-force').value);
+            const area = parseFloat(document.getElementById('axial-area').value);
+            
+            if (area <= 0) {
+                document.getElementById('axial-stress-result').innerHTML = "Area must be positive";
+                return;
+            }
+            
+            const stress = force / area;
+            
+            document.getElementById('axial-stress-result').innerHTML = 
+                `Axial Stress: <strong>${stress.toFixed(2)} MPa</strong>`;
+        }
+
+        // Torsion stress calculation
+        function calculateTorsionStress() {
+            const torque = parseFloat(document.getElementById('torque').value);
+            const polarMoment = parseFloat(document.getElementById('polar-moment').value);
+            const outerRadius = parseFloat(document.getElementById('outer-radius').value);
+            
+            if (polarMoment <= 0 || outerRadius <= 0) {
+                document.getElementById('torsion-stress-result').innerHTML = "Polar moment and radius must be positive";
+                return;
+            }
+            
+            const shearStress = (torque * outerRadius) / polarMoment;
+            
+            document.getElementById('torsion-stress-result').innerHTML = 
+                `Shear Stress: <strong>${shearStress.toFixed(2)} MPa</strong>`;
+        }
+
+        // Combined stress calculation
+        function calculateCombinedStress() {
+            const normalStress = parseFloat(document.getElementById('normal-stress').value);
+            const shearStress = parseFloat(document.getElementById('shear-stress').value);
+            const theory = document.getElementById('stress-theory').value;
+            
+            let equivalentStress;
+            let theoryName;
+            
+            switch (theory) {
+                case 'max-normal':
+                    equivalentStress = Math.abs(normalStress);
+                    theoryName = "Maximum Normal Stress";
+                    break;
+                case 'max-shear':
+                    equivalentStress = 2 * Math.sqrt(Math.pow(normalStress/2, 2) + Math.pow(shearStress, 2));
+                    theoryName = "Maximum Shear Stress (Tresca)";
+                    break;
+                case 'von-mises':
+                    equivalentStress = Math.sqrt(Math.pow(normalStress, 2) + 3 * Math.pow(shearStress, 2));
+                    theoryName = "Von Mises Stress";
+                    break;
+            }
+            
+            document.getElementById('combined-stress-result').innerHTML = 
+                `Equivalent Stress (${theoryName}): <strong>${equivalentStress.toFixed(2)} MPa</strong><br>
+                 Normal Stress: ${normalStress.toFixed(2)} MPa, Shear Stress: ${shearStress.toFixed(2)} MPa`;
+        }
+
+        // Initialize math.js
+        const math = {
+            evaluate: function(expr) {
+                // Simple safe expression evaluator
+                const allowed = /^[0-9+\-*/.()\s^]+$/;
+                if (!allowed.test(expr)) {
+                    throw new Error("Invalid characters in expression");
+                }
+                try {
+                    return Function(`return ${expr}`)();
+                } catch (e) {
+                    throw new Error("Invalid expression");
+                }
+            }
+        };
+    </script>
+</body>
+</html>
