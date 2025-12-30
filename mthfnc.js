@@ -1153,6 +1153,133 @@ let globalc = math.complex(1,0);
     math.complex(7.605260705023662591683674215491958711194575443441659148758242520e-5, -0.0005981647999801659300901133780805430707771024544719758191290647784)
 ];
 
+
+let tetr2tayl= [
+    math.complex(-3.3857449097100845707691587388563e-33, + 8.6283275119439326230796167979636e-39),
+    math.complex( 1.0621778617947649271415104422217, - 2.1215912851999261353841253933232e-39),
+    math.complex(-0.035744647728066731728445375866918, - 1.6528476068935126597661014198865e-39),
+    math.complex(-0.066213656853740344166900371179281, - 2.3073668409695291904464457420085e-39),
+    math.complex( 0.043454583570360524020685356585003, - 5.1351348268343419131727570159253e-39),
+    math.complex( 0.0022227783697499561408416671153217, + 6.2654767253789504085574784480459e-39),
+    math.complex(-0.0090087066530222806283948464598274, - 1.3668183011514358653749024702532e-39),
+    math.complex( 0.0024895349430564031347716108808865, - 3.2984249036745176819716061765155e-39),
+    math.complex( 0.0014278268881640732035497597588112, - 3.4331169647062381256355063557024e-39),
+    math.complex(-0.00082875263079754509666759428586248, + 7.3468396926392969248046033576390e-39),
+    math.complex(-0.00013018755918760200158547751382603, - 5.1749302085028047712817951371464e-39),
+    math.complex( 0.00017831681400586374114311547834521, - 2.2499696558707846832214097782770e-39),
+    math.complex(-1.6088163044730724829524259764940e-6, + 7.3315337766129650564236726887949e-39),
+    math.complex(-3.0408578284069319144844946418728e-5, - 3.4438311059246704335021578238933e-39),
+    math.complex( 3.4545598711243196908544057177571e-6, + 1.0016191447631574807398644342321e-38),
+    math.complex( 5.2727903495747596032363911552279e-6, + 2.9111852282083214065175477569098e-39),
+    math.complex(-8.8061164975416311214624546826141e-7, + 1.0377411065853006906445811433778e-39),
+    math.complex(-1.2157049677243275812877401045035e-6, - 1.2572279424028996862062088084197e-38),
+    math.complex( 2.2172020957604552224365530570359e-7, - 1.5608973163653239590896359236761e-38),
+    math.complex( 3.4355563006676171818167966078027e-7, + 2.5713938924237539236816111751737e-39),
+    math.complex(-7.6367283163368523707686138813354e-8, + 4.0070888156936831978858659930180e-39),
+    math.complex(-9.1951358096176236086139148647217e-8, - 4.2795341209623904585712341029341e-39),
+    math.complex( 2.8054860741793167748720937797415e-8, - 7.5182659521342138532199739065047e-39),
+    math.complex( 2.0791521206577107670749319749077e-8, + 5.5713534335848001679237211491719e-40),
+    math.complex(-9.0906226635513473062368943228692e-9, - 1.5765093507121824651568035881236e-38),
+    math.complex(-3.8577129209993632079619990795907e-9, - 1.0426389997137268885742717147419e-38),
+    math.complex( 2.5522452015652167406378184108721e-9, + 2.9081240450030550326820524320277e-39),
+    math.complex( 5.8326893630654334402310120569487e-10, - 9.7957862568523959002041229509323e-41),
+    math.complex(-6.4340767514257931618498054327961e-10, + 4.4019814491730454075303897470458e-39),
+    math.complex(-7.2648848556771317589600155133178e-11, - 8.0937683947242921119898082284782e-39),
+    math.complex( 1.5260809246760950505827045641832e-10, + 9.6855836614628064459098845441177e-39),
+    math.complex( 7.8716550258912403441556169373562e-12, + 1.4950818774520969242232262538577e-38),
+    math.complex(-3.5439398795861414171444367640004e-11, - 5.1733996169001715844437020702620e-39),
+    math.complex(-6.9539325049619912617929411841053e-13, - 4.1632091591622682572830691085866e-39),
+    math.complex( 8.1906561017471971219565840665564e-12, + 1.0989647706906281649807806934317e-38),
+    math.complex(-7.7689479529470792328614940107161e-14, + 6.0305309143747562255646996679110e-39),
+    math.complex(-1.8636328751061895361229845732376e-12, - 1.2122285492854839925768286348991e-39),
+    math.complex( 9.6338175226837344236486024829019e-14, - 8.2100933565244143135965916050522e-39),
+    math.complex( 4.0798536567343853072847916790796e-13, - 2.6099648008101102326387932251137e-38),
+    math.complex(-4.2677592794023930000636938090498e-14, - 2.3509887016445750159374730744445e-38),
+    math.complex(-8.4567385613979800551632120101862e-14, + 2.4795583962657627121215536332032e-39),
+    math.complex( 1.2676514816845404924030630245153e-14, - 1.0505980760474194602598030154314e-38),
+    math.complex( 1.6649451880873543718816002539030e-14, + 9.3672206081151035791258692809898e-39),
+    math.complex(-2.5562276017376011189847630018350e-15, - 3.0085308541357920907584640161094e-38),
+    math.complex(-3.2117362188790424577971815684401e-15, - 1.7375275873091937226907992235035e-38),
+    math.complex( 2.0479800318374656316032488505008e-16, - 2.2505818925118379579566470050307e-38),
+    math.complex( 6.4689129513374090371778344739818e-16, + 3.8730089913030160288934793641395e-38),
+    math.complex( 1.0535510959734262699287316432828e-16, + 2.4379263046741400296156328023849e-38),
+    math.complex(-1.4688238223502811939753881806142e-16, - 2.4232326252888614357150446545134e-38),
+    math.complex(-7.0455956674386816272387322364962e-17, + 1.7252828544881282278586073355376e-38),
+    math.complex( 3.9041046739257886001616133306127e-17, + 5.4489061053741452191238746961735e-39),
+    math.complex( 2.8647319603015467366804976732083e-17, - 3.4799530677468136432634962610371e-38),
+    math.complex(-1.1829987297231977523801197341511e-17, - 2.2199700604591742208124436086708e-38),
+    math.complex(-9.7829354347452905729765216121401e-18, + 2.1526240299433139989167698426320e-38),
+    math.complex( 3.8669864184452072663241880230450e-18, + 1.4007974347298926137222198048721e-38),
+    math.complex( 3.0501496556566839990866235961218e-18, + 4.8978931284261979500024932310204e-40),
+    math.complex(-1.2991086286781337331839396008006e-18, + 2.8603695870008996027918974954491e-38),
+    math.complex(-8.9367708534233680497146913203050e-19, - 5.0203404566368528987226850884622e-39),
+    math.complex( 4.3400223536801960889284518471795e-19, - 1.2501872210307870266872570243062e-38),
+    math.complex( 2.4792891444220073921055174168698e-19, + 2.6203728237080159031378260799277e-39),
+];
+
+
+let knthetaa2=[
+    math.complex( -1.238069414071374894166968742073728779402824139678115229070957379,-1.248161324844920365999405070526939338912940948444578047794726215),
+    math.complex(  0.002864641645729865478194942509084858793690099329283788815678805771,-0.09001416256086320154659764465141315472620051099255075090662505626),
+    math.complex(  0.001636134436621589610338292659520028459200881280861850397393175582,-0.03772961751248719901302864548541206644468427412520346279622117437),
+    math.complex(   0.001151878683273188933749805248407949881929702714864699473723554138,-0.02268307057422195686208026784327810467144042144069873155574894856),
+    math.complex( 0.0008905135903250987409799179255737027314688052161219601164432978455,-0.01582749272276461800500709660459162869204157131664275691425279390),
+    math.complex(  0.0007264118441894542626255716510455368888941830989589272702217756617,-0.01198396934354393924419365690312310342998359176117453467186601092),
+    math.complex(  0.0006136169937465890052224025336813938751119952077710404928279559788,-0.009554442216383947676734462344477270253696338842784796331220593648),
+    math.complex(   0.0005312448144001725700417082707270351904250477100560116674219028018,-0.007893188315673435338155101204325171308161675791161079035081658622),
+    math.complex(   0.0004684141135809476704389174774561727356184266254349374303185080100,-0.006692386592808443356008426878462335163047439278721633314040850484),
+    math.complex(    0.0004188900899325215787292116801652569967485970260792220104099580078,-0.005787746813526336347938452082074310225875790452798058875382420982),
+    math.complex(  0.0003788401849206416046480366058173926698226943779135698440497662354,-0.005084043192642145510218104812718530958800262313239821433206374391),
+    math.complex( 0.0003457772741224829296354162484496682640985387939787612467727421165,-0.004522488266452171155657410728933740659367978943577451198775649451),
+    math.complex(  0.0003180161659452486757918822230896331939962683796943765955472113957,-0.004064934830438772242036764453744764685833356529668396508217429246),
+    math.complex(   0.0002943741111405381090241121651334703889196959372677399274051591273,-0.003685607877598175464580810314174563103754546534786815680437153975),
+    math.complex(   0.0002739963218016022237433120157616849191313583431470006639630139739,-0.003366499176985576044722211672836191540034757911856252281406088295),
+    math.complex(  0.0002562495411433873716290295837287780166709412459419637970258644497,-0.003094667337182884842957577487282989231304337690447883717182308878),
+    math.complex( 0.0002406545686329981217260676060492070866028470255251592282287384498,-0.002860585751211877265070883206647700354396120713896050299310509961),
+   math.complex(  0.0002268420512345528312248387616108284688121821106035195770783438771,-0.002657094295923564232614316420245497557646178442082151973950874367),
+    math.complex( 0.0002145226839327245554759571017211628885891608017510207632479202445,-0.002478712998043174459694149966241043933152577069093138211132829521),
+    math.complex(  0.0002034666191664394759833971724349580685265729317497797037440220001,-0.002321180284236835444850159722094666293406982304457559101555625625),
+    math.complex(   0.0001934889256664242427228543029393548257249024981253102758623007036,-0.002181134810587955020328860860180605555274720504069230390387293580),
+    math.complex(   0.0001844391187735669235802158163833400177582772005492817385807370463,-0.002055891536369308141952259664094161599392040042967638467656461203),
+    math.complex(   0.0001761934907783181017324664687636036718211184291103732690113184104,-0.001943281123493067196868453008553837636305947263273835401150512433),
+    math.complex(  0.0001686494044329181614152856150099982905147522433318957604881652773,-0.001841532785636205664078922542200033437527411047308421809045295398),
+    math.complex(   0.0001617209870542795256498558188861822696525814347236196550254698584,-0.001749187515434656597762095518101392121430694768581974972576723391),
+    math.complex(   0.0001553358397197731657674426086291484109921999095516691790190581911,-0.001665032914896974406915580302926358347635865536077366035242416844),
+    math.complex(   0.0001494324927846778555601342170337024337497184619022738564105889811,-0.001588053628070522485189334631292703047608996576892801546900010741),
+    math.complex(  0.0001439584173501084131992876421840190398917944395077447402770470865,-0.001517393202000115787598219123174367739211756972892283279907257200),
+    math.complex(   0.0001388684558784936555239522028615292944747991424323617962690411365,-0.001452324427555783793745368977004190699459164038578715362938936063),
+    math.complex(  0.0001341235723345890924737835966018945678104137230927936540743007191,-0.001392226047645383039011476348663921789401830039658019791006592198),
+    math.complex(   0.0001296898484122708395286280521618827046092340585576663217707225968,-0.001336564299350893809084191849590534173183978176567312212155950372),
+    math.complex(   0.0001255376710920394679584926142046678626160512216794721320642553000,-0.001284878163317484748781395844411580651603006954528676453224090485),
+    math.complex(  0.0001216410702739497897935452653978299597673175467528572446218766020,-0.001236767483283940603932284621247144587242311281130921192005558782),
+    math.complex(  0.0001179771750968457665042359311163332864750972509045748755900590968,-0.001191883327278140221759550194466964841399374392894823442040195379),
+    math.complex(  0.0001145257648427598789026169889400359284321245326644117152809101354,-0.001149920114039156804472121311625437324988736858222437047959877961),
+    math.complex(  0.0001112688957627877844581970508085937171508207963005288193268675471,-0.001110609140197431652744611712748684366765094231209746934191746167),
+    math.complex(   0.0001081905892555680264207013910873122997876529469762433395493610117,-0.001073713227023928954359468730383994101445382313760016341518453492),
+    math.complex(   0.0001052765699403033603118858629480011100503431834927451602901892135,-0.001039022268075357996025722113318957879041783357073717631034448685),
+    math.complex(   0.0001025140445490257893372718970996683119931824133790091868086666962,-0.001006349506401670081455529487915678993263806560116887005358702181),
+    math.complex(  9.989151440209928527515112279692157849057431560957570310713770722e-5,-0.0009755284061228838687318561158413924883166467402134808837095720616),
+    math.complex(   9.739861566113232705795036780779964363915728423193311879844619947e-5,-0.0009464100109873142861121534988998198738153767892926470046191646708),
+    math.complex(   9.502598267323184189555771312470933951282868828856946046421455242e-5,-0.0009188607040713537932604019427774133464712796300388352776970465372),
+    math.complex(  9.276513060298723119637345611246665102062224762977835703094966953e-5,-0.0008927602995954066218733944548537945461650433512216261942352587987),
+    math.complex(  9.060835424833228479781018422921370610266478706567578946018578669e-5,-0.0008680004110370962428196842899390185096546141585420230823786097272),
+    math.complex(  8.854864049458526494174879732679740355349657151305399834534359896e-5,-0.0008444830501599700811049815321406603860304610031119312874731514772),
+    math.complex(   8.657959230866004681691129690402248232949961094536124104273624930e-5,-0.0008221194198729638135524197584924755572349256410677348258551219113),
+    math.complex(   8.469536253644556500338758269485465046781511612923112234051487256e-5,-0.0008008288704686290258436538080244051579645693381077657576642930286),
+    math.complex(   8.289059605892869556699271078883447459904717877590772499642621215e-5,-0.0007805379941187055039750892127096113631305463785217461372754491685),
+    math.complex(   8.116037910090367159593369659743248057490092516992844995547558271e-5,-0.0007611798368114716507847130012814095758794437421283883574833149077),
+    math.complex(   7.950019468104642332448065681630493454809543801528089618536698637e-5,-0.0007426932104103086455564341376762153940881334618097841751231073098),
+    math.complex(  7.790588335231940058862049490994339097823471486047111939609300649e-5,-0.0007250220903629197197352813017214495216569570747825053241529752092),
+    math.complex(  7.637360851386131086183944634764890398696229822155446029251974877e-5,-0.0007081150869249993701132921713979892368916704630432739896225996956),
+    math.complex(  7.489982568504159404425879843346563670136165301971563800919609130e-5,-0.0006919249796822669389117931191170600840193485456720869494415121297),
+    math.complex(  7.348125522345873851991986486958057897496637850183495058580632803e-5,-0.0006764083067405996570350921928659568895185864769353902075667525259),
+    math.complex(   7.211485804471647243872314590471669708068091242635694355149681907e-5,-0.0006615250012688375561414138142522206458663063368354355118378277834),
+    math.complex(   7.079781396553366853132716682103856937201492279463561503152163563e-5,-0.0006472380691730774216348166519122128941512571007447693296905972934),
+    math.complex(   6.952750234531567386485533850896287998715689300632739596521746615e-5,-0.0006335133025952131818666003628388473752846906462778881008405755272),
+    math.complex(   6.830148474650213087360529864901713327517141055477695701424236416e-5,-0.0006203190246944681584299780785677494972857631945719883519683463891),
+    math.complex(   6.711748937224255739891664080056225686941337885427004804383690354e-5,-0.0006076258618147900517723571635651621853369241923732429361265641644),
+    math.complex(   6.597339707240432028235216898795047091322161321533214141684829315e-5,-0.0005954065396843672450584830556020376513406260909964521340539363578),
+]
 function add(...args) {
     return args.reduce((acc, val) => math.add(acc, val));
 }
@@ -4232,7 +4359,7 @@ function jordantotient(n, k = 1) {
 
     while (factor * factor <= n) {
         if (n % factor === 0) {
-            result *= (1 - 1 / pow(factor, k));
+            result = mul(result,sub(1 ,div( 1 , pow(factor, k))));
             while (n % factor === 0) {
                 n /= factor;
             }
@@ -4240,9 +4367,9 @@ function jordantotient(n, k = 1) {
         factor++;
     }
 
-    if (n > 1) result *= (1 - 1 / pow(n, k)); // Remaining prime factor
+    if (n > 1) result = mul(result,(sub(1 , div(1 , pow(n, k))))); // Remaining prime factor
 
-    return Math.round(result);
+    return result;
 }
 function carmichael(n) {
     if (n === 1) return 1;
@@ -8773,7 +8900,7 @@ function sabs(b) {
 }
 
 function norm(b) {
-    return mul(mag(b), mag(b));
+    return re(mul(b, conj(b)));
 }
 
 function real(b) {
@@ -10904,11 +11031,40 @@ function nthhyperfactorial(x,z){
 function secondhyperfactorial(x){return nthhyperfactorial(2,x)}
 
 
-// Define zeta function based on your actual implementation
+
 function zeta(x) {
+
+
+/*
+const fun="-digamma(1-x)";
+return div(fractionalderiv(fun,0,sub(x,1)),gamma(x))
+*/
     
        let fi=math.complex(0,0);
       let N=bign*2;
+      
+     //const nigger
+      /*
+      for(let n=1;n<bign;n++)fi=add(fi,div(mobius(n),pow(n,x)));
+      return div(1,fi);
+      */
+      
+      
+      for(let n=0;n<bign*3;n++){
+    let fid=0;
+    for(let k=0;k<=n;k++){
+        fid=add(fid,mul(ncr(n,k),div(pow(-1,k),pow(add(k,1),x))));
+    }
+    let term=div(fid,pow(2,add(n,1)));
+    fi=add(fi,term);
+    
+    if(mag(term)<mag(fi)*0.01){
+        break;
+    }
+}
+return div(fi,sub(1,pow(2,sub(1,x))));
+      
+      
    /*   const ss=sin(mul(0.5,pi(),x))
       const cc=cos(mul(0.5,pi(),x))
     for(let k=1;k<=N;k++)
@@ -10928,11 +11084,36 @@ fi=add(fi,div(add(mul(ss,cos(mul(2,pi(),k))),mul(cc,sin(mul(2,pi(),k)))),pow(k,s
     return div(fi,sub(pow(2,sub(1,x)),1));
     
         
-}/*
+}
+function cohensp(x){let fi=0;for(let k=1;k<bign;k++)fi=add(fi,div(1,pow(k,x),add(exp(mul(2,pi(),k)),1)));}
+function cohensm(x){let fi=0;for(let k=1;k<bign;k++)fi=add(fi,div(1,pow(k,x),sub(exp(mul(2,pi(),k)),1)));}
+
+//function zetaprim(k){}
+
+const maslankaCache = new Map();
+function maslankaa(k){
+  if (maslankaCache.has(k)) {
+    return maslankaCache.get(k);
+  }let fi=0;for(let n=0;n<bign;n++)fi=add(fi,mul(pow(-1,n),ncr(k,n),add(n,n,1),zeta(add(n,n,2))));
+  maslankaCache.set(k, fi);
+  return fi;
+}
+    //let fi=0;for(let n=0;n<bign;n++)fi=add(fi,div(mul(ncr(k,n),bernoulli(add(n,n,2)),pow(pi(),add(n,n,2))),poch(2,n),poch(0.5,n)));return fi;}
+
+function zetamaslanka(s){let fi=0;for(let n=0;n<bign;n++)fi=add(fi,mul(poch(sub(1,div(s,2)),n),div(maslankaa(n),factorial(n))));return div(fi,sub(s,1))}
+
+function riemannj(x){let fi=0;for(let n=1;n<bign;n++)fi=add(fi,div(mul(pi(),pow(x,div(1,n))),n));return fi;}
+
 function zetaalthankeld(t,s){
     return div(pow(sub(0,t),sub(s,1)),sub(exp(t),1))
 }
-function zetaalthankel(x){
+function zetahankel(x){
+    
+    const h=integral(zetaalthankeld,sub(1,I),add(1,I),x)
+    const r=integral(zetaalthankeld,sub(sqrt(bign*15),I),sub(1,I),x)
+    const rr=integral(zetaalthankeld,add(1,I),add(sqrt(bign*15),I),x)
+    return div(mul(gamma(sub(1,x)),add(h,r,rr)),2,pi(),I);
+    /*
     let fi=0
     for(let n=1;n<bign-1;n++){
     let m=n/bign;
@@ -10945,8 +11126,11 @@ function zetaalthankel(x){
     
     }
     
-    return div(mul(gamma(sub(1,x)),add(integral(zetaalthankeld,sub(I,1),add(I,-1),x),fi)),-2,pi(),I)
-}*/
+    return div(mul(gamma(sub(1,x)),add(integral(zetaalthankeld,sub(I,1),add(I,-1),x),fi)),-2,pi(),I)*/
+}
+
+
+
 function zetaalt(x){return mul(div(math.complex(1.0), sub(math.complex(1.0), pow(math.complex(2.0), sub(math.complex(1.0), x)))),dirichleteta(x));}
 function zetap(x) {
         return derv(zeta,x);
@@ -11184,7 +11368,12 @@ function polylogarithm(s,z){
   return mul(fi,sub(1,z));*/
     
  //////////////////
- return mul(z,lerchtranscendent(z,s,1));
+ if(re(s)<2)return polylogarithmalt3(s,z);
+ return nielsenpolylogarithm(sub(s,1),1,z)
+ 
+ //return mul(z,lerchtranscendent(z,s,1));
+ 
+// return sub(0,fermidirac(sub(s,1),log(sub(0,z))));
   //  return 
    // return div(mul(add(mul(pow(I,sub(1,s)),hurwitzzeta(sub(1,s),add(0.5,div(log(sub(0,z)),2,pi(),I)))),mul(pow(I,sub(s,1)),hurwitzzeta(sub(1,s),sub(0.5,div(log(sub(0,z)),2,pi(),I))))),gamma(sub(1,s))),pow(mul(2,pi()),sub(1,s)))
     
@@ -11208,6 +11397,11 @@ function polylogarithm(s,z){
 		
 	//return sub(0,fermidirac(sub(i,1),log(sub(0,x))));*/
 }
+function nielsenpolylogarithmd(t,N){let [n,p,z]=N;return div(mul(pow(log(t),sub(n,1)),pow(log(sub(1,mul(z,t))),p)),t)}
+function nielsenpolylogarithm(n,p,z){return div(mul(pow(-1,add(n,p,-1)),integral(nielsenpolylogarithmd,0,1,[n,p,z])),factorial(p),gamma(n))}
+
+
+
 
 function polylogarithmdalt(t,A){
 	let s=g(A,0);let z=g(A,1);
@@ -11217,14 +11411,16 @@ function polylogarithmdalt2(t,A){
 	let s=g(A,0);let z=g(A,1);
 	return div(sin(sub(mul(s,atan(t)),mul(t,log(z)))),mul(pow(add(1,mul(t,t)),div(s,2)),sub(exp(mul(2,pi(),t)),1)))
 }
+
 function polylogarithmd(t,A){
 	let s=g(A,0);let z=g(A,1);
 	return div(sin(sub(mul(s,atan(t)),mul(t,log(sub(0,z))))),mul(pow(add(1,mul(t,t)),div(s,2)),sinh(mul(pi(),t))))
 }
+//function polylogarithmalt2(s,z){return add(div(z,2),mul(z,integral(polylogarithmdalt4,0,sqrt(bign),[s,z])))}
 function polylogarithmalt3(ss,z){
 	//polylogarithm(-1,x)
 
-	return add(mul(0.5,z),mul(z,integral(polylogarithmd,0,sqrt(bign),[ss,z])))
+	//return add(mul(0.5,z),mul(z,integral(polylogarithmd,0,sqrt(bign),[ss,z])))
 	return add(mul(0.5,z),div(incgamma(sub(1,ss),sub(0,log(z))),pow(sub(0,log(z)),sub(1,ss))), mul(z,2,integral(polylogarithmdalt2,0,bign/2,[ss,z])) )
 	/*
 				let fi=math.complex(0,0);
@@ -11401,9 +11597,25 @@ S=rearray(sS)
 }
 
 
-
-
-
+function farey(n, k, a=0,b=1,c=1){
+  let  d = n, t, i = 0
+for (; i < re(k); i++) {
+    t = floor(div(add(n , b, mul(I,im(k))) , d))
+    ;[a, b, c, d] = [c, d, sub(mul(t , c) ,a), sub(mul(t , d) , b)]
+  }
+  return div(a,b)
+}
+function fareyseq(n, k, a=0,b=1,c=1){
+  let  d = n, t, i = 0
+for (; i < re(k); i++) {
+    t = floor(div(add(n , b, mul(I,im(k))) , d))
+    ;[a, b, c, d] = [c, d, sub(mul(t , c) ,a), sub(mul(t , d) , b)]
+  }
+  return [a,b]
+}
+function fareydenom(n, k, a=0,b=1,c=1){return g(fareyseq(n,k,a,b,c),1)};
+function fareynom(n, k, a=0,b=1,c=1){return g(fareyseq(n,k,a,b,c),0)};
+function complexfarey(x,k){return farey(x,k,0,add(1,I),1)}
 
 function lcm(a, b) {
     return math.abs(a * b) / gcd(a, b);
@@ -11430,6 +11642,16 @@ function totient(n) {
         result -= result / n;
     }
     return result;
+}
+function totientsummatory (n) {
+  let sum = 0
+  for (let i = 1; i <= n; i++) sum += totient(i)
+  return sum
+}
+function reciprocaltotientsummatory (n) {
+  let sum = 0
+  for (let i = 1; i <= n; i++) sum += 1/totient(i)
+  return sum
 }
 function radical(n) {
     let result = math.complex(1,0);
@@ -13900,6 +14122,16 @@ function en(n,b){
 	return mul(pow(b,sub(n,1)),incgamma(sub(1,n),b));
 	//return integral(expcp, 1, bign, [n,b]);
 }
+function alpha(n,z){return en(sub(0,n),z)}
+function betaexponential(n,z){return sub(mul(pow(-1,add(n,1)),en(sub(0,n),sub(0,z))),en(sub(0,n),z))}
+
+function chebyshevintegral(x,p,q){return incompletebeta(x,add(1,p),add(1,q))}
+//https://mathworld.wolfram.com/DampedExponentialCosineIntegral.html
+function dampedexponentialcosineintegral(t,tt){return div(tt,add(sqr(t),sqr(tt)))}
+function dampedexponentialcosine(t,tt,w){return mul(exp(mul(-1,w,tt)),cos(mul(w,t)))}
+function dampedexponentialcosined(w,T){let [t,tt]=T;return mul(exp(mul(-1,w,tt)),cos(mul(w,t)))}
+function incompletedampedexponentialcosineintegral(t,tt,x){return integral(dampedexponentialcosined,0,x,[t,tt])}
+
 function misra(n,b){
 	return en(sub(0,n),b);
 }/*
@@ -14850,7 +15082,37 @@ function acc (x){
 bign = x;
 return 0;
 }
+
+
+
+function clausend(t){return log(mul(2,sin(div(t,2))))}
+
+
+
+function clausenc(z,t){}
+function clausenc(z,t){}
+
+function sin1100(x){return mul(sqrt(2),sub(1,sqr(sin(div(mul(pi(),sub(x,0.5)),4))),div(sub(2,sqrt(2)),4)))}
+
+function clausensl(z,t){return mul(div(mul(pow(-1,sin1100(z)),pow(mul(2,pi()),z)),2,factorial(z)),bernoullipoly(z,div(t,2,pi())))}
+function clausencleven(z,t){return div(sub(polylogarithm(z,exp(mul(I,t))),clausensl(z,t)),I)}
+function clausenclodd(z,t){return sub(polylogarithm(z,exp(mul(I,t))),mul(I,clausensl(z,t)))}
+function clausencl(z,t){return add(mul(sqr(sin(div(mul(z,pi()),2))),clausenclodd(z,t)),mul(sqr(cos(div(mul(z,pi()),2))),clausencleven(z,t)))}
+
+
+//safe
+function clausensls(z,t){let tt=modc(t,mul(pi(),2));return div(add(clausensl(z,tt),conj(clausensl(z,conj(tt)))),2)}
+function clausencls(z,t){let tt=modc(t,mul(pi(),2));return div(add(clausencl(z,tt),conj(clausencl(z,conj(tt)))),2)}
+
+
+
+
+
+
 function clausencos(a,b) {
+    
+
+    
     let fi = math.complex(0);
     for (let i = 1; i < bign; i++) {
         fi = add(fi, div(math.cos(mul(b,i)), pow(i, math.complex(a))));
@@ -14899,7 +15161,6 @@ function lommelweber(v,z){
     return div(integral(lommelweberd,0,pi(),[v,z]),pi())
 
 }
-
 
 
 function lommelpoly(m,v,z){
@@ -14954,13 +15215,23 @@ return mul(pow(sin(u),mul(2,n)),cos(mul(z,cos(u))));
 function besselj(a, b) {
 //return div(mul(2,pow(b,a),integral(besseljd,0,div(pi(),2),[b,a],mul(1+mag(a,re(b)),bign))),pi(),doublefactorial(add(a,a,-1)))
     let fi = math.complex(0, 0);
-    for (let n = 0; n < bign + mag(b); n++) {
-        const sign = pow(math.complex(-1.0, 0), n);
-        const numerator = mul(sign, pow(div(b, math.complex(2.0, 0)), add(1e-7,a, mul(2.0, n))));
-        const denominator = mul(gamma(add(n, math.complex(1.0, 0))), gamma(add(1e-7,a, n, math.complex(1.0, 0))));
-        fi = add(fi, div(numerator, denominator));
+    let divi=10;
+    for (let n = 0; norm(divi)>0.01*norm(fi); n++) {
+        const sign = pow(-1, n);
+        divi=div(mul(sign, pow(div(b, math.complex(2.0, 0)), add(1e-7,a, mul(2.0, n)))),mul(gamma(add(n, math.complex(1.0, 0))), gamma(add(1e-7,a, n, math.complex(1.0, 0)))))
+       fi = add(fi, divi);
     }
     return fi;
+}
+function besseljp(a, b) {
+    // J'_a(b) = (J_{a-1}(b) - J_{a+1}(b)) / 2
+    return div(
+        sub(
+            besselj(sub(a, 1), b),
+            besselj(add(a, 1), b)
+        ),
+        2
+    );
 }
 
 
@@ -15153,6 +15424,17 @@ fi=add(fi,div(pow(div(sqr(z),-4),k),factorial(k),factorial(add(v,k))));
 const aa=add(a,0.1);    return div(sub(mul(cos(mul(aa,pi())),besselj(aa,b)),besselj(sub(0,aa),b)),sin(aa,pi()));
    //if(re(b)>1)return div(sub(integral(besselyd1,0,pi(),[b,a]),integral(besselyd2,0,bign/2,[b,a])),pi())
     */}
+function besselyp(a, b) {
+    // Y'_a(b) = (Y_{a-1}(b) - Y_{a+1}(b)) / 2
+    return div(
+        sub(
+            bessely(sub(a, 1), b),
+            bessely(add(a, 1), b)
+        ),
+        2
+    );
+}
+
 function hankel1(a, b) {
     return add(mul(math.complex(0,1),bessely(a,b)),besselj(a,b));
 }
@@ -16219,7 +16501,7 @@ return fi;
         }
         
    function tetr(b) {
-            const N = bign * 2; // bign is set to 10000 for this example
+            const N = bign * 2; 
 
             let fi = math.complex(b.re, Math.abs(b.im));
             const bi = math.complex(math.mod(math.re(b), 1.0), math.im(fi));
@@ -16229,8 +16511,8 @@ return fi;
                 fi = add(fi, mul(knthetaa[i], math.exp(term)));
             }
 
-            const constant = math.complex(0.318132, 1.33724);
-            fi = add(constant, pow(math.log(constant), sub(fi, N)));
+            const constant = math.complex(0.3181321882853601 , 1.337236201708206);
+            fi = add(constant, pow(constant, sub(fi, N)));
 
 
             for (let i = 0; i < N; i++) {
@@ -16243,6 +16525,33 @@ return fi;
 
             return fi;
         }
+        
+       function tetr2(b) {
+            const N = bign * 2; 
+
+            let fi = math.complex(b.re, Math.abs(b.im));
+            const bi = math.complex(math.mod(math.re(b), 1.0), math.im(fi));
+
+            for (let i = 0; i < 28; i++) {
+                const term = mul(math.complex(0, 1), bi, pi() * 2.0 * i);
+                fi = add(fi, mul(knthetaa2[i], math.exp(term)));
+            }
+
+            const constant = math.complex(0.8246785461420744 , 1.5674321238496478);
+            fi = add(constant, pow(math.log(constant), sub(fi, N)));
+
+
+            for (let i = 0; i < N; i++) {
+                fi = exp2(fi);
+            }
+
+            if (b.im < 0.0) {
+                fi = math.conj(fi);
+            }
+
+            return fi;
+        }  
+   
 
 function kcarctau(b){
      let fi = b;
@@ -16250,7 +16559,17 @@ function kcarctau(b){
                 const term = mul(math.complex(0, 1), b, pi() * 2.0 * i);
                 fi = add(fi, mul(knthetaa[i], math.exp(term)));
             }return fi;}
+            
+function kcarctau2(b){
+     let fi = b;
+      for (let i = 0; i < 60; i++) {
+                const term = mul(math.complex(0, 1), b, pi() * 2.0 * i);
+                fi = add(fi, mul(knthetaa2[i], math.exp(term)));
+            }return fi;}            
+            
+            
             function kctheta(x){return sub(kcarctau(x),x)}
+            function kctheta2(x){return sub(kcarctau2(x),x)}
 //kcarcpsi(kctheta(x))
 function kctau(b){
     let W = math.complex(-0.4884150884437966, - 0.9223068629260567);
@@ -16552,6 +16871,13 @@ let result = add(
     return result;
 }       
    
+   
+    function tetr2ts(x) {
+     let fi=0;
+     const N=minc(bign*3,55);
+for(let i=1;i<N;i++)fi=add(fi,mul(tetr2tayl[i],pow(add(x,1),i)))     
+    return fi;
+    }
    function slogts(x) {
 
     // Constants
@@ -22321,6 +22647,186 @@ function bei0(x){return bei(0,x);}
 function ber0(x){return ber(0,x);}
 function kei0(x){return kei(0,x);}
 function ker0(x){return ker(0,x);}
+
+function sonined(t,N){[m,n,x]=N
+    return mul(besselj(n,mul(x,t)),pow(t,add(n,1)),pow(sub(1,sqr(t)),sub(m,n,-1)))
+}
+function soninei(m,n,x){
+ return integral(sonined,0,1,[m,n,x])   
+}//https://mathworld.wolfram.com/SoninesIntegral.html
+function sonine(m,n,x){
+ return div(besselj(m,x),div(mul(2,pow(x,sub(m,n))),pow(2,sub(m,n)),gamma(sub(m,n))))  
+}
+//https://mathworld.wolfram.com/PoissonIntegral.html
+function poissond(t,N){let [n,z]=N;return mul(cos(mul(z,cos(t))),pow(sin(t),mul(2,n)))}
+function poissoni(n,z){return div(besselj(n,z),div(pow(mul(0.5,z),n),gamma(add(0.5,n)),gamma(0.5)))}
+function incompletepoisson(x,z){return integral(poissond,0,x,[n,z])}
+//https://mathworld.wolfram.com/ParsevalsIntegral.html
+function parsevald(t,z){return cos(mul(z,cos(t)))}
+function parseval(z){return mul(pi(),besselj(0,z))}
+function incompleteparseval(x,z){return integral(parsevald,0,x,z)}
+//https://mathworld.wolfram.com/HankelsIntegral.html
+function hankeld(t,N){let [m,x]=N;return mul(cos(mul(x,t)),pow(sub(1,sqr(t)),sub(m,0.5)))}
+function hankeli(m,x){return div(besselj(m,x),div(pow(x,m),pow(2,sub(m,1)),sqrt(pi()),gamma(add(m,0.5))))}
+function incompletehankel(m,x,z){return integral(hankeld,0,x,[m,z])}
+//https://mathworld.wolfram.com/WeyrichsFormula.html
+function weyrichd(t,N){let [r,k,x]=N;return mul(hankel1(0,mul(r,sqrt(sub(sqr(k),sqr(t))))),exp(mul(I,t,x)))}
+function weyrich(r,k,x){return div(div(exp(mul(I,k,sqrt(add(sqr(r),sqr(x))))),sqrt(add(sqr(r),sqr(x)))),0.5,I)}
+function incompleteweyrich(r,k,x,z){return integral(weyrichd,0,x,[r,k,z])}
+
+
+//https://mathworld.wolfram.com/RayleighFunction.html
+function rayleigh(n,v){let fi=0;for(let k=1;k<bign;k++)fi=add(fi,pow(besseljzero(v,k),mul(-2,n)));return fi;}
+function braidrayleigh(n,v){let fi=0;for(let k=1;k<bign;k++)fi=add(fi,pow(besseljzero(k,v),mul(-2,n)));return fi;}
+
+//https://mathworld.wolfram.com/WatsonsTheorem.html
+//https://mathworld.wolfram.com/WhipplesIdentity.html
+function watson(a,b,c){return div(mul(gamma(0.5),gamma(add(0.5,c)),gamma(div(add(1,a,b),2)),gamma(add(0.5,div(a,-2),div(b,-2),c))),gamma(div(add(1,a),2)),gamma(div(add(1,b),2)),gamma(sub(0.5,sub(div(a,2),c))),gamma(sub(0.5,sub(div(b,2),c))))}
+function whiplle(a,c,e){return div(1,gamma(div(sub(add(1,e),a),2)),gamma(div(add(2,c,c,sub(0,a,e)),2)))}
+function bailey(a,b,c,d,e){return div(mul(hypg32(add(1,sub(a,b,c)),d,e,add(1,sub(a,b)),add(1,sub(a,c)),1),gamma(add(1,sub(a,d))),gamma(add(1,sub(a,e))),),gamma(add(1,a)),gamma(add(1,sub(a,d,e))))}
+function watsonwhiplle(q,a,b,c,d,e,f){return div(mul(qhypergeometric([div(mul(a,q),b,c),d,e,f],[div(mul(a,q),b),div(mul(a,q),c),div(mul(d,e,f),a)],q,q),qpochinf(div(mul(a,q),1,1),q),qpochinf(div(mul(a,q),d,e),q),qpochinf(div(mul(a,q),d,f),q),qpochinf(div(mul(a,q),e,f),q)),qpochinf(div(mul(a,q),d,1),q),qpochinf(div(mul(a,q),e,1),q),qpochinf(div(mul(a,q),f,1),q),qpochinf(div(mul(a,q),d,e,f),q))}
+function whipplestransform(a,b,c,d,m){return mul(div(mul(poch(add(a,q),m),poch(sub(a,d,e,-1),m)),poch(sub(a,d,-1),m),poch(sub(a,e,-1),m)),hypergeometric([sub(a,b,c,-1),d,e,sub(0,m)],[sub(a,b,-1),sub(a,c,-1),sub(add(d,e),a,m)],1))}
+function whipplestransform2(a,b,z,n,u,v,w){return hypergeometric([a,b,sub(0,z),sub(0,n)],[u,v,w],1)}
+
+function schloemilchax(n){return div(add(-1,pow(-1,n)),sqr(n))}
+function schloemilch(funca,x){let fi=div(evale(funca,{x:0}),2);for(let n=1;n<bign;n++)fi=add(fi,mul(evale(funca,{x:n}),besselj(0,mul(n,x))));return fi;}
+function kapteyn(funca,v,x){let fi=0;for(let n=0;n<bign;n++)fi=add(fi,mul(evale(funca,{x:n}),besselj(add(v,n),mul(add(v,n),x))));return fi;}
+function besselneumann(funca,v,x){let fi=0;for(let n=0;n<bign;n++)fi=add(fi,mul(evale(funca,{x:n}),besselj(add(v,n),mul(1,x))));return fi;}
+//ADD the inverse thing https://mathworld.wolfram.com/SchloemilchsSeries.html
+
+function webersonine(a,v,m,p){return mul(pow(div(a,2,p),v),div(gamma(div(add(v,m),2)),2,pow(p,m),gamma(add(v,1))),hypg11(div(add(v,m),2),add(v,1),div(sqr(a),-4,p,p)))}
+function webersonined(t,N){let [a,v,m,p]=N;return mul(besselj(v,mul(a,t)),exp(mul(-1,p,p,t,t)),pow(t,sub(m,1)))}
+function webersoninei(a,v,m,p){return integral(webersonined,0,sqrt(bign),[a,v,m,p])}
+function webersonine(a,v,m,p){return div(mul(pow(div(a,2,p),v),gamma(div(add(v,m),2)),hypg11(div(add(v,m),2),add(v,19,div(sqr(a),-4,p,p)),1),2,pow(p,m),factorial(v)))}
+function incompletewebersonine(a,v,m,p,x){return integral(webersonined,0,x,[a,v,m,p])}
+             
+function weberdiscontinuouscosd(t,AC){let [a,c]=AC;return mul(besselj(0,mul(a,t)),cos(mul(c,t)))}
+function weberdiscontinuoussind(t,AC){let [a,c]=AC;return mul(besselj(0,mul(a,t)),sin(mul(c,t)))}
+
+function weberdiscontinuouscosi(a,c){return integral(weberdiscontinuouscosd,0,sqrt(bign),[a,c])}
+function weberdiscontinuoussini(a,c){return integral(weberdiscontinuoussind,0,sqrt(bign),[a,c])}
+
+function incompleteweberdiscontinuouscos(a,c,x){return integral(weberdiscontinuouscosd,0,x,[a,c])}
+function incompleteweberdiscontinuoussin(a,c,x){return integral(weberdiscontinuoussind,0,x,[a,c])}
+
+function weberdiscontinuouscos(a,c){return (re(a)<re(c))?0:div(1,sqrt(sub(sqr(a),sqr(c))))}
+function weberdiscontinuoussin(a,c){return  (re(a)<re(c))?div(1,sqrt(sub(sqr(c),sqr(a)))):0}
+
+//https://mathworld.wolfram.com/LemonSurface.html
+function lemonsextic(a,x,y,z){return add(mul(a,a,a,a,add(sqr(x),sqr(z))),mul(y,y,y,cum(sub(y,a))))}
+function zitrussextic(x,y,z){return sub(sqr(x),mul(y,y,y,z,z,z))}
+function applequartic(r,rr,x,y,z){return add(tesseract(r),mul(-2,r,r,add(sqr(rr),sqr(x),sqr(y),mul(-1,z,z)))),sqr(add(sqr(x),sqr(y),sqr(z),mul(-1,rr,rr)))}
+
+
+//https://mathworld.wolfram.com/BourgetFunction.html
+function bourgetd(t,N){let [n,k,z]=N;return mul(pow(mul(2,cos(t)),k),cos(sub(mul(n,t),mul(z,sin(t)))))} 
+function bourget(n,k,z){return div(integral(bourgetd,0,pi(),[n,k,z]),pi())}
+function incompletebourget(n,k,x,z){return div(integral(bourgetd,0,x,[n,k,z]),pi())}
+//https://mathworld.wolfram.com/CatalanIntegrals.html
+function cataland(t,N){let [z,y]=N;return mul(exp(mul(y,cos(t))),cos(mul(z,sin(t))))}
+function catalani(z,y){return besselj(0,sqrt(sub(sqr(z),sqr(y))))}
+function catalanintegral(z,y){return div(integral(cataland,0,pi(),[z,y]),pi())}
+function incompletecatalan(z,y,x){return div(integral(cataland,0,x,[z,y]),pi())}
+
+function cataland2(t,z){return mul(exp(mul(add(1,z),cos(t))),cos(mul(sub(1,z),sin(t))))}
+function catalani2(z,y){return besselj(0,mul(2,I,sqrt(z)))}
+function catalanintegral2(z,y){return div(integral(cataland2,0,pi(),z),pi())}
+function incompletecatalan2(z,y,x){return div(integral(cataland2,0,x,z),pi())}
+
+//https://mathworld.wolfram.com/Dixon-FerrarFormula.html
+function dixonferrard(t,N){let [v,z]=N;return besselk(mul(2,v),mul(2,z,sinh(t)))}
+function dixonferrari(v,z){return div(mul(8,cos(mul(v,pi())),add(sqr(besselj(v,z)),sqr(bessely(v,z)))),pi(),pi())}
+function dixonferrar(v,z){return integral(dixonferrard,0,sqrt(bign),[v,z])}
+function incompletedixonferrard(v,z,x){return integral(dixonferrard,0,x,[v,z])}
+
+function dixonferrard2(t,N){let [m,v,z]=N;return mul(besselk(sub(m,v),mul(2,z,sinh(t))),exp(mul(t,add(m,v))))}
+function dixonferrari2(m,v,z){return div(mul(pi(),pi(),sub(mul(besselj(v,z),bessely(m,z)),mul(besselj(m,z),bessely(v,z)))),4,sin(mul(pi(),sub(v,m))))}
+function dixonferrar2(m,v,z){return integral(dixonferrard,0,sqrt(bign),[m,v,z])}
+function incompletedixonferrard2(m,v,z,x){return integral(dixonferrard2,0,x,[m,v,z])}
+
+function nicholsond(t,N){let [z,v]=N;return mul(besselk(0,mul(2,z,sinh(t))),cosh(mul(2,v,t)))}
+function nicholson(v,z){return add(sqr(besselj(v,z)),sqr(bessely(v,z)))}
+function nicholsoni(v,z){return div(mul(8,integral(nicholsond,0,sqrt(bign),[z,v])),pi(),pi())}
+function incompletenicholson(v,z,x){return div(mul(8,integral(nicholsond,0,x,[z,v])),pi(),pi())}
+
+function lipschitzd(t,N){let [a,b]=N;return mul(exp(mul(-1,a,t)),besselj(0,mul(b,t)))}
+function lipschitzi(a,b){return div(sqrt(add(sqr(a),sqr(b))))}
+function incompletelipschitz(a,b,x){return integral(lipschitzd,0,x,[a,b])}
+
+function knesersommerfeld(v,xx,x,z){return div(mul(pi(),besselj(v,mul(x,z)),sub(mul(besselj(v,z),bessely(mul(xx,z))),mul(bessely(v,z),besselj(mul(xx,z))))),4,besselj(v,z))}
+//https://mathworld.wolfram.com/Hansen-BesselFormula.html
+function hansenbessel1d(t,N){let [n,z]=N;return mul(exp(mul(I,z,cos(t))),exp(mul(I,n,sub(t,div(pi(),2)))))}
+function hansenbessel2d(t,N){let [n,z]=N;return mul(exp(mul(I,z,cos(t))),cos(mul(n,t)))}
+function hansenbessel3d(t,N){let [n,z]=N;return cos(sub(mul(z,sin(t)),mul(n,t)))}
+
+function hansenbessel1(n,z){return integral(hansenbessel1,sub(0,pi()),pi(),[n,z])}
+function hansenbessel2(n,z){return integral(hansenbessel2,0,pi(),[n,z])}
+function hansenbessel3(n,z){return integral(hansenbessel3,0,pi(),[n,z])}
+
+function incompletehansenbessel1(n,z,x){return integral(hansenbessel1,sub(0,x),x,[n,z])}
+function incompletehansenbessel2(n,z,x){return integral(hansenbessel2,0,x,[n,z])}
+function incompletehansenbessel3(n,z,x){return integral(hansenbessel3,0,x,[n,z])}
+
+function bessellambda(v,z){return div(mul(factorial(v),besselj(v,z)),pow(div(z,2),v))}
+
+function bessellambda2d(t,x){return div(factorial(t),pow(x,t))}
+function bessellambda2(x,y){return integral(bessellambda2d,0,y,x)}
+
+function watsonfd(t,N){let [v,m,z]=N;return mul(besselk(sub(v,m),mul(2,z,sinh(t))),exp(mul(-1,t,add(m,v))))}
+function watsonfd2(t,N){let [v,z]=N;return mul(besselk(0,mul(2,z,sinh(t))),exp(mul(-1,t,2,v)))}
+
+function watsonf(m,v,z){return div(sub(mul(besselj(m,z),bessely(v,z))),mul(besselj(v,z),bessely(m,z)),div(mul(4,sin(mul(pi(),sub(m,b)))),pi(),pi()))}
+function incompletewatsonf(m,v,z,x){return integral(watsonfd,0,x,[v,m,z])}
+//function watsonf2(v,z){return div(sub(mul(besselj(v,z),besselyp(v,z)),mul(bessely(v,z),besseljp(v,z))),div(-4,pi()))}
+function incompletewatsonf2(v,z,x){return integral(watsonfd,0,x,[v,z])}
+function incompletewatsonf(v,z){return integral(watsonfd,0,sqrt(bign),[v,z])}
+
+function mehlersbesseljd(t,x){return sin(mul(x,cosh(t)))}
+function mehlersbesselyd(t,x){return cos(mul(x,cosh(t)))}
+
+function incompletemehlersbesselj(z,x){return div(integral(mehlersbesseljd,0,x,z),pi(),0.5)}
+function incompletemehlersbessely(z,x){return div(integral(mehlersbesselyd,0,x,z),pi(),-0.5)}
+//https://mathworld.wolfram.com/RamanujansIntegral.html
+
+function ramanujanid(t,N){let [m,v,x,y,tt]=N;return div(mul(besselj(add(m,t),x),besselj(sub(v,t),y),exp(mul(I,tt,t))),pow(x,add(t,m)),pow(y,sub(v,t)))}
+function ramanujani(m,v,x,y,t){return mul(pow(div(mul(2,cos(div(t,2))),add(mul(x,x,exp(mul(-1,I,t,0.5))),mul(y,y,exp(mul(I,t,0.5))))),div(add(m,v),2)),besselj(add(m,v),sqrt(mul(2,cos(div(t,2)),add(mul(x,x,exp(mul(-1,I,t,0.5))),mul(y,y,exp(mul(I,t,0.5))))))),exp(div(mul(I,t,sub(v,m)),2)))}
+function incompleteramanujani(m,v,x,y,t,z){return integral(ramanujanid,sub(0,z),z,[m,v,x,y,t])}
+//https://mathworld.wolfram.com/SommerfeldsFormula.html
+function sommerfeldd(t,N){let [v,z]=N;return exp(add(mul(I,z,cos(t)),mul(I,v,sub(t,div(pi(),2)))))}
+function sommerfeldi(v,z,n){return div(integral(sommerfeldd,sub(add(pi(),pi(),mul(I,sqrt(bign))),n),sub(mul(I,sqrt(bign)),n),[v,z]),2,pi())}
+function incompletesommerfeldi(v,z,n,x,r){return div(integral(sommerfeldd,sub(add(r,mul(I,x)),n),sub(mul(I,x),n),[v,z]),2,pi())}
+
+function sommerfeld2d(t,N){let [r,k,x]=N;return mul(besselj(0,mul(t,r)),div(t,sqrt(sub(sqr(t),sqr(k)))),exp(mul(-1,sabs(x),sqrt(sub(sqr(t),sqr(k))))))}
+function sommerfeld2i(r,k,x){return div(exp(mul(-1,I,sabs(r),sqrt(add(sqr(k),sqr(x))))),sqrt(add(sqr(r),sqr(x))))}
+function incompletesommerfeld2i(r,k,x,z){return integral(sommerfeld2d,0,z,[r,k,x])}
+
+//https://mathworld.wolfram.com/WebersFormula.html
+function webersformulad(t,N){let [a,b,v,p]=N;return mul(t,besselj(v,mul(b,t)),besselj(v,mul(a,t)),exp(mul(-1,p,p,t,t)))}
+function webersformula(a,b,v,p){return div(mul(exp(div(add(sqr(a),sqr(b)),-4,p,p)),besseli(v,div(mul(a,b),2,p,p))),2,p,p)}
+function incompletewebersformula(a,b,v,p,x){return integral(webersformulad,0,x,[a,b,v,p])}
+//https://mathworld.wolfram.com/Weber-SonineFormula.html
+
+function schlafli1d(t,N){let [v,z]=N;return cos(sub(mul(z,t),mul(v,t)))}
+function schlafli2d(t,N){let [v,z]=N;return exp(add(mul(-1,z,sinh(t)),mul(-1,v,t)))}
+function schlafli(v,z){return sub(div(integral(schlafli1d,0,div(pi(),2),[v,z]),pi()),mul(div(sin(mul(pi(),v)),pi()),integral(schlafli2d,0,sqrt(bign),[v,z])))}
+function incompleteschlafli(v,z,x,y){return sub(div(integral(schlafli1d,0,x,[v,z]),pi()),mul(div(sin(mul(pi(),v)),pi()),integral(schlafli2d,0,y,[v,z])))}
+
+
+
+
+function nud(t,x){return div(pow(x,t),factorial(t))}
+function nu(x){return integral(nud,0,sqrt(bign),x)}
+function nu2(x,a){return integral(nud,a,sqrt(bign),x)}
+function incompletenu(x,z){return integral(nud,0,z,x)}
+function incompletenu2(x,a,z){return integral(nud,a,z,x)}
+//https://mathworld.wolfram.com/MuFunction.html
+function mud(t,X){let [x,b]=X;return div(mul(pow(x,t),pow(t,b)),factorial(b),factorial(t))}
+function mu(x,b){return integral(mud,0,sqrt(bign),[x,b])}
+function mu3(x,b,a){return integral(mud,a,sqrt(bign),[x,b])}
+function incompletemu(x,b,z){return integral(mud,0,z,[x,b])}
+function incompletemu3(x,b,a,z){return integral(mud,a,z,[x,b])}
+
+
 
 function retry (func,x,n){
 	let fi=math.complex(0,0);
