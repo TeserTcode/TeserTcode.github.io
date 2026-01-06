@@ -2573,8 +2573,116 @@ return [R,G,B];
 
 
 
+/*
+function rgbToOsaucs(r,g,b){
+    let [xx,yy,zz]=rgbToXyz(div(r,255),div(g,255),div(b,255));
+    let [x,y,z]=[div(xx,add(xx,yy,zz)),div(yy,add(xx,yy,zz)),div(z,add(xx,yy,zz))]
+    let k=add(mul(x,x,4.4934),mul(4.3034,y,y),mul(-4.276,x,y),mul(-1.3744,x),mul(-2.5643,y),1.8103);
+    let y0=mul(k,yy);
+    let lp=mul(5.9,add(cbrt(y0),div(-2,3),mul(0.042,cbrt(sub(y0,30)))))
+    let l=div(sub(lp,14.3993),sqrt(2))
+    let c=div(lp,5.9,sub(cbrt(y0),div(2,3)))
+    let a=add(mul(-13.7,cbrt(div(r,255))),mul(17.7,cbrt(div(g,255))),mul(-4,cbrt(div(b,255))))
+    let bb=add(mul(1.7,cbrt(div(r,255))),mul(8,cbrt(div(g,255))),mul(-9.7,cbrt(div(b,255))))
+    return [mul(l,255),mul(c,a,255),mul(c,bb,255)];
+}*/
+function rgbToOsaucs(r, g, b) {
+    //r /= 255; g /= 255; b /= 255;
 
+    const [X,Y,Z] = rgbToXyz(r,g,b);
+    const S = X + Y + Z;
 
+    const x = X / S, y = Y / S;
+
+    const k =
+        4.4934*x*x +
+        4.3034*y*y -
+        4.276*x*y -
+        1.3744*x -
+        2.5643*y +
+        1.8103;
+
+    const y0 = k * Y;
+
+    const cbrt = v => v < 0 ? -Math.pow(-v,1/3) : Math.pow(v,1/3);
+
+    const y03 = cbrt(y0);
+
+    const lp = 5.9 * (y03 - 2/3 + 0.042 * cbrt(y0 - 30));
+    const l  = (lp - 14.3993) / Math.SQRT2;
+    const c  = lp / (5.9 * (y03 - 2/3));
+
+    const r3 = cbrt(r), g3 = cbrt(g), b3 = cbrt(b);
+
+    const a  = -13.7*r3 + 17.7*g3 - 4.0*b3;
+    const bb =   1.7*r3 +  8.0*g3 - 9.7*b3;
+
+    return [
+        10*l,
+        1*c*a,
+        1*c*bb
+    ];
+}
+
+function osaucsToRgb(Lt, Gt, Jt, opt = {}) {
+    const maxIter = opt.maxIter ?? 30;
+    const eps     = opt.eps     ?? 1e-3;
+    const h       = opt.h       ?? 1e-2;
+
+    let r = Lt, g = Lt, b = Lt;
+
+    const clamp = () => {
+        r = Math.min(255, Math.max(0, r));
+        g = Math.min(255, Math.max(0, g));
+        b = Math.min(255, Math.max(0, b));
+    };
+
+    const F = (R,G,B) => {
+        const t = rgbToOsaucs(R,G,B);
+        return [t[0]-Lt, t[1]-Gt, t[2]-Jt];
+    };
+
+    for (let i=0; i<maxIter; i++) {
+        clamp();
+
+        const f  = F(r,g,b);
+        if (Math.abs(f[0])+Math.abs(f[1])+Math.abs(f[2]) < eps) break;
+
+        const fr = F(r+h,g,b);
+        const fg = F(r,g+h,b);
+        const fb = F(r,g,b+h);
+
+        const J00 = (fr[0]-f[0])/h, J01 = (fg[0]-f[0])/h, J02 = (fb[0]-f[0])/h;
+        const J10 = (fr[1]-f[1])/h, J11 = (fg[1]-f[1])/h, J12 = (fb[1]-f[1])/h;
+        const J20 = (fr[2]-f[2])/h, J21 = (fg[2]-f[2])/h, J22 = (fb[2]-f[2])/h;
+
+        const det =
+            J00*(J11*J22 - J12*J21) -
+            J01*(J10*J22 - J12*J20) +
+            J02*(J10*J21 - J11*J20);
+
+        if (Math.abs(det) < 1e-6) break;
+
+        const ir00 = (J11*J22 - J12*J21)/det;
+        const ir01 = (J02*J21 - J01*J22)/det;
+        const ir02 = (J01*J12 - J02*J11)/det;
+
+        const ir10 = (J12*J20 - J10*J22)/det;
+        const ir11 = (J00*J22 - J02*J20)/det;
+        const ir12 = (J02*J10 - J00*J12)/det;
+
+        const ir20 = (J10*J21 - J11*J20)/det;
+        const ir21 = (J01*J20 - J00*J21)/det;
+        const ir22 = (J00*J11 - J01*J10)/det;
+
+        r -= ir00*f[0] + ir01*f[1] + ir02*f[2];
+        g -= ir10*f[0] + ir11*f[1] + ir12*f[2];
+        b -= ir20*f[0] + ir21*f[1] + ir22*f[2];
+    }
+
+    clamp();
+    return [r,g,b];
+}
 
 
 
@@ -2627,23 +2735,26 @@ const reg = 30;
 function rgbToRgb (r, g, b) {
 	return [r,g,b];
 }
-
+// Identity transform: passthrough RGB
 function normal(r, g, b) {
-	return [r,g,b];
+	return [r, g, b];
 }
 
+// Channel rotation: (r,g,b) → (b,r,g)
+// Cyclic permutation of axes
 function ROT1(r, g, b) {
-	return [b,r,g];
+	return [b, r, g];
 }
 
-
+// Channel rotation: (r,g,b) → (g,b,r)
+// Inverse cyclic permutation of axes
 function ROT2(r, g, b) {
-	return [g,b,r];
+	return [g, b, r];
 }
 
-
+// rg chromaticity remapping using g as luminance-like divisor
+// Projects RGB onto an rg plane and re-expands with b as scale
 function rgG(r, g, b) {
-
     let r1 = r * b / g;
     let b1 = (1.0 - r - g) * b / g;
     r = r1;
@@ -2652,8 +2763,9 @@ function rgG(r, g, b) {
     return [r, g, b];
 }
 
+// Spherical coordinates → Cartesian
+// r = radius (ρ), g = polar angle (θ), b = azimuth (φ)
 function SPH(r, g, b) {
-//		console.log(r);
     let rho = r;
     let the = g;
     let phi = b;
@@ -2663,6 +2775,8 @@ function SPH(r, g, b) {
     return [r, g, b];
 }
 
+// Cylindrical coordinates → Cartesian (z unchanged)
+// r = radius, g = angle
 function CYL(r, g, b) {
     let x = r;
     let y = g;
@@ -2671,6 +2785,8 @@ function CYL(r, g, b) {
     return [r, g, b];
 }
 
+// Three-phase sinusoidal mapping (120° phase offsets)
+// Common in signal processing / color wheel synthesis
 function TRP(r, g, b) {
     let x = r;
     let y = g;
@@ -2679,18 +2795,29 @@ function TRP(r, g, b) {
     b = x * Math.sin(y/reg + 4 * Math.PI / 3);
     return [r, g, b];
 }
-function TPH(r, g, b){//threeohase
- let x = r;
+
+// Three-phase sinusoidal mapping with DC offset (b)
+// Models biased three-phase oscillation
+function TPH(r, g, b){ // three-phase
+    let x = r;
     let y = g;
     r = b + x * Math.sin(y/reg);
-    g = b + x * Math.sin(y/reg+2*3.14159265/3);
-	b = b + x * Math.sin(y/reg+4*3.14159265/3);
+    g = b + x * Math.sin(y/reg + 2*3.14159265/3);
+	b = b + x * Math.sin(y/reg + 4*3.14159265/3);
     return [r, g, b];
 }
-function HSV(r,g,b){return hsvToRgb(r,g,b);}
-function HSL(r,g,b){return hslToRgb(r,g,b);}
-function CMY(r,g,b){return cmyToRgb(r,g,b);}
 
+// HSV color space → RGB
+function HSV(r, g, b){ return hsvToRgb(r, g, b); }
+
+// HSL color space → RGB
+function HSL(r, g, b){ return hslToRgb(r, g, b); }
+
+// CMY subtractive color model → RGB
+function CMY(r, g, b){ return cmyToRgb(r, g, b); }
+
+// Toroidal coordinates → Cartesian
+// Models embedding of torus-like geometry
 function TOR(r, g, b) {
     let t = r;
     let s = g;
@@ -2701,6 +2828,8 @@ function TOR(r, g, b) {
     return [r*100, g*100, b*100];
 }
 
+// Parabolic cylindrical coordinates (one common normalization)
+// Maps (s,t) into quadratic surface coordinates
 function PCC(r, g, b) {
     let s = r/100;
     let t = g/100;
@@ -2709,6 +2838,8 @@ function PCC(r, g, b) {
     return [r*100, g*100, b];
 }
 
+// Oblate spheroidal coordinates → Cartesian
+// Used in potential theory and wave equations
 function OSC(r, g, b) {
     let m = r;
     let v = g;
@@ -2719,6 +2850,7 @@ function OSC(r, g, b) {
     return [r, g, b];
 }
 
+// Oblate spheroidal coordinates (z,x,p parameterization)
 function OSCzxp(r, g, b) {
     let z = r/100;
     let x = g/100;
@@ -2729,6 +2861,7 @@ function OSCzxp(r, g, b) {
     return [r*100, g*100, b*100];
 }
 
+// Oblate spheroidal coordinates (s,t,p parameterization)
 function OSCstp(r, g, b) {
     let s = r/100;
     let t = g/100;
@@ -2739,6 +2872,8 @@ function OSCstp(r, g, b) {
     return [r*100, g*100, b*100];
 }
 
+// Prolate spheroidal coordinates → Cartesian
+// Dual of oblate case (elongated axis)
 function PSC(r, g, b) {
     let m = r;
     let v = g;
@@ -2749,6 +2884,8 @@ function PSC(r, g, b) {
     return [r*100, g*100, b*100];
 }
 
+// Parabolic coordinates (3D variant)
+// Often used in separable Laplace problems
 function PC(r, g, b) {
     let m = r/100;
     let v = g/100;
@@ -2761,6 +2898,7 @@ function PC(r, g, b) {
     return [r*100, g*100, b*100];
 }
 
+// Elliptic cylindrical coordinates → Cartesian
 function ECC(r, g, b) {
     let m = r;
     let v = g;
@@ -2769,6 +2907,8 @@ function ECC(r, g, b) {
     return [r*100, g*100, b];
 }
 
+// Conical coordinates
+// Intersections of cones and quadrics
 function CC(r, g, b) {
     let r1 = r/100;
     let m = g/100;
@@ -2781,6 +2921,8 @@ function CC(r, g, b) {
     return [r*100, g*100, b*100];
 }
 
+// Bipolar coordinates → Cartesian
+// Used in 2-center potential problems
 function BC(r, g, b) {
     let t = r;
     let s = g;
@@ -2791,6 +2933,7 @@ function BC(r, g, b) {
     return [r*100, g*100, b*100];
 }
 
+// Bipolar cylindrical coordinates (no azimuth)
 function BCC(r, g, b) {
     let s = r;
     let t = g;
@@ -2799,35 +2942,38 @@ function BCC(r, g, b) {
     return [r*100, g*100, b];
 }
 
+// RGB → normalized rg chromaticity (simplex projection)
 function rgGp(r, g, b) {
     let r1 = r / (r + g + b);
     let g1 = g / (r + g + b);
-    r = r1*100;
-    g = g1*100;
+    r = r1 * 100;
+    g = g1 * 100;
     b = g;
     return [r, g, b];
 }
 
+// Inverted CMY (simple RGB inversion)
 function iCMY(r, g, b) {
     let c = 255 - r;
     let m = 255 - g;
     let y = 255 - b;
-    r = c;
-    g = m;
-    b = y;
-    return [r, g, b];
+    return [c, m, y];
 }
 
+// Cartesian → spherical coordinates
+// Inverse of SPH (up to scaling and angle conventions)
 function iSPH(r, g, b) {
     let x = r/100;
     let y = g/100;
     let z = b/100;
     r = Math.sqrt(x * x + y * y + z * z);
-    g = Math.acos(100*z / r)*100;
+    g = Math.acos(100*z / r) * 100;
     b = Math.sign(y) * Math.acos(x / Math.sqrt(x * x + y * y));
     return [r*100, g, b*100];
 }
 
+// Cartesian → cylindrical coordinates
+// Inverse of CYL
 function iCYL(r, g, b) {
     let x = r/100;
     let y = g/100;
@@ -2963,7 +3109,6 @@ return [
 
 
 
-
  if (colorMode === 'pcontour') {
 	
  	const contourThreshold=contourThresholdd * mag(deriv);
@@ -2981,11 +3126,41 @@ if(imDiff<doubleThreshold)return [ 0,255, 0];
 }
 
 
+
+    
+    
+ if (colorMode === 'divergenceri') {
+     const R=re(deriv)
+      const lightnessValue = teth.evaluate(magnitudeToLightnessExpr, { x: exp(R), z: complexOutput , c: complexInput , t: arg(complexOutput) , r: magnitude });
+    const chroma = saturationChroma;
+    const lightnessAdjusted = lightnessValue * lightness;
+     return hsvToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted)
+ }
+ if (colorMode === 'gradientri') {
+     const R=mag(deriv)
+      const lightnessValue = teth.evaluate(magnitudeToLightnessExpr, { x: (R), z: complexOutput , c: complexInput , t: arg(complexOutput) , r: magnitude });
+    const chroma = saturationChroma;
+    const lightnessAdjusted = lightnessValue * lightness;
+     return hsvToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted)
+ }
+ 
+  if (colorMode === 'fixed1') {
+     const R=mag(sub(complexOutput,complexInput))
+      const lightnessValue = teth.evaluate(magnitudeToLightnessExpr, { x: (R), z: complexOutput , c: complexInput , t: arg(complexOutput) , r: magnitude });
+    const chroma = saturationChroma;
+    const lightnessAdjusted = lightnessValue * lightness;
+     return hsvToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted)
+ }
+ 
+
+
+ 
+ 
  const lightnessValue = teth.evaluate(magnitudeToLightnessExpr, { x: magnitude, z: complexOutput , c: complexInput , t: arg(complexOutput) , r: magnitude });
     const chroma = saturationChroma;
     const lightnessAdjusted = lightnessValue * lightness;
-
-
+    
+    
 if (colorMode === 'acontour') {
 	const dd=1;
 
