@@ -1277,7 +1277,132 @@ let pent2tayl= [
     math.complex( 4.3400223536801960889284518471795e-19, - 1.2501872210307870266872570243062e-38),
     math.complex( 2.4792891444220073921055174168698e-19, + 2.6203728237080159031378260799277e-39),
 ];
-
+//at -1
+const penttayl=[
+    math.complex(   2.2902800358427223238792741003208e-30,1.8198734155308591758228179125680e-39),
+    math.complex(    0.99727185142263340743370246661282,-7.5764284330342749536051789681195e-41),
+    math.complex(   -0.045007215859218115833333872368186,2.2748417694135739697386950929317e-39),
+    math.complex(   0.0088901369292365764432830131921756,3.0745758817894141037939659179625e-39),
+    math.complex(    0.045713734782598722205609270254848,-1.9660449135823285207724160933880e-39),
+    math.complex(  -0.010706554884752458976229838541237,3.2463847891849893285205867557662e-39),
+    math.complex(    0.00011329335331439235567426684654267,-3.0183266403926444864585359677243e-39),
+    math.complex(    0.0051620130076806122858164787001400,-1.3346758774961389413766750878975e-39),
+    math.complex(   -0.0012422756898373028879083641483250,-2.3418051520287758947814673202474e-39),
+    math.complex(  -0.00067376885079665208569238231919901,-2.4030288161341033690619086534117e-40),
+    math.complex(   0.00050296665968765950574072201371012,4.2458611057044603478145682492507e-39),
+    math.complex(   3.9905534193068199636353320241569e-5,7.3162278605866331876444690421677e-40),
+    math.complex(  -9.4623078715532686232227806282769e-5,-2.7397589687134044782614863991573e-39),
+    math.complex(   2.6746817775170179559618506733625e-5,-2.3571110680551077633217071802048e-40),
+    math.complex(   1.5560915176630839373102667402784e-5,6.8448056469756116349004730105702e-39),
+    math.complex(  -1.4806164180600879049915937886522e-5,-3.1040397701401029506662212421572e-39),
+    math.complex(  -1.0862859329576915398005055046513e-6,4.2336163728833948527912053319489e-39),
+    math.complex(   5.9140073162222162193804345148230e-6,-6.9580694255704674628310702533754e-39),
+    math.complex(  -7.1091367653831526616412301895939e-7,-1.6092640110085326639380609545670e-38),
+    math.complex(  -1.7666311876111783264173771994524e-6,4.2519834721149930951669405167883e-39),
+    math.complex(   5.1445590441872869648094135698623e-7,4.5152452277679012351423686076245e-39),
+    math.complex(   3.6270009896115685098527218963699e-7,-1.1522293584622630677111035383527e-38),
+    math.complex(  -2.0971694575358607315886145755720e-7,-2.8346556480766620634977300748966e-39),
+    math.complex(  -2.1225391058732913780534313761335e-8,1.0591693890221653066965024619861e-39),
+    math.complex(   6.4546351710396107513443999114917e-8,-1.3775324423698681734008631295573e-38),
+    math.complex(  -2.2236468044317568271491009411731e-8,-1.1810044805917669807133189308967e-38),
+    math.complex(  -1.5692632671055194971128649717871e-8,6.3672610669540573350430684981048e-39),
+    math.complex(   1.3400661392837577306085061039608e-8,1.0101904577379033271606329616754e-39),
+    math.complex(   2.6987924084642996468630234407172e-9,2.2775203047181820466257033644228e-39),
+    math.complex(  -4.9614802252464409094615158807354e-9,-5.8835941205219702871960549536489e-39),
+    math.complex(  -2.7922236850001851554285963736440e-11,1.8979335872651517055214194703523e-39),
+    math.complex(   1.3836460390007228114262799298496e-9,9.4468113714520292959811822878850e-39),
+    math.complex(  -2.4899484532915622257751464291673e-10,2.7183306862765398622095650805491e-39),
+    math.complex(  -2.7775165123721252892738430400494e-10,3.8632132050461636328747890302981e-39),
+    math.complex(   1.4585545352854729246880722961599e-10,8.6692708373143703713968793149047e-39),
+    math.complex(   2.1881283347370594426061518421330e-11,-6.0305309143747562255646996679110e-39),
+    math.complex(  -5.8577406453489895571477511678466e-11,1.8060980911071604939613619283818e-39),
+    math.complex(   1.2909231497135917239484215939277e-11,3.0611832052663737187515582693877e-41),
+    math.complex(   1.8786069022344642023219158208043e-11,-2.1734400757391253402971776109317e-38),
+    math.complex(  -8.5420998532639626438866178996342e-12,-2.5095579916773731745305198028094e-38),
+    math.complex(  -4.8151371648401648527438793708345e-12,4.5121840445626348614661824738557e-39),
+    math.complex(   3.3148632097767457157012384742410e-12,-1.5618156713269038712562154402521e-38),
+    math.complex(   8.5524394294420641412521418995046e-13,7.4937764864920828631732480719012e-39),
+    math.complex(  -1.0019723048585680912399689314970e-12,-2.6534336023248927392229783833027e-38),
+    math.complex(  -5.9930482518764047218457602236272e-15,-2.1844603352780842856588950453901e-38),
+    math.complex(   2.4827288029993112835007922159168e-13,-2.6215972969901224527357478863258e-38),
+    math.complex(  -8.0449378593061006347728207506353e-14,3.3256694342013884079445574728392e-38),
+    math.complex(  -4.8820966087613688559069415703121e-14,2.3448663352340422684576534540163e-38),
+    math.complex(   4.5570323244547164513836233987037e-14,-2.3583355413372143127603197954897e-38),
+    math.complex(   5.9633662296406477853546667248287e-15,5.7550244259007825912828000197827e-40),
+    math.complex(  -1.7709779542013854210606623646671e-14,1.0897812210748290438247749392347e-38),
+    math.complex(   6.9690831381931622907934887213270e-16,-2.2750713581539689477484781338530e-38),
+    math.complex(   5.5578844475549155287379069695873e-15,-1.8844643811619796611868912906563e-38),
+    math.complex(  -8.7751665407280205597141577085020e-16,1.9309943658820285417021572883953e-38),
+    math.complex(  -1.4469366416064394405829662501639e-15,1.4203890072435974055047057667737e-38),
+    math.complex(   4.4743008331345780752439671767944e-16,-1.7020178621281037875372506602228e-39),
+    math.complex(   2.9740740323139410680489768619254e-16,3.1603655411170042271364538972923e-38),
+    math.complex(  -3.5333723730843087562331834781656e-17,-1.6101823659701125759771931182524e-38),
+    math.complex(  -1.8781140436554909038539372361618e-16,-1.4816126713489248798249743977163e-39),
+    math.complex(   7.1666386383498091401268575634356e-17,2.3999676329288369954255498174212e-39),
+]
+//at -1
+const pent10tayl=[
+    math.complex(   0.0074175553408772740878640586682078,-1.4999797705805231221409686358883e-40),
+    math.complex(    0.48957209935338663174412554333447,-1.7203849613597020299129858450622e-39),
+    math.complex(   -0.045512628829351029604166657321777,-3.4128366259713483994731910505877e-39),
+    math.complex(    0.41739622537634568709348788050144,3.7985457098349114880891564033090e-39),
+    math.complex(   -0.00098592781765459868884118350096835,-2.6999635870449416198338298957097e-39),
+    math.complex(   -0.13416328218615437962376062843615,-2.8836345793609240429539449796507e-39),
+    math.complex(    0.038782297855610878696665086578213,5.1274818688211759789026370859466e-40),
+    math.complex(    0.0078776098911699446243411362588838,6.9948036240336639472639222408277e-40),
+    math.complex(    0.0069388468793593121702736740432399,-2.0907881291969332498294021467130e-39),
+    math.complex(    0.065495806276652955194644111585185,3.2739354380323866922434987241385e-39),
+    math.complex(  -0.010517617966765823307879981132199,-2.3999676329288369954255498174212e-39),
+    math.complex(  -0.076354787691862675625211807814223,-2.0693598467600686337774808281048e-39),
+    math.complex(   0.0025683973175714613320596143963441,5.5560475175584682993834812892145e-39),
+    math.complex(   0.047530796445997036309179787234828,1.1081483203064272861527173667401e-39),
+    math.complex(   0.0029397651006489653286917360464890,8.5713129747458464124844495053965e-39),
+    math.complex(  -0.00028947458053215713750297383180119,1.4112054576277982843168381743540e-39),
+    math.complex(  -0.0024308379123692202530123283455834,-7.0407213721126595528049872251430e-40),
+    math.complex(  -0.037981928073196886475713252299118,3.3979133578456748277619563506864e-40),
+    math.complex(   0.00038414692813707566070849474302497,-4.1295361439043381465264032549031e-39),
+    math.complex(   0.047138954947628006697560154323385,-3.7377046936302423105580656346442e-39),
+    math.complex(   0.00046450328297087070221235493378764,-3.2540377471981552630296704724147e-39),
+    math.complex(  -0.025973992307017499094948108644596,-7.6039790818816723174276591809376e-39),
+    math.complex(  -0.00050388071929302754891928463029567,-6.8937845782598736143566879153242e-39),
+    math.complex(  -0.0079966649003679034606896758920115,-9.2080390814412521460524800316523e-39),
+    math.complex(   0.00056914563842294271954153589047318,-6.4284847310593848092040279379342e-39),
+    math.complex(   0.031879504731241284449297647779546,5.7672691587218480859078899593013e-39),
+    math.complex(  -0.00050925381753217711669847076137012,-2.0326256482968721491853196495393e-39),
+    math.complex(  -0.032494310546385034315243076323803,-1.0971280607674683407750690131704e-38),
+    math.complex(   7.5271074736323925241727825930385e-6,1.3181454881877005233181680170987e-38),
+    math.complex(   0.012853582429250069920791469998949,9.1223259516937936818447947572195e-39),
+    math.complex(   0.00061124929098393920128996069145272,-1.8428322895703569787128322980606e-39),
+    math.complex(   0.012243623423847995322169135285588,5.8468599220587738027632029661966e-39),
+    math.complex(  -0.00075165781857232637541239126298100,-4.0040276324884168238910614770227e-39),
+    math.complex(  -0.026744900503112883266062157325457,-7.3652067918708951668617201602519e-39),
+    math.complex(   0.00027988553078466976240542572785954,1.5061021369910558695849436883160e-38),
+    math.complex(   0.022984431628478379778691997648615,3.5448501516984607660907737671702e-39),
+    math.complex(   0.00037108832693423972891665677283616,-3.8938250370988273702738871324393e-39),
+    math.complex(  -0.0052274782666035441334338374693112,-8.8835536616830165312788557365338e-39),
+    math.complex(  -0.00068034862644230723637673872495060,-1.2679420836213319942640313059465e-38),
+    math.complex(  -0.014137095907590048096705341294476,-8.8345747303987545518226408317797e-39),
+    math.complex(   0.00047555010957526291887290961821480,3.4713817547720677969064514100391e-39),
+    math.complex(   0.022874553259378734768354966140297,-1.0285575569695015694726444700695e-38),
+    math.complex(   2.5630689731653772941186524091216e-5,-8.8039628983460908150607794940916e-39),
+    math.complex(  -0.016403048760573561839927990637294,-2.9068995717209484831797161402975e-38),
+    math.complex(  -0.00045353473489769160451061592765430,9.0611022875884662070465985529372e-39),
+    math.complex(   2.1075605063504532920802430023745e-5,-2.6375154496575075961068104877049e-38),
+    math.complex(   0.00054473846602221217357797196408162,-1.4779392515026052313816891989711e-38),
+    math.complex(   0.015153545342609897980360071311318,1.1656985645654351120774935562714e-38),
+    math.complex(  -0.00027538496583531135196353496653881,1.9334433124462416407705535483010e-38),
+    math.complex(  -0.019582536424322287143126662081046,2.3509887016445750159693349126671e-39),
+    math.complex(  -0.00015493928712706795066973761589503,-1.5918152667385143336651816098583e-38),
+    math.complex(   0.011193870074475982402084371729357,2.6203728237080159031378260799277e-39),
+    math.complex(   0.00045894611973003856395566238275479,-9.4284442722204310532868287208191e-40),
+    math.complex(   0.0038237506894466278112931030108704,1.0285575569695015694567135509581e-39),
+    math.complex(  -0.00044432382552358721825576663298833,1.8183428239282259888891393310157e-38),
+    math.complex(  -0.015472166409430765673652119455979,6.1835900746380749119229534141638e-39),
+    math.complex(   0.00013515356772440549487563608763523,-1.3469206103172044362407288140860e-40),
+    math.complex(   0.016508121405324970995281462295300,-9.3549758752940380844211247459145e-39),
+    math.complex(   0.00025016501079003818706994366142543,3.2938331288666181211387085936358e-39),
+    math.complex(  -0.0068702103689463512706162025125514,-1.1705964576938613100231150467468e-38),
+]
 
 let knthetaa2=[
     math.complex( -1.238069414071374894166968742073728779402824139678115229070957379,-1.248161324844920365999405070526939338912940948444578047794726215),
@@ -1403,7 +1528,7 @@ math.complex(  0.000103754774414130681855642070422021254845095285312091021852938
 math.complex(  0.0001018144078619839278558820592965697223706065903458976566296112702,-0.0006449942705335144459620316322484272725667287602684087457014540661),
 math.complex( 9.994353496512135650348190158524964318250510972784949908544471141e-5,-0.0006315523070392600443439148357988072927945652456358597444063746728),
 math.complex(  9.813851751576231414271228637164616745839250834755091733910520450e-5,-0.0006186209927174325754281388388363401086486601701346952696657458105),
-math.complex(  9.639596594642733938066279564612386016080983135099553451799839962e-5 - 0.0006061725306692120373452864274665425808980694046833859264966456824),
+math.complex(  9.639596594642733938066279564612386016080983135099553451799839962e-5,-0.0006061725306692120373452864274665425808980694046833859264966456824),
 ]
 
 let tetr10tayl =[
@@ -3164,7 +3289,266 @@ function reducedwordsc(w) {
     recurse(w, []);
     return words;
 }
-function generateStanleyic(a, N) {
+function affinelength(w, n=w.length) {
+    let L = 0;
+    for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) {
+            if (w[i] > w[j]) L++;
+        }
+    }
+    for (let i = 0; i < n; i++) {
+        L += Math.max(0, Math.floor((w[i] - (i + 1)) / n));
+    }
+    return L;
+}
+function reducedaffinewords(w, n) {
+    function applySimple(w, i, n) {
+    let v = w.slice();
+
+    if (i === 0) {
+        let a = v[0];
+        let b = v[n - 1];
+        v[0] = b - n;
+        v[n - 1] = a + n;
+    } else {
+        let t = v[i - 1];
+        v[i - 1] = v[i];
+        v[i] = t;
+    }
+
+    return v;
+}
+    const targetLen = affinelength(w, n);
+    const seen = new Map();
+
+    function key(v) {
+        return v.join(",");
+    }
+
+    function dfs(v, len) {
+        const k = key(v);
+        if (seen.has(k)) return [];
+        seen.set(k, true);
+
+        if (len === 0) {
+            return [ [] ];
+        }
+
+        let results = [];
+
+        for (let i = 0; i < n; i++) {
+            let u = applySimple(v, i, n);
+            if (affinelength(u, n) === len - 1) {
+                for (let r of dfs(u, len - 1)) {
+                    results.push([i, ...r]);
+                }
+            }
+        }
+
+        return results;
+    }
+
+    return dfs(w, targetLen);
+}
+function reducedinvolutionfixedpointfreewords(w) {
+    function fpfIdentity(n) {
+    let w = [];
+    for (let i = 1; i <= n; i += 2) {
+        w.push(i + 1, i);
+    }
+    return w;
+}
+function isFPFInvolution(w) {
+    let n = w.length;
+    for (let i = 0; i < n; i++) {
+        if (w[w[i] - 1] !== i + 1) return false; // involution
+        if (w[i] === i + 1) return false;        // no fixed points
+    }
+    return true;
+}
+function apply_si(w, i) {
+    let v = w.slice();
+    let tmp = v[i - 1];
+    v[i - 1] = v[i];
+    v[i] = tmp;
+    return v;
+}
+
+function apply_ti(w, i) {
+    w = apply_si(w, i);
+    w = apply_si(w, i + 1);
+    w = apply_si(w, i);
+    return w;
+}
+
+    if (!isFPFInvolution(w))
+        throw "Input is not a fixed-point-free involution";
+
+    const n = w.length;
+    const id = fpfIdentity(n);
+    let words = [];
+
+    function samePerm(a, b) {
+        for (let i = 0; i < a.length; i++)
+            if (a[i] !== b[i]) return false;
+        return true;
+    }
+
+    function recurse(curr, path) {
+        if (samePerm(curr, id)) {
+            words.push(path.slice());
+            return;
+        }
+
+        for (let i = 1; i <= n - 2; i++) {
+            let next = apply_ti(curr, i);
+
+            // Must stay FPF and reduce distance
+            if (isFPFInvolution(next)) {
+                path.push(i);
+                recurse(next, path);
+                path.pop();
+            }
+        }
+    }
+
+    recurse(w, []);
+    return words;
+}
+
+function reducedinvolutionwords(w) {
+    function fpfIdentity(n) {
+    let w = [];
+    for (let i = 1; i <= n; i += 2) {
+        w.push(i + 1, i);
+    }
+    return w;
+}
+function isFPFInvolution(w) {
+    let n = w.length;
+    for (let i = 0; i < n; i++) {
+    
+        if (w[w[i] - 1] !== i + 1) return false; // involution
+    }
+    return true;
+}
+function apply_si(w, i) {
+    let v = w.slice();
+    let tmp = v[i - 1];
+    v[i - 1] = v[i];
+    v[i] = tmp;
+    return v;
+}
+
+function apply_ti(w, i) {
+    w = apply_si(w, i);
+    w = apply_si(w, i + 1);
+    w = apply_si(w, i);
+    return w;
+}
+
+    if (!isFPFInvolution(w))
+        throw "Input is not a fixed-point-free involution";
+
+    const n = w.length;
+    const id = fpfIdentity(n);
+    let words = [];
+
+    function samePerm(a, b) {
+        for (let i = 0; i < a.length; i++)
+            if (a[i] !== b[i]) return false;
+        return true;
+    }
+
+    function recurse(curr, path) {
+        if (samePerm(curr, id)) {
+            words.push(path.slice());
+            return;
+        }
+
+        for (let i = 1; i <= n - 2; i++) {
+            let next = apply_ti(curr, i);
+
+            // Must stay FPF and reduce distance
+            if (isFPFInvolution(next)) {
+                path.push(i);
+                recurse(next, path);
+                path.pop();
+            }
+        }
+    }
+
+    recurse(w, []);
+    return words;
+}
+
+function reducedfixedpointfreewords(w) {
+    function fpfIdentity(n) {
+    let w = [];
+    for (let i = 1; i <= n; i += 2) {
+        w.push(i + 1, i);
+    }
+    return w;
+}
+function isFPFInvolution(w) {
+    let n = w.length;
+    for (let i = 0; i < n; i++) {
+        
+        if (w[i] === i + 1) return false;        // no fixed points
+    }
+    return true;
+}
+function apply_si(w, i) {
+    let v = w.slice();
+    let tmp = v[i - 1];
+    v[i - 1] = v[i];
+    v[i] = tmp;
+    return v;
+}
+
+function apply_ti(w, i) {
+    w = apply_si(w, i);
+    w = apply_si(w, i + 1);
+    w = apply_si(w, i);
+    return w;
+}
+
+    if (!isFPFInvolution(w))
+        throw "Input is not a fixed-point-free involution";
+
+    const n = w.length;
+    const id = fpfIdentity(n);
+    let words = [];
+
+    function samePerm(a, b) {
+        for (let i = 0; i < a.length; i++)
+            if (a[i] !== b[i]) return false;
+        return true;
+    }
+
+    function recurse(curr, path) {
+        if (samePerm(curr, id)) {
+            words.push(path.slice());
+            return;
+        }
+
+        for (let i = 1; i <= n - 2; i++) {
+            let next = apply_ti(curr, i);
+
+            // Must stay FPF and reduce distance
+            if (isFPFInvolution(next)) {
+                path.push(i);
+                recurse(next, path);
+                path.pop();
+            }
+        }
+    }
+
+    recurse(w, []);
+    return words;
+}
+
+function generatestanleyic(a, N) {
     const l = a.length;
     const result = [];
 
@@ -3205,6 +3589,7 @@ function generateStanleyic(a, N) {
     backtrack(0, []);
     return result;
 }
+
 function stanleysymmetric(W,X){
     let fi=0;
     A=reducedwords(rearray(W))
@@ -3248,7 +3633,95 @@ function stanleysymmetricc(W,X){
     return fi;
 }
 
+function fpfistanleysymmetric(W,X){
+    let fi=0;
+    A=reducedinvolutionfixedpointfreewords(rearray(W))
+    for(let q=0;q<leng(A);q++){
+        let I=generatestanleyi(g(A,i),leng(X))
+        for(let p=0;p<leng(I);p++){
+        let fid=1;
+        for(let t=0;t<leng(X);t++)
+            fid=mul(fid,g(X,g(I,p)-1))
+            }
+        fi=add(fi,fid)
+    }
+    return fi;
+}
+function fpfstanleysymmetric(W,X){
+    let fi=0;
+    A=reducedfixedpointfreewords(rearray(W))
+    for(let q=0;q<leng(A);q++){
+        let I=generatestanleyi(g(A,i),leng(X))
+        for(let p=0;p<leng(I);p++){
+        let fid=1;
+        for(let t=0;t<leng(X);t++)
+            fid=mul(fid,g(X,g(I,p)-1))
+            }
+        fi=add(fi,fid)
+    }
+    return fi;
+}function involutionstanleysymmetric(W,X){
+    let fi=0;
+    A=reducedinvolutionewords(rearray(W))
+    for(let q=0;q<leng(A);q++){
+        let I=generatestanleyi(g(A,i),leng(X))
+        for(let p=0;p<leng(I);p++){
+        let fid=1;
+        for(let t=0;t<leng(X);t++)
+            fid=mul(fid,g(X,g(I,p)-1))
+            }
+        fi=add(fi,fid)
+    }
+    return fi;
+}
+function affinestanleysymmetric(W,X){
+    let fi=0;
+    A=reducedaffinewords(rearray(W))
+    for(let q=0;q<leng(A);q++){
+        let I=generatestanleyi(g(A,i),leng(X))
+        for(let p=0;p<leng(I);p++){
+        let fid=1;
+        for(let t=0;t<leng(X);t++)
+            fid=mul(fid,g(X,g(I,p)-1))
+            }
+        fi=add(fi,fid)
+    }
+    return fi;
+}
+function skewaffinestanleysymmetric(W,V,X){
+    let fi=0;
+    A=reducedaffinewords(rearray(symetricdivide(rearray(W),rearray(V))))
+    for(let q=0;q<leng(A);q++){
+        let I=generatestanleyi(g(A,i),leng(X))
+        for(let p=0;p<leng(I);p++){
+        let fid=1;
+        for(let t=0;t<leng(X);t++)
+            fid=mul(fid,g(X,g(I,p)-1))
+            }
+        fi=add(fi,fid)
+    }
+    return fi;
+}
 
+function symetricdivide(w, u) {
+    function invertPerm(p) {
+    let n = p.length;
+    let inv = new Array(n);
+    for (let i = 0; i < n; i++) {
+        inv[p[i] - 1] = i + 1;
+    }
+    return inv;
+}
+function composePerm(w, u) {
+    let n = w.length;
+    let out = new Array(n);
+    for (let i = 0; i < n; i++) {
+        out[i] = w[u[i] - 1];
+    }
+    return out;
+}
+    return composePerm(w, invertPerm(u));
+}
 
 
 
@@ -19158,7 +19631,7 @@ return fi;
         
         
         
-   function tetr(b) {
+   function tetrp(b) {
             const N = bign * 2; 
 
             let fi = math.complex(b.re, Math.abs(b.im));
@@ -19184,7 +19657,7 @@ return fi;
             return fi;
         }
         
-       function tetr2(b) {
+       function tetr2p(b) {
             const N = bign * 2; 
 
             let fi = math.complex(b.re, Math.abs(b.im));
@@ -19209,7 +19682,7 @@ return fi;
 
             return fi;
         }  
-         function tetr10(b) {
+         function tetr10p(b) {
             const N = bign * 2; 
 
             let fi = math.complex(b.re, Math.abs(b.im));
@@ -19242,7 +19715,7 @@ function ackermann1(x){return add(n,2)}
 function ackermann2(x){return add(n,n,3)}
 function ackermann3(x){return add(pow(2,add(x,3)),-3)}
 function ackermann4(x){return sub(tetr2(add(3,x)),3)}
-//function ackermann5(x){return sub(pent2(add(3,x)),3)}
+function ackermann5(x){return sub(pent2(add(3,x)),3)}
             
    
    
@@ -19589,6 +20062,42 @@ for(let i=1;i<N;i++)fi=add(fi,mul(pent2tayl[i],pow(add(x,1),i)))
 for(let i=0;i<N;i++)fi=add(fi,mul(tetr10tayl[i],pow(add(x,0),i)))     
     return fi;
     }
+    function tetr10(x){
+        if(mag(im(x))>0.5)return tetr10p(x)
+        let fi=tetr10ts(modc(x,1))
+        if(re(x)<-1)for(let i=0;i<minc(mag(re(x)),10);i++)fi=log10(fi)
+   else if(re(x)>1)for(let i=0;i<minc(mag(re(x)-1),10);i++)fi=exp10(fi)
+       else return tetr10ts(x)
+        return fi;
+    }
+    function tetr2(x){
+        if(mag(im(x))>0.5)return tetr2p(x)
+        let fi=tetr2ts(modc(x,1))
+        if(re(x)<-1)for(let i=0;i<minc(mag(re(x)),10);i++)fi=log2(fi)
+   else if(re(x)>1)for(let i=0;i<minc(mag(re(x)-1),10);i++)fi=exp2(fi)
+       else return tetr2ts(x)
+        return fi;
+    }
+    function tetr(x){
+        if(mag(im(x))>0.5)return tetrp(x)
+        let fi=tetrts(modc(x,1))
+        if(re(x)<-1)for(let i=0;i<minc(mag(re(x)),10);i++)fi=log(fi)
+   else if(re(x)>1)for(let i=0;i<minc(mag(re(x)-1),10);i++)fi=exp(fi)
+       else return tetrts(x)
+        return fi;
+    }
+        function pentts(x) {
+     let fi=0;
+     const N=minc(bign*3,55);
+for(let i=1;i<N;i++)fi=add(fi,mul(penttayl[i],pow(add(x,1),i)))     
+    return fi;
+    }
+        function pent10ts(x) {
+     let fi=0;
+     const N=minc(bign*3,55);
+for(let i=1;i<N;i++)fi=add(fi,mul(pent10tayl[i],pow(add(x,1),i)))     
+    return fi;
+    }
    function slogts(x) {
 
     // Constants
@@ -19705,7 +20214,7 @@ let result = add(
 }       
      
         
-function pentts(x) {
+function penttsold(x) {
 
     // Constants
     const c1 = math.complex(0.99727185142263340743455208346122, 0);
@@ -19774,7 +20283,7 @@ function pentts(x) {
     return result;
 }
 	
-	function pent(x) {
+	function pentold(x) {
     const nn = 2;
 		let n=math.floor(x.re)+nn;
 		if(n < sub(nn,4))return add(-1.85035452902718141848345,math.exp(mul(1.86573322813586677933545,add(x,2.2481745))));
@@ -19789,32 +20298,119 @@ function pentts(x) {
 	}
     
     
-    
+    /*
     function pent2u(x){
-       
        const L=  -1.7439;
        const Lp= 5.171797;
- 
- 
-       
+
        let fi=sub(L,pow(Lp,add(x,1,sub(0,4),div(log(L),log(Lp)))));
-       
        ;
        for(let i=0;i<3;i++)
            fi=tetr2ts(fi);
-    //   fi=tetr2(fi)
-
        return fi;
     }
     function pent2u2(x){
         if(re(x)<0)return pent2u(add(x,1,-0.288,-0.5))
             let fi=pent2ts(sub(modc(modc(add(x,mul(I,3.82370243/2)),mul(I,3.82370243)),1),1,mul(I,3.82370243/2),0.5));
       //  let fi=pent2u(sub(modc(x,1),0));
-        for(let i=0;i<floor(re(x)+0);i++)
+        for(let i=0;i<minc(floor(re(x)+0),5);i++)
             fi=tetr2(fi);
         return fi;
     }
     function pent2(x){return pent2u2(add(x,1.5))}
+    */
+function pent2u(x){
+       const L=  -1.7439;
+       const Lp= 5.171797;
+
+       let fi=sub(L,pow(Lp,add(x,1,sub(0,7),div(log(L),log(Lp)))));
+       ;
+       for(let i=0;i<7;i++)
+           fi=tetr2(fi);
+       return fi;
+    }
+    function pent2(x){return pent2u(add(x,0.7179548082276691))}
+    
+
+
+    /////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////
+    /*
+      function pentu(x){
+       const L=  -1.8503545;
+       const Lp= 6.4606712;
+
+       let fi=sub(L,pow(Lp,add(x,1,sub(0,3),div(log(L),log(Lp)))));
+       ;
+       for(let i=0;i<2;i++)
+           fi=tetrts(fi);
+      // return tetr(fi)
+       return fi;
+    }
+    function pentu2(x){
+        if(re(x)<0)return pentu(add(x,1,-0.3,-1))
+            let fi=pentts(sub(modc(modc(add(x,mul(I,3.3676761567/2)),mul(I,3.3676761567)),1),1,mul(I,3.3676761567/2),1,0.));
+      //  let fi=pent2u(sub(modc(x,1),0));
+        for(let i=0;i<minc(floor(re(x)+0),5);i++)
+            fi=tetr(fi,30);
+        return fi;
+    }
+    function pent(x){return pentu2(add(x,2.2))}
+    */
+ function pentu(x){
+        const L=  -1.8503545;
+       const Lp= 6.4606712;
+
+       let fi=sub(L,pow(Lp,add(x,1,sub(0,7),div(log(L),log(Lp)))));
+       ;
+       for(let i=0;i<7;i++)
+           fi=tetr(fi);
+       return fi;
+    }
+    function pent(x){return pentu(add(x,0.9181855419230064))}
+    
+    /////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////
+    
+        function pent10u(x){
+       const L=  -1.985877443680;
+       const Lp= 30.75438234;
+
+       let fi=sub(L,pow(Lp,add(x,1,sub(0,7,0.5),div(log(L),log(Lp)))));
+       ;
+       for(let i=0;i<7;i++)
+           fi=tetr10(fi);
+      // return tetr(fi)
+       return fi;
+    }
+   /* function pent10u2(x){
+        if(re(x)<0)return pent10u(add(x,1,1,-1))
+            let fi=pent10ts(sub(modc(modc(add(x,mul(I,1.83395379590/2)),mul(I,1.83395379590)),1),1,mul(I,1.83395379590/2),1,-0.5));
+      //  let fi=pent2u(sub(modc(x,1),0));
+        for(let i=0;i<minc(floor(re(x)+0),5);i++)
+            fi=tetr10(fi);
+        return fi;
+    }*/
+    function pent10(x){
+        
+        return pent10u(add(x,1.7289))}
+    
+/*    function pent10(x){
+        if(re(x)<0) return pent10c(x)
+        let fi=pent10c(add(0,modc(x,1)))
+        for(let i=0;i<minc(5,re(floor(re(x))));i++)
+        fi=tetr10(fi);
+        return fi;
+    }*/
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     
