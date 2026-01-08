@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Annihilator (SANT)</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif; /* Default font */
+            background: url('sudbg.png') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            text-align: center;
+        }
+        table {
+            border-collapse: collapse;
+            margin: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        td {
+            border: 2px solid #ddd;
+            width: 40px;
+            padding: 4px;
+            height: 40px;
+            text-align: center;
+            vertical-align: middle;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+        }
+        td.thick-border {
+            border-right: 4px solid #000;
+        }
+        td.thick-borderr {
+            border-bottom: 4px solid #000;
+        }
+        td.thick-borderq {
+            border-left: 4px solid #000;
+        }
+        td.thick-borderrq {
+            border-top: 4px solid #000;
+        }
+        input {
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            border: none;
+            font-size: 18px;
+        }
+        .table-container {
+            display: inline-block;
+            vertical-align: top;
+        }
+        .button-container {
+            margin: 20px;
+        }
+        .solve-button {
+            font-family: 'Comic Sans MS', cursive, sans-serif; /* Fancy font */
+            font-size: 24px;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            background-image: linear-gradient(to bottom right, cyan, green);
+            color: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            cursor: pointer;
+        }
+        .solve-button:hover {
+            background-color: #45a049; /* Darker green on hover */
+        }
+        h1, h2 {
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        }
+        .textarea-container {
+            margin: 20px;
+        }
+        .time-container {
+            margin: 20px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sudoku Annihilator (SANT)</h1>
+        <div class="table-container">
+            <h2>Input Sudoku</h2>
+            <table id="inputTable"></table>
+        </div>
+        <div class="table-container">
+            <h2>Output Sudoku</h2>
+            <table id="outputTable"></table>
+        </div>
+        <div class="textarea-container">
+            <h2>Paste Sudoku Numbers</h2>
+            <textarea id="pasteArea" rows="1" cols="81" placeholder="Paste numbers here..."></textarea>
+			 <button class="read-button" onclick="pasteFromTextarea()">Read</button>
+        </div>
+        <div class="button-container">
+            <button class="solve-button" onclick="solveSudoku()">Solve Sudoku</button>
+        </div>
+        <div class="time-container">
+            <p id="calcTime">Calculation Time: N/A</p>
+        </div>
+    </div>
+    <script src="sudoku.js"></script>
+</body>
+<script>
+function createTable(tableId) {
+    const table = document.getElementById(tableId);
+    for (let row = 0; row < 9; row++) {
+        const tr = document.createElement('tr');
+        for (let col = 0; col < 9; col++) {
+            const td = document.createElement('td');
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.maxLength = 1;
+            input.addEventListener('input', function () {
+                if (!/^[1-9]?$/.test(this.value)) {
+                    this.value = '';
+                }
+            });
+            td.appendChild(input);
+
+            // Add thick border classes to cells in the 3x3 subgrids
+            if (col % 3 === 2) td.classList.add('thick-border'); // Right border
+            if (row % 3 === 2) td.classList.add('thick-borderr'); // Bottom border
+            if (col % 3 === 0) td.classList.add('thick-borderq'); // Left border
+            if (row % 3 === 0) td.classList.add('thick-borderrq'); // Top border
+            tr.appendChild(td);
+        }
+        table.appendChild(tr);
+    }
+}
+
+function getTableValues(tableId) {
+    const table = document.getElementById(tableId);
+    const values = [];
+    for (let row = 0; row < 9; row++) {
+        for (let col = 0; col < 9; col++) {
+            const value = table.rows[row].cells[col].firstChild.value;
+            values.push(value ? parseInt(value, 10) : 0);
+        }
+    }
+    return values;
+}
+
+function setTableValues(tableId, values) {
+    const table = document.getElementById(tableId);
+    for (let row = 0; row < 9; row++) {
+        for (let col = 0; col < 9; col++) {
+            table.rows[row].cells[col].firstChild.value = values[row * 9 + col] || '';
+        }
+    }
+}
+
+function isValid(board) {
+    // Implementation of Sudoku validation
+    for (let i = 0; i < 9; i++) {
+        let rowSet = new Set();
+        let colSet = new Set();
+        let boxSet = new Set();
+        for (let j = 0; j < 9; j++) {
+            let rowVal = board[i * 9 + j];
+            let colVal = board[j * 9 + i];
+            let boxVal = board[Math.floor(i / 3) * 27 + Math.floor(j / 3) * 9 + i % 3 * 3 + j % 3];
+            if (rowVal !== 0) {
+                if (rowSet.has(rowVal)) return false;
+                rowSet.add(rowVal);
+            }
+            if (colVal !== 0) {
+                if (colSet.has(colVal)) return false;
+                colSet.add(colVal);
+            }
+            if (boxVal !== 0) {
+                if (boxSet.has(boxVal)) return false;
+                boxSet.add(boxVal);
+            }
+        }
+    }
+    return true;
+}
+
+function solveSudoku() {
+    const inputValues = getTableValues('inputTable');
+    const outputValues = [...inputValues];
+
+    if (!isValid(outputValues)) {
+        alert('Invalid Sudoku puzzle');
+        return;
+    }
+
+    const startTime = performance.now();
+    if (solve(outputValues)) {
+        const endTime = performance.now();
+        const timeElapsed = endTime - startTime; // Time in milliseconds
+        document.getElementById('calcTime').textContent = `Calculation Time: ${timeElapsed} ms`; // Convert to nanoseconds
+        setTableValues('outputTable', outputValues);
+    } else {
+        document.getElementById('calcTime').textContent = `Calculation Time: N/A`;
+        alert('No solution found');
+    }
+}
+
+function solve(board) {
+    const empty = findEmpty(board);
+    if (!empty) return true;
+
+    const [row, col] = empty;
+
+    for (let num = 1; num <= 9; num++) {
+        if (isSafe(board, row, col, num)) {
+            board[row * 9 + col] = num;
+            if (solve(board)) return true;
+            board[row * 9 + col] = 0;
+        }
+    }
+    return false;
+}
+
+function findEmpty(board) {
+    for (let i = 0; i < 81; i++) {
+        if (board[i] === 0) return [Math.floor(i / 9), i % 9];
+    }
+    return null;
+}
+
+function isSafe(board, row, col, num) {
+    for (let i = 0; i < 9; i++) {
+        if (board[row * 9 + i] === num || board[i * 9 + col] === num) return false;
+        const boxRow = 3 * Math.floor(row / 3) + Math.floor(i / 3);
+        const boxCol = 3 * Math.floor(col / 3) + i % 3;
+        if (board[boxRow * 9 + boxCol] === num) return false;
+    }
+    return true;
+}
+function pasteFromTextarea() {
+    const pasteArea = document.getElementById('pasteArea');
+    const input = pasteArea.value.trim();
+    const values = [];
+
+    for (let char of input) {
+        if (char === '.' || /[1-9]/.test(char)) {
+            values.push(char === '.' ? 0 : parseInt(char, 10));
+        }
+    }
+
+    if (values.length === 81) {
+        setTableValues('inputTable', values);
+    } else {
+        alert('Invalid input. Please paste exactly 81 numbers or "." characters.');
+    }
+}
+
+// Create the tables on page load
+document.addEventListener('DOMContentLoaded', () => {
+    createTable('inputTable');
+    createTable('outputTable');
+});
+
+</script>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Translator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        p {
+            margin-top: 10px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Character Translator</h1>
+    <textarea id="inputText" placeholder="Enter text here..."></textarea><br>
+    <button onclick="translateText()">Translate</button>
+    <p><strong>Translated Text:</strong></p>
+    <p id="outputText"></p>
+
+    <script>
+        const translationMap = {
+            'A': '⟠', 'B': 'ꕬ', 'C': 'ⵔ', 'Ç': 'Ϙ', 'D': 'ↀ', 'E': '𐌇',
+            'F': 'Ħ', 'G': 'ⵙ', 'Ğ': '🕀', 'H': '⨝', 'I': 'L', 'İ': 'Ľ',
+            'J': '⥿', 'K': '⛋', 'L': '⌷', 'M': '🝪', 'N': '⌦', 'O': '8',
+            'Ö': 'ﮭ', 'P': 'ɸ', 'Q': '🜮', 'R': 'ℿ', 'S': 'Ω', 'Ş': '⍾',
+            'T': '⫪', 'U': '𝕀', 'Ü': 'θ', 'V': '◊', 'W': '⨇', 'X': '⨳',
+            'Y': '⧰', 'Z': 'ⵇ', '0': 'Ꝏ', '1': '↑', '2': 'ⵋ', '3': 'Ӿ',
+            '4': '🜍', '5': 'ϖ', '6': '۵', '7': '🜃', '8': '⌘', '9': 'б'
+        };
+
+        function translateText() {
+            const inputText = document.getElementById('inputText').value;
+            let translatedText = '';
+
+            for (let char of inputText) {
+                translatedText += translationMap[char] || char;
+            }
+
+            document.getElementById('outputText').innerText = translatedText;
+        }
+    </script>
+</body>
+</html>

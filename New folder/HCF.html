@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>String Expander</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #output { white-space: pre-wrap; margin-top: 10px; }
+        #input-area, #button-area { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h1>String Expander</h1>
+    <div id="input-area">
+        <textarea id="inputText" rows="4" cols="50" placeholder="Enter your expression here"></textarea>
+    </div>
+    <div id="button-area">
+        <label for="nValue">n:</label>
+        <input type="number" id="nValue" value="2" min="1" />
+        <button onclick="startExpansion()">Start Expansion</button>
+    </div>
+    <div id="output"></div>
+
+    <script>
+        // Define rule functions
+        function applyE(expression, nValue) {
+            return expression.replace(/e(_(\d+))?/, (match, _, k) => {
+                if (k === undefined || k === '0') {
+                    return Array(parseInt(nValue, 10)).fill('w').join('^');
+                } else {
+                    const m = parseInt(k, 10) - 1;
+                    return Array(parseInt(nValue, 10)).fill(`e_${m}`).join('^');
+                }
+            });
+        }
+
+        function applyW(expression, nValue) {
+            return expression.replace(/w(?!.*w)/, nValue);
+        }
+
+        function applyAddition(expression) {
+            return expression.replace(/(\w+)\+(\d+)$/, (match, base, num) => {
+                const newNum = parseInt(num, 10) - 1;
+                return newNum > 0 ? `${base}+${newNum}` : base;
+            });
+        }
+
+        function applyComplexMultiplication(expression) {
+            return expression.replace(/(\w+\*\w+)\*(\d+)$/, (match, base, num) => {
+                return Array(parseInt(num, 10)).fill(base).join('+');
+            });
+        }
+
+        function applySimpleMultiplication(expression) {
+            return expression.replace(/(\w+)\*(\d+)$/, (match, base, num) => {
+                return Array(parseInt(num, 10)).fill(base).join('+');
+            });
+        }
+
+        function applyExponentiation(expression) {
+            return expression.replace(/(\w+)\^(\d+)$/, (match, base, num) => {
+                return Array(parseInt(num, 10)).fill(base).join('*');
+            });
+        }
+
+        function applyParentheses(expression) {
+            return expression.replace(/\(([^()]*)\)\*(\d+)$/, (match, subExpr, num) => {
+                return Array(parseInt(num, 10)).fill(`(${subExpr})`).join('+');
+            });
+        }
+
+        function applyRightmostRule(expression, nValue) {
+            const rules = [
+                { pattern: /e(_\d*)?/, rule: applyE },
+                { pattern: /w(?!.*w)/, rule: applyW },
+                { pattern: /(\w+)\+(\d+)$/, rule: applyAddition },
+                { pattern: /(\w+\*\w+)\*(\d+)$/, rule: applyComplexMultiplication },
+                { pattern: /(\w+)\*(\d+)$/, rule: applySimpleMultiplication },
+                { pattern: /(\w+)\^(\d+)$/, rule: applyExponentiation },
+                { pattern: /\(([^()]*)\)\*(\d+)$/, rule: applyParentheses },
+            ];
+
+            // Find all matches for rules and their indices
+            const matches = rules.map(({ pattern, rule }) => {
+                const match = pattern.exec(expression);
+                return match ? { pattern, rule, index: match.index } : null;
+            }).filter(m => m !== null);
+
+            if (matches.length > 0) {
+                // Sort matches by index (latest rule should be applied)
+                matches.sort((a, b) => b.index - a.index);
+
+                // Apply the latest applicable rule
+                const { rule } = matches[0];
+                return rule(expression, nValue);
+            }
+
+            return expression; // If no rule applies, return the expression as is
+        }
+
+        function startExpansion() {
+            const inputText = document.getElementById('inputText').value;
+            const outputDiv = document.getElementById('output');
+            const nValue = document.getElementById('nValue').value;
+
+            outputDiv.textContent = '';
+
+            let expandedExpression = inputText;
+
+            const intervalId = setInterval(() => {
+                const newExpansion = applyRightmostRule(expandedExpression, nValue);
+                if (newExpansion === expandedExpression) {
+                    clearInterval(intervalId);
+                }
+                expandedExpression = newExpansion;
+                outputDiv.textContent += expandedExpression + '\n';
+            }, 100);
+        }
+    </script>
+</body>
+</html>

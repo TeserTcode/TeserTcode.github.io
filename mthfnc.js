@@ -20079,10 +20079,10 @@ for(let i=0;i<N;i++)fi=add(fi,mul(tetr10tayl[i],pow(add(x,0),i)))
         return fi;
     }
     function tetr(x){
-        if(mag(im(x))>0.5)return tetrp(x)
+        if(mag(im(x))>0.5 || mag(re(x))>5)return tetrp(x)
         let fi=tetrts(modc(x,1))
-        if(re(x)<-1)for(let i=0;i<minc(mag(re(x)),10);i++)fi=log(fi)
-   else if(re(x)>1)for(let i=0;i<minc(mag(re(x)-1),10);i++)fi=exp(fi)
+        if(re(x)<-1)for(let i=0;i<minc(mag(re(x)),5);i++)fi=log(fi)
+   else if(re(x)>1)for(let i=0;i<minc(mag(re(x)-1),5);i++)fi=exp(fi)
        else return tetrts(x)
         return fi;
     }
@@ -20323,16 +20323,62 @@ function pent2u(x){
        const L=  -1.7439;
        const Lp= 5.171797;
 
-       let fi=sub(L,pow(Lp,add(x,1,sub(0,7),div(log(L),log(Lp)))));
+       let fi=sub(L,pow(Lp,add(x,1,sub(0,6),div(log(L),log(Lp)))));
        ;
-       for(let i=0;i<7;i++)
+       for(let i=0;i<6;i++)
            fi=tetr2(fi);
        return fi;
     }
-    function pent2(x){return pent2u(add(x,0.7179548082276691))}
-    
+    function pent2c(x){return pent2u(add(x,0.7179548082276691))}
+        function pent2(x){
+        if(re(x)<0) return pent2c(x)
+        let fi=pent2c(add(0,modc(x,1)))
+        for(let i=0;i<minc(5,re(floor(re(x))));i++)
+        fi=tetr2(fi);
+        return fi;
+    }
+
+/////////////////////////////////
+//newtonzero("tetrs2(x)-x",0)  1.7303749482706337 -2.7527612196203917
+//0.11376615649538735 8.845904160281748
+function pents2(x){
+           const L=  -2.7527612196203917;
+       const Lp= 8.845904160281748;
+       let fi=sub(L,pow(Lp,add(x,1,sub(0,6),div(log(L),log(Lp)))));
+        for(let i=0;i<6;i++)
+           fi=tetrs2(fi);
+       return fi;
+}
 
 
+function sexts2(x){//sextation there is 3 real choices wow
+//newtonzero("pents2(x)-x",x)
+//-2.6839923389512133 -0.8947936102828048 1.7053994361978206
+//0.21153866214262962 2.229351532267998 0.053947604161663776
+
+                  const L=  -0.8947936102828048;
+       const Lp= 2.229351532267998;
+       let fi=sub(L,pow(Lp,add(x,1,sub(0,3),div(log(L),log(Lp)))));
+        for(let i=0;i<3;i++)
+           fi=pents2(fi);
+       return fi;
+       
+}
+/*
+function septs2(x){//septation
+//newtonzero("sexts2(x)-x",x)
+//1.689531548884997 | -0.5379191804331309 + 1.579325358358633i
+//0.04450353419116482 |0.33552602696218514 + 1.731521135361902i
+
+                  const L=  (im(x)<0)?math.complex(-0.5379191804331309,-1.579325358358633):math.complex(-0.5379191804331309, 1.579325358358633);
+       const Lp= (im(x)<0)?math.complex(0.33552602696218514,-1.731521135361902):math.complex(0.33552602696218514,1.731521135361902);
+       let fi=sub(L,pow(Lp,add(x,1,sub(0,3),div(log(L),log(Lp)))));
+        for(let i=0;i<3;i++)
+           fi=sexts2(fi);
+       return fi;
+       
+}
+*/
     /////////////////////////////////////////////////////////////////////////
         /////////////////////////////////////////////////////////////////////////
     /*
@@ -20361,13 +20407,22 @@ function pent2u(x){
         const L=  -1.8503545;
        const Lp= 6.4606712;
 
-       let fi=sub(L,pow(Lp,add(x,1,sub(0,7),div(log(L),log(Lp)))));
+       let fi=sub(L,pow(Lp,add(x,1,sub(0,6),div(log(L),log(Lp)))));
        ;
-       for(let i=0;i<7;i++)
+       for(let i=0;i<6;i++)
            fi=tetr(fi);
        return fi;
     }
-    function pent(x){return pentu(add(x,0.9181855419230064))}
+    function pentc(x){return pentu(add(x,0.9181855419230064))}
+    
+        function pent(x){
+        if(re(x)<0) return pentc(x)
+         //   return pentold(x)
+        let fi=pentc(add(0,modc(x,1)))
+        for(let i=0;i<minc(10,re(floor((x))));i++)
+        fi=tetr(fi);
+        return fi;
+    }
     
     /////////////////////////////////////////////////////////////////////////
         /////////////////////////////////////////////////////////////////////////
@@ -20376,9 +20431,9 @@ function pent2u(x){
        const L=  -1.985877443680;
        const Lp= 30.75438234;
 
-       let fi=sub(L,pow(Lp,add(x,1,sub(0,7,0.5),div(log(L),log(Lp)))));
+       let fi=sub(L,pow(Lp,add(x,1,sub(0,4,0.5),div(log(L),log(Lp)))));
        ;
-       for(let i=0;i<7;i++)
+       for(let i=0;i<4;i++)
            fi=tetr10(fi);
       // return tetr(fi)
        return fi;
@@ -20391,26 +20446,49 @@ function pent2u(x){
             fi=tetr10(fi);
         return fi;
     }*/
-    function pent10(x){
+    function pent10c(x){
         
         return pent10u(add(x,1.7289))}
     
-/*    function pent10(x){
+    function pent10(x){
         if(re(x)<0) return pent10c(x)
         let fi=pent10c(add(0,modc(x,1)))
         for(let i=0;i<minc(5,re(floor(re(x))));i++)
         fi=tetr10(fi);
         return fi;
-    }*/
+    }
     
     
     
     
+    //newtonzero("cheta(x)-x",0) 2.2019964546478192 + 2.82573571593886i
     
+    //-2.3072353805275725 + 0.07644643140736207i
     
+ /*   function supercheta(x){
+    const L=  math.complex(2.2019964546478192 , 2.82573571593886);
+       const Lp= math.complex(-2.3072353805275725 , 0.07644643140736207);
+       let fi=sub(L,pow(Lp,add(x,1,sub(0,6),div(log(L),log(Lp)))));
+        for(let i=0;i<6;i++)
+           fi=cheta(fi);
+       return fi;
+    }
+    */
     
+    //1.6722995839723493 -1.5724444769457022 
+    //  7.765583796004449
+    //newtonzero("etatetr(x)-x",x)
     
-    
+    //1.5974398768635851 -1.4947896500664286
+    //4.563173403582255
+    function etapentu(x){
+                const L=  -1.4947896500664286;
+       const Lp= 4.563173403582255;
+       let fi=sub(L,pow(Lp,add(x,1,sub(0,3),div(log(L),log(Lp)))));
+        for(let i=0;i<3;i++)
+           fi=etatetr(fi);
+       return fi;
+    }
     
     
     
@@ -29261,8 +29339,8 @@ function weakplog(x){return add(weakslog(weakslog(x)),1)}
 
 function tetrs2(x){return tetrregit(sqrt(2),x)}
 function slogs2(x){return arctetrregit(sqrt(2),x)}
-function pents2a(x,a=1,N=bign){return superfunctionf(slogs2,tetrs2,a,sub(0,x),0,3,N,1.75,0)}
-function pents2(x,a=1,N=bign){return superfunctionf(slogs2,tetrs2,a,sub(0,x),0,3,N,-2.71,0)}
+//function pents2a(x,a=1,N=bign){return superfunctionf(slogs2,tetrs2,a,sub(0,x),0,3,N,1.75,0)}
+//function pents2(x,a=1,N=bign){return superfunctionf(slogs2,tetrs2,a,sub(0,x),0,3,N,-2.71,0)}
 
 function rin(x){return superasin(-0.5,x)}
 function crin(x){return superasin(-1/3,x)}
@@ -29350,7 +29428,14 @@ function supercschalt(x,a=1,N=bign*1){return zconjn(superfunctionf(csch,acsch,a,
 
 function supermexp(x,a=2,N=bign*5){return superfunctionf(mexp,logp,a,x,0,3,N,1,0)}
 function superexpm(x,a=1,N=bign*5){return superfunctionf(expm,plog,a,x,0,3,N,0,0)}
+//function superexpm2(x,a=1,N=bign*5){return superfunctionregitff(plog,expm,a,x,0,3,N,0,0)}
 function superexp(x,a=1,N=bign*5){return superfunctionf(exp,log,a,x,0,filog(eulerc()),N,0,0)}
+
+function exmp(x){return div(exp(x),eulerc())}
+function lopg(x){return add(1,log(x))}
+
+function superexmp(x,a=1,N=bign*5){return add(1,superexpm(sub(x,1),a,N))}//return superfunctionf(exmp,lopg,a,x,0,3,N,1,0)}
+
 
 function superlinear(x,a=2,b=0,ri=1,bignc=bign*1){
     const globalc=2;
@@ -29425,13 +29510,26 @@ function supersex(x,s=1,e=0,a=1,N=bign*5) {
 
 function logeta(x){return mul(eulerc(),log(x))}
 function expeta(x){return pow(exp(div(1,eulerc())),x)}
-function etatetr(x,k=-0.55,a=math.complex(1,pow(10,-15)),N=bign*4){return zconjn(superfunctionf(expeta,logeta,a,wconjn(x,x,mul(k,I)),0,3,N,eulerc(),0),x)}
+
+function logmeta(x){return logb(x,1.44366786101)}
+function expmeta(x){return pow(1.44366786101,x)}
+
+function etatetru(x,a=1,N=bign*3){return superfunctionregitff(expmeta,logmeta,a,sub(x,0,-1.736),0,2,N*2,2.55964)}
+function etatetr(x){
+    if(re(x)<-9)return etatetru(x);
+    let fi=etatetru(sub(modc(x,1),9));
+    for(let i=0;i<minc(20,floor(re(x))+9);i++)
+        fi=expmeta(fi);
+    return fi;
+}
+
+function etatetrch(x,k=-0.55,a=math.complex(1,pow(10,-5)),N=bign*4){return zconjn(superfunctionf(expeta,logeta,a,wconjn(x,x,mul(k,I)),0,3,N,eulerc(),0),x)}
 function cheta(x,k=0,a=mul(eulerc(),2),N=bign){return zconjn(superfunctionf(expeta,logeta,a,wconjn(x,x,mul(k,I)),0,3,N,eulerc(),0),x)}
 function cheta2(x,k=0,a=sqr(eulerc()),N=bign){return zconjn(superfunctionf(expeta,logeta,a,wconjn(x,x,mul(k,I)),0,3,N,eulerc(),0),x)}
 
 //math.complex(1.5259833, 0.0178411)
 //1.5259833+0.0178411*i
-function sheldontetr(x){return 2}
+//function sheldontetr(x){return 2}
 
 
 function supermersenne(x,a=2,N=bign){return superfunctionf(mersenne,arcmersenne,a,x,0,3,N,0,0)}

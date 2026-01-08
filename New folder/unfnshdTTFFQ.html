@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>String Expansion</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin: 10px 0;
+        }
+        button {
+            margin: 5px;
+            padding: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>String Expansion</h1>
+    
+    <textarea id="inputBox" placeholder="Enter input string here..."></textarea>
+    <textarea id="outputBox" placeholder="Expanded output will appear here..." readonly></textarea>
+    <textarea id="resultBox" placeholder="Expanded result will appear here..." readonly></textarea>
+
+    <button onclick="expand()">Expand</button>
+    <button onclick="expandResult()">Expand Result</button>
+    <button onclick="simulateExpansion()">SGH</button>
+
+    <script>
+        function findClosingParenthesis(str, openingIndex) {
+            let count = 1; // Start count from 1 for the opening parenthesis '('
+            let i;
+            for (i = openingIndex + 1; i < str.length; ++i) {
+                if (str[i] === '(') {
+                    count++;
+                } else if (str[i] === ')') {
+                    count--;
+                    if (count === 0) {
+                        break;
+                    }
+                }
+            }
+            return i;
+        }
+
+        function generateSequenceAtIndex(input, index) {
+            let input_copy = input;
+            let initial_f = '';
+            let first_non_f = input_copy.search(/[^f]/);
+
+            if (first_non_f !== -1) {
+                initial_f = input_copy.substring(0, first_non_f);
+                input_copy = input_copy.substring(first_non_f);
+            }
+
+            let posF = input_copy.indexOf('F');
+
+            if (posF === -1) {
+                return input_copy;
+            }
+
+            if (posF + 1 < input_copy.length && input_copy[posF + 1] === '(') {
+                let posCloseParen = findClosingParenthesis(input_copy, posF + 1);
+                let content_inside_parentheses = input_copy.substring(posF + 2, posCloseParen);
+
+                let sequence_inside_parentheses = '';
+                for (let j = 0; j < index; ++j) {
+                    sequence_inside_parentheses += content_inside_parentheses;
+                }
+
+                return initial_f + sequence_inside_parentheses + input_copy.substring(posCloseParen + 1);
+            }
+
+            let posQ = input_copy.indexOf('q');
+            let posf = input_copy.indexOf('f');
+
+            let part_to_repeat = '';
+            let part_after_stop = '';
+
+            if (posQ !== -1 && posQ > posF && (posf === -1 || posQ < posf)) {
+                part_to_repeat = input_copy.substring(posF + 1, posQ);
+                part_after_stop = input_copy.substring(posQ + 1);
+            } else if (posf !== -1 && posf > posF) {
+                part_to_repeat = input_copy.substring(posF + 1, posf);
+                part_after_stop = input_copy.substring(posf + 1);
+            } else {
+                part_to_repeat = input_copy.substring(posF + 1);
+            }
+
+            let current_sequence = '';
+            for (let j = 0; j < index; ++j) {
+                current_sequence += part_to_repeat;
+            }
+            if (part_after_stop) {
+                current_sequence += part_after_stop;
+            }
+
+            return initial_f + current_sequence;
+        }
+
+        function expand() {
+            let input = document.getElementById('inputBox').value;
+            let index = parseInt(prompt("Enter index: "), 10);
+
+            if (index < 0) {
+                index = Math.abs(index);
+                let results = '';
+                for (let i = 1; i <= index; ++i) {
+                    results += generateSequenceAtIndex(input, i) + '\n';
+                }
+                document.getElementById('outputBox').value = results.trim();
+            } else {
+                let result = generateSequenceAtIndex(input, index);
+                document.getElementById('outputBox').value = result;
+            }
+        }
+
+        function expandResult() {
+            let output = document.getElementById('outputBox').value;
+            let index = parseInt(prompt("Enter index for expansion result: "), 10);
+
+            if (index >= 0) {
+                let result = generateSequenceAtIndex(output, index);
+                document.getElementById('resultBox').value = result;
+            }
+        }
+
+        function simulateExpansion() {
+            let input = document.getElementById('inputBox').value;
+            let index = parseInt(prompt("Enter index for simulation: "), 10);
+
+            if (index >= 0) {
+                let iterationCount = 0;
+                let result = generateSequenceAtIndex(input, index);
+
+                function update() {
+                    document.getElementById('resultBox').value = result;
+                    iterationCount++;
+                    if (result.includes('F')) {
+                        result = generateSequenceAtIndex(result, index);
+                        setTimeout(update, 500);
+                    } else {
+                        let fCount = (result.match(/f/g) || []).length;
+                        document.getElementById('resultBox').value += `\nFinal number of 'f': ${fCount}\nNumber of iterations: ${iterationCount}`;
+                    }
+                }
+
+                update();
+            }
+        }
+    </script>
+</body>
+</html>

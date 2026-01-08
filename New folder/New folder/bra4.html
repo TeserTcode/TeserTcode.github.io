@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expand String</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #output {
+            margin-top: 20px;
+            white-space: pre-wrap; /* Preserve formatting and newlines */
+        }
+    </style>
+</head>
+<body>
+    <h1>Expand String</h1>
+    <label for="input">Input:</label>
+    <input type="text" id="input" value="([{(,)}<]<),(>[>])">
+    <br>
+    <label for="repeatCount">Repeat count:</label>
+    <input type="number" id="repeatCount" value="2">
+    <br>
+    <button onclick="expandText()">Expand</button>
+    <button onclick="expandResult()">Expand Result</button>
+    <button onclick="startSGH()">SGH</button>
+    <div id="output"></div>
+    <script>
+        function stringfy(inp, maxima = -1) {
+            let chararray = [];
+            let numbuffer = '';
+            let commacount = 0;
+
+            for (let c of inp) {
+                if (c === ',') commacount++;
+                else {
+                    if (maxima !== -1) commacount = Math.min(commacount, maxima);
+                    if (commacount > 0) chararray.push("-N" + commacount);
+                    commacount = 0;
+
+                    if (/\d/.test(c)) numbuffer += c;
+                    else {
+                        if (numbuffer) chararray.push("-N" + numbuffer);
+                        numbuffer = '';
+                        switch (c) {
+                            case '(': chararray.push("01"); break;
+                            case ')': chararray.push("-01"); break;
+                            case '[': chararray.push("02"); break;
+                            case ']': chararray.push("-02"); break;
+                            case '{': chararray.push("03"); break;
+                            case '}': chararray.push("-03"); break;
+                            case 'U': chararray.push("-N50"); break;
+                            case 'w': chararray.push("09", "-N1", "-09"); break;
+                            case '<': if (chararray[chararray.length - 1]?.[1] !== 'N') chararray.push("<"); break;
+                            default: if (!/\s/.test(c)) chararray.push(c); break;
+                        }
+                    }
+                }
+            }
+            if (commacount > 0) chararray.push("-N" + commacount);
+            if (numbuffer) chararray.push("-N" + numbuffer);
+
+            return chararray;
+        }
+
+        function del(chararray) {
+            let first03Index = chararray.length;
+            let first02Index = chararray.length;
+            let first01Index = chararray.length;
+            let firstLessThanIndex = chararray.length;
+
+            for (let i = 0; i < chararray.length; ++i) {
+                if (chararray[i] === "03" && first03Index === chararray.length) first03Index = i;
+                else if (chararray[i] === "02" && first02Index === chararray.length) first02Index = i;
+                else if (chararray[i] === "01" && first01Index === chararray.length) first01Index = i;
+                else if (chararray[i] === "<" && firstLessThanIndex === chararray.length) firstLessThanIndex = i;
+            }
+
+            if (first03Index < chararray.length) {
+                chararray = chararray.filter((str, index) => index >= first03Index || str !== "-03");
+            } else {
+                chararray = chararray.filter(str => str !== "-03");
+            }
+
+            if (first02Index < chararray.length) {
+                chararray = chararray.filter((str, index) => index >= first02Index || str !== "-02");
+            } else {
+                chararray = chararray.filter(str => str !== "-02");
+            }
+
+            if (first01Index < chararray.length) {
+                chararray = chararray.filter((str, index) => index >= first01Index || str !== "-01");
+            } else {
+                chararray = chararray.filter(str => str !== "-01");
+            }
+
+            if (firstLessThanIndex < chararray.length) {
+                chararray = chararray.filter((str, index) => index >= firstLessThanIndex || str !== ">");
+            } else {
+                chararray = chararray.filter(str => str !== ">");
+            }
+
+            return chararray;
+        }
+
+        function delInverse(chararray) {
+            let lastNegative01Index = chararray.length;
+            let lastNegative02Index = chararray.length;
+            let lastNegative03Index = chararray.length;
+            let lastNegative0vIndex = chararray.length;
+
+            for (let i = 0; i < chararray.length; ++i) {
+                if (chararray[i] === "-01") lastNegative01Index = i;
+                else if (chararray[i] === "-02") lastNegative02Index = i;
+                else if (chararray[i] === "-03") lastNegative03Index = i;
+                else if (chararray[i] === ">") lastNegative0vIndex = i;
+            }
+
+            if (lastNegative03Index < chararray.length) {
+                chararray = chararray.filter((str, index) => index < lastNegative03Index || str !== "03");
+            } else {
+                chararray = chararray.filter(str => str !== "03");
+            }
+
+            if (lastNegative0vIndex < chararray.length) {
+                chararray = chararray.filter((str, index) => index < lastNegative0vIndex || str !== "<");
+            } else {
+                chararray = chararray.filter(str => str !== "<");
+            }
+
+            if (lastNegative02Index < chararray.length) {
+                chararray = chararray.filter((str, index) => index < lastNegative02Index || str !== "02");
+            } else {
+                chararray = chararray.filter(str => str !== "02");
+            }
+
+            if (lastNegative01Index < chararray.length) {
+                chararray = chararray.filter((str, index) => index < lastNegative01Index || str !== "01");
+            } else {
+                chararray = chararray.filter(str => str !== "01");
+            }
+
+            return chararray;
+        }
+
+        function expanda(chararray, w) {
+            let expandedarray = [...chararray];
+            let a = [];
+            let i = 0;
+            let ifv = 0;
+
+            while (i < expandedarray.length) {
+                if (expandedarray[i].length > 1 && expandedarray[i][0] !== '-') {
+                    let startstr = expandedarray[i];
+                    a.push(i);
+                    let counter = 1;
+                    let found = false;
+
+                    for (let j = i + 1; j < expandedarray.length; ++j) {
+                        if (expandedarray[j] === startstr) counter++;
+                        else if (expandedarray[j] === "-" + startstr) {
+                            --counter;
+                            if (counter === 0) {
+                                a.push(j);
+                                found = true;
+                                i = j;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!found) {
+                        a.pop();
+                        if (a.length > 0) {
+                            i = a.pop();
+                        }
+                    }
+                }
+                ++i;
+            }
+
+            if (a.length < 2) {
+                let foundspecial = false;
+
+                for (let j = 0; j < expandedarray.length; ++j) {
+                    if (expandedarray[j] === "<") {
+                        for (let k = j + 1; k < expandedarray.length; ++k) {
+                            if (expandedarray[k] === ">") {
+                                foundspecial = true;
+                                expandedarray.splice(j, 1);
+                                expandedarray.splice(k - 1, 1);
+                                break;
+                            }
+                        }
+                        if (foundspecial) break;
+                    }
+                }
+
+                if (!foundspecial) {
+                    let foundunpairedstart = false;
+
+                    for (let j = 0; j < expandedarray.length; ++j) {
+                        if (expandedarray[j].length > 1 && expandedarray[j][0] !== '-') {
+                            expandedarray.splice(j, 1);
+                            foundunpairedstart = true;
+                            break;
+                        }
+                    }
+
+                    if (!foundunpairedstart) {
+                        for (let j = 0; j < expandedarray.length; ++j) {
+                            if (expandedarray[j].length > 1 && expandedarray[j][0] === '-' && expandedarray[j][1] !== 'N') {
+                                expandedarray.splice(j, 1);
+                                break;
+                            }
+                        }
+                    }
+                }
+            } else {
+                ifv = 1;
+
+                while (a.length >= 2) {
+                    let start = a[a.length - 2];
+                    let end = a[a.length - 1];
+                    let bigo = 0;
+                    let tocopy = expandedarray.slice(start + 1, end);
+
+                    if (end + 2 < expandedarray.length && expandedarray[end + 1] === "<" && expandedarray[end + 2] === ">") {
+                        bigo = 1;
+                        tocopy = tocopy.concat(expandedarray.slice(end + 3));
+                    }
+
+                    for (let j = 0; j < tocopy.length; ++j) {
+                        expandedarray.splice(start + j + 1, 0, tocopy[j]);
+                    }
+
+                    if (bigo) expandedarray.push("<", ">");
+
+                    a.pop();
+                    a.pop();
+                }
+            }
+
+            return expandedarray;
+        }
+
+        function processInput(input) {
+            let charArray = stringfy(input);
+            charArray = del(charArray);
+            charArray = delInverse(charArray);
+            let resultArray = expanda(charArray, "w");
+
+            return resultArray.join('');
+        }
+
+        function expandText() {
+            let input = document.getElementById('input').value;
+            let repeatCount = parseInt(document.getElementById('repeatCount').value, 10);
+            let output = '';
+
+            for (let i = 0; i < repeatCount; ++i) {
+                input = processInput(input);
+                output += input + '\n';
+            }
+
+            document.getElementById('output').textContent = output;
+        }
+
+        function expandResult() {
+            let input = document.getElementById('input').value;
+            let result = processInput(input);
+            let output = document.getElementById('output').textContent;
+
+            document.getElementById('output').textContent = output + result + '\n';
+        }
+
+        function startSGH() {
+            let input = document.getElementById('input').value;
+            let output = '';
+            let lastResult = '';
+
+            function simulate() {
+                let result = processInput(input);
+
+                if (result === lastResult) {
+                    clearInterval(intervalId);
+                } else {
+                    output += result + '\n';
+                    document.getElementById('output').textContent = output;
+                    lastResult = result;
+                }
+            }
+
+            let intervalId = setInterval(simulate, 500);
+        }
+    </script>
+</body>
+</html>

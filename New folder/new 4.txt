@@ -1,0 +1,181 @@
+        <div class="char-set">
+            <div class="preset-controls">
+                <label for="charPresets">Preset Character Sets:</label>
+                <select id="charPresets">
+                    <option value="custom">Custom</option>
+                    <option value="blocks">Blocks (█▓▒░ )</option>
+                    <option value="detailed">Detailed (@%#*+=-:. `)</option>
+                    <option value="detailed2">Detailed 2(()[]{}-|^~\/HI= .,;: )</option>
+                    <option value="hiragana">China (一二三十上下大小`)</option>
+                    <option value="katakana">Hiragana</option>
+                    <option value="hiraganakatakana">Hiragana Katakana</option>
+                    <option value="hiraganakatakanakanji">Hiragana Katakana Kanji</option>
+                    <option value="china">China (一二三十上下大小`)</option>
+                    <option value="china2">China2 (黜黝黟默`)</option>
+                    <option value="minimal">Minimal (▪· )</option>
+                    <option value="artistic">Artistic (◉○◌◍◎●)</option>
+                    <option value="alphanumeric">Alphanumeric (MWN80ZDQLCJUYXKV)</option>
+                    <option value="box">Box Drawing (─│┌┐└┘├┤┬┴┼═║╔╗╚╝╠╣╦╩╬)</option>
+                    <option value="math">Math Symbols (πΣ√∞∫≈≠≤≥±×÷)</option>
+                    <option value="extra">Extra Detailed (☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼)</option>
+                    <option value="lines">Lines Only (─━│┃┄┅┆┇┈┉┊┋╌╍╎╏═║╒╓╔╕╖╗╘╙╚╛╜╝╞╟╠╡╢╣╤╥╦╧╨╩╪╫╬)</option>
+                    <option value="shades">Shades (█▓▒░ .)</option>
+<option value="braille">Braille (⠁⠂⠄⡀⢀⠈⠐⠠⢈⡈⢀⠠⠐⠈⠂⠄⠁⠁)</option>
+<option value="emoji">Emoji (😀😂🤣😊😎😍😘🥰😜🤩🤯)</option>
+<option value="arrows">Arrows (←↑→↓↔↕⇐⇑⇒⇓⇔⇕)</option>
+<option value="chess">Chess Pieces (♔♕♖♗♘♙♚♛♜♝♞♟)</option>
+<option value="runes">Runes (ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛋᛏᛒᛖᛗᛚ)</option>
+<option value="cyrillic">Cyrillic (АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЫЮЯ)</option>
+<option value="greek">Greek (ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ)</option>
+<option value="stars">Stars (★☆✦✧✩✪✫✬✭✮✯✰✱✲✳✴✵✶✷✸✹✺✻✼✽✾✿)</option>
+<option value="misc">Miscellaneous (☀☁☂☃☄★☆☇☈☉☊☋☌☍☎☏☐☑☒☓☕☘☙☚☛☜☝☞☟)</option>
+  <option value="extended_braille">Extended Braille (⡀⡁⡂⡃⡄⡅⡆⡇⡈⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒⡓⡔⡕⡖⡗⡘⡙⡚⡛⡜⡝⡞⡟...)</option>
+<option value="extended_math">Extended Math (∑∏∂∆∇∝∞≠≤≥≈∴∵⊥⊢⊨⊩⊬⊭⊯∃∀∅∈∉∋⊆⊂⊇⊃⋂⋃⊕⊗⊖⊘)</option>
+<option value="brackets">Brackets & Parentheses ((){}[]⟨⟩〈〉❬❭❮❯❰❱⦃⦄⦅⦆⦇⦈⦉⦊⦋⦌)</option>
+<option value="shadesextra">Extra Shades (█▓▒░░▒▓██▓▒░░▒▓██▓▒░)</option>
+<option value="boxextra">Extra Box Drawing (╭╮╯╰┏┓┗┛┃━┳┻┣┫╋╼╽╾╿╱╲╳╌╍╎╏)</option>
+<option value="gokturkish">Göktürk Runes (𐰀𐰁𐰂𐰃𐰄𐰅𐰆𐰇𐰈𐰉𐰊𐰋𐰌𐰍𐰎𐰏𐰐𐰑𐰒𐰓𐰔𐰕)</option>
+<option value="numbers">Numbers (0123456789₀₁₂₃₄₅₆₇₈₉⁰¹²³⁴⁵⁶⁷⁸⁹)</option>
+<option value="arabic">Arabic (٠١٢٣٤٥٦٧٨٩؀؁؂؃؄؅؆؇؈؉؊؋٪٫٬)</option>
+<option value="shapes">Shapes (■□▲△▼▽◆◇○●◎◉◊◌◍◐◑◒◓◔◕◖◗◘◙◚◛)</option>
+<option value="extreme_symbols">Extreme Symbols (☢☣⚠⚡♻☠⚔)</option>
+<option value="all_in_1">All-in-1</option>
+<option value="all_in_2">All-in-2</option>
+  </select>
+                <button id="applyPreset">Apply Preset</button>
+            </div>
+            <label for="characters">Character Set:</label><br>
+            <textarea id="characters">@%#*+=-:. `</textarea>
+        </div>
+        
+        <div class="comparison">
+            <div class="comparison-item">
+                <h3>Original Image</h3>
+                <canvas id="originalCanvas"></canvas>
+            </div>
+            <div class="comparison-item">
+                <h3>ASCII Art</h3>
+                <div id="asciiOutput">Upload an image and click "Generate ASCII Art"</div>
+            </div>
+        </div>
+        
+        <div class="magnifier" id="magnifier">
+            <h3>Character Analysis</h3>
+            <div class="zoom-row">
+                <div class="zoom-col">
+                    <h4>Original Region</h4>
+                    <canvas id="zoomOriginal" class="zoom-canvas"></canvas>
+                </div>
+                <div class="zoom-col">
+                    <h4>Grayscale</h4>
+                    <canvas id="zoomGrayscale" class="zoom-canvas"></canvas>
+                </div>
+                <div class="zoom-col">
+                    <h4>Processed</h4>
+                    <canvas id="zoomProcessed" class="zoom-canvas"></canvas>
+                </div>
+            </div>
+            <div class="zoom-row">
+                <div class="zoom-col">
+                    <h4>Best Character: <span id="bestCharDisplay"></span></h4>
+                    <canvas id="zoomChar" class="zoom-canvas"></canvas>
+                </div>
+                <div class="zoom-col">
+                    <h4>Character Grayscale</h4>
+                    <canvas id="zoomCharGray" class="zoom-canvas"></canvas>
+                </div>
+                <div class="zoom-col">
+                    <h4>Character Processed</h4>
+                    <canvas id="zoomCharProcessed" class="zoom-canvas"></canvas>
+                </div>
+            </div>
+            <div class="char-performance">
+                <h4>Character Performance</h4>
+                <div class="performance-graph" id="performanceGraph"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const elements = {
+                imageInput: document.getElementById('imageInput'),
+                cellSizeInput: document.getElementById('cellSize'),
+                fontSizeInput: document.getElementById('fontSize'),
+                generateBtn: document.getElementById('generateBtn'),
+                charactersInput: document.getElementById('characters'),
+                originalCanvas: document.getElementById('originalCanvas'),
+                asciiOutput: document.getElementById('asciiOutput'),
+                magnifier: document.getElementById('magnifier'),
+                zoomOriginal: document.getElementById('zoomOriginal'),
+                zoomGrayscale: document.getElementById('zoomGrayscale'),
+                zoomProcessed: document.getElementById('zoomProcessed'),
+                zoomChar: document.getElementById('zoomChar'),
+                zoomCharGray: document.getElementById('zoomCharGray'),
+                zoomCharProcessed: document.getElementById('zoomCharProcessed'),
+                bestCharDisplay: document.getElementById('bestCharDisplay'),
+                performanceGraph: document.getElementById('performanceGraph'),
+                invertCharBrightnessCheckbox: document.getElementById('invertCharBrightness'),
+                charPresets: document.getElementById('charPresets'),
+                applyPresetBtn: document.getElementById('applyPreset'),
+                contrastSlider: document.getElementById('contrast'),
+                contrastValue: document.getElementById('contrastValue'),
+                brightnessSlider: document.getElementById('brightness'),
+                brightnessValue: document.getElementById('brightnessValue'),
+                kernelType: document.getElementById('kernelType'),
+                kernelThreshold: document.getElementById('kernelThreshold'),
+                kernelThresholdValue: document.getElementById('kernelThresholdValue')
+            };
+            
+            let originalImage = null;
+            let originalCtx = elements.originalCanvas.getContext('2d');
+            let lastAsciiData = null;
+            let processedImageData = null;
+            let scaleRatio = 1;
+            
+            // Preset character sets
+            const presetCharacters = {
+                'custom': '',
+                'blocks': '█▓▒░ ▀▄▌▐█▞▚▖▗▘▝▞▛▜▟▙▛▜▚▞ ',
+                'detailed': '()[]{}-|^~\/HI= .,;:ALVTO+<>_*#qwertyuıopğüişlkjhgfdsazxcvbnmöç.QWERTYUIOPĞÜİŞLKJHGFDSAZXCVBNMÖÇ.',
+                'minimal': '▪· ',
+                'artistic': '◉○◌◍◎●',
+                'alphanumeric': 'qwertyuıopğü,asdfghjklşizxcvbnmöç.1234567890*-!^+%&/()=?_,;>£#$½{[]}\|@æ€₺`:"<>|QWERTYUIOPĞÜASDFGHJKLŞİZXCVBNMÖ',
+                'box': '─│┌┐└┘├┤┬┴┼═║╔╗╚╝╠╣╦╩╬',
+                'math': 'πΣ√∞∫≈≠≤≥±×÷',
+                'extra': '☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼',
+                'lines': '─━│┃┄┅┆┇┈┉┊┋╌╍╎╏═║╒╓╔╕╖╗╘╙╚╛╜╝╞╟╠╡╢╣╤╥╦╧╨╩╪╫╬',
+
+    'shades': '█▓▒░ .',
+    'braille': '⠁⠂⠄⡀⢀⠈⠐⠠⢈⡈⢀⠠⠐⠈⠂⠄⠁⠁',
+    'emoji': '😀😂🤣😊😎😍😘🥰😜🤩🤯',
+    'arrows': '←↑→↓↔↕⇐⇑⇒⇓⇔⇕',
+    'chess': '♔♕♖♗♘♙♚♛♜♝♞♟',
+    'runes': 'ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛋᛏᛒᛖᛗᛚ',
+    'cyrillic': 'АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЫЮЯ',
+    'greek': 'ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ',
+    'stars': '★☆✦✧✩✪✫✬✭✮✯✰✱✲✳✴✵✶✷✸✹✺✻✼✽✾✿',
+    'misc': '☀☁☂☃☄★☆☇☈☉☊☋☌☍☎☏☐☑☒☓☕☘☙☚☛☜☝☞☟',
+    //'extended_braille': '⡀⡁⡂⡃⡄⡅⡆⡇⡈⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒⡓⡔⡕⡖⡗⡘⡙⡚⡛⡜⡝⡞⡟',
+    'extended_braille':'⠁⠂⠃⠄⠅⠆⠇⠈⠉⠊⠋⠌⠍⠎⠏⠐⠑⠒⠓⠔⠕⠖⠗⠘⠙⠚⠛⠜⠝⠞⠟⠠⠡⠢⠣⠤⠥⠦⠧⠨⠩⠪⠫⠬⠭⠮⠯⠰⠱⠲⠳⠴⠵⠶⠷⠸⠹⠺⠻⠼⠽⠾⠿⡀⡁⡂⡃⡄⡅⡆⡇⡈⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒⡓⡔⡕⡖⡗⡘⡙⡚⡛⡜⡝⡞⡟⡠⡡⡢⡣⡤⡥⡦⡧⡨⡩⡪⡫⡬⡭⡮⡯⡰⡱⡲⡳⡴⡵⡶⡷⡸⡹⡺⡻⡼⡽⡾⡿⢀⢁⢂⢃⢄⢅⢆⢇⢈⢉⢊⢋⢌⢍⢎⢏⢐⢑⢒⢓⢔⢕⢖⢗⢘⢙⢚⢛⢜⢝⢞⢟⢠⢡⢢⢣⢤⢥⢦⢧⢨⢩⢪⢫⢬⢭⢮⢯⢰⢱⢲⢳⢴⢵⢶⢷⢸⢹⢺⢻⢼⢽⢾⢿⣀⣁⣂⣃⣄⣅⣆⣇⣈⣉⣊⣋⣌⣍⣎⣏⣐⣑⣒⣓⣔⣕⣖⣗⣘⣙⣚⣛⣜⣝⣞⣟⣠⣡⣢⣣⣤⣥⣦⣧⣨⣩⣪⣫⣬⣭⣮⣯⣰⣱⣲⣳⣴⣵⣶⣷⣸⣹⣺⣻⣼⣽⣾⣿',
+    'extended_math': '∑∏∂∆∇∝∞≠≤≥≈∴∵⊥⊢⊨⊩⊬⊭⊯∃∀∅∈∉∋⊆⊂⊇⊃⋂⋃⊕⊗⊖⊘',
+    'brackets': '(){}[]⟨⟩〈〉❬❭❮❯❰❱⦃⦄⦅⦆⦇⦈⦉⦊⦋⦌',
+    'shadesextra': '█▓▒░░▒▓██▓▒░░▒▓██▓▒░',
+    'boxextra': '╭╮╯╰┏┓┗┛┃━┳┻┣┫╋╼╽╾╿╱╲╳╌╍╎╏',
+    'gokturkish': '𐰀𐰁𐰂𐰃𐰄𐰅𐰆𐰇𐰈𐰉𐰊𐰋𐰌𐰍𐰎𐰏𐰐𐰑𐰒𐰓𐰔𐰕',
+    'numbers': '0123456789₀₁₂₃₄₅₆₇₈₉⁰¹²³⁴⁵⁶⁷⁸⁹',
+    'arabic': '٠١٢٣٤٥٦٧٨٩؀؁؂؃؄؅؆؇؈؉؊؋٪٫٬',
+    'shapes': '■□▲△▼▽◆◇○●◎◉◊◌◍◐◑◒◓◔◕◖◗◘◙◚◛',
+    'extreme_symbols': '☢☣⚠⚡♻☠⚔⚒⚖⚗⚙⚜☕♠♥♦♣⚜⚛⚕⚖⚗⚙⚡⚠☢☣☠⚔',
+    'all_in_1': '█▓▒░ .█▓▒░@%#*+=-:.`▪·◉○◌◍◎●MWN80ZDQLCJUYXKV─│┌┐└┘├┤┬┴┼═║╔╗╚╝╠╣πΣ√∞∫≈≠≤≥±×÷☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼⠁⠂⠄⡀⢀⠈⠐⠠⢈⡈ ',
+    'all_in_2': '←↑→↓↔↕⇐⇑⇒⇓⇔⇕𐰀𐰁𐰂𐰃𐰄𐰅𐰆𐰇𐰈𐰉𐰊𐰋𐰌𐰍𐰎𐰏𐰐𐰑𐰒𐰓𐰔𐰕0123456789₀₁₂₃₄₅₆₇₈₉⁰¹²³⁴⁵⁶⁷⁸⁹■□▲△▼▽◆◇○●◎◉◊◌◍◐◑◒◓◔◕◖◗◙◚◛⡀⡁⡂⡃⡄⡅⡆⡇⡈⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒⡓⡔⡕⡖⡗⡘⡙⡚⡛⡜⡝⡞⡟qwertyuıopğü,asdfghjklşizxcvbnmöç.1234567890*-!^+%&/()=?_,;>£#$½{[]}\|@æ€₺`:"<>|QWERTYUIOPĞÜASDFGHJKLŞİZXCVBNMÖ',
+'detailed2':'()[]{}-|^~\/HI= .,;:ALVTO+<>_*#qwertyuıopğüişlkjhgfdsazxcvbnmöç.QWERTYUIOPĞÜİŞLKJHGFDSAZXCVBNMÖÇ."`',
+'china':'一二三四五六七八九十人口手日大小上下月天白生心早山今也了明男女有几个左右中花草你在他她我不和去多少水我你他她它是有在不一了的和人中大小天地上下左右日月水火山石生死金木土风雷雨电花草树国家学校朋友时间爱和平快乐幸福梦想希望未来世界龍鳳麗顏驚騰耀繁壽夢樂藝醫聖贏寶觀鏡護鐘願變蘭耀騰興蘇躍艷繼藤聰聽闊蘇',
+'china2':'一丨乙二十丁厂七卜人入八九几儿了力乃刀又三干亏工土士大千川小山巾寸上下个口日中贝水手毛气长凡及夕天太女子也尤尹飞叉习午牛文方火无六公元云五升午仁片牙牛犬王井令加外冬出击半平玉甘生田由目白皮目矢石示礼立竹米羊羽而耳肉臣自至舌行血衣西色足车长片牙牛犬王井令加外冬出击半平玉甘生田由目白皮目矢石示礼立竹米羊羽而耳肉臣自至舌行血衣西色足车雨青非面革音风食首香骨高鬲黑鼎鼓鼠鼻齿龙龟鳞凤麟丽鸾鹤麟鹰鹦鹩鹭鹫鹬黛黔黜黝黟默黯霸露霹雳霜霞霖霏霓露霸霹雳青藤鹤鸾鹰鹦鹩鹭鹫鹬麟麟鹤黛黔黜黝黟默黯',
+'hiragana':'あいうえおかきくけこさしすせそたちつてとはひふへほなにぬねのまみむめもやゆよらりるれろわをん',
+'katakana':'アイウエオカキクケコサシスセソタチツテトハヒフヘホナニヌネノマミムメモヤユヨラリルレロワヲン',
+'hiraganakatakana':'あいうえおかきくけこさしすせそたちつてとはひふへほなにぬねのまみむめもやゆよらりるれろわをんアイウエオカキクケコサシスセソタチツテトハヒフヘホナニヌネノマミムメモヤユヨラリルレロワヲン',
+'hiraganakatakanakanji':'あいうえおかきくけこさしすせそたちつてとはひふへほなにぬねのまみむめもやゆよらりるれろわをんアイウエオカキクケコサシスセソタチツテトハヒフヘホナニヌネノマミムメモヤユヨラリルレロワヲン一二三四五六七八九十百千万上下左右大小中日月火水木金土山川田空天雨気風花草木虫犬猫魚鳥人男女子父母兄弟学校先生友国語電車駅店本新聞書読話聞食飲学生時間午前午後今何時東京大阪京都北海道海森楽歌声音星空雲雪風光明暗白黒赤青黄緑茶紫色顔体心手足頭目耳鼻口歯首声心意思考知識学問文科算数理科社会歴史地図世界国都県市町村道橋道路川湖海山島森林畑田園畜産工業商業銀行会社仕事職業医者看護師教師警察消防士料理運転旅行飛行機船電車自動車自転車動物植物野菜果物米麦肉魚牛豚鶏犬猫馬鳥虫蜂蛇龍亀象熊虎狼猿鹿兎馬羊牛象魚貝介虫草花木竹森林空雲雨雪雷風光太陽月星宇宙地球火山川湖池滝海浜砂漠山岳洞窟岩石鉱物金銀銅鉄鋼石炭油水波流湖海河温泉地震台風竜巻風速気温湿度天気晴曇雨雪雷雹霜霧虹光影夜昼朝夕時分秒週月年春夏秋冬暦時計時間空間過去現在未来歴史文化文明伝統習慣祭り神社寺教会仏教神道キリスト教イスラム教ヒンドゥー教言語文字書籍新聞雑誌文学詩歌俳句短歌小説漫画映画音楽絵画彫刻芸術舞台演劇茶道華道武道柔道剣道空手相撲棋道囲碁将棋」',
+
+            };

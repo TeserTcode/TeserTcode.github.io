@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Radon Transform Maker</title>
+  <style>
+    canvas {
+      border: 1px solid black;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .controls {
+      margin: 10px;
+    }
+    .controls label {
+      display: block;
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="controls">
+      <input type="file" id="imageInput" accept="image/png" />
+      <label for="steps">Number of Rotation Steps (N):</label>
+      <input type="number" id="steps" value="180" min="1" />
+      <label for="rotationMethod">Rotation Method:</label>
+<select id="rotationMethod">
+  <option value="nearest">Nearest Neighbor</option>
+  <option value="expandAverage">Expand Canvas (Average Fill)</option>
+  <option value="expandNearest">Expand Canvas (Nearest Fill)</option>
+
+</select>
+      <label for="averageMethod">Average Method:</label>
+     <select id="averageMethod">
+  <option value="mean">Arithmetic Mean</option>
+  <option value="median">Median</option>
+  <option value="max">Max</option>
+  <option value="min">Min</option>
+  <option value="harmonic">Harmonic Mean</option>
+  <option value="geometric">Geometric Mean</option>
+  <option value="agm">Arithmetic-Geometric Mean (AGM)</option>
+  <option value="mode">Mode</option>
+  <option value="midRange">Mid-Range</option>
+  <option value="truncatedMean">Truncated Mean</option>
+  <option value="weightedMean">Weighted Mean</option>
+  <option value="rms">Root Mean Square (RMS)</option>
+  <option value="quadraticMean">Quadratic Mean</option>
+  <option value="cubicMean">Cubic Mean</option>
+  <option value="contraharmonic">Contraharmonic Mean</option>
+  <option value="logarithmic">Logarithmic Mean</option>
+  <option value="exponential">Exponential Mean</option>
+  <option value="trimean">Trimean</option>
+</select>
+      <button id="startButton">Start Animation</button>
+	     <button id="startButton2">Row Fourier</button>
+		      <button id="startButton3">Diameterize</button>
+			       <button id="startButton4">2d Fourier</button>
+      <button id="fastCalculateButton">Fast Calculate</button>
+      <button id="saveButton" disabled>Save Result</button>
+    </div>
+    <canvas id="sourceCanvas" width="100" height="100"></canvas>
+    <canvas id="resultCanvas" width="100" height="100"></canvas>
+	    <div class="step-images">
+		<!--     <canvas id="stepA"></canvas> -->
+      <canvas id="step1" width="100" height="100"></canvas>
+      <canvas id="step2" width="100" height="100"></canvas>
+      <canvas id="step3" width="100" height="100"></canvas>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.7.0/math.min.js"></script>
+  <script>
+    const sourceCanvas = document.getElementById('sourceCanvas');
+    const resultCanvas = document.getElementById('resultCanvas');
+    const sourceCtx = sourceCanvas.getContext('2d');
+    const resultCtx = resultCanvas.getContext('2d');
+    const imageInput = document.getElementById('imageInput');
+    const stepsInput = document.getElementById('steps');
+    const rotationMethodSelect = document.getElementById('rotationMethod');
+    const averageMethodSelect = document.getElementById('averageMethod');
+    const startButton = document.getElementById('startButton');
+    const fastCalculateButton = document.getElementById('fastCalculateButton');
+    const saveButton = document.getElementById('saveButton');
+
+let wait=0;
+
+  //  const stepACanvas = document.getElementById('stepA');
+    const step1Canvas = document.getElementById('step1');
+    const step2Canvas = document.getElementById('step2');
+    const step3Canvas = document.getElementById('step3');
+    const startButton2 = document.getElementById('startButton2');
+const startButton3 = document.getElementById('startButton3');
+const startButton4 = document.getElementById('startButton4');
+  //  const stepACtx = stepACanvas.getContext('2d');
+    const step1Ctx = step1Canvas.getContext('2d');
+    const step2Ctx = step2Canvas.getContext('2d');
+    const step3Ctx = step3Canvas.getContext('2d');
+
+    let image = null;
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+    // Load image
+    imageInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          image = new Image();
+          image.src = e.target.result;
+          image.onload = () => {
+            sourceCanvas.width = image.width;
+            sourceCanvas.height = image.height;
+          //  stepACanvas.width = image.width;
+          //  stepACanvas.height = image.height;
+            step1Canvas.width = image.width;
+            step1Canvas.height = image.height;
+            step2Canvas.width = image.width;
+            step2Canvas.height = image.height;
+            step3Canvas.width = image.width;
+            step3Canvas.height = image.height;
+            sourceCtx.drawImage(image, 0, 0);
+          };
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Start Inverse Radon Transform
+    startButton2.addEventListener('click', () => {
+	if (!image) {console.log("skillissue");return;}
+
+      // Get ImageData from the source canvas
+      const sourceImageData = sourceCtx.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
+
+      const step1Data = fourierTransformRows(sourceImageData);
+      step1Ctx.putImageData(step1Data, 0, 0);
+
+    });
+	    startButton3.addEventListener('click', () => {
+	if (!image) {console.log("skillissue");return;}
+
+
+
+      const step1Data = step1Ctx.getImageData(0, 0, step1Canvas.width, step1Canvas.height);
+
+      // Step 2: Rearrange columns as diameters on a circle
+      const step2Data = rearrangeColumnsAsDiameters(step1Data);
+      step2Ctx.putImageData(step2Data, 0, 0);
+
+    });
+	
+	    startButton4.addEventListener('click', () => {
+	if (!image) {console.log("skillissue");return;}
+
+      const step2Data = step2Ctx.getImageData(0, 0, step2Canvas.width, step2Canvas.height);
+
+      const step3Data = fourierTransform2D(step2Data);
+      step3Ctx.putImageData(step3Data, 0, 0);
+    });
+
+    // Rearrange columns as diameters on a circle
+function rearrangeColumnsAsDiameters(imageData) {
+  const width = imageData.width;
+  const height = imageData.height;
+  const output = new ImageData(width, height);
+  const data = imageData.data;
+  const outputData = output.data;
+
+ for (let i = 0; i < outputData.length; i += 4) {
+	 outputData[i] = 0;     // R
+    outputData[i + 1] = 0; // G
+    outputData[i + 2] = 0; // B
+    outputData[i + 3] = 255; // A (fully opaque)
+  }
+
+
+  let currentX = 0; // Track the current column being processed
+
+  // Function to process one column at a time
+  const processColumn = () => {
+    if (currentX >= width) {
+      // Animation complete
+      return;
+    }
+
+    // Use 4 auxiliary rays per column to ensure no gaps
+    for (let aux = 0; aux < 4; aux++) {
+      const angleOffset = (aux / 4) * (2 * Math.PI / width); // Offset for auxiliary rays
+      for (let y = 0; y < height; y++) {
+        const angle = (currentX / width) * 2 * Math.PI + angleOffset;
+        const radius = (y / height) * (width / 2);
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const targetX = Math.round(centerX + radius * Math.cos(angle));
+        const targetY = Math.round(centerY + radius * Math.sin(angle));
+
+        if (targetX >= 0 && targetX < width && targetY >= 0 && targetY < height) {
+          const sourceIndex = (currentX * width + y) * 4;
+          const targetIndex = (targetY * width + targetX) * 4;
+          outputData[targetIndex] = data[sourceIndex];
+          outputData[targetIndex + 1] = data[sourceIndex + 1];
+          outputData[targetIndex + 2] = data[sourceIndex + 2];
+          outputData[targetIndex + 3] = data[sourceIndex + 3];
+        }
+      }
+    }
+
+    // Update the canvas with the current progress
+    step2Ctx.putImageData(output, 0, 0);
+
+    // Move to the next column
+    currentX++;
+
+    // Request the next frame of the animation
+    requestAnimationFrame(processColumn);
+  };
+
+  // Start the animation
+  processColumn();
+
+  return output;
+}
+
+    // Fourier transform each row
+function fourierTransformRows(imageData) {
+  const width = imageData.width;
+  const height = imageData.height;
+  const output = new ImageData(width, height);
+  const data = imageData.data;
+  const outputData = output.data;
+
+  let currentRow = 0; // Track the current row being processed
+
+  // Function to process one row at a time
+  const processRow = () => {
+    if (currentRow >= height) {
+      // Animation complete
+	  wait=0;
+      return;
+    }
+
+    const row = [];
+    for (let x = 0; x < width; x++) {
+      const index = (currentRow * width + x) * 4;
+      row.push(math.complex(data[index], 0)); // Use grayscale value
+    }
+
+    const fftRow = math.fft(row);
+
+    for (let x = 0; x < width; x++) {
+      const magnitude = math.abs(fftRow[x]);
+      const normalized = Math.min(255, magnitude );
+      const index = (currentRow * width + x) * 4;
+      outputData[index] = normalized;
+      outputData[index + 1] = normalized;
+      outputData[index + 2] = normalized;
+      outputData[index + 3] = 255;
+    }
+
+    // Update the canvas with the current progress
+    step1Ctx.putImageData(output, 0, 0);
+
+    // Move to the next row
+    currentRow++;
+
+    // Request the next frame of the animation
+    requestAnimationFrame(processRow);
+  };
+
+  // Start the animation
+  processRow();
+  return output;
+}
+
+    // 2D Fourier transform
+function fourierTransform2D(imageData) {
+  const width = imageData.width;
+  const height = imageData.height;
+  const output = new ImageData(width, height);
+  const data = imageData.data;
+  const outputData = output.data;
+
+  // Create a complex array to store the Fourier transform
+  const fourierData = new Array(height);
+  for (let v = 0; v < height; v++) {
+    fourierData[v] = new Array(width);
+    for (let u = 0; u < width; u++) {
+      fourierData[v][u] = math.complex(0, 0); // Initialize to 0
+    }
+  }
+
+  let currentU = 0; // Track the current frequency component (u)
+  let currentV = 0; // Track the current frequency component (v)
+
+  // Function to process one frequency component at a time
+  const processFrequency = () => {
+    if (currentV >= height) {
+      // Animation complete
+      return;
+    }
+
+    // Compute the Fourier transform for the current frequency (u, v)
+    let sumReal = 0;
+    let sumImag = 0;
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const index = (y * width + x) * 4;
+        const brightness = data[index]; // Use grayscale value
+
+        // Compute the angle
+        const angle = 2 * Math.PI * ((currentU * x) / width + (currentV * y) / height);
+
+        // Compute the real and imaginary parts
+        const cosVal = Math.cos(angle);
+        const sinVal = Math.sin(angle);
+
+        // Accumulate the sum
+        sumReal += brightness * cosVal;
+        sumImag -= brightness * sinVal; // Negative sign for the imaginary part
+      }
+    }
+
+    // Normalize the result
+    const factor = width * height;
+    const normalizedReal = sumReal / factor;
+    const normalizedImag = sumImag / factor;
+
+    // Store the result in the Fourier data array
+    fourierData[currentV][currentU] = math.complex(normalizedReal, normalizedImag);
+
+    // Compute the magnitude for visualization
+    const magnitude = math.abs(fourierData[currentV][currentU]);
+    const normalizedMagnitude = Math.min(255, magnitude * 255);
+
+    // Update the output image data
+    const outputIndex = (currentV * width + currentU) * 4;
+    outputData[outputIndex] = normalizedMagnitude; // Red
+    outputData[outputIndex + 1] = normalizedMagnitude; // Green
+    outputData[outputIndex + 2] = normalizedMagnitude; // Blue
+    outputData[outputIndex + 3] = 255; // Alpha
+
+    // Update the canvas with the current progress
+    if(currentU==2)step3Ctx.putImageData(output, 0, 0);
+
+    // Move to the next frequency component
+    currentU++;
+    if (currentU >= width) {
+      currentU = 0;
+      currentV++;
+    }
+
+    // Request the next frame of the animation
+    requestAnimationFrame(processFrequency);
+  };
+
+  // Start the animation
+  processFrequency();
+
+  return output;
+}
+
+
+    let animationFrameId = null;
+    let currentStep = 0;
+    let radonImageData = null;
+
+    // Load image
+    imageInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          image = new Image();
+          image.src = e.target.result;
+          image.onload = () => {
+            sourceCanvas.width = image.width;
+            sourceCanvas.height = image.height;
+            resultCanvas.width = image.width;
+            resultCanvas.height = image.height;
+            sourceCtx.drawImage(image, 0, 0);
+          };
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Start animation
+    startButton.addEventListener('click', () => {
+      if (!image) return;
+      const steps = parseInt(stepsInput.value, 10);
+      if (isNaN(steps) || steps < 1) return;
+
+      currentStep = 0;
+      radonImageData = resultCtx.createImageData(resultCanvas.width, resultCanvas.height);
+
+      const animate = () => {
+        if (currentStep >= steps) {
+          cancelAnimationFrame(animationFrameId);
+          saveButton.disabled = false;
+          return;
+        }
+
+        const angle = (360 / steps) * currentStep;
+        rotateAndUpdateColumn(angle);
+        currentStep++;
+        animationFrameId = requestAnimationFrame(animate);
+      };
+
+      animate();
+    });
+
+    // Fast calculate (no animation)
+    fastCalculateButton.addEventListener('click', () => {
+      if (!image) return;
+      const steps = parseInt(stepsInput.value, 10);
+      if (isNaN(steps) || steps < 1) return;
+
+      radonImageData = resultCtx.createImageData(resultCanvas.width, resultCanvas.height);
+
+      // Perform all steps without animation
+      for (let step = 0; step < steps; step++) {
+        const angle = (360 / steps) * step;
+        rotateAndUpdateColumn(angle);
+      }
+
+      // Enable save button
+      saveButton.disabled = false;
+    });
+
+    // Rotate image and update one column in the result
+    function rotateAndUpdateColumn(angle) {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = image.width;
+      tempCanvas.height = image.height;
+      const tempCtx = tempCanvas.getContext('2d');
+
+      // Handle rotation based on the selected method
+const rotationMethod = rotationMethodSelect.value;
+if (rotationMethod === "nearest") {
+  rotateNearestNeighbor(tempCtx, angle);
+} else if (rotationMethod === "expandAverage") {
+  rotateExpandCanvas(tempCtx, angle, "average");
+} else if (rotationMethod === "expandNearest") {
+  rotateExpandCanvas(tempCtx, angle, "nearest");
+} 
+      // Get image data
+      const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+      const data = imageData.data;
+
+      // Compute average color per row and update one column in the result
+      const columnX = Math.floor((currentStep / parseInt(stepsInput.value, 10)) * tempCanvas.width);
+      for (let y = 0; y < tempCanvas.height; y++) {
+        const rowPixels = [];
+        for (let x = 0; x < tempCanvas.width; x++) {
+          const index = (y * tempCanvas.width + x) * 4;
+          rowPixels.push([data[index], data[index + 1], data[index + 2]]);
+        }
+
+        const avgColor = computeAverage(rowPixels, averageMethodSelect.value);
+
+        // Update only one column in the result canvas
+        const radonIndex = (y * resultCanvas.width + columnX) * 4;
+        radonImageData.data[radonIndex] = avgColor[0]*255;
+        radonImageData.data[radonIndex + 1] = avgColor[1]*255;
+        radonImageData.data[radonIndex + 2] = avgColor[2]*255;
+        radonImageData.data[radonIndex + 3] = 255; // Alpha
+      }
+
+      resultCtx.putImageData(radonImageData, 0, 0);
+
+      // Draw rotated image on the source canvas for animation
+      sourceCtx.clearRect(0, 0, sourceCanvas.width, sourceCanvas.height);
+      sourceCtx.drawImage(tempCanvas, 0, 0);
+    }
+
+    // Rotation methods
+function rotateNearestNeighbor(ctx, angle) {
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.save();
+  ctx.translate(ctx.canvas.width / 2, ctx.canvas.height / 2);
+  ctx.rotate((angle * Math.PI) / 180);
+  ctx.drawImage(image, -image.width / 2, -image.height / 2);
+  ctx.restore();
+}
+
+function rotateExpandCanvas(ctx, angle, fillMethod) {
+  const expandedSize = Math.sqrt(ctx.canvas.width ** 2 + ctx.canvas.height ** 2);
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = expandedSize;
+  tempCanvas.height = expandedSize;
+  const tempCtx = tempCanvas.getContext('2d');
+
+  // Fill the expanded canvas
+  if (fillMethod === "average") {
+    const avgColor = computeOverallAverage(image);
+    tempCtx.fillStyle = `rgb(${avgColor[0]}, ${avgColor[1]}, ${avgColor[2]})`;
+    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+  } else if (fillMethod === "nearest") {
+    // Fill with nearest existing color (not implemented here)
+  }
+
+  // Draw the original image centered on the expanded canvas
+  tempCtx.drawImage(image, (expandedSize - image.width) / 2, (expandedSize - image.height) / 2);
+
+  // Rotate the expanded canvas
+  tempCtx.save();
+  tempCtx.translate(expandedSize / 2, expandedSize / 2);
+  tempCtx.rotate((angle * Math.PI) / 180);
+  tempCtx.drawImage(tempCanvas, -expandedSize / 2, -expandedSize / 2);
+  tempCtx.restore();
+
+  // Draw the rotated expanded canvas back to the original canvas
+  ctx.drawImage(tempCanvas, (ctx.canvas.width - expandedSize) / 2, (ctx.canvas.height - expandedSize) / 2);
+}
+
+    // Compute overall average color of the image
+    function computeOverallAverage(image) {
+      const canvas = document.createElement('canvas');
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(image, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+
+      let sumR = 0, sumG = 0, sumB = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        sumR += data[i];
+        sumG += data[i + 1];
+        sumB += data[i + 2];
+      }
+      const totalPixels = data.length / 4;
+      return [sumR / totalPixels, sumG / totalPixels, sumB / totalPixels];
+    }
+
+    // Compute average color based on the selected method
+   function computeAverage(pixels, method) {
+  // Normalize pixel values to [0, 1]
+  const normalizedPixels = pixels.map(pixel => [pixel[0] / 255, pixel[1] / 255, pixel[2] / 255]);
+
+  if (method === "mean") {
+    const sum = normalizedPixels.reduce((acc, pixel) => [acc[0] + pixel[0], acc[1] + pixel[1], acc[2] + pixel[2]], [0, 0, 0]);
+    return [sum[0] / normalizedPixels.length, sum[1] / normalizedPixels.length, sum[2] / normalizedPixels.length];
+  } else if (method === "median") {
+    const sortedR = normalizedPixels.map(p => p[0]).sort((a, b) => a - b);
+    const sortedG = normalizedPixels.map(p => p[1]).sort((a, b) => a - b);
+    const sortedB = normalizedPixels.map(p => p[2]).sort((a, b) => a - b);
+    const mid = Math.floor(normalizedPixels.length / 2);
+    return [sortedR[mid], sortedG[mid], sortedB[mid]];
+  } else if (method === "max") {
+    const maxR = Math.max(...normalizedPixels.map(p => p[0]));
+    const maxG = Math.max(...normalizedPixels.map(p => p[1]));
+    const maxB = Math.max(...normalizedPixels.map(p => p[2]));
+    return [maxR, maxG, maxB];
+  } else if (method === "min") {
+    const minR = Math.min(...normalizedPixels.map(p => p[0]));
+    const minG = Math.min(...normalizedPixels.map(p => p[1]));
+    const minB = Math.min(...normalizedPixels.map(p => p[2]));
+    return [minR, minG, minB];
+  } else if (method === "harmonic") {
+    const sumR = normalizedPixels.reduce((acc, pixel) => acc + 1 / pixel[0], 0);
+    const sumG = normalizedPixels.reduce((acc, pixel) => acc + 1 / pixel[1], 0);
+    const sumB = normalizedPixels.reduce((acc, pixel) => acc + 1 / pixel[2], 0);
+    return [normalizedPixels.length / sumR, normalizedPixels.length / sumG, normalizedPixels.length / sumB];
+  } else if (method === "geometric") {
+    const productR = normalizedPixels.reduce((acc, pixel) => acc * pixel[0], 1);
+    const productG = normalizedPixels.reduce((acc, pixel) => acc * pixel[1], 1);
+    const productB = normalizedPixels.reduce((acc, pixel) => acc * pixel[2], 1);
+    return [
+      Math.pow(productR, 1 / normalizedPixels.length),
+      Math.pow(productG, 1 / normalizedPixels.length),
+      Math.pow(productB, 1 / normalizedPixels.length),
+    ];
+  } else if (method === "agm") {
+    const agmR = agm(normalizedPixels.map(p => p[0]));
+    const agmG = agm(normalizedPixels.map(p => p[1]));
+    const agmB = agm(normalizedPixels.map(p => p[2]));
+    return [agmR, agmG, agmB];
+  } else if (method === "mode") {
+    // Mode implementation (not implemented here)
+  } else if (method === "midRange") {
+    const minR = Math.min(...normalizedPixels.map(p => p[0]));
+    const maxR = Math.max(...normalizedPixels.map(p => p[0]));
+    const minG = Math.min(...normalizedPixels.map(p => p[1]));
+    const maxG = Math.max(...normalizedPixels.map(p => p[1]));
+    const minB = Math.min(...normalizedPixels.map(p => p[2]));
+    const maxB = Math.max(...normalizedPixels.map(p => p[2]));
+    return [(minR + maxR) / 2, (minG + maxG) / 2, (minB + maxB) / 2];
+  } else if (method === "truncatedMean") {
+    // Truncated mean implementation (not implemented here)
+  } else if (method === "weightedMean") {
+    // Weighted mean implementation (not implemented here)
+  } else if (method === "rms") {
+    const rmsR = Math.sqrt(normalizedPixels.reduce((acc, pixel) => acc + pixel[0] ** 2, 0) / normalizedPixels.length);
+    const rmsG = Math.sqrt(normalizedPixels.reduce((acc, pixel) => acc + pixel[1] ** 2, 0) / normalizedPixels.length);
+    const rmsB = Math.sqrt(normalizedPixels.reduce((acc, pixel) => acc + pixel[2] ** 2, 0) / normalizedPixels.length);
+    return [rmsR, rmsG, rmsB];
+  } else if (method === "quadraticMean") {
+    const quadraticR = Math.sqrt(normalizedPixels.reduce((acc, pixel) => acc + pixel[0] ** 2, 0) / normalizedPixels.length);
+    const quadraticG = Math.sqrt(normalizedPixels.reduce((acc, pixel) => acc + pixel[1] ** 2, 0) / normalizedPixels.length);
+    const quadraticB = Math.sqrt(normalizedPixels.reduce((acc, pixel) => acc + pixel[2] ** 2, 0) / normalizedPixels.length);
+    return [quadraticR, quadraticG, quadraticB];
+  } else if (method === "cubicMean") {
+    const cubicR = Math.pow(normalizedPixels.reduce((acc, pixel) => acc + pixel[0] ** 3, 0) / normalizedPixels.length, 1 / 3);
+    const cubicG = Math.pow(normalizedPixels.reduce((acc, pixel) => acc + pixel[1] ** 3, 0) / normalizedPixels.length, 1 / 3);
+    const cubicB = Math.pow(normalizedPixels.reduce((acc, pixel) => acc + pixel[2] ** 3, 0) / normalizedPixels.length, 1 / 3);
+    return [cubicR, cubicG, cubicB];
+  } else if (method === "contraharmonic") {
+    const order = 1; // You can adjust the order as needed
+    const contraharmonicR = (normalizedPixels.reduce((acc, pixel) => acc + pixel[0] ** (order + 1), 0) / normalizedPixels.reduce((acc, pixel) => acc + pixel[0] ** order, 0));
+    const contraharmonicG = (normalizedPixels.reduce((acc, pixel) => acc + pixel[1] ** (order + 1), 0) / normalizedPixels.reduce((acc, pixel) => acc + pixel[1] ** order, 0));
+    const contraharmonicB = (normalizedPixels.reduce((acc, pixel) => acc + pixel[2] ** (order + 1), 0) / normalizedPixels.reduce((acc, pixel) => acc + pixel[2] ** order, 0));
+    return [contraharmonicR, contraharmonicG, contraharmonicB];
+  } else if (method === "logarithmic") {
+    const logR = Math.exp(normalizedPixels.reduce((acc, pixel) => acc + Math.log(pixel[0]), 0) / normalizedPixels.length);
+    const logG = Math.exp(normalizedPixels.reduce((acc, pixel) => acc + Math.log(pixel[1]), 0) / normalizedPixels.length);
+    const logB = Math.exp(normalizedPixels.reduce((acc, pixel) => acc + Math.log(pixel[2]), 0) / normalizedPixels.length);
+    return [logR, logG, logB];
+  } else if (method === "exponential") {
+    const expR = Math.log(normalizedPixels.reduce((acc, pixel) => acc + Math.exp(pixel[0]), 0) / normalizedPixels.length);
+    const expG = Math.log(normalizedPixels.reduce((acc, pixel) => acc + Math.exp(pixel[1]), 0) / normalizedPixels.length);
+    const expB = Math.log(normalizedPixels.reduce((acc, pixel) => acc + Math.exp(pixel[2]), 0) / normalizedPixels.length);
+    return [expR, expG, expB];
+  } else if (method === "trimean") {
+    const sortedR = normalizedPixels.map(p => p[0]).sort((a, b) => a - b);
+    const sortedG = normalizedPixels.map(p => p[1]).sort((a, b) => a - b);
+    const sortedB = normalizedPixels.map(p => p[2]).sort((a, b) => a - b);
+    const q1R = sortedR[Math.floor(normalizedPixels.length / 4)];
+    const q3R = sortedR[Math.floor((3 * normalizedPixels.length) / 4)];
+    const q1G = sortedG[Math.floor(normalizedPixels.length / 4)];
+    const q3G = sortedG[Math.floor((3 * normalizedPixels.length) / 4)];
+    const q1B = sortedB[Math.floor(normalizedPixels.length / 4)];
+    const q3B = sortedB[Math.floor((3 * normalizedPixels.length) / 4)];
+    const trimeanR = (q1R + 2 * sortedR[Math.floor(normalizedPixels.length / 2)] + q3R) / 4;
+    const trimeanG = (q1G + 2 * sortedG[Math.floor(normalizedPixels.length / 2)] + q3G) / 4;
+    const trimeanB = (q1B + 2 * sortedB[Math.floor(normalizedPixels.length / 2)] + q3B) / 4;
+    return [trimeanR, trimeanG, trimeanB];
+  }
+  return [0, 0, 0]; // Default
+}
+
+// Arithmetic-Geometric Mean (AGM) helper function
+function agm(values) {
+  let a = values.reduce((acc, val) => acc + val, 0) / values.length;
+  let g = Math.pow(values.reduce((acc, val) => acc * val, 1), 1 / values.length);
+  while (Math.abs(a - g) > 1e-7) {
+    const aNew = (a + g) / 2;
+    const gNew = Math.sqrt(a * g);
+    a = aNew;
+    g = gNew;
+  }
+  return a;
+}
+
+
+    // Save result
+    saveButton.addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = 'radon_transform.png';
+      link.href = resultCanvas.toDataURL();
+      link.click();
+    });
+	
+	
+	    function fft(signal) {
+      const N = signal.length;
+      if (N <= 1) return signal;
+
+      const even = fft(signal.filter((_, i) => i % 2 === 0));
+      const odd = fft(signal.filter((_, i) => i % 2 === 1));
+
+      const output = Array(N).fill(math.complex(0, 0));
+      for (let k = 0; k < N / 2; k++) {
+        const t = math.multiply(math.exp(math.complex(0, -2 * Math.PI * k / N)), odd[k]);
+        output[k] = math.add(even[k], t);
+        output[k + N / 2] = math.subtract(even[k], t);
+      }
+
+      return output;
+    }
+
+    // 2D FFT implementation
+    function fft2(matrix) {
+      const rows = matrix.length;
+      const cols = matrix[0].length;
+
+      // Apply 1D FFT to each row
+      const rowTransformed = matrix.map(row => fft(row));
+
+      // Apply 1D FFT to each column
+      const colTransformed = [];
+      for (let x = 0; x < cols; x++) {
+        const column = rowTransformed.map(row => row[x]);
+        const transformedColumn = fft(column);
+        for (let y = 0; y < rows; y++) {
+          if (!colTransformed[y]) colTransformed[y] = [];
+          colTransformed[y][x] = transformedColumn[y];
+        }
+      }
+
+      return colTransformed;
+    }
+
+    // Simpson's method for integration
+    function simpsonsIntegration(f, a, b, n) {
+      const h = (b - a) / n;
+      let sum = math.complex(0, 0);
+
+      for (let i = 0; i <= n; i++) {
+        const x = a + i * h;
+        const weight = (i === 0 || i === n) ? 1 : (i % 2 === 0) ? 2 : 4;
+        sum = math.add(sum, math.multiply(f(x), weight));
+      }
+
+      return math.multiply(sum, h / 3);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bracket Processing</title>
+</head>
+<body>
+    <h1>Bracket Processing Tool</h1>
+    <label for="textInput">Text Input:</label>
+    <input type="text" id="textInput" placeholder="Enter your text here">
+    <br>
+    <label for="numberInput">Number Input (w):</label>
+    <input type="number" id="numberInput" placeholder="Enter a number" min="1">
+    <br>
+    <button id="processButton">Process</button>
+    <h2>Output:</h2>
+    <textarea id="outputText" rows="10" cols="50" readonly></textarea>
+
+    <script src="script.js"></script>
+    <script>
+	
+document.getElementById('processButton').addEventListener('click', function() {
+    const textInput = document.getElementById('textInput').value;
+    const w = parseInt(document.getElementById('numberInput').value, 10);
+    const outputText = processText(textInput, w);
+    document.getElementById('outputText').value = outputText;
+});
+
+function processText(input, w) {
+    let result = input;
+    let closingBracketIndex = -1;
+
+    // Search for the last closing bracket
+    for (let i = result.length - 1; i >= 0; i--) {
+        if (result[i] === ']' || result[i] === ')' || result[i] === '}') {
+            closingBracketIndex = i;
+            break;
+        }
+    }
+
+    if (closingBracketIndex === -1) return result; // No closing bracket found
+
+    // Find the corresponding opening bracket
+    let openingBracketIndex = findOpeningBracket(result, closingBracketIndex);
+    
+    // Determine the starting point for badPart
+    let badPartStartIndex = openingBracketIndex !== -1 ? openingBracketIndex + 1 : closingBracketIndex;
+
+    // Check if there's a '<' immediately after the closing bracket
+    if (result[closingBracketIndex + 1] === '<') {
+        let count = 0;
+        let i = closingBracketIndex + 2;
+
+        // Count until we find '>' or end of string
+        while (i < result.length && result[i] !== '>') {
+            count++;
+            i++;
+        }
+        
+        // If we found '>', delete from '<' to '>'
+        if (i < result.length && result[i] === '>') {
+            const badPart = result.slice(badPartStartIndex, closingBracketIndex);
+            result = result.slice(0, closingBracketIndex + 1) + result.slice(i + 1);
+            // Copy the badPart string 'count' times
+            result = result.slice(0, closingBracketIndex) + badPart.repeat(count) + result.slice(closingBracketIndex + 1);
+        } else {
+            // No closing '>', take badPart until the end
+            const badPart = result.slice(badPartStartIndex, closingBracketIndex);
+            result = result.slice(0, closingBracketIndex) + badPart.repeat(w) + result.slice(closingBracketIndex);
+        }
+    } else {
+        // If no '<', just copy 'badPart' w times
+        const badPart = result.slice(badPartStartIndex, closingBracketIndex);
+        result = result.slice(0, openingBracketIndex) + badPart.repeat(w) + result.slice(closingBracketIndex);
+    }
+
+    return result;
+}
+
+function findOpeningBracket(str, closingBracketIndex) {
+    const closingChar = str[closingBracketIndex];
+    const matchingBrackets = {
+        ')': '(',
+        ']': '[',
+        '}': '{'
+    };
+    const openingChar = matchingBrackets[closingChar];
+
+    let stack = 0;
+
+    for (let i = closingBracketIndex - 1; i >= 0; i--) {
+        if (str[i] === closingChar) {
+            stack++;
+        } else if (str[i] === openingChar) {
+            if (stack === 0) {
+                return i; // Found the corresponding opening bracket
+            }
+            stack--;
+        }
+    }
+    return -1; // No matching opening bracket found
+}
+	
+</script>
+</body>
+</html>

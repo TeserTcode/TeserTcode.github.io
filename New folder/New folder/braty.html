@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>String Expander</title>
+    <style>
+        .button {
+            display: block;
+            margin: 5px 0;
+        }
+        .output {
+            white-space: pre-wrap;
+            background: #f0f0f0;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <h1>String Expander</h1>
+    <textarea id="inputStr" rows="4" cols="50"></textarea><br>
+    <label for="w">W:</label>
+    <input type="number" id="w" value="1"><br>
+    <label for="W">Maximum Comma Count:</label>
+    <input type="number" id="W" value="-1"><br>
+    <button id="expandButton" class="button">Expand</button>
+    <h2>Output:</h2>
+    <div id="output" class="output"></div>
+    
+    <script>
+        document.getElementById('expandButton').addEventListener('click', function() {
+            const inputStr = document.getElementById('inputStr').value;
+            const w = parseInt(document.getElementById('w').value);
+            const W = parseInt(document.getElementById('W').value);
+
+            fetch('/expand', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ input_str: inputStr, w: w, W: W })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('output').innerText = data;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>
