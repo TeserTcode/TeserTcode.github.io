@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZIP Image Processor</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body { padding: 20px; }
+        #imageList img { border: 1px solid #ddd; margin: 5px; cursor: pointer; }
+        #zoomView { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; }
+        #zoomView img { max-width: 90%; max-height: 90%; }
+        .item-container { display: inline-block; text-align: center; margin: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">ZIP Image Processor</h1>
+
+        <div class="form-group">
+            <label for="zipFile">Upload ZIP File</label>
+            <input type="file" class="form-control-file" id="zipFile" accept=".zip">
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Options</h5>
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>Spritesheet Layout</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="layout" id="layoutSquare" value="square" checked>
+                            <label class="form-check-label" for="layoutSquare">Square</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="layout" id="layoutHorizontal" value="horizontal">
+                            <label class="form-check-label" for="layoutHorizontal">Horizontal</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="layout" id="layoutVertical" value="vertical">
+                            <label class="form-check-label" for="layoutVertical">Vertical</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Image Size</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="size" id="sizeOriginal" value="1">
+                            <label class="form-check-label" for="sizeOriginal">Original</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="size" id="size5x" value="5" checked>
+                            <label class="form-check-label" for="size5x">5x Larger</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Background Color</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="background" id="bgAlpha" value="alpha" checked>
+                            <label class="form-check-label" for="bgAlpha">Transparent</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="background" id="bgBlack" value="black">
+                            <label class="form-check-label" for="bgBlack">Black</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="background" id="bgWhite" value="white">
+                            <label class="form-check-label" for="bgWhite">White</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="background" id="bgPink" value="pink">
+                            <label class="form-check-label" for="bgPink">Pink</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn btn-primary" id="processBtn">Process ZIP</button>
+
+        <hr>
+
+        <div id="results" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3>Processed Images</h3>
+                <div>
+                    <select id="sortCriteria" class="form-control d-inline-block w-auto">
+                        <option value="name">Name (Alphabetical)</option>
+                        <option value="lNumber">L Number</option>
+                        <option value="nonEmptyPixels">Non-Empty Pixels</option>
+                        <option value="colorCount">Color Count</option>
+                        <option value="lightness">Lightness</option>
+                        <option value="darkness">Darkness</option>
+                    </select>
+                    <div class="btn-group btn-group-toggle d-inline-block ml-2" data-toggle="buttons">
+                        <label class="btn btn-secondary active">
+                            <input type="radio" name="sortOrder" id="sortAsc" value="asc" checked> Asc
+                        </label>
+                        <label class="btn btn-secondary">
+                            <input type="radio" name="sortOrder" id="sortDesc" value="desc"> Desc
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+
+            <div id="imageList" class="mt-4"></div>
+
+            <hr>
+
+            <div id="downloads" class="mt-4">
+                <h4>Downloads</h4>
+                <button class="btn btn-success" id="downloadZip">Download x5 Zoomed ZIP</button>
+                <button class="btn btn-info" id="downloadTxt">Download Names List (.txt)</button>
+                <button class="btn btn-warning" id="downloadSpritesheet">Download Spritesheet</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="zoomView">
+        <img id="zoomedImage" src="" alt="Zoomed Image">
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.5.0/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
+    <script>
+		
+		document.addEventListener('DOMContentLoaded', () => {
+    const zipFileInput = document.getElementById('zipFile');
+    const processBtn = document.getElementById('processBtn');
+    const imageListDiv = document.getElementById('imageList');
+    const zoomView = document.getElementById('zoomView');
+    const zoomedImage = document.getElementById('zoomedImage');
+    const resultsDiv = document.getElementById('results');
+    const downloadsDiv = document.getElementById('downloads');
+    const sortCriteriaSelect = document.getElementById('sortCriteria');
+    const sortOrderRadios = document.querySelectorAll('input[name="sortOrder"]');
+
+    let imageData = [];
+
+    processBtn.addEventListener('click', () => {
+        const file = zipFileInput.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const zip = await JSZip.loadAsync(e.target.result);
+                imageData = [];
+                for (const filename in zip.files) {
+                    if (!zip.files[filename].dir && (filename.endsWith('.png') || filename.endsWith('.jpg') || filename.endsWith('.jpeg'))) {
+                        const fileData = await zip.files[filename].async('blob');
+                        const imageUrl = URL.createObjectURL(fileData);
+                        const parts = filename.split(',');
+                        const name = parts.length > 3 ? parts[3] : filename;
+                        const lNumber = parseInt(parts[0].replace('L', ''), 10) || 0;
+
+                        const stats = await getImageStats(imageUrl);
+
+                        imageData.push({
+                            name,
+                            lNumber,
+                            imageUrl,
+                            fileData,
+                            ...stats
+                        });
+                    }
+                }
+                sortAndDisplayImages();
+                resultsDiv.style.display = 'block';
+            };
+            reader.readAsArrayBuffer(file);
+        } else {
+            alert('Please select a ZIP file.');
+        }
+    });
+
+    sortCriteriaSelect.addEventListener('change', sortAndDisplayImages);
+    sortOrderRadios.forEach(radio => radio.addEventListener('change', sortAndDisplayImages));
+
+    function sortAndDisplayImages() {
+        const sortBy = sortCriteriaSelect.value;
+        const sortOrder = document.querySelector('input[name="sortOrder"]:checked').value;
+
+        imageData.sort((a, b) => {
+            let compare = 0;
+            if (sortBy === 'name') compare = a.name.localeCompare(b.name);
+            else if (sortBy === 'lNumber') compare = a.lNumber - b.lNumber;
+            else if (sortBy === 'nonEmptyPixels') compare = a.nonEmptyPixels - b.nonEmptyPixels;
+            else if (sortBy === 'colorCount') compare = a.colorCount - b.colorCount;
+            else if (sortBy === 'lightness') compare = b.lightness - a.lightness; // higher is lighter
+            else if (sortBy === 'darkness') compare = a.lightness - b.lightness;  // lower is darker
+
+            return sortOrder === 'asc' ? compare : -compare;
+        });
+
+        displayImages();
+    }
+
+    function displayImages() {
+        imageListDiv.innerHTML = '';
+        imageData.forEach(data => {
+            const itemContainer = document.createElement('div');
+            itemContainer.className = 'item-container';
+
+            const img = document.createElement('img');
+            img.src = data.imageUrl;
+            img.style.width = `${data.width * 5}px`;
+            img.style.height = `${data.height * 5}px`;
+            img.addEventListener('click', () => {
+                zoomedImage.src = img.src;
+                zoomView.style.display = 'flex';
+            });
+
+            const namePara = document.createElement('p');
+            namePara.textContent = data.name;
+
+            itemContainer.appendChild(img);
+            itemContainer.appendChild(namePara);
+            imageListDiv.appendChild(itemContainer);
+        });
+    }
+
+    zoomView.addEventListener('click', () => {
+        zoomView.style.display = 'none';
+    });
+
+    document.getElementById('downloadZip').addEventListener('click', async () => {
+        const zip = new JSZip();
+        for (const data of imageData) {
+            const canvas = await createImageCanvas(data.imageUrl, 5);
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            zip.file(`${data.name}.png`, blob);
+        }
+        zip.generateAsync({ type: 'blob' }).then(content => {
+            saveAs(content, 'zoomed_images.zip');
+        });
+    });
+
+    document.getElementById('downloadTxt').addEventListener('click', () => {
+        const text = imageData.map(data => data.name).join('\n');
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        saveAs(blob, 'names.txt');
+    });
+
+    document.getElementById('downloadSpritesheet').addEventListener('click', async () => {
+        const layout = document.querySelector('input[name="layout"]:checked').value;
+        const sizeMultiplier = parseInt(document.querySelector('input[name="size"]:checked').value, 10);
+        const background = document.querySelector('input[name="background"]:checked').value;
+
+        if (imageData.length === 0) return;
+
+        const firstImage = await loadImage(imageData[0].imageUrl);
+        const imgWidth = firstImage.width * sizeMultiplier;
+        const imgHeight = firstImage.height * sizeMultiplier;
+
+        let canvasWidth, canvasHeight, cols, rows;
+        if (layout === 'square') {
+            cols = Math.ceil(Math.sqrt(imageData.length));
+            rows = Math.ceil(imageData.length / cols);
+            canvasWidth = cols * imgWidth;
+            canvasHeight = rows * imgHeight;
+        } else if (layout === 'horizontal') {
+            cols = imageData.length;
+            rows = 1;
+            canvasWidth = cols * imgWidth;
+            canvasHeight = imgHeight;
+        } else { // vertical
+            cols = 1;
+            rows = imageData.length;
+            canvasWidth = imgWidth;
+            canvasHeight = rows * imgHeight;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        const ctx = canvas.getContext('2d');
+
+        if (background !== 'alpha') {
+            ctx.fillStyle = background;
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        }
+
+        for (let i = 0; i < imageData.length; i++) {
+            const img = await loadImage(imageData[i].imageUrl);
+            const row = Math.floor(i / cols);
+            const col = i % cols;
+            ctx.drawImage(img, col * imgWidth, row * imgHeight, imgWidth, imgHeight);
+        }
+
+        canvas.toBlob(blob => {
+            saveAs(blob, 'spritesheet.png');
+        }, 'image/png');
+    });
+
+    async function getImageStats(imageUrl) {
+        const img = await loadImage(imageUrl);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const pixelData = ctx.getImageData(0, 0, img.width, img.height).data;
+
+        let nonEmptyPixels = 0;
+        let totalLightness = 0;
+        const colors = new Set();
+
+        for (let i = 0; i < pixelData.length; i += 4) {
+            const alpha = pixelData[i + 3];
+            if (alpha > 0) {
+                nonEmptyPixels++;
+                const r = pixelData[i];
+                const g = pixelData[i + 1];
+                const b = pixelData[i + 2];
+                totalLightness += (r + g + b) / 3;
+                colors.add(`${r},${g},${b},${alpha}`);
+            }
+        }
+
+        return {
+            width: img.width,
+            height: img.height,
+            nonEmptyPixels,
+            colorCount: colors.size,
+            lightness: nonEmptyPixels > 0 ? totalLightness / nonEmptyPixels / 255 : 0
+        };
+    }
+
+    function loadImage(src) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = src;
+        });
+    }
+
+    async function createImageCanvas(imageUrl, sizeMultiplier) {
+        const img = await loadImage(imageUrl);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width * sizeMultiplier;
+        canvas.height = img.height * sizeMultiplier;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        return canvas;
+    }
+});
+		
+		</script>
+</body>
+</html>

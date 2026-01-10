@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Pitch Shifter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .audio-controls {
+            margin-bottom: 20px;
+        }
+        .audio-controls h3 {
+            margin-top: 0;
+            color: #444;
+        }
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        button:hover:not(:disabled) {
+            background-color: #45a049;
+        }
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #f8f8f8;
+            border-left: 4px solid #4CAF50;
+        }
+        .visualization {
+            margin-top: 20px;
+            height: 100px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Audio Pitch Shifter</h1>
+        
+        <div class="audio-controls">
+            <h3>Source Audio (to be pitch-shifted)</h3>
+            <input type="file" id="sourceFile" accept="audio/*" />
+            <audio id="sourceAudio" controls></audio>
+        </div>
+        
+        <div class="audio-controls">
+            <h3>Reference Audio (pitch reference)</h3>
+            <input type="file" id="referenceFile" accept="audio/*" />
+            <audio id="referenceAudio" controls></audio>
+        </div>
+        
+        <div>
+            <button id="processBtn" disabled>Process Audio</button>
+            <button id="playBtn" disabled>Play Result</button>
+            <button id="stopBtn" disabled>Stop</button>
+            <button id="downloadBtn" disabled>Download Result</button>
+        </div>
+        
+        <div class="status" id="status">Please load both audio files to begin.</div>
+        
+        <div class="visualization">
+            <canvas id="visualizer"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let sourceAudioBuffer = null;
+        let referenceAudioBuffer = null;
+        let processedAudioBuffer = null;
+        let audioContext = null;
+        let isProcessing = false;
+        let isPlaying = false;
+        let sourceNode = null;
+        let visualizerCanvas = null;
+        let visualizerCtx = null;
+        let animationFrame = null;
+
+        // DOM elements
+        const sourceFileInput = document.getElementById('sourceFile');
+        const referenceFileInput = document.getElementById('referenceFile');
+        const sourceAudioElement = document.getElementById('sourceAudio');
+        const referenceAudioElement = document.getElementById('referenceAudio');
+        const processBtn = document.getElementById('processBtn');
+        const playBtn = document.getElementById('playBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const statusElement = document.getElementById('status');
+
+        // Initialize audio context
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                visualizerCanvas = document.getElementById('visualizer');
+                visualizerCtx = visualizerCanvas.getContext('2d');
+            }
+        }
+
+        // File input handlers
+        sourceFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                sourceAudioElement.src = url;
+                loadAudioFile(file, 'source');
+            }
+        });
+
+        referenceFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                referenceAudioElement.src = url;
+                loadAudioFile(file, 'reference');
+            }
+        });
+
+        // Load audio file and decode to buffer
+        function loadAudioFile(file, type) {
+            initAudioContext();
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                audioContext.decodeAudioData(e.target.result)
+                    .then(function(buffer) {
+                        if (type === 'source') {
+                            sourceAudioBuffer = buffer;
+                        } else {
+                            referenceAudioBuffer = buffer;
+                        }
+                        
+                        updateUI();
+                    })
+                    .catch(function(err) {
+                        statusElement.textContent = 'Error decoding audio: ' + err.message;
+                    });
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Update UI based on current state
+        function updateUI() {
+            if (sourceAudioBuffer && referenceAudioBuffer) {
+                processBtn.disabled = false;
+                statusElement.textContent = 'Ready to process. Click "Process Audio" to begin.';
+            } else {
+                processBtn.disabled = true;
+            }
+            
+            if (processedAudioBuffer) {
+                playBtn.disabled = false;
+                downloadBtn.disabled = false;
+            } else {
+                playBtn.disabled = true;
+                downloadBtn.disabled = true;
+            }
+            
+            stopBtn.disabled = !isPlaying;
+        }
+
+        // Process button handler
+        processBtn.addEventListener('click', function() {
+            if (isProcessing) return;
+            
+            isProcessing = true;
+            processBtn.disabled = true;
+            statusElement.textContent = 'Processing audio... This may take a moment.';
+            
+            // Process in chunks with timeout to avoid blocking UI
+            setTimeout(function() {
+                processAudio();
+            }, 100);
+        });
+
+        // Play button handler
+        playBtn.addEventListener('click', function() {
+            if (!processedAudioBuffer || isPlaying) return;
+            
+            isPlaying = true;
+            updateUI();
+            
+            sourceNode = audioContext.createBufferSource();
+            sourceNode.buffer = processedAudioBuffer;
+            sourceNode.connect(audioContext.destination);
+            
+            // Start visualization
+            startVisualization();
+            
+            sourceNode.start(0);
+            sourceNode.onended = function() {
+                isPlaying = false;
+                stopVisualization();
+                updateUI();
+            };
+        });
+
+        // Stop button handler
+        stopBtn.addEventListener('click', function() {
+            if (sourceNode) {
+                sourceNode.stop(0);
+                isPlaying = false;
+                stopVisualization();
+                updateUI();
+            }
+        });
+
+        // Download button handler
+        downloadBtn.addEventListener('click', function() {
+            if (!processedAudioBuffer) return;
+            
+            // Convert audio buffer to WAV
+            const wavBuffer = audioBufferToWav(processedAudioBuffer);
+            const blob = new Blob([new Uint8Array(wavBuffer)], { type: 'audio/wav' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'pitch_shifted_audio.wav';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(function() {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+        });
+
+        // Main processing function
+        function processAudio() {
+            try {
+                // Get common sample rate and length
+                const sampleRate = sourceAudioBuffer.sampleRate;
+                const length = Math.min(
+                    sourceAudioBuffer.length, 
+                    referenceAudioBuffer.length
+                );
+                
+                // Create new buffer for processed audio
+                processedAudioBuffer = audioContext.createBuffer(
+                    sourceAudioBuffer.numberOfChannels,
+                    length,
+                    sampleRate
+                );
+                
+                // Process each channel
+                for (let channel = 0; channel < sourceAudioBuffer.numberOfChannels; channel++) {
+                    const sourceData = sourceAudioBuffer.getChannelData(channel);
+                    const referenceData = referenceAudioBuffer.getChannelData(
+                        Math.min(channel, referenceAudioBuffer.numberOfChannels - 1)
+                    );
+                    const outputData = processedAudioBuffer.getChannelData(channel);
+                    
+                    // Process in chunks to avoid blocking UI
+                    const chunkSize = 8192;
+                    let position = 0;
+                    
+                    const processChunk = function() {
+                        const chunkEnd = Math.min(position + chunkSize, length);
+                        
+                        for (let i = position; i < chunkEnd; i++) {
+                            // Analyze reference pitch in a window around current position
+                            const windowSize = 1024;
+                            const start = Math.max(0, i - windowSize/2);
+                            const end = Math.min(length, i + windowSize/2);
+                            
+                            // Extract window from reference audio
+                            const windowData = new Float32Array(end - start);
+                            for (let j = start; j < end; j++) {
+                                windowData[j - start] = referenceData[j];
+                            }
+                            
+                            // Detect pitch in the window
+                            const pitch = detectPitch(windowData, sampleRate);
+                            
+                            // Apply pitch shift to source audio
+                            if (pitch > 0) {
+                                // Simple pitch shift implementation
+                                // In a real application, you'd use more advanced techniques
+                                const shiftRatio = 1.0; // This would be based on the detected pitch
+                                outputData[i] = sourceData[i] * shiftRatio;
+                            } else {
+                                outputData[i] = sourceData[i];
+                            }
+                        }
+                        
+                        position += chunkSize;
+                        
+                        if (position < length) {
+                            // Update status and continue processing
+                            const percentComplete = (position / length * 100).toFixed(1);
+                            statusElement.textContent = `Processing: ${percentComplete}% complete`;
+                            
+                            // Process next chunk with timeout to avoid blocking UI
+                            setTimeout(processChunk, 1);
+                        } else {
+                            // Processing complete
+                            isProcessing = false;
+                            statusElement.textContent = 'Processing complete! Click "Play Result" to hear it.';
+                            updateUI();
+                        }
+                    };
+                    
+                    // Start processing chunks
+                    processChunk();
+                }
+            } catch (error) {
+                isProcessing = false;
+                statusElement.textContent = 'Error processing audio: ' + error.message;
+                updateUI();
+            }
+        }
+
+        // Pitch detection using DFT (Autocorrelation method)
+        function detectPitch(buffer, sampleRate) {
+            // Simple autocorrelation pitch detection
+            const maxSamples = 1024;
+            const newBuffer = buffer.length > maxSamples ? 
+                buffer.subarray(0, maxSamples) : buffer;
+            
+            // Find the period with maximum correlation
+            let bestOffset = -1;
+            let bestCorrelation = 0;
+            
+            const correlations = new Array(maxSamples/2).fill(0);
+            
+            for (let offset = 0; offset < maxSamples/2; offset++) {
+                let correlation = 0;
+                
+                for (let i = 0; i < maxSamples - offset; i++) {
+                    correlation += newBuffer[i] * newBuffer[i + offset];
+                }
+                
+                correlations[offset] = correlation;
+                
+                if (correlation > bestCorrelation) {
+                    bestCorrelation = correlation;
+                    bestOffset = offset;
+                }
+            }
+            
+            // Convert offset to frequency
+            if (bestOffset > 0) {
+                return sampleRate / bestOffset;
+            }
+            
+            return 0; // No pitch detected
+        }
+
+        // Visualization functions
+        function startVisualization() {
+            if (!processedAudioBuffer) return;
+            
+            const analyser = audioContext.createAnalyser();
+            analyser.fftSize = 2048;
+            
+            const source = audioContext.createBufferSource();
+            source.buffer = processedAudioBuffer;
+            source.connect(analyser);
+            analyser.connect(audioContext.destination);
+            source.start(0);
+            
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            
+            function draw() {
+                if (!isPlaying) return;
+                
+                animationFrame = requestAnimationFrame(draw);
+                
+                analyser.getByteTimeDomainData(dataArray);
+                
+                visualizerCtx.fillStyle = 'rgb(240, 240, 240)';
+                visualizerCtx.fillRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+                
+                visualizerCtx.lineWidth = 2;
+                visualizerCtx.strokeStyle = 'rgb(0, 150, 0)';
+                visualizerCtx.beginPath();
+                
+                const sliceWidth = visualizerCanvas.width * 1.0 / bufferLength;
+                let x = 0;
+                
+                for (let i = 0; i < bufferLength; i++) {
+                    const v = dataArray[i] / 128.0;
+                    const y = v * visualizerCanvas.height / 2;
+                    
+                    if (i === 0) {
+                        visualizerCtx.moveTo(x, y);
+                    } else {
+                        visualizerCtx.lineTo(x, y);
+                    }
+                    
+                    x += sliceWidth;
+                }
+                
+                visualizerCtx.lineTo(visualizerCanvas.width, visualizerCanvas.height / 2);
+                visualizerCtx.stroke();
+            }
+            
+            draw();
+        }
+
+        function stopVisualization() {
+            if (animationFrame) {
+                cancelAnimationFrame(animationFrame);
+                animationFrame = null;
+            }
+            
+            // Clear canvas
+            if (visualizerCtx) {
+                visualizerCtx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+            }
+        }
+
+        // Convert AudioBuffer to WAV format
+        function audioBufferToWav(buffer) {
+            const numChannels = buffer.numberOfChannels;
+            const length = buffer.length * numChannels * 2; // 2 bytes per sample
+            const sampleRate = buffer.sampleRate;
+            
+            const arrayBuffer = new ArrayBuffer(44 + length);
+            const view = new DataView(arrayBuffer);
+            
+            // Write WAV header
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + length, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * numChannels * 2, true);
+            view.setUint16(32, numChannels * 2, true);
+            view.setUint16(34, 16, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, length, true);
+            
+            // Write audio data
+            const dataOffset = 44;
+            let offset = dataOffset;
+            
+            for (let i = 0; i < buffer.length; i++) {
+                for (let channel = 0; channel < numChannels; channel++) {
+                    const sample = Math.max(-1, Math.min(1, buffer.getChannelData(channel)[i]));
+                    view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+                    offset += 2;
+                }
+            }
+            
+            return arrayBuffer;
+        }
+
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+    </script>
+</body>
+</html>

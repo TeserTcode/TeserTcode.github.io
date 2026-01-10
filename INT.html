@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Integral Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@12.4.1/lib/browser/math.js"></script>
+    <style>
+        /* Custom styles for a better look and feel */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+        /* Custom tooltip for chart.js */
+        .chartjs-tooltip {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 6px;
+            padding: 6px;
+            font-size: 12px;
+        }
+    </style>
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-4xl">
+        <div class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-6 sm:p-8">
+            <h1 class="text-3xl font-bold text-center text-gray-900 dark:text-white mb-2">Advanced Integral Calculator</h1>
+            <p class="text-center text-gray-500 dark:text-gray-400 mb-8">Visualize and compute integrals with various numerical methods.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Input Column -->
+                <div class="space-y-4">
+                    <div class="form-group">
+                        <label for="functionInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Function f(x)</label>
+                        <input type="text" id="functionInput" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., x^2, sin(x), exp(x)" value="sin(x)">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="lowerLimit" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Lower Limit (a)</label>
+                            <input type="text" id="lowerLimit" value="0" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-2.5" placeholder="e.g., 0 or 1+2i">
+                        </div>
+                        <div>
+                            <label for="upperLimit" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Upper Limit (b)</label>
+                            <input type="text" id="upperLimit" value="pi" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-2.5" placeholder="e.g., 1 or pi">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="method" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Integration Method</label>
+                        <select id="method" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-2.5">
+                            <option value="left">Left Riemann Sum</option>
+                            <option value="right">Right Riemann Sum</option>
+                            <option value="midpoint">Midpoint Rule</option>
+                            <option value="trapezoid">Trapezoidal Rule</option>
+                            <option value="simpson">Simpson's Rule</option>
+                            <option value="gauss">Gaussian Quadrature</option>
+                            <option value="montecarlo">Monte Carlo (Random Sampling)</option>
+                            <option value="contour">Contour Integral (Complex)</option>
+                        </select>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-2" id="methodDescription">Approximates area using rectangles from the left side.</p>
+                    </div>
+
+                    <div id="contourGroup" class="space-y-4 hidden">
+                         <div class="form-group">
+                            <label for="contourType" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contour Path</label>
+                            <select id="contourType" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-2.5">
+                                <option value="line">Line Segment</option>
+                                <option value="circle">Circle</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="radiusGroup">
+                            <label for="radius" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Radius (for circular path)</label>
+                            <input type="number" id="radius" value="1" min="0.1" step="0.1" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-2.5">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="intervals" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Intervals / Samples (N)</label>
+                        <input type="number" id="intervals" value="10" min="1" max="1000" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-2.5">
+                    </div>
+
+                    <button id="calculateBtn" class="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-3 text-center dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-800 transition-all duration-200">
+                        Calculate & Visualize
+                    </button>
+                </div>
+
+                <!-- Results and Visualization Column -->
+                <div id="results" class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 hidden">
+                    <h3 class="text-xl font-semibold text-center mb-4">Result & Visualization</h3>
+                    <div id="resultText" class="text-sm mb-4 text-center"></div>
+                    <div class="chart-container">
+                        <canvas id="integralChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- DOM Element References ---
+        const methodSelect = document.getElementById('method');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const resultsDiv = document.getElementById('results');
+        const resultText = document.getElementById('resultText');
+        const contourGroup = document.getElementById('contourGroup');
+        const contourTypeSelect = document.getElementById('contourType');
+        const radiusGroup = document.getElementById('radiusGroup');
+        const methodDescription = document.getElementById('methodDescription');
+        
+        let integralChart = null;
+
+        // --- Method Descriptions ---
+        const methodDescriptions = {
+            'left': 'Approximates area using rectangles from the left side of each interval.',
+            'right': 'Approximates area using rectangles from the right side of each interval.',
+            'midpoint': 'Uses rectangles whose height is the function value at the midpoint of the interval.',
+            'trapezoid': 'Approximates area using trapezoids connecting function points.',
+            'simpson': 'Uses quadratic parabolas to approximate the curve, offering higher accuracy.',
+            'gauss': 'A powerful method using weighted samples at specific points (Legendre roots).',
+            'montecarlo': 'Estimates the integral by taking many random samples within the interval.',
+            'contour': 'Integrates a complex function along a path in the complex plane.'
+        };
+
+        // --- Event Listeners ---
+        methodSelect.addEventListener('change', () => {
+            const selectedMethod = methodSelect.value;
+            methodDescription.textContent = methodDescriptions[selectedMethod];
+            contourGroup.style.display = selectedMethod === 'contour' ? 'block' : 'none';
+            updateContourUI();
+        });
+
+        contourTypeSelect.addEventListener('change', updateContourUI);
+        calculateBtn.addEventListener('click', handleCalculation);
+
+        function updateContourUI() {
+            radiusGroup.style.display = contourTypeSelect.value === 'circle' ? 'block' : 'none';
+        }
+
+        // --- Main Calculation Handler ---
+        function handleCalculation() {
+            resultsDiv.style.display = 'block';
+            resultText.innerHTML = `<span class="text-blue-500">Calculating...</span>`;
+
+            // Use a timeout to allow the UI to update before the potentially heavy calculation begins
+            setTimeout(() => {
+                try {
+                    // 1. Get Inputs
+                    const funcStr = document.getElementById('functionInput').value;
+                    const aStr = document.getElementById('lowerLimit').value;
+                    const bStr = document.getElementById('upperLimit').value;
+                    const N = parseInt(document.getElementById('intervals').value);
+                    const method = methodSelect.value;
+
+                    // 2. Parse Inputs
+                    const scope = { i: math.complex(0, 1), pi: Math.PI, e: Math.E };
+                    const a = math.evaluate(aStr, scope);
+                    const b = math.evaluate(bStr, scope);
+                    const node = math.parse(funcStr);
+                    const code = node.compile();
+                    const f = (x) => code.evaluate({ ...scope, x: x });
+
+                    // 3. Perform Integration
+                    const startTime = performance.now();
+                    const { result, visualizationData } = runIntegration(f, a, b, N, method);
+                    const computationTime = performance.now() - startTime;
+
+                    // 4. Display Results
+                    displayResults(result, funcStr, a, b, method, N, computationTime);
+                    
+                    // 5. Visualize
+                    drawVisualization(f, a, b, N, method, visualizationData);
+
+                } catch (e) {
+                    resultText.innerHTML = `<span class="text-red-500 font-semibold">Error: ${e.message}</span>`;
+                    console.error(e);
+                    if (integralChart) integralChart.destroy();
+                }
+            }, 10);
+        }
+
+        // --- Integration Logic ---
+        function runIntegration(f, a, b, N, method) {
+            let result, visualizationData = {};
+
+            switch (method) {
+                case 'left':
+                case 'right':
+                case 'midpoint':
+                    result = riemannSum(f, a, b, N, method);
+                    visualizationData = { type: 'riemann', method: method };
+                    break;
+                case 'trapezoid':
+                    result = trapezoidalRule(f, a, b, N);
+                    visualizationData = { type: 'trapezoid' };
+                    break;
+                case 'simpson':
+                    if (N % 2 !== 0) throw new Error("Simpson's rule requires an even number of intervals (N).");
+                    result = simpsonsRule(f, a, b, N);
+                    visualizationData = { type: 'simpson' };
+                    break;
+                case 'gauss':
+                    result = gaussianQuadrature(f, a, b, N);
+                    visualizationData = { type: 'gauss' };
+                    break;
+                case 'montecarlo':
+                    result = monteCarlo(f, a, b, N);
+                    visualizationData = { type: 'montecarlo', samples: result.samples };
+                    result = result.integral;
+                    break;
+                case 'contour':
+                    const contourType = document.getElementById('contourType').value;
+                    const radius = parseFloat(document.getElementById('radius').value);
+                    const path = generateContourPath(a, b, N, contourType, radius);
+                    result = contourIntegral(f, path);
+                    visualizationData = { type: 'contour', path: path };
+                    break;
+                default:
+                    throw new Error('Selected method not implemented.');
+            }
+            return { result, visualizationData };
+        }
+
+        // --- Numerical Methods ---
+        function riemannSum(f, a, b, N, type) {
+            const h = (b - a) / N;
+            let integral = 0;
+            for (let i = 0; i < N; i++) {
+                let x;
+                if (type === 'left') x = a + i * h;
+                else if (type === 'right') x = a + (i + 1) * h;
+                else x = a + (i + 0.5) * h; // midpoint
+                integral = math.add(integral, f(x));
+            }
+            return math.multiply(integral, h);
+        }
+
+        function trapezoidalRule(f, a, b, N) {
+            const h = (b - a) / N;
+            let integral = math.divide(math.add(f(a), f(b)), 2);
+            for (let i = 1; i < N; i++) {
+                integral = math.add(integral, f(a + i * h));
+            }
+            return math.multiply(integral, h);
+        }
+
+        function simpsonsRule(f, a, b, N) {
+            const h = (b - a) / N;
+            let integral = math.add(f(a), f(b));
+            for (let i = 1; i < N; i += 2) {
+                integral = math.add(integral, math.multiply(4, f(a + i * h)));
+            }
+            for (let i = 2; i < N - 1; i += 2) {
+                integral = math.add(integral, math.multiply(2, f(a + i * h)));
+            }
+            return math.multiply(integral, h / 3);
+        }
+
+        function gaussianQuadrature(f, a, b, N) {
+            // Using 5-point Legendre-Gauss Quadrature, repeated N times.
+            const weights = [0.236926885, 0.478628670, 0.568888889, 0.478628670, 0.236926885];
+            const abscissas = [-0.906179846, -0.538469310, 0.000000000, 0.538469310, 0.906179846];
+            let integral = 0;
+            const h = (b - a) / N;
+            for (let i = 0; i < N; i++) {
+                const a_i = a + i * h;
+                const b_i = a + (i + 1) * h;
+                let sub_integral = 0;
+                for (let j = 0; j < weights.length; j++) {
+                    const x_j = ((b_i - a_i) / 2) * abscissas[j] + ((a_i + b_i) / 2);
+                    sub_integral = math.add(sub_integral, math.multiply(weights[j], f(x_j)));
+                }
+                integral = math.add(integral, math.multiply(sub_integral, (b_i - a_i) / 2));
+            }
+            return integral;
+        }
+
+        function monteCarlo(f, a, b, N) {
+            let sum = 0;
+            const samples = [];
+            const range = b - a;
+            for (let i = 0; i < N; i++) {
+                const x_rand = a + Math.random() * range;
+                const y_val = f(x_rand);
+                sum = math.add(sum, y_val);
+                samples.push({x: x_rand, y: y_val});
+            }
+            return { integral: math.multiply(sum, range / N), samples };
+        }
+
+        function contourIntegral(f, path) {
+            let integral = math.complex(0, 0);
+            for (let i = 0; i < path.length - 1; i++) {
+                const z1 = path[i];
+                const z2 = path[i + 1];
+                const dz = math.subtract(z2, z1);
+                const midpoint = math.divide(math.add(z1, z2), 2);
+                integral = math.add(integral, math.multiply(f(midpoint), dz));
+            }
+            return integral;
+        }
+
+        function generateContourPath(a, b, N, type, radius) {
+            const path = [];
+            if (type === 'line') {
+                for (let i = 0; i <= N; i++) {
+                    const t = i / N;
+                    path.push(math.add(math.multiply(a, 1 - t), math.multiply(b, t)));
+                }
+            } else if (type === 'circle') {
+                const center = a; // Center at 'a'
+                for (let i = 0; i <= N; i++) {
+                    const theta = 2 * Math.PI * i / N;
+                    const point = math.complex(radius * Math.cos(theta), radius * Math.sin(theta));
+                    path.push(math.add(center, point));
+                }
+            }
+            return path;
+        }
+
+        // --- Visualization ---
+        function drawVisualization(f, a, b, N, method, data) {
+            const ctx = document.getElementById('integralChart').getContext('2d');
+            if (integralChart) {
+                integralChart.destroy();
+            }
+
+            const isComplex = math.isComplex(a) || math.isComplex(b);
+            if (isComplex && method !== 'contour') {
+                resultText.innerHTML += '<p class="text-sm text-yellow-500">Visualization is only available for real intervals or contour integrals.</p>';
+                return;
+            }
+
+            let chartConfig;
+            switch (data.type) {
+                 case 'riemann':
+                    chartConfig = getRiemannConfig(f, a, b, N, data.method);
+                    break;
+                case 'trapezoid':
+                    chartConfig = getTrapezoidConfig(f, a, b, N);
+                    break;
+                case 'simpson':
+                case 'gauss':
+                    chartConfig = getAreaFillConfig(f, a, b, N, data.type);
+                    break;
+                case 'montecarlo':
+                    chartConfig = getMonteCarloConfig(f, a, b, data.samples);
+                    break;
+                case 'contour':
+                    chartConfig = getContourConfig(data.path);
+                    break;
+                default:
+                    chartConfig = getAreaFillConfig(f, a, b, N, 'default');
+            }
+            integralChart = new Chart(ctx, chartConfig);
+        }
+
+        // --- Chart Configuration Generators ---
+        function getBaseConfig(title, xAxisLabel, yAxisLabel) {
+            return {
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: true, text: title, color: '#CBD5E1', font: { size: 16 } },
+                        legend: { labels: { color: '#CBD5E1' } }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: xAxisLabel, color: '#9CA3AF' }, ticks: { color: '#9CA3AF' } },
+                        y: { title: { display: true, text: yAxisLabel, color: '#9CA3AF' }, ticks: { color: '#9CA3AF' } }
+                    }
+                }
+            };
+        }
+        
+        function getFunctionLineDataset(f, a, b) {
+            const points = [];
+            const steps = 200;
+            const h = (b - a) / steps;
+            for (let i = 0; i <= steps; i++) {
+                const x = a + i * h;
+                points.push({ x: x, y: f(x) });
+            }
+            return {
+                type: 'line',
+                label: 'f(x)',
+                data: points,
+                borderColor: 'rgb(59, 130, 246)',
+                borderWidth: 2,
+                tension: 0.1,
+                pointRadius: 0
+            };
+        }
+
+        function getRiemannConfig(f, a, b, N, method) {
+            const config = getBaseConfig(`${method.charAt(0).toUpperCase() + method.slice(1)} Riemann Sum`, 'x', 'f(x)');
+            const h = (b - a) / N;
+            const barData = [];
+            for (let i = 0; i < N; i++) {
+                let x_ref;
+                if (method === 'left') x_ref = a + i * h;
+                else if (method === 'right') x_ref = a + (i + 1) * h;
+                else x_ref = a + (i + 0.5) * h;
+                
+                const x_start = a + i * h;
+                const x_end = a + (i + 1) * h;
+                const y = f(x_ref);
+
+                barData.push({x: x_start, y: y});
+                barData.push({x: x_end, y: y});
+            }
+
+            config.data = {
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: 'Approximation Rectangles',
+                        data: barData.map((p, i) => ({x: p.x, y: p.y})),
+                        backgroundColor: 'rgba(255, 99, 132, 0.4)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1,
+                        barPercentage: 1.0,
+                        categoryPercentage: 1.0,
+                    },
+                    getFunctionLineDataset(f, a, b)
+                ]
+            };
+            return config;
+        }
+
+        function getTrapezoidConfig(f, a, b, N) {
+            const config = getBaseConfig('Trapezoidal Rule', 'x', 'f(x)');
+            const h = (b - a) / N;
+            const trapezoidData = [];
+            for (let i = 0; i < N; i++) {
+                const x1 = a + i * h;
+                const x2 = a + (i + 1) * h;
+                trapezoidData.push({x: x1, y: f(x1)});
+                trapezoidData.push({x: x2, y: f(x2)});
+            }
+            config.data = {
+                datasets: [
+                    {
+                        type: 'line',
+                        label: 'Trapezoid Tops',
+                        data: trapezoidData,
+                        fill: { target: 'origin', above: 'rgba(75, 192, 192, 0.4)' },
+                        borderColor: 'rgb(75, 192, 192)',
+                        pointRadius: 4,
+                        pointBackgroundColor: 'rgb(75, 192, 192)',
+                    },
+                    getFunctionLineDataset(f, a, b)
+                ]
+            };
+            return config;
+        }
+        
+        function getAreaFillConfig(f, a, b, N, method) {
+             const title = method.charAt(0).toUpperCase() + method.slice(1) + ' Rule';
+             const config = getBaseConfig(title, 'x', 'f(x)');
+             const lineDataset = getFunctionLineDataset(f, a, b);
+             lineDataset.label = 'f(x) with integral area';
+             lineDataset.fill = { target: 'origin', above: 'rgba(153, 102, 255, 0.4)' };
+             config.data = { datasets: [lineDataset] };
+             return config;
+        }
+
+        function getMonteCarloConfig(f, a, b, samples) {
+            const config = getBaseConfig('Monte Carlo Sampling', 'x', 'f(x)');
+            config.data = {
+                datasets: [
+                    getFunctionLineDataset(f, a, b),
+                    {
+                       type: 'scatter',
+                       label: 'Random Samples',
+                       data: samples,
+                       backgroundColor: 'rgba(255, 159, 64, 0.7)',
+                       pointRadius: 3,
+                    }
+                ]
+            };
+            return config;
+        }
+
+        function getContourConfig(path) {
+            const config = getBaseConfig('Contour Path in Complex Plane', 'Real Axis', 'Imaginary Axis');
+            config.data = {
+                datasets: [{
+                    type: 'scatter',
+                    label: 'Integration Path',
+                    data: path.map(z => ({x: z.re, y: z.im})),
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                    showLine: true,
+                    tension: 0.1
+                }]
+            };
+            config.options.aspectRatio = 1;
+            return config;
+        }
+
+
+        // --- Result Display ---
+        function displayResults(result, funcStr, a, b, method, N, time) {
+            const formattedResult = math.isComplex(result) ?
+                `${result.re.toFixed(6)} ${result.im >= 0 ? '+' : '-'} ${Math.abs(result.im).toFixed(6)}i` :
+                result.toFixed(8);
+
+            let html = `<p class="font-semibold text-lg">${formattedResult}</p>`;
+            html += `<p class="text-xs text-gray-400">Computed in ${time.toFixed(2)}ms</p>`;
+            resultText.innerHTML = html;
+            
+            // Add theoretical value for simple known integrals
+            if (funcStr === 'sin(x)' && a === 0 && (b === Math.PI || b === 'pi')) {
+                 const exact = 2;
+                 const error = Math.abs(exact - result).toExponential(3);
+                 resultText.innerHTML += `<p class="text-xs mt-2">Theoretical: 2.0 | Error: ${error}</p>`;
+            }
+            if (funcStr === 'x^2' && !math.isComplex(a) && !math.isComplex(b)) {
+                 const exact = (b**3 - a**3) / 3;
+                 const error = Math.abs(exact - result).toExponential(3);
+                 resultText.innerHTML += `<p class="text-xs mt-2">Theoretical: ${exact.toFixed(6)} | Error: ${error}</p>`;
+            }
+        }
+
+        // Initial state
+        methodSelect.dispatchEvent(new Event('change'));
+        calculateBtn.click();
+    });
+    </script>
+</body>
+</html>

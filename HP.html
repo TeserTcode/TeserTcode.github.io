@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiling Grid with Given Angle</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        canvas {
+            border: 1px solid #000;
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="500" height="500"></canvas>
+    <script> 
+		const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+const scale = 20; // Scaling factor for better visualization
+const radiusLimit = 10; // Radius limit for exploration
+const angle = Math.PI / 3; // Given angle (60 degrees in radians)
+
+// Sets to keep track of points
+let todo = new Set();
+let done = new Set();
+
+// Add the origin to the "done" set
+done.add(`${0},${0}`);
+
+// Function to draw a line from (x1, y1) to (x2, y2)
+function drawLine(x1, y1, x2, y2) {
+    ctx.beginPath();
+    ctx.moveTo(centerX + x1 * scale, centerY - y1 * scale);
+    ctx.lineTo(centerX + x2 * scale, centerY - y2 * scale);
+    ctx.stroke();
+}
+
+// Function to calculate the next point based on the given angle
+function getNextPoint(x, y, angle) {
+    const nextX = x + Math.cos(angle);
+    const nextY = y + Math.sin(angle);
+    return { x: nextX, y: nextY };
+}
+
+// Function to check if a point is near a point in the "done" set
+function isNearDone(x, y) {
+    for (const point of done) {
+        const [doneX, doneY] = point.split(',').map(Number);
+        const dx = x - doneX;
+        const dy = y - doneY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < 0.1) { // Near threshold
+            return true;
+        }
+    }
+    return false;
+}
+
+// Function to explore the grid
+function exploreGrid() {
+    while (todo.size > 0) {
+        const current = todo.values().next().value;
+        todo.delete(current);
+
+        const [x, y] = current.split(',').map(Number);
+
+        // Draw lines in all directions based on the given angle
+        for (let i = 0; i < 6; i++) { // 6 directions for 60-degree angle
+            const nextPoint = getNextPoint(x, y, angle + (i * Math.PI / 3));
+            const nextKey = `${nextPoint.x.toFixed(2)},${nextPoint.y.toFixed(2)}`;
+
+            if (!done.has(nextKey) && !isNearDone(nextPoint.x, nextPoint.y)) {
+                drawLine(x, y, nextPoint.x, nextPoint.y);
+                todo.add(nextKey);
+            }
+        }
+
+        done.add(current);
+    }
+}
+
+// Initialize the "todo" set with the origin's neighbors
+const initialNeighbors = [
+    getNextPoint(0, 0, angle),
+    getNextPoint(0, 0, angle + Math.PI / 3),
+    getNextPoint(0, 0, angle + (2 * Math.PI / 3)),
+    getNextPoint(0, 0, angle + Math.PI),
+    getNextPoint(0, 0, angle + (4 * Math.PI / 3)),
+    getNextPoint(0, 0, angle + (5 * Math.PI / 3))
+];
+
+initialNeighbors.forEach(point => {
+    const key = `${point.x.toFixed(2)},${point.y.toFixed(2)}`;
+    if (!done.has(key)) {
+        todo.add(key);
+    }
+});
+
+// Start the exploration
+exploreGrid();
+		</script>
+</body>
+</html>

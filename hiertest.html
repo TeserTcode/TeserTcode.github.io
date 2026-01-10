@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Function Documentation Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #function-list {
+            width: 250px;
+            background: #f0f0f0;
+            padding: 10px;
+            overflow-y: auto;
+            border-right: 1px solid #ccc;
+        }
+        #function-list h3 {
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+        .function-item {
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        .function-item:hover {
+            background: #e0e0e0;
+        }
+        .function-item.selected {
+            background: #d0d0ff;
+            font-weight: bold;
+        }
+        .function-item.added {
+            color: #666;
+            text-decoration: line-through;
+        }
+        #main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #header-hierarchy {
+            padding: 15px;
+            background: #f8f8f8;
+            border-bottom: 1px solid #ddd;
+            min-height: 100px;
+            overflow-x: auto;
+        }
+        #hierarchy-visualization {
+            font-family: monospace;
+            white-space: pre;
+            line-height: 1.5;
+        }
+        #documentation-area {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            margin-bottom: 10px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 8px 15px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .example {
+            margin-bottom: 10px;
+        }
+        .similar-descriptions {
+            background: #f0f0f0;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .similar-item {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-bottom: 1px dashed #ccc;
+            cursor: pointer;
+        }
+        .similar-item:hover {
+            background: #e0e0e0;
+        }
+        .controls {
+            padding: 10px;
+            background: #f8f8f8;
+            border-top: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+        }
+        .hierarchy-controls {
+            display: flex;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .hierarchy-controls select {
+            margin-right: 10px;
+            padding: 5px;
+            min-width: 200px;
+        }
+        .hierarchy-path {
+            font-family: monospace;
+            margin-bottom: 10px;
+            padding: 5px;
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+        .export-import {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div id="function-list">
+        <h3>Functions</h3>
+        <div id="functions-container"></div>
+    </div>
+    
+    <div id="main-content">
+        <div id="header-hierarchy">
+            <h3>Header Hierarchy</h3>
+            <div id="hierarchy-visualization"></div>
+        </div>
+        
+        <div id="documentation-area">
+            <div class="section">
+                <h3>Function: <span id="function-name"></span></h3>
+                <div>
+                    <h4>Function Code</h4>
+                    <pre id="function-code"></pre>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h4>Description</h4>
+                <div id="similar-descriptions" class="similar-descriptions" style="display: none;">
+                    <h5>Similar Existing Descriptions</h5>
+                    <div id="similar-descriptions-list"></div>
+                </div>
+                <textarea id="description" placeholder="Write a description of the function..."></textarea>
+            </div>
+            
+            <div class="section">
+                <h4>Examples</h4>
+                <div id="examples-container">
+                    <div class="example">
+                        <input type="text" class="example-input" placeholder="Example usage with variable x">
+                        <textarea class="example-output" placeholder="Expected output or explanation"></textarea>
+                    </div>
+                </div>
+                <button id="add-example">Add Example</button>
+            </div>
+            
+            <div class="section">
+                <h4>Hierarchy Placement</h4>
+                <div id="current-path" class="hierarchy-path">No path selected</div>
+                <div class="hierarchy-controls">
+                    <select id="header-select">
+                        <option value="">-- Select Header --</option>
+                    </select>
+                    <select id="subheader-1-select">
+                        <option value="">-- Select Subheader --</option>
+                    </select>
+                    <select id="subheader-2-select">
+                        <option value="">-- Select Sub-subheader --</option>
+                    </select>
+                    <select id="subheader-3-select">
+                        <option value="">-- Select Sub-sub-subheader --</option>
+                    </select>
+                </div>
+                <div>
+                    <button id="add-header">Add New Header</button>
+                    <button id="add-subheader">Add New Subheader</button>
+                    <button id="confirm-placement">Confirm Placement</button>
+                </div>
+                <input type="text" id="new-header-name" placeholder="New header name" style="display: none;">
+                <button id="confirm-add-header" style="display: none;">Confirm</button>
+            </div>
+            
+            <div class="section export-import">
+                <h4>Export/Import</h4>
+                <button id="export-json">Export as JSON</button>
+                <button id="import-json">Import JSON</button>
+                <input type="file" id="json-upload" style="display: none;" accept=".json">
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div>
+                <button id="save-function">Save Function</button>
+                <button id="reset-function">Reset</button>
+            </div>
+            <div>
+                <button id="save-state">Save State</button>
+                <button id="load-state">Load State</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let functions = [];
+        let documentation = {
+            headers: [],
+            functions: {}
+        };
+        let currentFunction = null;
+        let addingHeader = false;
+        let addingSubheader = false;
+        let currentPath = [];
+        let selectedHeader = null;
+        let selectedSubheaders = [];
+
+        // DOM elements
+        const functionsContainer = document.getElementById('functions-container');
+        const functionNameElement = document.getElementById('function-name');
+        const functionCodeElement = document.getElementById('function-code');
+        const descriptionElement = document.getElementById('description');
+        const examplesContainer = document.getElementById('examples-container');
+        const headerSelect = document.getElementById('header-select');
+        const subheaderSelects = [
+            document.getElementById('subheader-1-select'),
+            document.getElementById('subheader-2-select'),
+            document.getElementById('subheader-3-select')
+        ];
+        const newHeaderNameInput = document.getElementById('new-header-name');
+        const confirmAddHeaderBtn = document.getElementById('confirm-add-header');
+        const hierarchyVisualization = document.getElementById('hierarchy-visualization');
+        const similarDescriptionsDiv = document.getElementById('similar-descriptions');
+        const similarDescriptionsList = document.getElementById('similar-descriptions-list');
+        const currentPathElement = document.getElementById('current-path');
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Set up event listeners
+            document.getElementById('add-example').addEventListener('click', addExample);
+            document.getElementById('add-header').addEventListener('click', startAddHeader);
+            document.getElementById('add-subheader').addEventListener('click', startAddSubheader);
+            document.getElementById('confirm-add-header').addEventListener('click', confirmAddHeader);
+            document.getElementById('confirm-placement').addEventListener('click', confirmPlacement);
+            document.getElementById('save-function').addEventListener('click', saveFunction);
+            document.getElementById('reset-function').addEventListener('click', resetFunction);
+            document.getElementById('save-state').addEventListener('click', saveState);
+            document.getElementById('load-state').addEventListener('click', loadState);
+            document.getElementById('export-json').addEventListener('click', exportDocumentation);
+            document.getElementById('import-json').addEventListener('click', () => document.getElementById('json-upload').click());
+            document.getElementById('json-upload').addEventListener('change', importDocumentation);
+            
+            headerSelect.addEventListener('change', () => updateSubheaderSelects(0));
+            subheaderSelects[0].addEventListener('change', () => updateSubheaderSelects(1));
+            subheaderSelects[1].addEventListener('change', () => updateSubheaderSelects(2));
+            
+            descriptionElement.addEventListener('focus', showSimilarDescriptions);
+            descriptionElement.addEventListener('blur', hideSimilarDescriptions);
+            
+            // Load functions from mthfnc.js
+            await loadFunctions();
+            
+            // Load saved state if available
+            const savedState = localStorage.getItem('functionDocumentationState');
+            if (savedState) {
+                documentation = JSON.parse(savedState);
+                updateHierarchyVisualization();
+            }
+            
+            // Populate function list
+            renderFunctionList();
+        });
+
+        // Load functions from mthfnc.js
+        async function loadFunctions() {
+            try {
+                const response = await fetch('mthfnc.js');
+                if (!response.ok) throw new Error('Failed to load mthfnc.js');
+                
+                const code = await response.text();
+                functions = extractFunctions(code);
+                
+                if (functions.length === 0) {
+                    functionsContainer.innerHTML = '<p>No functions found in mthfnc.js</p>';
+                }
+            } catch (error) {
+                console.error('Error loading functions:', error);
+                functionsContainer.innerHTML = `<p>Error loading functions: ${error.message}</p>`;
+            }
+        }
+
+        // Extract function definitions from code
+        function extractFunctions(code) {
+            const functionRegex = /function\s+([a-zA-Z_$][0-9a-zA-Z_$]*)\s*\(([^)]*)\)\s*\{([\s\S]*?)\n\}/g;
+            const matches = [];
+            let match;
+            
+            while ((match = functionRegex.exec(code)) !== null) {
+                matches.push({
+                    name: match[1],
+                    params: match[2].split(',').map(p => p.trim()).filter(p => p),
+                    body: match[3].trim(),
+                    fullCode: match[0]
+                });
+            }
+            
+            return matches;
+        }
+
+        // Render the list of functions
+        function renderFunctionList() {
+            functionsContainer.innerHTML = '';
+            
+            functions.forEach(func => {
+                const isAdded = documentation.functions.hasOwnProperty(func.name);
+                
+                const funcElement = document.createElement('div');
+                funcElement.className = `function-item ${isAdded ? 'added' : ''}`;
+                funcElement.textContent = func.name;
+                
+                if (!isAdded) {
+                    funcElement.addEventListener('click', () => selectFunction(func));
+                }
+                
+                functionsContainer.appendChild(funcElement);
+            });
+        }
+
+        // Select a function to document
+        function selectFunction(func) {
+            currentFunction = func;
+            currentPath = [];
+            selectedHeader = null;
+            selectedSubheaders = [];
+            
+            functionNameElement.textContent = func.name;
+            functionCodeElement.textContent = func.fullCode;
+            descriptionElement.value = '';
+            
+            // Clear examples
+            examplesContainer.innerHTML = '';
+            addExample(); // Add one empty example by default
+            
+            // Update header selects
+            updateHeaderSelect();
+            updateSubheaderSelects(0);
+            updateCurrentPath();
+            
+            // Show similar descriptions
+            findSimilarDescriptions(func.name);
+            
+            // Highlight selected function in list
+            document.querySelectorAll('.function-item').forEach(item => {
+                item.classList.remove('selected');
+                if (item.textContent === func.name) {
+                    item.classList.add('selected');
+                }
+            });
+        }
+
+        // Add an example input/output pair
+        function addExample() {
+            const exampleDiv = document.createElement('div');
+            exampleDiv.className = 'example';
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'example-input';
+            input.placeholder = 'Example usage with variable x';
+            
+            const output = document.createElement('textarea');
+            output.className = 'example-output';
+            output.placeholder = 'Expected output or explanation';
+            
+            exampleDiv.appendChild(input);
+            exampleDiv.appendChild(output);
+            examplesContainer.appendChild(exampleDiv);
+        }
+
+        // Start adding a new header
+        function startAddHeader() {
+            addingHeader = true;
+            addingSubheader = false;
+            newHeaderNameInput.style.display = 'block';
+            confirmAddHeaderBtn.style.display = 'inline-block';
+            newHeaderNameInput.placeholder = 'New header name';
+            newHeaderNameInput.focus();
+        }
+
+        // Start adding a new subheader
+        function startAddSubheader() {
+            if (currentPath.length === 0 && !headerSelect.value) {
+                alert('Please select a header first');
+                return;
+            }
+            
+            addingHeader = false;
+            addingSubheader = true;
+            newHeaderNameInput.style.display = 'block';
+            confirmAddHeaderBtn.style.display = 'inline-block';
+            newHeaderNameInput.placeholder = 'New subheader name';
+            newHeaderNameInput.focus();
+        }
+
+        // Confirm adding a new header or subheader
+        function confirmAddHeader() {
+            const name = newHeaderNameInput.value.trim();
+            if (!name) {
+                alert('Please enter a name');
+                return;
+            }
+            
+            if (addingHeader) {
+                // Check if header already exists
+                if (documentation.headers.some(h => h.name === name)) {
+                    alert('Header already exists');
+                    return;
+                }
+                
+                documentation.headers.push({
+                    name,
+                    subheaders: []
+                });
+            } else if (addingSubheader) {
+                // Find the parent to add the subheader to
+                let parent = findCurrentParent();
+                
+                if (!parent) {
+                    alert('No parent selected for subheader');
+                    return;
+                }
+                
+                // Check if subheader already exists
+                if (parent.subheaders.some(sh => sh.name === name)) {
+                    alert('Subheader already exists');
+                    return;
+                }
+                
+                parent.subheaders.push({
+                    name,
+                    subheaders: []
+                });
+            }
+            
+            // Reset UI
+            newHeaderNameInput.value = '';
+            newHeaderNameInput.style.display = 'none';
+            confirmAddHeaderBtn.style.display = 'none';
+            addingHeader = false;
+            addingSubheader = false;
+            
+            // Update selects and visualization
+            updateHeaderSelect();
+            updateSubheaderSelects(0);
+            updateHierarchyVisualization();
+        }
+
+        // Find the current parent for adding a subheader
+        function findCurrentParent() {
+            if (currentPath.length === 0) {
+                // Adding to a header
+                const headerIndex = headerSelect.selectedIndex - 1;
+                if (headerIndex >= 0 && headerIndex < documentation.headers.length) {
+                    return documentation.headers[headerIndex];
+                }
+                return null;
+            }
+            
+            // Adding to a subheader - navigate down the path
+            let current = documentation.headers.find(h => h.name === currentPath[0]);
+            if (!current) return null;
+            
+            for (let i = 1; i < currentPath.length; i++) {
+                current = current.subheaders.find(sh => sh.name === currentPath[i]);
+                if (!current) return null;
+            }
+            
+            return current;
+        }
+
+        // Confirm the current placement path
+        function confirmPlacement() {
+            currentPath = [];
+            if (headerSelect.value) {
+                currentPath.push(headerSelect.value);
+                
+                for (let i = 0; i < subheaderSelects.length; i++) {
+                    if (subheaderSelects[i].value) {
+                        currentPath.push(subheaderSelects[i].value);
+                    } else {
+                        break;
+                    }
+                }
+            }
+            
+            updateCurrentPath();
+        }
+
+        // Update the current path display
+        function updateCurrentPath() {
+            if (currentPath.length === 0) {
+                currentPathElement.textContent = "No path selected";
+            } else {
+                currentPathElement.textContent = "Current path: " + currentPath.join(" → ");
+            }
+        }
+
+        // Update the header select dropdown
+        function updateHeaderSelect() {
+            headerSelect.innerHTML = '<option value="">-- Select Header --</option>';
+            documentation.headers.forEach(header => {
+                const option = document.createElement('option');
+                option.value = header.name;
+                option.textContent = header.name;
+                headerSelect.appendChild(option);
+            });
+        }
+
+        // Update the subheader select dropdowns based on current selections
+        function updateSubheaderSelects(level) {
+            // Reset all subheader selects below the current level
+            for (let i = level; i < subheaderSelects.length; i++) {
+                subheaderSelects[i].innerHTML = `<option value="">-- Select ${'Sub-'.repeat(i+1)}header --</option>`;
+                subheaderSelects[i].disabled = true;
+            }
+            
+            if (level === 0) {
+                // Updating the header select
+                selectedHeader = headerSelect.value;
+                currentPath = selectedHeader ? [selectedHeader] : [];
+                
+                if (selectedHeader) {
+                    const header = documentation.headers.find(h => h.name === selectedHeader);
+                    if (header && header.subheaders.length > 0) {
+                        populateSubheaderSelect(0, header.subheaders);
+                    }
+                }
+            } else {
+                // Updating a subheader select
+                const prevSelect = subheaderSelects[level - 1];
+                if (prevSelect.value) {
+                    // Find the parent subheader
+                    let parent = documentation.headers.find(h => h.name === currentPath[0]);
+                    for (let i = 1; i < level; i++) {
+                        parent = parent.subheaders.find(sh => sh.name === currentPath[i]);
+                    }
+                    
+                    if (parent && parent.subheaders.length > 0) {
+                        populateSubheaderSelect(level, parent.subheaders);
+                    }
+                }
+            }
+            
+            updateCurrentPath();
+        }
+
+        // Populate a subheader select with options
+        function populateSubheaderSelect(level, subheaders) {
+            const select = subheaderSelects[level];
+            select.disabled = false;
+            
+            subheaders.forEach(subheader => {
+                const option = document.createElement('option');
+                option.value = subheader.name;
+                option.textContent = subheader.name;
+                select.appendChild(option);
+            });
+        }
+
+        // Save the current function documentation
+        function saveFunction() {
+            if (!currentFunction) {
+                alert('No function selected');
+                return;
+            }
+            
+            // Collect examples
+            const examples = [];
+            document.querySelectorAll('.example').forEach(exampleDiv => {
+                const input = exampleDiv.querySelector('.example-input').value.trim();
+                const output = exampleDiv.querySelector('.example-output').value.trim();
+                if (input && output) {
+                    examples.push({ input, output });
+                }
+            });
+            
+            if (examples.length === 0) {
+                alert('Please add at least one example');
+                return;
+            }
+            
+            if (!descriptionElement.value.trim()) {
+                alert('Please add a description');
+                return;
+            }
+            
+            if (currentPath.length === 0) {
+                alert('Please select a placement in the hierarchy');
+                return;
+            }
+            
+            // Save function documentation
+            documentation.functions[currentFunction.name] = {
+                description: descriptionElement.value.trim(),
+                examples,
+                path: [...currentPath] // Store the full path
+            };
+            
+            // Update visualization and function list
+            updateHierarchyVisualization();
+            renderFunctionList();
+            
+            // Save state
+            saveState();
+            
+            alert('Function documentation saved!');
+        }
+
+        // Reset the current function documentation form
+        function resetFunction() {
+            if (currentFunction) {
+                selectFunction(currentFunction);
+            }
+        }
+
+        // Save the current state to localStorage
+        function saveState() {
+            localStorage.setItem('functionDocumentationState', JSON.stringify(documentation));
+        }
+
+        // Load state from localStorage
+        function loadState() {
+            const savedState = localStorage.getItem('functionDocumentationState');
+            if (savedState) {
+                documentation = JSON.parse(savedState);
+                updateHierarchyVisualization();
+                renderFunctionList();
+                alert('State loaded successfully');
+            } else {
+                alert('No saved state found');
+            }
+        }
+
+        // Update the hierarchy visualization
+        function updateHierarchyVisualization() {
+            let visualization = '';
+            
+            function visualizeNode(node, depth, isLast) {
+                const indent = '    '.repeat(depth);
+                const prefix = depth === 0 ? '' : isLast ? '└── ' : '├── ';
+                visualization += `${indent}${prefix}${node.name}\n`;
+                
+                // Show functions at this level
+                const functionsHere = Object.entries(documentation.functions)
+                    .filter(([_, doc]) => doc.path.length === depth + 1 && 
+                                          doc.path[depth] === node.name);
+                
+                functionsHere.forEach(([funcName, _], i) => {
+                    const isLastFunc = i === functionsHere.length - 1;
+                    visualization += `${indent}${isLast ? '    ' : '│   '}${isLastFunc ? '└── ' : '├── '}${funcName}\n`;
+                });
+                
+                // Recursively visualize subheaders
+                node.subheaders?.forEach((subheader, i) => {
+                    visualizeNode(subheader, depth + 1, i === node.subheaders.length - 1);
+                });
+            }
+            
+            documentation.headers.forEach((header, i) => {
+                visualizeNode(header, 0, i === documentation.headers.length - 1);
+            });
+            
+            hierarchyVisualization.textContent = visualization || 'No hierarchy defined yet';
+        }
+
+        // Find similar descriptions to show as suggestions
+        function findSimilarDescriptions(funcName) {
+            similarDescriptionsList.innerHTML = '';
+            
+            // Find functions with similar names
+            const similarFuncs = Object.entries(documentation.functions)
+                .filter(([name, _]) => name.toLowerCase().includes(funcName.toLowerCase()) || 
+                                      funcName.toLowerCase().includes(name.toLowerCase()));
+            
+            if (similarFuncs.length === 0) {
+                similarDescriptionsDiv.style.display = 'none';
+                return;
+            }
+            
+            similarFuncs.forEach(([name, doc]) => {
+                const similarItem = document.createElement('div');
+                similarItem.className = 'similar-item';
+                similarItem.textContent = `${name}: ${doc.description.substring(0, 100)}${doc.description.length > 100 ? '...' : ''}`;
+                similarItem.addEventListener('click', () => {
+                    descriptionElement.value = doc.description;
+                    hideSimilarDescriptions();
+                });
+                similarDescriptionsList.appendChild(similarItem);
+            });
+            
+            similarDescriptionsDiv.style.display = 'block';
+        }
+
+        // Show similar descriptions
+        function showSimilarDescriptions() {
+            if (currentFunction && similarDescriptionsList.children.length > 0) {
+                similarDescriptionsDiv.style.display = 'block';
+            }
+        }
+
+        // Hide similar descriptions
+        function hideSimilarDescriptions() {
+            similarDescriptionsDiv.style.display = 'none';
+        }
+
+        // Export documentation as JSON
+        function exportDocumentation() {
+            const json = JSON.stringify(documentation, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'function_documentation.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Import documentation from JSON file
+        function importDocumentation(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedDoc = JSON.parse(e.target.result);
+                    documentation = importedDoc;
+                    updateHierarchyVisualization();
+                    renderFunctionList();
+                    alert('Documentation imported successfully');
+                } catch (error) {
+                    alert('Error importing documentation: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+            
+            // Reset file input
+            event.target.value = '';
+        }
+    </script>
+</body>
+</html>

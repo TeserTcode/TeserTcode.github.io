@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Octagon to Genus-2 Torus Mapping</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script>
+        // Scene setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x111122);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Lighting
+        const light1 = new THREE.DirectionalLight(0xffffff, 1);
+        light1.position.set(1, 1, 1);
+        scene.add(light1);
+        const light2 = new THREE.DirectionalLight(0xffffff, 0.5);
+        light2.position.set(-1, -1, -1);
+        scene.add(light2);
+        scene.add(new THREE.AmbientLight(0x404040));
+
+        // Camera position
+        camera.position.z = 5;
+
+        // Parameters
+        const R = 2;  // Major radius
+        const r = 0.8; // Minor radius
+        const segments = 128;
+
+        // Create the double torus
+        function createDoubleTorus() {
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            const indices = [];
+            const normals = [];
+            const uvs = [];
+
+            // Generate vertices for a double torus
+            for (let i = 0; i <= segments; i++) {
+                const u = i / segments * Math.PI * 2;
+                
+                for (let j = 0; j <= segments; j++) {
+                    const v = j / segments * Math.PI * 2;
+                    
+                    // First torus (right side)
+                    let x1 = (R + r * Math.cos(v)) * Math.cos(u);
+                    let y1 = (R + r * Math.cos(v)) * Math.sin(u);
+                    let z1 = r * Math.sin(v);
+                    
+                    // Second torus (left side)
+                    let x2 = (R + r * Math.cos(v)) * Math.cos(u + Math.PI);
+                    let y2 = (R + r * Math.cos(v)) * Math.sin(u + Math.PI);
+                    let z2 = r * Math.sin(v) + 0.5;
+                    
+                    // Blend between the two tori based on u
+                    const blend = Math.sin(u) * 0.5 + 0.5;
+                    
+                    // Final position is a blend between the two tori
+                    const x = x1 * blend + x2 * (1 - blend);
+                    const y = y1 * blend + y2 * (1 - blend);
+                    const z = z1 * blend + z2 * (1 - blend);
+                    
+                    vertices.push(x, y, z);
+                    
+                    // Normals (simplified)
+                    const nx = x - (R * Math.cos(u) * blend + R * Math.cos(u + Math.PI) * (1 - blend));
+                    const ny = y - (R * Math.sin(u) * blend + R * Math.sin(u + Math.PI) * (1 - blend));
+                    const nz = z;
+                    const length = Math.sqrt(nx * nx + ny * ny + nz * nz);
+                    normals.push(nx/length, ny/length, nz/length);
+                    
+                    uvs.push(i / segments, j / segments);
+                }
+            }
+
+            // Generate indices
+            for (let i = 0; i < segments; i++) {
+                for (let j = 0; j < segments; j++) {
+                    const a = i * (segments + 1) + j;
+                    const b = a + segments + 1;
+                    const c = a + 1;
+                    const d = b + 1;
+                    
+                    indices.push(a, b, d);
+                    indices.push(a, d, c);
+                }
+            }
+
+            geometry.setIndex(indices);
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+            geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+            
+            const material = new THREE.MeshPhongMaterial({
+                color: 0x44aa88,
+                side: THREE.DoubleSide,
+                flatShading: true,
+                wireframe: false
+            });
+            
+            return new THREE.Mesh(geometry, material);
+        }
+
+        // Create the octagon mapping visualization
+        function createOctagonMapping() {
+            const group = new THREE.Group();
+            
+            // Create the octagon (approximated as a circle with 8 arcs)
+            const octagonGeometry = new THREE.BufferGeometry();
+            const octagonVertices = [];
+            const octagonIndices = [];
+            
+            const octagonRadius = 1.5;
+            const center = [0, 0, 0];
+            
+            // Add center point
+            octagonVertices.push(...center, 0);
+            
+            // Add octagon points
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2;
+                const x = octagonRadius * Math.cos(angle);
+                const y = octagonRadius * Math.sin(angle);
+                octagonVertices.push(x, y, 0);
+                
+                // Connect to center
+                octagonIndices.push(0, i + 1, (i + 1) % 8 + 1);
+            }
+            
+            // Add edges to show the pairing
+            const edgeGeometry = new THREE.BufferGeometry();
+            const edgeVertices = [];
+            
+            // This represents the edge pairing you described:
+            // c-ccw, b-cw, a-cw, b-ccw, a-ccw, d-cw, c-cw, d-ccw
+            // For visualization, we'll just show the connections
+            const pairings = [
+                [1, 7], [2, 3], [4, 5], [6, 1], [4, 3], [6, 5], [2, 7], [6, 7]
+            ];
+            
+            for (const [i, j] of pairings) {
+                edgeVertices.push(
+                    octagonVertices[i * 3], octagonVertices[i * 3 + 1], octagonVertices[i * 3 + 2],
+                    octagonVertices[j * 3], octagonVertices[j * 3 + 1], octagonVertices[j * 3 + 2]
+                );
+            }
+            
+            edgeGeometry.setAttribute('position', new THREE.Float32BufferAttribute(edgeVertices, 3));
+            const edges = new THREE.LineSegments(
+                edgeGeometry,
+                new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 2 })
+            );
+            
+            octagonGeometry.setIndex(octagonIndices);
+            octagonGeometry.setAttribute('position', new THREE.Float32BufferAttribute(octagonVertices, 3));
+            
+            const octagon = new THREE.Mesh(
+                octagonGeometry,
+                new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true })
+            );
+            
+            group.add(octagon);
+            group.add(edges);
+            
+            return group;
+        }
+
+        // Create the double torus
+        const doubleTorus = createDoubleTorus();
+        scene.add(doubleTorus);
+
+        // Create the octagon mapping visualization
+        const octagonMapping = createOctagonMapping();
+        octagonMapping.position.x = -4;
+        scene.add(octagonMapping);
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            doubleTorus.rotation.x += 0.005;
+            doubleTorus.rotation.y += 0.01;
+            
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Problems: Significant Figures Challenge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .problem-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .problem-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .btn {
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .star-rating {
+            color: #f59e0b; /* amber-500 */
+        }
+        .star-rating-5-red {
+            color: #ef4444; /* red-500 */
+        }
+        .star-rating-6-cyan {
+            color: #06b6d4; /* cyan-500 */
+        }
+        .problem-list-item {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .problem-list-item:hover {
+            background-color: #e5e7eb; /* gray-200 */
+        }
+        .problem-list-item.selected {
+            background-color: #d1d5db; /* gray-300 */
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex items-center justify-center min-h-screen p-4">
+
+    <div id="app-container" class="w-full max-w-5xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900">Math Problems Challenge</h1>
+            <p class="text-lg text-gray-600 mt-2">Enter your answers rounded to 3 significant figures.</p>
+        </div>
+
+        <div id="loading" class="text-center p-8">
+            <svg class="animate-spin h-10 w-10 text-indigo-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="mt-4 text-gray-600">Loading problems...</p>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 mt-4 max-w-sm mx-auto">
+                <div id="loading-bar" class="bg-indigo-600 h-2.5 rounded-full" style="width: 0%; transition: width 0.2s ease-in-out;"></div>
+            </div>
+        </div>
+
+        <div id="main-content" class="hidden flex flex-col lg:flex-row gap-6">
+            <div class="lg:w-1/3 bg-white p-4 rounded-lg shadow-md flex flex-col">
+                <div class="flex flex-col sm:flex-row lg:flex-col justify-between items-center sm:items-start mb-6 gap-4">
+                    <div class="w-full">
+                        <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+                        <select id="category" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div class="w-full">
+                        <label for="difficulty" class="block text-sm font-medium text-gray-700">Difficulty</label>
+                        <select id="difficulty" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            <option>All</option>
+                        </select>
+                    </div>
+                    <div class="text-center sm:text-left lg:text-center w-full">
+                        <div class="text-lg font-semibold text-gray-800">Solved</div>
+                        <div id="solved-count" class="text-2xl font-bold text-indigo-600">0 / 0</div>
+                    </div>
+                </div>
+
+                <div class="flex-grow overflow-y-auto border-t pt-4 mt-4 -mx-4 px-4">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">Problems List</h3>
+                    <div id="problem-list-container" class="space-y-2">
+                        </div>
+                </div>
+            </div>
+
+            <div class="lg:w-2/3">
+                <div id="problem-card" class="problem-card bg-white p-6 sm:p-8 rounded-lg shadow-lg">
+                    <div id="problem-content">
+                        </div>
+                     <div id="no-problems" class="text-center py-10 hidden">
+                        <h3 class="text-xl font-semibold text-gray-700">No problems match the current filters.</h3>
+                        <p class="text-gray-500 mt-2">Try selecting a different category or difficulty.</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-center mt-6 gap-4">
+                     <button id="submit-btn" class="btn bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none">Check Answer</button>
+                     <button id="next-btn" class="btn bg-gray-700 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-gray-800">Next Problem</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- DOM Elements ---
+        const loadingEl = document.getElementById('loading');
+        const loadingBar = document.getElementById('loading-bar');
+        const mainContentEl = document.getElementById('main-content');
+        const categorySelect = document.getElementById('category');
+        const difficultySelect = document.getElementById('difficulty');
+        const solvedCountEl = document.getElementById('solved-count');
+        const problemCard = document.getElementById('problem-card');
+        const problemContentEl = document.getElementById('problem-content');
+        const noProblemsEl = document.getElementById('no-problems');
+        const submitBtn = document.getElementById('submit-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const problemListContainer = document.getElementById('problem-list-container'); // New DOM element
+
+        // --- App State ---
+        let db, auth;
+        let userId;
+        let problems = [];
+        let currentProblemIndex = -1;
+        let filteredProblemIndices = [];
+        let problemDataUnsubscribe = null;
+        let loadingInterval;
+
+        // --- Initial Problem Data ---
+        const initialProblems = [
+            // Note: The full list of 100 problems is included here.
+            // For brevity, only the problems with syntax corrections are shown.
+            // ... (All other problems remain the same) ...
+            { id: 1, text: "What is the average distance between two random points on a 1D line segment of length 1?", category: "Probability", difficulty: 1, answer: 1/3, solved: false, wrongGuesses: [] },
+            { id: 2, text: "What is the average length of a random chord on a unit circle (radius 1)?", category: "Geometry", difficulty: 2, answer: 4 / Math.PI, solved: false, wrongGuesses: [] },
+            { id: 3, text: "What is the average distance between two random points on the perimeter of a unit square (side length 1)?", category: "Geometry", difficulty: 3, answer: 0.5, solved: false, wrongGuesses: [] },
+            { id: 4, text: "What is the average area of a triangle formed by three random points on the perimeter of a unit circle (radius 1)?", category: "Geometry", difficulty: 3, answer: 3 / (2 * Math.PI), solved: false, wrongGuesses: [] },
+            { 
+                id: 5, 
+                text: "What is the average distance between two random points inside a unit square (side length 1)?", 
+                category: "Geometry", 
+                difficulty: 4, 
+                answer: (2 + Math.sqrt(2) + 5 * Math.log(1 + Math.sqrt(2))) / 15, 
+                solved: false, 
+                wrongGuesses: [],
+                explanation: "This classic geometric probability problem requires evaluating a complex quadruple integral over the unit square: \\( \\int_0^1\\int_0^1\\int_0^1\\int_0^1 \\sqrt{(x_1-x_2)^2 + (y_1-y_2)^2} \\,dx_1\\,dy_1\\,dx_2\\,dy_2 \\). The result is known as the Robbins constant."
+            },
+            { id: 6, text: "What is the average value of \\(x^2\\) over the interval [0, 1]?", category: "Calculus", difficulty: 1, answer: 1/3, solved: false, wrongGuesses: [] },
+            { id: 7, text: "What is the average area of a triangle formed by two random points on the x-axis between [0,1] and one random point on the y-axis between [0,1]?", category: "Probability", difficulty: 2, answer: 1/8, solved: false, wrongGuesses: [] },
+            { id: 8, text: "What is the average vertical distance between a random point in the unit square [0,1]×[0,1] and the line y = x?", category: "Geometry", difficulty: 2, answer: 1/3, solved: false, wrongGuesses: [] },
+            { id: 9, text: "What is the average value of \\(\\sin(x)\\) over the interval \\([0, \\pi]\\)?", category: "Calculus", difficulty: 1, answer: 2/Math.PI, solved: false, wrongGuesses: [] },
+            { id: 10, text: "What is the average area of a rectangle formed by two random points in the unit square [0,1]×[0,1] (using the points as opposite corners)?", category: "Probability", difficulty: 3, answer: 1/9, solved: false, wrongGuesses: [] },
+            { id: 11, text: "What is the average distance from a random point in the unit disk (radius 1) to its center?", category: "Geometry", difficulty: 2, answer: 2/3, solved: false, wrongGuesses: [] },
+            { id: 12, text: "What is the average slope of a line segment connecting two random points on the parabola \\(y = x^2\\) between x = 0 and x = 1?", category: "Calculus", difficulty: 3, answer: 1, solved: false, wrongGuesses: [] },
+            { id: 13, text: "What is the average area of a triangle formed by three random points inside the unit square [0,1]×[0,1]?", category: "Probability", difficulty: 4, answer: 11/144, solved: false, wrongGuesses: [] },
+            { id: 14, text: "What is the average distance between a random point in the unit square [0,1]×[0,1] and its center (0.5, 0.5)?", category: "Geometry", difficulty: 3, answer: (Math.sqrt(2) + Math.log(1 + Math.sqrt(2))) / 6, solved: false, wrongGuesses: [] },
+            { id: 15, text: "What is the average value of \\(e^x\\) over the interval [0, 1]?", category: "Calculus", difficulty: 1, answer: Math.E - 1, solved: false, wrongGuesses: [] },
+            { id: 16, text: "What is the average length of a random chord of a unit circle (radius 1) that passes through a fixed point on the circumference?", category: "Geometry", difficulty: 3, answer: 4/Math.PI, solved: false, wrongGuesses: [] },
+            { id: 17, text: "What is the average area of a triangle formed by three random points on the circumference of a unit circle (radius 1)?", category: "Geometry", difficulty: 3, answer: 3/(2*Math.PI), solved: false, wrongGuesses: [] },
+            { id: 18, text: "What is the average distance between two random points inside a unit cube (side length 1)?", category: "Geometry", difficulty: 4, answer: (4 + 3*Math.sqrt(2) - Math.PI + 24*Math.log(1+Math.sqrt(2)))/105, solved: false, wrongGuesses: [] },
+            { id: 19, text: "What is the average value of \\(1/x\\) over the interval [1, e]?", category: "Calculus", difficulty: 1, answer: 1/(Math.E-1), solved: false, wrongGuesses: [] },
+            { id: 20, text: "What is the average area of a quadrilateral formed by four random points in the unit square [0,1]×[0,1]?", category: "Probability", difficulty: 4, answer: 25/216, solved: false, wrongGuesses: [] },
+            { id: 21, text: "What is the probability that a triangle formed by three random points on the perimeter of a unit circle contains the center?", category: "Probability", difficulty: 3, answer: 1/4, solved: false, wrongGuesses: [] },
+            { id: 22, text: "What is the probability that a triangle formed by three random points on the perimeter of a unit circle is obtuse?", category: "Probability", difficulty: 3, answer: 3/4, solved: false, wrongGuesses: [] },
+            { id: 23, text: "If two circles of radius 0.25 are placed uniformly at random inside a unit circle, what is the probability that they overlap?", category: "Probability", difficulty: 4, answer: 1/4, solved: false, wrongGuesses: [] },
+            { id: 24, text: "A stick of length 1 is broken at two random points. What is the probability that the three pieces can form a triangle?", category: "Probability", difficulty: 3, answer: 1/4, explanation: "This is a classic probability problem. If the break points are x and y, the lengths are x, y-x, and 1-y (assuming x < y). For them to form a triangle, the triangle inequality must hold (sum of any two sides is greater than the third). This condition simplifies to \\(x < 1/2, y > 1/2, y-x < 1/2\\). Graphing these inequalities in the xy-plane (a unit square) shows the favorable region has an area of 1/4." },
+            { id: 25, text: "Two points are chosen uniformly at random inside a unit square. What is the probability that the distance between them is less than 1?", category: "Probability", difficulty: 3, answer: (Math.PI - 2)/4 + 1, solved: false, wrongGuesses: [] },
+            { id: 26, text: "A point is chosen uniformly at random inside a unit square. What is the probability that its distance to the nearest corner is less than 0.5?", category: "Probability", difficulty: 2, answer: Math.PI/16, solved: false, wrongGuesses: [] },
+            { id: 27, text: "Two points are chosen uniformly at random on a unit circle. What is the probability that the chord connecting them is longer than \\(\\sqrt{3}\\)?", category: "Probability", difficulty: 2, answer: 1/3, solved: false, wrongGuesses: [] },
+            { id: 28, text: "Three points are chosen uniformly at random inside a unit square. What is the probability that they form an acute triangle?", category: "Probability", difficulty: 4, answer: (Math.PI - 2)/4, solved: false, wrongGuesses: [] },
+            { 
+                id: 29, 
+                text: "A needle of length 1 is dropped onto a plane ruled with parallel lines 1 unit apart. What is the probability that the needle crosses a line? (Buffon's Needle Problem)", 
+                category: "Probability", 
+                difficulty: 3, 
+                answer: 2/Math.PI, 
+                solved: false, 
+                wrongGuesses: [],
+                explanation: "This is a famous problem in geometric probability. The solution involves integrating the probability of a needle of length L crossing a line over all possible angles and positions. The result is elegantly simple: \\(P = \\frac{2L}{\\pi D}\\), where D is the distance between lines. For L=D=1, P = \\(2/\\pi\\)."
+            },
+            { id: 30, text: "Four points are chosen uniformly at random inside a unit circle. What is the probability that the convex hull of these points is a quadrilateral (i.e., none are inside the triangle formed by the other three)?", category: "Probability", difficulty: 4, answer: 1 - (35)/(12 * Math.PI**2), solved: false, wrongGuesses: [] },
+            { id: 31, text: "A point is chosen uniformly at random inside an equilateral triangle of side length 1. What is the probability that its distance to the nearest vertex is less than 0.5?", category: "Probability", difficulty: 3, answer: Math.PI * Math.sqrt(3)/9, solved: false, wrongGuesses: [] },
+            { id: 32, text: "Two points are chosen uniformly at random on the surface of a unit sphere. What is the probability that the distance between them is less than 1?", category: "Probability", difficulty: 4, answer: 1/2, solved: false, wrongGuesses: [] },
+            { id: 33, text: "Three points are chosen uniformly at random on the surface of a unit sphere. What is the probability that the triangle they form contains the center of the sphere?", category: "Probability", difficulty: 4, answer: 1/8, solved: false, wrongGuesses: [] },
+            { id: 34, text: "A point is chosen uniformly at random inside a unit cube. What is the probability that it is closer to the center than to any of the vertices?", category: "Probability", difficulty: 4, answer: 1/8, solved: false, wrongGuesses: [] },
+            { id: 35, text: "Two numbers are chosen uniformly at random from [0,1]. What is the probability that their sum is less than 1.5 but greater than 0.5?", category: "Probability", difficulty: 2, answer: 3/4, solved: false, wrongGuesses: [] },
+            { id: 36, text: "A random walk starts at 0 on the number line and moves +1 or -1 with equal probability at each step. What is the probability it will ever reach +10?", category: "Probability", difficulty: 5, answer: 1, solved: false, wrongGuesses: [] },
+            { id: 37, text: "Three ants start at random positions on the vertices of a unit tetrahedron. Each moves along a random edge per second. What is the probability they will ever meet at the same vertex?", category: "Probability", difficulty: 5, answer: 7/16, solved: false, wrongGuesses: [] },
+            { id: 38, text: "A point is chosen uniformly at random inside a unit cube. What is the expected volume of the tetrahedron formed by this point and the four closest vertices?", category: "Geometry", difficulty: 5, answer: (77 - 120 * Math.log(2)) / 1200, solved: false, wrongGuesses: [] },
+            { id: 39, text: "Four random great circles are drawn on a unit sphere. What is the probability that all eight resulting spherical triangles are acute?", category: "Probability", difficulty: 5, answer: (Math.PI**2 - 6) / (4 * Math.PI**2), solved: false, wrongGuesses: [] },
+            { id: 40, text: "A random polynomial \\( P(x) = ax^2 + bx + c \\) has coefficients \\( a, b, c \\) chosen uniformly from [0,1]. What is the probability that \\( P(x) \\) has real roots?", category: "Probability", difficulty: 5, answer: (5 + 3 * Math.log(4)) / 36, solved: false, wrongGuesses: [] },
+	//  { id: 41, text: "A needle of length \\( L \\) is dropped onto a grid of squares with side length \\( S \\). What is the probability it crosses at least one line when \\( L > S \\)? (Generalized Buffon's Needle)", category: "Probability", difficulty: 5, answer: 1 - (S / L) * (Math.sqrt(L**2 - S**2) - S * Math.asin(S / L)) / (Math.PI * S), solved: false, wrongGuesses: [] },
+            { id: 42, text: "A random walk in 3D starts at the origin. At each step, it moves ±1 in x, y, or z with equal probability. What is the probability it will ever return to the origin?", category: "Probability", difficulty: 5, answer: 0.340537, explanation: "This is a classic random walk problem. Unlike 1D and 2D random walks, a 3D random walk is not recurrent, meaning there is a non-zero probability of never returning to the origin. The value is given by \\(1 - 1/u\\) where \\(u\\) is Watson's integral, approximately 1.51638. The probability is approximately 1 - 1/1.51638 ≈ 0.340537." },
+            { id: 43, text: "A random plane intersects a unit cube. What is the probability that the resulting cross-section is a regular hexagon?", category: "Probability", difficulty: 5, answer: 0, solved: false, wrongGuesses: [] },
+            { id: 44, text: "A random triangle is formed by three points on the surface of a unit sphere. What is the probability that its circumradius is less than 1?", category: "Probability", difficulty: 5, answer: 1/4, solved: false, wrongGuesses: [] },
+            { id: 45, text: "A random walk starts at (0,0) and moves up, down, left, or right with equal probability. What is the expected number of steps before it reaches a distance of 10 from the origin?", category: "Probability", difficulty: 5, answer: Infinity, solved: false, wrongGuesses: [] },
+            { id: 46, text: "A random parabola \\( y = ax^2 + bx + c \\) has coefficients \\( a, b, c \\) chosen uniformly from [0,1]. What is the probability it is entirely above the x-axis?", category: "Probability", difficulty: 5, answer: (5 - 3 * Math.log(4)) / 12, solved: false, wrongGuesses: [] },
+            { id: 47, text: "A random great circle is drawn on a unit sphere, splitting it into two hemispheres. A second great circle is drawn at random. What is the probability the two circles divide the sphere into four regions of equal area?", category: "Probability", difficulty: 5, answer: 0, solved: false, wrongGuesses: [] },
+            { id: 48, text: "A random 4D hyperplane intersects a unit 4D hypercube. What is the probability the resulting 3D cross-section is a regular polyhedron?", category: "Probability", difficulty: 5, answer: 0, solved: false, wrongGuesses: [] },
+            { id: 49, text: "A random walk in 2D starts at (0,0). At each step, it moves in a random direction (uniform angle) by distance 1. What is the probability it will ever return to within 0.5 units of the origin?", category: "Probability", difficulty: 5, answer: 1, solved: false, wrongGuesses: [] },
+            { id: 50, text: "A random polynomial \\( P(x) \\) of degree \\( n \\) has coefficients chosen uniformly from [-1,1]. What is the probability (as \\( n \\to \\infty \\)) that all its roots are real?", category: "Probability", difficulty: 5, answer: 0, solved: false, wrongGuesses: [] },
+            { id: 51, text: "Compute the volume of the region in \\(\\mathbb{R}^3\\) bounded by the surfaces \\( z = x^2 + y^2 \\) and \\( z = 2 - x^2 - y^2 \\).", category: "Multivariable Calculus", difficulty: 5, answer: Math.PI, solved: false, wrongGuesses: [] },
+            { id: 52, text: "Find the maximum value of \\( f(x,y,z) = xyz \\) subject to the constraint \\( x^2 + 2y^2 + 3z^2 = 6 \\).", category: "Optimization", difficulty: 5, answer: 2 / Math.sqrt(3), solved: false, wrongGuesses: [] },
+            { id: 53, text: "Evaluate the surface integral \\( \\iint_S (x^2 + y^2) \\, dS \\), where \\( S \\) is the part of the paraboloid \\( z = 1 - x^2 - y^2 \\) above the xy-plane.", category: "Surface Integrals", difficulty: 5, answer: (49 * Math.PI) / 60, solved: false, wrongGuesses: [] },
+            { id: 54, text: "Compute the line integral \\( \\int_C (x^2 - y^2) \\, dx + (x^2 + y^2) \\, dy \\), where \\( C \\) is the boundary of the square with vertices (0,0), (1,0), (1,1), and (0,1), oriented counterclockwise.", category: "Line Integrals", difficulty: 5, answer: 2/3, solved: false, wrongGuesses: [] },
+            { id: 55, text: "Find the flux of the vector field \\( \\mathbf{F}(x,y,z) = (x^3, y^3, z^3) \\) through the surface of the unit sphere \\( x^2 + y^2 + z^2 = 1 \\).", category: "Flux Integrals", difficulty: 5, answer: (12 * Math.PI) / 5, solved: false, wrongGuesses: [] },
+            { id: 56, text: "Evaluate the triple integral \\( \\iiint_E \\sqrt{x^2 + y^2} \\, dV \\), where \\( E \\) is the region inside the cylinder \\( x^2 + y^2 = 4 \\) and between the planes \\( z = 0 \\) and \\( z = 3 \\).", category: "Triple Integrals", difficulty: 5, answer: 16 * Math.PI, solved: false, wrongGuesses: [] },
+            { id: 57, text: "Find the directional derivative of \\( f(x,y,z) = x^2 y + y^2 z + z^2 x \\) at the point (1,1,1) in the direction of the vector \\( \\mathbf{v} = (2, -1, 2) \\).", category: "Directional Derivatives", difficulty: 5, answer: 5 / 3, solved: false, wrongGuesses: [] },
+            { id: 58, text: "Compute the Jacobian determinant of the transformation \\( T(u,v,w) = (u \\cos v, u \\sin v, w) \\) at the point (1, π/2, 1).", category: "Jacobian", difficulty: 5, answer: 1, solved: false, wrongGuesses: [] },
+            { id: 59, text: "Evaluate the integral \\( \\int_0^1 \\int_0^{1-x} \\int_0^{1-x-y} \\frac{1}{(1 + x + y + z)^4} \\, dz \\, dy \\, dx \\).", category: "Multiple Integrals", difficulty: 5, answer: Math.log(2) / 6 - 5 / 48, solved: false, wrongGuesses: [] },
+            { id: 60, text: "Find the work done by the force field \\( \\mathbf{F}(x,y,z) = (y^2, xz, z^2) \\) along the curve \\( C \\) given by \\( \\mathbf{r}(t) = (t, t^2, t^3) \\) for \\( 0 \\leq t \\leq 1 \\).", category: "Line Integrals", difficulty: 5, answer: 23 / 20, solved: false, wrongGuesses: [] },
+            { id: 61, text: "Determine the critical points of \\( f(x,y) = x^4 + y^4 - 4xy + 1 \\) and classify them as local minima, maxima, or saddle points.", category: "Critical Points", difficulty: 5, answer: "Saddle at (0,0), local minima at (1,1) and (-1,-1)", solved: false, wrongGuesses: [] },
+            { id: 62, text: "Compute the volume of the solid bounded by the surfaces \\( z = 0 \\), \\( z = x^2 + y^2 \\), and \\( x^2 + y^2 = 2x \\).", category: "Volume Integrals", difficulty: 5, answer: (5 * Math.PI) / 4, solved: false, wrongGuesses: [] },
+            { id: 63, text: "Evaluate the surface integral \\( \\iint_S \\mathbf{F} \\cdot d\\mathbf{S} \\), where \\( \\mathbf{F}(x,y,z) = (x, y, z) \\) and \\( S \\) is the part of the cone \\( z = \\sqrt{x^2 + y^2} \\) between \\( z = 1 \\) and \\( z = 2 \\).", category: "Flux Integrals", difficulty: 5, answer: 14 * Math.PI / 3, solved: false, wrongGuesses: [] },
+            { id: 64, text: "Find the mass of the lamina occupying the region \\( D \\) bounded by \\( y = x^2 \\) and \\( y = 1 \\), with density function \\( \\rho(x,y) = xy \\).", category: "Double Integrals", difficulty: 5, answer: 1 / 6, solved: false, wrongGuesses: [] },
+            { id: 65, text: "Compute the circulation of \\( \\mathbf{F}(x,y,z) = (y^2, z^2, x^2) \\) around the boundary of the triangle with vertices (1,0,0), (0,1,0), and (0,0,1), oriented counterclockwise when viewed from above.", category: "Stokes' Theorem", difficulty: 5, answer: 1 / 2, solved: false, wrongGuesses: [] },
+            { id: 66, text: "Compute \\( \\frac{\\partial f}{\\partial x} \\) at \\( (1,2) \\) for \\( f(x,y) = 3x^2 y + y^3 \\).", category: "Partial Derivatives", difficulty: 1, answer: 12, solved: false, wrongGuesses: [] },
+            { id: 67, text: "Evaluate \\( \\int_0^1 \\int_0^2 (x + 2y) \\, dy \\, dx \\).", category: "Double Integrals", difficulty: 1, answer: 4, solved: false, wrongGuesses: [] },
+            { id: 68, text: "Find the directional derivative of \\( f(x,y) = x^2 y \\) at \\( (2,1) \\) in the direction \\( \\mathbf{v} = (3,4) \\).", category: "Directional Derivatives", difficulty: 2, answer: 4.4, solved: false, wrongGuesses: [] },
+            { id: 69, text: "Compute the volume under \\( z = 4 - x - y \\) over the rectangle \\( [0,1] \\times [0,2] \\).", category: "Volume Integrals", difficulty: 2, answer: 5, solved: false, wrongGuesses: [] },
+            { id: 70, text: "Evaluate \\( \\iint_D e^{x^2 + y^2} \\, dA \\) where \\( D \\) is the disk \\( x^2 + y^2 \\leq 1 \\).", category: "Polar Integrals", difficulty: 3, answer: Math.PI * (Math.E-1), solved: false, wrongGuesses: [] },
+            { id: 71, text: "Find the maximum value of \\( f(x,y) = xy \\) on the ellipse \\( x^2 + 4y^2 = 8 \\).", category: "Optimization", difficulty: 3, answer: 2, solved: false, wrongGuesses: [] },
+            { id: 72, text: "Compute the flux of \\( \\mathbf{F}(x,y,z) = (0, y, z) \\) through the surface \\( z = 1 - x^2 - y^2 \\) (z ≥ 0).", category: "Flux Integrals", difficulty: 4, answer: Math.PI / 2, solved: false, wrongGuesses: [] },
+            { id: 73, text: "Evaluate \\( \\int_C (x + y) \\, ds \\) where \\( C \\) is the helix \\( \\mathbf{r}(t) = (\\cos t, \\sin t, t) \\) for \\( 0 \\leq t \\leq 2\\pi \\).", category: "Line Integrals", difficulty: 4, answer: Math.sqrt(2) * Math.PI**2, solved: false, wrongGuesses: [] },
+            { id: 74, text: "Evaluate \\( \\lim_{x \\to 0} \\frac{\\sin(3x)}{2x} \\).", category: "Trig Limits", difficulty: 2, answer: 1.5, solved: false, wrongGuesses: [] },
+            { id: 75, text: "Compute \\( \\lim_{x \\to \\infty} \\left(1 + \\frac{2}{x}\\right)^x \\).", category: "Exponential Limits", difficulty: 2, answer: Math.E**2, solved: false, wrongGuesses: [] },
+            { id: 76, text: "Find \\( \\lim_{x \\to 4} \\frac{\\sqrt{x} - 2}{x - 4} \\).", category: "Rational Limits", difficulty: 3, answer: 0.25, solved: false, wrongGuesses: [] },
+            { 
+                id: 77, 
+                text: "Evaluate \\( \\lim_{x \\to 0} \\frac{e^x - 1 - x}{x^2} \\).", 
+                category: "Taylor Series Limits", 
+                difficulty: 3, 
+                answer: 0.5, 
+                solved: false, 
+                wrongGuesses: [],
+                explanation: "This limit is an indeterminate form \\(0/0\\). While L'Hôpital's Rule can be used twice, a more elegant solution involves using the Taylor series expansion for \\(e^x\\) around 0, which is \\(1 + x + \\frac{x^2}{2!} + \\frac{x^3}{3!} + \\dots\\). Substituting this into the limit gives \\( \\lim_{x \\to 0} \\frac{(1 + x + x^2/2 + \\dots) - 1 - x}{x^2} = \\lim_{x \\to 0} \\frac{x^2/2 + \\dots}{x^2} = 1/2 \\)."
+            },
+            { id: 78, text: "Compute \\( \\lim_{x \\to 0^+} x^x \\).", category: "Indeterminate Forms", difficulty: 4, answer: 1, solved: false, wrongGuesses: [] },
+            { id: 79, text: "Find \\( \\lim_{n \\to \\infty} \\left(\\sum_{k=1}^n \\frac{1}{n + k}\\right) \\).", category: "Riemann Sums", difficulty: 4, answer: Math.log(2), solved: false, wrongGuesses: [] },
+            { id: 80, text: "Evaluate \\( \\lim_{x \\to 0} \\frac{\\sin(\\tan x) - \\tan(\\sin x)}{x^7} \\).", category: "Series Expansion", difficulty: 5, answer: -1/30, solved: false, wrongGuesses: [] },
+            { id: 81, text: "Compute \\( \\lim_{n \\to \\infty} \\sqrt[n]{n!} \\).", category: "Asymptotics", difficulty: 5, answer: Infinity, solved: false, wrongGuesses: [] },
+            { id: 82, text: "Evaluate \\( \\int_0^{\\pi/2} \\cos^6 x \\, dx \\).", category: "Trigonometric Integrals", difficulty: 4, answer: 5 * Math.PI / 32, solved: false, wrongGuesses: [] },
+            { id: 83, text: "Compute \\( \\int_{-\\infty}^\\infty \\frac{\\sin x}{x(x^2 + 1)} \\, dx \\) using residues.", category: "Contour Integration", difficulty: 4, answer: Math.PI * (1 - 1 / Math.E), solved: false, wrongGuesses: [] },
+            { id: 84, text: "Find \\( \\int \\frac{dx}{\\sqrt{x} + \\sqrt[3]{x}} \\). (Answer with C=0, for x=1)", category: "Algebraic Substitution", difficulty: 4, answer: 2 - 3 + 6 - 6 * Math.log(2), solved: false, wrongGuesses: [] },
+            { id: 85, text: "Evaluate \\( \\int_0^1 \\frac{\\ln(1 + x)}{1 + x^2} \\, dx \\).", category: "Definite Integrals", difficulty: 4, answer: Math.PI * Math.log(2) / 8, solved: false, wrongGuesses: [] },
+            { 
+                id: 86, 
+                text: "Compute \\( \\int_0^{2\\pi} \\frac{d\\theta}{3 + 2\\cos\\theta} \\).", 
+                category: "Residue Theorem", 
+                difficulty: 5, 
+                answer: 2 * Math.PI / Math.sqrt(5), 
+                solved: false, 
+                wrongGuesses: [],
+                explanation: "This integral is solved using complex analysis. By substituting \\( \\cos\\theta = \\frac{z + z^{-1}}{2} \\) and \\( d\\theta = \\frac{dz}{iz} \\), the integral is transformed into a contour integral around the unit circle. The value is then calculated using the Residue Theorem by finding the residue of the single pole located inside the circle at \\(z = -3 + \\sqrt{5}\\)."
+            },
+            { id: 87, text: "Evaluate \\( \\int_{-\\infty}^\\infty \\frac{e^{ax}}{1 + e^x} \\, dx \\) for \\( a = 0.5 \\).", category: "Complex Analysis", difficulty: 5, answer: Math.PI / Math.sin(0.5 * Math.PI), solved: false, wrongGuesses: [] },
+            { id: 88, text: "Find \\( \\int \\sqrt{\\tan x} \\, dx \\). (This is a famously difficult indefinite integral; answer not required)", category: "Nasty Substitutions", difficulty: 5, answer: 0, solved: false, wrongGuesses: [] },
+            { id: 89, text: "Compute \\( \\int_0^\\infty \\frac{x \\sin x}{x^4 + 1} \\, dx \\).", category: "Residue Theorem", difficulty: 5, answer: (Math.PI / 2) * Math.exp(-1 / Math.sqrt(2)) * Math.sin(1 / Math.sqrt(2)), solved: false, wrongGuesses: [] },
+            { id: 90, text: "Evaluate \\( \\int_0^\\infty e^{-x^2} \\cos(2x) \\, dx \\).", category: "Gaussian Integrals", difficulty: 5, answer: Math.sqrt(Math.PI) * Math.exp(-1) / 2, solved: false, wrongGuesses: [] },
+            { id: 91, text: "Find \\( \\int_0^1 \\frac{\\ln x}{1 - x^2} \\, dx \\).", category: "Series Expansion", difficulty: 5, answer: -(Math.PI ** 2) / 8, solved: false, wrongGuesses: [] },
+            { id: 92, text: "Compute \\( \\iiint_V (x^2 + y^2) \\, dV \\), where \\( V \\) is the region inside \\( x^2 + y^2 = 4 \\) and between \\( z = 0 \\) and \\( z = 3 \\).", category: "Cylindrical Coordinates", difficulty: 5, answer: 24 * Math.PI, solved: false, wrongGuesses: [] },
+            { id: 93, text: "Evaluate \\( \\int_0^\\infty \\int_0^\\infty \\frac{e^{-(x^2 + y^2)}}{1 + (x - y)^2} \\, dx \\, dy \\).", category: "Polar Tricks", difficulty: 5, answer: Math.PI ** 2 / 4, solved: false, wrongGuesses: [] },
+            { id: 94, text: "Compute \\( \\int_{-\\infty}^\\infty \\frac{\\sin^4 x}{x^4} \\, dx \\).", category: "Fourier/Residue Hybrid", difficulty: 5, answer: 2 * Math.PI / 3, solved: false, wrongGuesses: [] },
+            { id: 95, text: "Evaluate \\( \\int_0^1 \\frac{\\ln(1 - x)}{x} \\, dx \\).", category: "Series & Special Functions", difficulty: 5, answer: -(Math.PI ** 2) / 6, solved: false, wrongGuesses: [] },
+            { id: 96, text: "Find \\( \\int \\frac{1 - x^2}{(1 + x^2)\\sqrt{1 + x^4}} \\, dx \\). (Answer not required)", category: "Hyperbolic Substitution", difficulty: 4, answer: 0, solved: false, wrongGuesses: [] },
+            { 
+                id: 97, 
+                text: "Evaluate \\( \\int_0^{\\pi/2} \\ln(\\sin x) \\, dx \\).", 
+                category: "Symmetry", 
+                difficulty: 4, 
+                answer: -Math.PI * Math.log(2) / 2, 
+                solved: false, 
+                wrongGuesses: [],
+                explanation: "This integral is solved using a symmetry argument. Let \\(I = \\int_0^{\\pi/2} \\ln(\\sin x) \\, dx\\). By the substitution \\(u = \\pi/2 - x\\), we find \\(I = \\int_0^{\\pi/2} \\ln(\\cos u) \\, du\\). Adding the two expressions for I gives \\(2I = \\int_0^{\\pi/2} \\ln(\\sin x \\cos x) \\, dx = \\int_0^{\\pi/2} \\ln(\\frac{\\sin(2x)}{2}) \\, dx\\). This can be split into \\( \\int \\ln(\\sin(2x)) dx - \\int \\ln(2) dx \\) and solved to find the final result."
+            },
+            { id: 98, text: "Compute \\( \\int_0^\\infty \\frac{\\arctan(x)}{x \\sqrt{1 - x^2}} \\, dx \\).", category: "Impossible Substitutions", difficulty: 5, answer: Math.PI * Math.log(2) / 2, solved: false, wrongGuesses: [] },
+            { id: 99, text: "Evaluate \\( \\int_0^1 \\frac{\\ln(1 + x)}{x} \\, dx \\).", category: "Series Expansion", difficulty: 5, answer: Math.PI ** 2 / 12, solved: false, wrongGuesses: [] },
+            { id: 100, text: "Compute \\( \\int_{-\\infty}^\\infty \\frac{\\cos x}{x^2 + 4x + 5} \\, dx \\).", category: "Residue Theorem", difficulty: 5, answer: Math.PI * Math.cos(2) / Math.E, solved: false, wrongGuesses: [] }
+	    ];
+        
+        // --- Firebase Configuration ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-math-app';
+
+        /**
+         * Runs the app in offline mode, without saving progress to Firebase.
+         */
+        function runOfflineMode() {
+            console.warn("Firebase not connected. Running in offline mode. Progress will not be saved.");
+            problems = JSON.parse(JSON.stringify(initialProblems));
+            initializeAppUI();
+        }
+
+        /**
+         * Initializes the application, sets up Firebase if available, or falls back to offline mode.
+         */
+        async function init() {
+            // Simulate loading with a progress bar
+            let progress = 0;
+            loadingInterval = setInterval(() => {
+                progress += 5;
+                loadingBar.style.width = `${Math.min(progress, 95)}%`; // Stop just before 100
+                if (progress >= 100) clearInterval(loadingInterval);
+            }, 100);
+
+
+            // Render initial math on page load
+            if (window.renderMathInElement) {
+                renderMathInElement(document.body);
+            }
+            let firebaseConfig;
+            try {
+                if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                    firebaseConfig = JSON.parse(__firebase_config);
+                } else {
+                    runOfflineMode();
+                    return;
+                }
+                
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        await setupProblemDataListener();
+                    } else {
+                        await authenticateUser();
+                    }
+                });
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                loadingEl.innerHTML = `<p class="text-red-500">Error fetching data: ${error.message}</p>`;
+                runOfflineMode();
+            }
+        }
+        
+        async function authenticateUser() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Authentication failed:", error);
+                runOfflineMode();
+            }
+        }
+
+        async function setupProblemDataListener() {
+            if (!userId) return;
+            const docRef = doc(db, "artifacts", appId, "users", userId);
+            
+            if (problemDataUnsubscribe) problemDataUnsubscribe();
+
+            problemDataUnsubscribe = onSnapshot(docRef, (docSnap) => {
+                if (docSnap.exists() && docSnap.data().problems) {
+                    problems = docSnap.data().problems;
+                } else {
+                    problems = JSON.parse(JSON.stringify(initialProblems));
+                    saveProblemsToFirestore();
+                }
+                
+                if (mainContentEl.classList.contains('hidden')) {
+                    initializeAppUI();
+                } else {
+                    updateStats();
+                    filterAndLoadProblem();
+                    renderProblemList(); // Update list after data change
+                }
+            }, (error) => {
+                console.error("Error listening to problem data:", error);
+                loadingEl.innerHTML = `<p class="text-red-500">Error fetching data: ${error.message}</p>`;
+                runOfflineMode();
+            });
+        }
+
+        async function saveProblemsToFirestore() {
+            if (!userId || !db) return;
+            try {
+                const docRef = doc(db, "artifacts", appId, "users", userId);
+                await setDoc(docRef, { problems: problems }, { merge: true });
+            } catch (error) {
+                console.error("Error saving to Firestore:", error);
+            }
+        }
+
+        function initializeAppUI() {
+            // Complete and hide the loading bar
+            clearInterval(loadingInterval);
+            loadingBar.style.width = '100%';
+            setTimeout(() => {
+                loadingEl.classList.add('hidden');
+                mainContentEl.classList.remove('hidden');
+            }, 400);
+
+            populateFilters();
+            addEventListeners();
+            updateStats();
+            filterAndLoadProblem();
+            renderProblemList(); // Initial render of the problem list
+        }
+
+        function populateFilters() {
+            const categories = [...new Set(problems.map(p => p.category))].sort();
+            const difficulties = [...new Set(problems.map(p => p.difficulty))].sort((a,b) => a-b);
+
+            categorySelect.innerHTML = '<option>All</option>';
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                categorySelect.appendChild(option);
+            });
+
+            difficultySelect.innerHTML = '<option>All</option>';
+            difficulties.forEach(diff => {
+                const option = document.createElement('option');
+                option.value = diff;
+                option.textContent = `${'★'.repeat(diff)}${'☆'.repeat(5-diff)}`;
+                difficultySelect.appendChild(option);
+            });
+        }
+
+        function addEventListeners() {
+            submitBtn.addEventListener('click', checkAnswer);
+            nextBtn.addEventListener('click', () => filterAndLoadProblem(true));
+            categorySelect.addEventListener('change', () => {
+                filterAndLoadProblem();
+                renderProblemList(); // Re-render list on filter change
+            });
+            difficultySelect.addEventListener('change', () => {
+                filterAndLoadProblem();
+                renderProblemList(); // Re-render list on filter change
+            });
+            problemCard.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && e.target.id === 'answer-input') {
+                    checkAnswer();
+                }
+            });
+        }
+
+        function updateStats() {
+            const solved = problems.filter(p => p.solved).length;
+            solvedCountEl.textContent = `${solved} / ${problems.length}`;
+        }
+        
+        function filterAndLoadProblem(forceNext = false) {
+            const selectedCategory = categorySelect.value;
+            const selectedDifficulty = difficultySelect.value;
+
+            let availableIndices = problems
+                .map((p, index) => ({ p, index }))
+                .filter(({ p }) => !p.solved)
+                .filter(({ p }) => selectedCategory === 'All' || p.category === selectedCategory)
+                .filter(({ p }) => selectedDifficulty === 'All' || p.difficulty == selectedDifficulty)
+                .map(({ index }) => index);
+            
+            if (availableIndices.length === 0) {
+                 // If all problems in the filter are solved, show all solved problems for that filter
+                 availableIndices = problems
+                    .map((p, index) => ({ p, index }))
+                    .filter(({ p }) => selectedCategory === 'All' || p.category === selectedCategory)
+                    .filter(({ p }) => selectedDifficulty === 'All' || p.difficulty == selectedDifficulty)
+                    .map(({ index }) => index);
+            }
+
+            filteredProblemIndices = availableIndices;
+
+            if (filteredProblemIndices.length === 0) {
+                currentProblemIndex = -1;
+                displayNoProblemsMessage();
+                return;
+            }
+
+            let nextIndexToGo = 0;
+            if (forceNext && currentProblemIndex !== -1) {
+                const currentFilteredPos = filteredProblemIndices.indexOf(currentProblemIndex);
+                if (currentFilteredPos !== -1) {
+                   nextIndexToGo = (currentFilteredPos + 1) % filteredProblemIndices.length;
+                }
+            } else if (!forceNext && currentProblemIndex !== -1 && filteredProblemIndices.includes(currentProblemIndex)) {
+                nextIndexToGo = filteredProblemIndices.indexOf(currentProblemIndex);
+            } else {
+                nextIndexToGo = 0;
+            }
+            
+            currentProblemIndex = filteredProblemIndices[nextIndexToGo];
+            displayProblem(currentProblemIndex);
+            renderProblemList(); // Update list to highlight selected problem
+        }
+
+        function renderProblemList() {
+            problemListContainer.innerHTML = ''; // Clear existing list
+
+            const selectedProblemId = problems[currentProblemIndex]?.id;
+
+            filteredProblemIndices.forEach(index => {
+                const problem = problems[index];
+                const listItem = document.createElement('div');
+                listItem.classList.add('p-3', 'rounded-md', 'problem-list-item', 'flex', 'items-center', 'justify-between', 'text-sm', 'border-b', 'border-gray-200', 'last:border-b-0');
+
+                if (problem.id === selectedProblemId) {
+                    listItem.classList.add('selected', 'bg-indigo-100'); // Highlight selected problem
+                } else {
+                    listItem.classList.add('bg-white');
+                }
+
+                const stars = '★'.repeat(problem.difficulty) + '☆'.repeat(5 - problem.difficulty);
+                let starClasses = 'star-rating';
+                if (problem.difficulty === 5) {
+                    starClasses = 'star-rating-5-red';
+                }
+                // No difficulty 6 in data, so no need for 'star-rating-6-cyan'
+
+                listItem.innerHTML = `
+                    <div class="flex-1 overflow-hidden">
+                        <p class="font-medium text-gray-900 truncate">Problem #${problem.id}: ${problem.text.substring(0, 50)}...</p>
+                        <p class="text-gray-600">${problem.category} <span class="${starClasses}">${stars}</span></p>
+                    </div>
+                    <div class="flex-shrink-0 ml-4">
+                        ${problem.solved ? '<span class="text-green-500 font-bold">✔ Solved</span>' : '<span class="text-gray-500">Unsolved</span>'}
+                    </div>
+                `;
+                listItem.addEventListener('click', () => {
+                    currentProblemIndex = index;
+                    displayProblem(index);
+                    // Remove 'selected' from all and add to current
+                    document.querySelectorAll('.problem-list-item').forEach(item => item.classList.remove('selected', 'bg-indigo-100'));
+                    listItem.classList.add('selected', 'bg-indigo-100');
+                });
+                problemListContainer.appendChild(listItem);
+            });
+            if (window.renderMathInElement) {
+                renderMathInElement(problemListContainer);
+            }
+        }
+
+
+        function displayProblem(index) {
+            if (index < 0 || index >= problems.length) {
+                displayNoProblemsMessage();
+                return;
+            }
+
+            const problem = problems[index];
+            problemContentEl.classList.remove('hidden');
+            noProblemsEl.classList.add('hidden');
+
+            const stars = '★'.repeat(problem.difficulty) + '☆'.repeat(5 - problem.difficulty);
+            let starClasses = 'star-rating';
+            if (problem.difficulty === 5) {
+                starClasses = 'star-rating-5-red';
+            }
+            // No difficulty 6 in data, so no need for 'star-rating-6-cyan'
+            
+            let wrongGuessesHTML = '';
+            if (problem.wrongGuesses && problem.wrongGuesses.length > 0) {
+                wrongGuessesHTML = `
+                    <div class="mt-4 bg-red-50 border-l-4 border-red-400 p-3 rounded-r-lg">
+                        <h4 class="font-semibold text-red-800">Your previous incorrect guesses:</h4>
+                        <ul class="list-disc list-inside text-red-700 mt-1">
+                            ${problem.wrongGuesses.map(g => `<li>${g}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            let explanationHTML = '';
+            if (problem.solved && problem.explanation) {
+                 explanationHTML = `
+                    <div class="mt-4 bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+                        <h4 class="font-semibold text-blue-800">Explanation</h4>
+                        <p class="text-blue-700 mt-2">${problem.explanation}</p>
+                    </div>
+                `;
+            }
+
+            problemContentEl.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <p class="text-sm font-medium text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full">${problem.category}</p>
+                    <div class="${starClasses} text-xl" title="${problem.difficulty} star difficulty">${stars}</div>
+                </div>
+                <p class="mt-4 text-lg text-gray-700">${problem.text}</p>
+                <div class="mt-6">
+                    <label for="answer-input" class="block text-sm font-medium text-gray-700">Your Answer:</label>
+                    <input type="${typeof problem.answer === 'number' ? 'number' : 'text'}" id="answer-input" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Enter your answer">
+                </div>
+                <div id="feedback-container" class="mt-4 text-center font-medium h-6"></div>
+                <div id="explanation-container" class="mt-4">${explanationHTML}</div>
+                <div id="wrong-guesses-container">${wrongGuessesHTML}</div>
+            `;
+            
+            if (window.renderMathInElement) {
+                renderMathInElement(problemContentEl);
+            }
+            
+            submitBtn.disabled = problem.solved;
+            const answerInput = document.getElementById('answer-input');
+            answerInput.disabled = problem.solved;
+
+            if(problem.solved) {
+                const feedbackEl = document.getElementById('feedback-container');
+                const correctAnswerDisplay = (typeof problem.answer === 'number') ? toSignificantFigures(problem.answer, 3) : problem.answer; // Changed to 3 SF
+                feedbackEl.innerHTML = `<p class="text-green-600">Solved! The correct answer is ${correctAnswerDisplay}.</p>`;
+                answerInput.value = correctAnswerDisplay;
+            }
+        }
+
+        function displayNoProblemsMessage() {
+            problemContentEl.classList.add('hidden');
+            noProblemsEl.classList.remove('hidden');
+            submitBtn.disabled = true;
+        }
+
+        function checkAnswer() {
+            if (currentProblemIndex === -1) return;
+
+            const answerInput = document.getElementById('answer-input');
+            const feedbackEl = document.getElementById('feedback-container');
+            const problem = problems[currentProblemIndex];
+            
+            let isCorrect = false;
+
+            if (typeof problem.answer === 'number') {
+                const userAnswer = parseFloat(answerInput.value);
+                if (isNaN(userAnswer)) {
+                    feedbackEl.innerHTML = `<p class="text-red-600">Please enter a valid number.</p>`;
+                    return;
+                }
+                const correctAnswerRounded = toSignificantFigures(problem.answer, 3); // Changed to 3 SF
+                const userAnswerRounded = toSignificantFigures(userAnswer, 3); // Changed to 3 SF
+                if (userAnswerRounded === correctAnswerRounded) {
+                    isCorrect = true;
+                }
+            } else if (typeof problem.answer === 'string') {
+                if (answerInput.value.trim().toLowerCase() === problem.answer.toLowerCase()) {
+                    isCorrect = true;
+                }
+            }
+
+            if (isCorrect) {
+                const correctAnswerDisplay = (typeof problem.answer === 'number') ? toSignificantFigures(problem.answer, 3) : problem.answer; // Changed to 3 SF
+                feedbackEl.innerHTML = `<p class="text-green-600">Correct! The answer is ${correctAnswerDisplay}.</p>`;
+                problem.solved = true;
+                submitBtn.disabled = true;
+                answerInput.disabled = true;
+                
+                if (problem.explanation) {
+                    const explanationEl = document.getElementById('explanation-container');
+                    explanationEl.innerHTML = `
+                        <div class="mt-4 bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+                            <h4 class="font-semibold text-blue-800">Explanation</h4>
+                            <p class="text-blue-700 mt-2">${problem.explanation}</p>
+                        </div>
+                    `;
+                    if (window.renderMathInElement) {
+                        renderMathInElement(explanationEl);
+                    }
+                }
+
+                updateStats();
+                saveProblemsToFirestore();
+                renderProblemList(); // Update list after problem is solved
+            } else {
+                feedbackEl.innerHTML = `<p class="text-red-600">Not quite. Try again!</p>`;
+                const userGuess = answerInput.value;
+                if (!problem.wrongGuesses) problem.wrongGuesses = [];
+                if (userGuess && !problem.wrongGuesses.includes(userGuess)) {
+                    problem.wrongGuesses.push(userGuess);
+                     if(db && userId) {
+                        saveProblemsToFirestore();
+                    } else {
+                        displayProblem(currentProblemIndex);
+                    }
+                }
+            }
+        }
+        
+        function toSignificantFigures(num, sf) {
+            if (typeof num !== 'number' || isNaN(num)) return num;
+            if (num === 0) return 0;
+            const d = Math.ceil(Math.log10(num < 0 ? -num : num));
+            const power = sf - d;
+            const magnitude = Math.pow(10, power);
+            const shifted = Math.round(num * magnitude);
+            return shifted / magnitude;
+        }
+
+        init();
+
+    </script>
+</body>
+</html>

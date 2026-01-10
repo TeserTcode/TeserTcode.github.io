@@ -42,6 +42,22 @@
       flex-wrap: wrap;
       justify-content: center;
     }
+    .canvas-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.canvas-container {
+  display: inline-block;
+  margin-right: 10px;
+  vertical-align: top;
+}
+
+.canvas-container canvas {
+  display: block;
+}
   </style>
 </head>
 <body>
@@ -655,11 +671,11 @@ function rotate90Clockwise() {
 	
 	
 	
- const MAX_SIZE = 256;
+ let MAX_SIZE = 256;
     let realResult = null, resultSize = [0, 0];
 
 function processFromResultCanvas() {
-  const MAX_SIZE = 256;
+
   const canvas = document.getElementById("resultCanvas");
   const ctx = canvas.getContext("2d");
 
@@ -708,18 +724,36 @@ document.getElementById("processButton").addEventListener("click", processFromRe
 
 document.getElementById("updateButton").addEventListener("click", updateFinalImage);
 
- function createCanvas(title, w, h) {
-      const div = document.createElement("div");
-      const label = document.createElement("div");
-      label.textContent = title;
-      const canvas = document.createElement("canvas");
-      canvas.width = w;
-      canvas.height = h;
-      div.appendChild(label);
-      div.appendChild(canvas);
-      document.getElementById("steps2").appendChild(div);
-      return canvas.getContext("2d");
-    }
+function createCanvas(title, w, h) {
+  const container = document.createElement("div");
+  container.className = "canvas-container";
+  
+  const label = document.createElement("div");
+  label.textContent = title;
+  
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  
+  container.appendChild(label);
+  container.appendChild(canvas);
+  
+  // Check if we need to create a new row
+  const stepsDiv = document.getElementById("steps");
+  const lastRow = stepsDiv.lastElementChild;
+  
+  if (!lastRow || !lastRow.classList.contains("canvas-row") || 
+      lastRow.children.length >= 3) { // Adjust this number for how many per row
+    const newRow = document.createElement("div");
+    newRow.className = "canvas-row";
+    stepsDiv.appendChild(newRow);
+    newRow.appendChild(container);
+  } else {
+    lastRow.appendChild(container);
+  }
+  
+  return canvas.getContext("2d");
+}
 
     function resizeCanvasToFit(img) {
       const scale = Math.min(1, MAX_SIZE / Math.max(img.width, img.height));

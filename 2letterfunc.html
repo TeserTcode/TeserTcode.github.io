@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math.js Function Grid</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+    <script src="clrspc.js"></script>
+    <script src="mthfnc.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .grid {
+		
+            display: grid;
+            grid-template-columns: repeat(27, 1fr);
+            gap: 2px;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        .cell {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #ddd;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .exists {
+            background-color: #00ff00;
+        }
+        .not-exists {
+            background-color: #ff0000;
+        }
+        .header {
+            font-weight: bold;
+            background-color: #f2f2f2;
+        }
+        .tooltip {
+            position: absolute;
+            background-color: #333;
+            color: white;
+            padding: 5px;
+            border-radius: 3px;
+            font-size: 12px;
+            z-index: 100;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Math.js 2-Letter Function Grid</h1>
+    <p>Green = Function exists | Red = Function doesn't exist</p>
+    <div id="letterGrid"></div>
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const grid = document.getElementById('letterGrid');
+            const tooltip = document.getElementById('tooltip');
+            const letters = 'abcdefghijklmnopqrstuvwxyz';
+            
+            // Create header row
+            const headerRow = document.createElement('div');
+            headerRow.className = 'grid';
+            
+            // Add empty corner cell
+            const cornerCell = document.createElement('div');
+            cornerCell.className = 'cell header';
+            headerRow.appendChild(cornerCell);
+            
+            // Add column headers
+            for (let i = 0; i < letters.length; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell header';
+                cell.textContent = letters[i];
+                headerRow.appendChild(cell);
+            }
+            
+            grid.appendChild(headerRow);
+            
+            // Create grid rows
+            for (let row = 0; row < letters.length; row++) {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'grid';
+                
+                // Add row header
+                const rowHeader = document.createElement('div');
+                rowHeader.className = 'cell header';
+                rowHeader.textContent = letters[row];
+                rowDiv.appendChild(rowHeader);
+                
+                // Add cells
+                for (let col = 0; col < letters.length; col++) {
+                    const combo = letters[row] + letters[col];
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.textContent = combo;
+                    
+                    // Check if function exists
+                    const exists = typeof math[combo] === 'function';
+                    cell.classList.add(exists ? 'exists' : 'not-exists');
+                    
+                    // Add tooltip functionality
+                    cell.addEventListener('mouseover', function(e) {
+                        tooltip.textContent = exists ? 
+                            `math.${combo} exists` : 
+                            `math.${combo} doesn't exist`;
+                        tooltip.style.display = 'block';
+                        tooltip.style.left = (e.pageX + 10) + 'px';
+                        tooltip.style.top = (e.pageY + 10) + 'px';
+                    });
+                    
+                    cell.addEventListener('mouseout', function() {
+                        tooltip.style.display = 'none';
+                    });
+                    
+                    rowDiv.appendChild(cell);
+                }
+                
+                grid.appendChild(rowDiv);
+            }
+        });
+    </script>
+</body>
+</html>

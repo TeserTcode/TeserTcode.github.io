@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geometric Formulas and 3D Shapes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #000;
+            display: block;
+            margin: 20px auto;
+        }
+        .calculator {
+            margin: 20px 0;
+        }
+        .calculator input {
+            margin: 5px;
+        }
+        .shape-info {
+            margin: 20px 0;
+        }
+        .theorem {
+            background: #e0e0e0;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .view-controls {
+            text-align: center;
+            margin: 10px 0;
+        }
+        .view-controls button {
+            margin: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+    </style>
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- OrbitControls for 3D interaction -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Geometric Formulas and 3D Shapes</h1>
+
+        <!-- Contents Table -->
+        <h2>Contents</h2>
+        <ul>
+            <li><a href="#2d-shapes">2D Shapes</a></li>
+            <li><a href="#3d-shapes">3D Shapes</a></li>
+            <li><a href="#theorems">Theorems</a></li>
+        </ul>
+
+        <!-- 2D Shapes Section -->
+        <h2 id="2d-shapes">2D Shapes</h2>
+
+        <!-- Triangle -->
+        <div class="shape-info">
+            <h3>Triangle</h3>
+            <canvas id="triangleCanvas" width="200" height="200"></canvas>
+            <p><strong>Definition:</strong> A polygon with three edges and three vertices.</p>
+            <p><strong>Etymology:</strong> From Latin "triangulum," meaning "three-cornered."</p>
+            <p><strong>Angles:</strong> Sum of interior angles = 180°.</p>
+            <div class="calculator">
+                <label for="triangleBase">Base:</label>
+                <input type="number" id="triangleBase" placeholder="Base">
+                <label for="triangleHeight">Height:</label>
+                <input type="number" id="triangleHeight" placeholder="Height">
+                <button onclick="calculateTriangleArea()">Calculate Area</button>
+                <input type="text" id="triangleResult" placeholder="Result" readonly>
+            </div>
+        </div>
+
+        <!-- Regular Hexagon -->
+        <div class="shape-info">
+            <h3>Regular Hexagon</h3>
+            <canvas id="hexagonCanvas" width="200" height="200"></canvas>
+            <p><strong>Definition:</strong> A six-sided polygon with equal sides and angles.</p>
+            <p><strong>Etymology:</strong> From Greek "hex," meaning "six," and "gonia," meaning "angle."</p>
+            <p><strong>Angles:</strong> Each interior angle = 120°, each exterior angle = 60°.</p>
+            <div class="calculator">
+                <label for="hexagonSide">Side Length:</label>
+                <input type="number" id="hexagonSide" placeholder="Side Length">
+                <button onclick="calculateHexagonArea()">Calculate Area</button>
+                <input type="text" id="hexagonResult" placeholder="Result" readonly>
+            </div>
+        </div>
+
+        <!-- 3D Shapes Section -->
+        <h2 id="3d-shapes">3D Shapes</h2>
+
+        <!-- Cube -->
+        <div class="shape-info">
+            <h3>Cube</h3>
+            <div id="cubeCanvas" style="width: 400px; height: 400px; margin: 20px auto;"></div>
+            <p><strong>Definition:</strong> A three-dimensional shape with six square faces.</p>
+            <p><strong>Etymology:</strong> From Greek "kubos," meaning "a cube or die."</p>
+            <p><strong>Properties:</strong> All edges are equal, and all angles are 90°.</p>
+            <p><strong>Surface Area:</strong> \( 6a^2 \), where \( a \) is the side length.</p>
+            <p><strong>Volume:</strong> \( a^3 \), where \( a \) is the side length.</p>
+            <div class="view-controls">
+                <button onclick="setCubeView('normal')">Normal</button>
+                <button onclick="setCubeView('wireframe')">Wireframe</button>
+                <button onclick="setCubeView('edges')">Edges Highlighted</button>
+                <button onclick="setCubeView('colored')">Colored Faces</button>
+            </div>
+            <div class="calculator">
+                <label for="cubeEdge">Edge Length:</label>
+                <input type="number" id="cubeEdge" placeholder="Edge Length">
+                <button onclick="calculateCubeVolume()">Calculate Volume</button>
+                <input type="text" id="cubeResult" placeholder="Result" readonly>
+            </div>
+        </div>
+
+        <!-- Sphere -->
+        <div class="shape-info">
+            <h3>Sphere</h3>
+            <div id="sphereCanvas" style="width: 400px; height: 400px; margin: 20px auto;"></div>
+            <p><strong>Definition:</strong> A perfectly round three-dimensional shape.</p>
+            <p><strong>Etymology:</strong> From Greek "sphaira," meaning "ball" or "globe."</p>
+            <p><strong>Properties:</strong> All points on the surface are equidistant from the center.</p>
+            <p><strong>Surface Area:</strong> \( 4\pi r^2 \), where \( r \) is the radius.</p>
+            <p><strong>Volume:</strong> \( \frac{4}{3}\pi r^3 \), where \( r \) is the radius.</p>
+            <div class="view-controls">
+                <button onclick="setSphereView('normal')">Normal</button>
+                <button onclick="setSphereView('wireframe')">Wireframe</button>
+            </div>
+            <div class="calculator">
+                <label for="sphereRadius">Radius:</label>
+                <input type="number" id="sphereRadius" placeholder="Radius">
+                <button onclick="calculateSphereVolume()">Calculate Volume</button>
+                <input type="text" id="sphereResult" placeholder="Result" readonly>
+            </div>
+        </div>
+
+        <!-- Theorems Section -->
+        <h2 id="theorems">Theorems</h2>
+
+        <!-- Pythagorean Theorem -->
+        <div class="theorem">
+            <h3>Pythagorean Theorem</h3>
+            <p><strong>Statement:</strong> In a right-angled triangle, the square of the hypotenuse is equal to the sum of the squares of the other two sides.</p>
+            <p><strong>Formula:</strong> \( a^2 + b^2 = c^2 \)</p>
+        </div>
+
+        <!-- Properties of Regular Polygons -->
+        <div class="theorem">
+            <h3>Properties of Regular Polygons</h3>
+            <p><strong>Interior Angles:</strong> The sum of interior angles of an n-sided polygon is \( (n-2) \times 180° \).</p>
+            <p><strong>Exterior Angles:</strong> The sum of exterior angles is always 360°.</p>
+        </div>
+    </div>
+
+    <script>
+        // Draw Triangle
+        const triangleCanvas = document.getElementById('triangleCanvas');
+        const triangleCtx = triangleCanvas.getContext('2d');
+        triangleCtx.beginPath();
+        triangleCtx.moveTo(100, 50);
+        triangleCtx.lineTo(50, 150);
+        triangleCtx.lineTo(150, 150);
+        triangleCtx.closePath();
+        triangleCtx.stroke();
+
+        // Draw Regular Hexagon
+        const hexagonCanvas = document.getElementById('hexagonCanvas');
+        const hexagonCtx = hexagonCanvas.getContext('2d');
+        const hexagonSideLength = 50;
+        hexagonCtx.beginPath();
+        for (let i = 0; i < 6; i++) {
+            const angle = (i * 2 * Math.PI) / 6;
+            const x = 100 + hexagonSideLength * Math.cos(angle);
+            const y = 100 + hexagonSideLength * Math.sin(angle);
+            if (i === 0) hexagonCtx.moveTo(x, y);
+            else hexagonCtx.lineTo(x, y);
+        }
+        hexagonCtx.closePath();
+        hexagonCtx.stroke();
+
+        // Triangle Area Calculator
+        function calculateTriangleArea() {
+            const base = parseFloat(document.getElementById('triangleBase').value);
+            const height = parseFloat(document.getElementById('triangleHeight').value);
+            const area = (base * height) / 2;
+            document.getElementById('triangleResult').value = area.toFixed(4);
+        }
+
+        // Hexagon Area Calculator
+        function calculateHexagonArea() {
+            const side = parseFloat(document.getElementById('hexagonSide').value);
+            const area = (3 * Math.sqrt(3) * Math.pow(side, 2)) / 2;
+            document.getElementById('hexagonResult').value = area.toFixed(4);
+        }
+
+        // Cube Volume Calculator
+        function calculateCubeVolume() {
+            const edge = parseFloat(document.getElementById('cubeEdge').value);
+            const volume = Math.pow(edge, 3);
+            document.getElementById('cubeResult').value = volume.toFixed(4);
+        }
+
+        // Sphere Volume Calculator
+        function calculateSphereVolume() {
+            const radius = parseFloat(document.getElementById('sphereRadius').value);
+            const volume = (4 / 3) * Math.PI * Math.pow(radius, 3);
+            document.getElementById('sphereResult').value = volume.toFixed(4);
+        }
+
+        // Three.js for 3D Shapes
+        const cubeScene = new THREE.Scene();
+        const cubeCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+        const cubeRenderer = new THREE.WebGLRenderer();
+        cubeRenderer.setSize(400, 400);
+        document.getElementById('cubeCanvas').appendChild(cubeRenderer.domElement);
+
+        const cubeGeometry = new THREE.BoxGeometry();
+        const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: false });
+        const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+        cubeScene.add(cube);
+        cubeCamera.position.z = 5;
+
+    //    const cubeControls = new THREE.OrbitControls(cubeCamera, cubeRenderer.domElement);
+
+        function animateCube() {
+            requestAnimationFrame(animateCube);
+            cube.rotation.x += 0.01;
+            cube.rotation.y += 0.01;
+            cubeRenderer.render(cubeScene, cubeCamera);
+        }
+        animateCube();
+
+        function setCubeView(view) {
+            if (view === 'wireframe') {
+                cubeMaterial.wireframe = true;
+                cubeMaterial.color.set(0x00ff00);
+            } else if (view === 'edges') {
+                cubeMaterial.wireframe = false;
+                cubeMaterial.color.set(0x0000ff);
+            } else if (view === 'colored') {
+                cubeMaterial.wireframe = false;
+                cube.material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            } else {
+                cubeMaterial.wireframe = false;
+                cubeMaterial.color.set(0x00ff00);
+            }
+        }
+
+        const sphereScene = new THREE.Scene();
+        const sphereCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+        const sphereRenderer = new THREE.WebGLRenderer();
+        sphereRenderer.setSize(400, 400);
+        document.getElementById('sphereCanvas').appendChild(sphereRenderer.domElement);
+
+        const sphereGeometry = new THREE.SphereGeometry(1, 32, 32);
+        const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: false });
+        const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        sphereScene.add(sphere);
+        sphereCamera.position.z = 5;
+
+     //   const sphereControls = new THREE.OrbitControls(sphereCamera, sphereRenderer.domElement);
+
+        function animateSphere() {
+            requestAnimationFrame(animateSphere);
+            sphere.rotation.x += 0.01;
+            sphere.rotation.y += 0.01;
+            sphereRenderer.render(sphereScene, sphereCamera);
+        }
+        animateSphere();
+
+        function setSphereView(view) {
+            if (view === 'wireframe') {
+                sphereMaterial.wireframe = true;
+                sphereMaterial.color.set(0xff0000);
+            } else {
+                sphereMaterial.wireframe = false;
+                sphereMaterial.color.set(0xff0000);
+            }
+        }
+    </script>
+</body>
+</html>

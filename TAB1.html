@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Young Tableaux Visualization with 3D</title>
+    <style>
+        body {
+            font-family: monospace;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .step {
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .matrix {
+            margin: 10px 0;
+        }
+        .tableaux {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 10px 0;
+        }
+        .partition {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .partition-row {
+            display: flex;
+            margin-bottom: 2px;
+        }
+        .partition-cell {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 2px;
+        }
+        h3 {
+            margin-top: 0;
+        }
+        .matrix-controls {
+            margin: 10px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .cell-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-left: 5px;
+        }
+        .cell-controls button {
+            padding: 2px 5px;
+            font-size: 10px;
+        }
+        .matrix-cell {
+            display: flex;
+            align-items: center;
+        }
+        #nu-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .nu-step {
+            border: 1px solid #eee;
+            padding: 5px;
+        }
+        #three-container {
+            width: 500px;
+            height: 500px;
+            border: 1px solid #ccc;
+            margin-top: 20px;
+        }
+        .row-col-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .row-controls, .col-controls {
+            display: flex;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Young Tableaux Process Visualization</h1>
+        
+        <div class="step">
+            <h3>Input Matrix</h3>
+            <div class="matrix-controls">
+                <button id="randomize-btn">Randomize Values</button>
+                <button id="reset-btn">Reset to Default</button>
+                <button id="flip-orientation">Toggle Orientation (EN/FR)</button>
+            </div>
+            <div class="row-col-controls">
+                <div class="row-controls">
+                    <button id="add-row">Add Row</button>
+                    <button id="remove-row">Remove Row</button>
+                </div>
+                <div class="col-controls">
+                    <button id="add-col">Add Column</button>
+                    <button id="remove-col">Remove Column</button>
+                </div>
+            </div>
+            <div id="input-matrix" class="matrix"></div>
+        </div>
+        
+        <!-- Other visualization sections remain the same -->
+        <div class="step">
+            <h3>P Matrix</h3>
+            <div id="p-matrix" class="matrix"></div>
+        </div>
+        
+        <div class="step">
+            <h3>Q Matrix</h3>
+            <div id="q-matrix" class="matrix"></div>
+        </div>
+        
+        <div class="step">
+            <h3>Vacancies</h3>
+            <div id="vacancies"></div>
+        </div>
+        
+        <div class="step">
+            <h3>Admissibility Check</h3>
+            <div id="admissibility"></div>
+        </div>
+        
+        <div class="step">
+            <h3>Rigged Configuration λ (conjugate of column sums)</h3>
+            <div id="lambda" class="tableaux"></div>
+        </div>
+        
+        <div class="step">
+            <h3>Rigged Configuration μ (conjugate of row sums)</h3>
+            <div id="mu" class="tableaux"></div>
+        </div>
+        
+        <div class="step">
+            <h3>Rigged Configuration ν (conjugate of lower-right sums)</h3>
+            <div id="nu-steps">
+                <h4>Calculation Steps:</h4>
+                <div id="nu-calculation-steps"></div>
+            </div>
+            <div id="nu" class="tableaux"></div>
+            <h4>3D Visualization:</h4>
+            <div id="three-container"></div>
+            <div class="matrix-controls">
+                <button id="rotate-toggle">Pause Rotation</button>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="clrspc.js"></script>
+    <script src="mthfnc.js"></script>
+    <script>
+        // Current matrix state
+        let currentMatrix = [
+            [3, 2, 1, 1, 1, 1],
+            [2, 1, 1, 1, 0, 1],
+            [2, 1, 1, 1, 0, 0],
+            [1, 1, 1, 1, 1, 0],
+            [1, 1, 1, 0, 0, 0]
+        ];
+        
+        // Default matrix for reset
+        const defaultMatrix = [
+            [3, 2, 1, 1, 1, 1],
+            [2, 1, 1, 1, 0, 1],
+            [2, 1, 1, 1, 0, 0],
+            [1, 1, 1, 1, 1, 0],
+            [1, 1, 1, 0, 0, 0]
+        ];
+        
+        // Three.js variables
+        let scene, camera, renderer, cubes = [];
+        let rotationEnabled = true;
+        let animationId = null;
+        let center = new THREE.Vector3(0, 0, 0);
+        let topLeftAnchor = true; // true for top-left, false for bottom-left
+
+        // Initialize Three.js scene
+        function initThreeJS() {
+            const container = document.getElementById('three-container');
+            
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf0f0f0);
+            
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            resetCameraPosition();
+            
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderer.domElement);
+            
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+            
+            // Add axes helper
+            const axesHelper = new THREE.AxesHelper(5);
+            scene.add(axesHelper);
+            
+            // Start animation loop
+            animate();
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+            
+            // Set up rotation toggle button
+            document.getElementById('rotate-toggle').addEventListener('click', () => {
+                rotationEnabled = !rotationEnabled;
+                document.getElementById('rotate-toggle').textContent = 
+                    rotationEnabled ? 'Pause Rotation' : 'Resume Rotation';
+            });
+            
+            // Set up flip orientation button
+            document.getElementById('flip-orientation').addEventListener('click', () => {
+                topLeftAnchor = !topLeftAnchor;
+                updateVisualizations();
+            });
+        }
+        
+        function resetCameraPosition() {
+            // Position camera looking at center with a nice angle
+            camera.position.set(5, 5, 5);
+            camera.lookAt(center);
+        }
+        
+        // Animation loop
+        function animate() {
+            animationId = requestAnimationFrame(animate);
+            
+            // Rotate camera around the center if rotation is enabled
+            if (rotationEnabled) {
+                const time = Date.now() * 0.0005;
+                camera.position.x = Math.sin(time) * 10;
+                camera.position.z = Math.cos(time) * 10;
+                camera.lookAt(center);
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Create 3D visualization of ν
+        function visualizeNu3D(nu) {
+            // Clear previous cubes
+            cubes.forEach(cube => scene.remove(cube));
+            cubes = [];
+            
+            if (!nu || nu.length === 0) return;
+            
+            const colors = [0x3498db, 0xe74c3c, 0x2ecc71, 0xf39c12, 0x9b59b6];
+            const cubeSize = 0.5;
+            const spacing = 0.1;
+            
+            // Calculate center of all cubes
+            let totalCubes = 0;
+            let sumX = 0, sumY = 0, sumZ = 0;
+            
+            // First pass to calculate center
+            nu.forEach((partition, partitionIndex) => {
+                partition.forEach((rowLength, rowIndex) => {
+                    for (let i = 0; i < rowLength; i++) {
+                        const x = i * (cubeSize + spacing) - (partition.length * (cubeSize + spacing)) / 2;
+                        const y = (topLeftAnchor ? -1 : 1) * rowIndex * (cubeSize + spacing);
+                        const z = partitionIndex * (cubeSize + spacing) * 2;
+                        
+                        sumX += x;
+                        sumY += y;
+                        sumZ += z;
+                        totalCubes++;
+                    }
+                });
+            });
+            
+            // Update center point
+            center.set(sumX / totalCubes, sumY / totalCubes, sumZ / totalCubes);
+            
+            // Create cubes for each ν partition
+            nu.forEach((partition, partitionIndex) => {
+                const color = colors[partitionIndex % colors.length];
+                const material = new THREE.MeshPhongMaterial({ color });
+                
+                partition.forEach((rowLength, rowIndex) => {
+                    for (let i = 0; i < rowLength; i++) {
+                        const cube = new THREE.Mesh(
+                            new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize),
+                            material
+                        );
+                        
+                        // Position cubes in 3D space
+                        cube.position.x = i * (cubeSize + spacing) - (partition.length * (cubeSize + spacing)) / 2;
+                        cube.position.y = (topLeftAnchor ? -1 : 1) * rowIndex * (cubeSize + spacing);
+                        cube.position.z = partitionIndex * (cubeSize + spacing) * 2;
+                        
+                        scene.add(cube);
+                        cubes.push(cube);
+                    }
+                });
+            });
+            
+            // Reset camera to new center
+            resetCameraPosition();
+        }
+        
+        // Matrix resizing functions
+        function addRow() {
+            const cols = currentMatrix[0].length;
+            currentMatrix.push(new Array(cols).fill(0));
+            displayMatrix('input-matrix', currentMatrix, true);
+            updateVisualizations();
+        }
+        
+        function removeRow() {
+            if (currentMatrix.length > 1) {
+                currentMatrix.pop();
+                displayMatrix('input-matrix', currentMatrix, true);
+                updateVisualizations();
+            }
+        }
+        
+        function addColumn() {
+            currentMatrix.forEach(row => row.push(0));
+            displayMatrix('input-matrix', currentMatrix, true);
+            updateVisualizations();
+        }
+        
+        function removeColumn() {
+            if (currentMatrix[0].length > 1) {
+                currentMatrix.forEach(row => row.pop());
+                displayMatrix('input-matrix', currentMatrix, true);
+                updateVisualizations();
+            }
+        }
+        
+        // Display the steps for calculating ν
+        function displayNuSteps(M) {
+            const stepsContainer = document.getElementById('nu-calculation-steps');
+            stepsContainer.innerHTML = '';
+            
+            if (!M || M.length === 0) {
+                stepsContainer.textContent = 'Empty matrix';
+                return;
+            }
+            
+            // Step 1: Show original matrix
+            const step1 = document.createElement('div');
+            step1.className = 'nu-step';
+            step1.innerHTML = '<strong>Step 1: Original Matrix</strong>';
+            displayMatrixInDiv(step1, M);
+            stepsContainer.appendChild(step1);
+            
+            // Step 2: Calculate ν_i,j
+            const step2 = document.createElement('div');
+            step2.className = 'nu-step';
+            step2.innerHTML = '<strong>Step 2: Calculate ν<sub>i,j</sub> (sum of elements from row i to bottom in column j)</strong>';
+            
+            const nuValues = [];
+            for (let i = 0; i < M.length; i++) {
+                nuValues[i] = [];
+                for (let j = 0; j < M[0].length; j++) {
+                    let sum = 0;
+                    for (let k = i; k < M.length; k++) {
+                        sum += M[k][j];
+                    }
+                    nuValues[i][j] = sum;
+                }
+            }
+            displayMatrixInDiv(step2, nuValues);
+            stepsContainer.appendChild(step2);
+            
+            // Step 3: Conjugate each row
+            const step3 = document.createElement('div');
+            step3.className = 'nu-step';
+            step3.innerHTML = '<strong>Step 3: Conjugate each ν<sub>i</sub> partition</strong>';
+            
+            const conjugatedNu = [];
+            for (let i = 0; i < nuValues.length; i++) {
+                conjugatedNu[i] = conjugatepartition(nuValues[i]);
+                const step3a = document.createElement('div');
+                step3a.innerHTML = `<strong>ν<sub>${i+1}</sub> before conjugation:</strong> [${nuValues[i].join(', ')}]`;
+                step3.appendChild(step3a);
+                
+                const step3b = document.createElement('div');
+                step3b.innerHTML = `<strong>ν<sub>${i+1}</sub> after conjugation:</strong> [${conjugatedNu[i].join(', ')}]`;
+                step3.appendChild(step3b);
+                
+                const step3c = document.createElement('div');
+                displayPartitionInDiv(step3c, conjugatedNu[i]);
+                step3.appendChild(step3c);
+            }
+            stepsContainer.appendChild(step3);
+            
+            return conjugatedNu;
+        }
+        
+        // Helper to display matrix in a div
+        function displayMatrixInDiv(div, matrix) {
+            const table = document.createElement('table');
+            
+            for (let i = 0; i < matrix.length; i++) {
+                const row = document.createElement('tr');
+                for (let j = 0; j < matrix[i].length; j++) {
+                    const cell = document.createElement('td');
+                    cell.textContent = matrix[i][j];
+                    cell.style.padding = '5px';
+                    cell.style.textAlign = 'center';
+                    row.appendChild(cell);
+                }
+                table.appendChild(row);
+            }
+            
+            div.appendChild(table);
+        }
+        
+        // Helper to display partition in a div
+        function displayPartitionInDiv(div, partition) {
+            const partitionDiv = document.createElement('div');
+            partitionDiv.className = 'partition';
+            
+            for (let i = 0; i < partition.length; i++) {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'partition-row';
+                
+                for (let j = 0; j < partition[i]; j++) {
+                    const cellDiv = document.createElement('div');
+                    cellDiv.className = 'partition-cell';
+                    rowDiv.appendChild(cellDiv);
+                }
+                
+                partitionDiv.appendChild(rowDiv);
+            }
+            
+            div.appendChild(partitionDiv);
+        }
+        
+        // Visualization functions
+        function displayMatrix(elementId, matrix, editable = false) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+            
+            if (!matrix || matrix.length === 0) {
+                container.textContent = 'Empty matrix';
+                return;
+            }
+            
+            const table = document.createElement('table');
+            
+            for (let i = 0; i < matrix.length; i++) {
+                const row = document.createElement('tr');
+                for (let j = 0; j < matrix[i].length; j++) {
+                    const cell = document.createElement('td');
+                    
+                    if (editable) {
+                        const cellContainer = document.createElement('div');
+                        cellContainer.className = 'matrix-cell';
+                        
+                        const valueSpan = document.createElement('span');
+                        valueSpan.textContent = matrix[i][j];
+                        valueSpan.id = `cell-${i}-${j}`;
+                        
+                        const controls = document.createElement('div');
+                        controls.className = 'cell-controls';
+                        
+                        const incBtn = document.createElement('button');
+                        incBtn.textContent = '+';
+                        incBtn.onclick = () => updateCell(i, j, 1);
+                        
+                        const decBtn = document.createElement('button');
+                        decBtn.textContent = '-';
+                        decBtn.onclick = () => updateCell(i, j, -1);
+                        
+                        controls.appendChild(incBtn);
+                        controls.appendChild(decBtn);
+                        
+                        cellContainer.appendChild(valueSpan);
+                        cellContainer.appendChild(controls);
+                        cell.appendChild(cellContainer);
+                    } else {
+                        cell.textContent = matrix[i][j];
+                    }
+                    
+                    cell.style.padding = '5px';
+                    cell.style.textAlign = 'center';
+                    row.appendChild(cell);
+                }
+                table.appendChild(row);
+            }
+            
+            container.appendChild(table);
+        }
+        
+        function displayPartition(elementId, partition, title) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+            
+            if (!partition || partition.length === 0) {
+                container.textContent = 'Empty partition';
+                return;
+            }
+            
+            const partitionDiv = document.createElement('div');
+            partitionDiv.className = 'partition';
+            
+            for (let i = 0; i < partition.length; i++) {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'partition-row';
+                
+                for (let j = 0; j < partition[i]; j++) {
+                    const cellDiv = document.createElement('div');
+                    cellDiv.className = 'partition-cell';
+                    rowDiv.appendChild(cellDiv);
+                }
+                
+                partitionDiv.appendChild(rowDiv);
+            }
+            
+            container.appendChild(partitionDiv);
+        }
+        
+        function displayNestedPartitions(elementId, partitions) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+            
+            if (!partitions || partitions.length === 0) {
+                container.textContent = 'Empty partitions';
+                return;
+            }
+            
+            for (let i = 0; i < partitions.length; i++) {
+                const title = document.createElement('h4');
+                title.textContent = `ν${i+1}`;
+                container.appendChild(title);
+                
+                displayPartitionInDiv(container, partitions[i]);
+            }
+        }
+        
+        // Update matrix cell value
+        function updateCell(row, col, delta) {
+            currentMatrix[row][col] += delta;
+            document.getElementById(`cell-${row}-${col}`).textContent = currentMatrix[row][col];
+            updateVisualizations();
+        }
+        
+        // Randomize matrix
+        function randomizeMatrix() {
+            const rows = currentMatrix.length;
+            const cols = currentMatrix[0].length;
+            
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    currentMatrix[i][j] = Math.floor(Math.random() * 5); // Random numbers 0-4
+                }
+            }
+            
+            displayMatrix('input-matrix', currentMatrix, true);
+            updateVisualizations();
+        }
+        
+        // Reset to default matrix
+        function resetMatrix() {
+            currentMatrix = JSON.parse(JSON.stringify(defaultMatrix));
+            displayMatrix('input-matrix', currentMatrix, true);
+            updateVisualizations();
+        }
+        
+        // Update all visualizations based on current matrix
+        function updateVisualizations() {
+            // Calculate and display P matrix
+            const P = associatematrixp(currentMatrix);
+            displayMatrix('p-matrix', P);
+            
+            // Calculate and display Q matrix
+            const Q = associatematrixq(currentMatrix);
+            displayMatrix('q-matrix', Q);
+            
+            // Calculate and display vacancies
+            const vacancies = associatevacancy(currentMatrix);
+            document.getElementById('vacancies').textContent = vacancies.join(', ');
+            
+            // Check and display admissibility
+            const admissible = ismatrixadmossible(currentMatrix);
+            document.getElementById('admissibility').textContent = admissible ? 
+                'Matrix is admissible' : 'Matrix is NOT admissible';
+            
+            // Calculate and display λ
+            const lambda = riggedconfigurationlambda(currentMatrix);
+            displayPartition('lambda', lambda, 'λ');
+            
+            // Calculate and display μ
+            const mu = riggedconfigurationmu(currentMatrix);
+            displayPartition('mu', mu, 'μ');
+            
+            // Calculate and display ν with steps
+            const nu = displayNuSteps(currentMatrix);
+            displayNestedPartitions('nu', nu);
+            
+            // Visualize ν in 3D
+            visualizeNu3D(nu);
+        }
+        
+        // Main execution
+        function visualize() {
+            // Initialize Three.js
+            initThreeJS();
+            
+            // Set up event listeners
+            document.getElementById('randomize-btn').addEventListener('click', randomizeMatrix);
+            document.getElementById('reset-btn').addEventListener('click', resetMatrix);
+            document.getElementById('add-row').addEventListener('click', addRow);
+            document.getElementById('remove-row').addEventListener('click', removeRow);
+            document.getElementById('add-col').addEventListener('click', addColumn);
+            document.getElementById('remove-col').addEventListener('click', removeColumn);
+            
+            // Display initial matrix (editable)
+            displayMatrix('input-matrix', currentMatrix, true);
+            
+            // Update all visualizations
+            updateVisualizations();
+        }
+        
+        // Run the visualization when the page loads
+        window.onload = visualize;
+    </script>
+</body>
+</html>

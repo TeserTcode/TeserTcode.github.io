@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Orbital Viewer</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+        }
+        select, button {
+            margin: 5px 0;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <label for="l">Quantum number l:</label>
+        <select id="l">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+        </select>
+        
+        <label for="m">Quantum number m:</label>
+        <select id="m">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="-1">-1</option>
+            <option value="2">2</option>
+            <option value="-2">-2</option>
+        </select>
+        
+        <button id="update">Update Orbital</button>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+    <script src="clrspc.js"></script>
+    <script src="mthfnc.js"></script>
+    
+    <script>
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+        
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0x404040);
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        directionalLight.position.set(1, 1, 1);
+        scene.add(directionalLight);
+        
+        // Camera position
+        camera.position.z = 5;
+        
+        // Orbital parameters
+        let currentL = 0;
+        let currentM = 0;
+        let orbitalMesh = null;
+        
+        // Create orbital
+        function createOrbital(l, m) {
+            // Remove previous orbital if exists
+            if (orbitalMesh) {
+                scene.remove(orbitalMesh);
+            }
+            
+            const geometry = new THREE.BufferGeometry();
+            const material = new THREE.MeshPhongMaterial({ 
+                side: THREE.DoubleSide,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.8,
+                flatShading: true
+            });
+            
+            // Parameters for the sphere
+            const segments = 100;
+            const rings = 50;
+            const radius = 2;
+            
+            // Create vertices and colors
+            const vertices = [];
+            const colors = [];
+            const indices = [];
+            
+            // Generate points on a sphere and calculate spherical harmonics
+            for (let i = 0; i <= rings; i++) {
+                const theta = (i / rings) * Math.PI;
+                
+                for (let j = 0; j <= segments; j++) {
+                    const phi = (j / segments) * 2 * Math.PI;
+                    
+                    // Calculate spherical harmonic
+                    const sh = re(sphericalharmonic(l, m, theta, phi));
+                    const shValue = math.abs(sh);
+                    const shSign = math.sign(math.re(sh)) >= 0 ? 1 : -1;
+                    
+                    // Calculate position
+                    const r = radius * shValue;
+                    const x = r * Math.sin(theta) * Math.cos(phi);
+                    const y = r * Math.sin(theta) * Math.sin(phi);
+                    const z = r * Math.cos(theta);
+                    
+                    vertices.push(x, y, z);
+                    
+                    // Set color based on sign
+                    if (shSign > 0) {
+                        // Positive - red
+                        colors.push(1, 0, 0);
+                    } else {
+                        // Negative - blue
+                        colors.push(0, 0, 1);
+                    }
+                }
+            }
+            
+            // Create indices for faces
+            for (let i = 0; i < rings; i++) {
+                for (let j = 0; j < segments; j++) {
+                    const a = i * (segments + 1) + j;
+                    const b = a + segments + 1;
+                    const c = a + 1;
+                    const d = b + 1;
+                    
+                    indices.push(a, b, c);
+                    indices.push(b, d, c);
+                }
+            }
+            
+            // Set geometry attributes
+            geometry.setIndex(indices);
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+            
+            // Compute normals for lighting
+            geometry.computeVertexNormals();
+            
+            // Create mesh
+            orbitalMesh = new THREE.Mesh(geometry, material);
+            scene.add(orbitalMesh);
+        }
+        
+        // Initial orbital
+        createOrbital(currentL, currentM);
+        
+        // Controls
+        document.getElementById('update').addEventListener('click', function() {
+            currentL = parseInt(document.getElementById('l').value);
+            currentM = parseInt(document.getElementById('m').value);
+            createOrbital(currentL, currentM);
+        });
+        
+        // Animation
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (orbitalMesh) {
+                orbitalMesh.rotation.x += 0.005;
+                orbitalMesh.rotation.y += 0.01;
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        animate();
+    </script>
+</body>
+</html>

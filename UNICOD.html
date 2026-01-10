@@ -2,52 +2,132 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Unicode Grid</title>
+  <title>Unicode Character Grid</title>
   <style>
-    body { font-family: sans-serif; margin: 0; padding: 0; }
+    :root {
+      --bg-color: #fff;
+      --text-color: #222;
+      --cell-bg: #f9f9f9;
+      --cell-border: #ccc;
+      --cell-hover: #eef;
+      --header-bg: #f0f0f0;
+      --modal-bg: rgba(0, 0, 0, 0.6);
+      --modal-content-bg: #fff;
+      --btn-bg: #fff;
+      --btn-border: #ccc;
+      --btn-primary-bg: #4CAF50;
+      --btn-primary-text: #fff;
+      --btn-danger-bg: #f44336;
+      --btn-danger-text: #fff;
+      --input-bg: #fff;
+      --cell-size: 100px; /* Default size, controlled by JS */
+    }
+
+    body.dark {
+      --bg-color: #222;
+      --text-color: #eee;
+      --cell-bg: #333;
+      --cell-border: #555;
+      --cell-hover: #445;
+      --header-bg: #1a1a1a;
+      --modal-content-bg: #2b2b2b;
+      --btn-bg: #444;
+      --btn-border: #666;
+      --input-bg: #555;
+    }
+
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      background: var(--bg-color);
+      color: var(--text-color);
+    }
+
     #controls {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       padding: 10px;
-      background: #f0f0f0;
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--cell-border);
       position: sticky;
       top: 0;
       z-index: 100;
     }
+
     #search {
       flex: 1;
-      min-width: 200px;
-      font-size: 1.2em;
+      min-width: 150px;
+      font-size: 1.1em;
       padding: 10px;
       box-sizing: border-box;
-      border: 1px solid #ccc;
+      border: 1px solid var(--btn-border);
+      background: var(--input-bg);
+      color: var(--text-color);
     }
-    select, button {
+
+    select, button, input[type="number"] {
       padding: 10px;
       font-size: 1em;
-      border: 1px solid #ccc;
-      background: white;
+      border: 1px solid var(--btn-border);
+      background: var(--btn-bg);
+      color: var(--text-color);
       cursor: pointer;
     }
+    input[type="number"] {
+      width: 80px;
+    }
+
+    #settings-btn {
+      background: #007bff;
+      color: white;
+      border: none;
+    }
+
     #grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      /* --cell-size is set by JavaScript */
+      grid-template-columns: repeat(auto-fill, minmax(var(--cell-size), 1fr));
       gap: 8px;
       padding: 10px;
     }
+
     .cell {
-      border: 1px solid #ccc;
+      border: 1px solid var(--cell-border);
       padding: 5px;
       text-align: center;
       font-size: 1.5em;
-      cursor: default;
-      background: #f9f9f9;
+      background: var(--cell-bg);
       position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: calc(var(--cell-size) * 0.9);
+      box-sizing: border-box;
     }
-    .cell:hover { background: #eef; }
-    .symbol { font-size: 2em; display: block; }
-    .name { font-size: 0.6em; word-break: break-word; color: #444; }
+    .cell.copyable { cursor: copy; }
+    .cell.copyable:hover { background: var(--cell-hover); }
+
+    .symbol {
+      font-size: 2em;
+      display: block;
+      margin: 5px 0;
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+    }
+
+    .name-container {
+      font-size: 0.6em;
+      word-break: break-word;
+      color: var(--text-color);
+    }
+    .name { display: block; }
+    .code-str { display: block; color: #888; }
+
     .metrics {
       position: absolute;
       top: 2px;
@@ -58,434 +138,786 @@
       padding: 2px;
       border-radius: 2px;
     }
+    body.dark .metrics {
+      background: rgba(0,0,0,0.5);
+      color: #bbb;
+    }
+    
+    .info-btn {
+      position: absolute;
+      top: 0;
+      left: 0;
+      font-size: 0.5em;
+      padding: 2px 4px;
+      background: #eee;
+      border: 1px solid #ccc;
+      border-top: none;
+      border-left: none;
+      border-radius: 0 0 4px 0;
+      cursor: pointer;
+    }
+    body.dark .info-btn {
+      background: #444;
+      border-color: #666;
+    }
+
+    /* Hide elements via body classes */
+    body.hide-name .name { display: none; }
+    body.hide-code .code-str { display: none; }
+    body.hide-metrics .metrics { display: none; }
+    body.hide-info-btn .info-btn { display: none; }
+
+    /* Loading Container (now simpler) */
     #loading-container {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.5);
-      display: none;
+      background: var(--modal-bg);
+      display: flex; /* Show by default */
       justify-content: center;
       align-items: center;
       z-index: 1000;
     }
-    #loading-bar {
-      width: 80%;
-      max-width: 500px;
-      background: #f0f0f0;
-      border-radius: 5px;
-      padding: 3px;
-    }
-    #loading-progress {
-      width: 0%;
-      height: 20px;
-      background: #4CAF50;
-      border-radius: 3px;
-      transition: width 0.1s;
+    #loading-content {
+      background: var(--modal-content-bg);
+      padding: 30px;
+      border-radius: 8px;
+      text-align: center;
     }
     #loading-text {
-      color: white;
+      color: var(--text-color);
+      font-size: 1.4em;
+    }
+
+    /* Counter */
+    #counter {
+      padding: 10px;
+      font-size: 0.9em;
       text-align: center;
-      margin-top: 10px;
-      font-size: 1.2em;
+      background: var(--header-bg);
+      border-top: 1px solid var(--cell-border);
+      position: sticky;
+      bottom: 0;
     }
-    #cancel-load {
-      margin-top: 20px;
-      padding: 8px 15px;
-      background: #f44336;
+    #copy-toast {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
       color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 0.9em;
+      z-index: 2000;
+      opacity: 0;
+      transition: opacity 0.3s, bottom 0.3s;
+      pointer-events: none;
     }
-    .cell.unmeasured {
-      opacity: 0.7;
+    #copy-toast.show {
+      opacity: 1;
+      bottom: 70px;
+    }
+
+    /* --- Modals (Settings & Info) --- */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--modal-bg);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 900;
+    }
+    .modal.visible { display: flex; }
+    
+    .modal-content {
+      background: var(--modal-content-bg);
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 90%;
+      max-height: 90%;
+      overflow-y: auto;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--cell-border);
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    .modal-header h2 { margin: 0; }
+    .modal-close {
+      font-size: 1.5em;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-color);
+    }
+
+    /* Settings Modal */
+    #settings-modal .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    .settings-group {
+      border: 1px solid var(--cell-border);
+      padding: 15px;
+      border-radius: 5px;
+    }
+    .settings-group h3 { margin-top: 0; }
+    .setting {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .setting label {
+      margin-right: 10px;
+    }
+    /* Simple checkbox toggle */
+    .toggle {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 28px;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 28px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider { background-color: #4CAF50; }
+    input:checked + .slider:before { transform: translateX(22px); }
+
+    /* Info Modal */
+    #info-modal .char-display {
+      font-size: 6em;
+      text-align: center;
+      border: 1px solid var(--cell-border);
+      background: var(--cell-bg);
+      padding: 20px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+    }
+    #info-modal table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    #info-modal th, #info-modal td {
+      text-align: left;
+      padding: 8px;
+      border: 1px solid var(--cell-border);
+    }
+    #info-modal th {
+      width: 30%;
+      background: var(--header-bg);
     }
   </style>
 </head>
 <body>
 
+<!-- Controls -->
 <div id="controls">
-  <input type="text" id="search" placeholder="Search by Unicode name or hex...">
+  <input type="text" id="search" placeholder="Search by name or hex...">
   <select id="sort">
-    <option value="code">Sort by Code Point</option>
-    <option value="brightness">Sort by Brightness</option>
+    <option value="codePoint">Sort by Code Point</option>
     <option value="width">Sort by Width</option>
     <option value="height">Sort by Height</option>
-    <option value="size">Sort by Size (Area)</option>
+    <option value="area">Sort by Area (Filled)</option>
+    <option value="density">Sort by Density</option>
+    <option value="perimeter">Sort by Perimeter</option>
+    <option value="circularity">Sort by Circularity</option>
+    <!-- --- NEW SORT OPTIONS --- -->
+    <option value="bbox_area">Sort by BBox Area (W×H)</option>
+    <option value="aspect_ratio">Sort by Aspect Ratio</option>
+    <option value="components">Sort by Components</option>
+    <option value="solidity">Sort by Solidity</option>
+    <option value="hole_count">Sort by Hole Count</option>
+    <!-- --- END NEW SORT OPTIONS --- -->
   </select>
   <select id="order">
     <option value="asc">Ascending</option>
     <option value="desc">Descending</option>
   </select>
   <button id="refresh">Refresh View</button>
-  <button id="load-all">Large Load (All Unicode)</button>
+  <button id="settings-btn">Settings</button>
 </div>
+
+<!-- Grid -->
 <div id="grid"></div>
 
+<!-- Counter -->
+<div id="counter">Loading data...</div>
+
+<!-- Copy Toast -->
+<div id="copy-toast"></div>
+
+<!-- Loading Modal -->
 <div id="loading-container">
-  <div>
-    <div id="loading-bar">
-      <div id="loading-progress"></div>
-    </div>
-    <div id="loading-text">Loading: 0%</div>
-    <button id="cancel-load">Cancel Loading</button>
+  <div id="loading-content">
+    <div id="loading-text">Loading pre-calculated data...</div>
   </div>
 </div>
 
-<!-- Load Unicode names -->
-<script src="unicodedata.js"></script>
+<!-- Settings Modal -->
+<div id="settings-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Settings</h2>
+      <button class="modal-close" id="settings-close-btn">&times;</button>
+    </div>
+    <div class="settings-grid">
+      <div class="settings-group">
+        <h3>Display</h3>
+        <div class="setting">
+          <label for="setting-dark-mode">Dark Mode</label>
+          <label class="toggle"><input type="checkbox" id="setting-dark-mode"><span class="slider"></span></label>
+        </div>
+        <div class="setting">
+          <label for="setting-show-name">Show Name</label>
+          <label class="toggle"><input type="checkbox" id="setting-show-name" checked><span class="slider"></span></label>
+        </div>
+        <div class="setting">
+          <label for="setting-show-code">Show Code Point</label>
+          <label class="toggle"><input type="checkbox" id="setting-show-code" checked><span class="slider"></span></label>
+        </div>
+        <div class="setting">
+          <label for="setting-show-metrics">Show Metrics</label>
+          <label class="toggle"><input type="checkbox" id="setting-show-metrics" checked><span class="slider"></span></label>
+        </div>
+        <div class="setting">
+          <label for="setting-show-info-btn">Show Info Button</label>
+          <label class="toggle"><input type="checkbox" id="setting-show-info-btn" checked><span class="slider"></span></label>
+        </div>
+      </div>
+      
+      <div class="settings-group">
+        <h3>Interaction & Layout</h3>
+        <div class="setting">
+          <label for="setting-copy-on-click">Copy on Click</label>
+          <label class="toggle"><input type="checkbox" id="setting-copy-on-click" checked><span class="slider"></span></label>
+        </div>
+        <div class="setting">
+          <label for="setting-cell-size">Cell Size (px)</label>
+          <input type="number" id="setting-cell-size" min="50" max="300" step="10" value="100">
+        </div>
+        <div class="setting">
+          <label for="setting-batch-size">Load Batch Size</label>
+          <input type="number" id="setting-batch-size" min="50" max="2000" step="50" value="500">
+        </div>
+      </div>
 
-<!-- Main script AFTER DOM elements exist -->
+      <div class="settings-group">
+        <h3>Display Filters (Instant)</h3>
+        <div class="setting">
+          <label for="setting-show-control">Show Control Characters</label>
+          <label class="toggle"><input type="checkbox" id="setting-show-control"><span class="slider"></span></label>
+        </div>
+        <div class="setting">
+          <label for="setting-show-combiners">Show Combiners</label>
+          <label class="toggle"><input type="checkbox" id="setting-show-combiners"><span class="slider"></span></label>
+        </div>
+        <div class="setting">
+          <label for="setting-show-regionals">Show Regionals</label>
+          <label class="toggle"><input type="checkbox" id="setting-show-regionals" checked><span class="slider"></span></label>
+        </div>
+        <div class="setting">
+          <label for="setting-show-cjk">Show CJK</label>
+          <label class="toggle"><input type="checkbox" id="setting-show-cjk" checked><span class="slider"></span></label>
+        </div>
+        <div class="setting">
+          <label for="setting-show-emoji">Show Emoji</label>
+          <label class="toggle"><input type="checkbox" id="setting-show-emoji" checked><span class="slider"></span></label>
+        </div>
+        <div class="setting">
+          <label for="setting-show-rtl">Show RTL</label>
+          <label class="toggle"><input type="checkbox" id="setting-show-rtl" checked><span class="slider"></span></label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Info Modal -->
+<div id="info-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="info-modal-title">Character Info</h2>
+      <button class="modal-close" id="info-close-btn">&times;</button>
+    </div>
+    <div id="info-modal-body">
+      <div id="info-modal-char" class="char-display"></div>
+      <table>
+        <tr>
+          <th>Name</th>
+          <td id="info-modal-name"></td>
+        </tr>
+        <tr>
+          <th>Code Point</th>
+          <td id="info-modal-code"></td>
+        </tr>
+        <tr>
+          <th>Decimal</th>
+          <td id="info-modal-decimal"></td>
+        </tr>
+        <tr>
+          <th>Metrics (W×H)</th>
+          <td id="info-modal-metrics"></td>
+        </tr>
+        <tr>
+          <th>Area (px)</th>
+          <td id="info-modal-area"></td>
+        </tr>
+        <tr>
+          <th>Density (Filled)</th>
+          <td id="info-modal-density"></td>
+        </tr>
+        <tr>
+          <th>Perimeter (px)</th>
+          <td id="info-modal-perimeter"></td>
+        </tr>
+        <tr>
+          <th>Circularity</th>
+          <td id="info-modal-circularity"></td>
+        </tr>
+        <!-- --- NEW INFO FIELDS --- -->
+        <tr>
+          <th>BBox Area (W×H)</th>
+          <td id="info-modal-bbox-area"></td>
+        </tr>
+        <tr>
+          <th>Aspect Ratio</th>
+          <td id="info-modal-aspect-ratio"></td>
+        </tr>
+        <tr>
+          <th>Components</th>
+          <td id="info-modal-components"></td>
+        </tr>
+        <tr>
+          <th>Solidity</th>
+          <td id="info-modal-solidity"></td>
+        </tr>
+        <tr>
+          <th>Hole Count</th>
+          <td id="info-modal-hole-count"></td>
+        </tr>
+        <!-- --- END NEW INFO FIELDS --- -->
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<!--
+  UPDATED: Load the pre-calculated data from the .js file.
+  This MUST come before the main application script.
+-->
+<script src="preuni.js"></script>
+
+<!-- Main Application Script -->
 <script>
+// DOM Elements
 const grid = document.getElementById("grid");
 const search = document.getElementById("search");
 const sortSelect = document.getElementById("sort");
 const orderSelect = document.getElementById("order");
 const refreshBtn = document.getElementById("refresh");
-const loadAllBtn = document.getElementById("load-all");
 const loadingContainer = document.getElementById("loading-container");
-const loadingProgress = document.getElementById("loading-progress");
 const loadingText = document.getElementById("loading-text");
-const cancelLoadBtn = document.getElementById("cancel-load");
+const counter = document.getElementById("counter");
+const copyToast = document.getElementById("copy-toast");
 
-const BATCH_SIZE = 1000;
-const INITIAL_LOAD_SIZE = 1000; // First batch to show immediately
-const BACKGROUND_BATCH_SIZE = 500; // Subsequent batches
-let currentCode = 0;
-const MAX_CODE = 0xE01EF;
-let loadingActive = false;
-let cancelRequested = false;
+// Settings Modal
+const settingsBtn = document.getElementById("settings-btn");
+const settingsModal = document.getElementById("settings-modal");
+const settingsCloseBtn = document.getElementById("settings-close-btn");
 
-const nameMap = new Map();
-const cellData = new Map(); // Store cell metrics for sorting
-const sortIndex = new Map(); // Index for faster sorting
+// Info Modal
+const infoModal = document.getElementById("info-modal");
+const infoCloseBtn = document.getElementById("info-close-btn");
 
-function parseUnicodeData() {
-  const lines = unidata.trim().split("\n");
-  for (let line of lines) {
-    const [hex, name] = line.split(";");
-    if (!hex || !name) continue;
-    const code = parseInt(hex, 16);
-    nameMap.set(code, name.trim());
+// Global State
+let BATCH_SIZE = 500; // Will be updated from settings
+const characterData = []; // Will be populated from precalculatedData
+const charDataMap = new Map(); // For quick lookup by code point
+let filteredAndSortedData = [];
+let displayIndex = 0;
+let toastTimeout;
+
+// --- Default Settings ---
+const defaultSettings = {
+  darkMode: false,
+  showName: true,
+  showCode: true,
+  showMetrics: true,
+  showInfoBtn: true,
+  copyOnClick: true,
+  cellSize: 100,
+  batchSize: 500,
+  // Display Filters
+  showControl: false,
+  showCombiners: false,
+  showRegionals: true,
+  showCJK: true,
+  showEmoji: true,
+  showRTL: true
+};
+let currentSettings = {};
+
+// --- Helper Functions ---
+
+function updateCounter() {
+  const shown = grid.children.length;
+  const total = filteredAndSortedData.length;
+  const dataTotal = characterData.length;
+  counter.textContent = `Showing ${shown} of ${total} filtered characters (from ${dataTotal} total loaded)`;
+}
+
+function showToast(message) {
+  clearTimeout(toastTimeout);
+  copyToast.textContent = message;
+  copyToast.classList.add("show");
+  toastTimeout = setTimeout(() => {
+    copyToast.classList.remove("show");
+  }, 2000);
+}
+
+// --- Settings Logic ---
+
+function applySettings() {
+  // 1. Apply visual toggles
+  document.body.classList.toggle("dark", currentSettings.darkMode);
+  document.body.classList.toggle("hide-name", !currentSettings.showName);
+  document.body.classList.toggle("hide-code", !currentSettings.showCode);
+  document.body.classList.toggle("hide-metrics", !currentSettings.showMetrics);
+  document.body.classList.toggle("hide-info-btn", !currentSettings.showInfoBtn);
+  
+  // 2. Apply layout/interaction
+  document.documentElement.style.setProperty('--cell-size', `${currentSettings.cellSize}px`);
+  BATCH_SIZE = currentSettings.batchSize;
+  grid.classList.toggle("copyable", currentSettings.copyOnClick);
+  
+  // 3. Applying display filters requires a refresh
+  refreshDisplay();
+}
+
+function saveSettings() {
+  localStorage.setItem('unicodeGridSettings', JSON.stringify(currentSettings));
+}
+
+function loadSettings() {
+  const saved = localStorage.getItem('unicodeGridSettings');
+  currentSettings = { ...defaultSettings, ...(saved ? JSON.parse(saved) : {}) };
+  
+  // Populate settings modal from loaded settings
+  document.getElementById('setting-dark-mode').checked = currentSettings.darkMode;
+  document.getElementById('setting-show-name').checked = currentSettings.showName;
+  document.getElementById('setting-show-code').checked = currentSettings.showCode;
+  document.getElementById('setting-show-metrics').checked = currentSettings.showMetrics;
+  document.getElementById('setting-show-info-btn').checked = currentSettings.showInfoBtn;
+  document.getElementById('setting-copy-on-click').checked = currentSettings.copyOnClick;
+  document.getElementById('setting-cell-size').value = currentSettings.cellSize;
+  document.getElementById('setting-batch-size').value = currentSettings.batchSize;
+  document.getElementById('setting-show-control').checked = currentSettings.showControl;
+  document.getElementById('setting-show-combiners').checked = currentSettings.showCombiners;
+  document.getElementById('setting-show-regionals').checked = currentSettings.showRegionals;
+  document.getElementById('setting-show-cjk').checked = currentSettings.showCJK;
+  document.getElementById('setting-show-emoji').checked = currentSettings.showEmoji;
+  document.getElementById('setting-show-rtl').checked = currentSettings.showRTL;
+
+  // Apply visual-only settings immediately
+  document.body.classList.toggle("dark", currentSettings.darkMode);
+  document.body.classList.toggle("hide-name", !currentSettings.showName);
+  document.body.classList.toggle("hide-code", !currentSettings.showCode);
+  document.body.classList.toggle("hide-metrics", !currentSettings.showMetrics);
+  document.body.classList.toggle("hide-info-btn", !currentSettings.showInfoBtn);
+  document.documentElement.style.setProperty('--cell-size', `${currentSettings.cellSize}px`);
+  BATCH_SIZE = currentSettings.batchSize;
+  grid.classList.toggle("copyable", currentSettings.copyOnClick);
+}
+
+function setupSettingsListeners() {
+  settingsBtn.addEventListener("click", () => settingsModal.classList.add("visible"));
+  settingsCloseBtn.addEventListener("click", () => settingsModal.classList.remove("visible"));
+  
+  settingsModal.addEventListener("click", (e) => {
+    if (e.target === settingsModal) {
+      settingsModal.classList.remove("visible");
+    }
+  });
+  
+  settingsModal.addEventListener("input", (e) => { // Use 'input' for sliders/numbers
+    const id = e.target.id;
+    let value = e.target.type === 'checkbox' ? e.target.checked : (e.target.type === 'number' ? parseInt(e.target.value) : e.target.value);
+    
+    switch(id) {
+      case 'setting-dark-mode': currentSettings.darkMode = value; break;
+      case 'setting-show-name': currentSettings.showName = value; break;
+      case 'setting-show-code': currentSettings.showCode = value; break;
+      case 'setting-show-metrics': currentSettings.showMetrics = value; break;
+      case 'setting-show-info-btn': currentSettings.showInfoBtn = value; break;
+      case 'setting-copy-on-click': currentSettings.copyOnClick = value; break;
+      case 'setting-cell-size': currentSettings.cellSize = value; break;
+      case 'setting-batch-size': currentSettings.batchSize = value; break;
+      case 'setting-show-control': currentSettings.showControl = value; break;
+      case 'setting-show-combiners': currentSettings.showCombiners = value; break;
+      case 'setting-show-regionals': currentSettings.showRegionals = value; break;
+      case 'setting-show-cjk': currentSettings.showCJK = value; break;
+      case 'setting-show-emoji': currentSettings.showEmoji = value; break;
+      case 'setting-show-rtl': currentSettings.showRTL = value; break;
+    }
+    
+    if (e.target.type === 'checkbox' || id === 'setting-cell-size') {
+        applySettings(); // Apply and refresh
+    } else {
+        document.documentElement.style.setProperty('--cell-size', `${currentSettings.cellSize}px`);
+        BATCH_SIZE = currentSettings.batchSize;
+    }
+    
+    saveSettings();
+  });
+}
+
+// --- Info Modal Logic ---
+
+function showInfoModal(codePoint) {
+  const charData = charDataMap.get(parseInt(codePoint));
+  if (!charData) return;
+  
+  document.getElementById('info-modal-char').textContent = charData.char;
+  document.getElementById('info-modal-name').textContent = charData.name;
+  document.getElementById('info-modal-code').textContent = charData.codeStr;
+  document.getElementById('info-modal-decimal').textContent = charData.codePoint;
+  
+  const metrics = `${charData.width} × ${charData.height}`;
+  document.getElementById('info-modal-metrics').textContent = metrics;
+  document.getElementById('info-modal-area').textContent = `${charData.area} px`;
+  document.getElementById('info-modal-density').textContent = `${(charData.density * 100).toFixed(1)}%`;
+  document.getElementById('info-modal-perimeter').textContent = `${charData.perimeter} px`;
+  document.getElementById('info-modal-circularity').textContent = `${charData.circularity.toFixed(3)}`;
+
+  // --- NEW METRICS ---
+  document.getElementById('info-modal-bbox-area').textContent = `${charData.bbox_area} px`;
+  document.getElementById('info-modal-aspect-ratio').textContent = charData.aspect_ratio.toFixed(3);
+  document.getElementById('info-modal-components').textContent = charData.components;
+  document.getElementById('info-modal-solidity').textContent = charData.solidity.toFixed(3);
+  document.getElementById('info-modal-hole-count').textContent = charData.hole_count;
+  // --- END NEW METRICS ---
+
+  infoModal.classList.add('visible');
+}
+
+function setupInfoModalListeners() {
+  infoCloseBtn.addEventListener("click", () => infoModal.classList.remove("visible"));
+  infoModal.addEventListener("click", (e) => {
+    if (e.target === infoModal) {
+      infoModal.classList.remove("visible");
+    }
+  });
+}
+
+// --- Data Loading Logic ---
+
+function processPrecalculatedData() {
+  try {
+    // Check if the global variable from preuni.js exists
+    if (typeof precalculatedData === 'undefined') {
+      throw new Error("'preuni.js' file not found or failed to load.");
+    }
+
+    // Clear and populate global data
+    characterData.length = 0;
+    charDataMap.clear();
+
+    for (const row of precalculatedData) {
+      characterData.push(row);
+      charDataMap.set(row.codePoint, row);
+    }
+    
+    loadingContainer.style.display = "none";
+    refreshDisplay(); // Initial display
+    
+  } catch (e) {
+    console.error(e);
+    loadingText.textContent = `Error: ${e.message}`;
+    loadingText.style.color = 'red';
   }
 }
 
-function getUnicodeName(codePoint) {
-  return nameMap.get(codePoint) || "U+" + codePoint.toString(16).toUpperCase().padStart(4, '0');
-}
+// --- Display Logic ---
 
-function createBasicCell(codePoint) {
-  const char = String.fromCodePoint(codePoint);
-  const name = getUnicodeName(codePoint);
-  const codeStr = "U+" + codePoint.toString(16).toUpperCase().padStart(4, '0');
+function createCell(charData) {
+  const { codePoint, char, name, codeStr, width, height, density } = charData;
   
   const cell = document.createElement("div");
-  cell.className = "cell unmeasured";
-  cell.innerHTML = `
-    <span class="symbol">${char}</span>
-    <span class="name">${name}<br>${codeStr}</span>
-    <span class="metrics">...</span>
-  `;
+  cell.className = "cell";
+  cell.dataset.codePoint = codePoint;
+
+  const symbol = document.createElement("span");
+  symbol.className = "symbol";
+  symbol.textContent = char;
+  cell.appendChild(symbol);
+  
+  const nameContainer = document.createElement("div");
+  nameContainer.className = "name-container";
+  
+  const nameEl = document.createElement("span");
+  nameEl.className = "name";
+  nameEl.textContent = name;
+  nameContainer.appendChild(nameEl);
+  
+  const codeEl = document.createElement("span");
+  codeEl.className = "code-str";
+  codeEl.textContent = codeStr;
+  nameContainer.appendChild(codeEl);
+  
+  cell.appendChild(nameContainer);
+
+  const metrics = document.createElement("span");
+  metrics.className = "metrics";
+  metrics.textContent = `${width}×${height} (${(density * 100).toFixed(0)}%)`;
+  cell.appendChild(metrics);
+  
+  const infoBtn = document.createElement("button");
+  infoBtn.className = "info-btn";
+  infoBtn.textContent = "i";
+  infoBtn.title = "More info";
+  infoBtn.dataset.code = codePoint;
+  cell.appendChild(infoBtn);
+  
   cell.dataset.name = name.toLowerCase();
   cell.dataset.code = codeStr.toLowerCase();
-  cell.dataset.codePoint = codePoint;
   
   return cell;
 }
 
-function measureCharacter(char) {
-  const span = document.createElement('span');
-  span.style.position = 'absolute';
-  span.style.left = '-9999px';
-  span.style.fontSize = '100px';
-  span.style.fontFamily = 'sans-serif';
-  span.textContent = char;
-  document.body.appendChild(span);
-  
-  const rect = span.getBoundingClientRect();
-  const width = rect.width;
-  const height = rect.height;
-  
-  // Create canvas for brightness measurement
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.max(1, Math.ceil(width));
-  canvas.height = Math.max(1, Math.ceil(height));
-  const ctx = canvas.getContext('2d');
-  ctx.font = '100px sans-serif';
-  ctx.fillText(char, 0, 100);
-  
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-  let brightness = 0;
-  let pixelCount = 0;
-  
-  for (let i = 0; i < data.length; i += 4) {
-    const alpha = data[i + 3] / 255;
-    if (alpha > 0) {
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-      brightness += (0.299 * r + 0.587 * g + 0.114 * b) * alpha;
-      pixelCount++;
-    }
-  }
-  
-  document.body.removeChild(span);
-  
-  return {
-    width: width,
-    height: height,
-    size: width * height,
-    brightness: pixelCount > 0 ? brightness / pixelCount : 0
-  };
-}
-
-function updateCellMetrics(cell) {
-  const codePoint = parseInt(cell.dataset.codePoint);
-  const char = String.fromCodePoint(codePoint);
-  const metrics = measureCharacter(char);
-  
-  cell.querySelector('.metrics').textContent = 
-    `${metrics.width.toFixed(1)}×${metrics.height.toFixed(1)}`;
-  cell.classList.remove('unmeasured');
-  
-  cell.dataset.width = metrics.width;
-  cell.dataset.height = metrics.height;
-  cell.dataset.size = metrics.size;
-  cell.dataset.brightness = metrics.brightness;
-  
-  // Store metrics for sorting
-  cellData.set(codePoint, metrics);
-}
-
-function loadInitialBatch(limit = INITIAL_LOAD_SIZE) {
-  const fragment = document.createDocumentFragment();
-  let count = 0;
-  while (count < limit && currentCode <= MAX_CODE) {
-    try {
-      const cell = createBasicCell(currentCode);
-      fragment.appendChild(cell);
-      currentCode++;
-      count++;
-    } catch (e) {
-      currentCode++;
-      console.warn(`Skipping code point U+${currentCode.toString(16)}: ${e}`);
-    }
-  }
-  grid.appendChild(fragment);
-  return count;
-}
-
-async function processMeasurementsInBackground() {
-  const cells = Array.from(grid.querySelectorAll('.unmeasured'));
-  const total = cells.length;
-  let processed = 0;
-  
-  for (const cell of cells) {
-    if (cancelRequested) break;
-    
-    updateCellMetrics(cell);
-    processed++;
-    
-    // Update progress every 50 cells
-    if (processed % 50 === 0) {
-      const progress = Math.floor((processed / total) * 100);
-      loadingProgress.style.width = `${progress}%`;
-      loadingText.textContent = `Processing: ${progress}%`;
-      
-      // Yield to UI thread
-      await new Promise(resolve => setTimeout(resolve, 0));
-    }
-  }
-  
-  return processed;
-}
-
-function filterGrid() {
+function filterAndSortData() {
   const terms = search.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  const cells = Array.from(grid.children);
-
-  let matches = 0;
-  for (let i = 0; i < cells.length; i++) {
-    const cell = cells[i];
-    const name = cell.dataset.name;
-    const code = cell.dataset.code;
-    const matched = terms.every(term => name.includes(term) || code.includes(term));
-    cell.style.display = matched ? "block" : "none";
-    if (matched) matches++;
-  }
-  return matches;
-}
-
-function buildSortIndex() {
-  sortIndex.clear();
-  const cells = Array.from(grid.children);
-  
-  // Build indexes for each sort type
-  ['brightness', 'width', 'height', 'size', 'codePoint'].forEach(type => {
-    const index = cells.map(cell => ({
-      cell,
-      value: parseFloat(cell.dataset[type]) || parseInt(cell.dataset[type])
-    }));
-    
-    // Sort once and store the ordered cells
-    index.sort((a, b) => a.value - b.value);
-    sortIndex.set(`${type}_asc`, index.map(item => item.cell));
-    
-    // Reverse for descending
-    index.sort((a, b) => b.value - a.value);
-    sortIndex.set(`${type}_desc`, index.map(item => item.cell));
-  });
-}
-
-function sortGrid() {
   const sortBy = sortSelect.value;
   const order = orderSelect.value;
-  const sortKey = `${sortBy}_${order}`;
   
-  // Use pre-built index if available
-  if (sortIndex.has(sortKey)) {
-    const sortedCells = sortIndex.get(sortKey);
-    sortedCells.forEach(cell => grid.appendChild(cell));
-    return;
+  let filtered = characterData;
+  
+  if (terms.length > 0) {
+    filtered = filtered.filter(charData => {
+      const name = charData.name.toLowerCase();
+      const code = charData.codeStr.toLowerCase();
+      return terms.every(term => name.includes(term) || code.includes(term));
+    });
   }
   
-  // Fallback to live sorting if index not available
-  const cells = Array.from(grid.children);
-  cells.sort((a, b) => {
-    let valA, valB;
-    
-    switch (sortBy) {
-      case 'brightness':
-        valA = parseFloat(a.dataset.brightness);
-        valB = parseFloat(b.dataset.brightness);
-        break;
-      case 'width':
-        valA = parseFloat(a.dataset.width);
-        valB = parseFloat(b.dataset.width);
-        break;
-      case 'height':
-        valA = parseFloat(a.dataset.height);
-        valB = parseFloat(b.dataset.height);
-        break;
-      case 'size':
-        valA = parseFloat(a.dataset.size);
-        valB = parseFloat(b.dataset.size);
-        break;
-      default: // code
-        valA = parseInt(a.dataset.codePoint);
-        valB = parseInt(b.dataset.codePoint);
-    }
-    
+  // Apply settings filters
+  if (!currentSettings.showControl) filtered = filtered.filter(c => !c.is_control);
+  if (!currentSettings.showCombiners) filtered = filtered.filter(c => !c.is_combining);
+  if (!currentSettings.showRegionals) filtered = filtered.filter(c => !c.is_regional);
+  if (!currentSettings.showCJK) filtered = filtered.filter(c => !c.is_cjk);
+  if (!currentSettings.showEmoji) filtered = filtered.filter(c => !c.is_emoji);
+  if (!currentSettings.showRTL) filtered = filtered.filter(c => !c.is_rtl);
+  
+  // Then sort
+  filteredAndSortedData = [...filtered].sort((a, b) => {
+    const valA = a[sortBy];
+    const valB = b[sortBy];
     return order === 'asc' ? valA - valB : valB - valA;
   });
   
-  cells.forEach(cell => grid.appendChild(cell));
+  displayIndex = 0;
 }
 
-function smartSearch() {
-  filterGrid();
-  sortGrid();
-}
-
-async function loadAllCharacters() {
-  if (loadingActive) return;
+function loadMoreCharacters() {
+  const fragment = document.createDocumentFragment();
+  const endIndex = Math.min(displayIndex + BATCH_SIZE, filteredAndSortedData.length);
   
-  loadingActive = true;
-  cancelRequested = false;
-  loadingContainer.style.display = "flex";
+  for (let i = displayIndex; i < endIndex; i++) {
+    const cell = createCell(filteredAndSortedData[i]);
+    fragment.appendChild(cell);
+  }
+  
+  grid.appendChild(fragment);
+  displayIndex = endIndex;
+  
+  updateCounter();
+  return displayIndex >= filteredAndSortedData.length;
+}
+
+function refreshDisplay() {
   grid.innerHTML = '';
-  currentCode = 0;
-  cellData.clear();
-  sortIndex.clear();
-  
-  // Load initial batch quickly
-  loadingText.textContent = "Loading initial set...";
-  const loadedCount = loadInitialBatch();
-  
-  // Start background processing
-  loadingText.textContent = "Processing measurements...";
-  const processed = await processMeasurementsInBackground();
-  
-  if (!cancelRequested) {
-    // Load remaining characters in background
-    loadingText.textContent = "Loading remaining characters...";
-    const totalCodes = MAX_CODE;
-    const remainingStart = currentCode;
-    
-    for (let i = remainingStart; i <= totalCodes && !cancelRequested; i += BACKGROUND_BATCH_SIZE) {
-      const fragment = document.createDocumentFragment();
-      const end = Math.min(i + BACKGROUND_BATCH_SIZE, totalCodes);
-      
-      for (let code = i; code <= end && !cancelRequested; code++) {
-        try {
-          const cell = createBasicCell(code);
-          fragment.appendChild(cell);
-          currentCode++;
-        } catch (e) {
-          console.warn(`Skipping code point U+${code.toString(16)}: ${e}`);
-          currentCode++;
-        }
-      }
-      
-      grid.appendChild(fragment);
-      
-      // Update progress
-      const progress = Math.min(100, Math.floor((currentCode / totalCodes) * 100));
-      loadingProgress.style.width = `${progress}%`;
-      loadingText.textContent = `Loading: ${progress}%`;
-      
-      // Yield to UI thread
-      await new Promise(resolve => setTimeout(resolve, 0));
-    }
-    
-    if (!cancelRequested) {
-      // Build sort indexes in background
-      loadingText.textContent = "Building indexes...";
-      buildSortIndex();
-      
-      loadingText.textContent = "Complete!";
-      smartSearch();
-      setTimeout(() => {
-        loadingContainer.style.display = "none";
-      }, 1000);
-    }
-  }
-  
-  loadingActive = false;
-  if (cancelRequested) {
-    loadingContainer.style.display = "none";
-    cancelRequested = false;
-  }
+  filterAndSortData();
+  loadMoreCharacters();
 }
+
+// --- Event Listeners ---
 
 window.addEventListener("scroll", () => {
   if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
-    loadInitialBatch(BATCH_SIZE);
-    smartSearch();
+    loadMoreCharacters();
   }
 });
 
-search.addEventListener("input", smartSearch);
-sortSelect.addEventListener("change", sortGrid);
-orderSelect.addEventListener("change", sortGrid);
-refreshBtn.addEventListener("click", () => {
-  grid.innerHTML = '';
-  currentCode = 0;
-  cellData.clear();
-  sortIndex.clear();
-  loadInitialBatch();
-  smartSearch();
-});
-loadAllBtn.addEventListener("click", loadAllCharacters);
-cancelLoadBtn.addEventListener("click", () => {
-  cancelRequested = true;
+grid.addEventListener("click", (e) => {
+  const cell = e.target.closest('.cell');
+  
+  if (e.target.classList.contains('info-btn')) {
+    e.stopPropagation();
+    showInfoModal(e.target.dataset.code);
+    return;
+  }
+
+  if (currentSettings.copyOnClick && cell) {
+    const codePoint = parseInt(cell.dataset.codePoint);
+    const char = String.fromCodePoint(codePoint);
+    navigator.clipboard.writeText(char).then(() => {
+      showToast(`Copied ${char} to clipboard!`);
+    }).catch(err => {
+      showToast('Failed to copy.');
+      console.error('Clipboard error:', err);
+    });
+  }
 });
 
-parseUnicodeData();
-loadInitialBatch();
+search.addEventListener("input", refreshDisplay);
+sortSelect.addEventListener("change", refreshDisplay);
+orderSelect.addEventListener("change", refreshDisplay);
+refreshBtn.addEventListener("click", refreshDisplay);
+
+
+// --- Initialization ---
+function init() {
+  loadSettings();
+  setupSettingsListeners();
+  setupInfoModalListeners();
+  processPrecalculatedData(); // UPDATED: Process the global variable
+}
+
+// Wait for the DOM to be ready before initializing
+document.addEventListener('DOMContentLoaded', init);
+
 </script>
 
 </body>

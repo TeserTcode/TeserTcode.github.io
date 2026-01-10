@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Geometric Simulation with Histograms</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 20px; }
+    #container { position: relative; display: inline-block; }
+    canvas { border: 1px solid #ccc; }
+    #histogram { position: absolute; top: 0; left: 0; pointer-events: none; }
+    #controls { margin: 15px; }
+  </style>
+</head>
+<body>
+  <h2>Geometric Simulations + Histograms</h2>
+
+  <div id="controls">
+    <label for="simType">Simulation Type:</label>
+    <select id="simType">
+      <optgroup label="2‑Point">
+        <option value="circleInside">Circle Inside</option>
+        <option value="circleRim">Circle Rim</option>
+        <option value="squareInside">Square Inside</option>
+        <option value="squareRim">Square Rim</option>
+        <option value="hexInside">Hexagon Inside</option>
+        <option value="hexRim">Hexagon Rim</option>
+        <option value="kissInside">Kissing Circles Inside</option>
+        <option value="kissRim">Kissing Circles Rim</option>
+      </optgroup>
+      <optgroup label="3‑Point Triangle">
+        <option value="triangleCircle">Triangle in Circle</option>
+        <option value="triangleHex">Triangle in Hexagon</option>
+        <option value="triangleSquare">Triangle in Square</option>
+        <option value="triangleKiss">Triangle in Kissing Circles</option>
+      </optgroup>
+    </select>
+    <label for="speed">Speed:</label>
+    <input type="range" id="speed" min="1" max="100" value="20"> 
+    <span id="speedVal">20</span> samples/sec
+  </div>
+
+  <p id="stats">Samples: 0</p>
+
+  <div id="container">
+    <canvas id="mainCanvas" width="400" height="400"></canvas>
+    <canvas id="histogram" width="400" height="400"></canvas>
+  </div>
+
+  <script>
+    const main = document.getElementById('mainCanvas');
+    const hist = document.getElementById('histogram');
+    const ctx = main.getContext('2d'), hctx = hist.getContext('2d');
+    const c = { x: 200, y: 200 }, R = 150, S = 300;
+    let total=0, count=0, totalP=0, totalA=0;
+
+    const stats = document.getElementById('stats');
+    const simType = document.getElementById('simType');
+    const speedSlider = document.getElementById('speed');
+    const speedVal = document.getElementById('speedVal');
+    let interval;
+
+    const bins = 50, histData = Array(bins).fill(0);
+
+    function resetAll() {
+      total = totalP = totalA = count = 0;
+      histData.fill(0);
+      hctx.clearRect(0,0,400,400);
+      updateStats();
+    }
+
+    function updateStats() {
+      const avg = total/count||0, ap = totalP/count||0, aa = totalA/count||0;
+      let txt = `Samples: ${count}`;
+      if (simType.value.startsWith('triangle')) 
+        txt += ` | Avg Per = ${(ap/R).toFixed(4)}, Area = ${(aa/(R*R)).toFixed(4)}`;
+      else 
+        txt += ` | Avg Dist = ${(avg/R).toFixed(4)}`;
+      stats.textContent = txt;
+    }
+
+    function drawBase() {
+      ctx.clearRect(0,0,400,400);
+      ctx.strokeStyle='#000';
+      if(simType.value.includes('circle')) {
+        ctx.beginPath(); ctx.arc(c.x,c.y,R,0,2*Math.PI); ctx.stroke();
+        if(simType.value.includes('kiss')) {
+          const d=2*R;
+          ctx.beginPath(); ctx.arc(c.x+d,c.y,R,0,2*Math.PI); ctx.stroke();
+        }
+      } else if(simType.value.includes('square')) {
+        ctx.strokeRect(c.x-S/2,c.y-S/2,S,S);
+      } else if(simType.value.includes('hex')) {
+        const ang=Math.PI/3;
+        ctx.beginPath();
+        for(let i=0;i<6;i++){
+          const x=c.x+R*Math.cos(ang*i), y=c.y+R*Math.sin(ang*i);
+          i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+        }
+        ctx.closePath(); ctx.stroke();
+      }
+    }
+
+    function randInCircle() {
+      const t=2*Math.PI*Math.random();
+      const r=R*Math.sqrt(Math.random());
+      return {x:c.x+r*Math.cos(t), y:c.y+r*Math.sin(t)};
+    }
+
+    function randOnCircle() {
+      const t=2*Math.PI*Math.random();
+      return {x:c.x+R*Math.cos(t), y:c.y+R*Math.sin(t)};
+    }
+
+    function randInSquare() {
+      return {x:c.x-S/2+Math.random()*S, y:c.y-S/2+Math.random()*S};
+    }
+
+    function randOnSquare() {
+      const s = Math.random()*4, o=Math.random()*S, h=S/2;
+      if(s<1) return {x:c.x-h+o, y:c.y-h};
+      if(s<2) return {x:c.x+h, y:c.y-h+o};
+      if(s<3) return {x:c.x+h-o, y:c.y+h};
+      return {x:c.x-h, y:c.y+h-o};
+    }
+
+    function randInHex() {
+      while(true){
+        const x=c.x+Math.random()*2*R-R, y=c.y+Math.random()*2*R-R;
+        const dx=Math.abs(x-c.x), dy=Math.abs(y-c.y);
+        if(dy<=R && dx<=Math.sqrt(3)*R/2 && Math.sqrt(3)*dx+dy<=Math.sqrt(3)*R)
+          return {x, y};
+      }
+    }
+
+    function randOnHex() {
+      const i = Math.floor(Math.random()*6);
+      const a = Math.PI/3, f = Math.random();
+      const x1 = c.x + R*Math.cos(a*i), y1 = c.y + R*Math.sin(a*i);
+      const x2 = c.x + R*Math.cos(a*(i+1)), y2 = c.y + R*Math.sin(a*(i+1));
+      return {x: x1 + f*(x2-x1), y: y1 + f*(y2-y1)};
+    }
+
+    function randInKiss() {
+      const d = Math.random()<0.5 ? 0 : 2*R;
+      const t = 2*Math.PI*Math.random(), r = R*Math.sqrt(Math.random());
+      return {x: c.x + d + r*Math.cos(t), y: c.y + r*Math.sin(t)};
+    }
+
+    function randOnKiss() {
+      const d = Math.random()<0.5 ? 0 : 2*R;
+      const t = 2*Math.PI*Math.random();
+      return {x: c.x + d + R*Math.cos(t), y: c.y + R*Math.sin(t)};
+    }
+
+    function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+    function areaTri(a,b,p) {return Math.abs((a.x*(b.y-p.y)+b.x*(p.y-a.y)+p.x*(a.y-b.y))/2);}
+    function drawPt(p){ctx.fillStyle='red';ctx.beginPath();ctx.arc(p.x,p.y,3,0,2*Math.PI);ctx.fill();}
+
+    function simStep(){
+      drawBase();
+      let val=0;
+      let gen;
+
+      if(simType.value.includes('circle')) gen = simType.value.includes('Rim') ? randOnCircle : randInCircle;
+      else if(simType.value.includes('square')) gen = simType.value.includes('Rim') ? randOnSquare : randInSquare;
+      else if(simType.value.includes('hex')) gen = simType.value.includes('Rim') ? randOnHex : randInHex;
+      else if(simType.value.includes('kiss')) gen = simType.value.includes('Rim') ? randOnKiss : randInKiss;
+
+      if(simType.value.startsWith('triangle')) {
+        const p1=gen(), p2=gen(), p3=gen();
+        ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y);
+        ctx.lineTo(p3.x,p3.y); ctx.closePath(); ctx.strokeStyle='blue'; ctx.stroke();
+        [p1,p2,p3].forEach(drawPt);
+        val = dist(p1,p2)+dist(p2,p3)+dist(p3,p1);
+        totalP += val;
+        totalA += areaTri(p1,p2,p3);
+      } else {
+        const p1=gen(), p2=gen();
+        val = dist(p1,p2); total += val;
+        ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y);
+        ctx.strokeStyle='blue'; ctx.stroke();
+        drawPt(p1); drawPt(p2);
+      }
+
+      count++;
+      const idx = Math.min(bins-1, Math.floor(val/R*bins));
+      histData[idx]++;
+
+      hctx.clearRect(0,0,400,400);
+      const maxv = Math.max(...histData);
+      histData.forEach((n,i)=>{
+        const h = n / maxv * 200;
+        hctx.fillStyle='rgba(0,0,255,0.3)';
+        hctx.fillRect(i*(400/bins), 400-h, (400/bins)-1, h);
+      });
+      updateStats();
+    }
+
+    function updateSpeed(){
+      speedVal.textContent = speedSlider.value;
+      clearInterval(interval);
+      interval = setInterval(simStep,1000/speedSlider.value);
+    }
+
+    simType.addEventListener('change', resetAll);
+    speedSlider.addEventListener('input', updateSpeed);
+    resetAll(); updateSpeed();
+  </script>
+</body>
+</html>

@@ -115,12 +115,12 @@
       };
       img.src = URL.createObjectURL(file);
     }
-    
+        let maxWidth = 300;
+      let maxHeight = 200;
     function drawInputImage(img) {
       // Resize and draw
       const aspectRatio = img.width / img.height;
-      const maxWidth = 300;
-      const maxHeight = 200;
+  
 
       let width = img.width;
       let height = img.height;

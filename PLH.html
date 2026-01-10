@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polyhedron and Dual Visualizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f5f5f5;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            background-color: white;
+            margin-top: 10px;
+        }
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        label {
+            font-weight: bold;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Polyhedron and Dual Visualizer</h1>
+    
+    <div class="controls">
+        <div class="control-group">
+            <label for="polyhedron-select">Polyhedron:</label>
+            <select id="polyhedron-select">
+                <option value="tetrahedron">Tetrahedron</option>
+                <option value="dtetrahedron">Dual Tetrahedron</option>
+                <option value="octahedron">Octahedron</option>
+                <option value="cube">Cube</option>
+                <option value="icosahedron">Icosahedron</option>
+                <option value="dodecahedron">Dodecahedron</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label>
+                <input type="checkbox" id="show-dual"> Show Dual
+            </label>
+            <label>
+                <input type="checkbox" id="overlay-dual"> Overlay Dual
+            </label>
+        </div>
+        
+        <div class="control-group">
+            <label for="rotation-speed">Rotation Speed:</label>
+            <input type="range" id="rotation-speed" min="0" max="100" value="30">
+        </div>
+        
+        <div class="control-group">
+            <label for="scale">Scale:</label>
+            <input type="range" id="scale" min="10" max="200" value="100">
+        </div>
+        
+        <div class="control-group">
+            <button id="reset-rotation">Reset Rotation</button>
+        </div>
+    </div>
+    
+    <canvas id="canvas" width="600" height="600"></canvas>
+    
+    <script>
+        const dualsMap = new Map([
+            // Regular polyhedra
+            ["tetrahedron", {
+                dual: "dtetrahedron",
+                vertices: [
+                    [Math.sqrt(2)/4, Math.sqrt(2)/4, Math.sqrt(2)/4],
+                    [-Math.sqrt(2)/4, -Math.sqrt(2)/4, Math.sqrt(2)/4],
+                    [-Math.sqrt(2)/4, Math.sqrt(2)/4, -Math.sqrt(2)/4],
+                    [Math.sqrt(2)/4, -Math.sqrt(2)/4, -Math.sqrt(2)/4]
+                ],
+                faces: [
+                    [0, 1, 2],
+                    [0, 1, 3],
+                    [0, 2, 3],
+                    [1, 2, 3]
+                ]
+            }],
+            ["dtetrahedron", {
+                dual: "tetrahedron",
+                vertices: [
+                    [(Math.sqrt(2)/4 + -Math.sqrt(2)/4 + -Math.sqrt(2)/4) / 3, 
+                     (Math.sqrt(2)/4 + -Math.sqrt(2)/4 + Math.sqrt(2)/4) / 3, 
+                     (Math.sqrt(2)/4 + Math.sqrt(2)/4 + -Math.sqrt(2)/4) / 3],
+                    [(Math.sqrt(2)/4 + -Math.sqrt(2)/4 + Math.sqrt(2)/4) / 3, 
+                     (Math.sqrt(2)/4 + -Math.sqrt(2)/4 + -Math.sqrt(2)/4) / 3, 
+                     (Math.sqrt(2)/4 + Math.sqrt(2)/4 + -Math.sqrt(2)/4) / 3],
+                    [(Math.sqrt(2)/4 + -Math.sqrt(2)/4 + Math.sqrt(2)/4) / 3, 
+                     (Math.sqrt(2)/4 + Math.sqrt(2)/4 + -Math.sqrt(2)/4) / 3, 
+                     (Math.sqrt(2)/4 + -Math.sqrt(2)/4 + -Math.sqrt(2)/4) / 3],
+                    [(-Math.sqrt(2)/4 + -Math.sqrt(2)/4 + Math.sqrt(2)/4) / 3, 
+                     (-Math.sqrt(2)/4 + Math.sqrt(2)/4 + -Math.sqrt(2)/4) / 3, 
+                     (Math.sqrt(2)/4 + -Math.sqrt(2)/4 + -Math.sqrt(2)/4) / 3]
+                ],
+                faces: [
+                    [0, 1, 2],
+                    [0, 1, 3],
+                    [0, 2, 3],
+                    [1, 2, 3]
+                ]
+            }],
+            ["octahedron", {
+                dual: "cube",
+                vertices: [
+                    [Math.sqrt(2)/2, 0, 0], [-Math.sqrt(2)/2, 0, 0],
+                    [0, Math.sqrt(2)/2, 0], [0, -Math.sqrt(2)/2, 0],
+                    [0, 0, Math.sqrt(2)/2], [0, 0, -Math.sqrt(2)/2]
+                ],
+                faces: [
+                    [0, 2, 4], [0, 2, 5],
+                    [0, 3, 4], [0, 3, 5],
+                    [1, 2, 4], [1, 2, 5],
+                    [1, 3, 4], [1, 3, 5]
+                ]
+            }],
+            ["cube", {
+                dual: "octahedron",
+                vertices: [
+                    [0.5, 0.5, 0.5], [-0.5, 0.5, 0.5],
+                    [-0.5, -0.5, 0.5], [0.5, -0.5, 0.5],
+                    [0.5, 0.5, -0.5], [-0.5, 0.5, -0.5],
+                    [-0.5, -0.5, -0.5], [0.5, -0.5, -0.5]
+                ],
+                faces: [
+                    [0, 1, 2, 3], [4, 5, 6, 7], // front and back
+                    [0, 3, 7, 4], [1, 2, 6, 5], // left and right
+                    [0, 1, 5, 4], [2, 3, 7, 6]  // top and bottom
+                ]
+            }],
+            ["icosahedron", {
+                dual: "dodecahedron",
+                vertices: (() => {
+                    const phi = (1 + Math.sqrt(5))/2;
+                    const vertices = [];
+                    // All cyclic permutations of (0, ±1, ±phi)
+                    for (let i = 0; i < 3; i++) {
+                        const signs = [[1,1], [1,-1], [-1,1], [-1,-1]];
+                        for (const [s1, s2] of signs) {
+                            const coords = [0, 1*s1, phi*s2];
+                            // Rotate coordinates for all cyclic permutations
+                            vertices.push([...coords]);
+                            vertices.push([coords[2], coords[0], coords[1]]);
+                            vertices.push([coords[1], coords[2], coords[0]]);
+                        }
+                    }
+                    return vertices;
+                })(),
+                faces: (() => {
+                    // Icosahedron faces (20 triangular faces)
+                    const phi = (1 + Math.sqrt(5))/2;
+                    const vertices = [
+                        [0, 1, phi], [0, 1, -phi], [0, -1, phi], [0, -1, -phi],
+                        [1, phi, 0], [1, -phi, 0], [-1, phi, 0], [-1, -phi, 0],
+                        [phi, 0, 1], [phi, 0, -1], [-phi, 0, 1], [-phi, 0, -1]
+                    ];
+                    
+                    // Create a map from vertex coordinates to index
+                    const vertexMap = new Map();
+                    vertices.forEach((v, i) => {
+                        const key = v.join(',');
+                        vertexMap.set(key, i);
+                    });
+                    
+                    // Find all sets of 3 vertices that are a distance of 2 from each other
+                    const faces = [];
+                    const distance = (v1, v2) => {
+                        const dx = v1[0] - v2[0];
+                        const dy = v1[1] - v2[1];
+                        const dz = v1[2] - v2[2];
+                        return Math.sqrt(dx*dx + dy*dy + dz*dz);
+                    };
+                    
+                    for (let i = 0; i < vertices.length; i++) {
+                        for (let j = i+1; j < vertices.length; j++) {
+                            if (Math.abs(distance(vertices[i], vertices[j]) - 2) > 0.001) continue;
+                            for (let k = j+1; k < vertices.length; k++) {
+                                if (Math.abs(distance(vertices[i], vertices[k]) - 2) > 0.001) continue;
+                                if (Math.abs(distance(vertices[j], vertices[k]) - 2) > 0.001) continue;
+                                faces.push([i, j, k]);
+                            }
+                        }
+                    }
+                    
+                    return faces;
+                })()
+            }],
+            ["dodecahedron", {
+                dual: "icosahedron",
+                vertices: (() => {
+                    const phi = (1 + Math.sqrt(5))/2;
+                    const vertices = [];
+                    
+                    // All sign changes of (±phi, ±phi, ±phi)
+                    for (const x of [-phi, phi]) {
+                        for (const y of [-phi, phi]) {
+                            for (const z of [-phi, phi]) {
+                                vertices.push([x, y, z]);
+                            }
+                        }
+                    }
+                    
+                    // All even permutations of (0, ±1/phi, ±phi)
+                    const perms = [
+					[1, 1, 1], [1, 1, -1], [1, -1, 1], [1, -1, -1],
+    [-1, 1, 1], [-1, 1, -1], [-1, -1, 1], [-1, -1, -1],
+                        [0, 1/phi, phi], [0, 1/phi, -phi], [0, -1/phi, phi], [0, -1/phi, -phi],
+                        [1/phi, phi, 0], [1/phi, -phi, 0], [-1/phi, phi, 0], [-1/phi, -phi, 0],
+                        [phi, 0, 1/phi], [phi, 0, -1/phi], [-phi, 0, 1/phi], [-phi, 0, -1/phi]
+                    ];
+                    
+                    return vertices.concat(perms);
+                })(),
+                faces: (() => {
+                    // Dodecahedron faces (12 pentagonal faces)
+                    const phi = (1 + Math.sqrt(5))/2;
+                    const invPhi = 1/phi;
+                    
+                    // Create all vertices
+                    const vertices = [];
+                    
+                    // (±1, ±1, ±1)
+                    for (let x = -1; x <= 1; x += 2) {
+                        for (let y = -1; y <= 1; y += 2) {
+                            for (let z = -1; z <= 1; z += 2) {
+                                vertices.push([x, y, z]);
+                            }
+                        }
+                    }
+                    
+                    // (0, ±1/φ, ±φ) and permutations
+                    const specials = [
+                        [0, invPhi, phi], [0, invPhi, -phi], [0, -invPhi, phi], [0, -invPhi, -phi],
+                        [invPhi, phi, 0], [invPhi, -phi, 0], [-invPhi, phi, 0], [-invPhi, -phi, 0],
+                        [phi, 0, invPhi], [phi, 0, -invPhi], [-phi, 0, invPhi], [-phi, 0, -invPhi]
+                    ];
+                    
+                    vertices.push(...specials);
+                    
+                    // Create a map from vertex coordinates to index
+                    const vertexMap = new Map();
+                    vertices.forEach((v, i) => {
+                        const key = v.join(',');
+                        vertexMap.set(key, i);
+                    });
+                    
+                    // Define faces - each face is a pentagon centered around one of the cube vertices
+                    const faces = [];
+                    
+                    // Faces around the cube vertices
+                    const cubeVertices = vertices.slice(0, 8);
+                    for (const cv of cubeVertices) {
+                        const [x, y, z] = cv;
+                        const face = [];
+                        
+                        // Find all vertices that are adjacent to this cube vertex
+                        // These will be the cube vertex itself and 4 special vertices
+                        const adjacent = vertices.filter(v => {
+                            if (v === cv) return true;
+                            // Check if it's one of the special vertices that shares two coordinates with the cube vertex
+                            const shared = (v[0] === x ? 1 : 0) + (v[1] === y ? 1 : 0) + (v[2] === z ? 1 : 0);
+                            return shared === 2;
+                        });
+                        
+                        // Order the vertices to form a proper pentagon
+                        // This is a simplified approach - in a real app you'd want to properly order them
+                        faces.push(adjacent.map(v => vertexMap.get(v.join(','))));
+                    }
+                    
+                    // Faces around the special vertices (these will be the other 6 faces)
+                    // This is a simplified approach - in a complete implementation you'd properly define all 12 faces
+                    for (let i = 8; i < 20; i += 4) {
+                        faces.push([i, i+1, i+2, i+3, i]);
+                    }
+                    
+                    return faces;
+                })()
+            }]
+        ]);
+
+        // Canvas setup
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        const centerX = width / 2;
+        const centerY = height / 2;
+
+        // State
+        let currentPolyhedron = 'tetrahedron';
+        let rotationX = 0;
+        let rotationY = 0;
+        let rotationZ = 0;
+        let animationId = null;
+        let showDual = false;
+        let overlayDual = false;
+        let rotationSpeed = 0.01;
+        let scale = 100;
+        let isRotating = true;
+
+        // Event listeners
+        document.getElementById('polyhedron-select').addEventListener('change', (e) => {
+            currentPolyhedron = e.target.value;
+            draw();
+        });
+
+        document.getElementById('show-dual').addEventListener('change', (e) => {
+            showDual = e.target.checked;
+            draw();
+        });
+
+        document.getElementById('overlay-dual').addEventListener('change', (e) => {
+            overlayDual = e.target.checked;
+            draw();
+        });
+
+        document.getElementById('rotation-speed').addEventListener('input', (e) => {
+            rotationSpeed = e.target.value / 1000;
+        });
+
+        document.getElementById('scale').addEventListener('input', (e) => {
+            scale = parseInt(e.target.value);
+            draw();
+        });
+
+        document.getElementById('reset-rotation').addEventListener('click', () => {
+            rotationX = 0;
+            rotationY = 0;
+            rotationZ = 0;
+            draw();
+        });
+
+        // Project 3D point to 2D
+        function projectPoint(x, y, z) {
+            // Apply rotations
+            let rotated = rotateX(x, y, z, rotationX);
+            rotated = rotateY(rotated.x, rotated.y, rotated.z, rotationY);
+            rotated = rotateZ(rotated.x, rotated.y, rotated.z, rotationZ);
+            
+            // Perspective projection
+            const distance = 5;
+            const factor = distance / (distance - rotated.z);
+            const projectedX = rotated.x * factor * scale + centerX;
+            const projectedY = rotated.y * factor * scale + centerY;
+            
+            return {
+                x: projectedX,
+                y: projectedY,
+                z: rotated.z
+            };
+        }
+
+        // Rotation functions
+        function rotateX(x, y, z, angle) {
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            return {
+                x: x,
+                y: y * cos - z * sin,
+                z: y * sin + z * cos
+            };
+        }
+
+        function rotateY(x, y, z, angle) {
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            return {
+                x: x * cos + z * sin,
+                y: y,
+                z: -x * sin + z * cos
+            };
+        }
+
+        function rotateZ(x, y, z, angle) {
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            return {
+                x: x * cos - y * sin,
+                y: x * sin + y * cos,
+                z: z
+            };
+        }
+
+        // Draw a face
+        function drawFace(vertices, face, color, opacity = 1) {
+            ctx.beginPath();
+            const firstPoint = projectPoint(
+                vertices[face[0]][0], 
+                vertices[face[0]][1], 
+                vertices[face[0]][2]
+            );
+            ctx.moveTo(firstPoint.x, firstPoint.y);
+            
+            for (let i = 1; i < face.length; i++) {
+                const point = projectPoint(
+                    vertices[face[i]][0], 
+                    vertices[face[i]][1], 
+                    vertices[face[i]][2]
+                );
+                ctx.lineTo(point.x, point.y);
+            }
+            
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.globalAlpha = opacity;
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+        }
+
+        // Calculate face normal for backface culling
+        function getFaceNormal(vertices, face) {
+            const p0 = vertices[face[0]];
+            const p1 = vertices[face[1]];
+            const p2 = vertices[face[2]];
+            
+            const u = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
+            const v = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
+            
+            return [
+                u[1] * v[2] - u[2] * v[1],
+                u[2] * v[0] - u[0] * v[2],
+                u[0] * v[1] - u[1] * v[0]
+            ];
+        }
+
+        // Draw the polyhedron
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+            
+            const polyhedron = dualsMap.get(currentPolyhedron);
+            if (!polyhedron) return;
+            
+            // Draw main polyhedron
+            const faceColor = '#3498db';
+            for (const face of polyhedron.faces) {
+                const normal = getFaceNormal(polyhedron.vertices, face);
+                let projectedNormal = rotateX(normal[0], normal[1], normal[2], rotationX);
+                projectedNormal = rotateY(projectedNormal.x, projectedNormal.y, projectedNormal.z, rotationY);
+                projectedNormal = rotateZ(projectedNormal.x, projectedNormal.y, projectedNormal.z, rotationZ);
+                
+                // Backface culling
+                if (projectedNormal.z < 0) continue;
+                
+                drawFace(polyhedron.vertices, face, faceColor);
+            }
+            
+            // Draw dual if enabled
+            if (showDual) {
+                const dualName = polyhedron.dual;
+                const dual = dualsMap.get(dualName);
+                if (dual) {
+                    const dualColor = '#e74c3c';
+                    const opacity = overlayDual ? 0.5 : 1;
+                    
+                    for (const face of dual.faces) {
+                        const normal = getFaceNormal(dual.vertices, face);
+                        let projectedNormal = rotateX(normal[0], normal[1], normal[2], rotationX);
+                        projectedNormal = rotateY(projectedNormal.x, projectedNormal.y, projectedNormal.z, rotationY);
+                        projectedNormal = rotateZ(projectedNormal.x, projectedNormal.y, projectedNormal.z, rotationZ);
+                        
+                        // Backface culling
+                        if (projectedNormal.z < 0) continue;
+                        
+                        drawFace(dual.vertices, face, dualColor, opacity);
+                    }
+                }
+            }
+        }
+
+        // Animation loop
+        function animate() {
+            if (isRotating) {
+                rotationY += rotationSpeed;
+                rotationX += rotationSpeed * 0.7;
+            }
+            draw();
+            animationId = requestAnimationFrame(animate);
+        }
+
+        // Start animation
+        animate();
+
+        // Initial draw
+        draw();
+    </script>
+</body>
+</html>

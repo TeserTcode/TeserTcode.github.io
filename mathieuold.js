@@ -1,4 +1,10 @@
-
+  <script src="mthfnc.js"></script>
+<script src="clrspc.js"></script>  <script src="mthfnc.js"></script>
+<script src="clrspc.js"></script>  <script src="mthfnc.js"></script>
+<script src="clrspc.js"></script>  <script src="mthfnc.js"></script>
+<script src="clrspc.js"></script>  <script src="mthfnc.js"></script>
+<script src="clrspc.js"></script>  <script src="mthfnc.js"></script>
+<script src="clrspc.js"></script>
 function mathieufloquet(v,z,q,a,c0=0,c2=0){
     let fi=math.complex(0,0)
     for(let n=-bign;n<=bign;n++)
@@ -92,10 +98,7 @@ function mathieua1n(a,q,nn){
     const term2 = mul(q, mathieua1n(a, q, sub(nn, 4)));
     return div(sub(term1, term2), q);
 }
-function mathieuan(a,q,nn){
-  
-    if(nn%2==0)return mathieua2n(a,q,nn);return mathieua1n(a,q,nn);
-}
+
 
 
 //function mathieucn(a,q,m,v){if (q==0)return 1; }
@@ -111,4 +114,16 @@ return fi
 
 function mathieuce(q,z,nn=0,rr=nn){
 return  mathieuc(mathieul(q,rr),q,z,nn)
-}
+}	
+
+
+
+.cell.color-1 { background-color: #ff0000; } /* Red */
+.cell.color-2 { background-color: #00ff00; } /* Green */
+.cell.color-3 { background-color: #0000ff; } /* Blue */
+.cell.color-4 { background-color: #ffff00; } /* Yellow */
+.cell.color-5 { background-color: #ff00ff; } /* Magenta */
+.cell.color-6 { background-color: #00ffff; } /* Cyan */
+.cell.color-7 { background-color: #ff8000; } /* Orange */
+.cell.color-8 { background-color: #8000ff; } /* Purple */
+.cell.color-9 { background-color: #00ff80; } /* Light Green */

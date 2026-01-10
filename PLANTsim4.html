@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Plant & Soil Pigment Estimator</title>
+  <script src="clrspc.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f9f9f9; }
+    .slider { display: flex; align-items: center; margin-bottom: 10px; }
+    .slider label { width: 180px; }
+    .bar { height: 20px; margin-bottom: 5px; background: #ddd; position: relative; }
+    .bar span { position: absolute; left: 5px; top: 0; color: #000; font-size: 12px; }
+    .container { display: flex; gap: 40px; }
+    .preview { width: 100px; height: 100px; border: 1px solid #000; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Leaf and Soil Pigment Estimator</h2>
+
+  <div class="container">
+    <div>
+      <h3>Leaf Color</h3>
+      <input type="color" id="leafcolor" value="#00aa00" onchange="update()">
+      <div class="preview" id="leafpreview"></div>
+     
+
+      <h3>Soil Color</h3>
+      <input type="color" id="soilcolor" value="#885533" onchange="update()">
+      <div class="preview" id="soilpreview"></div>
+      <div class="slider"><label>Soil Coarseness:</label><input type="range" min="0" max="100" id="soilvar" value="30" oninput="update()"></div>
+
+      <h3>Environmental Factors</h3>
+     
+      <div class="slider"><label>Rescale Bars (×):</label><input type="range" min="-3" max="3" step="0.1" id="scale" value="1" oninput="update()"></div>
+
+      <h3>Presets</h3>
+      <select id="preset" onchange="loadPreset()">
+        <option value="default">-- Select Preset --</option>
+        <option value="spring">🌿 Spring Leaf / Loam Soil</option>
+        <option value="autumn">🍁 Autumn Leaf / Sandy Soil</option>
+        <option value="wetland">🌾 Wetland / Clay Soil</option>
+      </select>
+    </div>
+
+    <div>
+      <h3>Plant Pigments</h3>
+      <div id="plantbars"></div>
+      <h3>Soil Properties</h3>
+      <div id="soilbars"></div>
+    </div>
+  </div>
+
+  <script>
+    function update() {
+      let leaf = hexToRgb(document.getElementById("leafcolor").value);
+      let soil = hexToRgb(document.getElementById("soilcolor").value);
+      document.getElementById("leafpreview").style.background = `rgb(${leaf.r},${leaf.g},${leaf.b})`;
+      document.getElementById("soilpreview").style.background = `rgb(${soil.r},${soil.g},${soil.b})`;
+
+      let scale = Math.pow(10,parseFloat(document.getElementById("scale").value));
+
+      let [ l, c, h ] = rgbToLch(leaf.r, leaf.g, leaf.b);
+      let [ ll, a, b ] = rgbToLab(leaf.r, leaf.g, leaf.b);
+	  
+	  console.log(leaf.g)
+	  
+      let pigments = [
+        ["Anthocyanin", "BerryBoost", 474.31 - 5.87*h - 10.814*c + 9.586*a],
+        ["Flavonoids", "Flare Factor", 322.9 - 4.7*h + 2.1*c + 1.2*a + 0.4*b],
+        ["Carotenoids", "Gold Ratio", 90.5 + 3.1*h - 0.9*c + 1.3*a - 2.5*b],
+        ["Xanthophylls", "Sunstain Index", 76.2 + 1.7*h - 0.3*c + 1.1*a + 1.8*b],
+        ["Triterpenoids", "Shieldscore", 250.1 + 2.3*h + 0.6*c - 1.2*a - 2.0*b],
+        ["Diterpenes", "Smog Rejection", 112.8 - 0.4*h + 3.1*c - 0.9*a + 1.4*b],
+        ["Monoterpenes", "ScentStrength", 89.4 + 2.8*h - 1.1*c + 2.0*a - 3.2*b],
+        ["Steroids", "Hardplant Index", 342.3 - 3.2*h + 0.9*c - 1.7*a + 1.2*b],
+        ["Flavonols", "Crystal Glow", 298.5 + 1.9*h + 1.5*c + 0.8*a - 0.3*b],
+        ["Chlorophyll", "Greencode Level", 1200*l - 4.1*c - 5.2*h + 3.6*a - 2.3*b],
+      ];
+
+      let [ l_s,  c_s,  h_s ] = rgbToLch(soil.r, soil.g, soil.b);
+  let [ ll_s ,a_s,  b_s ] = rgbToLab(soil.r, soil.g, soil.b);
+let [ x_s,  y_s, z_s ] = rgbToXyz(soil.r, soil.g, soil.b);
+
+      let soiltraits = [
+        ["Soil Organic Carbon", "HumusCore Index", y_s * 1.8 + 0.5*h_s - 0.9*c_s + 2.3*a_s],
+        ["Nitrogen Presence", "N-Pulse", x_s + 1.1*h_s + 0.7*c_s - 1.2*b_s],
+        ["Iron Oxide Levels", "RustRichness", z_s * 2.4 + 0.8*h_s + 3.5*c_s],
+        ["Clay Content", "SoilSmooth", 500 - 1.3*l_s + 2.5*c_s - 3.1*a_s + 2.2*b_s],
+        ["Soil pH Estimate", "pH-Light Factor", 6.5 + 0.002*(x_s + y_s + z_s) - 0.01*c_s + 0.005*a_s - 0.003*b_s],
+        ["Soil Moisture Proxy", "MudSignal", l_s * 2.7 - 1.5*c_s + 0.4*h_s],
+        ["Decomposition Level", "DecayGlow", 300 - 2.1*h_s + 3.2*c_s - 0.8*a_s + 0.6*b_s],
+        ["Heavy Metal Risk", "ToxicTinge", z_s + 1.8*c_s + 2.3*b_s - 0.6*a_s],
+        ["Fungal/Bacterial Activity", "MycoFlash", l_s + 0.9*c_s - 0.3*h_s + 1.1*a_s - 2.4*b_s],
+        ["Phosphate Residue", "PhosLight Index", y_s * 0.6 + 0.7*a_s - 0.8*b_s + 0.3*h_s]
+      ];
+
+      renderBars("plantbars", pigments, scale);
+      renderBars("soilbars", soiltraits, scale);
+    }
+
+    function renderBars(id, items, scale) {
+      let div = document.getElementById(id);
+      div.innerHTML = "";
+      for (let [name, cool, val] of items) {
+        if (val < 0) continue;
+        let bar = document.createElement("div");
+        bar.className = "bar";
+        bar.style.width = val * scale + "px";
+        bar.innerHTML = `<span>${cool} (${name}): ${val.toFixed(1)}</span>`;
+        div.appendChild(bar);
+      }
+    }
+
+    function hexToRgb(hex) {
+      let bigint = parseInt(hex.slice(1), 16);
+      return {
+        r: (bigint >> 16) & 255,
+        g: (bigint >> 8) & 255,
+        b: bigint & 255
+      };
+    }
+
+    function loadPreset() {
+      const p = document.getElementById("preset").value;
+      if (p === "spring") {
+        document.getElementById("leafcolor").value = "#33cc33";
+        document.getElementById("soilcolor").value = "#a0522d";
+      } else if (p === "autumn") {
+        document.getElementById("leafcolor").value = "#cc6633";
+        document.getElementById("soilcolor").value = "#deb887";
+      } else if (p === "wetland") {
+        document.getElementById("leafcolor").value = "#446644";
+        document.getElementById("soilcolor").value = "#5c4033";
+      }
+      update();
+    }
+
+    window.onload = update;
+  </script>
+</body>
+</html>

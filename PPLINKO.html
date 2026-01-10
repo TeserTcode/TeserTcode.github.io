@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Plinko Machine</title>
+<style>
+  body { margin: 0; background: #111; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+  #plinkoCanvas { display: block; }
+</style>
+</head>
+<body>
+<input type="file" id="imgInput" accept="image/png" style="position:absolute;top:10px;left:10px;z-index:10;">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<script src="https://unpkg.com/gif.js.optimized/dist/gif.js"></script>
+<script>
+const { Engine, Render, Runner, World, Bodies, Events } = Matter;
+
+// Canvas size
+const CANVAS_WIDTH = window.innerWidth * 0.8;
+const CANVAS_HEIGHT = window.innerHeight * 0.9;
+
+// Create engine and renderer
+let engine = Engine.create();
+let render = Render.create({
+    element: document.body,
+    engine: engine,
+    canvas: document.createElement("canvas"),
+    options: {
+        width: CANVAS_WIDTH,
+        height: CANVAS_HEIGHT,
+        wireframes: false,
+        background: "#111"
+    }
+});
+render.canvas.id = "plinkoCanvas";
+Render.run(render);
+Runner.run(Runner.create(), engine);
+
+// Side walls
+const wallThickness = 50;
+World.add(engine.world, [
+    Bodies.rectangle(-wallThickness/2, CANVAS_HEIGHT/2, wallThickness, CANVAS_HEIGHT*2, { isStatic: true }),
+    Bodies.rectangle(CANVAS_WIDTH + wallThickness/2, CANVAS_HEIGHT/2, wallThickness, CANVAS_HEIGHT*2, { isStatic: true })
+]);
+
+// Pegs in hexagonal pattern
+const pegRadius = 8;
+const pegDistance = 50;
+const rows = Math.floor(CANVAS_HEIGHT / pegDistance) + 4;
+const cols = Math.floor(CANVAS_WIDTH / pegDistance) + 2;
+for (let r = 0; r < rows; r++) {
+    let offset = (r % 2) ? pegDistance / 2 : 0;
+    for (let c = 0; c < cols; c++) {
+        let x = c * pegDistance + offset;
+        let y = r * pegDistance + 100;
+        if (x > 0 && x < CANVAS_WIDTH) {
+            World.add(engine.world, Bodies.circle(x, y, pegRadius, {
+                isStatic: true,
+                restitution: 0.4,
+                render: { fillStyle: "#777" }
+            }));
+        }
+    }
+}
+
+// Brighter glow beneath
+let glow = Bodies.rectangle(CANVAS_WIDTH/2, CANVAS_HEIGHT+100, CANVAS_WIDTH, 200, {
+    isStatic: true,
+    render: {
+        fillStyle: "rgba(255,0,0,0.8)" // bright red glow
+    }
+});
+World.add(engine.world, glow);
+
+// Image texture
+let cubeTexture = null;
+
+// GIF Recorder
+let gif;
+let recording = false;
+
+function startRecording() {
+    gif = new GIF({ workers: 2, quality: 10, workerScript: 'https://unpkg.com/gif.js.optimized/dist/gif.worker.js' });
+    recording = true;
+    (function recordFrame() {
+        if (!recording) return;
+        gif.addFrame(render.canvas, { delay: 16, copy: true });
+        requestAnimationFrame(recordFrame);
+    })();
+}
+
+function stopRecording() {
+    recording = false;
+    gif.on('finished', blob => {
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement("a");
+        a.href = url;
+        a.download = "cube_fall.gif";
+        a.click();
+    });
+    gif.render();
+}
+
+document.getElementById("imgInput").addEventListener("change", e => {
+    let file = e.target.files[0];
+    if (!file) return;
+    let img = new Image();
+    img.onload = () => {
+        // Scale image to 20x20 for smaller cube
+        let canvas = document.createElement("canvas");
+        canvas.width = 20;
+        canvas.height = 20;
+        let ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, 20, 20);
+        cubeTexture = canvas.toDataURL();
+        spawnCube();
+    };
+    img.src = URL.createObjectURL(file);
+});
+
+function spawnCube() {
+    if (!cubeTexture) return;
+    startRecording();
+
+    let cube = Bodies.rectangle(CANVAS_WIDTH/2, -300, 20, 20, {
+        restitution: 0.3,
+        friction: 0.001,
+        render: {
+            sprite: { texture: cubeTexture, xScale: 1, yScale: 1 }
+        }
+    });
+    World.add(engine.world, cube);
+
+    Events.on(engine, "afterUpdate", () => {
+        if (cube.position.y > CANVAS_HEIGHT + 350) {
+            World.remove(engine.world, cube);
+            stopRecording();
+        }
+    });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hyperbolic Tiling - 5 Squares per Vertex (Connected)</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <canvas id="hyperbolicCanvas"></canvas>
+    
+    <script>
+        const canvas = document.getElementById('hyperbolicCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        // Center and radius of the Poincaré disk
+        const center = { x: canvas.width / 2, y: canvas.height / 2 };
+        let radius = Math.min(canvas.width, canvas.height) * 0.45;
+        
+        // Parameters for the tiling
+        const p = 4; // square edges
+        const q = 5; // squares meeting at each vertex
+        const maxLevel = 4; // recursion depth
+        
+        // Store all generated points and their neighbors
+        const points = new Map();
+        
+        // Function to convert hyperbolic to Euclidean coordinates in the Poincaré disk
+        function hyperbolicToEuclidean(hx, hy) {
+            const r = Math.sqrt(hx * hx + hy * hy);
+            if (r === 0) return { x: 0, y: 0 };
+            
+            const factor = Math.tanh(r) / r;
+            return {
+                x: center.x + hx * factor * radius,
+                y: center.y + hy * factor * radius
+            };
+        }
+        
+        // Function to draw a point in the hyperbolic plane
+        function drawHyperbolicPoint(hx, hy, size = 2, color = 'black') {
+            const euclidean = hyperbolicToEuclidean(hx, hy);
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(euclidean.x, euclidean.y, size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Function to draw a hyperbolic line between two points
+        function drawHyperbolicLine(hx1, hy1, hx2, hy2, color = 'rgba(0, 0, 0, 0.3)') {
+            const p1 = hyperbolicToEuclidean(hx1, hy1);
+            const p2 = hyperbolicToEuclidean(hx2, hy2);
+            
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+        }
+        
+        // Generate the tiling recursively
+        function generateTiling(level, hx, hy, parentAngle = null) {
+            if (level > maxLevel) return;
+            
+            const key = `${hx.toFixed(4)},${hy.toFixed(4)}`;
+            if (points.has(key)) return;
+            
+            // Store this point and initialize its neighbors
+            points.set(key, { x: hx, y: hy, neighbors: [] });
+            
+            // Generate neighboring squares
+            const angleIncrement = (2 * Math.PI) / q;
+            const distance = 2 * Math.acosh(Math.cos(Math.PI/p) / Math.sin(Math.PI/q));
+            
+            for (let i = 0; i < q; i++) {
+                // Skip the direction we came from (for optimization)
+                if (parentAngle !== null && Math.abs(i * angleIncrement - parentAngle) < 0.01) {
+                    continue;
+                }
+                
+                const angle = i * angleIncrement;
+                const newHx = hx + distance * Math.cos(angle);
+                const newHy = hy + distance * Math.sin(angle);
+                
+                const neighborKey = `${newHx.toFixed(4)},${newHy.toFixed(4)}`;
+                
+                // Add this neighbor to our list
+                points.get(key).neighbors.push({ x: newHx, y: newHy });
+                
+                // Recursively generate the neighbor
+                generateTiling(level + 1, newHx, newHy, (angle + Math.PI) % (2 * Math.PI));
+            }
+        }
+        
+        // Draw all connections between points
+        function drawConnections() {
+            points.forEach((point, key) => {
+                point.neighbors.forEach(neighbor => {
+                    const neighborKey = `${neighbor.x.toFixed(4)},${neighbor.y.toFixed(4)}`;
+                    if (points.has(neighborKey)) {
+                        drawHyperbolicLine(point.x, point.y, neighbor.x, neighbor.y);
+                    }
+                });
+            });
+        }
+        
+        // Draw all points
+        function drawPoints() {
+            points.forEach((point, key) => {
+                const level = Math.min(Math.floor(key.split(',').reduce((sum, val) => sum + Math.abs(parseFloat(val)), 0) / 2), 7);
+                drawHyperbolicPoint(point.x, point.y, 3, `hsl(${(level * 45) % 360}, 80%, 50%)`);
+            });
+        }
+        
+        // Draw the Poincaré disk boundary
+        function drawBoundary() {
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+        
+        // Main drawing function
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBoundary();
+            
+            points.clear();
+            generateTiling(0, 0, 0);
+            drawConnections();
+            drawPoints();
+        }
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            center.x = canvas.width / 2;
+            center.y = canvas.height / 2;
+            radius = Math.min(canvas.width, canvas.height) * 0.45;
+            draw();
+        });
+        
+        // Initial draw
+        draw();
+    </script>
+</body>
+</html>

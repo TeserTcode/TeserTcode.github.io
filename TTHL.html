@@ -23,6 +23,16 @@
     <option value="nimplies">NIMPLIES</option>
     <option value="converse">CONVERSE</option>
     <option value="nconverse">NCONVERSE</option>
+  <option value="diff">DIFF</option>
+    <option value="sym-diff">SYMDIFF</option>
+    <option value="intersect">INTERSECT</option>
+   <option value="union">UNION</option>
+    <option value="cartesian-product">CARTESIAN PRODUCT</option>
+    <option value="power-set">POWER SET</option>
+    <option value="subset">SUBSET</option>
+    <option value="proper-subset">PROPER SUBSET</option>
+    <option value="superset">SUPERSET</option>
+    <option value="proper-superset">PROPER SUPERSET</option>
     <option value="mod-and">MODAND</option>
     <option value="mod-or">MODOR</option>
     <option value="mod-xor">MODXOR</option>
@@ -43,9 +53,18 @@
     <option value="siimplies">SNIMPLIES</option>
     <option value="sconverse">SCONVERSE</option>
     <option value="snconverse">SNCONVERSE</option>
-    <option value="diff">DIFF</option>
-    <option value="sym-diff">SYMDIFF</option>
-    <option value="intersect">INTERSECT</option>
+  <option value="flip-and">FAND</option>
+<option value="flip-or">FOR</option>
+<option value="flip-xor">FXOR</option>
+<option value="flip-nand">FNAND</option>
+<option value="flip-nor">FNOR</option>
+<option value="flip-xnor">FXNOR</option>
+<option value="flip-implies">FIMPLIES</option>
+<option value="flip-nimplies">FNIMPLIES</option>
+<option value="flip-converse">FCONVERSE</option>
+<option value="flip-nconverse">FNCONVERSE</option>
+  
+    
   </select>
 <label for="shorthand">Shorthand Mode:</label>
 <select id="shorthand">
@@ -155,9 +174,82 @@ if(str==="A")return 'rgb(255,0,255)'
 
 
 
+function symmetricClosureOp(P) {
+  let setP = toSet(P);
+  if (!Array.isArray(setP)) return setP; // Ensure it's an array
+
+  let transposed = setP
+    .filter(x => Array.isArray(x) && x.length === 2) // Ensure it's a pair (relation)
+    .map(([a, b]) => [b, a]);
+
+  return simplify([...setP, ...transposed.filter(x => !setP.some(y => deepEqual(x, y)))]);
+}
+
+function unionOp(P, Q) {
+  let setP = toSet(P), setQ = toSet(Q);
+  return simplify([...setP, ...setQ.filter(x => !setP.some(y => deepEqual(x, y)))]);
+}
+
+// ---- Cartesian Product (A × B) ----
+function cartesianProductOp(P, Q) {
+  let setP = toSet(P), setQ = toSet(Q);
+  let product = setP.flatMap(x => setQ.map(y => [x, y]));
+  return simplify(product);
+}
+
+// ---- Power Set (𝒫(A)) ----
+function powerSetOp(P) {
+  let setP = toSet(P);
+  let powerSet = setP.reduce((subsets, value) => subsets.concat(subsets.map(set => [...set, value])), [[]]);
+  return simplify(powerSet);
+}
+
+function complementOp(P) {
+  const H3s = [
+[1],
+[0],
+[1,0],
+    [1, [1,0]],    // {1, T}
+    [0, [1,0]],    // {0, T}
+    [1,0,[1,0]]    // {1,0,T}
+  ];
+
+  let setP = toSet(P);
+  if (!Array.isArray(setP)) setP = [setP]; // Convert single element to array
+
+  let H3 = toSet(H4s); // Assume H3_SET holds all elements of H_3
+  return simplify(H3.filter(x => !setP.some(y => deepEqual(x, y))));
+}
 
 
+// ---- Subset (A ⊆ B) ----
+function subsetOp(P, Q) {
+  let setP = toSet(P), setQ = toSet(Q);
+  return setP.every(x => setQ.some(y => deepEqual(x, y))) ? "1" : "0";
+}
 
+// ---- Proper Subset (A ⊂ B) ----
+function properSubsetOp(P, Q) {
+  let setP = toSet(P), setQ = toSet(Q);
+  return (setP.every(x => setQ.some(y => deepEqual(x, y))) && setQ.some(x => !setP.some(y => deepEqual(x, y))))
+    ? "1"
+    : "0";
+}
+
+// ---- Superset (A ⊇ B) ----
+function supersetOp(P, Q) {
+  return subsetOp(Q, P);
+}
+
+// ---- Proper Superset (A ⊃ B) ----
+function properSupersetOp(P, Q) {
+  return properSubsetOp(Q, P);
+}
+
+// ---- Set Difference (A \ B) ----
+function setDiffOp(P, Q) {
+  return diffOp(P, Q);
+}
 
 
   // ---- Operator Definitions ----
@@ -461,6 +553,43 @@ function modOp(P, Q, baseOp) {
   return simplify(mostFrequent);
 }
 
+function flipOp(P, Q, baseOp) {
+  let setP = toSet(P), setQ = toSet(Q);
+  let countMap = {};
+
+  for (let x of setP) {
+    for (let y of setQ) {
+      let r = baseOp(x, y);
+
+      // Ensure `r` is a set
+      if (typeof r !== "object" || r === null) {
+        r = new Set([r]); // Convert numbers into sets
+      } else {
+        r = new Set(r); // Ensure it's a Set object
+      }
+
+      let key = JSON.stringify([...r]); // Convert set to array for JSON
+      countMap[key] = (countMap[key] || 0) + 1;
+    }
+  }
+
+  let toggledPresence = new Set();
+  for (let [key, count] of Object.entries(countMap)) {
+    let resultSet = new Set(JSON.parse(key));
+
+    for (let value of resultSet) {
+      if (toggledPresence.has(value)) {
+        toggledPresence.delete(value);
+      } else {
+        toggledPresence.add(value);
+      }
+    }
+  }
+
+  return simplify([...toggledPresence]);
+}
+
+
 // ---- Add operators to selection ----
 const operators = {
   "and": andOp,
@@ -499,13 +628,34 @@ const operators = {
   "mod-nimplies": (P, Q) => modOp(P, Q, nimpliesOp),
   "mod-converse": (P, Q) => modOp(P, Q, converseOp),
   "mod-nconverse": (P, Q) => modOp(P, Q, nconverseOp),
+  "flip-and": (P, Q) => flipOp(P, Q, andOp),
+  "flip-or": (P, Q) => flipOp(P, Q, orOp),
+  "flip-xor": (P, Q) => flipOp(P, Q, xorOp),
+  "flip-nand": (P, Q) => flipOp(P, Q, nandOp),
+  "flip-nor": (P, Q) => flipOp(P, Q, norOp),
+  "flip-xnor": (P, Q) => flipOp(P, Q, xnorOp),
+  "flip-iff": (P, Q) => flipOp(P, Q, iffOp),
+  "flip-implies": (P, Q) => flipOp(P, Q, impliesOp),
+  "flip-nimplies": (P, Q) => flipOp(P, Q, nimpliesOp),
+  "flip-converse": (P, Q) => flipOp(P, Q, converseOp),
+  "flip-nconverse": (P, Q) => flipOp(P, Q, nconverseOp),
+ "union": unionOp, // A ∪ B
+  "cartesian-product": cartesianProductOp, // A × B
+  "power-set": powerSetOp, // 𝒫(A)
+  "complement": complementOp, // H3 - A
+  "subset": subsetOp, // A ⊆ B
+  "proper-subset": properSubsetOp, // A ⊂ B
+  "superset": supersetOp, // A ⊇ B
+  "proper-superset": properSupersetOp, // A ⊃ B
+ "symmetric-closure": symmetricClosureOp,
+
 };
 
   // ---- H₃ Definition (as before) ----
   const H3 = [
-    1,
-    0,
-    [1,0],         // T shorthand for {1,0}
+[1],
+[0],
+[1,0],
     [1, [1,0]],    // {1, T}
     [0, [1,0]],    // {0, T}
     [1,0,[1,0]]    // {1,0,T}

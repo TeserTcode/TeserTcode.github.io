@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fourier Series Solver</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+</head>
+<body>
+    <h2>Fourier Series Solver</h2>
+    <label for="diffEq">Enter Differential Equation (in terms of x):</label>
+    <input type="text" id="diffEq" placeholder="e.g. sin(x) + x^2">
+    <button onclick="solveSeries()">Generate</button>
+    <p>Equations Solved:</p>
+    <pre id="equations"></pre>
+    <canvas id="plot" width="600" height="400"></canvas>
+
+    <script>
+        function solveSeries() {
+            const expr = document.getElementById("diffEq").value;
+            const g = x => math.evaluate(expr, {x: x});
+            let equationsText = "";
+            const C_n = [];
+
+            for (let n = 1; n <= 10; n++) {
+                const func = C => -n * n * C - g(C);
+                let C_guess = 1;
+                for (let i = 0; i < 10; i++) {
+                    let f_val = func(C_guess);
+                    let df_val = -n * n; 
+                    C_guess -= f_val / df_val;
+                }
+                C_n.push(C_guess);
+                equationsText += `C_${n} * (-${n}^2) = g(C_${n}) => C_${n} = ${C_guess.toFixed(4)}\n`;
+            }
+
+            document.getElementById("equations").innerText = equationsText;
+            drawSeries(C_n);
+        }
+
+        function drawSeries(C_n) {
+            const canvas = document.getElementById("plot");
+            const ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.beginPath();
+            ctx.moveTo(0, 200);
+            for (let px = 0; px <= canvas.width; px++) {
+                let x = (px / canvas.width) * (2 * Math.PI);
+                let y = 0;
+                for (let n = 1; n <= 10; n++) {
+                    y += C_n[n-1] * Math.sin(n * x);
+                }
+                let py = 200 - (y * 50);
+                ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+        }
+    </script>
+</body>
+</html>

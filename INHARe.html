@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>H-H Inharmonic Oscillator</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        canvas { border: 1px solid #000; margin: 10px; }
+        .container { display: flex; }
+        .controls { margin-left: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Hydrogen Molecule (H-H) Inharmonic Oscillator</h1>
+    <div class="container">
+        <div>
+            <canvas id="simulation" width="500" height="300"></canvas>
+            <canvas id="potentialGraph" width="500" height="200"></canvas>
+        </div>
+        <div class="controls">
+            <p>Drag the hydrogen atoms with your mouse</p>
+            <p>Equilibrium distance: ~74 pm</p>
+            <div>
+                <label for="damping">Damping:</label>
+                <input type="range" id="damping" min="0" max="1" step="0.01" value="0.0">
+            </div>
+            <button id="reset">Reset Simulation</button>
+        </div>
+    </div>
+
+    <script>
+// Constants for Hydrogen molecule (H-H)
+const k = 510; // Force constant in N/m (not directly used here)
+const reducedMass = 8.367e-28; // Reduced mass of H2 in kg
+const equilibriumDistance = 74e-12; // Equilibrium bond distance in meters (74 pm)
+const dissociationEnergy = 7.17e-19; // Dissociation energy in Joules (4.48 eV)
+const a = 2.0e10; // Morse parameter in 1/m (adjusted to match equilibrium distance)
+
+// Simulation parameters
+const scale = 3e10 // scale factor: meters to pixels (3e11 px/m => 1 pm = 3 px)
+const pmToMeters = 1e-12;
+
+// DOM elements
+const simCanvas = document.getElementById('simulation');
+const graphCanvas = document.getElementById('potentialGraph');
+const resetBtn = document.getElementById('reset');
+const dampingControl = document.getElementById('damping');
+
+// Canvas contexts
+const simCtx = simCanvas.getContext('2d');
+const graphCtx = graphCanvas.getContext('2d');
+
+// Simulation state
+let atoms = [
+    { x: 200, y: 150, vx: 0, vy: 0, ax: 0, ay: 0, radius: 15, dragging: false },
+    { x: 300, y: 150, vx: 0, vy: 0, ax: 0, ay: 0, radius: 15, dragging: false }
+];
+
+let damping = 0.0;
+let mouse = { x: 0, y: 0, down: false };
+let lastTime = performance.now();
+
+// Morse potential function (Morse potential in Joules)
+function morsePotential(r) {
+    // r in meters
+    const diff = r - equilibriumDistance;
+    const expTerm = Math.exp(-a * diff);
+    return dissociationEnergy * (1 - expTerm) ** 2;
+}
+
+// Force from Morse potential (derivative wrt r, in Newtons)
+function morseForce(r) {
+    // dV/dr = 2 * a * De * exp(-a(r - re)) * (1 - exp(-a(r - re)))
+    // Force is negative gradient: F = -dV/dr
+    const diff = r - equilibriumDistance;
+    const expTerm = Math.exp(-a * diff);
+    const dVdr = 2 * a * dissociationEnergy * expTerm * (1 - expTerm);
+    return dVdr;
+}
+
+// Update simulation
+function update(dt) {
+    // Cap the maximum time step to prevent instability
+    dt = Math.min(dt, 0.1);
+
+    const dx = (atoms[1].x - atoms[0].x) / scale; // meters
+    const dy = (atoms[1].y - atoms[0].y) / scale; // meters
+    const r = Math.sqrt(dx * dx + dy * dy);
+
+    if (r === 0) return;
+
+    // Calculate force magnitude (N)
+    const forceMagnitude = morseForce(r);
+
+    // Force components
+    const forceX = forceMagnitude * (dx / r);
+    const forceY = forceMagnitude * (dy / r);
+
+    // Update atom 0 if not dragging
+    if (!atoms[0].dragging) {
+        atoms[0].ax = forceX / reducedMass;
+        atoms[0].vx += atoms[0].ax * dt;
+        atoms[0].vx *= (1 - damping);
+        atoms[0].x += atoms[0].vx * dt * scale;
+
+        atoms[0].ay = forceY / reducedMass;
+        atoms[0].vy += atoms[0].ay * dt;
+        atoms[0].vy *= (1 - damping);
+        atoms[0].y += atoms[0].vy * dt * scale;
+    }
+
+    // Update atom 1 (equal and opposite force)
+    if (!atoms[1].dragging) {
+        atoms[1].ax = -forceX / reducedMass;
+        atoms[1].vx += atoms[1].ax * dt;
+        atoms[1].vx *= (1 - damping);
+        atoms[1].x += atoms[1].vx * dt * scale;
+
+        atoms[1].ay = -forceY / reducedMass;
+        atoms[1].vy += atoms[1].ay * dt;
+        atoms[1].vy *= (1 - damping);
+        atoms[1].y += atoms[1].vy * dt * scale;
+    }
+
+    // Boundary checks
+    atoms.forEach(atom => {
+        if (atom.x < atom.radius) {
+            atom.x = atom.radius;
+            atom.vx *= -0.5;
+        }
+        if (atom.x > simCanvas.width - atom.radius) {
+            atom.x = simCanvas.width - atom.radius;
+            atom.vx *= -0.5;
+        }
+        if (atom.y < atom.radius) {
+            atom.y = atom.radius;
+            atom.vy *= -0.5;
+        }
+        if (atom.y > simCanvas.height - atom.radius) {
+            atom.y = simCanvas.height - atom.radius;
+            atom.vy *= -0.5;
+        }
+    });
+}
+
+// Draw simulation
+function draw() {
+    // Clear canvas
+    simCtx.clearRect(0, 0, simCanvas.width, simCanvas.height);
+
+    // Draw bond
+    simCtx.beginPath();
+    simCtx.moveTo(atoms[0].x, atoms[0].y);
+    simCtx.lineTo(atoms[1].x, atoms[1].y);
+    simCtx.strokeStyle = '#aaa';
+    simCtx.lineWidth = 2;
+    simCtx.stroke();
+
+    // Draw atoms and velocity/acceleration arrows
+    atoms.forEach((atom, i) => {
+        // Atom circle
+        simCtx.beginPath();
+        simCtx.arc(atom.x, atom.y, atom.radius, 0, Math.PI * 2);
+        simCtx.fillStyle = i === 0 ? '#f88' : '#88f';
+        simCtx.fill();
+        simCtx.strokeStyle = '#000';
+        simCtx.stroke();
+
+        // Velocity arrow (scaled for visibility)
+        {
+            drawArrow(simCtx, atom.x, atom.y,
+                atom.x + atom.vx * 10e10,  // scale velocity for visibility
+                atom.y + atom.vy * 10e10,
+                '#0a0');
+        }
+
+        // Acceleration arrow (scaled)
+        {
+            drawArrow(simCtx, atom.x, atom.y,
+                atom.x + atom.ax * 1e-1,  // scale acceleration for visibility
+                atom.y + atom.ay * 1e-1,
+                '#a00');
+        }
+    });
+
+    // Draw potential energy graph
+    drawPotentialGraph();
+}
+
+// Helper function to draw arrows
+function drawArrow(ctx, fromX, fromY, toX, toY, color) {
+    const headLength = 10;
+    const angle = Math.atan2(toY - fromY, toX - fromX);
+
+    ctx.beginPath();
+    ctx.moveTo(fromX, fromY);
+    ctx.lineTo(toX, toY);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Arrow head
+    ctx.beginPath();
+    ctx.moveTo(toX, toY);
+    ctx.lineTo(
+        toX - headLength * Math.cos(angle - Math.PI / 6),
+        toY - headLength * Math.sin(angle - Math.PI / 6)
+    );
+    ctx.lineTo(
+        toX - headLength * Math.cos(angle + Math.PI / 6),
+        toY - headLength * Math.sin(angle + Math.PI / 6)
+    );
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+}
+
+// Draw potential energy graph
+function drawPotentialGraph() {
+    const width = graphCanvas.width;
+    const height = graphCanvas.height;
+    const padding = 40;
+
+    graphCtx.clearRect(0, 0, width, height);
+
+    // Axes
+    graphCtx.beginPath();
+    graphCtx.moveTo(padding, padding);
+    graphCtx.lineTo(padding, height - padding);
+    graphCtx.lineTo(width - padding, height - padding);
+    graphCtx.strokeStyle = '#000';
+    graphCtx.lineWidth = 1;
+    graphCtx.stroke();
+
+    // Labels
+    graphCtx.font = '14px Arial';
+    graphCtx.fillStyle = '#000';
+    graphCtx.textAlign = 'center';
+    graphCtx.fillText('Distance (pm)', width / 2, height - 10);
+    graphCtx.save();
+    graphCtx.translate(15, height / 2);
+    graphCtx.rotate(-Math.PI / 2);
+    graphCtx.fillText('Potential Energy (eV)', 0, 0);
+    graphCtx.restore();
+
+    // Potential graph points
+    const minR = 20 * pmToMeters;  // 20 pm
+    const maxR = 200 * pmToMeters; // 200 pm
+    const steps = 300;
+
+    // Compute potential values and find max to scale
+    let maxPotential = 0;
+    let potentials = [];
+    for (let i = 0; i <= steps; i++) {
+        const r = minR + (maxR - minR) * (i / steps);
+        const V = morsePotential(r);
+        if (V > maxPotential) maxPotential = V;
+        potentials.push({ r, V });
+    }
+
+    // Convert maxPotential to eV
+    maxPotential = maxPotential / 1.60218e-19;
+
+    // Draw potential curve
+    graphCtx.beginPath();
+    for (let i = 0; i <= steps; i++) {
+        const { r, V } = potentials[i];
+        const x = padding + ((r - minR) / (maxR - minR)) * (width - 2 * padding);
+        const y = height - padding - (V / 1.60218e-19) / maxPotential * (height - 2 * padding);
+
+        if (i === 0) graphCtx.moveTo(x, y);
+        else graphCtx.lineTo(x, y);
+    }
+    graphCtx.strokeStyle = '#0077cc';
+    graphCtx.lineWidth = 2;
+    graphCtx.stroke();
+
+    // Mark current distance
+    const dx = (atoms[1].x - atoms[0].x) / scale;
+    const dy = (atoms[1].y - atoms[0].y) / scale;
+    const currentR = Math.sqrt(dx * dx + dy * dy);
+    if (currentR >= minR && currentR <= maxR) {
+        const x = padding + ((currentR - minR) / (maxR - minR)) * (width - 2 * padding);
+        const y = height - padding - (morsePotential(currentR) / 1.60218e-19) / maxPotential * (height - 2 * padding);
+        graphCtx.beginPath();
+        graphCtx.arc(x, y, 6, 0, 2 * Math.PI);
+        graphCtx.fillStyle = '#cc0000';
+        graphCtx.fill();
+        graphCtx.strokeStyle = '#000';
+        graphCtx.stroke();
+    }
+
+    // Draw ticks for distance axis (in pm)
+    graphCtx.fillStyle = '#000';
+    graphCtx.textAlign = 'center';
+    for (let rPm = 20; rPm <= 200; rPm += 20) {
+        const x = padding + ((rPm * pmToMeters - minR) / (maxR - minR)) * (width - 2 * padding);
+        graphCtx.beginPath();
+        graphCtx.moveTo(x, height - padding);
+        graphCtx.lineTo(x, height - padding + 6);
+        graphCtx.stroke();
+
+        graphCtx.fillText(rPm.toString(), x, height - padding + 20);
+    }
+
+    // Draw ticks for energy axis (in eV)
+    graphCtx.textAlign = 'right';
+    for (let eVTick = 0; eVTick <= Math.ceil(maxPotential); eVTick += 1) {
+        const y = height - padding - (eVTick / maxPotential) * (height - 2 * padding);
+        graphCtx.beginPath();
+        graphCtx.moveTo(padding - 6, y);
+        graphCtx.lineTo(padding, y);
+        graphCtx.stroke();
+
+        graphCtx.fillText(eVTick.toString(), padding - 10, y + 5);
+    }
+}
+
+// Mouse interaction for dragging atoms
+simCanvas.addEventListener('mousedown', e => {
+    const rect = simCanvas.getBoundingClientRect();
+    mouse.x = e.clientX - rect.left;
+    mouse.y = e.clientY - rect.top;
+    mouse.down = true;
+    atoms.forEach(atom => {
+        const dx = atom.x - mouse.x;
+        const dy = atom.y - mouse.y;
+        if (Math.sqrt(dx * dx + dy * dy) < atom.radius) {
+            atom.dragging = true;
+            atom.vx = 0;
+            atom.vy = 0;
+        }
+    });
+});
+
+simCanvas.addEventListener('mousemove', e => {
+    if (!mouse.down) return;
+    const rect = simCanvas.getBoundingClientRect();
+    mouse.x = e.clientX - rect.left;
+    mouse.y = e.clientY - rect.top;
+    atoms.forEach(atom => {
+        if (atom.dragging) {
+            atom.x = mouse.x;
+            atom.y = mouse.y;
+            atom.vx = 0;
+            atom.vy = 0;
+        }
+    });
+});
+
+simCanvas.addEventListener('mouseup', () => {
+    mouse.down = false;
+    atoms.forEach(atom => atom.dragging = false);
+});
+
+dampingControl.addEventListener('input', () => {
+    damping = parseFloat(dampingControl.value);
+});
+
+resetBtn.addEventListener('click', () => {
+    atoms[0].x = 200; atoms[0].y = 150;
+    atoms[0].vx = atoms[0].vy = 0;
+    atoms[1].x = 300; atoms[1].y = 150;
+    atoms[1].vx = atoms[1].vy = 0;
+});
+
+// Main loop
+function loop(timestamp) {
+    const dt = (timestamp - lastTime) / 10;
+    lastTime = timestamp;
+    update(dt);
+    draw();
+    requestAnimationFrame(loop);
+}
+
+// Initialize canvas size and start loop
+function init() {
+    simCanvas.width = 600;
+    simCanvas.height = 300;
+    graphCanvas.width = 600;
+    graphCanvas.height = 200;
+    draw();
+    requestAnimationFrame(loop);
+}
+
+init();
+
+    </script>
+</body>
+</html>

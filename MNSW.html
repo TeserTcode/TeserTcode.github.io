@@ -158,6 +158,7 @@
   <button id="beginner" class="active">Beginner</button>
   <button id="intermediate">Intermediate</button>
   <button id="expert">Expert</button>
+   <button id="custom">Custom</button>
 </div>
 
 
@@ -176,6 +177,19 @@ const difficultyLevels = {
   beginner: { rows: 9, cols: 9, mines: 10 },
   intermediate: { rows: 16, cols: 16, mines: 40 },
   expert: { rows: 16, cols: 30, mines: 99 }
+};
+document.getElementById('custom').onclick = () => {
+  let rows = parseInt(prompt("Enter number of rows: ", "16"));
+  let cols = parseInt(prompt("Enter number of columns:", "30"));
+  let mines = parseInt(prompt("Enter number of mines:", "99"));
+
+  // Basic validation
+  if (isNaN(rows)) rows = 16;
+  if (isNaN(cols)) cols = 30;
+  if (isNaN(mines) || mines < 1 || mines >= rows * cols) mines = Math.floor(rows * cols)-1;
+
+  difficultyLevels.custom = { rows, cols, mines };
+  initBoard("custom");
 };
 
 function initBoard(diff=currentDiff) {

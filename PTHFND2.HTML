@@ -1,0 +1,86 @@
+<canvas id="canvas" width="480" height="480"></canvas>
+<script>
+const SIZE = 12;
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const cellSize = canvas.width / SIZE;
+
+// Converts 1-indexed goal to 0-indexed
+const goal = { x: 4, y: 2 }; // gx=5, gy=3 (for example)
+const start = { x: 11 - 1, y: 12 - 1 }; // (10, 11)
+
+// Directions: [dx, dy]
+const dirs = [
+  [0, -1],  // up
+  [0, 1],   // down
+  [-1, 0],  // left
+  [1, 0]    // right
+];
+
+let longest = { len: -1, path: [] };
+
+// Explore with DFS
+function dfs(x, y, visited, path, dir, straightLen) {
+  if (x === goal.x && y === goal.y) {
+    if (straightLen > longest.len) {
+      longest = { len: straightLen, path: [...path, { x, y }] };
+    }
+    return;
+  }
+
+  for (let d = 0; d < 4; d++) {
+    const [dx, dy] = dirs[d];
+    const nx = x + dx, ny = y + dy;
+    const key = `${nx},${ny}`;
+
+    if (nx < 0 || ny < 0 || nx >= SIZE || ny >= SIZE) continue;
+    if (visited.has(key)) continue;
+
+    visited.add(key);
+    const isSameDir = (dir === null || dir[0] === dx && dir[1] === dy);
+    dfs(nx, ny, visited, [...path, { x, y }], [dx, dy], straightLen + (isSameDir ? 1 : 0));
+    visited.delete(key);
+  }
+}
+
+// Run DFS
+let visited = new Set();
+visited.add(`${start.x},${start.y}`);
+dfs(start.x, start.y, visited, [], null, 0);
+
+// Draw the grid
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Grid lines
+  ctx.strokeStyle = "#ccc";
+  for (let i = 0; i <= SIZE; i++) {
+    ctx.beginPath();
+    ctx.moveTo(0, i * cellSize);
+    ctx.lineTo(canvas.width, i * cellSize);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(i * cellSize, 0);
+    ctx.lineTo(i * cellSize, canvas.height);
+    ctx.stroke();
+  }
+
+  // Draw path
+  ctx.fillStyle = "blue";
+  for (let p of longest.path) {
+    ctx.fillRect(p.x * cellSize, p.y * cellSize, cellSize, cellSize);
+  }
+
+  // Draw start and goal
+  ctx.fillStyle = "green";
+  ctx.fillRect(start.x * cellSize, start.y * cellSize, cellSize, cellSize);
+
+  ctx.fillStyle = "red";
+  ctx.fillRect(goal.x * cellSize, goal.y * cellSize, cellSize, cellSize);
+}
+
+draw();
+console.log("Longest straight path length:", longest.len);
+console.log("Path:", longest.path.map(p => `(${p.x + 1},${p.y + 1})`).join(" → "));
+</script>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radon Transform & Inverse Radon Transform</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f4f4f9;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .canvas-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            background: white;
+        }
+        button {
+            padding: 10px 15px;
+            background: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        input {
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Radon Transform & Inverse Radon Transform</h1>
+        
+        <div>
+            <input type="file" id="imageInput" accept="image/*">
+            <button onclick="processImage()">Compute Radon Transform</button>
+            <button onclick="inverseRadon()">Inverse Radon (Reconstruct)</button>
+        </div>
+
+        <div class="canvas-container">
+            <div>
+                <h3>Original Image</h3>
+                <canvas id="originalCanvas" width="256" height="256"></canvas>
+            </div>
+            <div>
+                <h3>Radon Transform (Sinogram)</h3>
+                <canvas id="radonCanvas" width="360" height="256"></canvas>
+            </div>
+            <div>
+                <h3>Reconstructed Image</h3>
+                <canvas id="reconstructedCanvas" width="256" height="256"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const originalCanvas = document.getElementById('originalCanvas');
+        const radonCanvas = document.getElementById('radonCanvas');
+        const reconstructedCanvas = document.getElementById('reconstructedCanvas');
+        
+        const originalCtx = originalCanvas.getContext('2d');
+        const radonCtx = radonCanvas.getContext('2d');
+        const reconstructedCtx = reconstructedCanvas.getContext('2d');
+
+        let imageData = null;
+        let radonData = null;
+
+        // Load image and draw on canvas
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    // Draw original image (resized to 256x256)
+                    originalCtx.drawImage(img, 0, 0, 256, 256);
+                    imageData = originalCtx.getImageData(0, 0, 256, 256);
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Compute Radon Transform (Sinogram)
+        function processImage() {
+            if (!imageData) {
+                alert("Please upload an image first!");
+                return;
+            }
+
+            const width = imageData.width;
+            const height = imageData.height;
+            const numAngles = 180; // Number of projection angles (0° to 179°)
+            const maxDistance = Math.sqrt(width * width + height * height);
+            const radonWidth = numAngles;
+            const radonHeight = Math.floor(maxDistance);
+
+            radonData = new Array(numAngles).fill().map(() => new Array(radonHeight).fill(0));
+
+            // For each angle, compute line integrals (projections)
+            for (let angle = 0; angle < numAngles; angle++) {
+                const theta = (angle * Math.PI) / 180;
+                const cosTheta = Math.cos(theta);
+                const sinTheta = Math.sin(theta);
+
+                for (let d = 0; d < radonHeight; d++) {
+                    let sum = 0;
+                    let count = 0;
+
+                    // Parametric line: x = t * cosθ - s * sinθ, y = t * sinθ + s * cosθ
+                    for (let s = -radonHeight / 2; s < radonHeight / 2; s++) {
+                        const x = Math.floor(width / 2 + d * cosTheta - s * sinTheta);
+                        const y = Math.floor(height / 2 + d * sinTheta + s * cosTheta);
+
+                        if (x >= 0 && x < width && y >= 0 && y < height) {
+                            const idx = (y * width + x) * 4;
+                            const pixelValue = imageData.data[idx]; // Grayscale (R=G=B)
+                            sum += pixelValue;
+                            count++;
+                        }
+                    }
+
+                    if (count > 0) {
+                        radonData[angle][d] = sum / count; // Average intensity
+                    }
+                }
+            }
+
+            // Draw Radon Transform (Sinogram)
+            radonCtx.clearRect(0, 0, radonCanvas.width, radonCanvas.height);
+            for (let angle = 0; angle < numAngles; angle++) {
+                for (let d = 0; d < radonHeight; d++) {
+                    const intensity = Math.floor(radonData[angle][d]);
+                    radonCtx.fillStyle = `rgb(${intensity}, ${intensity}, ${intensity})`;
+                    radonCtx.fillRect(angle, d, 1, 1);
+                }
+            }
+        }
+
+        // Inverse Radon Transform (Backprojection)
+        function inverseRadon() {
+            if (!radonData) {
+                alert("Compute Radon Transform first!");
+                return;
+            }
+
+            const width = 256;
+            const height = 256;
+            const numAngles = 180;
+            const reconstructed = new Array(width * height).fill(0);
+
+            // For each pixel (x,y), accumulate contributions from all projections
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    let sum = 0;
+
+                    // Center coordinates
+                    const cx = x - width / 2;
+                    const cy = y - height / 2;
+
+                    for (let angle = 0; angle < numAngles; angle++) {
+                        const theta = (angle * Math.PI) / 180;
+                        const d = Math.floor(cx * Math.cos(theta) + cy * Math.sin(theta) + radonData[0].length / 2);
+
+                        if (d >= 0 && d < radonData[0].length) {
+                            sum += radonData[angle][d];
+                        }
+                    }
+
+                    reconstructed[y * width + x] = sum / numAngles; // Average backprojection
+                }
+            }
+
+            // Draw reconstructed image
+            const reconstructedImage = reconstructedCtx.createImageData(width, height);
+            for (let i = 0; i < reconstructed.length; i++) {
+                const val = Math.floor(reconstructed[i]);
+                reconstructedImage.data[i * 4] = val;     // R
+                reconstructedImage.data[i * 4 + 1] = val; // G
+                reconstructedImage.data[i * 4 + 2] = val; // B
+                reconstructedImage.data[i * 4 + 3] = 255; // Alpha
+            }
+            reconstructedCtx.putImageData(reconstructedImage, 0, 0);
+        }
+    </script>
+</body>
+</html>

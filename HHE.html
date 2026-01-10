@@ -120,18 +120,33 @@ vec4 rk(vec4 s,float h){
   vec4 k4=deriv(s+h*k3);
   return s+(k1+2.0*k2+2.0*k3+k4)*h/6.0;
 }
-
 vec3 palette(float t){
-  t=clamp(t,0.0,1.0);
-  if(COL==0) return mix(vec3(0,0,0.5),vec3(1,1,0),t);
-  if(COL==1){
-    float r=clamp(1.5*t,0,1);
-    float g=clamp(1.2*t*t,0,1);
-    return vec3(r,g,t*t*t);
+  // ensure t is in [0,1] using min/max directly
+  t = max(0.0, min(t, 1.0));
+
+  if(COL==0) {
+    return mix(vec3(0.0,0.0,0.5), vec3(1.0,1.0,0.0), t);
   }
-  if(COL==2) return vec3(t*t,0.7*t,1.0);
-  if(COL==3) return 0.5+0.5*cos(6.283*(t+vec3(0,0.33,0.67)));
-  return vec3(log(1.0+8.0*t));
+  if(COL==1){
+    // manually clamp each component
+    float r = min(max(1.5*t, 0.0), 1.0);
+    float g = min(max(1.2*t*t, 0.0), 1.0);
+    float b = t*t*t; // optional: could clamp if needed
+    return vec3(r, g, b);
+  }
+  if(COL==2){
+    float r = t*t;
+    float g = 0.7*t;
+    float b = 1.0;
+    return vec3(r, g, b); // values naturally in [0,1] for t in [0,1]
+  }
+  if(COL==3){
+    // vector math works directly; result stays in [0,1]
+    return 0.5 + 0.5*cos(6.283*(t + vec3(0.0,0.33,0.67)));
+  }
+
+  // fallback
+  return vec3(log(1.0 + 8.0*t));
 }
 
 void main(){

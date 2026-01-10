@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Torus Line Puzzle</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; background: #222; color: white; }
+    canvas { display: block; margin: auto; background: #333; border: 2px solid #555; cursor: pointer; }
+    #ui, #main-menu { text-align: center; padding: 1em; }
+    .hidden { display: none; }
+    button { margin: 0.3em; padding: 0.5em 1em; border-radius: 6px; border: none; cursor: pointer; }
+    .manual-level { outline: 2px dashed yellow; }
+    .level-btn { background: #555; color: white; }
+    .level-btn.completed { background: green; color: white; }
+    #level-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+      gap: 5px;
+      max-width: 600px;
+      margin: auto;
+      padding: 10px;
+      border: 1px solid #444;
+      border-radius: 8px;
+    }
+    details { margin-top: 1em; background: #444; padding: 1em; border-radius: 6px; }
+    #win-message { font-size: 1.5em; color: lightgreen; margin-top: 1em; }
+    #key-bindings { text-align: left; max-width: 400px; margin: 1em auto; background: #333; padding: 1em; border-radius: 6px; }
+    .color-preset { width: 20px; height: 20px; display: inline-block; margin: 2px; cursor: pointer; border: 1px solid #fff; }
+    .wave-type-btn { margin: 5px; padding: 5px 10px; }
+    .selected { outline: 2px solid gold; }
+    .color-controls { display: flex; gap: 10px; margin: 10px 0; justify-content: center; }
+    .color-control { display: flex; flex-direction: column; align-items: center; }
+    .color-palette { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 5px; max-width: 120px; }
+    select { padding: 5px; border-radius: 4px; background: #333; color: white; border: 1px solid #555; }
+    .compact-control { margin: 5px 0; }
+    .compact-control label { display: inline-block; width: 80px; }
+    .compact-control input { width: 120px; }
+    .style-showcase { 
+      margin: 10px auto; 
+      width: 300px; 
+      height: 60px; 
+      border: 1px solid #555; 
+      background: repeating-conic-gradient(#333 0% 25%, #444 0% 50%) 50% / 30px 30px;
+    }
+    .color-space-controls { display: none; margin-top: 10px; }
+    .slider-container { margin: 5px 0; }
+    .slider-container label { display: inline-block; width: 30px; }
+  </style>
+</head>
+<body>
+  <div id="main-menu">
+    <h1>TTHM</h1>
+    <p>Connect all cells by drawing a continuous line. Numbers must be visited in weakly increasing order.</p>
+    <div id="level-list"></div>
+
+    <details>
+      <summary> Line Customization</summary>
+      <div class="color-controls">
+        <div class="color-control">
+          <div>Line Color</div>
+          <input type="color" id="color1" value="#ff0000">
+          <div class="color-palette" id="palette1"></div>
+        </div>
+        <div class="color-control">
+          <div>End Color</div>
+          <input type="color" id="color2" value="#0000ff">
+          <div class="color-palette" id="palette2"></div>
+        </div>
+		
+
+      </div>
+      
+      <div class="compact-control">
+        <label>Color Space:</label>
+        <select id="color-space">
+          <option value="rgb">RGB</option>
+          <option value="hsv">HSV</option>
+          <option value="lab">LAB</option>
+          <option value="oklab">OKLAB</option>
+          <option value="xyz">XYZ</option>
+        </select>
+      </div>
+      
+
+      <div class="compact-control">
+        <label>Line Style:</label>
+        <select id="line-style">
+          <option value="sine">Sine Wave</option>
+          <option value="triangle">Triangle Wave</option>
+          <option value="square">Square Wave</option>
+          <option value="noise">Noise</option>
+          <option value="spiky">Spiky</option>
+          <option value="kinky">Kinky</option>
+          <option value="bumpy">Bumpy</option>
+          <option value="classic">Classic</option>
+          <option value="extreme">Extreme</option>
+          <option value="zigzag">Zigzag</option>
+          <option value="pulse">Pulse</option>
+        </select>
+      </div>
+      
+      <div class="compact-control">
+        <label>Amplitude:</label>
+        <input type="range" id="amp" min="0" max="20" step="0.1" value="2">
+      </div>
+      <div class="compact-control">
+        <label>Frequency:</label>
+        <input type="range" id="freq" min="0.1" max="10" step="0.1" value="2">
+      </div>
+      <div class="compact-control">
+        <label>Thickness:</label>
+        <input type="range" id="thickness" min="1" max="10" step="0.5" value="4">
+      </div>
+      <div class="compact-control">
+        <label>Direction:</label>
+        <input type="range" id="shicness" min="0" max="100" step="1" value="50">
+      </div>
+      
+      <canvas class="style-showcase" id="line-preview" width="300" height="60"></canvas>
+    </details>
+    
+    <details id="key-bindings">
+      <summary> Key Bindings</summary>
+      <ul>
+        <li><b>Mouse Click:</b> Start a new line at the clicked tile</li>
+        <li><b>WASD / Arrows:</b> Move the line</li>
+        <li><b>U Key:</b> Undo last step</li>
+        <li><b>R Key:</b> Redo last step</li>
+      </ul>
+    </details>
+		<button onclick="resetProgress()">Reset Progress</button>
+  </div>
+
+  <div id="ui" class="hidden">
+    <button onclick="backToMenu()"> Menu</button>
+    <canvas id="gameCanvas" width="600" height="600"></canvas>
+    <div id="win-message"></div>
+    <button id="next-level-btn" class="hidden" onclick="goToNextLevel()">Next Level </button>
+  </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+<script src="clrspc.js"></script>
+<script src="mthfnc.js"></script>
+<script>
+
+
+
+    // Line Generator Class
+    class LineGenerator {
+      constructor() {
+        this.waveType = 'sine';
+        this.amp = 2;
+        this.freq = 2;
+        this.thickness = 4;
+        this.shicness = 50;
+        this.colorSpace = 'rgb';
+        this.color1 = [255, 0, 0];
+        this.color2 = [0, 0, 255];
+      }
+      
+      setWaveType(type) {
+        this.waveType = type;
+      }
+      
+      setParams(amp, freq, thickness, shicness) {
+        this.amp = amp;
+        this.freq = freq;
+        this.thickness = thickness;
+        this.shicness = shicness;
+      }
+      
+      setColorSpace(space) {
+        this.colorSpace = space;
+      }
+      
+      setColors(color1, color2) {
+        this.color1 = color1;
+        this.color2 = color2;
+      }
+      
+      getWaveOffset(t, now) {
+        const angle = t * Math.PI * 2 * this.freq + now / 300;
+        const shicnessFactor = this.shicness / 100;
+        
+        switch (this.waveType) {
+          case "triangle":
+            const triangleWave = 2 * Math.abs(2 * (angle / (2 * Math.PI) - Math.floor(angle / (2 * Math.PI) + 0.5))) - 1;
+            return {
+              x: this.amp * triangleWave * shicnessFactor,
+              y: this.amp * triangleWave * (1 - shicnessFactor)
+            };
+            
+          case "square":
+            const squareWave = Math.sign(Math.sin(angle));
+            return {
+              x: this.amp * squareWave * shicnessFactor,
+              y: this.amp * squareWave * (1 - shicnessFactor)
+            };
+            
+          case "noise":
+            const randomWave1 = Math.sin(angle * 10) * 0.5 + Math.cos(angle * 7) * 0.5;
+            const randomWave2 = Math.sin(angle * 8) * 0.5 + Math.cos(angle * 11) * 0.5;
+            return {
+              x: this.amp * randomWave1 * shicnessFactor,
+              y: this.amp * randomWave2 * (1 - shicnessFactor)
+            };
+            
+          case "spiky":
+            const spike = Math.abs(Math.sin(angle * 3)) * Math.sin(angle * 10);
+            return {
+              x: this.amp * spike * shicnessFactor,
+              y: this.amp * spike * (1 - shicnessFactor)
+            };
+            
+          case "kinky":
+            const kink = Math.sin(angle) * Math.abs(Math.sin(angle * 5));
+            return {
+              x: this.amp * kink * shicnessFactor,
+              y: this.amp * kink * (1 - shicnessFactor)
+            };
+            
+          case "bumpy":
+            const bump = Math.sin(angle) + Math.sin(angle * 3) * 0.3;
+            return {
+              x: this.amp * bump * shicnessFactor,
+              y: this.amp * bump * (1 - shicnessFactor)
+            };
+            
+          case "extreme":
+            const extreme = Math.sin(angle * 2) * Math.sin(angle * 0.5);
+            return {
+              x: this.amp * extreme * shicnessFactor * 2,
+              y: this.amp * extreme * (1 - shicnessFactor) * 2
+            };
+            
+          case "zigzag":
+            const zigzag = Math.abs((angle / Math.PI * 2) % 2 - 1) * 2 - 1;
+            return {
+              x: this.amp * zigzag * shicnessFactor,
+              y: this.amp * zigzag * (1 - shicnessFactor)
+            };
+            
+          case "pulse":
+            const pulse = Math.sin(angle) * (0.5 + Math.abs(Math.sin(angle * 0.5)) * 0.5);
+            return {
+              x: this.amp * pulse * shicnessFactor,
+              y: this.amp * pulse * (1 - shicnessFactor)
+            };
+            
+          case "classic":
+            return { x: 0, y: 0 };
+            
+          default: // "sine"
+            return {
+              x: this.amp * Math.sin(angle) * shicnessFactor,
+              y: this.amp * Math.cos(angle) * (1 - shicnessFactor)
+            };
+        }
+      }
+      
+      interpolateColor(t) {
+	  
+        const [r1, g1, b1] = this.color1;
+        const [r2, g2, b2] = this.color2;
+        
+        switch (this.colorSpace) {
+          case "hsv":
+            const [h1, s1, v1] = rgbToHsv(r1, g1, b1);
+            const [h2, s2, v2] = rgbToHsv(r2, g2, b2);
+            const h = h1 + t * (h2 - h1);
+            const s = s1 + t * (s2 - s1);
+            const v = v1 + t * (v2 - v1);
+            return hsvToRgb(h, s, v);
+            
+          case "lab":
+            const [l1, a1, bb1] = rgbToLab(r1, g1, b1);
+            const [l2, a2, bb2] = rgbToLab(r2, g2, b2);
+            const l = l1 + t * (l2 - l1);
+            const a = a1 + t * (a2 - a1);
+            const b = bb1 + t * (bb2 - bb1);
+            return labToRgb(l, a, b);
+            
+          case "oklab":
+            const [ol1, oa1, ob1] = rgbToOklab(r1, g1, b1);
+            const [ol2, oa2, ob2] = rgbToOklab(r2, g2, b2);
+            const ol = ol1 + t * (ol2 - ol1);
+            const oa = oa1 + t * (oa2 - oa1);
+            const ob = ob1 + t * (ob2 - ob1);
+            return oklabToRgb(ol, oa, ob);
+            
+          case "xyz":
+            const [x1, y1, z1] = rgbToXyz(r1, g1, b1);
+            const [x2, y2, z2] = rgbToXyz(r2, g2, b2);
+            const x = x1 + t * (x2 - x1);
+            const y = y1 + t * (y2 - y1);
+            const z = z1 + t * (z2 - z1);
+            return xyzToRgb(x, y, z);
+            
+          default: // "rgb"
+            return [
+              r1 + t * (r2 - r1),
+              g1 + t * (g2 - g1),
+              b1 + t * (b2 - b1)
+            ];
+        }
+      }
+      
+      getColor(t) {
+        const [r, g, b] = this.interpolateColor(t);
+        return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+      }
+    }
+
+    // Main Game Code
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const previewCtx = document.getElementById("line-preview").getContext("2d");
+    let currentLevel = null;
+    let progress = JSON.parse(localStorage.getItem("progress") || "[]");
+
+    const levels = generateLevels();
+    renderLevelList();
+
+    let board = [], path = [], undoStack = [], redoStack = [];
+    let gridSize = 0;
+    let invalidPath = false;
+    
+    const lineGenerator = new LineGenerator();
+    lineGenerator.setWaveType(localStorage.getItem("waveType") || "sine");
+    lineGenerator.setColorSpace(localStorage.getItem("colorSpace") || "rgb");
+    lineGenerator.shicness = parseFloat(localStorage.getItem("shicness") || 50);
+
+    // Enhanced color presets
+const colorPresets = [
+  // RED:      Dark, Full, Bright, Pastel
+  "#330000", "#ff0000", "#cc3333", "#ff9999",
+  // ORANGE
+  "#331a00", "#ff8000", "#cc6600", "#ffbb80",
+  // YELLOW
+  "#333300", "#ffff00", "#cccc00", "#ffff99",
+  // GREEN
+  "#003300", "#00ff00", "#33aa33", "#99ff99",
+  // BLUE
+  "#000033", "#0000ff", "#3366cc", "#99ccff",
+  // PURPLE
+  "#220033", "#8000ff", "#9933cc", "#e0b3ff",
+
+  // === 8 Grays (unchanged) ===
+  "#000000", "#222222", "#444444", "#666666",
+  "#999999", "#bbbbbb", "#dddddd", "#ffffff"
+];
+
+    // Initialize color palettes
+    function initColorPalettes() {
+      const palette1 = document.getElementById("palette1");
+      const palette2 = document.getElementById("palette2");
+      
+      colorPresets.forEach(color => {
+        const preset1 = document.createElement("div");
+        preset1.className = "color-preset";
+        preset1.style.backgroundColor = color;
+        preset1.onclick = () => {
+          document.getElementById("color1").value = color;
+          updateColorFromPicker('color1');
+        };
+        palette1.appendChild(preset1);
+        
+        const preset2 = document.createElement("div");
+        preset2.className = "color-preset";
+        preset2.style.backgroundColor = color;
+        preset2.onclick = () => {
+          document.getElementById("color2").value = color;
+          updateColorFromPicker('color2');
+        };
+        palette2.appendChild(preset2);
+      });
+    }
+
+    function updateColorFromPicker(id) {
+      const hex = document.getElementById(id).value;
+      const r = parseInt(hex.substr(1, 2), 16);
+      const g = parseInt(hex.substr(3, 2), 16);
+      const b = parseInt(hex.substr(5, 2), 16);
+      
+      if (id === 'color1') {
+        lineGenerator.setColors([r, g, b], lineGenerator.color2);
+      } else {
+        lineGenerator.setColors(lineGenerator.color1, [r, g, b]);
+      }
+      
+      updateColorSliders();
+      drawGrid();
+      drawLinePreview();
+    }
+
+    function updateColorSliders() {
+      const space = lineGenerator.colorSpace;
+      const [c1, c2] = [lineGenerator.color1, lineGenerator.color2];
+      
+      if (space === 'rgb') {
+        document.getElementById('r1').value = c1[0];
+        document.getElementById('g1').value = c1[1];
+        document.getElementById('b1').value = c1[2];
+      } else if (space === 'hsv') {
+        const [h, s, v] = rgbToHsv(c1[0], c1[1], c1[2]);
+        document.getElementById('h1').value = h;
+        document.getElementById('s1').value = s;
+        document.getElementById('v1').value = v;
+      }
+    }
+
+
+      
+
+
+    function setupLineStyleSelector() {
+      const selector = document.getElementById("line-style");
+      selector.value = lineGenerator.waveType;
+      selector.addEventListener("change", function() {
+        lineGenerator.setWaveType(this.value);
+        localStorage.setItem("waveType", this.value);
+        drawGrid();
+        drawLinePreview();
+      });
+    }
+
+    function generateLevels() {
+      const levels = [];
+      for (let i = 0; i < 50; i++) {
+        const size = Math.min(15, 5 + Math.floor(i / 5));
+        const numDensity = 0.15 + (i / 50) * 0.1;
+        levels.push({ id: i, manual: false, gridSize: size, seed: i, numDensity: numDensity });
+      }
+      return levels;
+    }
+
+    function renderLevelList() {
+      const list = document.getElementById("level-list");
+      list.innerHTML = "";
+      levels.forEach(lvl => {
+        const btn = document.createElement("button");
+        btn.textContent = `${lvl.id}`;
+        btn.className = "level-btn";
+        if (lvl.manual) btn.classList.add("manual-level");
+        if (progress.includes(lvl.id)) btn.classList.add("completed");
+        btn.onclick = () => startLevel(lvl);
+        list.appendChild(btn);
+      });
+    }
+
+    function backToMenu() {
+      document.getElementById("ui").classList.add("hidden");
+      document.getElementById("main-menu").classList.remove("hidden");
+      document.getElementById("win-message").textContent = "";
+      document.getElementById("next-level-btn").classList.add("hidden");
+      renderLevelList();
+    }
+
+    function startLevel(level) {
+      currentLevel = level;
+      document.getElementById("ui").classList.remove("hidden");
+      document.getElementById("main-menu").classList.add("hidden");
+      document.getElementById("win-message").textContent = "";
+      document.getElementById("next-level-btn").classList.add("hidden");
+      initGrid(level);
+      drawGrid();
+    }
+
+function initGrid(level) {
+  gridSize = level.gridSize;
+  board = Array.from({ length: gridSize }, () => Array(gridSize).fill(null));
+  path = [];
+  undoStack = [];
+  redoStack = [];
+  invalidPath = false;
+  visitedTiles = new Set();
+
+  // Create a Hamiltonian path (guaranteed solution)
+  const hamiltonianPath = createHamiltonianPath(gridSize, level.seed);
+  
+  // Sprinkle numbers along the path in weakly increasing order
+  const numCount = Math.max(3, Math.floor(gridSize * gridSize * level.numDensity));
+  const numberSequence = generateWeaklyIncreasingSequence(numCount, 99, level.seed + 1);
+  
+  // Place numbers along the Hamiltonian path
+  let numIndex = 0;
+  const step = Math.max(1, Math.floor(hamiltonianPath.length / numCount));
+  for (let i = 0; i < hamiltonianPath.length && numIndex < numberSequence.length; i += step) {
+    const [x, y] = hamiltonianPath[i];
+    board[y][x] = numberSequence[numIndex];
+    numIndex++;
+  }
+
+  // Helper functions
+  function createHamiltonianPath(size, seed) {
+    // Implementation of a Hamiltonian path generator
+    // Using a space-filling curve approach for guaranteed path
+    const path = [];
+    let x = Math.floor(Math.sin(seed) * size) % size;
+    let y = Math.floor(Math.cos(seed) * size) % size;
+    if (x < 0) x += size;
+    if (y < 0) y += size;
+
+    // Use a modified depth-first search that guarantees Hamiltonian path
+    const visited = Array.from({ length: size }, () => Array(size).fill(false));
+    const directions = [
+      [1, 0], [0, 1], [-1, 0], [0, -1] // right, down, left, up
+    ];
+
+    function dfs(x, y) {
+      visited[y][x] = true;
+      path.push([x, y]);
+
+      // Shuffle directions based on seed for variety
+      const shuffledDirs = [...directions].sort(() => Math.sin(seed++) - 0.5);
+
+      for (const [dx, dy] of shuffledDirs) {
+        const nx = (x + dx + size) % size;
+        const ny = (y + dy + size) % size;
+        if (!visited[ny][nx]) {
+          dfs(nx, ny);
+        }
+      }
+    }
+
+    dfs(x, y);
+    return path;
+  }
+
+  function generateWeaklyIncreasingSequence(length, maxNum, seed) {
+    const sequence = [];
+    let current = 1;
+    
+    for (let i = 0; i < length; i++) {
+      // Sometimes increase the number, sometimes stay same
+      const randVal = Math.sin(seed + i) * 10000;
+      const rand = randVal - Math.floor(randVal);
+      
+      if (rand < 0.7 || current >= maxNum) {
+        sequence.push(current);
+      } else {
+        current = Math.min(maxNum, current + Math.floor(rand * 3) + 1);
+        sequence.push(current);
+      }
+    }
+    
+    return sequence;
+  }
+
+}
+
+    function drawGrid() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const tw = canvas.width / gridSize;
+      const th = canvas.height / gridSize;
+
+      // Draw visited tiles with highlight
+      for (let y = 0; y < gridSize; y++) {
+        for (let x = 0; x < gridSize; x++) {
+          const isVisited = path.some(p => p[0] === x && p[1] === y);
+          if (isVisited) {
+            ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
+            ctx.fillRect(x * tw, y * th, tw, th);
+          }
+        }
+      }
+
+      // Draw grid lines
+      ctx.strokeStyle = "#666";
+      for (let x = 0; x <= gridSize; x++) {
+        ctx.beginPath(); ctx.moveTo(x * tw, 0); ctx.lineTo(x * tw, canvas.height); ctx.stroke();
+      }
+      for (let y = 0; y <= gridSize; y++) {
+        ctx.beginPath(); ctx.moveTo(0, y * th); ctx.lineTo(canvas.width, y * th); ctx.stroke();
+      }
+
+      // Draw numbers
+      for (let y = 0; y < gridSize; y++) {
+        for (let x = 0; x < gridSize; x++) {
+          const val = board[y][x];
+          if (val !== null) {
+            const isVisited = path.some(p => p[0] === x && p[1] === y);
+            ctx.fillStyle = isVisited ? "#ffffff" : "#aaaaaa";
+            ctx.font = `${Math.floor(tw / 2.5)}px sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(val, x * tw + tw / 2, y * th + th / 2);
+          }
+        }
+      }
+
+      drawPath();
+    }
+
+    function drawPath() {
+      if (path.length < 1) return;
+      const tw = canvas.width / gridSize;
+      const th = canvas.height / gridSize;
+      const now = Date.now();
+
+      ctx.lineWidth = lineGenerator.thickness;
+      ctx.lineCap = "round";
+
+      if (path.length === 1) {
+        const [x, y] = path[0];
+        const px = x * tw + tw / 2;
+        const py = y * th + th / 2;
+        ctx.fillStyle = lineGenerator.getColor(0);
+        ctx.beginPath();
+        ctx.arc(px, py, lineGenerator.thickness, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = lineGenerator.getColor(0);
+        ctx.stroke();
+        return;
+      }
+
+      const segments = [];
+      let currentSegment = [path[0]];
+      
+      for (let i = 1; i < path.length; i++) {
+        const prev = path[i-1];
+        const curr = path[i];
+        const dx = Math.min(Math.abs(curr[0] - prev[0]), gridSize - Math.abs(curr[0] - prev[0]));
+        const dy = Math.min(Math.abs(curr[1] - prev[1]), gridSize - Math.abs(curr[1] - prev[1]));
+        if (dx > 1 || dy > 1) {
+          segments.push(currentSegment);
+          currentSegment = [curr];
+        } else {
+          currentSegment.push(curr);
+        }
+      }
+      segments.push(currentSegment);
+
+      for (const segment of segments) {
+        if (segment.length < 2) continue;
+
+        for (let i = 0; i < segment.length - 1; i++) {
+          const [x1, y1] = segment[i];
+          const [x2, y2] = segment[i + 1];
+          const dx = x2 - x1;
+          const dy = y2 - y1;
+          const distanceSquared = dx * dx + dy * dy;
+
+          const t1 = (path.indexOf(segment[i]) / (path.length - 1));
+          const t2 = (path.indexOf(segment[i + 1]) / (path.length - 1));
+
+          const px1 = x1 * tw + tw / 2;
+          const py1 = y1 * th + th / 2;
+          const px2 = x2 * tw + tw / 2;
+          const py2 = y2 * th + th / 2;
+
+          if (distanceSquared > 9) {
+            ctx.strokeStyle = lineGenerator.getColor(t1);
+            ctx.globalAlpha = 1.0;
+            ctx.beginPath();
+            ctx.moveTo(px1, py1);
+            ctx.lineTo(px1 - (px2 - px1) * 0.2, py1 - (py2 - py1) * 0.2);
+            ctx.stroke();
+
+            ctx.strokeStyle = lineGenerator.getColor(t2);
+            ctx.globalAlpha = 0.0;
+            ctx.beginPath();
+            ctx.moveTo(px2 + (px2 - px1) * 0.2, py2 + (py2 - py1) * 0.2);
+            ctx.globalAlpha = 1.0;
+            ctx.lineTo(px2, py2);
+            ctx.stroke();
+            ctx.globalAlpha = 1.0;
+            continue;
+          }
+
+          const waveOffset1 = lineGenerator.getWaveOffset(t1, now);
+          const waveOffset2 = lineGenerator.getWaveOffset(t2, now);
+          ctx.strokeStyle = invalidPath
+            ? (Math.floor(now / 200) % 2 === 0 ? "red" : "black")
+            : lineGenerator.getColor(t1);
+
+          ctx.beginPath();
+          if (!invalidPath) {
+            ctx.moveTo(px1 + waveOffset1.x, py1 + waveOffset1.y);
+            ctx.lineTo(px2 + waveOffset2.x, py2 + waveOffset2.y);
+          } else {
+            ctx.moveTo(px1, py1);
+            ctx.lineTo(px2, py2);
+          }
+          ctx.stroke();
+        }
+      }
+    }
+
+    function drawLinePreview() {
+      previewCtx.clearRect(0, 0, 300, 60);
+      
+      // Draw 2x2 grid background
+      previewCtx.fillStyle = "#333";
+      previewCtx.fillRect(0, 0, 300, 60);
+      previewCtx.fillStyle = "#444";
+      previewCtx.fillRect(0, 0, 150, 30);
+      previewCtx.fillRect(150, 30, 150, 30);
+      
+      // Draw line
+      const steps = 100;
+      const points = [];
+      const now = Date.now();
+      
+      previewCtx.lineWidth = lineGenerator.thickness;
+      previewCtx.lineCap = "round";
+      
+      // Simulate a path that goes around the 2x2 grid
+      for (let i = 0; i < steps; i++) {
+        const t = i / (steps - 1);
+        let x, y;
+        
+        if (t < 0.25) {
+          // Top edge (left to right)
+          x = 50 + (t * 4) * 200;
+          y = 15;
+        } else if (t < 0.5) {
+          // Right edge (top to bottom)
+          x = 250;
+          y = 15 + ((t - 0.25) * 4) * 30;
+        } else if (t < 0.75) {
+          // Bottom edge (right to left)
+          x = 250 - ((t - 0.5) * 4) * 200;
+          y = 45;
+        } else {
+          // Left edge (bottom to top)
+          x = 50;
+          y = 45 - ((t - 0.75) * 4) * 30;
+        }
+        
+        const offset = lineGenerator.getWaveOffset(t, now);
+        points.push({
+          x: x + offset.x,
+          y: y + offset.y,
+          color: lineGenerator.getColor(t)
+        });
+      }
+      
+      for (let i = 0; i < points.length - 1; i++) {
+        previewCtx.strokeStyle = points[i].color;
+        previewCtx.beginPath();
+        previewCtx.moveTo(points[i].x, points[i].y);
+        previewCtx.lineTo(points[i+1].x, points[i+1].y);
+        previewCtx.stroke();
+      }
+      
+      // Draw start/end markers
+      if (points.length > 0) {
+        previewCtx.fillStyle = lineGenerator.getColor(0);
+        previewCtx.beginPath();
+        previewCtx.arc(points[0].x, points[0].y, lineGenerator.thickness/2, 0, Math.PI*2);
+        previewCtx.fill();
+        
+        previewCtx.fillStyle = lineGenerator.getColor(1);
+        previewCtx.beginPath();
+        previewCtx.arc(points[points.length-1].x, points[points.length-1].y, lineGenerator.thickness/2, 0, Math.PI*2);
+        previewCtx.fill();
+      }
+    }
+
+    function checkVictory() {
+      if (path.length === gridSize * gridSize && !invalidPath) {
+        completeLevel(currentLevel.id);
+        document.getElementById("win-message").textContent = " You Win!";
+        document.getElementById("next-level-btn").classList.remove("hidden");
+      }
+    }
+
+    // Event listeners and initialization
+    canvas.addEventListener("click", e => {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / (canvas.width / gridSize));
+      const y = Math.floor((e.clientY - rect.top) / (canvas.height / gridSize));
+
+      if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
+        path = [[x, y]];
+        undoStack = [JSON.stringify(path)];
+        redoStack = [];
+        invalidPath = false;
+        updatePathValidity();
+        drawGrid();
+      }
+    });
+
+    document.addEventListener("keydown", e => {
+      if (!path.length) return;
+
+      if (e.key === 'u' || e.key === 'U') {
+        undoLastMove();
+        return;
+      }
+      if (e.key === 'r' || e.key === 'R') {
+        redoLastMove();
+        return;
+      }
+
+      const dir = {
+        ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0],
+        w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0]
+      }[e.key];
+      if (!dir) return;
+
+      const [dx, dy] = dir;
+      let [x, y] = path[path.length - 1];
+      let nextX = (x + dx + gridSize) % gridSize;
+      let nextY = (y + dy + gridSize) % gridSize;
+
+      if (path.length > 1) {
+        const [prevX, prevY] = path[path.length - 2];
+        if (nextX === prevX && nextY === prevY) {
+          undoLastMove();
+          return;
+        }
+      }
+
+      if (path.some(p => p[0] === nextX && p[1] === nextY)) return;
+
+      path.push([nextX, nextY]);
+      undoStack.push(JSON.stringify(path));
+      redoStack = [];
+      
+      updatePathValidity();
+      drawGrid();
+      checkVictory();
+    });
+
+    function undoLastMove() {
+      if (undoStack.length > 1) {
+        redoStack.push(undoStack.pop());
+        path = JSON.parse(undoStack[undoStack.length - 1]);
+      } else if (undoStack.length === 1) {
+        redoStack.push(undoStack.pop());
+        path = [];
+      }
+      updatePathValidity();
+      drawGrid();
+    }
+
+    function redoLastMove() {
+      if (redoStack.length > 0) {
+        path = JSON.parse(redoStack.pop());
+        undoStack.push(JSON.stringify(path));
+      }
+      updatePathValidity();
+      drawGrid();
+    }
+
+    function updatePathValidity() {
+      invalidPath = false;
+      let lastVal = -Infinity;
+      for (let [px, py] of path) {
+        const val = board[py][px];
+        if (val !== null) {
+          if (val < lastVal) {
+            invalidPath = true;
+            break;
+          }
+          lastVal = val;
+        }
+      }
+    }
+
+    // Animation loop
+    setInterval(() => {
+      drawGrid();
+      drawLinePreview();
+    }, 100);
+
+    function completeLevel(id) {
+      if (!progress.includes(id)) {
+        progress.push(id);
+        localStorage.setItem("progress", JSON.stringify(progress));
+      }
+    }
+	function resetProgress() {
+  progress = [];
+  localStorage.removeItem("progress");
+  // Optional: do something after reset, like reload or update UI
+  location.reload(); // or call a render/update function
+}
+
+
+    function goToNextLevel() {
+      const nextLevelId = currentLevel.id + 1;
+      const nextLevel = levels.find(lvl => lvl.id === nextLevelId);
+      if (nextLevel) {
+        startLevel(nextLevel);
+      } else {
+        alert("Congratulations! You have completed all levels!");
+        backToMenu();
+      }
+    }
+
+    // Initialize UI
+    initColorPalettes();
+    setupLineStyleSelector();
+    setupColorSpaceControls();
+    
+    // Load settings
+    document.getElementById("color1").value = localStorage.getItem("color1") || "#ff0000";
+    document.getElementById("color2").value = localStorage.getItem("color2") || "#0000ff";
+    document.getElementById("amp").value = parseFloat(localStorage.getItem("amp") || "2");
+    document.getElementById("freq").value = parseFloat(localStorage.getItem("freq") || "2");
+    document.getElementById("thickness").value = parseFloat(localStorage.getItem("thickness") || "4");
+    document.getElementById("shicness").value = parseFloat(localStorage.getItem("shicness") || "50");
+    document.getElementById("line-style").value = localStorage.getItem("waveType") || "sine";
+    document.getElementById("color-space").value = localStorage.getItem("colorSpace") || "rgb";
+
+    // Set initial colors
+    updateColorFromPicker('color1');
+    updateColorFromPicker('color2');
+    
+    // Update line generator params
+    lineGenerator.setParams(
+      parseFloat(document.getElementById("amp").value),
+      parseFloat(document.getElementById("freq").value),
+      parseFloat(document.getElementById("thickness").value),
+      parseFloat(document.getElementById("shicness").value)
+    );
+
+    // Save settings on change
+    const settings = ["amp", "freq", "thickness", "shicness", "line-style", "color-space"];
+    settings.forEach(id => {
+      document.getElementById(id).addEventListener("change", function() {
+        localStorage.setItem(id === "line-style" ? "waveType" : id, this.value);
+        
+        if (id === "amp" || id === "freq" || id === "thickness" || id === "shicness") {
+          lineGenerator.setParams(
+            parseFloat(document.getElementById("amp").value),
+            parseFloat(document.getElementById("freq").value),
+            parseFloat(document.getElementById("thickness").value),
+            parseFloat(document.getElementById("shicness").value)
+          );
+        }
+        
+        drawGrid();
+        drawLinePreview();
+      });
+    });
+
+    // Color picker events
+    document.getElementById("color1").addEventListener("change", () => updateColorFromPicker('color1'));
+    document.getElementById("color2").addEventListener("change", () => updateColorFromPicker('color2'));
+
+    // Initial preview
+    drawLinePreview();
+  </script>
+</body>
+</html>

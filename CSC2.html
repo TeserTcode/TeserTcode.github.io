@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Complex Superfunction Calculator</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      background: #000;
+      color: #fff;
+      padding: 6px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    main {
+      display: flex;
+      flex: 1;
+    }
+    #left-panel {
+      width: 230px;
+      background: #eee;
+      border-right: 5px solid #000;
+      border-top: 10px solid black;
+      box-shadow: inset gray 0px 0px 60px -6px;
+      padding: 5px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+    #controls {
+      flex: 1;
+      overflow-y: auto;
+    }
+    #controls label {
+      margin-top: 6px;
+      display: block;
+    }
+    #controls input, 
+    #controls select {
+      width: 100%;
+      font-size: 12px;
+      margin-top: 2px;
+      box-sizing: border-box;
+    }
+    #controls input[type=range] {
+      width: 100%;
+    }
+    #bottom-controls {
+      margin-top: 8px;
+    }
+    #bottom-controls button {
+      width: 100%;
+      padding: 6px;
+      margin-bottom: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    #right-panel {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 5px solid #000;
+      border-top: 10px solid black;
+      background-color: #eeeeee;
+      box-shadow: inset gray 0px 0px 60px -6px;
+      position: relative;
+    }
+    canvas {
+      width: 400px;   /* always visually 400px */
+      height: 400px;  /* always visually 400px */
+      border: 1px solid #333;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    Complex Superfunction Calculator
+  </header>
+  <main>
+    <div id="left-panel">
+      <div id="controls">
+        <label>Function</label>
+        <input type="text" id="Func" value="2^x">
+
+        <label>Width</label>
+        <input type="number" id="width" value="30">
+
+        <label>Height</label>
+        <input type="number" id="height" value="30">
+
+        <label>Min Re</label>
+        <input type="number" id="minRe" value="-7">
+        <label>Max Re</label>
+        <input type="number" id="maxRe" value="7">
+
+        <label>Min Im</label>
+        <input type="number" id="minIm" value="-7">
+        <label>Max Im</label>
+        <input type="number" id="maxIm" value="7">
+
+        <label>Magnitude → Lightness Expr</label>
+        <input type="text" id="magnitudeToLightnessExpr" value="tanh(x)"><!-- log(x+1) -->
+
+          <label for="colorMode">Color Mode</label>
+        <select id="colorMode">
+<option value="hsv">HSV</option>
+<option value="hsl">HSL</option>
+<option value="hcl">HCL</option>
+<option value="ycbcr">YCbCr</option>
+<option value="ydbdr">YDbDr</option>
+<option value="ycocg">YCoCg</option>
+<option value="ypbpr">YPbPr</option>
+<option value="cielch">CIELCH</option>
+<option value="qhsv">qHSV</option>
+<option value="qhsl">qHSL</option>
+<option value="hqv">HQV</option>
+<option value="hsm">HSM</option>
+<option value="hsg">HSG</option>
+<option value="hsh">HSH</option>
+<option value="2d">2d</option>
+<option value="contour">Contour</option>
+<option value="pcontour">Polar Contour</option>
+<option value="isolines">Isolines</option> 
+<option value="neon">Neon</option>
+<option value="differ">Differ</option>
+<option value="purify">Purify</option>
+<option value="real">Real</option>
+<option value="imag">Imaginary</option>
+<option value="magnitude">Magnitude</option>
+<option value="magnitudeold">Magnitude 2</option>
+<option value="magnitudecolour">Magnitude 3</option>
+<option value="mag4">Magnitude 4</option>
+<option value="realimagheat">Real Imag Map</option>
+<option value="trisect">Trisection</option>
+<option value="quadrant">Quadrant</option>
+<option value="hexasect">Hexasection</option>
+<option value="octant">Octant</option>
+<option value="dodecasect">Dodecasection</option>
+<option value="griddistort">Grid Distort</option>
+<option value="griddistorts">Grid Distort Solid</option>
+<option value="griddistortbw">Grid Distort BW</option>
+<option value="upperplanebw">Upper Plane BW</option>
+<option value="unitcirclebw">Unit Circle BW</option>
+<option value="freergb">Free RGB [r,g,b]</option>
+<option value="freehsv">Free HSV [h,s,v]</option>
+<option value="freehsl">Free HSL [h,s,l]</option>
+</select>
+
+        <label>Saturation / Chroma</label>
+        <input type="range" id="saturationChroma" min="0" max="100" value="100">
+
+        <label>Lightness</label>
+        <input type="range" id="lightness" min="0" max="100" value="100">
+
+        <!-- New controls -->
+        <label>lim inf</label>
+        <input type="number" id="limInf" value="10">
+
+        <label>Start Pos (rootfinding)</label>
+        <input type="text" id="startPos" value="1+i">
+
+        <label>Rootfinding Method</label>
+        <select id="rootfindingMethod">
+          <option value="newton">Newton</option>
+		  <option selected value="snewton">Smart Newton</option>
+		</select>
+
+        <label>Dummy Value</label>
+        <input type="number" id="dummyValue" value="2">
+
+        <label><input type="checkbox" id="forceConj" checked> Force f(conj)=conj(f)</label>
+
+        <label>Inverse of Function</label>
+        <input type="text" id="inverseFunc" value="log2(x)">
+        <label><input type="checkbox" id="useInverse"> Use inverse</label>
+
+        <label>Secondary Parameter</label>
+        <input type="text" id="secondaryParam" value="1+0.1i">
+
+        <label><input type="checkbox" id="usePrePost"> Use pre-post functions</label>
+        <label>Prefunction</label>
+        <input type="text" id="preFunc" value="x">
+        <label>Postfunction</label>
+        <input type="text" id="postFunc" value="x">
+      </div>
+
+      <div id="bottom-controls">
+        <button onclick="draw()">Generate</button>
+        <label>Presets</label>
+        <select id="presetSelect">
+          <option value="direct">Direct</option>
+		  <option value="dervv">Derivative</option>
+		  <option value="invv">Inverse</option>
+		  
+		  <option value="-">----------Superfunction and vars--------</option>
+		  
+		  <option value="knes">Kneser like</option>
+		  <option value="uknes">Uncentered Kneser like</option>
+		  <option value="gknes">Generalized Kneser like</option>
+		  <option value="regint">Regular Iteration</option>
+		  <option value="adapt">Adaptive Superfunction</option>
+		  
+		  
+		  <option value="label">Levy Formulation</option>
+		   <option value="label2">Levy Formulation flipped</option>
+		  
+		   <option value="-">----------Functional Eqs-----------</option>
+		  
+		  <option value="abel">Abels Equation</option>
+		  <option value="iabel">Inverse Abels Equation</option>
+
+		  
+		  <option value="schr">Schroders Equation</option>
+		  <option value="ischr">Inverse Schroders Equation</option>
+		  
+		  
+		  <option value="botc">Botchers Equation</option>
+		  <option value="ibotc">Inverse Botchers Equation</option>
+		  
+		  <option value="-">----------Conjugate-----------</option>
+		  
+		  <option value="cabel">Conjugate Abels Equation</option>
+		  <option value="ciabel">Inverse Conjugate Abels Equation</option>
+		  <option value="cschr">Conjugate Schroders Equation</option>
+		  <option value="cischr">Inverse Conjugate Schroders Equation</option>
+		  <option value="cbotc">Conjugate Botchers Equation</option>
+		  <option value="cibotc">Inverse Conjugate Botchers Equation</option>
+		  
+        </select>
+      </div>
+    </div>
+
+    <div id="right-panel">
+      <canvas id="myCanvas"></canvas>
+    </div>
+  </main>
+
+  <!-- Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+  <script src="mthfnc.js"></script>
+  <script src="clrspc.js"></script>
+
+  <script>
+    // Make DOM elements global
+    const canvas = document.getElementById("myCanvas");
+    const ctx = canvas.getContext("2d");
+    for (let el of document.querySelectorAll("input,select,button,canvas")) {
+      window[el.id] = el;
+    }
+	
+	// Explicit globals for new controls
+window.limInf            = document.getElementById("limInf");
+window.startPos          = document.getElementById("startPos");
+window.rootfindingMethod = document.getElementById("rootfindingMethod");
+window.dummyValue        = document.getElementById("dummyValue");
+window.forceConj         = document.getElementById("forceConj");
+window.inverseFunc       = document.getElementById("inverseFunc");
+window.useInverse        = document.getElementById("useInverse");
+window.secondaryParam    = document.getElementById("secondaryParam");
+window.usePrePost        = document.getElementById("usePrePost");
+window.preFunc           = document.getElementById("preFunc");
+window.postFunc          = document.getElementById("postFunc");
+
+let N=10;
+    function draw() {
+	
+ N   = parseInt(limInf.value, 10);
+let c    = parseFloat(dummyValue.value);
+
+// Complex values
+let spar = parseComplex(startPos.value);
+let z= parseComplex(secondaryParam.value);
+
+// Strings
+let rMode  = rootfindingMethod.value;
+let inverseExpr = inverseFunc.value;
+let pre     = preFunc.value;
+let post    = postFunc.value;
+
+// Booleans
+let forceConjVal= forceConj.checked;
+let useInvVal   = useInverse.checked;
+let usePrePostVal = usePrePost.checked;
+	
+      const w = parseInt(width.value,10);
+      const h = parseInt(height.value,10);
+      canvas.width = w;  // internal resolution
+      canvas.height = h; // internal resolution
+
+      const minR = parseFloat(minRe.value);
+      const maxR = parseFloat(maxRe.value);
+      const minI = parseFloat(minIm.value);
+      const maxI = parseFloat(maxIm.value);
+
+      const magExpr = magnitudeToLightnessExpr.value;
+      const cMode = colorMode.value;
+	  const Mode = presetSelect.value;
+      const sat = parseFloat(saturationChroma.value);
+      const light = parseFloat(lightness.value);
+
+      const imgData = ctx.createImageData(w,h);
+	  
+	const func = document.getElementById('Func').value.trim();
+
+      for (let y=0;y<h;y++){
+        for (let x=0;x<w;x++){
+          const re = minR + (x/w)*(maxR-minR);
+          const im = maxI - (y/h)*(maxI-minI);
+          const complexValue = math.complex(re,im);
+		  
+          let funcValue = complexValue; // placeholder
+			
+			if(usePrePostVal)funcValue=eval(pre,funcValue);
+			if(forceConjVal && im<0)funcValue=conj(funcValue);
+			
+			switch(Mode){
+			case "direct": funcValue = eval(func,funcValue);break;
+			case "dervv": funcValue = derv(func,funcValue);break;
+			case "invv": funcValue = inv(func,funcValue,spar,rMode);break;
+			
+			case "knes": funcValue = knes(func,funcValue,z,spar,rMode);break;
+			case "uknes": funcValue = uknes(func,funcValue,z,spar,rMode);break;
+			case "gknes": funcValue = gknes(func,funcValue,z,spar,rMode);break;
+			case "regint": funcValue = regit(func,funcValue,z,spar,rMode);break;
+			
+			case "adapt": funcValue = adaptive(func,funcValue,z,spar,rMode);break;
+			
+			case "abel": funcValue = abel(func,funcValue,spar,rMode);break;
+			case "iabel": funcValue = iabel(func,funcValue,spar,rMode);break;
+			case "schr": funcValue = schr(func,funcValue,spar,rMode);break;
+			case "ischr": funcValue = ischr(func,funcValue,spar,rMode);break;
+			case "botc": funcValue = botc(func,funcValue,spar,rMode);break;
+			case "ibotc": funcValue = ibotc(func,funcValue,spar,rMode);break;
+			
+			
+			
+			
+			case "label": funcValue = levyabel(func,funcValue,z);break;
+			case "label2": funcValue = levyabel(func,z,funcValue);break;
+			
+			
+			}
+			if(forceConjVal && im<0)funcValue=conj(funcValue);
+			if(usePrePostVal)funcValue=eval(post,funcValue);
+
+          const color = complexToColor(complexValue,funcValue,magExpr,cMode,sat,light,null,0.1,1);
+          const idx = (y*w+x)*4;
+          imgData.data[idx]   = color[0];
+          imgData.data[idx+1] = color[1];
+          imgData.data[idx+2] = color[2];
+          imgData.data[idx+3] = 255;
+        }
+      }
+      ctx.putImageData(imgData,0,0);
+    }
+	
+	
+	function eval(func,x){return evale(func,{x:x})}
+	
+	function derv(func,x){let h = math.complex(pow(10,-7), 0);return div(sub(evale(func,{x:add(x,h)}),evale(func,{x:sub(x,h)})),mul(2,h))}
+	
+	function inv(func, target, init, meth="newton",fast=0) {
+  let maxIter = N;
+  let tol = 1e-5;
+  let y = init; // initial guess (can adjust)
+
+
+if(fast && useInverse.checked)return eval(inverseFunc.value,target)
+
+  switch (meth) {
+   
+   case "newton":
+      for (let i = 0; i < maxIter; i++) {
+        let fy = evale(func, {x: y});
+        let diff = sub(fy, target);
+        if (mag(diff) < tol) {return y;}
+        y = sub(y,div(diff,derv(func,y)));
+      }
+      break;
+	  
+	case "snewton": {
+	tol=0.01
+  let starts = [
+  //  target,                                // original guess
+    math.log(target),                      // log(x)
+ //   math.sqrt(target)                      // sqrt(x)
+  ];
+
+  for (let guess of starts) {
+    let cand = guess;
+    for (let i = 0; i < maxIter; i++) {
+      let fy = evale(func, {x: cand});
+      let diff = sub(fy, target);
+      if (mag(diff) < tol) return cand;
+
+      cand = sub(cand, div(diff, derv(func, cand)));
+    }
+  }
+  break;
+}
+
+	  
+	  default:return target;}
+  return y;
+}
+	/*
+function fix(func,init, meth="newton") {
+  fix.cache ||= new Map();
+  let key = func+"|"+meth;
+  if (fix.cache.has(key)) return fix.cache.get(key);
+  let res = inv("("+func+")-x", math.complex(0,0), init, "newton");
+  return fix.cache.set(key,res).get(key);
+} */
+
+function fix(func, init) {
+  fix.cache ||= new Map();
+  let key = func + "|wegstein|" + init;
+  if (fix.cache.has(key)) return fix.cache.get(key);
+
+  let eps = 0.01;     // tolerance
+  let x0 = init;
+
+  // define g(x) = f(x) - x
+  function g(z) {
+    return sub(evale(func,{x:z}), z);
+  }
+
+  let f0 = g(x0);
+  let x1 = sub(x0,f0);  // crude first step
+  let f1 = g(x1);
+
+  for (let k=0; k<N; k++) {
+    // Wegstein parameter λ
+    let denom = sub(f1,f0);
+    let lam = (mag(denom) < 1e-14) ? math.complex(1,0) : div(sub(x1,x0),denom);
+
+    // update step: x_{n+1} = x_n - λ*g(x_n)
+    let x2 = sub(x1, mul(lam,f1));
+
+    if (mag(sub(x2,x1)) < eps) {
+      fix.cache.set(key,x2);
+      return x2;
+    }
+
+    x0 = x1; f0 = f1;
+    x1 = x2; f1 = g(x1);
+  }
+
+  fix.cache.set(key,x1);
+  return x1;
+}
+
+
+
+function parseComplex(str) {
+  try {
+    return math.complex(str.replace(/\s+/g,'')); // remove spaces
+  } catch(e) {
+    console.warn("Invalid complex string:", str);
+    return math.complex(0,0);
+  }
+}
+
+
+////////////////////
+//                //
+// FUN STUFF HERE //
+//                //
+////////////////////
+
+
+function uknes(func,x,z,init,meth){
+let L=fix(func,init,meth);
+let S=derv(func,L)
+let fi=add(L,mul(sub(z,L,N),pow(S,x)));
+for(let i=0;i<N;i++)fi=eval(func,fi);
+return fi;
+}
+
+//(logc((f -N(a)-L)c N)  +   (f(logc((f-N(a)-L)cN)) - logc((f-N(a)-L)cN))b  -N)
+  
+
+function gknes(func,x,z,init,meth){
+let L=fix(func,init,meth);
+let c=math.complex(1,1)
+let fna=z;//lam
+for(let i=0;i<N-1;i++)fna=inv(func,fna,init,meth,1);
+let fnaf=inv(func,fna,init,meth,1);//fi
+//fna = sub(fna,L);
+let cn=pow(c,N)
+let lc=log(c);
+//fna=log(mul(fna,cn))
+//let fz=add(L,pow(c,add(fna,sub(mul(sub(eval(func,fna),div(fna,lc)),x),N))))
+//let fz=add(L,mul(sub(fnaf,L),pow(c,sub(mul(x,div(log(sub(fna,L)),lc)),div(log(sub(fnaf,L)),lc)))))
+//let fz=div(log(mul(sub(fnaf,L),cn)),lc)
+//let fii=div(log(mul(sub(fna,L),cn)),lc)
+//fz=add(fii,mul(x,sub(fna,L)))
+//fz=add(L,pow(c,sub(fz,N)))
+
+let fi=div(log(mul(sub(fnaf,L),cn)),lc)
+let lam=div(log(mul(sub(fna,L),cn)),lc)
+fi=add(fi,mul(x,sub(lam,fi)))
+fi=add(L,pow(c,sub(fi,N)))
+for(let i=0;i<N;i++)fi=eval(func,fi);
+return fi;
+
+}
+
+
+function levyabel(func,x,z){
+
+let hz = z;
+let hu = x; 
+for(let i=0;i<N;i++)hz=eval(func,hz);
+for(let i=0;i<N;i++)hu=eval(func,hu);
+return div(sub(hz,hu),sub(eval(func,hu),hu))
+
+}
+
+
+function knes(func,x,z,init,meth){
+return iabel(func,add(x,abel(func,z,init,meth)),init,meth)
+/*
+let L=fix(func,init,meth);
+let S=derv(func,L)
+let fi=z;
+for(let i=0;i<N;i++)fi=inv(func,fi,init,meth);
+fi=add(L,mul(sub(fi,L),pow(S,x)));
+for(let i=0;i<N;i++)fi=eval(func,fi);
+return fi;*/
+}
+
+function regit(func,x,z,init,meth){
+let L=fix(func,init,meth);//dont work
+let S=derv(func,L)
+let fi=z;
+for(let i=0;i<N;i++)fi=eval(func,fi);
+fi=sub(L,pow(S,add(x,1,div(log(sub(L,fi)),log(S)))))
+for(let i=0;i<N;i++)fi=inv(func,fi,init,meth,1);
+return fi;
+return add(div(log(sub(fi,L)),log(S)),N)
+
+}
+
+
+function adaptive(func,x,z,init,meth){
+let L=fix(func,init,meth);
+let S=derv(func,L)
+if(mag(S)-1>0.001)return knes(func,x,z,init,meth)
+if(mag(S)<0.9999)return regit(func,x,z,init,meth)
+return gknes(func,x,z,init,meth)
+
+}
+
+
+function abel(func,x,init,meth){
+let L=fix(func,init,meth);
+let S=derv(func,L)
+if(mag(S)-1>0.001)return abelkn(func,x,init,meth)
+if(mag(S)<0.9999)return abelregit(func,x,init,meth)
+return 1
+}
+function iabel(func,x,init,meth){
+let L=fix(func,init,meth);
+let S=derv(func,L)
+if(mag(S)-1>0.001)return iabelkn(func,x,init,meth)
+if(mag(S)<0.9999)return iabelregit(func,x,init,meth)
+return 1
+}
+
+function abelkn(func,x,init,meth){
+let L=fix(func,init,meth);
+let S=derv(func,L)
+let fi=x;
+for(let i=0;i<N;i++)fi=inv(func,fi,init,meth,1);
+return add(div(log(sub(fi,L)),log(S)),N)
+}
+
+function iabelkn(func,x,init,meth){
+let L=fix(func,init,meth);
+let S=derv(func,L);
+let fi=add(L,pow(S,sub(x,N)));
+for(let i=0;i<N;i++)fi=eval(func,fi);
+return fi;
+}
+
+function abelregit(func,x,init,meth){
+let L=fix(func,init,meth);
+let S=derv(func,L)
+let fi=x;
+for(let i=0;i<N;i++)fi=eval(func,fi);
+return add(div(log(sub(fi,L)),log(S)),sub(0,N))
+}
+
+function iabelregit(func,x,init,meth){
+let L=fix(func,init,meth);
+let S=derv(func,L);
+let fi=add(L,pow(S,sub(x,sub(0,N))));
+for(let i=0;i<N;i++)fi=inv(func,fi,init,meth,1)
+return fi;
+}
+
+function schr(func,x,init,meth){let L=fix(func,init,meth);let S=derv(func,L);return pow(S,abel(func,x,init,meth))}
+function ischr(func,x,init,meth){let L=fix(func,init,meth);let S=derv(func,L);return iabel(func,div(log(x),log(S)),init,meth)}
+function botc(func,x,init,meth){let L=fix(func,init,meth);let S=derv(func,L);return pow(S,schr(func,x,init,meth))}
+function ibotc(func,x,init,meth){let L=fix(func,init,meth);let S=derv(func,L);return ischr(func,div(log(x),log(S)),init,meth)}
+
+
+
+	
+  </script>
+</body>
+</html>

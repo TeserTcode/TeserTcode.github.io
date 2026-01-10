@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Color Palette Generator</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    canvas { display: block; margin: 10px 0; max-width: 100%; }
+    .color-box {
+      width: 100px; height: 100px; display: inline-block;
+      margin: 5px; text-align: center; line-height: 100px;
+      color: white; font-weight: bold; cursor: pointer;
+    }
+    #paletteContainer, #antiContainer { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Advanced Color Palette Generator</h1>
+
+  <input type="file" id="imageUpload" accept="image/*" />
+  <canvas id="canvas"></canvas>
+
+  <label>Number of Colors: <input type="number" id="numColors" value="5" min="2" max="20" /></label><br>
+  <label>Iterations: <input type="number" id="iterations" value="10" min="1" max="100" /></label><br>
+  <label>Color Space:
+    <select id="colorSpace"></select>
+  </label><br>
+  <label>Distance Metric:
+    <select id="distanceMetric">
+      <option value="euclidean">Euclidean</option>
+      <option value="manhattan">Manhattan</option>
+    </select>
+  </label><br><br>
+
+  <button id="generateBtn">Generate Palette</button>
+  <button id="antiBtn">Generate Anti‑Palette</button>
+  <progress id="progressBar" value="0" max="100"></progress>
+
+  <div id="paletteContainer"></div>
+  <div id="antiContainer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3-color@3"></script>
+  <script>
+    const colorSpaces = [
+      'rgb', 'hsv', 'hsl', 'hwb', 'hcl', 'lch', 'ycbcr', 'xyz', 'hsi', 'hsm', 'hsh', 'hsg',
+      'yjk', 'lab', 'cmyk', 'cmy', 'uvw', 'lms', 'ydbdr', 'yiq', 'lcw', 'lct',
+      'ycocg', 'ycocgr', 'yuv', 'ypbpr', 'tsl', 'luv', 'srgb', 'scrgb', 'ecirgb', 'rxy', 'oklab', 'ypo', 'yrl'
+    ];
+
+    const colorSpaceSelect = document.getElementById('colorSpace');
+    colorSpaces.forEach(space => {
+      const option = document.createElement('option');
+      option.value = space;
+      option.textContent = space;
+      colorSpaceSelect.appendChild(option);
+    });
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const imageUpload = document.getElementById('imageUpload');
+    const numColorsInput = document.getElementById('numColors');
+    const iterationsInput = document.getElementById('iterations');
+    const generateBtn = document.getElementById('generateBtn');
+    const antiBtn = document.getElementById('antiBtn');
+    const paletteContainer = document.getElementById('paletteContainer');
+    const progressBar = document.getElementById('progressBar');
+    const colorSpace = document.getElementById('colorSpace');
+    const distanceMetric = document.getElementById('distanceMetric');
+
+    let pixels = [];
+    let lastClusters = null;
+    let lastCentroids = null;
+    let lastSpace = null;
+
+    imageUpload.addEventListener('change', e => {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+          const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+          pixels = Array.from(data);
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function convertColor(color, from, to) {
+      let c = d3.rgb(...color);
+      if (from === 'rgb' && to === 'lab') return Object.values(d3.lab(c));
+      if (from === 'rgb' && to === 'lch') return Object.values(d3.lch(c));
+      if (from === 'lab' && to === 'rgb') return Object.values(d3.lab(...color).rgb());
+      if (from === 'lch' && to === 'rgb') return Object.values(d3.lch(...color).rgb());
+      return color;
+    }
+
+    function getDistance(c1, c2, metric) {
+      if (metric === 'euclidean') {
+        return Math.sqrt(c1.reduce((sum, v, i) => sum + (v - c2[i]) ** 2, 0));
+      } else if (metric === 'manhattan') {
+        return c1.reduce((sum, v, i) => sum + Math.abs(v - c2[i]), 0);
+      }
+    }
+
+    function rgbToHex([r, g, b]) {
+      return [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+    }
+
+    function luminance([r, g, b]) {
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    }
+
+    function kMeansPalette(pixels, k, space, metric, maxIterations) {
+      const colors = [];
+      for (let i = 0; i < pixels.length; i += 4) {
+        const rgb = [pixels[i], pixels[i + 1], pixels[i + 2]];
+        colors.push(convertColor(rgb, 'rgb', space));
+      }
+
+      const centroids = [];
+      const used = new Set();
+      while (centroids.length < k && centroids.length < colors.length) {
+        const i = Math.floor(Math.random() * colors.length);
+        if (!used.has(i)) {
+          centroids.push([...colors[i]]);
+          used.add(i);
+        }
+      }
+
+      let clusters = null;
+      for (let iter = 0; iter < maxIterations; iter++) {
+        clusters = Array.from({ length: k }, () => []);
+        colors.forEach(color => {
+          let minD = Infinity, idx = 0;
+          centroids.forEach((c, i) => {
+            const d = getDistance(color, c, metric);
+            if (d < minD) (minD = d, idx = i);
+          });
+          clusters[idx].push(color);
+        });
+        clusters.forEach((cls, i) => {
+          if (cls.length === 0) return;
+          const mean = cls[0].map(() => 0);
+          cls.forEach(c => c.forEach((v, j) => mean[j] += v));
+          centroids[i] = mean.map(v => v / cls.length);
+        });
+        progressBar.value = ((iter + 1) / maxIterations) * 100;
+      }
+
+      lastClusters = clusters;
+      lastCentroids = centroids;
+      lastSpace = space;
+
+      return centroids.map(c => convertColor(c, space, 'rgb').map(v => Math.round(v)))
+                      .sort((a, b) => luminance(a) - luminance(b));
+    }
+
+    function displayPalette(colors, container, title) {
+      container.innerHTML = `<h3>${title}</h3>`;
+      colors.forEach(color => {
+        const box = document.createElement('div');
+        const hex = rgbToHex(color);
+        box.className = 'color-box';
+        box.style.backgroundColor = `rgb(${color.join(',')})`;
+        box.textContent = `#${hex}`;
+        box.title = `RGB: ${color.join(',')}`;
+        box.onclick = () => {
+          navigator.clipboard.writeText('#' + hex);
+          alert('Copied: #' + hex);
+        };
+        container.appendChild(box);
+      });
+    }
+
+    generateBtn.addEventListener('click', () => {
+      const k = parseInt(numColorsInput.value);
+      const space = colorSpace.value;
+      const metric = distanceMetric.value;
+      const maxIterations = parseInt(iterationsInput.value);
+      const palette = kMeansPalette(pixels, k, space, metric, maxIterations);
+      displayPalette(palette, paletteContainer, 'Palette');
+      document.getElementById('antiContainer').innerHTML = '';
+    });
+
+    antiBtn.addEventListener('click', () => {
+      if (!lastClusters || !lastCentroids) {
+        alert("Please generate the main palette first.");
+        return;
+      }
+      const anti = [];
+      lastClusters.forEach((cls, i) => {
+        if (cls.length === 0) return;
+        let maxD = -1, worst = cls[0];
+        cls.forEach(c => {
+          const d = getDistance(c, lastCentroids[i], distanceMetric.value);
+          if (d > maxD) (maxD = d, worst = c);
+        });
+        anti.push(convertColor(worst, lastSpace, 'rgb').map(v => Math.round(v)));
+      });
+      anti.sort((a, b) => luminance(a) - luminance(b));
+      displayPalette(anti, document.getElementById('antiContainer'), 'Anti‑Palette (Worst Colors)');
+    });
+  </script>
+</body>
+</html>

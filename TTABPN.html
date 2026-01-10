@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>String Expander</title>
+</head>
+<body>
+    <h1>String Expander</h1>
+    <label for="input-string">Enter your string:</label>
+    <input type="text" id="input-string" value="" placeholder="Enter string here">
+    <label for="w-value">W value:</label>
+    <input type="number" id="w-value" value="3">
+    <button onclick="expandString()">Expand</button>
+    <button onclick="reexpandString()">Re-expand</button>
+
+    <h2>Result</h2>
+    <p id="result"></p>
+
+    <script>
+        function expandString() {
+            let inputString = document.getElementById('input-string').value;
+            let w = parseInt(document.getElementById('w-value').value, 10);
+
+            function processStringOnce(str) {
+                const openers = /[\(\[\{]/;
+                const closers = { '(': ')', '[': ']', '{': '}' };
+
+                const openIndex = str.search(openers);
+                if (openIndex === -1) return str.length; // No parentheses, return length
+
+                const opener = str[openIndex];
+                const closer = closers[opener];
+
+                let closeIndex = -1;
+                let balance = 0;
+                for (let i = openIndex + 1; i < str.length; i++) {
+                    if (str[i] === opener) balance++;
+                    if (str[i] === closer) {
+                        if (balance === 0) {
+                            closeIndex = i;
+                            break;
+                        } else {
+                            balance--;
+                        }
+                    }
+                }
+
+                if (closeIndex === -1) {
+                    // No matching closer
+                    const repeated = str.slice(0, openIndex) + str.slice(openIndex + 1).repeat(w);
+                    return repeated;
+                }
+
+                const afterCloser = str.indexOf('<', closeIndex);
+                if (afterCloser === -1) {
+                    // No < after the closer
+                    const inner = str.slice(openIndex + 1, closeIndex);
+                    str = str.slice(0, openIndex) + inner.repeat(w) + str.slice(closeIndex + 1);
+                } else {
+                    const endAngle = str.indexOf('>', afterCloser);
+                    if (endAngle === -1) {
+                        // No closing >
+                        const substring = str.slice(afterCloser + 1);
+                        const unchanged = str.slice(0, afterCloser + 1) + substring;
+                        const processed = str.slice(0, afterCloser + 1) + processStringOnce(substring);
+                        return unchanged + "\n" + processed;
+                    }
+
+                    const nested = str.slice(afterCloser + 1, endAngle);
+                    if (isNaN(nested)) {
+                        const unchanged = str.slice(0, afterCloser + 1) + nested + str.slice(endAngle);
+                        const processed = str.slice(0, afterCloser + 1) + processStringOnce(nested) + str.slice(endAngle);
+                        return unchanged + "\n" + processed;
+                    } else {
+                        const multiplier = parseInt(nested, 10);
+                        const inner = str.slice(openIndex + 1, closeIndex);
+                        str = str.slice(0, openIndex) + inner.repeat(multiplier) + str.slice(endAngle + 1);
+                    }
+                }
+
+                return str;
+            }
+
+            const result = processStringOnce(inputString);
+            document.getElementById('result').textContent = result;
+        }
+
+        function reexpandString() {
+            let resultString = document.getElementById('result').textContent;
+            let w = parseInt(document.getElementById('w-value').value, 10);
+
+            function processStringOnce(str) {
+                const openers = /[\(\[\{]/;
+                const closers = { '(': ')', '[': ']', '{': '}' };
+
+                const openIndex = str.search(openers);
+                if (openIndex === -1) return str.length; // No parentheses, return length
+
+                const opener = str[openIndex];
+                const closer = closers[opener];
+
+                let closeIndex = -1;
+                let balance = 0;
+                for (let i = openIndex + 1; i < str.length; i++) {
+                    if (str[i] === opener) balance++;
+                    if (str[i] === closer) {
+                        if (balance === 0) {
+                            closeIndex = i;
+                            break;
+                        } else {
+                            balance--;
+                        }
+                    }
+                }
+
+                if (closeIndex === -1) {
+                    // No matching closer
+                    const repeated = str.slice(0, openIndex) + str.slice(openIndex + 1).repeat(w);
+                    return repeated;
+                }
+
+                const afterCloser = str.indexOf('<', closeIndex);
+                if (afterCloser === -1) {
+                    // No < after the closer
+                    const inner = str.slice(openIndex + 1, closeIndex);
+                    str = str.slice(0, openIndex) + inner.repeat(w) + str.slice(closeIndex + 1);
+                } else {
+                    const endAngle = str.indexOf('>', afterCloser);
+                    if (endAngle === -1) {
+                        // No closing >
+                        const substring = str.slice(afterCloser + 1);
+                        const unchanged = str.slice(0, afterCloser + 1) + substring;
+                        const processed = str.slice(0, afterCloser + 1) + processStringOnce(substring);
+                        return unchanged + "\n" + processed;
+                    }
+
+                    const nested = str.slice(afterCloser + 1, endAngle);
+                    if (isNaN(nested)) {
+                        const unchanged = str.slice(0, afterCloser + 1) + nested + str.slice(endAngle);
+                        const processed = str.slice(0, afterCloser + 1) + processStringOnce(nested) + str.slice(endAngle);
+                        return unchanged + "\n" + processed;
+                    } else {
+                        const multiplier = parseInt(nested, 1);
+                        const inner = str.slice(openIndex + 1, closeIndex);
+                        str = str.slice(0, openIndex) + inner.repeat(multiplier) + str.slice(endAngle + 1);
+                    }
+                }
+
+                return str;
+            }
+
+            const result = processStringOnce(resultString);
+            document.getElementById('result').textContent = result;
+        }
+    </script>
+</body>
+</html>

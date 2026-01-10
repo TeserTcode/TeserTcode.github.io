@@ -53,6 +53,8 @@
 			<option value="blob">Blob Division</option>
 			<option value="origin">Origin Shift</option>
 			<option value="weave">Weave</option>
+			
+			
 			<option value="braid">Braid</option>
 			<option value="preeliminate">Pre-Eliminate Squares</option>
 			<option value="randomrestart">Random Restarts</option>
@@ -61,6 +63,13 @@
 			<option value="---">-----------</option>
 			<option value="fill">Flled (test)</option>
 			<option value="bare">Bare (test)</option>
+			<option value="---">-----------</option>
+			<option value="sparsehex">Sparse Hex Random (ng)</option>
+			<option value="densehex">Dense Hex Random (ng)</option>
+			<option value="defaulthex">Default Hex Random (ng)</option>
+			<option  value="hexkruskal">Hexagonal Kruskal's Algorithm</option>
+			<option  value="hextridfalpha">Hexagonal Depth First-a Algorithm</option>
+			<option  value="hextridfbeta">Hexagonal Depth First-b Algorithm</option>
         </select>
 		<br>
 		<div id="colouras">
@@ -171,49 +180,18 @@
         }
 		
 		
-		
-		
+		function generate_sparsehex(){
+		 hexGenerateGrid2(0.2);
+		}
+		function generate_defaulthex(){
+		 hexGenerateGrid2(0.3);
+		}function generate_densehex(){
+		 hexGenerateGrid2(0.4);
+		}
 		
 		
 		
 		//////////////////////////////////////////////////////
-		
-		
-		
-		function generate_fractal() {
-    const size = Math.pow(2, Math.ceil(Math.log2(N))) - 1; // Ensure the size is a power of 2 minus 1
-    grid = Array.from({ length: size + 2 }, () => Array(size + 2).fill(1));
-
-    function carve(x, y, level) {
-if (level == 2)return; 
-        const subSize = Math.pow(2, level - 1) - 1;
-
-        for (let i = 0; i <= 1; i++) {
-            for (let j = 0; j <= 1; j++) {
-                carve(x + i * (subSize + 1), y + j * (subSize + 1), level - 1);
-            }
-        }
-
-        const mx = x + subSize;
-        const my = y + subSize;
-
-        grid[my][x + subSize + 1] = 0; 
-        grid[y + subSize + 1][mx] = 0;
-        grid[my][mx] = 0; 
-    }
-
-carve(1, 1,5 );
-
-    playerPos = { x: 1, y: 1 };
-    finishPos = { x: N - 1, y: N - 1 };
-    grid[playerPos.y][playerPos.x] = 0;
-    grid[finishPos.y][finishPos.x] = 0;
-
-    canvas.width = (N + 1) * tileSize;
-    canvas.height = (N + 1) * tileSize;
-    drawGrid();
-}
-		
 		
 		
 		
@@ -731,6 +709,309 @@ function generate_kruskals() {
                 case 'd': movePlayer(1, 0); break; // Right
             }
         });
+		
+		
+		
+		
+		
+		
+		////////////////////HEXAGONAL///////////////////
+	/*	
+		function hexGenerateGrid(wallProbability) {
+    // Initialize the hex grid
+    grid = Array.from({ length: N }, () =>
+        Array.from({ length: N }, () => Math.random() > wallProbability ? 0 : 1)
+    );
+
+    // Set out-of-bounds (-1)
+    grid = grid.map((row, i) =>
+        row.map((cell, j) => (i < 0 || j < 0 || i >= N || j >= N ? -1 : cell))
+    );
+
+    // Set player starting position
+    playerPos = { q: 0, r: 0 }; // Axial coordinates
+    grid[playerPos.r][playerPos.q] = 0;
+
+    // Set finish position
+    finishPos = { q: N - 1, r: N - 1 };
+    grid[finishPos.r][finishPos.q] = 0;
+
+    canvas.width = N * tileSize * 1.5 + tileSize / 2; // Adjust canvas for hex layout
+    canvas.height = N * tileSize * Math.sqrt(3);
+    hexDrawGrid();
+}*/
+function hexGenerateGrid2(wallProbability) {
+    // Increase grid size to accommodate the border
+    const gridSize = N + 2; // Add an extra shell
+
+    // Initialize the grid with walls (-1)
+    grid = Array.from({ length: gridSize }, (_, r) =>
+        Array.from({ length: gridSize }, (_, q) => {
+            if (r < q) return -1; // Out of bounds for triangular grid
+            if (r === q || q === 0 || r === q- 1 || r === N-1) {
+                return 1; // Add border walls
+            }
+            return Math.random() > wallProbability ? 0 : 1;
+        })
+    );
+
+    // Set the player starting position
+    playerPos = { q: 1, r: 2 }; // Adjust for the new border
+    grid[playerPos.r][playerPos.q] = 0;
+
+    // Set the finish position
+    finishPos = { q: N - 3, r: N - 2 }; // Adjust for the new border
+    grid[finishPos.r][finishPos.q] = 0;
+
+    // Adjust canvas size for new grid
+    canvas.width = gridSize * tileSize * 1.5 + tileSize / 2; // Adjust for hex layout
+    canvas.height = gridSize * tileSize * Math.sqrt(3);
+    hexDrawGrid();
+}
+function hexfix() {
+    const gridSize = N + 2;
+    grid = Array.from({ length: gridSize }, (_, r) =>
+        Array.from({ length: gridSize }, (_, q) => {
+            if (r < q) return -1; // Out of bounds for triangular grid
+            if (r === q || q === 0 || r === q- 1 || r === N-1) {
+                return 1; // Add border walls
+            }
+           return grid[r][q];
+        })
+    );
+
+    // Set the player starting position
+    playerPos = { q: 1, r: 2 }; // Adjust for the new border
+    grid[playerPos.r][playerPos.q] = 0;
+
+    // Set the finish position
+    finishPos = { q: N - 3, r: N - 2 }; // Adjust for the new border
+    grid[finishPos.r][finishPos.q] = 0;
+
+    // Adjust canvas size for new grid
+    canvas.width = gridSize * tileSize * 1.5 + tileSize / 2; // Adjust for hex layout
+    canvas.height = gridSize * tileSize * Math.sqrt(3);
+    hexDrawGrid();
+}
+function generate_hextridfalpha() {
+    grid = Array.from({ length: N + 2 }, () => Array(N + 2).fill(1));
+const gridSize = N + 2;
+    const stack = [];
+
+    let startX = 1;
+    let startY = 1;
+
+    stack.push([1,2]);
+
+    const directions = [
+        [-2, -2], 
+	//	 [0, -2], 
+		  [2, 0], 
+	//	   [-2, 0], 
+		    [0, 2], 
+	//		 [2, 2]
+
+    ];
+
+    while (stack.length > 0) {
+        const [x, y] = stack[stack.length - 1];
+
+        const neighbors = [];
+        for (const [dx, dy] of directions) {
+            const nx = x + dx;
+            const ny = y + dy;
+
+            if (nx > 0 && nx < N + 1 && ny > 0 && ny < N + -1 && nx<ny  && grid[ny][nx] === 1) {
+                neighbors.push([nx, ny]);
+            }
+        }
+
+        if (neighbors.length > 0) {
+            const [nextX, nextY] = neighbors[Math.floor(Math.random() * neighbors.length)];
+
+            const wallX = (x + nextX) / 2;
+            const wallY = (y + nextY) / 2;
+            grid[wallY][wallX] = 0;
+
+            grid[nextY][nextX] = 0;
+            stack.push([nextX, nextY]);
+        } else {
+            stack.pop();
+        }
+    }
+
+     playerPos = { q: 1, r: 2 }; // Adjust for the new border
+    grid[playerPos.r][playerPos.q] = 0;
+
+    // Set the finish position
+    finishPos = { q: N - 3, r: N - 2 }; // Adjust for the new border
+    grid[finishPos.r][finishPos.q] = 0;
+
+    canvas.width = N * tileSize * 1.5 + tileSize / 2; // Adjust for hex layout
+    canvas.height = N * tileSize * Math.sqrt(3);
+    hexDrawGrid();
+
+}
+function generate_hextridfbeta() {
+    grid = Array.from({ length: N + 2 }, () => Array(N + 2).fill(1));
+const gridSize = N + 2;
+    const stack = [];
+
+    let startX = 1;
+    let startY = 1;
+
+    stack.push([1,2]);
+
+    const directions = [
+       [-2, -2], 
+		 [0, -2], 
+		  [2, 0], 
+		   [-2, 0], 
+	   [0, 2], 
+				 [2, 2]
+
+    ];
+
+    while (stack.length > 0) {
+        const [x, y] = stack[stack.length - 1];
+
+        const neighbors = [];
+        for (const [dx, dy] of directions) {
+            const nx = x + dx;
+            const ny = y + dy;
+
+            if (nx > 0 && nx < N + 1 && ny > 0 && ny < N + -1 && nx<ny  && grid[ny][nx] === 1) {
+                neighbors.push([nx, ny]);
+            }
+        }
+
+        if (neighbors.length > 0) {
+            const [nextX, nextY] = neighbors[Math.floor(Math.random() * neighbors.length)];
+
+            const wallX = (x + nextX) / 2;
+            const wallY = (y + nextY) / 2;
+            grid[wallY][wallX] = 0;
+
+            grid[nextY][nextX] = 0;
+            stack.push([nextX, nextY]);
+        } else {
+            stack.pop();
+        }
+    }
+
+     playerPos = { q: 1, r: 2 }; // Adjust for the new border
+    grid[playerPos.r][playerPos.q] = 0;
+
+    // Set the finish position
+    finishPos = { q: N - 3, r: N - 2 }; // Adjust for the new border
+    grid[finishPos.r][finishPos.q] = 0;
+
+    canvas.width = N * tileSize * 1.5 + tileSize / 2; // Adjust for hex layout
+    canvas.height = N * tileSize * Math.sqrt(3);
+    hexDrawGrid();
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function hexDrawGrid() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const hexHeight = Math.sqrt(3) * tileSize;
+    const hexWidth = 1.5 * tileSize;
+
+    for (let r = 0; r < N; r++) {
+        for (let q = 0; q < N; q++) {
+            const x = q * hexWidth + tileSize ;
+            const y = r * hexHeight + (hexHeight/2) - (q)*hexHeight/2;
+
+            if (grid[r][q] === -1 || r<q) continue; // Out of bounds
+
+            ctx.fillStyle = grid[r][q] === 1 ? tileColors.wall : tileColors.empty;
+
+            if (showPlayerAndFinish && r === playerPos.r && q === playerPos.q) {
+                ctx.fillStyle = tileColors.player;
+            } else if (showPlayerAndFinish && r === finishPos.r && q === finishPos.q) {
+                ctx.fillStyle = tileColors.finish;
+            }
+
+            hexDrawHexagon(x, y, tileSize, ctx.fillStyle);
+        }
+    }
+}
+
+function hexDrawHexagon(x, y, size, color) {
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i;
+        const xOffset = x + size * Math.cos(angle);
+        const yOffset = y + size * Math.sin(angle);
+        if (i === 0) ctx.moveTo(xOffset, yOffset);
+        else ctx.lineTo(xOffset, yOffset);
+    }
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+    if (borderThickness > 0) {
+        ctx.lineWidth = borderThickness;
+        ctx.strokeStyle = tileColors.border;
+        ctx.stroke();
+    }
+}
+
+function hexMovePlayer(direction) {
+    const directions = {
+        q: { dq: -1, dr: -1 },
+        w: { dq: 0, dr: -1 },
+        e: { dq: 1, dr: 0 },
+        a: { dq: -1, dr: 0 },
+        s: { dq: 0, dr: 1 },
+        d: { dq: 1, dr: 1 },
+    };
+
+    const { dq, dr } = directions[direction];
+    const newQ = playerPos.q + dq;
+    const newR = playerPos.r + dr;
+
+    if (
+        newQ >= 0 &&
+        newQ < N &&
+        newR >= 0 &&
+        newR < N &&
+        grid[newR][newQ] === 0
+    ) {
+        playerPos.q = newQ;
+        playerPos.r = newR;
+        hexDrawGrid();
+
+        if (playerPos.q === finishPos.q && playerPos.r === finishPos.r) {
+            clearInterval(completionTimer);
+            const now2 = new Date();
+            const elapsed2 = (now2 - gameStart) / 1000;
+            alert('Congratulations! You reached the finish in ' + elapsed2.toFixed(3));
+            gameEnd = new Date();
+            hexDrawGrid();
+        }
+    }
+}
+
+window.addEventListener('keydown', (event) => {
+    const key = event.key.toLowerCase();
+    if (['q', 'w', 'e', 'a', 's', 'd'].includes(key)) {
+        hexMovePlayer(key);
+    }
+});
     </script>
 </body>
 </html>

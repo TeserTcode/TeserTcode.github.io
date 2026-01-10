@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plantelligence | Akıllı Bitki Yetiştirme Sistemi</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+		:root {
+			--primary-dark: #1B5E20;
+			--primary-main: #2E7D32;
+			--primary-light: #81C784;
+			--secondary-main: #FFB300;
+			--text-primary: #212121;
+			--text-secondary: #757575;
+			--bg-default: #f8f9fa;
+			--bg-paper: #ffffff;
+		}
+
+		.dark-mode {
+			--primary-dark: #0D2E1C;
+			--primary-main: #1A4729;
+			--primary-light: #4CAF50;
+			--text-primary: #e0e0e0;
+			--text-secondary: #9e9e9e;
+			--bg-default: #121212;
+			--bg-paper: #1e1e1e;
+		}
+		.sensor-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+			gap: 1.5rem;
+			margin: 2rem 0;
+		}
+
+		.sensor-card {
+			background: var(--bg-paper);
+			padding: 1.5rem;
+			border-radius: 15px;
+			text-align: center;
+			border-left: 4px solid var(--primary-main);
+		}
+
+		.sensor-card i {
+			font-size: 2.5rem;
+			color: var(--primary-main);
+			margin-bottom: 1rem;
+		}
+
+		.alert-card {
+			background: #fff3cd;
+			color: #856404;
+			padding: 1rem;
+			border-radius: 8px;
+			margin: 1rem 0;
+			display: flex;
+			align-items: center;
+			gap: 1rem;
+			animation: pulse 1.5s infinite;
+		}
+
+		@keyframes pulse {
+			0% { transform: scale(1); }
+			50% { transform: scale(1.02); }
+			100% { transform: scale(1); }
+		}
+			/* Yeni Eklenen Responsive Stiller */
+	@media (max-width: 768px) {
+		/* Sadece Mobil için Stiller */
+		.nav-menu {
+			display: none;
+			position: absolute;
+			top: 100%;
+			left: 0;
+			right: 0;
+			background: var(--bg-paper);
+			flex-direction: column;
+			padding: 1rem;
+			box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+		}
+		
+		.nav-menu.active {
+			display: flex;
+		}
+
+		.brand-logo {
+			font-size: 1.4rem;
+		}
+
+		.hero-title {
+			font-size: 2.2rem;
+			line-height: 1.3;
+		}
+
+		.features-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.team-grid,
+		.tech-grid,
+		.gallery-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.contact-grid {
+			grid-template-columns: 1fr;
+			gap: 2rem;
+		}
+
+		.mobile-menu-btn {
+			display: block;
+		}
+
+		.map-container {
+			height: 250px;
+		}
+	}
+
+	@media (max-width: 480px) {
+		/* Küçük Ekran Optimizasyonları */
+		.hero-title {
+			font-size: 1.8rem;
+		}
+		
+		.button-primary {
+			padding: 10px 20px;
+			font-size: 14px;
+		}
+
+		.store-badge {
+			height: 38px;
+		}
+
+		.feature-card {
+			padding: 1.5rem;
+		}
+	}
+
+	/* Masaüstü Stillerini Koru */
+	.mobile-menu-btn {
+		display: none; /* Masaüstünde gizle */
+	}
+
+	.nav-menu {
+		display: flex; /* Masaüstünde normal görünüm */
+	}
+
+	.features-grid {
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Orijinal değer */
+	}
+
+	.team-grid {
+		grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); /* Orijinal değer */
+	}
+
+	/* Diğer Masaüstü Stillerini Koru */
+	.hero-title {
+		font-size: 3.5rem; /* Orijinal boyut */
+	}
+
+	.hero-subtitle {
+		font-size: 1.2rem; /* Orijinal boyut */
+	}
+
+	.feature-card {
+		padding: 2rem; /* Orijinal padding */
+	}
+		.tech-icon img {
+			filter: invert(86%) sepia(21%) saturate(671%) hue-rotate(47deg) brightness(85%) contrast(83%);
+			transition: filter 0.3s;
+		}
+
+		.dark-mode .tech-icon img {
+			filter: invert(100%);
+		}
+        /* Teknoloji İkonları */
+        .tech-icon img {
+            width: 50px;
+            height: 50px;
+            filter: invert(86%) sepia(21%) saturate(671%) hue-rotate(47deg) brightness(85%) contrast(83%);
+        }
+		
+				/* Yeni Global Buton Stili */
+		.button-primary {
+			background: var(--primary-main);
+			color: white;
+			padding: 12px 28px;
+			border: none;
+			border-radius: 30px;
+			font-weight: 600;
+			display: inline-flex;
+			align-items: center;
+			gap: 10px;
+			cursor: pointer;
+			transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+			box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+		}
+
+		.button-primary:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+			background: var(--primary-dark);
+		}
+
+		.button-primary i {
+			font-size: 1.1em;
+		}
+
+		/* Teknoloji Kartları Güncellemesi */
+		.tech-card {
+			background: var(--bg-paper);
+			border-radius: 20px;
+			padding: 2rem;
+			position: relative;
+			overflow: hidden;
+			transition: transform 0.3s, box-shadow 0.3s;
+			border: 1px solid rgba(0,0,0,0.1);
+		}
+
+		.tech-card::before {
+			content: "";
+			position: absolute;
+			top: -50%;
+			left: -50%;
+			width: 200%;
+			height: 200%;
+			background: linear-gradient(45deg, 
+				transparent 25%,
+				rgba(255,255,255,0.1) 50%,
+				transparent 75%);
+			transform: rotate(45deg);
+			opacity: 0;
+			transition: opacity 0.5s;
+		}
+
+		.tech-card:hover::before {
+			opacity: 1;
+		}
+
+		.tech-card:hover {
+			transform: translateY(-8px);
+			box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+		}
+
+		/* Detay Butonları için Global Stil */
+		.detail-button {
+			position: relative;
+			background: transparent;
+			color: var(--primary-main);
+			border: 2px solid var(--primary-main);
+			padding: 10px 25px;
+			border-radius: 30px;
+			font-weight: 600;
+			overflow: hidden;
+			transition: all 0.4s;
+			margin-top: 1.5rem;
+		}
+
+		.detail-button::after {
+			content: "";
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			width: 0;
+			height: 0;
+			background: var(--primary-main);
+			border-radius: 50%;
+			transform: translate(-50%, -50%);
+			transition: width 0.3s, height 0.3s;
+			z-index: -1;
+		}
+
+		.detail-button:hover {
+			color: white;
+			border-color: transparent;
+		}
+
+		.detail-button:hover::after {
+			width: 150%;
+			height: 150%;
+		}
+
+		/* Tüm Section Başlıkları */
+		.section-title {
+			text-align: center;
+			font-size: 2.5rem;
+			margin-bottom: 3rem;
+			position: relative;
+			display: inline-block;
+			padding: 0 1rem;
+		}
+
+		.section-title::after {
+			content: "";
+			position: absolute;
+			bottom: -10px;
+			left: 50%;
+			transform: translateX(-50%);
+			width: 60%;
+			height: 3px;
+			background: var(--primary-main);
+			border-radius: 2px;
+		}
+
+		/* Kart İçi Listeler */
+		.feature-list {
+			list-style: none;
+			padding-left: 0;
+		}
+
+		.feature-list li {
+			position: relative;
+			padding-left: 30px;
+			margin-bottom: 1rem;
+		}
+
+		.feature-list li::before {
+			content: "✓";
+			position: absolute;
+			left: 0;
+			color: var(--primary-main);
+			font-weight: bold;
+		}
+
+		/* Responsive İyileştirmeler */
+		@media (max-width: 768px) {
+			.section-title {
+				font-size: 2rem;
+			}
+			
+			.button-primary {
+				padding: 10px 20px;
+			}
+		}
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-default);
+            color: var(--text-primary);
+            line-height: 1.8;
+            padding-top: var(--section-spacing);
+        }
+
+        /* Navigation */
+        .app-bar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(var(--bg-paper), 0.98);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+
+        .nav-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--primary-main);
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .nav-link.active {
+            background: rgba(var(--primary-main), 0.15);
+            color: var(--primary-main);
+        }
+
+        /* Main Content */
+        .page-section {
+            padding: 4rem 2rem;
+            max-width: 1280px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: none;
+        }
+
+        .page-section.active {
+            display: block;
+            animation: fadeIn 1s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Hero Section */
+        .hero-section {
+            text-align: center;
+            padding: 6rem 0 4rem;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-main);
+        }
+
+        .eco-badge {
+            background: var(--primary-dark);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 2rem 0;
+            font-size: 1.1rem;
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .feature-card {
+            background: var(--bg-paper);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--primary-main);
+        }
+
+        /* Team Section */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+				.team-member {
+			background: var(--bg-paper);
+			padding: 2rem;
+			border-radius: 15px;
+			transition: transform 0.3s;
+			border-bottom: 4px solid var(--primary-light);
+		}
+
+		.team-member:hover {
+			transform: translateY(-5px);
+			box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+		}
+
+		.member-expertise {
+			color: var(--secondary-main);
+			font-weight: 600;
+			font-size: 0.95rem;
+			margin: 0.5rem 0 1.5rem;
+		}
+
+	 /* ===== TEKNOLOJİ SAYFASI STİLLERİ ===== */
+		.tech-container {
+			max-width: 1400px;
+			margin: 0 auto;
+			padding: 2rem;
+		}
+
+		.tech-category {
+			margin: 4rem 0;
+		}
+
+		.tech-category h3 {
+			color: var(--primary-main);
+			margin-bottom: 2rem;
+			display: flex;
+			align-items: center;
+			gap: 1rem;
+			font-size: 1.8rem;
+		}
+
+		.tech-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+			gap: 2rem;
+		}
+
+		.tech-card {
+			background: var(--bg-paper);
+			padding: 2rem;
+			border-radius: 20px;
+			transition: transform 0.3s;
+			border-top: 4px solid transparent;
+		}
+
+		.hardware-card { border-color: var(--primary-main); }
+		.software-card { border-color: #FFB300; }
+		.data-card { border-color: #2196F3; }
+
+		.tech-card:hover {
+			transform: translateY(-5px);
+			box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+		}
+
+		.tech-icon {
+			width: 80px;
+			height: 80px;
+			background: var(--bg-default);
+			border-radius: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			margin-bottom: 1.5rem;
+		}
+
+		.tech-icon i {
+			font-size: 2.5rem;
+			color: var(--primary-main);
+		}
+
+		.tech-icon img {
+			width: 50px;
+			height: 50px;
+		}
+
+		.tech-card h4 {
+			color: var(--text-primary);
+			margin-bottom: 1rem;
+		}
+
+		.tech-card ul {
+			list-style: none;
+			padding-left: 1.2rem;
+		}
+
+		.tech-card li {
+			position: relative;
+			margin-bottom: 0.8rem;
+		}
+
+		.tech-card li::before {
+			content: "▹";
+			position: absolute;
+			left: -1.2rem;
+			color: var(--primary-light);
+		}
+
+		@media (max-width: 768px) {
+			.tech-grid {
+				grid-template-columns: 1fr;
+			}
+			
+			.tech-category h3 {
+				font-size: 1.5rem;
+			}
+		}
+		    /* App Badges Stilleri */
+    .app-badges {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 1.5rem;
+    }
+
+    .store-badge {
+        height: 45px;
+        width: auto;
+        transition: transform 0.3s ease;
+        border-radius: 5px;
+    }
+
+    .store-badge:hover {
+        transform: scale(1.05);
+        cursor: pointer;
+    }
+
+    /* Mobil Uyum */
+    @media (max-width: 480px) {
+        .app-badges {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .store-badge {
+            height: 40px;
+        }
+    }
+
+        /* Timeline */
+        .timeline-container {
+            position: relative;
+            max-width: 900px;
+            margin: 4rem auto;
+            padding-left: 2rem;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2rem;
+            padding-left: 2rem;
+            border-left: 3px solid var(--primary-main);
+        }
+
+        /* Comparison Table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 3rem 0;
+            background: var(--bg-paper);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1.2rem;
+            border: 1px solid rgba(0,0,0,0.1);
+            text-align: left;
+        }
+		.sensor-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+			gap: 1.5rem;
+			margin: 2rem 0;
+		}
+
+		.sensor-card {
+			background: var(--bg-paper);
+			padding: 1.5rem;
+			border-radius: 15px;
+			text-align: center;
+			border-left: 4px solid var(--primary-main);
+		}
+
+		.sensor-card i {
+			font-size: 2.5rem;
+			color: var(--primary-main);
+			margin-bottom: 1rem;
+		}
+
+		.alert-card {
+			background: #fff3cd;
+			color: #856404;
+			padding: 1rem;
+			border-radius: 8px;
+			margin: 1rem 0;
+			display: flex;
+			align-items: center;
+			gap: 1rem;
+			animation: pulse 1.5s infinite;
+		}
+
+		@keyframes pulse {
+			0% { transform: scale(1); }
+			50% { transform: scale(1.02); }
+			100% { transform: scale(1); }
+		}
+        /* Gallery */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .gallery-item {
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            aspect-ratio: 16/9;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+		
+		/* ===== İLETİŞİM SAYFASI STİLLERİ ===== */
+		.contact-container {
+			max-width: 1300px;
+			margin: 0 auto;
+			padding: 2rem;
+		}
+
+		.contact-grid {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 3rem;
+			margin-top: 2rem;
+		}
+
+		.form-card {
+			background: var(--bg-paper);
+			padding: 2rem;
+			border-radius: 15px;
+			box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+		}
+
+		.form-group {
+			margin-bottom: 1.5rem;
+		}
+
+		label {
+			display: block;
+			margin-bottom: 0.5rem;
+			color: var(--text-primary);
+			font-weight: 500;
+		}
+
+		input, textarea {
+			width: 100%;
+			padding: 1rem;
+			border: 2px solid var(--primary-light);
+			border-radius: 8px;
+			background: var(--bg-default);
+			color: var(--text-primary);
+			transition: all 0.3s;
+		}
+
+		input:focus, textarea:focus {
+			border-color: var(--primary-main);
+			outline: none;
+			box-shadow: 0 0 8px rgba(46,125,50,0.2);
+		}
+
+		.submit-btn {
+			background: var(--primary-main);
+			color: white;
+			padding: 1rem 2.5rem;
+			border: none;
+			border-radius: 8px;
+			cursor: pointer;
+			font-weight: 600;
+			display: flex;
+			align-items: center;
+			gap: 0.8rem;
+			transition: transform 0.2s;
+		}
+
+		.submit-btn:hover {
+			transform: translateY(-2px);
+			background: var(--primary-dark);
+		}
+
+		.info-card {
+			background: var(--bg-paper);
+			padding: 2rem;
+			border-radius: 15px;
+			margin-bottom: 2rem;
+		}
+
+		.social-links {
+			display: flex;
+			gap: 1.5rem;
+			margin-top: 2rem;
+		}
+
+		.social-icon {
+			font-size: 1.8rem;
+			color: var(--text-secondary);
+			transition: color 0.3s;
+		}
+
+		.social-icon:hover {
+			color: var(--primary-main);
+		}
+
+		.map-container {
+			height: 300px;
+			border-radius: 15px;
+			overflow: hidden;
+			margin-top: 2rem;
+		}
+
+		@media (max-width: 768px) {
+			.contact-grid {
+				grid-template-columns: 1fr;
+			}
+			
+			.map-container {
+				height: 250px;
+			}
+		}
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--primary-main);
+            color: white;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+            }
+            
+            .hero-title {
+                font-size: 2.5rem;
+            }
+        }
+				.gradient-text {
+			background: linear-gradient(45deg, #4CAF50, #81C784);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+		}
+
+		.performance-meter {
+			background: var(--bg-default);
+			border-radius: 10px;
+			padding: 1rem;
+		}
+
+		.meter-bar {
+			background: var(--primary-main);
+			height: 25px;
+			margin: 10px 0;
+			border-radius: 5px;
+			color: white;
+			padding-left: 1rem;
+		}
+
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="app-bar">
+        <div class="nav-container">
+            <div class="brand-logo">
+                <i class="fas fa-seedling"></i>
+                Plantelligence
+            </div>
+            <ul class="nav-menu">
+                <li><a class="nav-link active" href="#home" onclick="showSection('home')">Ana Sayfa</a></li>
+                <li><a class="nav-link" href="#project" onclick="showSection('project')">Proje</a></li>
+                <li><a class="nav-link" href="#team" onclick="showSection('team')">Ekip</a></li>
+                <li><a class="nav-link" href="#tech" onclick="showSection('tech')">Teknoloji</a></li>
+				<li><a class="nav-link" href="#simulation" onclick="showSection('simulation')">Simülasyon</a
+                <li><a class="nav-link" href="#gallery" onclick="showSection('gallery')">Galeri</a></li>
+				<li><a class="nav-link" href="#contact" onclick="showSection('contact')">İletişim</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Theme Toggle -->
+    <div class="theme-toggle" onclick="toggleTheme()">
+        <i class="fas fa-moon"></i>
+    </div>
+
+	<!-- Hero Section Güncellemesi -->
+	<section id="home" class="page-section active">
+		<div class="hero-section">
+			<div class="hero-content">
+				<h1 class="hero-title">
+					<span class="gradient-text">Akıllı Tarım</span><br>
+					Geleceği Burada
+				</h1>
+				<div class="hero-cta">
+					<button class="button-primary" onclick="showSection('project')">
+						<i class="fas fa-seedling"></i>
+						Hemen Keşfet
+					</button>
+				</div>
+			</div>
+		</div>
+		    <!-- Öne Çıkan Özellikler -->
+		<div class="features-section">
+			<div class="features-grid">
+				<div class="feature-card glow-card">
+					<i class="fas fa-brain feature-icon"></i>
+					<h3>Akıllı Analiz</h3>
+					<p>Gerçek zamanlı bitki sağlığı izleme</p>
+					<div class="feature-progress">
+						<div class="progress-bar" style="width: 92%">%92 Doğruluk</div>
+					</div>
+				</div>
+
+				<div class="feature-card glow-card">
+					<i class="fas fa-tint feature-icon"></i>
+					<h3>Otonom Sulama</h3>
+					<p>İhtiyaca göre optimize edilmiş sulama</p>
+					<div class="feature-stats">
+						<div class="stat">
+							<span class="stat-value">%70</span>
+							<span class="stat-label">Su Tasarrufu</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="feature-card glow-card">
+					<i class="fas fa-mobile-alt feature-icon"></i>
+					<h3>Mobil Kontrol</h3>
+					<p>7/24 erişim ve anlık bildirimler</p>
+					<div class="app-badges">
+						<img src="https://play.google.com/intl/en_us/badges/static/images/badges/tr_badge_web_generic.png" 
+							 alt="Google Play" 
+							 class="store-badge">
+						<img src="https://developer.apple.com/app-store/marketing/guidelines/images/badge-download-on-the-app-store.svg" 
+							 alt="App Store" 
+							 class="store-badge">
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Project Section -->
+	<section id="project" class="page-section">
+		<div class="project-container">
+			<!-- Proje Amacı -->
+			<div class="feature-card">
+				<h2>🌱 Proje Amacı ve Hedefler</h2>
+				<p class="project-description">
+					Şehirde yaşayanlar için bitki yetiştirmeyi otomatikleştiren, 
+					<span class="highlight">yapay zeka destekli</span> akıllı sera sistemi. 
+					Temel hedefler:
+				</p>
+				<ul class="goal-list">
+					<li><i class="fas fa-check-circle"></i> Bitki ölümlerini %90 azaltmak</li>
+					<li><i class="fas fa-check-circle"></i> Su tüketimini optimize etmek</li>
+					<li><i class="fas fa-check-circle"></i> Kullanıcı dostu mobil entegrasyon</li>
+				</ul>
+			</div>
+
+			<!-- Timeline -->
+			<div class="feature-card timeline-wrapper">
+				<h2>⏳ Proje Aşamaları</h2>
+				<div class="timeline-container">
+					<div class="timeline-item">
+						<div class="timeline-badge primary-bg">1</div>
+						<h4>Planlama & Araştırma</h4>
+						<p class="timeline-date">1-15 Ocak 2025</p>
+						<ul>
+							<li>Pazar analizi</li>
+							<li>Teknoloji seçimi</li>
+						</ul>
+					</div>
+					
+					<div class="timeline-item">
+						<div class="timeline-badge secondary-bg">2</div>
+						<h4>Prototip Geliştirme</h4>
+						<p class="timeline-date">16 Ocak - 28 Şubat 2025</p>
+						<ul>
+							<li>Donanım entegrasyonu</li>
+							<li>Temel yazılım mimarisi</li>
+						</ul>
+					</div>
+
+					<div class="timeline-item">
+						<div class="timeline-badge success-bg">3</div>
+						<h4>Pilot Uygulama</h4>
+						<p class="timeline-date">1 Mart - 30 Nisan 2025</p>
+						<ul>
+							<li>100 kullanıcılı test ağı</li>
+							<li>Veri analizi</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+
+			<!-- Yenilikçi Özellikler -->
+			<div class="innovation-section">
+				<h2>🚀 Yenilikçi Teknolojiler</h2>
+				<div class="innovation-grid">
+					<div class="innovation-card ai-card">
+						<i class="fas fa-brain"></i>
+						<h4>AI Destekli Teşhis</h4>
+						<p>Bitki hastalıklarını %98 doğrulukla tanıma</p>
+					</div>
+					
+					<div class="innovation-card sensor-card">
+						<i class="fas fa-wifi"></i>
+						<h4>Akıllı Sensör Ağı</h4>
+						<p>15+ parametrede gerçek zamanlı izleme</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Performans Grafiği -->
+			<div class="chart-container feature-card">
+				<h2>📈 Rakip Karşılaştırması</h2>
+				<canvas id="performanceChart"></canvas>
+				<div class="chart-legend">
+					<span class="legend-item our-product"><i class="fas fa-square"></i> Plantelligence</span>
+					<span class="legend-item competitor"><i class="fas fa-square"></i> Rakip Ürünler</span>
+				</div>
+			</div>
+		</div>
+	</section>
+
+			<!-- Team Section -->
+	<section id="team" class="page-section">
+		<h2>Uzman Ekibimiz</h2>
+		<div class="team-grid">
+			<!-- Emre Yazan -->
+			<div class="team-member">
+				<h3>Emre Yazan</h3>
+				<p class="member-expertise">Takım Lideri & Proje Yöneticisi</p>
+				<ul>
+					<li>Takım koordinasyonu</li>
+					<li>Stratejik planlama</li>
+					<li>İletişim yönetimi</li>
+				</ul>
+			</div>
+
+			<!-- Eser Çamlıbel -->
+			<div class="team-member">
+				<h3>Eser Çamlıbel</h3>
+				<p class="member-expertise">Yazılım Mühendisi</p>
+				<ul>
+					<li>C++ optimizasyon</li>
+					<li>Yüksek seviye programlama</li>
+					<li>IoT entegrasyonu</li>
+				</ul>
+			</div>
+
+			<!-- Taha Can Tunç -->
+			<div class="team-member">
+				<h3>Taha Can Tunç</h3>
+				<p class="member-expertise">Yapay Zeka Uzmanı</p>
+				<ul>
+					<li>Makine öğrenimi modelleri</li>
+					<li>Görüntü işleme algoritmaları</li>
+					<li>Veri analizi</li>
+				</ul>
+			</div>
+
+			<!-- Kerem Özfidan -->
+			<div class="team-member">
+				<h3>Ali Kerem Özfidan</h3>
+				<p class="member-expertise">Botanik Uzmanı</p>
+				<ul>
+					<li>Bitki fizyolojisi</li>
+					<li>Toprak-besin optimizasyonu</li>
+					<li>Biyolojik veri modelleme</li>
+				</ul>
+			</div>
+
+			<!-- Yeni Üye 1 -->
+			<div class="team-member">
+				<h3>Taha Ramazan Lim</h3>
+				<p class="member-expertise">Donanım Mühendisi</p>
+				<ul>
+					<li>Sensör ağı tasarımı</li>
+					<li>Gömülü sistemler</li>
+					<li>Prototip üretim</li>
+				</ul>
+			</div>
+
+			<!-- Yeni Üye 2 -->
+			<div class="team-member">
+				<h3>Ahmet Öztürk</h3>
+				<p class="member-expertise">Full Stack Developer</p>
+				<ul>
+					<li>Web arayüz geliştirme</li>
+					<li>Veritabanı yönetimi</li>
+					<li>Cloud entegrasyon</li>
+				</ul>
+			</div>
+		</div> <!-- team-grid kapatıldı -->
+	</section>
+
+
+	<!-- Technology Section -->
+	<section id="tech" class="page-section">
+		<div class="tech-container">
+			<h2 class="section-title">🚀 Kullandığımız Teknolojiler</h2>
+			<div class="tech-card">
+		<div class="tech-icon">
+			<i class="fab fa-python"></i>
+		</div>
+		<h3>Python AI Entegrasyonu</h3>
+		<ul class="feature-list">
+			<li>Real-time görüntü işleme</li>
+			<li>TensorFlow Lite optimizasyon</li>
+			<li>MQTT protokol desteği</li>
+		</ul>
+		<button class="detail-button">
+			<i class="fas fa-info-circle"></i>
+			Detaylı Bilgi
+		</button>
+	</div>
+			
+			<!-- Donanım Teknolojileri -->
+        <div class="tech-category">
+            <h3><i class="fas fa-microchip"></i> Donanım Altyapısı</h3>
+            <div class="tech-grid">
+                <div class="tech-card hardware-card">
+                    <div class="tech-icon">
+                        <img src="https://simpleicons.org/icons/espressif.svg" alt="ESP32">
+                    </div>
+                    <h4>ESP32-CAM</h4>
+                    <ul>
+                        <li>Dual-core 240MHz</li>
+                        <li>Entegre WiFi/BT</li>
+                        <li>OV2640 Kamera</li>
+                    </ul>
+                    <button class="detail-button" onclick="showTechDetail('esp32')">
+                        <i class="fas fa-info-circle"></i>
+                        Detaylı Bilgi
+                    </button>
+                </div>
+
+                <div class="tech-card hardware-card">
+                    <div class="tech-icon">
+                        <img src="https://simpleicons.org/icons/arduino.svg" alt="Sensör">
+                    </div>
+                    <h4>Sensör Ağı</h4>
+                    <ul>
+                        <li>DHT22 (Nem/Sıcaklık)</li>
+                        <li>NPK Sensör (RS485)</li>
+                        <li>BH1750 (Işık Şiddeti)</li>
+                    </ul>
+                    <button class="detail-button" onclick="showTechDetail('sensor')">
+                        <i class="fas fa-info-circle"></i>
+                        Detaylı Bilgi
+                    </button>
+                </div>
+            </div>
+        </div>
+
+			<!-- Proje Kartı Örneği -->
+			<div class="project-card">
+				<h3>Akıllı Sulama Sistemi</h3>
+				<ul class="feature-list">
+					<li>Nem sensörü entegrasyonu</li>
+					<li>Hava tahmini API</li>
+					<li>Enerji tasarruf modu</li>
+				</ul>
+				<button class="detail-button">
+					<i class="fas fa-info-circle"></i>
+					Teknik Spesifikasyonlar
+				</button>
+			</div>
+
+			<!-- Yazılım Teknolojileri -->
+		 <div class="tech-category">
+					<h3><i class="fas fa-code"></i> Yazılım Mimarisi</h3>
+					<div class="tech-grid">
+						<div class="tech-card software-card">
+							<div class="tech-icon">
+								<img src="https://simpleicons.org/icons/python.svg" alt="Python">
+							</div>
+							<h4>Python & AI</h4>
+							<ul>
+								<li>TensorFlow Lite</li>
+								<li>OpenCV Görüntü İşleme</li>
+								<li>MQTT Protokolü</li>
+							</ul>
+							<button class="detail-button" onclick="showTechDetail('python')">
+								<i class="fas fa-info-circle"></i>
+								Detaylı Bilgi
+							</button>
+						</div>
+
+						<div class="tech-card software-card">
+							<div class="tech-icon">
+								<img src="https://simpleicons.org/icons/nodedotjs.svg" alt="Node.js">
+							</div>
+							<h4>Node.js Backend</h4>
+							<ul>
+								<li>Express.js Framework</li>
+								<li>MongoDB Atlas</li>
+								<li>RESTful API</li>
+							</ul>
+							<button class="detail-button" onclick="showTechDetail('nodejs')">
+								<i class="fas fa-info-circle"></i>
+								Detaylı Bilgi
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Veri Görselleştirme -->
+			<div class="tech-category">
+				<h3><i class="fas fa-chart-line"></i> Veri Analitiği</h3>
+				<div class="tech-grid">
+					<div class="tech-card data-card">
+						<div class="tech-icon">
+							<i class="fas fa-cloud"></i>
+						</div>
+						<h4>Bulut Entegrasyonu</h4>
+						<ul>
+							<li>AWS IoT Core</li>
+							<li>Firebase Realtime DB</li>
+							<li>Grafana Dashboard</li>
+						</ul>
+					</div>
+
+					<div class="tech-card data-card">
+						<div class="tech-icon">
+							<i class="fas fa-mobile-alt"></i>
+						</div>
+						<h4>Mobil Uygulama</h4>
+						<ul>
+							<li>React Native</li>
+							<li>Anlık Bildirimler</li>
+							<li>AR Görüntüleme</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+    <!-- Gallery Section -->
+    <section id="gallery" class="page-section">
+        <h2>Proje Görselleri</h2>
+        <div class="gallery-grid">
+            <div class="gallery-item">
+                <img src="prototype-1.jpg" alt="Prototip 1">
+            </div>
+            <div class="gallery-item">
+                <img src="prototype-2.jpg" alt="Prototip 2">
+            </div>
+        </div>
+    </section>
+		<!-- İletişim Section -->
+	<section id="contact" class="page-section">
+		<div class="contact-container">
+			<h2 class="section-title">🌍 Bize Ulaşın</h2>
+			
+			<div class="contact-grid">
+				<!-- İletişim Formu -->
+				<div class="contact-form">
+					<form id="contactForm" class="form-card">
+						<div class="form-group">
+							<label for="name">Adınız</label>
+							<input type="text" id="name" required 
+								placeholder="Adınız Soyadınız">
+						</div>
+						
+						<div class="form-group">
+							<label for="email">E-posta</label>
+							<input type="email" id="email" required
+								placeholder="ornek@mail.com">
+						</div>
+
+						<div class="form-group">
+							<label for="message">Mesajınız</label>
+							<textarea id="message" rows="5" required
+								placeholder="Mesajınızı buraya yazın..."></textarea>
+						</div>
+
+						<button type="submit" class="submit-btn">
+							<i class="fas fa-paper-plane"></i> Gönder
+						</button>
+					</form>
+				</div>
+
+				<!-- İletişim Bilgileri -->
+				<div class="contact-info">
+					<div class="info-card">
+						<h3><i class="fas fa-map-marker-alt"></i> Adres</h3>
+						<p>Teknopark İstanbul<br>Sanayi Mah. 123. Sokak<br>No: 5 Kat: 3</p>
+						
+						<h3><i class="fas fa-phone"></i> Telefon</h3>
+						<p>+90 555 123 45 67</p>
+						
+						<h3><i class="fas fa-envelope"></i> E-posta</h3>
+						<p>info@plantelligence.com</p>
+
+						<div class="social-links">
+							<a href="#" class="social-icon">
+								<i class="fab fa-twitter"></i>
+							</a>
+							<a href="#" class="social-icon">
+								<i class="fab fa-linkedin"></i>
+							</a>
+							<a href="#" class="social-icon">
+								<i class="fab fa-github"></i>
+							</a>
+						</div>
+					</div>
+
+					<!-- Harita -->
+					<div id="contactMap" class="map-container"></div>
+				</div>
+			</div>
+		</div>
+	</section>
+	<section id="simulation" class="page-section">
+		<div class="contact-container">
+			<h2 class="section-title">🌿 Canlı Bitki Simülasyonu</h2>
+			<div class="form-card" style="max-width: 800px; margin: 0 auto;">
+				<div id="status" class="status">
+					<!-- Sensör verileri buraya gelecek -->
+				</div>
+			</div>
+		</div>
+	</section>
+
+    <script>
+        // Tema Yönetimi
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const icon = document.querySelector('.theme-toggle i');
+            icon.classList.toggle('fa-moon');
+            icon.classList.toggle('fa-sun');
+        }
+
+        // Sayfa Yönetimi
+        function showSection(sectionId) {
+            document.querySelectorAll('.page-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+            
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            document.querySelector(`a[href="#${sectionId}"]`).classList.add('active');
+        }
+
+        // Performans Grafiği
+        const ctx = document.getElementById('performanceChart');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Plantelligence', 'Rakip 1', 'Rakip 2'],
+                datasets: [{
+                    label: 'Sensör Sayısı',
+                    data: [8, 4, 5],
+                    backgroundColor: '#2E7D32'
+                },{
+                    label: 'Özellik Sayısı',
+                    data: [12, 7, 9],
+                    backgroundColor: '#FFB300'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        // Harita Yükleme
+        function initMap() {
+            const map = L.map('map').setView([41.015137, 28.979530], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            L.marker([41.015137, 28.979530]).addTo(map)
+                .bindPopup('Plantelligence Merkez Ofisi');
+        }
+
+        window.onload = () => {
+            initMap();
+            showSection('home');
+        }
+			// Harita İçin
+		function initContactMap() {
+			const map = L.map('contactMap').setView([41.015137, 28.979530], 15);
+			L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+			L.marker([41.015137, 28.979530])
+				.addTo(map)
+				.bindPopup('Plantelligence Merkez Ofisi');
+		}
+
+		// Form Gönderimi
+		document.getElementById('contactForm').addEventListener('submit', function(e) {
+			e.preventDefault();
+			alert('Mesajınız başarıyla gönderildi! En kısa sürede dönüş yapacağız.');
+			this.reset();
+		});
+
+		// Sayfa Yüklendiğinde
+		window.onload = () => {
+			initMap(); // Ana sayfa haritası
+			initContactMap(); // İletişim sayfası haritası
+		}
+		const techDetails = {
+            python: {
+                title: "Python Teknolojisi Detayları",
+                content: `
+                <h4>Özellikler:</h4>
+                <ul>
+                    <li>TensorFlow Lite ile optimize edilmiş AI modelleri</li>
+                    <li>OpenCV ile gerçek zamanlı görüntü analizi</li>
+                    <li>MQTT protokolü ile IoT entegrasyonu</li>
+                    <li>Günlük 1TB veri işleme kapasitesi</li>
+                </ul>
+                <h4>Performans Metrikleri:</h4>
+                <div class="performance-meter">
+                    <div class="meter-bar" style="width: 92%">Doğruluk: 92%</div>
+                    <div class="meter-bar" style="width: 87%">Hız: 87ms</div>
+                </div>`
+            }
+        };
+		// Simülasyon Fonksiyonları
+		function generateNoise(value, noiseRange) {
+			return value + (Math.random() - 0.5) * noiseRange * 4;
+		}
+
+		function stabilizeConditions(humidity, temperature, phValue) {
+			let messages = [];
+			if (humidity < 35.0) {
+				messages.push("🔴 Uyarı: Nem çok düşük! Sulama açılıyor...");
+				humidity += 10.0;
+			} else if (humidity > 65.0) {
+				messages.push("🔴 Uyarı: Nem çok yüksek! Havalandırma açılıyor...");
+				humidity -= 10.0;
+			}
+			if (temperature < 18.0) {
+				messages.push("🔴 Uyarı: Sıcaklık çok düşük! Isıtıcı açılıyor...");
+				temperature += 3.0;
+			} else if (temperature > 28.0) {
+				messages.push("🔴 Uyarı: Sıcaklık çok yüksek! Soğutma açılıyor...");
+				temperature -= 3.0;
+			}
+
+			if (phValue < 5.0) {
+				messages.push("🔴 Uyarı: pH çok düşük! Alkalin ekleniyor...");
+				phValue += 0.5;
+			} else if (phValue > 7.8) {
+				messages.push("🔴 Uyarı: pH çok yüksek! Asidik çözüm ekleniyor...");
+				phValue -= 0.5;
+			}
+			return { humidity, temperature, phValue, messages };
+		}
+		// Function to detect diseases
+		function diseaseDetection(temperature, humidity, phValue) {
+			let messages = [];
+
+			if (temperature > 33.0 && humidity < 30.0 && phValue < 5.5) {
+				messages.push("⚠️ Hastalık: Mantar enfeksiyonu riski!");
+			} else if (temperature < 16.0 && humidity > 75.0) {
+				messages.push("⚠️ Hastalık: Bakteriyel enfeksiyon riski!");
+			} else if (phValue > 7.6) {
+				messages.push("⚠️ Hastalık: Toprak dengesiz, kök hastalıkları oluşabilir!");
+			}
+
+			return messages;
+		}
+
+
+		function updateStatus() {
+			let humidity = generateNoise(50.0, 10.0);
+			let temperature = generateNoise(22.0, 5.0);
+			let phValue = generateNoise(6.5, 1.0);
+			
+			let stabilized = stabilizeConditions(humidity, temperature, phValue);
+			
+			let statusDiv = document.getElementById('status');
+			statusDiv.innerHTML = `
+				<div class="sensor-grid">
+					<div class="sensor-card">
+						<i class="fas fa-tint"></i>
+						<h3>${stabilized.humidity.toFixed(2)}%</h3>
+						<p>Nem Seviyesi</p>
+					</div>
+					<div class="sensor-card">
+						<i class="fas fa-thermometer-half"></i>
+						<h3>${stabilized.temperature.toFixed(2)}°C</h3>
+						<p>Sıcaklık</p>
+					</div>
+					<div class="sensor-card">
+						<i class="fas fa-flask"></i>
+						<h3>${stabilized.phValue.toFixed(2)}</h3>
+						<p>pH Değeri</p>
+					</div>
+				</div>
+				${stabilized.messages.map(msg => `
+					<div class="alert-card">
+						<i class="fas fa-exclamation-triangle"></i>
+						${msg}
+					</div>`).join('')}
+			`;
+		}
+
+		// Her 2 saniyede bir güncelle
+		setInterval(updateStatus, 2000);
+		updateStatus();
+    </script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+</body>
+</html>

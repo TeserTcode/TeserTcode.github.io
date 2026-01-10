@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Map Projection Viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <div>
+        <input type="file" id="mapInput" accept="image/*">
+        <select id="projectionType">
+            <option value="mercator">Mercator</option>
+            <option value="gallpeters">Gall-Peters</option>
+            <option value="equirectangular">Equirectangular</option>
+        </select>
+        <input type="color" id="bgColor" value="#000000">
+        <label>
+            Crop sides: <input type="checkbox" id="cropCheckbox">
+        </label>
+        <div id="cropControls" style="display: none;">
+            <label>Left: <input type="range" id="cropLeft" min="0" max="50" value="0"></label>
+            <label>Right: <input type="range" id="cropRight" min="0" max="50" value="0"></label>
+        </div>
+        <button id="projectButton">Project</button>
+    </div>
+    <div id="threejs-container" style="width: 100%; height: 80vh;"></div>
+
+    <script>
+        // Main App Module
+        const MapProjectionApp = (function() {
+            // Constants
+            const DEFAULT_BG_COLOR = 0x000000;
+            const MAX_TEXTURE_SIZE = 4096; // Typical GPU limit
+            const MIN_SPHERE_SEGMENTS = 16;
+            const MAX_SPHERE_SEGMENTS = 256;
+            const DEFAULT_SPHERE_SEGMENTS = 64;
+            
+            // State
+            let scene, camera, renderer, controls;
+            let currentTexture = null;
+            let currentSphere = null;
+            let originalImageData = null;
+            let processedImageData = null;
+            
+            // DOM Elements
+            const container = document.getElementById('threejs-container');
+            const mapInput = document.getElementById('mapInput');
+            const projectionTypeSelect = document.getElementById('projectionType');
+            const projectButton = document.getElementById('projectButton');
+            const bgColorInput = document.getElementById('bgColor');
+            const cropCheckbox = document.getElementById('cropCheckbox');
+            const cropControls = document.getElementById('cropControls');
+            const cropLeftInput = document.getElementById('cropLeft');
+            const cropRightInput = document.getElementById('cropRight');
+            
+            // Initialize Three.js scene
+            function initThreeJS() {
+                // Scene
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(DEFAULT_BG_COLOR);
+                
+                // Camera
+                camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+                camera.position.z = 2;
+                
+                // Renderer
+                renderer = new THREE.WebGLRenderer({ 
+                    antialias: true,
+                    powerPreference: "high-performance"
+                });
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Cap at 2x
+                renderer.setSize(container.clientWidth, container.clientHeight);
+                renderer.outputEncoding = THREE.sRGBEncoding;
+                container.appendChild(renderer.domElement);
+                
+                // Controls
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+                controls.dampingFactor = 0.25;
+                
+                // Lighting
+                const ambientLight = new THREE.AmbientLight(0x404040);
+                scene.add(ambientLight);
+                
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+                directionalLight.position.set(1, 1, 1);
+                scene.add(directionalLight);
+                
+                // Window resize handler
+                window.addEventListener('resize', onWindowResize);
+            }
+            
+            function onWindowResize() {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            }
+            
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+            
+            // Process image to square and handle cropping
+            function processImageToSquare(image, cropLeft = 0, cropRight = 0) {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Calculate dimensions after cropping
+                const cropLeftPx = (image.width * cropLeft) / 100;
+                const cropRightPx = (image.width * cropRight) / 100;
+                const croppedWidth = image.width - cropLeftPx - cropRightPx;
+                
+                // Make it square (use height as reference)
+                const size = image.height;
+                canvas.width = size;
+                canvas.height = size;
+                
+                // Draw cropped image stretched to square
+                ctx.drawImage(
+                    image, 
+                    cropLeftPx, 0,              // source x, y
+                    croppedWidth, image.height,  // source width, height
+                    0, 0,                        // destination x, y
+                    size, size                   // destination width, height
+                );
+                
+                // Store original image data for coordinate mapping
+                originalImageData = {
+                    width: image.width,
+                    height: image.height,
+                    cropLeft: cropLeftPx,
+                    cropRight: cropRightPx
+                };
+                
+                return canvas;
+            }
+            
+            // Load and process image
+            function loadImage(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const img = new Image();
+                        img.onload = function() {
+                            // Check if image is too large
+                            if (img.width > MAX_TEXTURE_SIZE || img.height > MAX_TEXTURE_SIZE) {
+                                alert(`Image is too large (max ${MAX_TEXTURE_SIZE}x${MAX_TEXTURE_SIZE}px). It will be resized.`);
+                            }
+                            
+                            // Process to square and optionally crop
+                            const shouldCrop = cropCheckbox.checked;
+                            const cropLeft = shouldCrop ? parseFloat(cropLeftInput.value) : 0;
+                            const cropRight = shouldCrop ? parseFloat(cropRightInput.value) : 0;
+                            
+                            const squareCanvas = processImageToSquare(img, cropLeft, cropRight);
+                            processedImageData = squareCanvas;
+                            
+                            // Create texture
+                            const texture = new THREE.CanvasTexture(squareCanvas);
+                            texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+                            texture.encoding = THREE.sRGBEncoding;
+                            currentTexture = texture;
+                            
+                            resolve(texture);
+                        };
+                        img.src = event.target.result;
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
+            
+            // Create sphere with projected texture
+            function createProjectedSphere(texture, projectionType) {
+                // Remove previous sphere if exists
+                if (currentSphere) {
+                    scene.remove(currentSphere);
+                    currentSphere.geometry.dispose();
+                    currentSphere.material.dispose();
+                }
+                
+                // Determine quality based on image size
+                const segments = Math.min(
+                    MAX_SPHERE_SEGMENTS,
+                    Math.max(
+                        MIN_SPHERE_SEGMENTS,
+                        Math.floor(Math.sqrt(texture.image.width * texture.image.height) / 10)
+                    )
+                );
+                
+                // Create sphere geometry
+                const geometry = new THREE.SphereGeometry(1, segments, segments);
+                const material = new THREE.MeshPhongMaterial({ 
+                    map: texture,
+                    specular: 0x111111,
+                    shininess: 30,
+                    side: THREE.DoubleSide
+                });
+                
+                // Modify UVs based on projection type
+                const uvAttribute = geometry.attributes.uv;
+                
+                for (let i = 0; i < uvAttribute.count; i++) {
+                    let u = uvAttribute.getX(i);
+                    let v = uvAttribute.getY(i);
+                    
+                    // Convert from [0,1] to [-0.5,0.5]
+                    u = u - 0.5;
+                    v = v - 0.5;
+                    
+                    // Apply inverse projection
+                    switch(projectionType) {
+                        case 'mercator':
+                            // Inverse Mercator projection
+                            v = 2 * Math.atan(Math.exp(v * 2 * Math.PI)) - Math.PI/2;
+                            v /= Math.PI;
+                            break;
+                        case 'gallpeters':
+                            // Inverse Gall-Peters projection
+                            v = Math.sin(v * Math.PI) / 2;
+                            break;
+                        case 'equirectangular':
+                            // Equirectangular is already linear
+                            break;
+                    }
+                    
+                    // Convert back to [0,1] range
+                    u = u + 0.5;
+                    v = v + 0.5;
+                    
+                    uvAttribute.setXY(i, u, v);
+                }
+                
+                uvAttribute.needsUpdate = true;
+                
+                const sphere = new THREE.Mesh(geometry, material);
+                scene.add(sphere);
+                currentSphere = sphere;
+                return sphere;
+            }
+            
+            // Project button handler
+            async function onProjectButtonClick() {
+                if (!currentTexture) {
+                    alert('Please load an image first');
+                    return;
+                }
+                
+                const projectionType = projectionTypeSelect.value;
+                createProjectedSphere(currentTexture, projectionType);
+            }
+            
+            // Change background color
+            function onBgColorChange() {
+                scene.background = new THREE.Color(bgColorInput.value);
+            }
+            
+            // Toggle crop controls visibility
+            function onCropCheckboxChange() {
+                cropControls.style.display = cropCheckbox.checked ? 'block' : 'none';
+            }
+            
+            // Initialize event listeners
+            function initEventListeners() {
+                mapInput.addEventListener('change', async (e) => {
+                    if (e.target.files.length > 0) {
+                        await loadImage(e.target.files[0]);
+                        // Auto-project after load
+                        onProjectButtonClick();
+                    }
+                });
+                
+                projectButton.addEventListener('click', onProjectButtonClick);
+                bgColorInput.addEventListener('input', onBgColorChange);
+                cropCheckbox.addEventListener('change', onCropCheckboxChange);
+                
+                // Limit crop values
+                cropLeftInput.addEventListener('input', function() {
+                    const maxRight = 50 - parseFloat(cropRightInput.value);
+                    if (parseFloat(this.value) > maxRight) {
+                        this.value = maxRight;
+                    }
+                });
+                
+                cropRightInput.addEventListener('input', function() {
+                    const maxLeft = 50 - parseFloat(cropLeftInput.value);
+                    if (parseFloat(this.value) > maxLeft) {
+                        this.value = maxLeft;
+                    }
+                });
+            }
+            
+            // Public API
+            return {
+                init: function() {
+                    initThreeJS();
+                    initEventListeners();
+                    animate();
+                },
+                
+                // Helper function to get original coordinates from sphere UVs
+                getOriginalCoordinates: function(u, v) {
+                    if (!originalImageData || !processedImageData) return null;
+                    
+                    // First, get the coordinates in the square image
+                    const squareX = u * processedImageData.width;
+                    const squareY = (1 - v) * processedImageData.height; // Flip Y
+                    
+                    // Then map back to original image coordinates
+                    const originalAspect = originalImageData.width / originalImageData.height;
+                    const croppedWidth = originalImageData.width - originalImageData.cropLeft - originalImageData.cropRight;
+                    
+                    const originalX = originalImageData.cropLeft + (squareX / processedImageData.width) * croppedWidth;
+                    const originalY = squareY; // Height wasn't cropped
+                    
+                    return {
+                        x: originalX,
+                        y: originalY,
+                        valid: originalX >= 0 && originalX <= originalImageData.width &&
+                              originalY >= 0 && originalY <= originalImageData.height
+                    };
+                },
+                
+                // Expose for debugging or extension
+                getScene: () => scene,
+                getCamera: () => camera,
+                getRenderer: () => renderer,
+                getCurrentTexture: () => currentTexture,
+                getCurrentSphere: () => currentSphere,
+                getOriginalImageData: () => originalImageData,
+                getProcessedImageData: () => processedImageData
+            };
+        })();
+        
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            MapProjectionApp.init();
+        });
+    </script>
+</body>
+</html>

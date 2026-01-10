@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Exact Discrete Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+html,body{
+  margin:0;height:100%;
+  background:url("power.png") center/contain no-repeat;
+}
+body{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+#box{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+pre{white-space:pre-wrap}
+</style>
+</head>
+
+<body>
+<div id="box">
+
+<h3>Exact BigInt Calculator</h3>
+
+<label>a:</label><input id="a" value="2">
+<label>n:</label><input id="n" value="10">
+
+<label>Operation:</label>
+<select id="op">
+  <option value="pow">a^n</option>
+  <option value="fall">falling factorial (nfr)</option>
+  <option value="rise">rising factorial (nrr)</option>
+  <option value="npr">nPr</option>
+  <option value="ncr">nCr</option>
+</select>
+
+<label>Digit set:</label>
+<select id="digits">
+  <option value="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ">62 (0-9 a-z A-Z)</option>
+  <option value="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz">62 (0-9 A-Z a-z)</option>
+  <option value="0123456789⓪①②③④⑤⑥⑦⑧⑨⓿❶❷❸❹❺❻❼❽❾">30 circled</option>
+</select>
+
+<label>Base:</label><input id="base" type="number" value="10" min="2" max="62">
+
+<label>Split g:</label><input id="g" type="number" value="0">
+<select id="mode">
+  <option value="lines">equal lines</option>
+  <option value="digits">equal digits</option>
+</select>
+
+<button onclick="compute()">Compute</button>
+
+<pre id="out"></pre>
+
+</div>
+
+<script>
+const fact=n=>{let r=1n;for(let i=2n;i<=n;i++)r*=i;return r}
+const fall=(a,n)=>{let r=1n;for(let i=0n;i<n;i++)r*=a-i;return r}
+const rise=(a,n)=>{let r=1n;for(let i=0n;i<n;i++)r*=a+i;return r}
+const pow =(a,n)=>{let r=1n,b=a;while(n){if(n&1n)r*=b;b*=b;n>>=1n}return r}
+
+function compute(){
+  const a=BigInt(aEl.value), n=BigInt(nEl.value)
+  const op=opEl.value, ds=digitsEl.value
+  const base=+baseEl.value, g=+gEl.value, mode=modeEl.value
+  if(base>ds.length)return out.textContent="Base exceeds digit set"
+
+  let v=
+    op=="pow" ? pow(a,n) :
+    op=="fall"? fall(a,n):
+    op=="rise"? rise(a,n):
+    op=="npr" ? fall(a,n):
+    op=="ncr" ? fall(a,n)/fact(n):
+    0n
+
+  let digs=[],B=BigInt(base)
+  if(v==0n)digs=[ds[0]]
+  else while(v){digs.push(ds[Number(v%B)]);v/=B}
+  let txt=digs.reverse().join('')
+
+  if(g>0){
+    let L=[],len=txt.length
+    if(mode=="lines"){
+      let k=Math.ceil(len/g)
+      for(let i=0;i<len;i+=k)L.push(txt.slice(i,i+k))
+    }else{
+      let k=Math.floor(len/g),r=len%g,s=0
+      for(let i=0;i<g;i++){
+        let e=s+k+(r-->0)
+        L.push(txt.slice(s,e));s=e
+      }
+    }
+    txt=L.join("\n")
+  }
+  out.textContent=txt
+}
+
+const aEl=a,nEl=n,opEl=op,digitsEl=digits,baseEl=base,gEl=g,modeEl=mode
+</script>
+</body>
+</html>

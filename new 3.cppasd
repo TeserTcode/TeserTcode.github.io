@@ -1,0 +1,23 @@
+#include <iostream>
+
+/* run this program using the console pauser or add your own getch, system("pause") or input loop */
+
+
+struct tree{
+	*tree r;
+	tree* l;
+	int value
+	
+}
+
+
+int main(int argc, char** argv) {
+	
+	
+	int kel=0;
+	
+
+	
+	
+	return 0;
+}

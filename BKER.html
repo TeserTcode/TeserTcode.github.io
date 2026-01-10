@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<label>N: <input type="number" id="N" value="128"></label>
+<label>Iterations n: <input type="number" id="iterations" value="10"></label>
+<select id="mapType">
+<option value="arnold">Arnold</option>
+<option value="baker">Baker</option>
+<option value="catMap">Cat Map</option>
+<option value="swirl">Swirl</option>
+</select>
+<select id="colorScheme">
+<option value="bw">Black-White</option>
+<option value="wb">White-Black</option>
+<option value="rainbow">Rainbow</option>
+<option value="flame">Flame</option>
+<option value="yellowblue">Yellow-Blue</option>
+<option value="pinkgreen">Pink-Green</option>
+</select>
+<input type="file" id="imgLoader">
+<button onclick="makeGIF()">Make GIF</button>
+<button onclick="makeLyapunov()">Lyapunov</button>
+<button onclick="makeInvariant()">Invariance</button>
+<button onclick="makePeriod()">Period</button>
+<button onclick="generateGradient()">Generate RG Gradient</button>
+
+<br>
+<canvas id="canvas"></canvas>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+<script>
+let canvas=document.getElementById("canvas");
+let ctx=canvas.getContext("2d");
+let original=null;
+
+// ------------------ Color utilities ------------------
+function applyColorScheme(val, scheme){
+    // val: 0..1 float
+    let r=0,g=0,b=0;
+    switch(scheme){
+        case "bw": r=g=b=Math.floor(val*255); break;
+        case "wb": r=g=b=Math.floor((1-val)*255); break;
+        case "rainbow":
+            let h=val*360;
+            [r,g,b]=hsl2rgb(h,1,0.5); break;
+        case "flame":
+            r=Math.floor(255*val); g=Math.floor(128*val); b=0; break;
+        case "yellowblue":
+            r=Math.floor(255*val); g=Math.floor(255*val*(1-val)); b=Math.floor(255*(1-val)); break;
+        case "pinkgreen":
+            r=Math.floor(255*val); g=Math.floor(255*(1-val)); b=Math.floor(128*val); break;
+    }
+    return [r,g,b];
+}
+
+// HSL to RGB helper
+function hsl2rgb(h,s,l){
+    h/=360;
+    let r,g,b;
+    if(s==0){r=g=b=l;} else{
+        function hue2rgb(p,q,t){
+            if(t<0)t+=1; if(t>1)t-=1;
+            if(t<1/6)return p+(q-p)*6*t;
+            if(t<1/2)return q;
+            if(t<2/3)return p+(q-p)*(2/3-t)*6;
+            return p;
+        }
+        let q=l<0.5? l*(1+s) : l+s-l*s;
+        let p=2*l-q;
+        r=hue2rgb(p,q,h+1/3);
+        g=hue2rgb(p,q,h);
+        b=hue2rgb(p,q,h-1/3);
+    }
+    return [Math.floor(r*255),Math.floor(g*255),Math.floor(b*255)];
+}
+
+// ------------------ Gradient ------------------
+function generateGradient(){
+    let N=parseInt(document.getElementById("N").value);
+    canvas.width=canvas.height=N;
+    let img=ctx.createImageData(N,N);
+    for(let y=0;y<N;y++){
+        for(let x=0;x<N;x++){
+            let idx=(y*N+x)*4;
+            img.data[idx]=Math.floor(255*x/(N-1));
+            img.data[idx+1]=Math.floor(255*y/(N-1));
+            img.data[idx+2]=0;
+            img.data[idx+3]=255;
+        }
+    }
+    ctx.putImageData(img,0,0);
+    original=ctx.getImageData(0,0,N,N);
+}
+
+// ------------------ Load image ------------------
+document.getElementById("imgLoader").addEventListener("change",function(e){
+    let file=e.target.files[0]; if(!file) return;
+    let reader=new FileReader();
+    reader.onload=function(evt){
+        let img=new Image();
+        img.onload=function(){
+            let N=parseInt(document.getElementById("N").value);
+            canvas.width=canvas.height=N;
+            ctx.drawImage(img,0,0,N,N);
+            original=ctx.getImageData(0,0,N,N);
+        }
+        img.src=evt.target.result;
+    }
+    reader.readAsDataURL(file);
+});
+
+// ------------------ 1-to-1 mappings ------------------
+function mapPoint(x,y,type,N){
+    let newX,newY;
+    let yy=y%2;
+    switch(type){
+        case "arnold":
+            newX=(x+y)%N;
+            newY=(x+2*y)%N;
+            break;
+        case "baker":
+            if(x<N/2){
+                newX=(2*x+yy)%N;
+                newY=Math.floor(y/2)%(N/2);
+            } else {
+                newX=(N*2-2*x-yy-1)%N;
+                newY=(Math.floor(N-y/2)+yy-1)%(N/2)+N/2;
+            }
+            break;
+        case "catMap":
+            newX=(x+2*y)%N;
+            newY=(2*x+y)%N;
+            break;
+        case "swirl":
+            // a simple invert + shift mapping demo
+            newX=(N-1-x+y)%N;
+            newY=(x+N-1+y*2)%N;
+            break;
+        default:
+            newX=x; newY=y;
+    }
+    return [newX,newY];
+}
+
+// ------------------ Apply map ------------------
+function applyMap(n){
+    if(!original) return;
+    let N=parseInt(document.getElementById("N").value);
+    let type=document.getElementById("mapType").value;
+    let data=original.data.slice();
+    for(let k=0;k<n;k++){
+        let tmp=new Uint8ClampedArray(data.length);
+        for(let y=0;y<N;y++){
+            for(let x=0;x<N;x++){
+                let [newX,newY]=mapPoint(x,y,type,N);
+                let src=(y*N+x)*4, dst=(newY*N+newX)*4;
+                tmp[dst]=data[src]; tmp[dst+1]=data[src+1];
+                tmp[dst+2]=data[src+2]; tmp[dst+3]=data[src+3];
+            }
+        }
+        data=tmp;
+    }
+    ctx.putImageData(new ImageData(data,N,N),0,0);
+}
+
+// Auto-update iterations
+document.getElementById("iterations").addEventListener("input",()=>{
+    applyMap(parseInt(document.getElementById("iterations").value));
+});
+
+// ------------------ Lyapunov ------------------
+function makeLyapunov(){
+    if(!original) return;
+    let N=parseInt(document.getElementById("N").value);
+    let nIter=parseInt(document.getElementById("iterations").value);
+    let type=document.getElementById("mapType").value;
+    let scheme=document.getElementById("colorScheme").value;
+    let img=ctx.createImageData(N,N);
+
+    for(let y=0;y<N;y++){
+        for(let x=0;x<N;x++){
+            let posX=x,posY=y;
+            let dist=0;
+            for(let i=0;i<nIter;i++){
+                let [newX,newY]=mapPoint(posX,posY,type,N);
+                dist+=Math.sqrt((newX-posX)**2+(newY-posY)**2);
+                posX=newX; posY=newY;
+            }
+            let val=Math.min(1, dist / (N*nIter)); // normalized
+            let [r,g,b]=applyColorScheme(val,scheme);
+            let idx=(y*N+x)*4;
+            img.data[idx]=r; img.data[idx+1]=g; img.data[idx+2]=b; img.data[idx+3]=255;
+        }
+    }
+    ctx.putImageData(img,0,0);
+}
+
+// ------------------ Invariance ------------------
+function makeInvariant(){
+    if(!original) return;
+    let N=parseInt(document.getElementById("N").value);
+    let type=document.getElementById("mapType").value;
+    let scheme=document.getElementById("colorScheme").value;
+    let img=ctx.createImageData(N,N);
+    for(let y=0;y<N;y++){
+        for(let x=0;x<N;x++){
+            let [newX,newY]=mapPoint(x,y,type,N);
+            let dist=Math.sqrt((newX-x)**2+(newY-y)**2);
+            let val=Math.min(1, dist/Math.sqrt(2*N*N));
+            let [r,g,b]=applyColorScheme(val,scheme);
+            let idx=(y*N+x)*4;
+            img.data[idx]=r; img.data[idx+1]=g; img.data[idx+2]=b; img.data[idx+3]=255;
+        }
+    }
+    ctx.putImageData(img,0,0);
+}
+
+// ------------------ Period ------------------
+function makePeriod(){
+    if(!original) return;
+    let N=parseInt(document.getElementById("N").value);
+    let type=document.getElementById("mapType").value;
+    let iterations=3*N;
+    let data=original.data.slice();
+    let periodMap=new Array(N*N).fill(0);
+    let initial=new Uint8ClampedArray(data);
+
+    for(let k=1;k<=iterations;k++){
+        let tmp=new Uint8ClampedArray(data.length);
+        for(let y=0;y<N;y++){
+            for(let x=0;x<N;x++){
+                let [newX,newY]=mapPoint(x,y,type,N);
+                let src=(y*N+x)*4, dst=(newY*N+newX)*4;
+                tmp[dst]=data[src]; tmp[dst+1]=data[src+1];
+                tmp[dst+2]=data[src+2]; tmp[dst+3]=data[src+3];
+            }
+        }
+        data=tmp;
+        for(let i=0;i<N*N;i++){
+            if(!periodMap[i]){
+                let match=true;
+                for(let j=0;j<4;j++){ if(data[i*4+j]!==initial[i*4+j]){match=false; break;} }
+                if(match) periodMap[i]=k;
+            }
+        }
+    }
+
+    let maxP=Math.max(...periodMap);
+    let img=ctx.createImageData(N,N);
+    for(let i=0;i<N*N;i++){
+        let val=periodMap[i]/maxP;
+        let [r,g,b]=applyColorScheme(val,document.getElementById("colorScheme").value);
+        let idx=i*4;
+        img.data[idx]=r; img.data[idx+1]=g; img.data[idx+2]=b; img.data[idx+3]=255;
+    }
+    ctx.putImageData(img,0,0);
+}
+
+// ------------------ GIF ------------------
+function makeGIF(){
+    if(!original) return;
+    let N=parseInt(document.getElementById("N").value);
+    let totalFrames=3*N;
+    let gif=new GIF({workers:2,quality:10,width:N,height:N});
+    for(let i=0;i<totalFrames;i++){
+        applyMap(i);
+        gif.addFrame(ctx,{copy:true,delay:50});
+    }
+    gif.on('finished',function(blob){
+        let url=URL.createObjectURL(blob);
+        let a=document.createElement('a'); a.href=url; a.download='map.gif'; a.click();
+    });
+    gif.render();
+    original=ctx.getImageData(0,0,N,N);
+}
+
+// ------------------ Init ------------------
+canvas.width=canvas.height=parseInt(document.getElementById("N").value);
+generateGradient();
+
+</script>
+</body>
+</html>

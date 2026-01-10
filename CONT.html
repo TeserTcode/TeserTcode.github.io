@@ -1,0 +1,111 @@
+<!doctype html><title>Filters</title>
+<input id=file type=file accept="image/*"><button id=save>Save</button><button id=reset>Reset</button><br>
+<canvas id=c></canvas><br>
+<div id=controls></div>
+<script>
+const c=document.getElementById('c'),g=c.getContext('2d'),ctl=document.getElementById('controls')
+let img=new Image(),orig=null,ready=false
+const ui=(html)=>{ctl.innerHTML=html;Array.from(ctl.querySelectorAll('input,select')).forEach(el=>el.oninput=render);Array.from(ctl.querySelectorAll('input[type=checkbox]')).forEach(el=>el.onclick=render)}
+ui(`
+<label>contrast <input id=contrast type=range min=-200 max=200 value=0></label>
+<label>brightness <input id=brightness type=range min=-255 max=255 value=0></label>
+<label>lightness <input id=lightness type=range min=-100 max=100 value=0></label>
+<label>gamma <input id=gamma type=range min=10 max=300 value=100></label>
+<label>saturation <input id=sat type=range min=-100 max=200 value=0></label>
+<label>sinusoidal ON <input id=sinon type=checkbox></label>
+<label>sin amp <input id=sinA type=range min=0 max=1 step=0.01 value=0.2></label>
+<label>sin freq <input id=sinF type=range min=0.1 max=10 step=0.1 value=2></label>
+<label>sh3 <input id=sh3 type=checkbox></label>
+<label>sh5 <input id=sh5 type=checkbox></label>
+<label>sh7 <input id=sh7 type=checkbox></label>
+<label>detail enhancer <input id=unsh type=range min=0 max=5 step=0.1 value=0></label>
+<label>high-pass <input id=hp type=range min=0 max=5 step=0.1 value=0></label>
+<label>hist equalize <input id=he type=checkbox></label>
+<label>autocontrast <input id=ac type=checkbox></label>
+<label>vibrance <input id=vib type=range min=-100 max=200 value=0></label>
+<label>sepia <input id=sep type=range min=0 max=100 value=0></label>
+<label>invert <input id=inv type=checkbox></label>
+<label>posterize <input id=post type=range min=2 max=32 value=32></label>
+<label>emboss <input id=emb type=checkbox></label>
+<label>edge detect <input id=edge type=checkbox></label>
+<label>solarize <input id=sol type=range min=0 max=255 value=0></label>
+<label>hue rotate <input id=hue type=range min=0 max=360 value=0></label>
+<label>noise <input id=noise type=range min=0 max=100 value=0></label>
+<label>blur <input id=blur type=range min=0 max=5 step=0.1 value=0></label>
+`)
+document.getElementById('file').onchange=e=>{
+  const f=e.target.files[0]; if(!f) return
+  const url=URL.createObjectURL(f)
+  img.onload=()=>{c.width=img.width;c.height=img.height; g.drawImage(img,0,0); orig=g.getImageData(0,0,c.width,c.height); ready=true; render(); URL.revokeObjectURL(url)}
+  img.src=url
+}
+document.getElementById('reset').onclick=()=>{if(ready){g.putImageData(orig,0,0); render()}}
+document.getElementById('save').onclick=()=>{if(!ready)return; const a=document.createElement('a'); a.download='edited.png'; a.href=c.toDataURL(); a.click()}
+
+function render(){
+  if(!ready) return
+  const id=g.createImageData(orig.width,orig.height),w=orig.width,h=orig.height,s=orig.data,d=id.data
+  const contrast=+document.getElementById('contrast').value
+  const brightness=+document.getElementById('brightness').value
+  const lightness=+document.getElementById('lightness').value
+  const gamma=+document.getElementById('gamma').value/100
+  const sat=+document.getElementById('sat').value/100
+  const sinusOn=document.getElementById('sinon').checked, sinA=+document.getElementById('sinA').value, sinF=+document.getElementById('sinF').value
+  const sh3=document.getElementById('sh3').checked, sh5=document.getElementById('sh5').checked, sh7=document.getElementById('sh7').checked
+  const unshAmt=+document.getElementById('unsh').value, hpAmt=+document.getElementById('hp').value
+  const he=document.getElementById('he').checked, ac=document.getElementById('ac').checked
+  const vib=+document.getElementById('vib').value/100, sep=+document.getElementById('sep').value/100
+  const inv=document.getElementById('inv').checked, post=+document.getElementById('post').value
+  const emb=document.getElementById('emb').checked, edge=document.getElementById('edge').checked
+  const sol=+document.getElementById('sol').value, hue=+document.getElementById('hue').value, noise=+document.getElementById('noise').value/100
+  const blurAmt=+document.getElementById('blur').value
+
+  let buf=new Float32Array(s.length)
+  for(let i=0;i<s.length;i+=4){
+    let r=s[i],g1=s[i+1],b=s[i+2]
+    let lum=(r*0.2126+g1*0.7152+b*0.0722)
+    let L=lum+lightness
+    r=(r-128)*(1+contrast/100)+128+brightness
+    g1=(g1-128)*(1+contrast/100)+128+brightness
+    b=(b-128)*(1+contrast/100)+128+brightness
+    r=Math.pow(Math.max(0,Math.min(255,r))/255,1/gamma)*255
+    g1=Math.pow(Math.max(0,Math.min(255,g1))/255,1/gamma)*255
+    b=Math.pow(Math.max(0,Math.min(255,b))/255,1/gamma)*255
+    let mx=Math.max(r,g1,b),mn=Math.min(r,g1,b),delta=mx-mn
+    let satFactor=1+sat
+    r=r+(r-lum)*satFactor; g1=g1+(g1-lum)*satFactor; b=b+(b-lum)*satFactor
+    if(vib!==0){let avg=(r+g1+b)/3;r+=(r-avg)*vib;g1+=(g1-avg)*vib;b+=(b-avg)*vib}
+    if(sep>0){let tr=r*0.393+g1*0.769+b*0.189,tg=r*0.349+g1*0.686+b*0.168,tb=r*0.272+g1*0.534+b*0.131;r=r*(1-sep)+tr*sep;g1=g1*(1-sep)+tg*sep;b=b*(1-sep)+tb*sep}
+    if(sinusOn){let Lnorm=L/255; let k=Lnorm+sinA*Math.sin(2*Math.PI*sinF*Lnorm); k/=Lnorm||1; r*=k; g1*=k; b*=k}
+    if(inv){r=255-r; g1=255-g1; b=255-b}
+    if(post<32){r=Math.floor(r/(256/post))*(256/post); g1=Math.floor(g1/(256/post))*(256/post); b=Math.floor(b/(256/post))*(256/post)}
+    if(sol>0){r=r>sol?255-r:r; g1=g1>sol?255-g1:g1; b=b>sol?255-b:b}
+    buf[i]=r; buf[i+1]=g1; buf[i+2]=b; buf[i+3]=s[i+3]
+  }
+
+  const conv=(src,k,kSiz)=>{
+    const out=new Float32Array(src.length),half=kSiz>>1
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+      let idx=(y*w+x)*4,r=0,g2=0,b2=0
+      for(let ky=0;ky<kSiz;ky++)for(let kx=0;kx<kSiz;kx++){
+        let sx=x+kx-half,sy=y+ky-half;if(sx<0)sx=0;if(sy<0)sy=0;if(sx>=w)sx=w-1;if(sy>=h)sy=h-1
+        let sidx=(sy*w+sx)*4,val=k[ky*kSiz+kx]; r+=src[sidx]*val; g2+=src[sidx+1]*val; b2+=src[sidx+2]*val
+      }
+      out[idx]=r; out[idx+1]=g2; out[idx+2]=b2; out[idx+3]=src[idx+3]
+    }
+    return out
+  }
+
+  if(sh3){buf.set(conv(buf,[0,-1,0,-1,5,-1,0,-1,0],3))}
+  if(sh5){buf.set(conv(buf,[-1,-1,-1,-1,-1,-1,2,2,2,-1,-1,2,16,2,-1,-1,2,2,2,-1,-1,-1,-1,-1,-1],5))}
+  if(sh7){let k7=new Array(49).fill(-1); k7[24]=48; buf.set(conv(buf,k7,7))}
+  if(unshAmt>0){let k=[1,4,6,4,1,4,16,24,16,4,6,24,36,24,6,4,16,24,16,4,1,4,6,4,1]; let blur=conv(buf,k,5); for(let i=0;i<buf.length;i+=4){buf[i]+=unshAmt*(buf[i]-blur[i]); buf[i+1]+=unshAmt*(buf[i+1]-blur[i+1]); buf[i+2]+=unshAmt*(buf[i+2]-blur[i+2])}}
+  if(hpAmt>0){let k=[1,4,6,4,1,4,16,24,16,4,6,24,36,24,6,4,16,24,16,4,1,4,6,4,1]; let blur=conv(buf,k,5); for(let i=0;i<buf.length;i+=4){buf[i]+=hpAmt*(buf[i]-blur[i]); buf[i+1]+=hpAmt*(buf[i+1]-blur[i+1]); buf[i+2]+=hpAmt*(buf[i+2]-blur[i+2])}}
+  if(edge){buf.set(conv(buf,[-1,-1,-1,-1,8,-1,-1,-1,-1],3))}
+  if(emb){buf.set(conv(buf,[-2,-1,0,-1,1,1,0,1,2],3))}
+  if(blurAmt>0){let k=new Array(9).fill(1); buf.set(conv(buf,k,3))}
+
+  for(let i=0;i<d.length;i+=4){d[i]=Math.max(0,Math.min(255,buf[i])); d[i+1]=Math.max(0,Math.min(255,buf[i+1])); d[i+2]=Math.max(0,Math.min(255,buf[i+2])); d[i+3]=s[i+3]}
+  g.putImageData(id,0,0)
+}
+</script>

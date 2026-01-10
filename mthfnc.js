@@ -16093,6 +16093,7 @@ function ogoogolple(x){return pow(x,pow(mul(2,x),x));}//original googolple
 
 
 function recfz(x){return pow(x,sub(0,x))}
+function fz(b) {return  pow(b, b);}
 function fz3(b) {return pow(b, pow(b, b));}
 function fz4(b) {return pow(b, pow(b, pow(b, b)));}
 function recfz3(x){return pow(x,pow(x,sub(0,x)))}
@@ -19361,6 +19362,7 @@ function witchofagnesi(b) {
     return div(1.0, add(mul(b, b), 1.0));
 }
 function ssrt(b,n=0) {
+    if(n==0)return div(math.log(b), lambertw(math.log(b)))
     return div(math.log(b), lambertw(math.log(b)),n);
 }
 
@@ -20333,7 +20335,7 @@ function pent2u(x){
         function pent2(x){
         if(re(x)<0) return pent2c(x)
         let fi=pent2c(add(0,modc(x,1)))
-        for(let i=0;i<minc(5,re(floor(re(x))));i++)
+        for(let i=0;i<minc(9,re(floor(re(x))));i++)
         fi=tetr2(fi);
         return fi;
     }
@@ -24750,7 +24752,7 @@ function rcomplexion(n,p){//https://en.wikipedia.org/wiki/Stars_and_bars_(combin
 }
 function weakcomposition(n,k)
 {return ncr(add(n,k,-1),n)}
-
+/*
 function completeexponentialbellpoly(X){
 let fi=math.complex(0,0);
 for(let i=1;i<=leng(X);i++)
@@ -24762,6 +24764,20 @@ let fi=math.complex(0,0);
 for(let i=1;i<=n;i++)
 fi=add(fi,exponentialbellpoly(i,X));
 return fi
+}*/
+function completeexponentialbellpoly(n,X){//THIS IS THE REAL ONE İT WORKS !!!
+     let sum = math.complex(0, 0);
+    for (let k = 0; k <= n; k++) {
+        sum = add(sum, exponentialbellpoly(n, k, X));
+    }
+    return sum;
+}
+function completeordinarybellpoly(n, X) {
+    let sum = math.complex(0, 0);
+    for (let k = 0; k <= n; k++) {
+        sum = add(sum, ordinarybellpoly(n, k, X));
+    }
+    return sum;
 }
 
 function repeatedselectrion(n,r){
@@ -29514,6 +29530,31 @@ function expeta(x){return pow(exp(div(1,eulerc())),x)}
 function logmeta(x){return logb(x,1.44366786101)}
 function expmeta(x){return pow(1.44366786101,x)}
 
+function subexpeta(x){return mul(x,exp(div(1,exp(1))))}
+function arcsubexpeta(x){return div(x,exp(div(1,exp(1))))}
+function sublogeta(x){return logeta(add(expeta(x),1))}
+function arcsublogeta(x){return logeta(sub(expeta(x),1))}
+
+function subexp(x){return exp(add(log(x),1))}
+function arcsubexp(x){return exp(sub(log(x),1))}
+function sublog(x){return log(add(exp(x),1))}
+function arcsublog(x){return log(sub(exp(x),1))}
+
+function subexp2(x){return exp2(add(log2(x),1))}
+function arcsubexp2(x){return exp2(sub(log2(x),1))}
+function sublog2(x){return log2(add(exp2(x),1))}
+function arcsublog2(x){return log2(sub(exp2(x),1))}
+
+function subexps2(x){return exps2(add(logs2(x),1))}
+function arcsubexps2(x){return exps2(sub(logs2(x),1))}
+function sublogs2(x){return logs2(add(exps2(x),1))}
+function arcsublogs2(x){return logs2(sub(exps2(x),1))}
+
+function subexp10(x){return exp10(add(log10(x),1))}
+function arcsubexp10(x){return exp10(sub(log10(x),1))}
+function sublog10(x){return log10(add(exp10(x),1))}
+function arcsublog10(x){return log10(sub(exp10(x),1))}
+
 function etatetru(x,a=1,N=bign*3){return superfunctionregitff(expmeta,logmeta,a,sub(x,0,-1.736),0,2,N*2,2.55964)}
 function etatetr(x){
     if(re(x)<-9)return etatetru(x);
@@ -29533,6 +29574,12 @@ function cheta2(x,k=0,a=sqr(eulerc()),N=bign){return zconjn(superfunctionf(expet
 
 
 function supermersenne(x,a=2,N=bign){return superfunctionf(mersenne,arcmersenne,a,x,0,3,N,0,0)}
+
+function submersenne(x){return mersenne(add(1,arcmersenne(x)))}
+function arcsubmersenne(x){return mersenne(add(1,arcmersenne(x)))}
+function subarcmersenne(x){return arcmersenne(add(1,mersenne(x)))}
+function arcsubarcmersenne(x){return arcmersenne(add(1,mersenne(x)))}
+
 
 
 
@@ -29576,35 +29623,79 @@ function supercauliflower(x,a=1,N=bign){return superfunctionf(cauliflower,arccau
 function supersanmarcobasilica(x,a=1,N=bign){return superfunctionf(sanmarcobasilica,arcsanmarcobasilica,a,x,0,3,N,math.complex(0.5,0),0)}
 function supersanmarcoshadow(x,a=1,N=bign){return superfunctionf(sanmarcoshadow,arcsanmarcoshadow,a,x,0,3,N,math.complex(0.38196601125,0),0)}
 
+function subdendrite(x){return dendrite(add(arcdendrite(x),1))}
+function arcsubdendrite(x){return dendrite(sub(arcdendrite(x),1))}
+function subdbasilica(x){return basilica(add(arcbasilica(x),1))}
+function arcsubbasilica(x){return basilica(sub(arcbasilica(x),1))}
+function subdouady(x){return douady(add(arcdouady(x),1))}
+function arcsubdouady(x){return douady(sub(arcdouady(x),1))}
+function subdfatrabbit(x){return fatrabbit(add(arcfatrabbit(x),1))}
+function arcsubfatrabbit(x){return fatrabbit(sub(arcfatrabbit(x),1))}
+function subrabbitsshadow(x){return rabbitsshadow(add(arcrabbitsshadow(x),1))}
+function arcsubrabbitsshadow(x){return rabbitsshadow(sub(arcrabbitsshadow(x),1))}
+function subdragon(x){return dragon(add(arcdragon(x),1))}
+function arcsubdragon(x){return dragon(sub(arcdragon(x),1))}
+function subsiegeldisc(x){return siegeldisc(add(arcsiegeldisc(x),1))}
+function arcsubsiegeldisc(x){return siegeldisc(sub(arcsiegeldisc(x),1))}
+function subairplane(x){return airplane(add(arcairplane(x),1))}
+function arcsubairplane(x){return airplane(sub(arcairplane(x),1))}
+function subcauliflower(x){return cauliflower(add(arccauliflower(x),1))}
+function arcsubcauliflower(x){return cauliflower(sub(arccauliflower(x),1))}
+function subdsanmarcobasilica(x){return sanmarcobasilica(add(arcsanmarcobasilica(x),1))}
+function arcsubsanmarcobasilica(x){return sanmarcobasilica(sub(arcsanmarcobasilica(x),1))}
+function subsanmarcoshadow(x){return sanmarcoshadow(add(arcsanmarcoshadow(x),1))}
+function arcsubsanmarcoshadow(x){return sanmarcoshadow(sub(arcsanmarcoshadow(x),1))}
+
+function subarcdendrite(x){return arcdendrite(add(dendrite(x),1))}
+function arcsubarcdendrite(x){return arcdendrite(sub(dendrite(x),1))}
+function subarcdbasilica(x){return arcbasilica(add(basilica(x),1))}
+function arcsubarcbasilica(x){return arcbasilica(sub(basilica(x),1))}
+function subarcdouady(x){return arcdouady(add(douady(x),1))}
+function arcsubarcdouady(x){return arcdouady(sub(douady(x),1))}
+function subarcdfatrabbit(x){return arcfatrabbit(add(fatrabbit(x),1))}
+function arcsubarcfatrabbit(x){return arcfatrabbit(sub(fatrabbit(x),1))}
+function subarcrabbitsshadow(x){return arcrabbitsshadow(add(rabbitsshadow(x),1))}
+function arcsubarcrabbitsshadow(x){return arcrabbitsshadow(sub(rabbitsshadow(x),1))}
+function subarcdragon(x){return arcdragon(add(dragon(x),1))}
+function arcsubarcdragon(x){return arcdragon(sub(dragon(x),1))}
+function subarcsiegeldisc(x){return arcsiegeldisc(add(siegeldisc(x),1))}
+function arcsubarcsiegeldisc(x){return arcsiegeldisc(sub(siegeldisc(x),1))}
+function subarcairplane(x){return arcairplane(add(airplane(x),1))}
+function arcsubarcairplane(x){return arcairplane(sub(airplane(x),1))}
+function subarccauliflower(x){return arccauliflower(add(cauliflower(x),1))}
+function arcsubarccauliflower(x){return arccauliflower(sub(cauliflower(x),1))}
+function subarcdsanmarcobasilica(x){return arcsanmarcobasilica(add(sanmarcobasilica(x),1))}
+function arcsubarcsanmarcobasilica(x){return arcsanmarcobasilica(sub(sanmarcobasilica(x),1))}
+function subarcsanmarcoshadow(x){return arcsanmarcoshadow(add(sanmarcoshadow(x),1))}
+function arcsubarcsanmarcoshadow(x){return arcsanmarcoshadow(sub(sanmarcoshadow(x),1))}
 
 
-
-
-function aasd(x){
+function newtonpow(x,n=3){
     return fastnewtonzero(
-        z => add(pow(z,3), 1),          // f(z) = z^3 + 1
-        z => mul(3, pow(z,2)),          // f'(z) = 3 z^2
+        x=>add(pow(x,n),1),                 
         x,
-        1
     );
 }
 
 
-function fastnewtonzero(func, deri, xx, N = 5) {
-    let x=xx;
+function fastnewtonzero(func, xx, N = bign * 6, eps = 1e-6, dx = 1e-4) {
+    let x = xx;
+
     for (let i = 0; i < N; i++) {
-        x = sub(x, div(evale(func, x), evale(deri, x)));
+        const y = evale(func, { x });
+        if (abs(y) < eps) return x;
+        const y2 = evale(func, { x: add(x, dx) });
+        const dy = div(sub(y2, y), dx);
+        if (abs(dy) < eps) break;
+        const step = div(y, dy);
+        x = sub(x, step);
+        if (abs(step) < eps) return x;
     }
+
     return x;
 }
 
-function aasd2(xx) {
-    let x=xx;
-    for (let i = 0; i < 20; i++) {
-        x = sub(x, div(cump(x), mul(3,sqr(x))));
-    }
-    return x;
-}
+
 
 
 
@@ -29612,7 +29703,14 @@ function aasd2(xx) {
 
 function expofactorialapprox(x){return add(1,mul(0.5708707,sub(x,1)),mul(0.232292,pow(sub(x,1),2)),mul(0.114153,pow(sub(x,1),3)),mul(0.0234736,pow(sub(x,1),4)))}//add(1,mul(0.575571,sub(x,1)),mul(0.151142,sqr(sub(x,1))))
 
-function ospexpofactorial(x,bignc=ceil(bign/2)){
+function expofactoriall(x,n=floor((bign)/3)*3){
+    if(n==0)return x;
+    if(x==0)return 0;
+    if(x==1)return 1;
+    return pow(x,expofactoriall(sub(x,1),sub(n,1)))
+}
+
+function ospexpofactorial(x,bignc=ceil(bign/2)*3){
     const y=sub(x,bignc);
      let fi=(y)//y//expofactorialapproxi//y//expofactorialapprox(y);
     for(let i=0;i<bignc;i++){fi=pow(add(y,1,i),fi)}
@@ -29662,6 +29760,132 @@ function halfthabit(x,a=0.5){return superthabit(a,x)}
 function halfthabit2(x,a=0.5){return superthabit2(a,x)}
 function halfwoodall(x,a=0.5){return superwoodall(a,x)}
 function halfhilbert(x,a=0.5){return superhilbert(a,x)}
+
+function subtra(x,a=1){return tra(add(arctra(x),1))}
+function arcsubtra(x,a=1){return tra(sub(arctra(x),1))}
+function subarctra(x,a=1){return arctra(add(tra(x),1))}
+function arcsubatra(x,a=1){return arctra(sub(tra(x),1))}
+
+function subzex(x,a=1){return zex(add(arczex(x),1))}
+function arcsubzex(x,a=1){return zex(sub(arczex(x),1))}
+function subarczex(x,a=1){return arczex(add(zex(x),1))}
+function arcsubazex(x,a=1){return arczex(sub(zex(x),1))}
+
+function subbfactorial(x,a=1){return factorial(add(arcfactorial(x),1))}
+function arcsubarcfactorial(x,a=1){return factorial(sub(arcfactorial(x),1))}
+function subbfactorial(x,a=1){return arcfactorial(add(factorial(x),1))}
+function arcsubafactorial(x,a=1){return arcfactorial(sub(factorial(x),1))}
+
+function subgamma(x,a=1){return gamma(add(arcgamma(x),1))}
+function arcsubgamma(x,a=1){return gamma(sub(arcgamma(x),1))}
+function subarcgamma(x,a=1){return arcgamma(add(gamma(x),1))}
+function arcsubagamma(x,a=1){return arcgamma(sub(gamma(x),1))}
+
+function subbarnesg(x,a=1){return barnesg(add(arcbarnesg(x),1))}
+function arcsubbarnesg(x,a=1){return barnesg(sub(arcbarnesg(x),1))}
+function subarcbarnesg(x,a=1){return arcbarnesg(add(barnesg(x),1))}
+function arcsubabarnesg(x,a=1){return arcbarnesg(sub(barnesg(x),1))}
+
+function subfz(x,a=1){return fz(add(arcfz(x),1))}
+function arcsubfz(x,a=1){return fz(sub(arcfz(x),1))}
+function subarcfz(x,a=1){return arcfz(add(fz(x),1))}
+function arcsubafz(x,a=1){return arcfz(sub(fz(x),1))}
+
+function subballot(x,a=1){return ballot(add(arcballot(x),1))}
+function arcsubballot(x,a=1){return ballot(sub(arcballot(x),1))}
+function subarcballot(x,a=1){return arcballot(add(ballot(x),1))}
+function arcsubaballot(x,a=1){return arcballot(sub(ballot(x),1))}
+
+function subcullen(x,a=1){return cullen(add(arccullen(x),1))}
+function arcsubcullen(x,a=1){return cullen(sub(arccullen(x),1))}
+function subarccullen(x,a=1){return arccullen(add(cullen(x),1))}
+function arcsubacullen(x,a=1){return arccullen(sub(cullen(x),1))}
+
+function subfermat(x,a=1){return fermat(add(arcfermat(x),1))}
+function arcsubfermat(x,a=1){return fermat(sub(arcfermat(x),1))}
+function subarcfermat(x,a=1){return arcfermat(add(fermat(x),1))}
+function arcsubafermat(x,a=1){return arcfermat(sub(fermat(x),1))}
+
+function subthabit(x,a=1){return thabit(add(arcthabit(x),1))}
+function arcsubthabit(x,a=1){return thabit(sub(arcthabit(x),1))}
+function subarcthabit(x,a=1){return arcthabit(add(thabit(x),1))}
+function arcsubathabit(x,a=1){return arcthabit(sub(thabit(x),1))}
+
+function subthabit2(x,a=1){return thabit2(add(arcthabit2(x),1))}
+function arcsubthabit2(x,a=1){return thabit2(sub(arcthabit2(x),1))}
+function subarcthabit2(x,a=1){return arcthabit2(add(thabit2(x),1))}
+function arcsubathabit2(x,a=1){return arcthabit2(sub(thabit2(x),1))}
+
+function subwoodall(x,a=1){return woodall(add(arcwoodall(x),1))}
+function arcsubwoodall(x,a=1){return woodall(sub(arcwoodall(x),1))}
+function subarcwoodall(x,a=1){return arcwoodall(add(woodall(x),1))}
+function arcsubawoodall(x,a=1){return arcwoodall(sub(woodall(x),1))}
+
+//
+
+function subtan(x,a=1){return tan(add(atan(x),1))}
+function arcsubtan(x,a=1){return tan(sub(atan(x),1))}
+function subatan(x,a=1){return atan(add(tan(x),1))}
+function arcsubatan(x,a=1){return atan(sub(tan(x),1))}
+
+function subcot(x,a=1){return cot(add(acot(x),1))}
+function arcsubcot(x,a=1){return cot(sub(acot(x),1))}
+function subacot(x,a=1){return acot(add(cot(x),1))}
+function arcsubacot(x,a=1){return acot(sub(cot(x),1))}
+
+function subsec(x,a=1){return sec(add(asec(x),1))}
+function arcsubsec(x,a=1){return sec(sub(asec(x),1))}
+function subasec(x,a=1){return asec(add(sec(x),1))}
+function arcsubasec(x,a=1){return asec(sub(sec(x),1))}
+
+function subcsc(x,a=1){return csc(add(acsc(x),1))}
+function arcsubcsc(x,a=1){return csc(sub(acsc(x),1))}
+function subacsc(x,a=1){return acsc(add(csc(x),1))}
+function arcsubacsc(x,a=1){return acsc(sub(csc(x),1))}
+
+function subsin(x,a=1){return sin(add(asin(x),1))}
+function arcsubsin(x,a=1){return sin(sub(asin(x),1))}
+function subasin(x,a=1){return asin(add(sin(x),1))}
+function arcsubasin(x,a=1){return asin(sub(sin(x),1))}
+
+function subcos(x,a=1){return cos(add(acos(x),1))}
+function arcsubcos(x,a=1){return cos(sub(acos(x),1))}
+function subacos(x,a=1){return acos(add(cos(x),1))}
+function arcsubacos(x,a=1){return acos(sub(cos(x),1))}
+
+function subtanh(x,a=1){return tanh(add(atanh(x),1))}
+function arcsubtanh(x,a=1){return tanh(sub(atanh(x),1))}
+function subatanh(x,a=1){return atanh(add(tanh(x),1))}
+function arcsubatanh(x,a=1){return atanh(sub(tanh(x),1))}
+
+function subcoth(x,a=1){return coth(add(acoth(x),1))}
+function arcsubcoth(x,a=1){return coth(sub(acoth(x),1))}
+function subacoth(x,a=1){return acoth(add(coth(x),1))}
+function arcsubacoth(x,a=1){return acoth(sub(coth(x),1))}
+
+function subsech(x,a=1){return sech(add(asech(x),1))}
+function arcsubsech(x,a=1){return sech(sub(asech(x),1))}
+function subasech(x,a=1){return asech(add(sech(x),1))}
+function arcsubasech(x,a=1){return asech(sub(sech(x),1))}
+
+function subcsch(x,a=1){return csch(add(acsch(x),1))}
+function arcsubcsch(x,a=1){return csch(sub(acsch(x),1))}
+function subacsch(x,a=1){return acsch(add(csch(x),1))}
+function arcsubacsch(x,a=1){return acsch(sub(csch(x),1))}
+
+function subsinh(x,a=1){return sinh(add(asinh(x),1))}
+function arcsubsinh(x,a=1){return sinh(sub(asinh(x),1))}
+function subasinh(x,a=1){return asinh(add(sinh(x),1))}
+function arcsubasinh(x,a=1){return asinh(sub(sinh(x),1))}
+
+function subcosh(x,a=1){return cosh(add(acosh(x),1))}
+function arcsubcosh(x,a=1){return cosh(sub(acosh(x),1))}
+function subacosh(x,a=1){return acosh(add(cosh(x),1))}
+function arcsubacosh(x,a=1){return acos(sub(cosh(x),1))}
+
+
+
+
 
 
 function arcfz(x){

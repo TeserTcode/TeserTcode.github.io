@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taylor Series with Complex Domain Coloring</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.7.0/math.min.js"></script>
+   <script src="clrspc.js"></script>
+<script src="mthfnc.js"></script>
+   <style>
+        canvas {
+            border: 1px solid black;
+        }
+        label {
+            display: inline-block;
+            width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Taylor Series with Complex Domain Coloring</h1>
+    <label for="N">Enter N:</label>
+    <input type="number" id="N" value="13" min="1">
+    <br><br>
+    <label for="functionInput">Enter Function:</label>
+    <input type="text" id="functionInput" value="sin(x)">
+    <br><br>
+    <label for="calculationType">Calculation Type:</label>
+<select id="calculationType">
+    <option value="power">Power</option>
+    <option value="pochhammer">Pochhammer</option>
+    <option value="fallingFactorial">Falling Factorial</option>
+    <option value="ncr">nCr</option>
+    <option value="npr">nPr</option>
+    <option value="sin(n*x)">sin(n*x)</option>
+    <option value="cos(n*x)">cos(n*x)</option>
+    <option value="cis(n*x)">cis(n*x)</option>
+    <option value="n^x">n^x</option>
+    <option value="dirichlet">Dirichlet Series</option>
+    <option selected value="taylor">Taylor Series</option>
+    <option value="puiseux">Puiseux Series</option>
+    <option value="laurent">Laurent Series</option>
+    <option value="poisson">Poisson Series</option>
+    <option value="lambert">Lambert Series</option>
+</select>
+    <label for="dervType">Derivative Type:</label>
+<select id="dervType">
+    <option value="derivative">Derivative</option>
+    <option value="q-derivative">q-Derivative</option>
+    <option value="h-derivative">h-Derivative</option>
+    <option value="hahn-derivative">Hahn-Derivative</option>
+    <option value="pq-derivative">pq-Derivative</option>
+    <option value="beta-derivative">β-Derivative</option>
+    <option value="umbral-derivative">Umbral-Derivative</option>
+    <option value="fractal-derivative">Fractal-Derivative</option>
+    <option value="dini-derivative">Dini-Derivative</option>
+</select>
+
+
+    <input type="number" id="param1" value="2">
+
+    <input type="number" id="param2" value="2" >
+    <br><br>
+    <label for="xMin">X Min:</label>
+    <input type="number" id="xMin" value="-5">
+    <label for="xMax">X Max:</label>
+    <input type="number" id="xMax" value="5">
+    <br><br>
+    <label for="yMin">Y Min:</label>
+    <input type="number" id="yMin" value="-5">
+    <label for="yMax">Y Max:</label>
+    <input type="number" id="yMax" value="5">
+    <br><br>
+    <button onclick="calculate()">Calculate and Draw</button>
+    <br><br>
+    <canvas id="plotCanvas" width="150" height="100"></canvas>
+
+    <script>
+        let coefficients = []; // Array to store Taylor series coefficients
+
+
+        // Calculate coefficients using the selected derivative method
+function calculateCoefficients(func, x0, N ,dervType, param1, param2) {
+    coefficients = []; // Reset coefficients array
+    for (let n = 0; n < N; n++) {
+        // Calculate the nth derivative using finite differences
+        let nthDerivativeValue = nthDeriv(func, x0, n,dervType,param1,param2);
+        // Divide by n! to get the Taylor coefficient
+        let coefficient = math.divide(nthDerivativeValue, factorial(n));
+        coefficients.push(coefficient);
+    }
+}
+
+function nthDeriv(func, x, n, type, param1, param2) {
+    if (n === 0) {
+        // Base case: 0th derivative is just the function value
+        return math.evaluate(func, { x: x });
+    }
+
+    // Handle standard derivative case directly
+    if (type === "derivative") {
+        const h = math.pow(2, math.add(-10, math.divide(n, 1.2)));
+        let sum = math.complex(0, 0); 
+        for (let i = 0; i <= n; i++) {
+            const binom = math.combinations(n, i);
+            const xPoint = math.add(x, math.multiply(math.subtract(math.divide(n, 2), i), h));
+            const funcValue = math.evaluate(func, { x: xPoint });
+            sum = math.add(sum, math.multiply(math.pow(-1, i), binom, funcValue));
+        }
+        return math.divide(sum, math.pow(h, n));
+    }
+
+    // For other derivative types, compute step by step numerically
+    let currentX = x;
+    for (let i = 0; i < n; i++) {
+        let h = 1e-5; // Small step for numerical differentiation
+        let fx, fxh;
+
+        switch (type) {
+            case "q-derivative":
+                fx = math.evaluate(func, { x: currentX });
+                fxh = math.evaluate(func, { x: param1 * currentX });
+                currentX = math.divide(math.subtract(fxh, fx), math.subtract(math.multiply(param1, currentX), currentX));
+                break;
+            case "h-derivative":
+                fx = math.evaluate(func, { x: currentX });
+                fxh = math.evaluate(func, { x: currentX + param1 });
+                currentX = math.divide(math.subtract(fxh, fx), param1);
+                break;
+            case "pq-derivative":
+                fx = math.evaluate(func, { x: param2 * currentX });
+                fxh = math.evaluate(func, { x: param1 * currentX });
+                currentX = math.divide(math.subtract(fxh, fx), math.multiply(math.subtract(param1, param2), currentX));
+                break;
+            case "hahn-derivative":
+                fx = math.evaluate(func, { x: currentX });
+                fxh = math.evaluate(func, { x: math.add(math.multiply(param1, currentX), param2) });
+                currentX = math.divide(math.subtract(fxh, fx), math.add(math.multiply(math.subtract(param1, 1), currentX), param2));
+                break;
+            case "beta-berivative":
+                fx = math.evaluate(func, { x: currentX });
+                fxh = math.evaluate(func, { x: param1(currentX) });
+                currentX = math.divide(math.subtract(fxh, fx), math.subtract(param1(currentX), currentX));
+                break;
+            case "umbral-derivative":
+                fx = math.evaluate(func, { x: currentX });
+                fxh = math.evaluate(func, { x: currentX + 1 });
+                currentX = math.subtract(fxh, fx);
+                break;
+            case "fractal-derivative":
+                fx = math.evaluate(func, { x: currentX });
+                fxh = math.evaluate(func, { x: currentX + h });
+                currentX = math.divide(math.subtract(fxh, fx), math.subtract(math.pow(currentX + h, param1), math.pow(currentX, param1)));
+                break;
+            case "dini-derivative":
+                fx = math.evaluate(func, { x: currentX });
+                fxh = math.evaluate(func, { x: currentX + h * param1 });
+                currentX = math.divide(math.subtract(fxh, fx), h);
+                break;
+            default:
+                throw new Error("Invalid derivative type");
+        }
+    }
+
+    return currentX;
+}
+   
+
+
+        function pochhammer(x, n) {
+            let result = math.complex(1, 0); // Start with complex 1
+            for (let i = 0; i < n; i++) {
+                result = math.multiply(result, math.add(x, i)); // Use math.multiply and math.add
+            }
+            return result;
+        }
+
+
+function evaluateSeries(x0, N, z, calculationType) {
+    let sum = math.complex(0, 0); // Start with complex 0
+    for (let n = 0; n < N; n++) {
+        let term;
+        switch (calculationType) {
+            case "power":
+                term = math.multiply(coefficients[n], math.pow(z, n) , factorial(n)); // Power series
+                break;
+            case "pochhammer":
+                term = math.multiply(coefficients[n], pochhammer(z, n)); // Pochhammer symbol
+                break;
+            case "fallingFactorial":
+                term = math.multiply(coefficients[n], fallingfactorial(z,n)); // Falling factorial
+                break;
+            case "sin(n*x)":
+                term = math.multiply(coefficients[n], math.sin(math.multiply(n, z))); // sin(n*x)
+                break;
+            case "cos(n*x)":
+                term = math.multiply(coefficients[n], math.cos(math.multiply(n, z))); // cos(n*x)
+                break;
+            case "cis(n*x)":
+                term = math.multiply(coefficients[n], math.exp(math.multiply(math.complex(0, 1), math.multiply(n, z)))); // cis(n*x) = e^(i*n*x)
+                break;
+            case "n^x":
+                term = math.multiply(coefficients[n], math.pow(n, z)); // n^x
+                break;
+            case "ncr":
+                term = math.multiply(coefficients[n], ncr(n, z)); // n^x
+                break;
+            case "npr":
+                term = math.multiply(coefficients[n], npr(n, z)); // n^x
+                break;
+            case "dirichlet":
+                term = math.multiply(coefficients[n], math.pow(n, math.unaryMinus(z))); // Dirichlet series: a_n / n^z
+                break;
+            case "taylor":
+                term = math.multiply(coefficients[n], math.pow(math.subtract(z, x0), n)); // Taylor series: a_n * (z - x0)^n
+                break;
+            case "puiseux":
+                term = math.multiply(coefficients[n], math.pow(z, math.divide(n, 2))); // Puiseux series: a_n * z^(n/2)
+                break;
+            case "laurent":
+                term = math.multiply(coefficients[n], math.pow(z, math.subtract(n, Math.floor(N / 2)))); // Laurent series: a_n * z^(n - N/2)
+                break;
+            case "poisson":
+                term = math.multiply(coefficients[n], math.pow(z, n) , math.divide(exp(math.subtract(0,z)),factorial(n))); // Position generating function: a_n * z^n
+                break;
+            case "lambert":
+                term = math.multiply(coefficients[n], math.divide(math.pow(z, n), math.subtract(1, math.pow(z, n)))); // Lambert series: a_n * z^n / (1 - z^n)
+                break;
+            default:
+                term = math.multiply(coefficients[n], pochhammer(math.subtract(z, x0), n)); // Default to Pochhammer
+        }
+        sum = math.add(sum, term); // Accumulate the sum
+    }
+    return sum;
+}
+        function complexToColor(z) {
+            // Calculate magnitude and phase
+            let magnitude = math.sqrt(math.add(math.pow(z.re, 2), math.pow(z.im, 2))); // Use math.sqrt, math.add, and math.pow
+            let phase = math.atan2(z.im, z.re); // Use math.atan2
+
+            // Map phase to hue (0 to 360 degrees) and magnitude to lightness
+            let hue = math.multiply(math.add(phase, Math.PI), 180 / Math.PI); // Use math.multiply and math.add
+            let lightness = math.multiply(50, math.subtract(1, math.exp(math.unaryMinus(magnitude)))); // Use math.multiply, math.subtract, and math.exp
+
+            return `hsl(${hue}, 100%, ${lightness}%)`;
+        }
+
+        function drawGraph(func, x0, N, xMin, xMax, yMin, yMax, calculationType) {
+            const canvas = document.getElementById('plotCanvas');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+
+            // Clear the canvas
+            ctx.clearRect(0, 0, width, height);
+
+            // Iterate over each pixel
+            for (let px = 0; px < width; px++) {
+                for (let py = 0; py < height; py++) {
+                    // Map pixel coordinates to complex plane
+                    let x = math.add(xMin, math.multiply(math.subtract(xMax, xMin), px / width)); // Use math.add, math.multiply, and math.subtract
+                    let y = math.subtract(yMax, math.multiply(math.subtract(yMax, yMin), py / height)); // Use math.subtract and math.multiply
+
+                    // Evaluate the function at the complex point (x + iy)
+                    let z = evaluateSeries(x0, N, math.complex(x, y), calculationType);
+
+                    // Map the complex result to a color
+                    let color = complexToColor(z);
+
+                    // Draw the pixel
+                    ctx.fillStyle = color;
+                    ctx.fillRect(px, py, 1, 1);
+                }
+            }
+        }
+
+        function calculate() {
+            let N = parseInt(document.getElementById('N').value);
+            let func = document.getElementById('functionInput').value;
+            let x0 = 0;
+
+            // Get min and max values
+            let xMin = parseFloat(document.getElementById('xMin').value);
+            let xMax = parseFloat(document.getElementById('xMax').value);
+            let yMin = parseFloat(document.getElementById('yMin').value);
+            let yMax = parseFloat(document.getElementById('yMax').value);
+
+            // Get calculation and derivative types
+            let calculationType = document.getElementById('calculationType').value;
+             let dervType = document.getElementById('dervType').value;
+             let param1 = parseFloat(document.getElementById('param1').value);
+             let param2 = parseFloat(document.getElementById('param2').value);
+          //  let derivativeType = document.getElementById('derivativeType').value;
+
+            // Calculate coefficients
+            calculateCoefficients(func, x0, N,dervType,param1,param2);
+
+            // Draw the graph
+            drawGraph(func, x0, N, xMin, xMax, yMin, yMax, calculationType);
+        }
+        
+    </script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBF</title>
+</head>
+<body>
+    <div class="container">
+        <div id="inputContainer">
+            <input type="number" id="headInput" value="10">
+            <input type="number" id="exponentInput" value="100">
+        </div>
+        <button onclick="calculate()">Calculate</button>
+        <h1 id="result" style="text-align: center; font-family: 'Clear Sans'; font-size: 5em;">1.12q</h1>
+        <h1 id="formattedResult" class="result"></h1>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/break_infinity.js"></script>
+    <script>
+        const Abbreviations = {
+            minor: {
+                i1: "M", i2: "B", i3: "T", i4: "q", i5: "Q", i6: "s", i7: "S", i8: "O", i9: "N", i0: ""
+            },
+            ones: {
+                i1: "U", i2: "D", i3: "T", i4: "q", i5: "Q", i6: "s", i7: "S", i8: "O", i9: "N", i0: ""
+            },
+            tens: {
+                i1: "De", i2: "V", i3: "TR", i4: "QU", i5: "QI", i6: "Sx", i7: "Sp", i8: "Oc", i9: "No", i0: ""
+            },
+            hundreds: {
+                i1: "Ce", i2: "Du", i3: "Te", i4: "Qr", i5: "Qn", i6: "Se", i7: "St", i8: "Ot", i9: "Nn", i0: ""
+            },
+            major: {
+                i0: "", i1: "il", i2: "cr", i3: "Nan", i4: "Pic", i5: "Fmt", i6: "Att", i7: "Zpt", i8: "Yoc", i9: "Xon",
+                i10: "Vec", i11: "Mec", i12: "Dec", i13: "Trc", i14: "Ttc", i15: "Ptc", i16: "Hxc", i17: "Hpc", i18: "Otc", i19: "Enc",
+                i20: "Ico", i21: "Meico", i22: "Duico", i23: "Trico", i24: "Ttico", i25: "Ptico", i26: "Hxico", i27: "Hpico", i28: "Ocico", i29: "Enico",
+                i30: "Trcon", i31: "Metrcon", i32: "Dutrcon", i33: "Trtrcon", i34: "Tttrcon", i35: "Pttrcon", i36: "Hxtrcon", i37: "Hptrcon", i38: "Octrcon", i39: "Entrcon",
+                i40: "Ttcon", i41: "Mettcon", i42: "Duttcon", i43: "Trttcon", i44: "Ttttcon", i45: "Ptttcon", i46: "Hxttcon", i47: "Hpttcon", i48: "Octtcon", i49: "Enttcon",
+                i50: "Ptcon", i51: "Meptcon", i52: "Duptcon", i53: "Trptcon", i54: "Ttptcon", i55: "Ptptcon", i56: "Hxptcon", i57: "Hpptcon", i58: "Ocptcon", i59: "Enptcon",
+                i60: "Hxcon", i61: "Mehxcon", i62: "Duhxcon", i63: "Trhxcon", i64: "Tthxcon", i65: "Pthxcon", i66: "Hxhxcon", i67: "Hphxcon", i68: "Ochxcon", i69: "Enhxcon",
+                i70: "Hpcon", i71: "Mehpcon", i72: "Duhpcon", i73: "Trhpcon", i74: "Tthpcon", i75: "Pthpcon", i76: "Hxhpcon", i77: "Hphpcon", i78: "Ochpcon", i79: "Enhpcon",
+                i80: "Occon", i81: "Meoccon", i82: "Duoccon", i83: "Troccon", i84: "Ttoccon", i85: "Ptoccon", i86: "Hxoccon", i87: "Hpoccon", i88: "Ococcon", i89: "Enoccon",
+                i90: "Encon", i91: "Meencon", i92: "Duencon", i93: "Trencon", i94: "Ttencon", i95: "Ptencon", i96: "Hxencon", i97: "Hpencon", i98: "Ocencon", i99: "Enencon",
+                i100: "Hect", i101: "Mehect", i102: "Duhect"
+            }
+        };
+
+        function name(x, layer) {
+            let data = [0, 0, 0, 0];
+            let abbrev = '';
+            if (x === 1 && layer === 0) return 'k';
+            if (x === 0) return '';
+            if (layer !== 0) x++;
+            data[0] = Math.floor((x - 1) / 1000);
+            data[1] = Math.floor((x - 1) / 100) % 10;
+            data[2] = Math.floor((x - 1) / 10) % 10;
+            data[3] = (x - 1) % 10;
+            if ((x - 1) % 1000 < 10) {
+                if (data[3] !== 1 || layer < 3) {
+                    abbrev = data[3] !== 0 ? Abbreviations.minor[`i${data[3]}`] + Abbreviations.major[`i${layer}`] : '';
+                } else {
+                    abbrev = Abbreviations.major[`i${layer}`]
+                }
+            } else if (data[2] === 1 && data[1] === 0) {
+                abbrev = Abbreviations.ones[`i${data[3]}`] + "D" + Abbreviations.major[`i${layer}`];
+            } else {
+                abbrev = Abbreviations.ones[`i${data[3]}`] + Abbreviations.tens[`i${data[2]}`] + Abbreviations.hundreds[`i${data[1]}`] + Abbreviations.major[`i${layer}`];
+            }
+            return data[0] === 0 ? abbrev : name(data[0], layer + 1) + abbrev;
+        }
+
+        function calculate() {
+            let base = new Decimal(document.getElementById('headInput').value);
+            let exponent = new Decimal(document.getElementById('exponentInput').value);
+            let result = base.pow(exponent);
+
+            if (result.gte(Decimal.pow(10, 1e6))) {
+                document.getElementById('result').textContent = "Too large to display";
+            } else {
+                document.getElementById('result').textContent = result.toString();
+            }
+        }
+    </script>
+</body>
+</html>

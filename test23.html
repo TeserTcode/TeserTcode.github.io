@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Plot log(f(p)) for Primes</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    textarea {
+      width: 100%;
+      height: 120px;
+    }
+    canvas {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Plot log(f(p)) for primes p</h2>
+<p>Paste your f(n) data below (format: f(n) = value per line):</p>
+<textarea id="dataInput">f(1) = 1
+f(2) = 2
+f(3) = 5
+f(4) = 4
+f(5) = 17
+f(6) = 10
+f(7) = 341
+f(8) = 8
+f(9) = 257
+f(10) = 16</textarea><br><br>
+
+<label>Number of primes: <input type="number" id="numPoints" value="7" min="1" style="width:60px;"></label>
+<label>Log base:
+  <select id="logBase">
+    <option value="e">ln</option>
+    <option value="10">log10</option>
+  </select>
+</label>
+<button onclick="plotData()">Plot</button>
+
+<canvas id="plot" width="700" height="400"></canvas>
+
+<script>
+// Generate primes using Sieve of Eratosthenes
+function generatePrimes(limit) {
+  const sieve = new Array(limit+1).fill(true);
+  sieve[0] = sieve[1] = false;
+  for (let i = 2; i*i <= limit; i++) {
+    if (sieve[i]) {
+      for (let j = i*i; j <= limit; j += i) sieve[j] = false;
+    }
+  }
+  return sieve.map((isPrime, i) => isPrime ? i : null).filter(x => x);
+}
+
+function parseData(input) {
+  const fMap = {};
+  input.split('\n').forEach(line => {
+    const match = line.match(/f\((\d+)\)\s*=\s*(\d+)/);
+    if (match) {
+      const n = parseInt(match[1]);
+      const val = parseInt(match[2]);
+      fMap[n] = val;
+    }
+  });
+  return fMap;
+}
+
+function plotData() {
+  const input = document.getElementById('dataInput').value;
+  const fMap = parseData(input);
+  const k = parseInt(document.getElementById('numPoints').value);
+  const logBase = document.getElementById('logBase').value;
+
+  // Generate primes up to a reasonable range
+  const primes = generatePrimes(1000); // enough for small k
+
+  const xs = []; // primes
+  const ys = []; // log(f(prime))
+
+  let count = 0;
+  for (let i = 0; i < primes.length && count < k; i++) {
+    const p = primes[i];
+    if (fMap[p] !== undefined) {
+      xs.push(p);
+      const logVal = logBase === 'e' ? Math.log(fMap[p])/Math.log(p) : Math.log10(fMap[p]);
+      ys.push(logVal);
+      count++;
+    }
+  }
+
+  if (window.myChart) {
+    window.myChart.destroy();
+  }
+
+  const ctx = document.getElementById('plot').getContext('2d');
+  window.myChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: xs,
+      datasets: [{
+        label: `log(f(p)) for primes (base ${logBase})`,
+        data: ys,
+        borderColor: 'green',
+        backgroundColor: 'rgba(0, 128, 0, 0.1)',
+        pointRadius: 5,
+        fill: false
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        x: {
+          title: { display: true, text: 'Prime p' }
+        },
+        y: {
+          title: { display: true, text: `log base ${logBase}` }
+        }
+      }
+    }
+  });
+}
+</script>
+
+</body>
+</html>

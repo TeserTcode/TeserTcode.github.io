@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optical Ray Tracing Simulator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        #container {
+            display: flex;
+            flex-direction: column;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        #canvas-container {
+            position: relative;
+            border: 1px solid #ccc;
+            background-color: white;
+            margin-bottom: 10px;
+        }
+        #simulation-canvas {
+            display: block;
+            background-color: white;
+        }
+        #controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #eee;
+            border-radius: 5px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            padding: 5px;
+            background-color: #ddd;
+            border-radius: 5px;
+        }
+        button {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        select, input {
+            padding: 5px;
+        }
+        .color-preview {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 5px;
+            border: 1px solid #000;
+        }
+        #objects-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 5px;
+            background-color: white;
+        }
+        .object-item {
+            padding: 3px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .object-item:hover {
+            background-color: #f0f0f0;
+        }
+        .object-item.selected {
+            background-color: #d0e0ff;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>Optical Ray Tracing Simulator</h1>
+        
+        <div id="controls">
+            <div class="control-group">
+                <h3>Light Sources</h3>
+                <select id="light-type">
+                    <option value="point">Point Light</option>
+                    <option value="parallel">Parallel Light</option>
+                    <option value="laser">Laser</option>
+                    <option value="rainbow">Rainbow Light</option>
+                </select>
+                <div>
+                    <label>Color: <input type="color" id="light-color" value="#ffffff"></label>
+                    <span class="color-preview" id="light-color-preview"></span>
+                </div>
+                <button id="add-light">Add Light Source</button>
+            </div>
+            
+            <div class="control-group">
+                <h3>Mirrors</h3>
+                <select id="mirror-type">
+                    <option value="flat">Flat Mirror</option>
+                    <option value="concave">Concave Mirror</option>
+                    <option value="convex">Convex Mirror</option>
+                </select>
+                <button id="add-mirror">Add Mirror</button>
+            </div>
+            
+            <div class="control-group">
+                <h3>Lenses</h3>
+                <select id="lens-type">
+                    <option value="biconvex">Biconvex</option>
+                    <option value="planoconvex">Plano-convex</option>
+                    <option value="positivemeniscus">Positive Meniscus</option>
+                    <option value="negativemeniscus">Negative Meniscus</option>
+                    <option value="planoconcave">Plano-concave</option>
+                    <option value="biconcave">Biconcave</option>
+                </select>
+                <div>
+                    <label>Refractive Index: <input type="number" id="lens-ri" min="1.0" max="3.0" step="0.01" value="1.5"></label>
+                </div>
+                <button id="add-lens">Add Lens</button>
+            </div>
+            
+            <div class="control-group">
+                <h3>Prisms</h3>
+                <select id="prism-type">
+                    <option value="triangle">Triangular</option>
+                    <option value="square">Square</option>
+                    <option value="pentagon">Pentagonal</option>
+                </select>
+                <div>
+                    <label>Refractive Index: <input type="number" id="prism-ri" min="1.0" max="3.0" step="0.01" value="1.5"></label>
+                </div>
+                <button id="add-prism">Add Prism</button>
+            </div>
+            
+            <div class="control-group">
+                <h3>Other Objects</h3>
+                <select id="object-type">
+                    <option value="opaque">Opaque Object</option>
+                    <option value="diffuse">Diffuse Surface</option>
+                    <option value="scattering">Scattering Surface</option>
+                </select>
+                <button id="add-object">Add Object</button>
+            </div>
+            
+            <div class="control-group">
+                <h3>Simulation</h3>
+                <label><input type="checkbox" id="realtime-checkbox"> Real-time Calculation</label>
+                <button id="calculate-button">Calculate Paths</button>
+                <button id="clear-button">Clear Scene</button>
+                <button id="reset-button">Reset Simulation</button>
+                <button id="save-button">Save Scene</button>
+                <button id="load-button">Load Scene</button>
+                <input type="file" id="file-input" style="display: none;">
+            </div>
+        </div>
+        
+        <div id="canvas-container">
+            <canvas id="simulation-canvas" width="1000" height="600"></canvas>
+        </div>
+        
+        <div class="control-group">
+            <h3>Objects in Scene</h3>
+            <div id="objects-list"></div>
+            <button id="delete-object">Delete Selected</button>
+        </div>
+    </div>
+
+    <script>
+        // Main application
+        class OpticalSimulator {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.width = canvas.width;
+                this.height = canvas.height;
+                
+                this.objects = [];
+                this.lights = [];
+                this.rays = [];
+                this.selectedObject = null;
+                
+                this.isDragging = false;
+                this.dragOffset = { x: 0, y: 0 };
+                this.realtime = false;
+                
+                this.setupEventListeners();
+                this.setupUIListeners();
+                
+                // Predefined colors for rainbow light
+                this.rainbowColors = [
+                    '#ff0000', '#ff7f00', '#ffff00', '#00ff00', 
+                    '#0000ff', '#4b0082', '#9400d3'
+                ];
+                
+                // Initialize with a simple scene
+                this.initializeDefaultScene();
+            }
+            
+            initializeDefaultScene() {
+                // Add a default light source
+                this.addLightSource('point', { x: 100, y: 300 }, '#ffffff');
+                
+                // Add a default mirror
+                this.addMirror('flat', [
+                    { x: 400, y: 200 },
+                    { x: 400, y: 400 }
+                ]);
+                
+                // Add a default lens
+                this.addLens('biconvex', { x: 600, y: 300 }, 100, 50, 1.5);
+            }
+            
+            setupEventListeners() {
+                this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
+                this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
+                this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
+                this.canvas.addEventListener('click', this.handleClick.bind(this));
+            }
+            
+            setupUIListeners() {
+                // Light source controls
+                document.getElementById('add-light').addEventListener('click', () => {
+                    const type = document.getElementById('light-type').value;
+                    const color = document.getElementById('light-color').value;
+                    this.addLightSource(type, { x: 100, y: 300 }, color);
+                });
+                
+                // Mirror controls
+                document.getElementById('add-mirror').addEventListener('click', () => {
+                    const type = document.getElementById('mirror-type').value;
+                    this.addMirror(type, [
+                        { x: 300, y: 200 },
+                        { x: 300, y: 400 }
+                    ]);
+                });
+                
+                // Lens controls
+                document.getElementById('add-lens').addEventListener('click', () => {
+                    const type = document.getElementById('lens-type').value;
+                    const ri = parseFloat(document.getElementById('lens-ri').value);
+                    this.addLens(type, { x: 500, y: 300 }, 100, 50, ri);
+                });
+                
+                // Prism controls
+                document.getElementById('add-prism').addEventListener('click', () => {
+                    const type = document.getElementById('prism-type').value;
+                    const ri = parseFloat(document.getElementById('prism-ri').value);
+                    this.addPrism(type, { x: 500, y: 300 }, 80, ri);
+                });
+                
+                // Other objects
+                document.getElementById('add-object').addEventListener('click', () => {
+                    const type = document.getElementById('object-type').value;
+                    this.addObject(type, [
+                        { x: 200, y: 200 },
+                        { x: 250, y: 200 },
+                        { x: 250, y: 400 },
+                        { x: 200, y: 400 }
+                    ]);
+                });
+                
+                // Simulation controls
+                document.getElementById('calculate-button').addEventListener('click', () => {
+                    this.calculateRayPaths();
+                });
+                
+                document.getElementById('clear-button').addEventListener('click', () => {
+                    this.clearScene();
+                });
+                
+                document.getElementById('reset-button').addEventListener('click', () => {
+                    this.resetSimulation();
+                });
+                
+                document.getElementById('save-button').addEventListener('click', () => {
+                    this.saveScene();
+                });
+                
+                document.getElementById('load-button').addEventListener('click', () => {
+                    document.getElementById('file-input').click();
+                });
+                
+                document.getElementById('file-input').addEventListener('change', (e) => {
+                    this.loadScene(e.target.files[0]);
+                });
+                
+                document.getElementById('realtime-checkbox').addEventListener('change', (e) => {
+                    this.realtime = e.target.checked;
+                    if (this.realtime) {
+                        this.calculateRayPaths();
+                    }
+                });
+                
+                document.getElementById('delete-object').addEventListener('click', () => {
+                    if (this.selectedObject) {
+                        const index = this.objects.indexOf(this.selectedObject);
+                        if (index !== -1) {
+                            this.objects.splice(index, 1);
+                            this.selectedObject = null;
+                            this.updateObjectsList();
+                            this.draw();
+                            if (this.realtime) {
+                                this.calculateRayPaths();
+                            }
+                        }
+                    }
+                });
+                
+                // Update color preview
+                document.getElementById('light-color').addEventListener('input', (e) => {
+                    document.getElementById('light-color-preview').style.backgroundColor = e.target.value;
+                });
+            }
+            
+            handleMouseDown(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                
+                // Check if we clicked on an object
+                for (let i = this.objects.length - 1; i >= 0; i--) {
+                    const obj = this.objects[i];
+                    if (this.isPointInObject(mouseX, mouseY, obj)) {
+                        this.selectedObject = obj;
+                        this.isDragging = true;
+                        this.dragOffset = {
+                            x: mouseX - obj.position.x,
+                            y: mouseY - obj.position.y
+                        };
+                        this.updateObjectsList();
+                        this.draw();
+                        return;
+                    }
+                }
+                
+                // If we didn't click on an object, deselect
+                this.selectedObject = null;
+                this.updateObjectsList();
+                this.draw();
+            }
+            
+            handleMouseMove(e) {
+                if (this.isDragging && this.selectedObject) {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const mouseX = e.clientX - rect.left;
+                    const mouseY = e.clientY - rect.top;
+                    
+                    // Update object position
+                    const newX = mouseX - this.dragOffset.x;
+                    const newY = mouseY - this.dragOffset.y;
+                    
+                    // Calculate movement delta
+                    const dx = newX - this.selectedObject.position.x;
+                    const dy = newY - this.selectedObject.position.y;
+                    
+                    // Update object position
+                    this.selectedObject.position.x = newX;
+                    this.selectedObject.position.y = newY;
+                    
+                    // If it's a mirror or object with vertices, update all vertices
+                    if (this.selectedObject.vertices) {
+                        for (const vertex of this.selectedObject.vertices) {
+                            vertex.x += dx;
+                            vertex.y += dy;
+                        }
+                    }
+                    
+                    this.draw();
+                    
+                    if (this.realtime) {
+                        this.calculateRayPaths();
+                    }
+                }
+            }
+            
+            handleMouseUp() {
+                this.isDragging = false;
+            }
+            
+            handleClick(e) {
+                // For objects that need multiple clicks to define (like mirrors)
+                // This would be extended for more complex object creation
+            }
+            
+            isPointInObject(x, y, obj) {
+                if (obj.type === 'light') {
+                    // Simple distance check for point lights
+                    const distance = Math.sqrt((x - obj.position.x) ** 2 + (y - obj.position.y) ** 2);
+                    return distance < 10; // 10px radius for selection
+                } else if (obj.vertices) {
+                    // Polygon check for mirrors, objects, etc.
+                    return this.pointInPolygon(x, y, obj.vertices);
+                } else if (obj.type.includes('lens') || obj.type.includes('prism')) {
+                    // Bounding box check for lenses and prisms
+                    return x >= obj.position.x - obj.width/2 && 
+                           x <= obj.position.x + obj.width/2 && 
+                           y >= obj.position.y - obj.height/2 && 
+                           y <= obj.position.y + obj.height/2;
+                }
+                return false;
+            }
+            
+            pointInPolygon(x, y, vertices) {
+                let inside = false;
+                for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
+                    const xi = vertices[i].x, yi = vertices[i].y;
+                    const xj = vertices[j].x, yj = vertices[j].y;
+                    
+                    const intersect = ((yi > y) !== (yj > y)) &&
+                        (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+                    if (intersect) inside = !inside;
+                }
+                return inside;
+            }
+            
+            addLightSource(type, position, color) {
+                const light = {
+                    type: 'light',
+                    lightType: type,
+                    position: { ...position },
+                    color: color,
+                    angle: 0, // For directional lights
+                    spread: 30 // For non-laser lights
+                };
+                
+                this.lights.push(light);
+                this.objects.push(light);
+                this.updateObjectsList();
+                
+                if (this.realtime) {
+                    this.calculateRayPaths();
+                } else {
+                    this.draw();
+                }
+            }
+            
+            addMirror(type, vertices) {
+                const mirror = {
+                    type: 'mirror',
+                    mirrorType: type,
+                    vertices: vertices.map(v => ({ ...v })),
+                    position: this.calculateCenter(vertices)
+                };
+                
+                this.objects.push(mirror);
+                this.updateObjectsList();
+                this.draw();
+            }
+            
+            addLens(type, position, width, height, refractiveIndex) {
+                const lens = {
+                    type: 'lens',
+                    lensType: type,
+                    position: { ...position },
+                    width: width,
+                    height: height,
+                    refractiveIndex: refractiveIndex
+                };
+                
+                this.objects.push(lens);
+                this.updateObjectsList();
+                this.draw();
+            }
+            
+            addPrism(type, position, size, refractiveIndex) {
+                const prism = {
+                    type: 'prism',
+                    prismType: type,
+                    position: { ...position },
+                    size: size,
+                    refractiveIndex: refractiveIndex
+                };
+                
+                this.objects.push(prism);
+                this.updateObjectsList();
+                this.draw();
+            }
+            
+            addObject(type, vertices) {
+                const obj = {
+                    type: type,
+                    vertices: vertices.map(v => ({ ...v })),
+                    position: this.calculateCenter(vertices)
+                };
+                
+                this.objects.push(obj);
+                this.updateObjectsList();
+                this.draw();
+            }
+            
+            calculateCenter(vertices) {
+                let x = 0, y = 0;
+                for (const vertex of vertices) {
+                    x += vertex.x;
+                    y += vertex.y;
+                }
+                return {
+                    x: x / vertices.length,
+                    y: y / vertices.length
+                };
+            }
+            
+            calculateRayPaths() {
+                this.rays = [];
+                
+                for (const light of this.lights) {
+                    if (light.lightType === 'rainbow') {
+                        // Create separate rays for each color in the rainbow
+                        for (const color of this.rainbowColors) {
+                            this.generateRaysForLight(light, color);
+                        }
+                    } else {
+                        this.generateRaysForLight(light, light.color);
+                    }
+                }
+                
+                this.draw();
+            }
+            
+            generateRaysForLight(light, color) {
+                const wavelength = this.colorToWavelength(color);
+                
+                if (light.lightType === 'point') {
+                    // Emit rays in all directions from point source
+                    for (let angle = 0; angle < 360; angle += 10) {
+                        const rad = angle * Math.PI / 180;
+                        const dx = Math.cos(rad);
+                        const dy = Math.sin(rad);
+                        
+                        this.traceRay(
+                            light.position.x, light.position.y,
+                            dx, dy, color, wavelength, 100
+                        );
+                    }
+                } else if (light.lightType === 'parallel') {
+                    // Emit parallel rays from left side of screen
+                    for (let y = 50; y < this.height; y += 20) {
+                        this.traceRay(
+                            0, y,
+                            1, 0, color, wavelength, 100
+                        );
+                    }
+                } else if (light.lightType === 'laser') {
+                    // Emit a single straight ray
+                    this.traceRay(
+                        light.position.x, light.position.y,
+                        Math.cos(light.angle), Math.sin(light.angle),
+                        color, wavelength, 100
+                    );
+                }
+            }
+            
+            traceRay(x, y, dx, dy, color, wavelength, remainingBounces) {
+                if (remainingBounces <= 0) return;
+                
+                const ray = {
+                    points: [{ x, y }],
+                    color: color,
+                    wavelength: wavelength
+                };
+                
+                // Find the first intersection with any object
+                let closestIntersection = null;
+                let closestObject = null;
+                let closestNormal = null;
+                
+                for (const obj of this.objects) {
+                    if (obj.type === 'light') continue;
+                    
+                    const intersection = this.findRayIntersection(x, y, dx, dy, obj);
+                    if (intersection) {
+                        const distance = Math.sqrt(
+                            (intersection.x - x) ** 2 + (intersection.y - y) ** 2
+                        );
+                        
+                        if (!closestIntersection || distance < closestIntersection.distance) {
+                            closestIntersection = {
+                                x: intersection.x,
+                                y: intersection.y,
+                                distance: distance
+                            };
+                            closestObject = obj;
+                            closestNormal = intersection.normal;
+                        }
+                    }
+                }
+                
+                if (closestIntersection) {
+                    // Add intersection point to ray
+                    ray.points.push({
+                        x: closestIntersection.x,
+                        y: closestIntersection.y
+                    });
+                    
+                    // Calculate reflected or refracted ray
+                    if (closestObject.type === 'mirror') {
+                        // Reflect the ray
+                        const dot = dx * closestNormal.x + dy * closestNormal.y;
+                        const rdx = dx - 2 * dot * closestNormal.x;
+                        const rdy = dy - 2 * dot * closestNormal.y;
+                        
+                        // Continue tracing reflected ray
+                        this.traceRay(
+                            closestIntersection.x, closestIntersection.y,
+                            rdx, rdy, color, wavelength, remainingBounces - 1
+                        );
+                    } else if (closestObject.type.includes('lens') || closestObject.type.includes('prism')) {
+                        // Refract the ray (simplified)
+                        const n1 = 1.0; // Air
+                        const n2 = closestObject.refractiveIndex;
+                        
+                        // Adjust refractive index based on wavelength (simplified dispersion)
+                        const adjustedN2 = n2 + (wavelength - 550) * 0.0005;
+                        
+                        const normal = closestNormal;
+                        const cosI = - (dx * normal.x + dy * normal.y);
+                        const sinI = Math.sqrt(1 - cosI * cosI);
+                        const sinT = (n1 / adjustedN2) * sinI;
+                        
+                        if (Math.abs(sinT) <= 1) {
+                            const cosT = Math.sqrt(1 - sinT * sinT);
+                            const tdx = (n1 / adjustedN2) * dx + ((n1 / adjustedN2) * cosI - cosT) * normal.x;
+                            const tdy = (n1 / adjustedN2) * dy + ((n1 / adjustedN2) * cosI - cosT) * normal.y;
+                            
+                            // Normalize direction
+                            const len = Math.sqrt(tdx * tdx + tdy * tdy);
+                            const ndx = tdx / len;
+                            const ndy = tdy / len;
+                            
+                            // Continue tracing refracted ray
+                            this.traceRay(
+                                closestIntersection.x, closestIntersection.y,
+                                ndx, ndy, color, wavelength, remainingBounces - 1
+                            );
+                        }
+                    } else if (closestObject.type === 'opaque') {
+                        // Ray stops at opaque object
+                    } else if (closestObject.type === 'diffuse') {
+                        // Diffuse reflection (simplified)
+                        const angle = Math.random() * Math.PI * 2;
+                        const rdx = Math.cos(angle);
+                        const rdy = Math.sin(angle);
+                        
+                        this.traceRay(
+                            closestIntersection.x, closestIntersection.y,
+                            rdx, rdy, color, wavelength, remainingBounces - 1
+                        );
+                    }
+                } else {
+                    // Ray continues to edge of screen
+                    let endX = x + dx * this.width * 2;
+                    let endY = y + dy * this.height * 2;
+                    
+                    // Clip to canvas bounds
+                    if (dx > 0) {
+                        endX = Math.min(endX, this.width);
+                    } else {
+                        endX = Math.max(endX, 0);
+                    }
+                    
+                    if (dy > 0) {
+                        endY = Math.min(endY, this.height);
+                    } else {
+                        endY = Math.max(endY, 0);
+                    }
+                    
+                    ray.points.push({ x: endX, endY });
+                }
+                
+                this.rays.push(ray);
+            }
+            
+            findRayIntersection(x, y, dx, dy, obj) {
+                if (obj.vertices) {
+                    // Polygon object (mirror, opaque object, etc.)
+                    return this.rayPolygonIntersection(x, y, dx, dy, obj.vertices);
+                } else if (obj.type.includes('lens')) {
+                    // Lens intersection (simplified as ellipse)
+                    return this.rayLensIntersection(x, y, dx, dy, obj);
+                } else if (obj.type.includes('prism')) {
+                    // Prism intersection (as polygon)
+                    return this.rayPrismIntersection(x, y, dx, dy, obj);
+                }
+                return null;
+            }
+            
+            rayPolygonIntersection(x, y, dx, dy, vertices) {
+                let closestIntersection = null;
+                let closestNormal = null;
+                let minDistance = Infinity;
+                
+                for (let i = 0; i < vertices.length; i++) {
+                    const j = (i + 1) % vertices.length;
+                    const x1 = vertices[i].x;
+                    const y1 = vertices[i].y;
+                    const x2 = vertices[j].x;
+                    const y2 = vertices[j].y;
+                    
+                    const intersection = this.rayLineSegmentIntersection(x, y, dx, dy, x1, y1, x2, y2);
+                    if (intersection) {
+                        const distance = Math.sqrt((intersection.x - x) ** 2 + (intersection.y - y) ** 2);
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            closestIntersection = intersection;
+                            
+                            // Calculate normal (perpendicular to the edge, pointing outward)
+                            const edgeX = x2 - x1;
+                            const edgeY = y2 - y1;
+                            const len = Math.sqrt(edgeX * edgeX + edgeY * edgeY);
+                            const nx = -edgeY / len;
+                            const ny = edgeX / len;
+                            
+                            // Make sure normal points outward (simplified)
+                            const dot = (x - x1) * nx + (y - y1) * ny;
+                            closestNormal = {
+                                x: dot > 0 ? nx : -nx,
+                                y: dot > 0 ? ny : -ny
+                            };
+                        }
+                    }
+                }
+                
+                if (closestIntersection) {
+                    return {
+                        x: closestIntersection.x,
+                        y: closestIntersection.y,
+                        normal: closestNormal
+                    };
+                }
+                return null;
+            }
+            
+            rayLineSegmentIntersection(x, y, dx, dy, x1, y1, x2, y2) {
+                const x3 = x;
+                const y3 = y;
+                const x4 = x + dx;
+                const y4 = y + dy;
+                
+                const denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
+                if (denom === 0) return null; // Parallel
+                
+                const ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denom;
+                if (ua < 0 || ua > 1) return null; // Outside segment
+                
+                const ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denom;
+                if (ub < 0) return null; // Ray goes away from segment
+                
+                return {
+                    x: x1 + ua * (x2 - x1),
+                    y: y1 + ua * (y2 - y1)
+                };
+            }
+            
+            rayLensIntersection(x, y, dx, dy, lens) {
+                // Simplified as intersection with an ellipse
+                const a = lens.width / 2;
+                const b = lens.height / 2;
+                const h = lens.position.x;
+                const k = lens.position.y;
+                
+                // Translate ray to lens coordinate system
+                const x0 = x - h;
+                const y0 = y - k;
+                
+                // Solve quadratic equation for intersection
+                const A = (dx * dx) / (a * a) + (dy * dy) / (b * b);
+                const B = 2 * (x0 * dx) / (a * a) + 2 * (y0 * dy) / (b * b);
+                const C = (x0 * x0) / (a * a) + (y0 * y0) / (b * b) - 1;
+                
+                const discriminant = B * B - 4 * A * C;
+                if (discriminant < 0) return null;
+                
+                const sqrtDisc = Math.sqrt(discriminant);
+                const t1 = (-B + sqrtDisc) / (2 * A);
+                const t2 = (-B - sqrtDisc) / (2 * A);
+                
+                let t = null;
+                if (t1 >= 0 && t2 >= 0) {
+                    t = Math.min(t1, t2);
+                } else if (t1 >= 0) {
+                    t = t1;
+                } else if (t2 >= 0) {
+                    t = t2;
+                } else {
+                    return null;
+                }
+                
+                const ix = x + dx * t;
+                const iy = y + dy * t;
+                
+                // Calculate normal (ellipse normal)
+                const nx = (ix - h) / (a * a);
+                const ny = (iy - k) / (b * b);
+                const len = Math.sqrt(nx * nx + ny * ny);
+                
+                return {
+                    x: ix,
+                    y: iy,
+                    normal: {
+                        x: nx / len,
+                        y: ny / len
+                    }
+                };
+            }
+            
+            rayPrismIntersection(x, y, dx, dy, prism) {
+                // Generate prism vertices based on type
+                let vertices = [];
+                const sides = prism.prismType === 'triangle' ? 3 : 
+                              prism.prismType === 'square' ? 4 : 5;
+                
+                for (let i = 0; i < sides; i++) {
+                    const angle = (i * 2 * Math.PI / sides) - Math.PI / 2;
+                    vertices.push({
+                        x: prism.position.x + prism.size * Math.cos(angle),
+                        y: prism.position.y + prism.size * Math.sin(angle)
+                    });
+                }
+                
+                return this.rayPolygonIntersection(x, y, dx, dy, vertices);
+            }
+            
+            colorToWavelength(color) {
+                // Simplified conversion from color to wavelength in nm
+                const hex = color.replace('#', '');
+                const r = parseInt(hex.substring(0, 2), 16);
+                const g = parseInt(hex.substring(2, 4), 16);
+                const b = parseInt(hex.substring(4, 6), 16);
+                
+                if (r > g && r > b) return 700; // Red
+                if (g > r && g > b) return 550; // Green
+                if (b > r && b > g) return 450; // Blue
+                if (r === g && g === b) return 550; // White (use green)
+                
+                // For other colors, estimate
+                return 500 + (r - b) * 0.5;
+            }
+            
+            draw() {
+                this.ctx.clearRect(0, 0, this.width, this.height);
+                
+                // Draw objects
+                for (const obj of this.objects) {
+                    if (obj.type === 'light') {
+                        this.drawLight(obj);
+                    } else if (obj.type === 'mirror') {
+                        this.drawMirror(obj);
+                    } else if (obj.type.includes('lens')) {
+                        this.drawLens(obj);
+                    } else if (obj.type.includes('prism')) {
+                        this.drawPrism(obj);
+                    } else {
+                        this.drawObject(obj);
+                    }
+                }
+                
+                // Draw rays
+                for (const ray of this.rays) {
+                    this.drawRay(ray);
+                }
+                
+                // Draw selection highlight
+                if (this.selectedObject) {
+                    this.drawSelection(this.selectedObject);
+                }
+            }
+            
+            drawLight(light) {
+                this.ctx.fillStyle = light.color;
+                this.ctx.strokeStyle = '#000';
+                this.ctx.lineWidth = 1;
+                
+                if (light.lightType === 'point') {
+                    this.ctx.beginPath();
+                    this.ctx.arc(light.position.x, light.position.y, 8, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.stroke();
+                    
+                    // Draw small rays to indicate light source
+                    for (let i = 0; i < 8; i++) {
+                        const angle = i * Math.PI / 4;
+                        const length = 15;
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(light.position.x, light.position.y);
+                        this.ctx.lineTo(
+                            light.position.x + Math.cos(angle) * length,
+                            light.position.y + Math.sin(angle) * length
+                        );
+                        this.ctx.stroke();
+                    }
+                } else if (light.lightType === 'parallel' || light.lightType === 'laser') {
+                    this.ctx.beginPath();
+                    this.ctx.arc(light.position.x, light.position.y, 5, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.stroke();
+                    
+                    // Draw direction indicator
+                    const angle = light.angle || 0;
+                    const length = 20;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(light.position.x, light.position.y);
+                    this.ctx.lineTo(
+                        light.position.x + Math.cos(angle) * length,
+                        light.position.y + Math.sin(angle) * length
+                    );
+                    this.ctx.stroke();
+                    
+                    // Draw arrowhead
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(
+                        light.position.x + Math.cos(angle) * length,
+                        light.position.y + Math.sin(angle) * length
+                    );
+                    this.ctx.lineTo(
+                        light.position.x + Math.cos(angle - 0.3) * (length - 8),
+                        light.position.y + Math.sin(angle - 0.3) * (length - 8)
+                    );
+                    this.ctx.lineTo(
+                        light.position.x + Math.cos(angle + 0.3) * (length - 8),
+                        light.position.y + Math.sin(angle + 0.3) * (length - 8)
+                    );
+                    this.ctx.closePath();
+                    this.ctx.fill();
+                } else if (light.lightType === 'rainbow') {
+                    // Draw rainbow light source
+                    const radius = 10;
+                    const segmentAngle = Math.PI * 2 / this.rainbowColors.length;
+                    
+                    for (let i = 0; i < this.rainbowColors.length; i++) {
+                        this.ctx.fillStyle = this.rainbowColors[i];
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(light.position.x, light.position.y);
+                        this.ctx.arc(
+                            light.position.x, light.position.y, radius,
+                            i * segmentAngle, (i + 1) * segmentAngle
+                        );
+                        this.ctx.closePath();
+                        this.ctx.fill();
+                    }
+                    
+                    this.ctx.strokeStyle = '#000';
+                    this.ctx.lineWidth = 1;
+                    this.ctx.beginPath();
+                    this.ctx.arc(light.position.x, light.position.y, radius, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                }
+            }
+            
+            drawMirror(mirror) {
+                this.ctx.strokeStyle = '#333';
+                this.ctx.lineWidth = 2;
+                this.ctx.fillStyle = 'rgba(200, 200, 255, 0.3)';
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(mirror.vertices[0].x, mirror.vertices[0].y);
+                for (let i = 1; i < mirror.vertices.length; i++) {
+                    this.ctx.lineTo(mirror.vertices[i].x, mirror.vertices[i].y);
+                }
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.stroke();
+                
+                // Add reflective shine
+                if (mirror.vertices.length >= 2) {
+                    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+                    this.ctx.lineWidth = 1;
+                    
+                    const midX = (mirror.vertices[0].x + mirror.vertices[1].x) / 2;
+                    const midY = (mirror.vertices[0].y + mirror.vertices[1].y) / 2;
+                    
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(midX, midY);
+                    this.ctx.lineTo(
+                        midX + (mirror.vertices[1].y - mirror.vertices[0].y) * 0.3,
+                        midY - (mirror.vertices[1].x - mirror.vertices[0].x) * 0.3
+                    );
+                    this.ctx.stroke();
+                }
+            }
+            
+            drawLens(lens) {
+                this.ctx.fillStyle = 'rgba(200, 255, 255, 0.3)';
+                this.ctx.strokeStyle = '#333';
+                this.ctx.lineWidth = 2;
+                
+                // Draw lens shape based on type
+                if (lens.lensType === 'biconvex') {
+                    this.drawBiconvexLens(lens);
+                } else if (lens.lensType === 'planoconvex') {
+                    this.drawPlanoconvexLens(lens);
+                } else if (lens.lensType === 'positivemeniscus') {
+                    this.drawPositiveMeniscusLens(lens);
+                } else if (lens.lensType === 'negativemeniscus') {
+                    this.drawNegativeMeniscusLens(lens);
+                } else if (lens.lensType === 'planoconcave') {
+                    this.drawPlanoconcaveLens(lens);
+                } else if (lens.lensType === 'biconcave') {
+                    this.drawBiconcaveLens(lens);
+                }
+                
+                // Label with refractive index
+                this.ctx.fillStyle = '#000';
+                this.ctx.font = '12px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText(
+                    `n=${lens.refractiveIndex.toFixed(2)}`,
+                    lens.position.x,
+                    lens.position.y + 5
+                );
+            }
+            
+            drawBiconvexLens(lens) {
+                const a = lens.width / 2;
+                const b = lens.height / 2;
+                const h = lens.position.x;
+                const k = lens.position.y;
+                
+                // Left half of lens
+                this.ctx.beginPath();
+                this.ctx.ellipse(
+                    h - a/2, k,
+                    a/2, b,
+                    0, Math.PI/2, 3*Math.PI/2,
+                    true
+                );
+                
+                // Right half of lens
+                this.ctx.ellipse(
+                    h + a/2, k,
+                    a/2, b,
+                    0, -Math.PI/2, Math.PI/2,
+                    false
+                );
+                
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.stroke();
+            }
+            
+            drawPlanoconvexLens(lens) {
+                const a = lens.width / 2;
+                const b = lens.height / 2;
+                const h = lens.position.x;
+                const k = lens.position.y;
+                
+                this.ctx.beginPath();
+                
+                // Flat side
+                this.ctx.moveTo(h - a, k - b);
+                this.ctx.lineTo(h - a, k + b);
+                
+                // Convex side
+                this.ctx.ellipse(
+                    h, k,
+                    a, b,
+                    0, Math.PI/2, 3*Math.PI/2,
+                    true
+                );
+                
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.stroke();
+            }
+            
+            drawPositiveMeniscusLens(lens) {
+                const a = lens.width / 2;
+                const b = lens.height / 2;
+                const h = lens.position.x;
+                const k = lens.position.y;
+                
+                this.ctx.beginPath();
+                
+                // Left curve (less curved)
+                this.ctx.ellipse(
+                    h - a/3, k,
+                    a/1.5, b,
+                    0, Math.PI/2, 3*Math.PI/2,
+                    true
+                );
+                
+                // Right curve (more curved)
+                this.ctx.ellipse(
+                    h + a/2, k,
+                    a/2, b,
+                    0, -Math.PI/2, Math.PI/2,
+                    false
+                );
+                
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.stroke();
+            }
+            
+            drawNegativeMeniscusLens(lens) {
+                const a = lens.width / 2;
+                const b = lens.height / 2;
+                const h = lens.position.x;
+                const k = lens.position.y;
+                
+                this.ctx.beginPath();
+                
+                // Left curve (more curved)
+                this.ctx.ellipse(
+                    h - a/2, k,
+                    a/2, b,
+                    0, Math.PI/2, 3*Math.PI/2,
+                    true
+                );
+                
+                // Right curve (less curved)
+                this.ctx.ellipse(
+                    h + a/3, k,
+                    a/1.5, b,
+                    0, -Math.PI/2, Math.PI/2,
+                    false
+                );
+                
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.stroke();
+            }
+            
+            drawPlanoconcaveLens(lens) {
+                const a = lens.width / 2;
+                const b = lens.height / 2;
+                const h = lens.position.x;
+                const k = lens.position.y;
+                
+                this.ctx.beginPath();
+                
+                // Flat side
+                this.ctx.moveTo(h + a, k - b);
+                this.ctx.lineTo(h + a, k + b);
+                
+                // Concave side
+                this.ctx.ellipse(
+                    h, k,
+                    a, b,
+                    0, -Math.PI/2, Math.PI/2,
+                    true
+                );
+                
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.stroke();
+            }
+            
+            drawBiconcaveLens(lens) {
+                const a = lens.width / 2;
+                const b = lens.height / 2;
+                const h = lens.position.x;
+                const k = lens.position.y;
+                
+                // Left half of lens
+                this.ctx.beginPath();
+                this.ctx.ellipse(
+                    h + a/2, k,
+                    a/2, b,
+                    0, Math.PI/2, 3*Math.PI/2,
+                    true
+                );
+                
+                // Right half of lens
+                this.ctx.ellipse(
+                    h - a/2, k,
+                    a/2, b,
+                    0, -Math.PI/2, Math.PI/2,
+                    false
+                );
+                
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.stroke();
+            }
+            
+            drawPrism(prism) {
+                this.ctx.fillStyle = 'rgba(255, 220, 200, 0.3)';
+                this.ctx.strokeStyle = '#333';
+                this.ctx.lineWidth = 2;
+                
+                // Generate prism vertices based on type
+                let vertices = [];
+                const sides = prism.prismType === 'triangle' ? 3 : 
+                              prism.prismType === 'square' ? 4 : 5;
+                
+                for (let i = 0; i < sides; i++) {
+                    const angle = (i * 2 * Math.PI / sides) - Math.PI / 2;
+                    vertices.push({
+                        x: prism.position.x + prism.size * Math.cos(angle),
+                        y: prism.position.y + prism.size * Math.sin(angle)
+                    });
+                }
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(vertices[0].x, vertices[0].y);
+                for (let i = 1; i < vertices.length; i++) {
+                    this.ctx.lineTo(vertices[i].x, vertices[i].y);
+                }
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.stroke();
+                
+                // Label with refractive index
+                this.ctx.fillStyle = '#000';
+                this.ctx.font = '12px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText(
+                    `n=${prism.refractiveIndex.toFixed(2)}`,
+                    prism.position.x,
+                    prism.position.y + 5
+                );
+            }
+            
+            drawObject(obj) {
+                this.ctx.fillStyle = obj.type === 'opaque' ? 'rgba(100, 100, 100, 0.7)' :
+                                    obj.type === 'diffuse' ? 'rgba(150, 150, 150, 0.7)' :
+                                    'rgba(200, 200, 200, 0.7)';
+                this.ctx.strokeStyle = '#333';
+                this.ctx.lineWidth = 2;
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(obj.vertices[0].x, obj.vertices[0].y);
+                for (let i = 1; i < obj.vertices.length; i++) {
+                    this.ctx.lineTo(obj.vertices[i].x, obj.vertices[i].y);
+                }
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.stroke();
+                
+                // Add texture for scattering surface
+                if (obj.type === 'scattering') {
+                    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                    for (let i = 0; i < 20; i++) {
+                        const x = obj.position.x + (Math.random() - 0.5) * 50;
+                        const y = obj.position.y + (Math.random() - 0.5) * 50;
+                        if (this.pointInPolygon(x, y, obj.vertices)) {
+                            this.ctx.beginPath();
+                            this.ctx.arc(x, y, 1 + Math.random() * 2, 0, Math.PI * 2);
+                            this.ctx.fill();
+                        }
+                    }
+                }
+            }
+            
+            drawRay(ray) {
+                this.ctx.strokeStyle = ray.color;
+                this.ctx.lineWidth = 1;
+                this.ctx.setLineDash([]);
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(ray.points[0].x, ray.points[0].y);
+                for (let i = 1; i < ray.points.length; i++) {
+                    this.ctx.lineTo(ray.points[i].x, ray.points[i].y);
+                }
+                this.ctx.stroke();
+                
+                // Draw arrowhead for the last segment if it's long enough
+                if (ray.points.length >= 2) {
+                    const last = ray.points.length - 1;
+                    const dx = ray.points[last].x - ray.points[last-1].x;
+                    const dy = ray.points[last].y - ray.points[last-1].y;
+                    const len = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (len > 10) {
+                        const angle = Math.atan2(dy, dx);
+                        const arrowSize = 5;
+                        
+                        this.ctx.fillStyle = ray.color;
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(ray.points[last].x, ray.points[last].y);
+                        this.ctx.lineTo(
+                            ray.points[last].x - arrowSize * Math.cos(angle - 0.3),
+                            ray.points[last].y - arrowSize * Math.sin(angle - 0.3)
+                        );
+                        this.ctx.lineTo(
+                            ray.points[last].x - arrowSize * Math.cos(angle + 0.3),
+                            ray.points[last].y - arrowSize * Math.sin(angle + 0.3)
+                        );
+                        this.ctx.closePath();
+                        this.ctx.fill();
+                    }
+                }
+            }
+            
+            drawSelection(obj) {
+                this.ctx.strokeStyle = '#00f';
+                this.ctx.lineWidth = 2;
+                this.ctx.setLineDash([5, 5]);
+                
+                if (obj.vertices) {
+                    // Polygon object
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(obj.vertices[0].x, obj.vertices[0].y);
+                    for (let i = 1; i < obj.vertices.length; i++) {
+                        this.ctx.lineTo(obj.vertices[i].x, obj.vertices[i].y);
+                    }
+                    this.ctx.closePath();
+                    this.ctx.stroke();
+                } else if (obj.type.includes('lens') || obj.type.includes('prism')) {
+                    // Lens or prism - draw bounding box
+                    const width = obj.width || obj.size * 2;
+                    const height = obj.height || obj.size * 2;
+                    
+                    this.ctx.beginPath();
+                    this.ctx.rect(
+                        obj.position.x - width/2,
+                        obj.position.y - height/2,
+                        width,
+                        height
+                    );
+                    this.ctx.stroke();
+                } else {
+                    // Light source - circle around it
+                    this.ctx.beginPath();
+                    this.ctx.arc(obj.position.x, obj.position.y, 15, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                }
+                
+                this.ctx.setLineDash([]);
+            }
+            
+            updateObjectsList() {
+                const list = document.getElementById('objects-list');
+                list.innerHTML = '';
+                
+                for (const obj of this.objects) {
+                    const item = document.createElement('div');
+                    item.className = 'object-item';
+                    if (obj === this.selectedObject) {
+                        item.classList.add('selected');
+                    }
+                    
+                    let text = '';
+                    if (obj.type === 'light') {
+                        text = `Light (${obj.lightType})`;
+                    } else if (obj.type === 'mirror') {
+                        text = `Mirror (${obj.mirrorType})`;
+                    } else if (obj.type.includes('lens')) {
+                        text = `Lens (${obj.lensType}, n=${obj.refractiveIndex.toFixed(2)})`;
+                    } else if (obj.type.includes('prism')) {
+                        text = `Prism (${obj.prismType}, n=${obj.refractiveIndex.toFixed(2)})`;
+                    } else {
+                        text = `${obj.type.charAt(0).toUpperCase() + obj.type.slice(1)} Object`;
+                    }
+                    
+                    item.textContent = text;
+                    item.addEventListener('click', () => {
+                        this.selectedObject = obj;
+                        this.updateObjectsList();
+                        this.draw();
+                    });
+                    
+                    list.appendChild(item);
+                }
+            }
+            
+            clearScene() {
+                this.objects = [];
+                this.lights = [];
+                this.rays = [];
+                this.selectedObject = null;
+                this.updateObjectsList();
+                this.draw();
+            }
+            
+            resetSimulation() {
+                this.rays = [];
+                this.draw();
+            }
+            
+            saveScene() {
+                const scene = {
+                    objects: this.objects.map(obj => {
+                        // Create a simplified version of each object for serialization
+                        const simpleObj = { ...obj };
+                        
+                        // Handle special cases
+                        if (obj.vertices) {
+                            simpleObj.vertices = obj.vertices.map(v => ({ ...v }));
+                        }
+                        
+                        return simpleObj;
+                    }),
+                    lights: this.lights.map(light => ({ ...light })),
+                    version: '1.0'
+                };
+                
+                const blob = new Blob([JSON.stringify(scene)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'optical_scene.lgtscn';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+            
+            loadScene(file) {
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const scene = JSON.parse(e.target.result);
+                        
+                        this.objects = scene.objects || [];
+                        this.lights = scene.lights || [];
+                        this.rays = [];
+                        this.selectedObject = null;
+                        
+                        this.updateObjectsList();
+                        this.draw();
+                        
+                        if (this.realtime) {
+                            this.calculateRayPaths();
+                        }
+                    } catch (err) {
+                        alert('Error loading scene: ' + err.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+        
+        // Initialize the simulator when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('simulation-canvas');
+            const simulator = new OpticalSimulator(canvas);
+            
+            // Initial draw
+            simulator.draw();
+            
+            // Initialize color preview
+            document.getElementById('light-color-preview').style.backgroundColor = 
+                document.getElementById('light-color').value;
+        });
+    </script>
+</body>
+</html>

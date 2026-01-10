@@ -569,11 +569,13 @@ let xgl=math.complex(0, 0);
                 } else {
                   fi = parseComplex(a);//classical superfunction calculation
                 }
-                let lam = mathsc(funcStr, fi);//mathsc = f(x)
-                for (let i = 0; i < bign; i++) {//infinite composition
-                  fi = findInverse(funcStr, fi, initialGuess, bign);
+                let lam=fi
+                //let lam = mathsc(funcStr, fi);//mathsc = f(x)
+                for (let i = 0; i < bign-1; i++) {//infinite composition
+               //   fi = findInverse(funcStr, fi, initialGuess, bign);
                   lam = findInverse(funcStr, lam, initialGuess, bign);//calculating lambda
                 }
+                fi = findInverse(funcStr, lam, initialGuess, bign);//calculating lambda
                 fi = math.divide(math.log(math.multiply(math.subtract(fi, fix), math.pow(globalc, bign))), math.log(globalc));
                 lam = math.divide(math.log(math.multiply(math.subtract(lam, fix), math.pow(globalc, bign))), math.log(globalc));
                 fi = math.add(fi, math.multiply(bs, math.subtract(lam, fi)));

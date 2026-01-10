@@ -157,6 +157,43 @@
         .kernel-options {
             margin-top: 10px;
         }
+         .matching-options {
+        margin-top: 15px;
+        padding: 10px;
+        background: #f0f0f0;
+        border-radius: 5px;
+    }
+    .matching-options h4 {
+        margin-top: 0;
+        margin-bottom: 10px;
+    }
+    .processing-preview {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f8f8;
+    border-radius: 5px;
+}
+
+.preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: space-between;
+}
+
+.preview-item {
+    flex: 1;
+    min-width: 200px;
+    text-align: center;
+}
+
+.preview-canvas {
+    width: 100%;
+    max-width: 200px;
+    height: auto;
+    border: 1px solid #ddd;
+    background: white;
+}
     </style>
 </head>
 <body>
@@ -194,6 +231,7 @@
                 <select id="kernelType">
                     <option value="none">None</option>
                     <option value="edges">Edge Detection</option>
+                     <option value="edges2">Edge Detection Smooth</option>
                     <option value="sharpen">Sharpen</option>
                     <option value="emboss">Emboss</option>
                 </select>
@@ -208,51 +246,31 @@
                 </div>
             </div>
         </div>
-        
+            <div class="matching-options">
+        <h4>Character Matching Method</h4>
+        <div class="adjustment-slider">
+            <label for="brightnessWeight">Brightness Weight:</label>
+            <input type="range" id="brightnessWeight" min="0" max="100" value="50">
+            <span id="brightnessWeightValue">50</span>%
+        </div>
+        <div class="adjustment-slider">
+            <label for="shapeWeight">Shape Weight:</label>
+            <input type="range" id="shapeWeight" min="0" max="100" value="50">
+            <span id="shapeWeightValue">50</span>%
+        </div>
+        <div>
+            <label for="shapeMethod">Shape Matching Method:</label>
+            <select id="shapeMethod">
+                <option value="gradient">Gradient Similarity</option>
+                <option value="structure">Structural Similarity</option>
+                <option value="edges">Edge Matching</option>
+            </select>
+        </div>
+    </div>
         <div class="char-set">
             <div class="preset-controls">
-                <label for="charPresets">Preset Character Sets:</label>
-                <select id="charPresets">
-                    <option value="custom">Custom</option>
-                    <option value="blocks">Blocks (█▓▒░ )</option>
-                    <option value="detailed">Detailed (@%#*+=-:. `)</option>
-                    <option value="detailed2">Detailed 2(()[]{}-|^~\/HI= .,;: )</option>
-                    <option value="hiragana">China (一二三十上下大小`)</option>
-                    <option value="katakana">Hiragana</option>
-                    <option value="hiraganakatakana">Hiragana Katakana</option>
-                    <option value="hiraganakatakanakanji">Hiragana Katakana Kanji</option>
-                    <option value="china">China (一二三十上下大小`)</option>
-                    <option value="china2">China2 (黜黝黟默`)</option>
-                    <option value="minimal">Minimal (▪· )</option>
-                    <option value="artistic">Artistic (◉○◌◍◎●)</option>
-                    <option value="alphanumeric">Alphanumeric (MWN80ZDQLCJUYXKV)</option>
-                    <option value="box">Box Drawing (─│┌┐└┘├┤┬┴┼═║╔╗╚╝╠╣╦╩╬)</option>
-                    <option value="math">Math Symbols (πΣ√∞∫≈≠≤≥±×÷)</option>
-                    <option value="extra">Extra Detailed (☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼)</option>
-                    <option value="lines">Lines Only (─━│┃┄┅┆┇┈┉┊┋╌╍╎╏═║╒╓╔╕╖╗╘╙╚╛╜╝╞╟╠╡╢╣╤╥╦╧╨╩╪╫╬)</option>
-                    <option value="shades">Shades (█▓▒░ .)</option>
-<option value="braille">Braille (⠁⠂⠄⡀⢀⠈⠐⠠⢈⡈⢀⠠⠐⠈⠂⠄⠁⠁)</option>
-<option value="emoji">Emoji (😀😂🤣😊😎😍😘🥰😜🤩🤯)</option>
-<option value="arrows">Arrows (←↑→↓↔↕⇐⇑⇒⇓⇔⇕)</option>
-<option value="chess">Chess Pieces (♔♕♖♗♘♙♚♛♜♝♞♟)</option>
-<option value="runes">Runes (ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛋᛏᛒᛖᛗᛚ)</option>
-<option value="cyrillic">Cyrillic (АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЫЮЯ)</option>
-<option value="greek">Greek (ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ)</option>
-<option value="stars">Stars (★☆✦✧✩✪✫✬✭✮✯✰✱✲✳✴✵✶✷✸✹✺✻✼✽✾✿)</option>
-<option value="misc">Miscellaneous (☀☁☂☃☄★☆☇☈☉☊☋☌☍☎☏☐☑☒☓☕☘☙☚☛☜☝☞☟)</option>
-  <option value="extended_braille">Extended Braille (⡀⡁⡂⡃⡄⡅⡆⡇⡈⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒⡓⡔⡕⡖⡗⡘⡙⡚⡛⡜⡝⡞⡟...)</option>
-<option value="extended_math">Extended Math (∑∏∂∆∇∝∞≠≤≥≈∴∵⊥⊢⊨⊩⊬⊭⊯∃∀∅∈∉∋⊆⊂⊇⊃⋂⋃⊕⊗⊖⊘)</option>
-<option value="brackets">Brackets & Parentheses ((){}[]⟨⟩〈〉❬❭❮❯❰❱⦃⦄⦅⦆⦇⦈⦉⦊⦋⦌)</option>
-<option value="shadesextra">Extra Shades (█▓▒░░▒▓██▓▒░░▒▓██▓▒░)</option>
-<option value="boxextra">Extra Box Drawing (╭╮╯╰┏┓┗┛┃━┳┻┣┫╋╼╽╾╿╱╲╳╌╍╎╏)</option>
-<option value="gokturkish">Göktürk Runes (𐰀𐰁𐰂𐰃𐰄𐰅𐰆𐰇𐰈𐰉𐰊𐰋𐰌𐰍𐰎𐰏𐰐𐰑𐰒𐰓𐰔𐰕)</option>
-<option value="numbers">Numbers (0123456789₀₁₂₃₄₅₆₇₈₉⁰¹²³⁴⁵⁶⁷⁸⁹)</option>
-<option value="arabic">Arabic (٠١٢٣٤٥٦٧٨٩؀؁؂؃؄؅؆؇؈؉؊؋٪٫٬)</option>
-<option value="shapes">Shapes (■□▲△▼▽◆◇○●◎◉◊◌◍◐◑◒◓◔◕◖◗◘◙◚◛)</option>
-<option value="extreme_symbols">Extreme Symbols (☢☣⚠⚡♻☠⚔)</option>
-<option value="all_in_1">All-in-1</option>
-<option value="all_in_2">All-in-2</option>
-  </select>
+        <label for="charPresets">Preset Character Sets:</label>
+        <select id="charPresets"></select>
                 <button id="applyPreset">Apply Preset</button>
             </div>
             <label for="characters">Character Set:</label><br>
@@ -305,6 +323,34 @@
                 <div class="performance-graph" id="performanceGraph"></div>
             </div>
         </div>
+        
+        
+        <div class="processing-preview">
+            <h3>Effect Preview</h3>
+    <div class="preview-container">
+        <div class="preview-item">
+            <h4>Original</h4>
+            <canvas id="previewOriginal" class="preview-canvas"></canvas>
+        </div>
+        <div class="preview-item">
+            <h4>Sharpen</h4>
+            <canvas id="previewSharpen" class="preview-canvas"></canvas>
+        </div>
+        <div class="preview-item">
+            <h4>Emboss</h4>
+            <canvas id="previewEmboss" class="preview-canvas"></canvas>
+        </div>
+        <div class="preview-item">
+            <h4>Edges</h4>
+            <canvas id="previewEdges" class="preview-canvas"></canvas>
+        </div>
+                <div class="preview-item">
+            <h4>Edges Smooth</h4>
+            <canvas id="previewEdges2" class="preview-canvas"></canvas>
+        </div>
+    </div>
+</div>
+        
     </div>
 
     <script>
@@ -336,7 +382,17 @@
                 brightnessValue: document.getElementById('brightnessValue'),
                 kernelType: document.getElementById('kernelType'),
                 kernelThreshold: document.getElementById('kernelThreshold'),
-                kernelThresholdValue: document.getElementById('kernelThresholdValue')
+                kernelThresholdValue: document.getElementById('kernelThresholdValue'),
+                  brightnessWeight: document.getElementById('brightnessWeight'),
+        brightnessWeightValue: document.getElementById('brightnessWeightValue'),
+        shapeWeight: document.getElementById('shapeWeight'),
+        shapeWeightValue: document.getElementById('shapeWeightValue'),
+        shapeMethod: document.getElementById('shapeMethod'),
+        previewOriginal: document.getElementById('previewOriginal'),
+    previewSharpen: document.getElementById('previewSharpen'),
+    previewEmboss: document.getElementById('previewEmboss'),
+    previewEdges: document.getElementById('previewEdges'),
+    previewEdges2: document.getElementById('previewEdges2')
             };
          
 
@@ -348,50 +404,94 @@
             
             // Preset character sets
             const presetCharacters = {
-                'custom': '',
+            
+            //QUALİFİED
+            'custom': '',
+              'simple': '.,:;|-_#',
+                            'detailed': '()[]{}-|^~\/HI= .,;:ALVTO+<>_*#qwertyuıopğüişlkjhgfdsazxcvbnmöç.QWERTYUIOPĞÜİŞLKJHGFDSAZXCVBNMÖÇ.',
+             'lines': '─━│┃┄┅┆┇┈┉┊┋╌╍╎╏═║╒╓╔╕╖╗╘╙╚╛╜╝╞╟╠╡╢╣╤╥╦╧╨╩╪╫╬ ',
+             
+             'shadesextra': '█▓▒░',
+             'emoji': '😀😂🤣😊😎😍😘🥰😜🤩🤯',
+             'emoji2': '😀😂🤣😊😎😍😘🥰😜🤩🤯😇🤓🥵🥶😈👻💀👽👾🎃🧠🧠🦾',
+           'math': 'πΣ√∞∫≈≠≤≥±×÷',
+            'extra': '☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼⌂♩♪♫♬√¤¡¿©®™µ',
+
+            'box': '─│┌┐└┘├┤┬┴┼═║╔╗╚╝╠╣╦╩╬━┃┏┓┗┛┠┨┯┷┿ ',
+
+            'cyrillic': 'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя',
+'greek': 'ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩαβγδεζηθικλμνξοπρστυφχψω',
+
+     'chess': '♔♕♖♗♘♙♚♛♜♝♞♟',
+
+     'numbers2': '0123456789₀₁₂₃₄₅₆₇₈₉⁰¹²³⁴⁵⁶⁷⁸⁹⓪①②③④⑤⑥⑦⑧⑨',
+      'all_in_1': '█▓▒░ .█▓▒░@%#*+=-:.`▪·◉○◌◍◎●MWN80ZDQLCJUYXKV─│┌┐└┘├┤┬┴┼═║╔╗╚╝╠╣πΣ√∞∫≈≠≤≥±×÷☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼⠁⠂⠄⡀⢀⠈⠐⠠⢈⡈ ',
+      
+      'china':'一二三四五六七八九十人口手日大小上下月天白生心早山今也了明男女有几个左右中花草你在他她我不和去多少水我你他她它是有在不一了的和人中大小天地上下左右日月水火山石生死金木土风雷雨电花草树国家学校朋友时间爱和平快乐幸福梦想希望未来世界龍鳳麗顏驚騰耀繁壽夢樂藝醫聖贏寶觀鏡護鐘願變蘭耀騰興蘇躍艷繼藤聰聽闊蘇',
+'china2':'一丨乙二十丁厂七卜人入八九几儿了力乃刀又三干亏工土士大千川小山巾寸上下个口日中贝水手毛气长凡及夕天太女子也尤尹飞叉习午牛文方火无六公元云五升午仁片牙牛犬王井令加外冬出击半平玉甘生田由目白皮目矢石示礼立竹米羊羽而耳肉臣自至舌行血衣西色足车长片牙牛犬王井令加外冬出击半平玉甘生田由目白皮目矢石示礼立竹米羊羽而耳肉臣自至舌行血衣西色足车雨青非面革音风食首香骨高鬲黑鼎鼓鼠鼻齿龙龟鳞凤麟丽鸾鹤麟鹰鹦鹩鹭鹫鹬黛黔黜黝黟默黯霸露霹雳霜霞霖霏霓露霸霹雳青藤鹤鸾鹰鹦鹩鹭鹫鹬麟麟鹤黛黔黜黝黟默黯',
+'hiragana':'あいうえおかきくけこさしすせそたちつてとはひふへほなにぬねのまみむめもやゆよらりるれろわをん',
+'katakana':'アイウエオカキクケコサシスセソタチツテトハヒフヘホナニヌネノマミムメモヤユヨラリルレロワヲン',
+'hiraganakatakana':'あいうえおかきくけこさしすせそたちつてとはひふへほなにぬねのまみむめもやゆよらりるれろわをんアイウエオカキクケコサシスセソタチツテトハヒフヘホナニヌネノマミムメモヤユヨラリルレロワヲン',
+'hiraganakatakanakanji':'あいうえおかきくけこさしすせそたちつてとはひふへほなにぬねのまみむめもやゆよらりるれろわをんアイウエオカキクケコサシスセソタチツテトハヒフヘホナニヌネノマミムメモヤユヨラリルレロワヲン一二三四五六七八九十百千万上下左右大小中日月火水木金土山川田空天雨気風花草木虫犬猫魚鳥人男女子父母兄弟学校先生友国語電車駅店本新聞書読話聞食飲学生時間午前午後今何時東京大阪京都北海道海森楽歌声音星空雲雪風光明暗白黒赤青黄緑茶紫色顔体心手足頭目耳鼻口歯首声心意思考知識学問文科算数理科社会歴史地図世界国都県市町村道橋道路川湖海山島森林畑田園畜産工業商業銀行会社仕事職業医者看護師教師警察消防士料理運転旅行飛行機船電車自動車自転車動物植物野菜果物米麦肉魚牛豚鶏犬猫馬鳥虫蜂蛇龍亀象熊虎狼猿鹿兎馬羊牛象魚貝介虫草花木竹森林空雲雨雪雷風光太陽月星宇宙地球火山川湖池滝海浜砂漠山岳洞窟岩石鉱物金銀銅鉄鋼石炭油水波流湖海河温泉地震台風竜巻風速気温湿度天気晴曇雨雪雷雹霜霧虹光影夜昼朝夕時分秒週月年春夏秋冬暦時計時間空間過去現在未来歴史文化文明伝統習慣祭り神社寺教会仏教神道キリスト教イスラム教ヒンドゥー教言語文字書籍新聞雑誌文学詩歌俳句短歌小説漫画映画音楽絵画彫刻芸術舞台演劇茶道華道武道柔道剣道空手相撲棋道囲碁将棋」',
+'shapez':'🔺🔻🔸🔹🔶🔷🔵🔴⚫⚪⬛⬜',
+
+'detailed2':'─━│┃┄┅┆┇┈┉┊┋╌╍╎╏═║╒╓╔╕╖╗╘╙╚╛╜╝╞╟╠╡╢╣╤╥╦╧╨╩╪╫╬ 0123456789₀₁₂₃₄₅₆₇₈₉⁰¹²³⁴⁵⁶⁷⁸⁹()[]{}-|^~/HI= .,;:ALVTO+<>_*#qwertyuıopğüişlkjhgfdsazxcvbnmöç.QWERTYUIOPĞÜİŞLKJHGFDSAZXCVBNMÖÇ.АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюяΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩαβγδεζηθικλμνξοπρστυφχψω',
+
+
+
+
+      //UNQUALİFİED
+            
+            '                 ': '',
+             '                ': '',
+              '               ': '',
+               '              ': '',
+               
+               
+               
+                    'numbers': '0123456789₀₁₂₃₄₅₆₇₈₉⁰¹²³⁴⁵⁶⁷⁸⁹',
+                'alphanumeric': 'qwertyuıopğü,asdfghjklşizxcvbnmöç.1234567890*-!^+%&/()=?_,;>£#$½{[]}\|@æ€₺`:"<>|QWERTYUIOPĞÜASDFGHJKLŞİZXCVBNMÖ',
                 'blocks': '█▓▒░ ▀▄▌▐█▞▚▖▗▘▝▞▛▜▟▙▛▜▚▞ ',
-                'detailed': '()[]{}-|^~\/HI= .,;:ALVTO+<>_*#qwertyuıopğüişlkjhgfdsazxcvbnmöç.QWERTYUIOPĞÜİŞLKJHGFDSAZXCVBNMÖÇ.',
+               'boxextra': '╭╮╯╰┏┓┗┛┃━┳┻┣┫╋╼╽╾╿╱╲╳╌╍╎╏ ',
                 'minimal': '▪· ',
                 'artistic': '◉○◌◍◎●',
-                'alphanumeric': 'qwertyuıopğü,asdfghjklşizxcvbnmöç.1234567890*-!^+%&/()=?_,;>£#$½{[]}\|@æ€₺`:"<>|QWERTYUIOPĞÜASDFGHJKLŞİZXCVBNMÖ',
-                'box': '─│┌┐└┘├┤┬┴┼═║╔╗╚╝╠╣╦╩╬',
-                'math': 'πΣ√∞∫≈≠≤≥±×÷',
-                'extra': '☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼',
-                'lines': '─━│┃┄┅┆┇┈┉┊┋╌╍╎╏═║╒╓╔╕╖╗╘╙╚╛╜╝╞╟╠╡╢╣╤╥╦╧╨╩╪╫╬',
 
     'shades': '█▓▒░ .',
     'braille': '⠁⠂⠄⡀⢀⠈⠐⠠⢈⡈⢀⠠⠐⠈⠂⠄⠁⠁',
-    'emoji': '😀😂🤣😊😎😍😘🥰😜🤩🤯',
+   
     'arrows': '←↑→↓↔↕⇐⇑⇒⇓⇔⇕',
-    'chess': '♔♕♖♗♘♙♚♛♜♝♞♟',
+   
     'runes': 'ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛋᛏᛒᛖᛗᛚ',
-    'cyrillic': 'АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЫЮЯ',
-    'greek': 'ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ',
+    
     'stars': '★☆✦✧✩✪✫✬✭✮✯✰✱✲✳✴✵✶✷✸✹✺✻✼✽✾✿',
     'misc': '☀☁☂☃☄★☆☇☈☉☊☋☌☍☎☏☐☑☒☓☕☘☙☚☛☜☝☞☟',
     //'extended_braille': '⡀⡁⡂⡃⡄⡅⡆⡇⡈⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒⡓⡔⡕⡖⡗⡘⡙⡚⡛⡜⡝⡞⡟',
     'extended_braille':'⠁⠂⠃⠄⠅⠆⠇⠈⠉⠊⠋⠌⠍⠎⠏⠐⠑⠒⠓⠔⠕⠖⠗⠘⠙⠚⠛⠜⠝⠞⠟⠠⠡⠢⠣⠤⠥⠦⠧⠨⠩⠪⠫⠬⠭⠮⠯⠰⠱⠲⠳⠴⠵⠶⠷⠸⠹⠺⠻⠼⠽⠾⠿⡀⡁⡂⡃⡄⡅⡆⡇⡈⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒⡓⡔⡕⡖⡗⡘⡙⡚⡛⡜⡝⡞⡟⡠⡡⡢⡣⡤⡥⡦⡧⡨⡩⡪⡫⡬⡭⡮⡯⡰⡱⡲⡳⡴⡵⡶⡷⡸⡹⡺⡻⡼⡽⡾⡿⢀⢁⢂⢃⢄⢅⢆⢇⢈⢉⢊⢋⢌⢍⢎⢏⢐⢑⢒⢓⢔⢕⢖⢗⢘⢙⢚⢛⢜⢝⢞⢟⢠⢡⢢⢣⢤⢥⢦⢧⢨⢩⢪⢫⢬⢭⢮⢯⢰⢱⢲⢳⢴⢵⢶⢷⢸⢹⢺⢻⢼⢽⢾⢿⣀⣁⣂⣃⣄⣅⣆⣇⣈⣉⣊⣋⣌⣍⣎⣏⣐⣑⣒⣓⣔⣕⣖⣗⣘⣙⣚⣛⣜⣝⣞⣟⣠⣡⣢⣣⣤⣥⣦⣧⣨⣩⣪⣫⣬⣭⣮⣯⣰⣱⣲⣳⣴⣵⣶⣷⣸⣹⣺⣻⣼⣽⣾⣿',
     'extended_math': '∑∏∂∆∇∝∞≠≤≥≈∴∵⊥⊢⊨⊩⊬⊭⊯∃∀∅∈∉∋⊆⊂⊇⊃⋂⋃⊕⊗⊖⊘',
     'brackets': '(){}[]⟨⟩〈〉❬❭❮❯❰❱⦃⦄⦅⦆⦇⦈⦉⦊⦋⦌',
-    'shadesextra': '█▓▒░░▒▓██▓▒░░▒▓██▓▒░',
-    'boxextra': '╭╮╯╰┏┓┗┛┃━┳┻┣┫╋╼╽╾╿╱╲╳╌╍╎╏',
+   
+    
     'gokturkish': '𐰀𐰁𐰂𐰃𐰄𐰅𐰆𐰇𐰈𐰉𐰊𐰋𐰌𐰍𐰎𐰏𐰐𐰑𐰒𐰓𐰔𐰕',
-    'numbers': '0123456789₀₁₂₃₄₅₆₇₈₉⁰¹²³⁴⁵⁶⁷⁸⁹',
+    
     'arabic': '٠١٢٣٤٥٦٧٨٩؀؁؂؃؄؅؆؇؈؉؊؋٪٫٬',
     'shapes': '■□▲△▼▽◆◇○●◎◉◊◌◍◐◑◒◓◔◕◖◗◘◙◚◛',
     'extreme_symbols': '☢☣⚠⚡♻☠⚔⚒⚖⚗⚙⚜☕♠♥♦♣⚜⚛⚕⚖⚗⚙⚡⚠☢☣☠⚔',
-    'all_in_1': '█▓▒░ .█▓▒░@%#*+=-:.`▪·◉○◌◍◎●MWN80ZDQLCJUYXKV─│┌┐└┘├┤┬┴┼═║╔╗╚╝╠╣πΣ√∞∫≈≠≤≥±×÷☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼⠁⠂⠄⡀⢀⠈⠐⠠⢈⡈ ',
+   
     'all_in_2': '←↑→↓↔↕⇐⇑⇒⇓⇔⇕𐰀𐰁𐰂𐰃𐰄𐰅𐰆𐰇𐰈𐰉𐰊𐰋𐰌𐰍𐰎𐰏𐰐𐰑𐰒𐰓𐰔𐰕0123456789₀₁₂₃₄₅₆₇₈₉⁰¹²³⁴⁵⁶⁷⁸⁹■□▲△▼▽◆◇○●◎◉◊◌◍◐◑◒◓◔◕◖◗◙◚◛⡀⡁⡂⡃⡄⡅⡆⡇⡈⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒⡓⡔⡕⡖⡗⡘⡙⡚⡛⡜⡝⡞⡟qwertyuıopğü,asdfghjklşizxcvbnmöç.1234567890*-!^+%&/()=?_,;>£#$½{[]}\|@æ€₺`:"<>|QWERTYUIOPĞÜASDFGHJKLŞİZXCVBNMÖ',
-'detailed2':'()[]{}-|^~\/HI= .,;:ALVTO+<>_*#qwertyuıopğüişlkjhgfdsazxcvbnmöç.QWERTYUIOPĞÜİŞLKJHGFDSAZXCVBNMÖÇ."`',
-'china':'一二三四五六七八九十人口手日大小上下月天白生心早山今也了明男女有几个左右中花草你在他她我不和去多少水我你他她它是有在不一了的和人中大小天地上下左右日月水火山石生死金木土风雷雨电花草树国家学校朋友时间爱和平快乐幸福梦想希望未来世界龍鳳麗顏驚騰耀繁壽夢樂藝醫聖贏寶觀鏡護鐘願變蘭耀騰興蘇躍艷繼藤聰聽闊蘇',
-'china2':'一丨乙二十丁厂七卜人入八九几儿了力乃刀又三干亏工土士大千川小山巾寸上下个口日中贝水手毛气长凡及夕天太女子也尤尹飞叉习午牛文方火无六公元云五升午仁片牙牛犬王井令加外冬出击半平玉甘生田由目白皮目矢石示礼立竹米羊羽而耳肉臣自至舌行血衣西色足车长片牙牛犬王井令加外冬出击半平玉甘生田由目白皮目矢石示礼立竹米羊羽而耳肉臣自至舌行血衣西色足车雨青非面革音风食首香骨高鬲黑鼎鼓鼠鼻齿龙龟鳞凤麟丽鸾鹤麟鹰鹦鹩鹭鹫鹬黛黔黜黝黟默黯霸露霹雳霜霞霖霏霓露霸霹雳青藤鹤鸾鹰鹦鹩鹭鹫鹬麟麟鹤黛黔黜黝黟默黯',
-'hiragana':'あいうえおかきくけこさしすせそたちつてとはひふへほなにぬねのまみむめもやゆよらりるれろわをん',
-'katakana':'アイウエオカキクケコサシスセソタチツテトハヒフヘホナニヌネノマミムメモヤユヨラリルレロワヲン',
-'hiraganakatakana':'あいうえおかきくけこさしすせそたちつてとはひふへほなにぬねのまみむめもやゆよらりるれろわをんアイウエオカキクケコサシスセソタチツテトハヒフヘホナニヌネノマミムメモヤユヨラリルレロワヲン',
-'hiraganakatakanakanji':'あいうえおかきくけこさしすせそたちつてとはひふへほなにぬねのまみむめもやゆよらりるれろわをんアイウエオカキクケコサシスセソタチツテトハヒフヘホナニヌネノマミムメモヤユヨラリルレロワヲン一二三四五六七八九十百千万上下左右大小中日月火水木金土山川田空天雨気風花草木虫犬猫魚鳥人男女子父母兄弟学校先生友国語電車駅店本新聞書読話聞食飲学生時間午前午後今何時東京大阪京都北海道海森楽歌声音星空雲雪風光明暗白黒赤青黄緑茶紫色顔体心手足頭目耳鼻口歯首声心意思考知識学問文科算数理科社会歴史地図世界国都県市町村道橋道路川湖海山島森林畑田園畜産工業商業銀行会社仕事職業医者看護師教師警察消防士料理運転旅行飛行機船電車自動車自転車動物植物野菜果物米麦肉魚牛豚鶏犬猫馬鳥虫蜂蛇龍亀象熊虎狼猿鹿兎馬羊牛象魚貝介虫草花木竹森林空雲雨雪雷風光太陽月星宇宙地球火山川湖池滝海浜砂漠山岳洞窟岩石鉱物金銀銅鉄鋼石炭油水波流湖海河温泉地震台風竜巻風速気温湿度天気晴曇雨雪雷雹霜霧虹光影夜昼朝夕時分秒週月年春夏秋冬暦時計時間空間過去現在未来歴史文化文明伝統習慣祭り神社寺教会仏教神道キリスト教イスラム教ヒンドゥー教言語文字書籍新聞雑誌文学詩歌俳句短歌小説漫画映画音楽絵画彫刻芸術舞台演劇茶道華道武道柔道剣道空手相撲棋道囲碁将棋」',
 
             };
-            
+     const select = document.getElementById('charPresets');
+Object.entries(presetCharacters).forEach(([key, value]) => {
+    const option = document.createElement('option');
+    option.value = key;
+    let label = key.charAt(0).toUpperCase() + key.slice(1);
+    if (value.trim()) {
+        // Show preview (e.g. first few characters)
+        label += ` (${value.slice(0, 6)}...)`;
+    }
+    option.textContent = label;
+    select.appendChild(option);
+});      
             // Default character set
             elements.charactersInput.value = presetCharacters['detailed'];
             
@@ -415,7 +515,90 @@
                     elements.charactersInput.value = presetCharacters[preset];
                 }
             });
-            
+              elements.brightnessWeight.addEventListener('input', function() {
+        elements.brightnessWeightValue.textContent = this.value;
+    });
+    
+    elements.shapeWeight.addEventListener('input', function() {
+        elements.shapeWeightValue.textContent = this.value;
+    });
+      function calculateGradientSimilarity(imgData, charData, cellSize) {
+        let similarity = 0;
+        for (let y = 1; y < cellSize - 1; y++) {
+            for (let x = 1; x < cellSize - 1; x++) {
+                const imgIdx = (y * cellSize + x) * 4;
+                const charIdx = (y * cellSize + x) * 4;
+                
+                // Calculate gradients for image
+                const imgGx = imgData[imgIdx - 4] - imgData[imgIdx + 4];
+                const imgGy = imgData[imgIdx - cellSize*4] - imgData[imgIdx + cellSize*4];
+                
+                // Calculate gradients for character
+                const charGx = charData[charIdx - 4] - charData[charIdx + 4];
+                const charGy = charData[charIdx - cellSize*4] - charData[charIdx + cellSize*4];
+                
+                // Compare gradient directions
+                const dotProduct = imgGx * charGx + imgGy * charGy;
+                const imgMagnitude = Math.sqrt(imgGx * imgGx + imgGy * imgGy);
+                const charMagnitude = Math.sqrt(charGx * charGx + charGy * charGy);
+                
+                if (imgMagnitude > 10 && charMagnitude > 10) {
+                    const cosTheta = dotProduct / (imgMagnitude * charMagnitude);
+                    similarity += (cosTheta + 1) / 2; // Normalize to 0-1
+                }
+            }
+        }
+        return similarity / ((cellSize - 2) * (cellSize - 2));
+    }
+
+    function calculateStructuralSimilarity(imgData, charData, cellSize) {
+        // Simple structural similarity metric
+        let match = 0;
+        const threshold = 30;
+        
+        for (let i = 0; i < cellSize * cellSize * 4; i += 4) {
+            const imgVal = imgData[i] > threshold ? 1 : 0;
+            const charVal = charData[i] > threshold ? 1 : 0;
+            match += imgVal === charVal ? 1 : 0;
+        }
+        
+        return match / (cellSize * cellSize);
+    }
+
+    function calculateEdgeSimilarity(imgData, charData, cellSize) {
+        // Count matching edge pixels
+        let edgeMatches = 0;
+        let totalEdges = 1; // Avoid division by zero
+        const edgeThreshold = 50;
+        
+        for (let y = 1; y < cellSize - 1; y++) {
+            for (let x = 1; x < cellSize - 1; x++) {
+                const idx = (y * cellSize + x) * 4;
+                
+                // Check if pixel is an edge in either image
+                const isImgEdge = imgData[idx] > edgeThreshold && 
+                                 (imgData[idx - 4] <= edgeThreshold || 
+                                  imgData[idx + 4] <= edgeThreshold || 
+                                  imgData[idx - cellSize*4] <= edgeThreshold || 
+                                  imgData[idx + cellSize*4] <= edgeThreshold);
+                
+                const isCharEdge = charData[idx] > edgeThreshold && 
+                                  (charData[idx - 4] <= edgeThreshold || 
+                                   charData[idx + 4] <= edgeThreshold || 
+                                   charData[idx - cellSize*4] <= edgeThreshold || 
+                                   charData[idx + cellSize*4] <= edgeThreshold);
+                
+                if (isImgEdge || isCharEdge) {
+                    totalEdges++;
+                    if (isImgEdge && isCharEdge) {
+                        edgeMatches++;
+                    }
+                }
+            }
+        }
+        
+        return edgeMatches / totalEdges;
+    }
             // Handle image upload
             elements.imageInput.addEventListener('change', function(e) {
                 if (e.target.files && e.target.files[0]) {
@@ -526,6 +709,9 @@
                     case 'edges':
                         processedRegion = detectEdges(grayscaleRegion, lastAsciiData.kernelThreshold);
                         break;
+                         case 'edges2':
+                        processedRegion = detectEdges2(grayscaleRegion);
+                        break;
                     case 'sharpen':
                         processedRegion = applyKernel(grayscaleRegion, SHARPEN_KERNEL);
                         break;
@@ -596,6 +782,9 @@
                 switch(lastAsciiData.kernelType) {
                     case 'edges':
                         charProcessed = detectEdges(charGrayscale, lastAsciiData.kernelThreshold);
+                        break;
+                         case 'edges2':
+                        processedRegion = detectEdges2(grayscaleRegion);
                         break;
                     case 'sharpen':
                         charProcessed = applyKernel(charGrayscale, SHARPEN_KERNEL);
@@ -794,7 +983,53 @@
                 
                 return new ImageData(output, width, height);
             }
-            
+                    function detectEdges2(imageData) {
+                const width = imageData.width;
+                const height = imageData.height;
+                const data = imageData.data;
+                const output = new Uint8ClampedArray(data.length);
+                
+                // Sobel kernels
+                const kernelX = [
+                    [-1, 0, 1],
+                    [-2, 0, 2],
+                    [-1, 0, 1]
+                ];
+                
+                const kernelY = [
+                    [-1, -2, -1],
+                    [0, 0, 0],
+                    [1, 2, 1]
+                ];
+                
+                for (let y = 1; y < height - 1; y++) {
+                    for (let x = 1; x < width - 1; x++) {
+                        let gx = 0;
+                        let gy = 0;
+                        
+                        // Apply kernels
+                        for (let ky = -1; ky <= 1; ky++) {
+                            for (let kx = -1; kx <= 1; kx++) {
+                                const idx = ((y + ky) * width + (x + kx)) * 4;
+                                const value = data[idx];
+                                
+                                gx += kernelX[ky + 1][kx + 1] * value;
+                                gy += kernelY[ky + 1][kx + 1] * value;
+                            }
+                        }
+                        
+                        // Calculate gradient magnitude
+                        const magnitude = Math.sqrt(gx * gx + gy * gy);
+                        const edgeValue = magnitude
+                        
+                        const idx = (y * width + x) * 4;
+                        output[idx] = output[idx + 1] = output[idx + 2] = edgeValue;
+                        output[idx + 3] = 255;
+                    }
+                }
+                
+                return new ImageData(output, width, height);
+            }
             /**
              * Convert image to ASCII art using shape matching
              * @param {Image} image - The image to convert
@@ -834,6 +1069,9 @@
                 switch(kernelType) {
                     case 'edges':
                         processedData = detectEdges(grayscaleData, kernelThreshold);
+                        break;
+                         case 'edges2':
+                        processedData = detectEdges2(grayscaleData);
                         break;
                     case 'sharpen':
                         processedData = applyKernel(grayscaleData, SHARPEN_KERNEL);
@@ -889,7 +1127,7 @@
                             // Calculate difference score
                             let score = 0;
                             
-                           if (useNormalizedScoring) {
+if (useNormalizedScoring) {
     // First, compute average brightness for image and character regions
     let imgTotal = 0;
     let charTotal = 0;
@@ -913,7 +1151,8 @@
     const imgOffset = 125 - imgAvg;
     const charOffset = 125 - charAvg;
 
-    // Now accumulate score using normalized values
+    // Calculate brightness score
+    let brightnessScore = 0;
     for (let py = 0; py < cellSize; py++) {
         for (let px = 0; px < cellSize; px++) {
             const imgIdx = ((cellY + py) * tempCanvas.width + (cellX + px)) * 4;
@@ -924,12 +1163,59 @@
             if (invertCharBrightness) charBrightness = 255 - charBrightness;
             charBrightness += charOffset/2;
 
-            score += Math.abs(imgBrightness - charBrightness);
+            brightnessScore += Math.abs(imgBrightness - charBrightness);
         }
     }
 
+    // Calculate shape score
+    const shapeMethod = elements.shapeMethod.value;
+    let shapeScore = 0;
+    const imgRegion = new Uint8ClampedArray(cellSize * cellSize * 4);
+    const charRegion = new Uint8ClampedArray(cellSize * cellSize * 4);
+
+    // Extract regions
+    for (let py = 0; py < cellSize; py++) {
+        for (let px = 0; px < cellSize; px++) {
+            const imgIdx = ((cellY + py) * tempCanvas.width + (cellX + px)) * 4;
+            const outIdx = (py * cellSize + px) * 4;
+            
+            imgRegion[outIdx] = pixels[imgIdx];
+            imgRegion[outIdx+1] = pixels[imgIdx+1];
+            imgRegion[outIdx+2] = pixels[imgIdx+2];
+            imgRegion[outIdx+3] = pixels[imgIdx+3];
+            
+            charRegion[outIdx] = charData[outIdx];
+            charRegion[outIdx+1] = charData[outIdx+1];
+            charRegion[outIdx+2] = charData[outIdx+2];
+            charRegion[outIdx+3] = charData[outIdx+3];
+        }
+    }
+
+    // Calculate shape similarity based on selected method
+    let shapeSimilarity = 0;
+    switch(shapeMethod) {
+        case 'gradient':
+            shapeSimilarity = calculateGradientSimilarity(imgRegion, charRegion, cellSize);
+            break;
+        case 'structure':
+            shapeSimilarity = calculateStructuralSimilarity(imgRegion, charRegion, cellSize);
+            break;
+        case 'edges':
+            shapeSimilarity = calculateEdgeSimilarity(imgRegion, charRegion, cellSize);
+            break;
+    }
+
+    // Convert similarity to difference score (higher similarity = lower score)
+    shapeScore = (1 - shapeSimilarity) * cellSize * cellSize * 255;
+
+    // Get weights from UI
+    const brightnessWeight = parseInt(elements.brightnessWeight.value) / 100;
+    const shapeWeight = parseInt(elements.shapeWeight.value) / 100;
+
+    // Combine scores using weights
+    score = (brightnessScore * brightnessWeight) + (shapeScore * shapeWeight);
 } else {
-    // Use original absolute difference scoring
+    // Original absolute difference scoring (unchanged)
     for (let py = 0; py < cellSize; py++) {
         for (let px = 0; px < cellSize; px++) {
             const imgIdx = ((cellY + py) * tempCanvas.width + (cellX + px)) * 4;
@@ -985,7 +1271,97 @@
                     processedImageData: processedData
                 };
             }
+            
+              
+        function updateEffectPreviews() {
+    if (!originalImage) return;
+    
+    // Create a small version for preview
+    const previewSize = 200;
+    const previewCanvas = document.createElement('canvas');
+    const previewCtx = previewCanvas.getContext('2d');
+    
+    // Calculate dimensions maintaining aspect ratio
+    let width, height;
+    if (originalImage.width > originalImage.height) {
+        width = previewSize;
+        height = (originalImage.height / originalImage.width) * previewSize;
+    } else {
+        height = previewSize;
+        width = (originalImage.width / originalImage.height) * previewSize;
+    }
+    
+    previewCanvas.width = width;
+    previewCanvas.height = height;
+    
+    // Draw original image
+    previewCtx.drawImage(originalImage, 0, 0, width, height);
+    let imageData = previewCtx.getImageData(0, 0, width, height);
+    
+    // Apply current contrast/brightness settings
+    const contrast = parseInt(elements.contrastSlider.value);
+    const brightness = parseInt(elements.brightnessSlider.value);
+    imageData = applyImageAdjustments(imageData, contrast, brightness);
+    
+    // Convert to grayscale
+    const grayscaleData = toGrayscale(imageData);
+    
+    // Display original preview
+    displayPreview(elements.previewOriginal, grayscaleData);
+    
+    // Create sharpen preview
+    const sharpenData = applyKernel(grayscaleData, SHARPEN_KERNEL);
+    displayPreview(elements.previewSharpen, sharpenData);
+    
+    // Create emboss preview
+    const embossData = applyKernel(grayscaleData, EMBOSS_KERNEL);
+    displayPreview(elements.previewEmboss, embossData);
+    
+    // Create edge detection preview
+    const threshold = parseInt(elements.kernelThreshold.value);
+    const edgesData = detectEdges(grayscaleData, threshold);
+     const edges2Data = detectEdges2(grayscaleData);
+    displayPreview(elements.previewEdges, edgesData);
+     displayPreview(elements.previewEdges2, edges2Data);
+}
+
+function displayPreview(canvas, imageData) {
+    const ctx = canvas.getContext('2d');
+    canvas.width = imageData.width;
+    canvas.height = imageData.height;
+    ctx.putImageData(imageData, 0, 0);
+}
+elements.contrastSlider.addEventListener('input', function() {
+    elements.contrastValue.textContent = this.value;
+    updateEffectPreviews();
+});
+
+elements.brightnessSlider.addEventListener('input', function() {
+    elements.brightnessValue.textContent = this.value;
+    updateEffectPreviews();
+});
+
+elements.kernelThreshold.addEventListener('input', function() {
+    elements.kernelThresholdValue.textContent = this.value;
+    updateEffectPreviews();
+});
+
+elements.kernelType.addEventListener('change', updateEffectPreviews);
+ const reader = new FileReader();
+// Update preview when image loads
+reader.onload = function(event) {
+    originalImage = new Image();
+    originalImage.onload = function() {
+        // ... existing image load code ...
+        updateEffectPreviews(); // Add this line
+    };
+    originalImage.src = event.target.result;
+};
+            
         });
+        
+        
+      
     </script>
 </body>
 </html>

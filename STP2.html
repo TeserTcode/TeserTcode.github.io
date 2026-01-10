@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Star Polyhedron Corner Viewer</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+        }
+        input { width: 50px; }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <h3>Star Polyhedron Corner</h3>
+        <div>
+            Schläfli Symbol: {<input id="q1" type="number" value="5" min="2" step="1"> / 
+            <input id="p1" type="number" value="2" min="1" step="1"> , 
+            <input id="q2" type="number" value="5" min="2" step="1"> / 
+            <input id="p2" type="number" value="2" min="1" step="1">}
+        </div>
+        <div>
+            <button id="update">Update</button>
+        </div>
+        <p>Move: Q(up) W(forward) E(down) A(left) S(back) D(right)</p>
+        <p>Rotate: Z(pitch down) X(pitch up) C(yaw left) V(yaw right)</p>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script>
+        // Scene setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x111122);
+        
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 0, 5);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+        
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0x404040);
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(1, 1, 1);
+        scene.add(directionalLight);
+        
+        // Variables for controls
+        const moveSpeed = 0.1;
+        const rotationSpeed = 0.03;
+        const keys = {
+            q: false, w: false, e: false, a: false, s: false, d: false,
+            z: false, x: false, c: false, v: false
+        };
+        
+        // Event listeners for keyboard controls
+        window.addEventListener('keydown', (event) => {
+            if (keys.hasOwnProperty(event.key.toLowerCase())) {
+                keys[event.key.toLowerCase()] = true;
+            }
+        });
+        
+        window.addEventListener('keyup', (event) => {
+            if (keys.hasOwnProperty(event.key.toLowerCase())) {
+                keys[event.key.toLowerCase()] = false;
+            }
+        });
+        
+        // Resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // Star polyhedron corner generation
+        let currentCorner = null;
+        
+        function generateStarPolyhedronCorner(q1, p1, q2, p2) {
+            // Clear previous corner if exists
+            if (currentCorner) {
+                scene.remove(currentCorner);
+            }
+            
+            const group = new THREE.Group();
+            
+            // Calculate the fundamental triangle angles
+            const alpha = Math.PI / q1;
+            const beta = Math.PI / q2;
+            const gamma = Math.PI * p1 / q1;
+            
+            // Create the vertex figure (a single corner)
+            const radius = 1.5;
+            const geometry = new THREE.SphereGeometry(0.05, 16, 16);
+            const material = new THREE.MeshPhongMaterial({ color: 0xff0000 });
+            const vertex = new THREE.Mesh(geometry, material);
+            group.add(vertex);
+            
+            // Create edges meeting at this vertex
+            const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x00ff00 });
+            
+            // First type of edge (q1/p1)
+            for (let i = 0; i < q1; i++) {
+                const angle = i * 2 * Math.PI / q1;
+                const x = radius * Math.sin(alpha) * Math.cos(angle);
+                const y = radius * Math.sin(alpha) * Math.sin(angle);
+                const z = radius * Math.cos(alpha);
+                
+                const points = [];
+                points.push(new THREE.Vector3(0, 0, 0));
+                points.push(new THREE.Vector3(x, y, z));
+                
+                const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+                const line = new THREE.Line(lineGeometry, edgeMaterial);
+                group.add(line);
+                
+                // Add small sphere at end of edge
+                const endSphere = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.03, 8, 8),
+                    new THREE.MeshPhongMaterial({ color: 0x0000ff })
+                );
+                endSphere.position.set(x, y, z);
+                group.add(endSphere);
+            }
+            
+            // Second type of edge (q2/p2)
+            for (let i = 0; i < q2; i++) {
+                const angle = i * 2 * Math.PI / q2 + Math.PI / q2; // Offset by half step
+                const x = radius * Math.sin(beta) * Math.cos(angle);
+                const y = radius * Math.sin(beta) * Math.sin(angle);
+                const z = radius * Math.cos(beta);
+                
+                const points = [];
+                points.push(new THREE.Vector3(0, 0, 0));
+                points.push(new THREE.Vector3(x, y, z));
+                
+                const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+                const line = new THREE.Line(lineGeometry, edgeMaterial);
+                group.add(line);
+                
+                // Add small sphere at end of edge
+                const endSphere = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.03, 8, 8),
+                    new THREE.MeshPhongMaterial({ color: 0xff00ff })
+                );
+                endSphere.position.set(x, y, z);
+                group.add(endSphere);
+            }
+            
+            // Add faces (as transparent polygons)
+            const faceMaterial = new THREE.MeshBasicMaterial({
+                color: 0x8888ff,
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.DoubleSide
+            });
+            
+            // For simplicity, we'll just show one face of each type
+            if (q1 >= 3) {
+                const face1Points = [];
+                for (let i = 0; i < 3; i++) {
+                    const angle = i * 2 * Math.PI / q1;
+                    const x = radius * Math.sin(alpha) * Math.cos(angle);
+                    const y = radius * Math.sin(alpha) * Math.sin(angle);
+                    const z = radius * Math.cos(alpha);
+                    face1Points.push(new THREE.Vector3(x, y, z));
+                }
+                
+                const face1Geometry = new THREE.BufferGeometry().setFromPoints(face1Points);
+                const face1 = new THREE.Mesh(face1Geometry, faceMaterial);
+                group.add(face1);
+            }
+            
+            if (q2 >= 3) {
+                const face2Points = [];
+                for (let i = 0; i < 3; i++) {
+                    const angle = i * 2 * Math.PI / q2 + Math.PI / q2;
+                    const x = radius * Math.sin(beta) * Math.cos(angle);
+                    const y = radius * Math.sin(beta) * Math.sin(angle);
+                    const z = radius * Math.cos(beta);
+                    face2Points.push(new THREE.Vector3(x, y, z));
+                }
+                
+                const face2Geometry = new THREE.BufferGeometry().setFromPoints(face2Points);
+                const face2 = new THREE.Mesh(face2Geometry, faceMaterial);
+                group.add(face2);
+            }
+            
+            currentCorner = group;
+            scene.add(currentCorner);
+        }
+        
+        // Initialize with default values
+        generateStarPolyhedronCorner(5, 2, 5, 2);
+        
+        // UI controls
+        document.getElementById('update').addEventListener('click', () => {
+            const q1 = parseInt(document.getElementById('q1').value);
+            const p1 = parseInt(document.getElementById('p1').value);
+            const q2 = parseInt(document.getElementById('q2').value);
+            const p2 = parseInt(document.getElementById('p2').value);
+            
+            if (q1 >= 2 && p1 >= 1 && q2 >= 2 && p2 >= 1) {
+                generateStarPolyhedronCorner(q1, p1, q2, p2);
+            } else {
+                alert("Invalid parameters. q values must be ≥ 2, p values must be ≥ 1");
+            }
+        });
+        
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Handle movement
+            if (keys.w) camera.translateZ(-moveSpeed);
+            if (keys.s) camera.translateZ(moveSpeed);
+            if (keys.a) camera.translateX(-moveSpeed);
+            if (keys.d) camera.translateX(moveSpeed);
+            if (keys.q) camera.translateY(moveSpeed);
+            if (keys.e) camera.translateY(-moveSpeed);
+            
+            // Handle rotation
+            if (keys.z) camera.rotateX(-rotationSpeed); // Pitch down
+            if (keys.x) camera.rotateX(rotationSpeed);  // Pitch up
+            if (keys.c) camera.rotateY(-rotationSpeed);  // Yaw left
+            if (keys.v) camera.rotateY(rotationSpeed);   // Yaw right
+            
+            renderer.render(scene, camera);
+        }
+        
+        animate();
+    </script>
+</body>
+</html>

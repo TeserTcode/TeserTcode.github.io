@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Clock</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: black;
+            color: white;
+            font-family: 'Consolas', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="clockCanvas" width="1000" height="700"></canvas>
+    <script>
+        function isLeap(year) {
+            if (year % 400 === 0) return true;
+            if (year % 100 === 0) return false;
+            if (year % 4 === 0) return true;
+            return false;
+        }
+
+        function modulo(a, b) {
+            return ((a % b) + b) % b;
+        }
+
+        function formatDate(year, month, day, hour, minute, second) {
+            const pad = (num, size) => String(num).padStart(size, '0');
+            const year2 = pad(year, 4);
+            const month2 = pad(month, 2);
+            const day2 = pad(day, 2);
+            const hour2 = pad(hour, 2);
+            const minute2 = pad(minute, 2);
+            const second2 = pad(second.toFixed(6), 2);
+            return `${year2}-${month2}-${day2} ${hour2}:${minute2}:${second2}`;
+        }
+
+        function getWeekday(year, month, day) {
+            const date = new Date(year, month - 1, day);
+            const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            return weekdays[date.getDay()];
+        }
+
+        function getMonthLengths(year) {
+            return [0, 31, isLeap(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        }
+
+        function main() {
+            const canvas = document.getElementById('clockCanvas');
+            const ctx = canvas.getContext('2d');
+            const FONT_SIZE = 50;
+            ctx.font = `${FONT_SIZE}px Consolas`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            let year = parseInt(prompt("Enter year:"));
+            let month = parseInt(prompt("Enter month:"));
+            let day = parseInt(prompt("Enter day:"));
+            let hour = parseInt(prompt("Enter hour:"));
+            let minute = parseInt(prompt("Enter minute:"));
+            let second = parseFloat(prompt("Enter second:"));
+            let speed = parseFloat(prompt("Enter speed:"));
+            let start = Date.now() / 1000;
+            let resets = 0;
+            let monthLengths = getMonthLengths(year);
+
+            function update() {
+                const now = Date.now() / 1000;
+                let elapsed = (now - start) * speed;
+                second = second + elapsed - resets * 60;
+                minute += Math.floor((second - modulo(second, 60)) / 60);
+                resets += Math.floor((second - modulo(second, 60)) / 60);
+                second = modulo(second, 60);
+                hour += Math.floor((minute - modulo(minute, 60)) / 60);
+                minute = modulo(minute, 60);
+                day += Math.floor((hour - modulo(hour, 24)) / 24);
+                hour = modulo(hour, 24);
+
+                while (day < 1 || month < 1) {
+                    month -= 1;
+                    while (month < 1) {
+                        month += 12;
+                        year -= 1;
+                        monthLengths = getMonthLengths(year);
+                    }
+                    day += monthLengths[((month - 1) % 12) + 1];
+                }
+
+                while (day > monthLengths[((month - 1) % 12) + 1]) {
+                    day -= monthLengths[((month - 1) % 12) + 1];
+                    month += 1;
+                    while (month > 12) {
+                        month -= 12;
+                        year += 1;
+                        monthLengths = getMonthLengths(year);
+                    }
+                }
+
+                const weekday = getWeekday(year, month, day);
+                const dateStr = formatDate(year, month, day, hour, minute, second);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillText(`${weekday} ${dateStr}`, canvas.width / 2, canvas.height / 2);
+
+                start = now;
+                requestAnimationFrame(update);
+            }
+
+            update();
+        }
+
+        main();
+    </script>
+</body>
+</html>

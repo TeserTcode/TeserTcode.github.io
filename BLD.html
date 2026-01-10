@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Builder Simulation with A* Pathfinding</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #000;
+            margin: 10px auto;
+            display: block;
+        }
+        .controls {
+            margin: 10px;
+        }
+        .info {
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background: #f5f5f5;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <h1>Builder Simulation with A* Pathfinding</h1>
+    <div class="controls">
+        <label for="speedSlider">Builder Speed:</label>
+        <input type="range" id="speedSlider" min="1" max="10" value="5">
+        <span id="speedValue">5</span>
+    </div>
+    <div class="info">
+        <div>Phase: <span id="phaseDisplay">Starting</span></div>
+        <div>Inventory: <span id="inventoryDisplay">0/10</span></div>
+        <div>Path Length: <span id="pathLength">0</span></div>
+    </div>
+    <canvas id="gameCanvas" width="600" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const phaseDisplay = document.getElementById('phaseDisplay');
+        const inventoryDisplay = document.getElementById('inventoryDisplay');
+        const pathLengthDisplay = document.getElementById('pathLength');
+        const speedSlider = document.getElementById('speedSlider');
+        const speedValue = document.getElementById('speedValue');
+
+        // Game constants
+        const GRID_SIZE = 30;
+        const CELL_SIZE = canvas.width / GRID_SIZE;
+        const MIDDLE = Math.floor(GRID_SIZE / 2);
+        
+        // Resources
+        const RESOURCES = {
+            SPRUCE: {name: 'Spruce', color: '#8B4513'},
+            STONE: {name: 'Stone', color: '#808080'},
+            MARBLE: {name: 'Marble', color: '#FFFFFF'},
+            BIRCH: {name: 'Birch', color: '#D2B48C'}
+        };
+        
+        // Quadrants
+        const QUADRANTS = [
+            {x1: 0, y1: 0, x2: MIDDLE, y2: MIDDLE, resource: RESOURCES.SPRUCE},
+            {x1: MIDDLE, y1: 0, x2: GRID_SIZE, y2: MIDDLE, resource: RESOURCES.STONE},
+            {x1: 0, y1: MIDDLE, x2: MIDDLE, y2: GRID_SIZE, resource: RESOURCES.MARBLE},
+            {x1: MIDDLE, y1: MIDDLE, x2: GRID_SIZE, y2: GRID_SIZE, resource: RESOURCES.BIRCH}
+        ];
+
+        // Game state
+        let builder = {
+            x: MIDDLE,
+            y: MIDDLE,
+            inventory: [],
+            maxInventory: 10,
+            phase: 'chilling', // collecting, building, chilling
+            phaseCounter: 0,
+            target: null,
+            path: [],
+            speed: 5
+        };
+
+        let world = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(null));
+        let resourceNodes = [];
+        let frameCount = 0;
+
+        // Initialize the game
+        function init() {
+            // Create initial resource nodes in each quadrant
+            QUADRANTS.forEach(quad => {
+                for (let i = 0; i < 3; i++) {
+                    const x = Math.floor(Math.random() * (quad.x2 - quad.x1 - 4)) + quad.x1 + 2;
+                    const y = Math.floor(Math.random() * (quad.y2 - quad.y1 - 4)) + quad.y1 + 2;
+                    resourceNodes.push({x, y, resource: quad.resource, amount: 5});
+                }
+            });
+            
+            // Set up speed slider
+            speedSlider.addEventListener('input', function() {
+                builder.speed = parseInt(this.value);
+                speedValue.textContent = this.value;
+            });
+            
+            // Start game loop
+            setInterval(gameLoop, 100);
+        }
+
+        // Main game loop
+        function gameLoop() {
+            frameCount++;
+            
+            // Update phase occasionally
+            if (frameCount % (50 - builder.speed * 3) === 0) {
+                changePhase();
+            }
+            
+            // Perform actions based on phase
+            switch (builder.phase) {
+                case 'collecting':
+                    collectingPhase();
+                    break;
+                case 'building':
+                    buildingPhase();
+                    break;
+                case 'chilling':
+                    chillingPhase();
+                    break;
+            }
+            
+            // Move builder along path
+            if (builder.path.length > 0 && frameCount % Math.max(1, Math.floor(6 - builder.speed/2)) === 0) {
+                const next = builder.path.shift();
+                builder.x = next.x;
+                builder.y = next.y;
+                
+                // Check if reached target
+                if (builder.target && builder.x === builder.target.x && builder.y === builder.target.y) {
+                    if (builder.phase === 'collecting') {
+                        collectResource();
+                    }
+                    builder.target = null;
+                }
+                pathLengthDisplay.textContent = builder.path.length;
+            }
+            
+            // Update display
+            updateDisplay();
+            render();
+        }
+
+        function changePhase() {
+            const phases = ['collecting', 'building', 'chilling'];
+            if (builder.phase === 'collecting' && builder.inventory.length >= builder.maxInventory) {
+                builder.phase = 'building';
+            } else if (builder.phase === 'building' && builder.inventory.length === 0) {
+                builder.phase = 'collecting';
+            } else {
+                // Random chance to change phase
+                if (Math.random() < 0.2) {
+                    let newPhase;
+                    do {
+                        newPhase = phases[Math.floor(Math.random() * phases.length)];
+                    } while (newPhase === builder.phase || 
+                            (newPhase === 'building' && builder.inventory.length === 0) ||
+                            (newPhase === 'collecting' && builder.inventory.length >= builder.maxInventory));
+                    
+                    builder.phase = newPhase;
+                    builder.phaseCounter = 0;
+                    builder.target = null;
+                    builder.path = [];
+                    pathLengthDisplay.textContent = '0';
+                }
+            }
+            
+            phaseDisplay.textContent = builder.phase.charAt(0).toUpperCase() + builder.phase.slice(1);
+        }
+
+        function collectingPhase() {
+            if (builder.target) return;
+            
+            // Find closest resource node with remaining resources
+            let closestNode = null;
+            let closestDist = Infinity;
+            
+            resourceNodes.forEach(node => {
+                if (node.amount > 0) {
+                    const dist = Math.abs(node.x - builder.x) + Math.abs(node.y - builder.y);
+                    if (dist < closestDist) {
+                        closestDist = dist;
+                        closestNode = node;
+                    }
+                }
+            });
+            
+            if (closestNode) {
+                builder.target = {x: closestNode.x, y: closestNode.y};
+                aStarPathfinding(builder.x, builder.y, builder.target.x, builder.target.y);
+            } else {
+                // No resources left, switch to building
+                builder.phase = 'building';
+                phaseDisplay.textContent = 'Building';
+            }
+        }
+
+        function collectResource() {
+            const node = resourceNodes.find(n => n.x === builder.target.x && n.y === builder.target.y);
+            if (node && node.amount > 0 && builder.inventory.length < builder.maxInventory) {
+                node.amount--;
+                builder.inventory.push(node.resource);
+                inventoryDisplay.textContent = `${builder.inventory.length}/${builder.maxInventory}`;
+                
+                if (node.amount === 0) {
+                    // Remove depleted node
+                    resourceNodes = resourceNodes.filter(n => n !== node);
+                }
+            }
+        }
+
+        function buildingPhase() {
+            if (builder.inventory.length === 0) {
+                changePhase();
+                return;
+            }
+            
+            // Occasionally find a new place to build
+            if (builder.phaseCounter % 5 === 0 || !builder.target) {
+                findBuildingSpot();
+            }
+            
+            builder.phaseCounter++;
+        }
+
+        function findBuildingSpot() {
+            // Look for existing blocks to build adjacent to
+            const adjacentSpots = [];
+            
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    if (world[y][x]) {
+                        // Check all 4 orthogonal directions
+                        const directions = [{x: 1, y: 0}, {x: -1, y: 0}, {x: 0, y: 1}, {x: 0, y: -1}];
+                        
+                        directions.forEach(dir => {
+                            const nx = x + dir.x;
+                            const ny = y + dir.y;
+                            
+                            if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE && 
+                                !world[ny][nx] && !isSpotOccupied(nx, ny)) {
+                                
+                                // Check if this would create a 3x3 solid block (which builder dislikes)
+                                if (!creates3x3Block(nx, ny, world[y][x])) {
+                                    adjacentSpots.push({
+                                        x: nx,
+                                        y: ny,
+                                        material: world[y][x],
+                                        distance: Math.abs(nx - MIDDLE) + Math.abs(ny - MIDDLE)
+                                    });
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+            
+            // If no adjacent spots, look for spots near existing blocks (max 2 away)
+            if (adjacentSpots.length === 0) {
+                for (let y = 0; y < GRID_SIZE; y++) {
+                    for (let x = 0; x < GRID_SIZE; x++) {
+                        if (world[y][x]) {
+                            // Check in a 5x5 area around the block
+                            for (let dy = -2; dy <= 2; dy++) {
+                                for (let dx = -2; dx <= 2; dx++) {
+                                    const nx = x + dx;
+                                    const ny = y + dy;
+                                    
+                                    if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE && 
+                                        !world[ny][nx] && !isSpotOccupied(nx, ny) &&
+                                        (Math.abs(dx) + Math.abs(dy)) <= 2) {
+                                        
+                                        if (!creates3x3Block(nx, ny, world[y][x])) {
+                                            adjacentSpots.push({
+                                                x: nx,
+                                                y: ny,
+                                                material: world[y][x],
+                                                distance: Math.abs(nx - MIDDLE) + Math.abs(ny - MIDDLE)
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // If still no spots, try near the center
+            if (adjacentSpots.length === 0) {
+                for (let y = MIDDLE - 3; y <= MIDDLE + 3; y++) {
+                    for (let x = MIDDLE - 3; x <= MIDDLE + 3; x++) {
+                        if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE && 
+                            !world[y][x] && !isSpotOccupied(x, y)) {
+                            
+                            adjacentSpots.push({
+                                x,
+                                y,
+                                material: builder.inventory[0],
+                                distance: Math.abs(x - MIDDLE) + Math.abs(y - MIDDLE)
+                            });
+                        }
+                    }
+                }
+            }
+            
+            if (adjacentSpots.length > 0) {
+                // Sort by material similarity and distance to center
+                adjacentSpots.sort((a, b) => {
+                    // Try to use same material as existing adjacent blocks
+                    const currentMaterial = builder.inventory[0];
+                    const aScore = (a.material === currentMaterial ? -2 : 0) + a.distance;
+                    const bScore = (b.material === currentMaterial ? -2 : 0) + b.distance;
+                    return aScore - bScore;
+                });
+                
+                builder.target = adjacentSpots[0];
+                aStarPathfinding(builder.x, builder.y, builder.target.x, builder.target.y);
+            } else {
+                // No place to build, switch phase
+                changePhase();
+            }
+        }
+
+        function creates3x3Block(x, y, material) {
+            // Check if placing this block would create a 3x3 solid block
+            for (let dy = -1; dy <= 1; dy++) {
+                for (let dx = -1; dx <= 1; dx++) {
+                    const nx = x + dx;
+                    const ny = y + dy;
+                    
+                    if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
+                        if (!world[ny][nx] || world[ny][nx] !== material) {
+                            return false;
+                        }
+                    } else {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function isSpotOccupied(x, y) {
+            // Check if spot is occupied by builder or resource node
+            if (builder.x === x && builder.y === y) return true;
+            
+            return resourceNodes.some(node => node.x === x && node.y === y);
+        }
+
+        function chillingPhase() {
+            if (builder.phaseCounter % 10 === 0 || !builder.target) {
+                // Find a random spot near the middle
+                const radius = 5;
+                const x = MIDDLE + Math.floor(Math.random() * radius * 2) - radius;
+                const y = MIDDLE + Math.floor(Math.random() * radius * 2) - radius;
+                
+                if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE && !world[y][x]) {
+                    builder.target = {x, y};
+                    aStarPathfinding(builder.x, builder.y, builder.target.x, builder.target.y);
+                }
+            }
+            
+            // Occasionally do some Brownian motion
+            if (builder.phaseCounter % 3 === 0 && Math.random() < 0.3) {
+                const directions = [{x: 1, y: 0}, {x: -1, y: 0}, {x: 0, y: 1}, {x: 0, y: -1}];
+                const dir = directions[Math.floor(Math.random() * directions.length)];
+                const nx = builder.x + dir.x;
+                const ny = builder.y + dir.y;
+                
+                if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE && !world[ny][nx]) {
+                    builder.x = nx;
+                    builder.y = ny;
+                }
+            }
+            
+            builder.phaseCounter++;
+        }
+
+        function placeBlock() {
+            if (builder.inventory.length > 0 && builder.target && 
+                Math.abs(builder.x - builder.target.x) <= 1 && 
+                Math.abs(builder.y - builder.target.y) <= 1) {
+                
+                world[builder.target.y][builder.target.x] = builder.inventory.shift();
+                inventoryDisplay.textContent = `${builder.inventory.length}/${builder.maxInventory}`;
+                builder.target = null;
+            }
+        }
+
+        // A* Pathfinding Algorithm
+        function aStarPathfinding(startX, startY, endX, endY) {
+            // Node class for A*
+            class Node {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.g = 0; // Cost from start to current node
+                    this.h = 0; // Heuristic (estimated cost from current to end)
+                    this.f = 0; // Total cost (g + h)
+                    this.parent = null;
+                }
+                
+                // Calculate heuristic (Manhattan distance)
+                calculateHeuristic(endNode) {
+                    this.h = Math.abs(this.x - endNode.x) + Math.abs(this.y - endNode.y);
+                }
+            }
+            
+            // Initialize open and closed lists
+            const openList = [];
+            const closedList = [];
+            
+            // Create start and end nodes
+            const startNode = new Node(startX, startY);
+            const endNode = new Node(endX, endY);
+            
+            // Add start node to open list
+            openList.push(startNode);
+            
+            // Possible movement directions (orthogonal only)
+            const directions = [
+                {x: 1, y: 0},  // Right
+                {x: -1, y: 0}, // Left
+                {x: 0, y: 1},  // Down
+                {x: 0, y: -1}   // Up
+            ];
+            
+            while (openList.length > 0) {
+                // Find node with lowest f cost
+                let currentNode = openList[0];
+                let currentIndex = 0;
+                
+                for (let i = 1; i < openList.length; i++) {
+                    if (openList[i].f < currentNode.f) {
+                        currentNode = openList[i];
+                        currentIndex = i;
+                    }
+                }
+                
+                // Move current node from open to closed list
+                openList.splice(currentIndex, 1);
+                closedList.push(currentNode);
+                
+                // Check if we reached the goal
+                if (currentNode.x === endNode.x && currentNode.y === endNode.y) {
+                    // Reconstruct path
+                    const path = [];
+                    let current = currentNode;
+                    while (current !== null) {
+                        path.unshift({x: current.x, y: current.y});
+                        current = current.parent;
+                    }
+                    builder.path = path.slice(1); // Exclude starting position
+                    pathLengthDisplay.textContent = builder.path.length;
+                    return;
+                }
+                
+                // Generate children
+                const children = [];
+                for (const dir of directions) {
+                    const nodeX = currentNode.x + dir.x;
+                    const nodeY = currentNode.y + dir.y;
+                    
+                    // Make sure within grid bounds
+                    if (nodeX < 0 || nodeX >= GRID_SIZE || nodeY < 0 || nodeY >= GRID_SIZE) {
+                        continue;
+                    }
+                    
+                    // Make sure walkable (not a block and not a resource node)
+                    if (world[nodeY][nodeX] !== null || 
+                        resourceNodes.some(n => n.x === nodeX && n.y === nodeY)) {
+                        continue;
+                    }
+                    
+                    // Create new node
+                    const newNode = new Node(nodeX, nodeY);
+                    newNode.parent = currentNode;
+                    children.push(newNode);
+                }
+                
+                // Process children
+                for (const child of children) {
+                    // Skip if child is in closed list
+                    if (closedList.some(node => node.x === child.x && node.y === child.y)) {
+                        continue;
+                    }
+                    
+                    // Calculate g, h, and f values
+                    child.g = currentNode.g + 1;
+                    child.calculateHeuristic(endNode);
+                    child.f = child.g + child.h;
+                    
+                    // Skip if child is already in open list with lower g
+                    const existingOpenNode = openList.find(node => node.x === child.x && node.y === child.y);
+                    if (existingOpenNode && child.g > existingOpenNode.g) {
+                        continue;
+                    }
+                    
+                    // Add child to open list
+                    openList.push(child);
+                }
+            }
+            
+            // If we get here, no path was found
+            builder.path = [];
+            pathLengthDisplay.textContent = '0';
+        }
+
+        function updateDisplay() {
+            // Update phase display if building and placing a block
+            if (builder.phase === 'building' && builder.target && 
+                Math.abs(builder.x - builder.target.x) <= 1 && 
+                Math.abs(builder.y - builder.target.y) <= 1) {
+                placeBlock();
+            }
+        }
+
+        function render() {
+            // Clear canvas
+            ctx.fillStyle = '#87CEEB'; // Sky blue
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid lines
+            ctx.strokeStyle = '#DDD';
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i <= GRID_SIZE; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * CELL_SIZE, 0);
+                ctx.lineTo(i * CELL_SIZE, canvas.height);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(0, i * CELL_SIZE);
+                ctx.lineTo(canvas.width, i * CELL_SIZE);
+                ctx.stroke();
+            }
+            
+            // Draw placed blocks
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    if (world[y][x]) {
+                        ctx.fillStyle = world[y][x].color;
+                        ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                        
+                        // Add some texture
+                        ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+                        ctx.strokeRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    }
+                }
+            }
+            
+            // Draw resource nodes
+            resourceNodes.forEach(node => {
+                if (node.amount > 0) {
+                    ctx.fillStyle = node.resource.color;
+                    ctx.beginPath();
+                    ctx.arc(
+                        (node.x + 0.5) * CELL_SIZE, 
+                        (node.y + 0.5) * CELL_SIZE, 
+                        CELL_SIZE * 0.4, 
+                        0, 
+                        Math.PI * 2
+                    );
+                    ctx.fill();
+                    
+                    // Draw amount
+                    ctx.fillStyle = '#000';
+                    ctx.font = `${CELL_SIZE * 0.4}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(node.amount.toString(), (node.x + 0.5) * CELL_SIZE, (node.y + 0.5) * CELL_SIZE);
+                }
+            });
+            
+            // Draw builder
+            ctx.fillStyle = '#FF0000';
+            ctx.beginPath();
+            ctx.arc(
+                (builder.x + 0.5) * CELL_SIZE, 
+                (builder.y + 0.5) * CELL_SIZE, 
+                CELL_SIZE * 0.4, 
+                0, 
+                Math.PI * 2
+            );
+            ctx.fill();
+            
+            // Draw builder's target path
+            if (builder.path.length > 0) {
+                ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.beginPath();
+                ctx.moveTo((builder.x + 0.5) * CELL_SIZE, (builder.y + 0.5) * CELL_SIZE);
+                
+                builder.path.forEach(point => {
+                    ctx.lineTo((point.x + 0.5) * CELL_SIZE, (point.y + 0.5) * CELL_SIZE);
+                });
+                
+                if (builder.target) {
+                    ctx.lineTo((builder.target.x + 0.5) * CELL_SIZE, (builder.target.y + 0.5) * CELL_SIZE);
+                }
+                
+                ctx.stroke();
+            }
+            
+            // Draw target
+            if (builder.target) {
+                ctx.strokeStyle = '#FFFF00';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(
+                    (builder.target.x + 0.5) * CELL_SIZE, 
+                    (builder.target.y + 0.5) * CELL_SIZE, 
+                    CELL_SIZE * 0.3, 
+                    0, 
+                    Math.PI * 2
+                );
+                ctx.stroke();
+            }
+        }
+
+        // Start the game
+        init();
+    </script>
+</body>
+</html>

@@ -57,7 +57,7 @@
       <div class="control-group">
         <h3>Transform Settings</h3>
         <label for="steps">Number of Rotation Steps (N):</label>
-        <input type="number" id="steps" value="360" min="1" />
+        <input type="number" id="steps" value="180" min="1" />
         
         <label for="rotationMethod">Rotation Method:</label>
         <select id="rotationMethod">
@@ -162,34 +162,33 @@
     let originalImageData = null;
 
 
-function rotate90Clockwise() {
-    
-     const canvas = document.getElementById('resultCanvas');
-  const ctx = canvas.getContext('2d');
-  
-  
-  const tempCanvas = document.createElement("canvas");
-  const tempCtx = tempCanvas.getContext("2d");
+    function rotate90Clockwise() {
+      const canvas = document.getElementById('resultCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      const tempCanvas = document.createElement("canvas");
+      const tempCtx = tempCanvas.getContext("2d");
 
-  // Swap width and height
-  tempCanvas.width = canvas.height;
-  tempCanvas.height = canvas.width;
+      // Swap width and height
+      tempCanvas.width = canvas.height;
+      tempCanvas.height = canvas.width;
 
-  // Apply rotation
-  tempCtx.translate(tempCanvas.width, 0);
-  tempCtx.rotate(Math.PI / 2); // 90 degrees
+      // Apply rotation
+      tempCtx.translate(tempCanvas.width, 0);
+      tempCtx.rotate(Math.PI / 2); // 90 degrees
 
-  // Draw original content onto rotated context
-  tempCtx.drawImage(canvas, 0, 0);
+      // Draw original content onto rotated context
+      tempCtx.drawImage(canvas, 0, 0);
 
-  // Resize original canvas
-  canvas.width = tempCanvas.width;
-  canvas.height = tempCanvas.height;
+      // Resize original canvas
+      canvas.width = tempCanvas.width;
+      canvas.height = tempCanvas.height;
 
-  // Copy rotated image back
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(tempCanvas, 0, 0);
-}
+      // Copy rotated image back
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(tempCanvas, 0, 0);
+    }
+
     // Load image
     imageInput.addEventListener('change', (event) => {
       const file = event.target.files[0];
@@ -202,10 +201,11 @@ function rotate90Clockwise() {
             // Calculate expanded size to avoid cutting corners
             const expandedSize = Math.ceil(Math.sqrt(image.width ** 2 + image.height ** 2));
             
-            // Set canvas sizes (result canvas is wider to accommodate all steps)
+            // Set canvas sizes (result canvas width matches number of steps)
+            const steps = parseInt(stepsInput.value, 10);
             sourceCanvas.width = expandedSize;
             sourceCanvas.height = expandedSize;
-            resultCanvas.width = expandedSize * 2; // Wider to fit all projections
+            resultCanvas.width = steps; // Width equals number of steps
             resultCanvas.height = expandedSize;
             
             // Draw original image centered on expanded canvas
@@ -229,6 +229,18 @@ function rotate90Clockwise() {
       }
     });
 
+    // Update result canvas dimensions when steps change
+    stepsInput.addEventListener('change', () => {
+      if (image) {
+        const steps = parseInt(stepsInput.value, 10);
+        const expandedSize = Math.ceil(Math.sqrt(image.width ** 2 + image.height ** 2));
+        resultCanvas.width = steps;
+        resultCanvas.height = expandedSize;
+        resultCtx.fillStyle = 'black';
+        resultCtx.fillRect(0, 0, resultCanvas.width, resultCanvas.height);
+      }
+    });
+
     // Start animation
     startButton.addEventListener('click', () => {
       if (!image) return;
@@ -243,13 +255,13 @@ function rotate90Clockwise() {
       resultCtx.fillRect(0, 0, resultCanvas.width, resultCanvas.height);
 
       const animate = () => {
-        if (currentStep >= steps*2) {
+        if (currentStep >= steps) {
           cancelAnimationFrame(animationFrameId);
           saveButton.disabled = false;
           return;
         }
 
-        const angle = (90 / steps) * currentStep;
+        const angle = (180 / steps) * currentStep;
         rotateAndUpdateColumn(angle);
         currentStep++;
         animationFrameId = requestAnimationFrame(animate);
@@ -271,9 +283,9 @@ function rotate90Clockwise() {
       resultCtx.fillRect(0, 0, resultCanvas.width, resultCanvas.height);
 
       // Perform all steps without animation
-      for (let step = 0; step < steps*2; step++) {
-       currentStep = step;
-        const angle = (90 / steps) * step;
+      for (let step = 0; step < steps; step++) {
+        currentStep = step;
+        const angle = (180 / steps) * step;
         rotateAndUpdateColumn(angle);
       }
 
@@ -296,7 +308,7 @@ function rotate90Clockwise() {
         rotateNearestNeighbor(tempCtx, angle);
       } else if (rotationMethod.startsWith("expand")) {
         const fillMethod = rotationMethod.replace("expand", "").toLowerCase();
-        rotateExpandCanvas(tempCtx, angle/2, fillMethod, backgroundMethod);
+        rotateExpandCanvas(tempCtx, angle, fillMethod, backgroundMethod);
       }
       
       // Get image data
@@ -317,7 +329,7 @@ function rotate90Clockwise() {
       const data = imageData.data;
 
       // Compute average color per row and update one column in the result
-      const columnX = Math.floor((currentStep / parseInt(stepsInput.value, 10)) * (resultCanvas.width / 2));
+      const columnX = currentStep;
       
       for (let y = 0; y < tempCanvas.height; y++) {
         const rowPixels = [];

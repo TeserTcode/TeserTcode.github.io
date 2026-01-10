@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organic Chemistry Quiz</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            margin-bottom: 20px;
+        }
+        .question {
+            margin-bottom: 20px;
+        }
+        #feedback {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        #score {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Organic Chemistry Quiz</h1>
+    <div class="question">
+        <p>What is the IUPAC name of the given organic molecule?</p>
+		  <input type="text" id="answerInput" placeholder="Enter IUPAC name">
+        <button onclick="checkAnswer()">Submit</button>
+		<br>
+        <canvas id="moleculeCanvas"></canvas>
+      
+        <p id="feedback"></p>
+        <p id="score">Score: 0</p>
+    </div>
+
+    <script>
+        // Molecule database
+        const molecules = [
+            {
+                name: "ethanol",
+                atoms: [
+                    { element: 'C', x: 50, y: 100 },  // Atom 0
+                    { element: 'C', x: 150, y: 100 }, // Atom 1
+                    { element: 'O', x: 250, y: 100 }, // Atom 2
+                    { element: 'H', x: 30, y: 80 },  // Atom 3
+                    { element: 'H', x: 30, y: 120 },  // Atom 4
+                    { element: 'H', x: 170, y: 80 },  // Atom 5
+                    { element: 'H', x: 170, y: 120 }, // Atom 6
+                    { element: 'H', x: 270, y: 80 }   // Atom 7
+                ],
+                bonds: [
+                    { atom1Index: 0, atom2Index: 1, bondType: 'single' }, // C-C
+                    { atom1Index: 1, atom2Index: 2, bondType: 'single' }, // C-O
+                    { atom1Index: 0, atom2Index: 3, bondType: 'single' }, // C-H
+                    { atom1Index: 0, atom2Index: 4, bondType: 'single' }, // C-H
+                    { atom1Index: 1, atom2Index: 5, bondType: 'single' }, // C-H
+                    { atom1Index: 1, atom2Index: 6, bondType: 'single' }, // C-H
+                    { atom1Index: 2, atom2Index: 7, bondType: 'single' }  // O-H
+                ]
+            },
+			{
+    name: "toluene",
+    atoms: [
+        { element: 'C', x: 100, y: 100 }, // Benzene ring
+        { element: 'C', x: 150, y: 50 },
+        { element: 'C', x: 200, y: 100 },
+        { element: 'C', x: 200, y: 150 },
+        { element: 'C', x: 150, y: 200 },
+        { element: 'C', x: 100, y: 150 },
+        { element: 'C', x: 50, y: 100 },   // Methyl group
+        { element: 'H', x: 30, y: 100 },   // H on methyl
+        { element: 'H', x: 50, y: 80 },    // H on methyl
+        { element: 'H', x: 50, y: 120 },   // H on methyl
+        { element: 'H', x: 175, y: 25 },   // Ring Hs
+        { element: 'H', x: 225, y: 75 },
+        { element: 'H', x: 225, y: 175 },
+        { element: 'H', x: 175, y: 225 },
+        { element: 'H', x: 75, y: 175 }
+    ],
+    bonds: [
+        // Benzene alternating bonds
+        { atom1Index: 0, atom2Index: 1, bondType: 'double' },
+        { atom1Index: 1, atom2Index: 2, bondType: 'single' },
+        { atom1Index: 2, atom2Index: 3, bondType: 'double' },
+        { atom1Index: 3, atom2Index: 4, bondType: 'single' },
+        { atom1Index: 4, atom2Index: 5, bondType: 'double' },
+        { atom1Index: 5, atom2Index: 0, bondType: 'single' },
+        // Methyl group
+        { atom1Index: 0, atom2Index: 6, bondType: 'single' },
+        { atom1Index: 6, atom2Index: 7, bondType: 'single' },
+        { atom1Index: 6, atom2Index: 8, bondType: 'single' },
+        { atom1Index: 6, atom2Index: 9, bondType: 'single' },
+        // Remaining Hs
+        { atom1Index: 1, atom2Index: 10, bondType: 'single' },
+        { atom1Index: 2, atom2Index: 11, bondType: 'single' },
+        { atom1Index: 3, atom2Index: 12, bondType: 'single' },
+        { atom1Index: 4, atom2Index: 13, bondType: 'single' },
+        { atom1Index: 5, atom2Index: 14, bondType: 'single' }
+    ]
+},
+{
+    name: "phenol",
+    atoms: [
+        { element: 'C', x: 100, y: 100 }, // Benzene ring
+        { element: 'C', x: 150, y: 50 },
+        { element: 'C', x: 200, y: 100 },
+        { element: 'C', x: 200, y: 150 },
+        { element: 'C', x: 150, y: 200 },
+        { element: 'C', x: 100, y: 150 },
+        { element: 'O', x: 50, y: 100 },   // Hydroxyl group
+        { element: 'H', x: 30, y: 100 },    // O-H
+        { element: 'H', x: 175, y: 25 },    // Ring Hs
+        { element: 'H', x: 225, y: 75 },
+        { element: 'H', x: 225, y: 175 },
+        { element: 'H', x: 175, y: 225 },
+        { element: 'H', x: 75, y: 175 }
+    ],
+    bonds: [
+        // Benzene ring
+        { atom1Index: 0, atom2Index: 1, bondType: 'double' },
+        { atom1Index: 1, atom2Index: 2, bondType: 'single' },
+        { atom1Index: 2, atom2Index: 3, bondType: 'double' },
+        { atom1Index: 3, atom2Index: 4, bondType: 'single' },
+        { atom1Index: 4, atom2Index: 5, bondType: 'double' },
+        { atom1Index: 5, atom2Index: 0, bondType: 'single' },
+        // Hydroxyl group
+        { atom1Index: 0, atom2Index: 6, bondType: 'single' },
+        { atom1Index: 6, atom2Index: 7, bondType: 'single' },
+        // Remaining Hs
+        { atom1Index: 1, atom2Index: 8, bondType: 'single' },
+        { atom1Index: 2, atom2Index: 9, bondType: 'single' },
+        { atom1Index: 3, atom2Index: 10, bondType: 'single' },
+        { atom1Index: 4, atom2Index: 11, bondType: 'single' },
+        { atom1Index: 5, atom2Index: 12, bondType: 'single' }
+    ]
+},
+{
+    name: "pyridine",
+    atoms: [
+        { element: 'N', x: 100, y: 100 }, // N replaces C
+        { element: 'C', x: 150, y: 50 },
+        { element: 'C', x: 200, y: 100 },
+        { element: 'C', x: 200, y: 150 },
+        { element: 'C', x: 150, y: 200 },
+        { element: 'C', x: 100, y: 150 },
+        { element: 'H', x: 175, y: 25 },  // Hs on carbons
+        { element: 'H', x: 225, y: 75 },
+        { element: 'H', x: 225, y: 175 },
+        { element: 'H', x: 175, y: 225 },
+        { element: 'H', x: 75, y: 175 }
+    ],
+    bonds: [
+        // Alternating bonds (no H on N)
+        { atom1Index: 0, atom2Index: 1, bondType: 'double' },
+        { atom1Index: 1, atom2Index: 2, bondType: 'single' },
+        { atom1Index: 2, atom2Index: 3, bondType: 'double' },
+        { atom1Index: 3, atom2Index: 4, bondType: 'single' },
+        { atom1Index: 4, atom2Index: 5, bondType: 'double' },
+        { atom1Index: 5, atom2Index: 0, bondType: 'single' },
+        // Hydrogens
+        { atom1Index: 1, atom2Index: 6, bondType: 'single' },
+        { atom1Index: 2, atom2Index: 7, bondType: 'single' },
+        { atom1Index: 3, atom2Index: 8, bondType: 'single' },
+        { atom1Index: 4, atom2Index: 9, bondType: 'single' },
+        { atom1Index: 5, atom2Index: 10, bondType: 'single' }
+    ]
+},{
+    name: "nitrobenzene",
+    atoms: [
+        { element: 'C', x: 100, y: 100 }, // Benzene ring
+        { element: 'C', x: 150, y: 50 },
+        { element: 'C', x: 200, y: 100 },
+        { element: 'C', x: 200, y: 150 },
+        { element: 'C', x: 150, y: 200 },
+        { element: 'C', x: 100, y: 150 },
+        { element: 'N', x: 50, y: 100 },   // Nitro group
+        { element: 'O', x: 30, y: 80 },    // O1
+        { element: 'O', x: 30, y: 120 },   // O2
+        { element: 'H', x: 175, y: 25 },   // Ring Hs
+        { element: 'H', x: 225, y: 75 },
+        { element: 'H', x: 225, y: 175 },
+        { element: 'H', x: 175, y: 225 },
+        { element: 'H', x: 75, y: 175 }
+    ],
+    bonds: [
+        // Benzene ring
+        { atom1Index: 0, atom2Index: 1, bondType: 'double' },
+        { atom1Index: 1, atom2Index: 2, bondType: 'single' },
+        { atom1Index: 2, atom2Index: 3, bondType: 'double' },
+        { atom1Index: 3, atom2Index: 4, bondType: 'single' },
+        { atom1Index: 4, atom2Index: 5, bondType: 'double' },
+        { atom1Index: 5, atom2Index: 0, bondType: 'single' },
+        // Nitro group
+        { atom1Index: 0, atom2Index: 6, bondType: 'single' },
+        { atom1Index: 6, atom2Index: 7, bondType: 'double' },
+        { atom1Index: 6, atom2Index: 8, bondType: 'double' },
+        // Hydrogens
+        { atom1Index: 1, atom2Index: 9, bondType: 'single' },
+        { atom1Index: 2, atom2Index: 10, bondType: 'single' },
+        { atom1Index: 3, atom2Index: 11, bondType: 'single' },
+        { atom1Index: 4, atom2Index: 12, bondType: 'single' },
+        { atom1Index: 5, atom2Index: 13, bondType: 'single' }
+    ]
+},{
+    name: "furan",
+    atoms: [
+        { element: 'O', x: 100, y: 100 }, // Oxygen atom
+        { element: 'C', x: 150, y: 50 },
+        { element: 'C', x: 200, y: 100 },
+        { element: 'C', x: 150, y: 150 },
+        { element: 'C', x: 100, y: 150 },
+        { element: 'H', x: 175, y: 25 },  // Hs on carbons
+        { element: 'H', x: 225, y: 75 },
+        { element: 'H', x: 175, y: 175 },
+        { element: 'H', x: 75, y: 175 }
+    ],
+    bonds: [
+        // Conjugated double bonds
+        { atom1Index: 0, atom2Index: 1, bondType: 'single' },
+        { atom1Index: 1, atom2Index: 2, bondType: 'double' },
+        { atom1Index: 2, atom2Index: 3, bondType: 'single' },
+        { atom1Index: 3, atom2Index: 4, bondType: 'double' },
+        { atom1Index: 4, atom2Index: 0, bondType: 'single' },
+        // Hydrogens
+        { atom1Index: 1, atom2Index: 5, bondType: 'single' },
+        { atom1Index: 2, atom2Index: 6, bondType: 'single' },
+        { atom1Index: 3, atom2Index: 7, bondType: 'single' },
+        { atom1Index: 4, atom2Index: 8, bondType: 'single' }
+    ]
+},
+{
+    name: "chlorobenzene",
+    atoms: [
+        { element: 'C', x: 100, y: 100 }, // Benzene ring
+        { element: 'C', x: 150, y: 50 },
+        { element: 'C', x: 200, y: 100 },
+        { element: 'C', x: 200, y: 150 },
+        { element: 'C', x: 150, y: 200 },
+        { element: 'C', x: 100, y: 150 },
+        { element: 'Cl', x: 50, y: 100 }, // Chlorine substituent
+        { element: 'H', x: 175, y: 25 },   // Ring Hs
+        { element: 'H', x: 225, y: 75 },
+        { element: 'H', x: 225, y: 175 },
+        { element: 'H', x: 175, y: 225 },
+        { element: 'H', x: 75, y: 175 }
+    ],
+    bonds: [
+        // Benzene ring
+        { atom1Index: 0, atom2Index: 1, bondType: 'double' },
+        { atom1Index: 1, atom2Index: 2, bondType: 'single' },
+        { atom1Index: 2, atom2Index: 3, bondType: 'double' },
+        { atom1Index: 3, atom2Index: 4, bondType: 'single' },
+        { atom1Index: 4, atom2Index: 5, bondType: 'double' },
+        { atom1Index: 5, atom2Index: 0, bondType: 'single' },
+        // Chlorine substituent
+        { atom1Index: 0, atom2Index: 6, bondType: 'single' },
+        // Hydrogens
+        { atom1Index: 1, atom2Index: 7, bondType: 'single' },
+        { atom1Index: 2, atom2Index: 8, bondType: 'single' },
+        { atom1Index: 3, atom2Index: 9, bondType: 'single' },
+        { atom1Index: 4, atom2Index: 10, bondType: 'single' },
+        { atom1Index: 5, atom2Index: 11, bondType: 'single' }
+    ]
+},
+{
+    name: "thiophene",
+    atoms: [
+        { element: 'S', x: 100, y: 100 }, // Sulfur atom
+        { element: 'C', x: 150, y: 50 },
+        { element: 'C', x: 200, y: 100 },
+        { element: 'C', x: 150, y: 150 },
+        { element: 'C', x: 100, y: 150 },
+        { element: 'H', x: 175, y: 25 },  // Hs on carbons
+        { element: 'H', x: 225, y: 75 },
+        { element: 'H', x: 175, y: 175 },
+        { element: 'H', x: 75, y: 175 }
+    ],
+    bonds: [
+        // Conjugated double bonds
+        { atom1Index: 0, atom2Index: 1, bondType: 'single' },
+        { atom1Index: 1, atom2Index: 2, bondType: 'double' },
+        { atom1Index: 2, atom2Index: 3, bondType: 'single' },
+        { atom1Index: 3, atom2Index: 4, bondType: 'double' },
+        { atom1Index: 4, atom2Index: 0, bondType: 'single' },
+        // Hydrogens
+        { atom1Index: 1, atom2Index: 5, bondType: 'single' },
+        { atom1Index: 2, atom2Index: 6, bondType: 'single' },
+        { atom1Index: 3, atom2Index: 7, bondType: 'single' },
+        { atom1Index: 4, atom2Index: 8, bondType: 'single' }
+    ]
+},
+
+{
+    name: "acetamide",
+    atoms: [
+        { element: 'C', x: 100, y: 100 }, // Atom 0
+        { element: 'C', x: 200, y: 100 }, // Atom 1
+        { element: 'O', x: 250, y: 150 }, // Atom 2
+        { element: 'N', x: 150, y: 50 },  // Atom 3
+        { element: 'H', x: 80, y: 100 },  // Atom 4
+        { element: 'H', x: 100, y: 120 }, // Atom 5
+        { element: 'H', x: 140, y: 20 },  // Atom 6
+        { element: 'H', x: 160, y: 20 },   // Atom 7
+		{ element: 'H', x: 100, y: 80 }, // Atom 5
+    ],
+    bonds: [
+        { atom1Index: 0, atom2Index: 1, bondType: 'single' }, // C-C
+        { atom1Index: 1, atom2Index: 2, bondType: 'double' }, // C=O
+        { atom1Index: 1, atom2Index: 3, bondType: 'single' },  // C-N
+        { atom1Index: 0, atom2Index: 4, bondType: 'single' },  // C-H
+        { atom1Index: 0, atom2Index: 5, bondType: 'single' },  // C-H
+		{ atom1Index: 0, atom2Index: 8, bondType: 'single' },  // C-H
+        { atom1Index: 3, atom2Index: 6, bondType: 'single' },  // N-H
+        { atom1Index: 3, atom2Index: 7, bondType: 'single' }   // N-H
+    ]
+},{
+    name: "acetonitrile",
+    atoms: [
+        { element: 'C', x: 100, y: 100 }, // Atom 0
+        { element: 'C', x: 200, y: 100 }, // Atom 1
+        { element: 'N', x: 250, y: 150 }, // Atom 2
+        { element: 'H', x: 80, y: 80 },   // Atom 3
+        { element: 'H', x: 80, y: 120 },  // Atom 4
+		{ element: 'H', x: 60, y: 100 }  // Atom 4
+    ],
+    bonds: [
+        { atom1Index: 0, atom2Index: 1, bondType: 'single' }, // C-C
+        { atom1Index: 1, atom2Index: 2, bondType: 'triple' },  // C≡N
+        { atom1Index: 0, atom2Index: 3, bondType: 'single' },  // C-H
+        { atom1Index: 0, atom2Index: 4, bondType: 'single' } ,  // C-H
+		{ atom1Index: 0, atom2Index: 5, bondType: 'single' }   // C-H
+    ]
+},
+            {
+                name: "methanol",
+                atoms: [
+                    { element: 'C', x: 100, y: 100 }, // Atom 0
+                    { element: 'O', x: 200, y: 100 }, // Atom 1
+                    { element: 'H', x: 80, y: 80 },   // Atom 2
+                    { element: 'H', x: 80, y: 120 },  // Atom 3
+                    { element: 'H', x: 120, y: 80 },  // Atom 4
+                    { element: 'H', x: 220, y: 80 }   // Atom 5
+                ],
+                bonds: [
+                    { atom1Index: 0, atom2Index: 1, bondType: 'single' }, // C-O
+                    { atom1Index: 0, atom2Index: 2, bondType: 'single' }, // C-H
+                    { atom1Index: 0, atom2Index: 3, bondType: 'single' }, // C-H
+                    { atom1Index: 0, atom2Index: 4, bondType: 'single' }, // C-H
+                    { atom1Index: 1, atom2Index: 5, bondType: 'single' }  // O-H
+                ]
+            },
+            {
+                name: "acetylene",
+                atoms: [
+                    { element: 'C', x: 100, y: 100 }, // Atom 0
+                    { element: 'C', x: 200, y: 100 }, // Atom 1
+                    { element: 'H', x: 80, y: 100 },  // Atom 2
+                    { element: 'H', x: 220, y: 100 }  // Atom 3
+                ],
+                bonds: [
+                    { atom1Index: 0, atom2Index: 1, bondType: 'triple' }, // C≡C
+                    { atom1Index: 0, atom2Index: 2, bondType: 'single' },  // C-H
+                    { atom1Index: 1, atom2Index: 3, bondType: 'single' }  // C-H
+                ]
+            },
+			 {
+        name: "propanol",
+        atoms: [
+            { element: 'C', x: 50, y: 100 },  // Atom 0
+            { element: 'C', x: 150, y: 100 }, // Atom 1
+            { element: 'C', x: 250, y: 100 }, // Atom 2
+            { element: 'O', x: 350, y: 100 }, // Atom 3
+            { element: 'H', x: 30, y: 80 },  // Atom 4
+            { element: 'H', x: 30, y: 120 },  // Atom 5
+            { element: 'H', x: 170, y: 80 },  // Atom 6
+            { element: 'H', x: 170, y: 120 }, // Atom 7
+            { element: 'H', x: 270, y: 80 },  // Atom 8
+            { element: 'H', x: 270, y: 120 }, // Atom 9
+            { element: 'H', x: 370, y: 80 }   // Atom 10
+        ],
+        bonds: [
+            { atom1Index: 0, atom2Index: 1, bondType: 'single' }, // C-C
+            { atom1Index: 1, atom2Index: 2, bondType: 'single' }, // C-C
+            { atom1Index: 2, atom2Index: 3, bondType: 'single' }, // C-O
+            { atom1Index: 0, atom2Index: 4, bondType: 'single' }, // C-H
+            { atom1Index: 0, atom2Index: 5, bondType: 'single' }, // C-H
+            { atom1Index: 1, atom2Index: 6, bondType: 'single' }, // C-H
+            { atom1Index: 1, atom2Index: 7, bondType: 'single' }, // C-H
+            { atom1Index: 2, atom2Index: 8, bondType: 'single' }, // C-H
+            { atom1Index: 2, atom2Index: 9, bondType: 'single' }, // C-H
+            { atom1Index: 3, atom2Index: 10, bondType: 'single' }  // O-H
+        ]
+    },
+
+
+
+    {
+        name: "diethyl ether",
+        atoms: [
+            { element: 'C', x: 50, y: 100 },  // Atom 0
+            { element: 'C', x: 150, y: 100 }, // Atom 1
+            { element: 'O', x: 250, y: 100 }, // Atom 2
+            { element: 'C', x: 350, y: 100 }, // Atom 3
+            { element: 'C', x: 450, y: 100 }, // Atom 4
+            { element: 'H', x: 30, y: 80 },  // Atom 5
+            { element: 'H', x: 30, y: 120 },  // Atom 6
+            { element: 'H', x: 170, y: 80 },  // Atom 7
+            { element: 'H', x: 170, y: 120 }, // Atom 8
+            { element: 'H', x: 370, y: 80 },  // Atom 9
+            { element: 'H', x: 370, y: 120 }, // Atom 10
+            { element: 'H', x: 470, y: 80 },  // Atom 11
+            { element: 'H', x: 470, y: 120 }  // Atom 12
+        ],
+        bonds: [
+            { atom1Index: 0, atom2Index: 1, bondType: 'single' }, // C-C
+            { atom1Index: 1, atom2Index: 2, bondType: 'single' }, // C-O
+            { atom1Index: 2, atom2Index: 3, bondType: 'single' }, // O-C
+            { atom1Index: 3, atom2Index: 4, bondType: 'single' }, // C-C
+            { atom1Index: 0, atom2Index: 5, bondType: 'single' }, // C-H
+            { atom1Index: 0, atom2Index: 6, bondType: 'single' }, // C-H
+            { atom1Index: 1, atom2Index: 7, bondType: 'single' }, // C-H
+            { atom1Index: 1, atom2Index: 8, bondType: 'single' }, // C-H
+            { atom1Index: 3, atom2Index: 9, bondType: 'single' }, // C-H
+            { atom1Index: 3, atom2Index: 10, bondType: 'single' }, // C-H
+            { atom1Index: 4, atom2Index: 11, bondType: 'single' }, // C-H
+            { atom1Index: 4, atom2Index: 12, bondType: 'single' }  // C-H
+        ]
+    },
+    {
+        name: "methylamine",
+        atoms: [
+            { element: 'C', x: 100, y: 100 }, // Atom 0
+            { element: 'N', x: 200, y: 100 }, // Atom 1
+            { element: 'H', x: 80, y: 80 },  // Atom 2
+            { element: 'H', x: 80, y: 120 },  // Atom 3
+            { element: 'H', x: 220, y: 80 },  // Atom 4
+            { element: 'H', x: 220, y: 120 } , // Atom 5
+			{ element: 'H', x: 60, y: 100 }  // Atom 6
+        ],
+        bonds: [
+		{ atom1Index: 0, atom2Index: 6, bondType: 'single' }, // C-N
+            { atom1Index: 0, atom2Index: 1, bondType: 'single' }, // C-N
+            { atom1Index: 0, atom2Index: 2, bondType: 'single' }, // C-H
+            { atom1Index: 0, atom2Index: 3, bondType: 'single' }, // C-H
+            { atom1Index: 1, atom2Index: 4, bondType: 'single' }, // N-H
+            { atom1Index: 1, atom2Index: 5, bondType: 'single' }  // N-H
+        ]
+    },
+    
+
+            {
+                name: "benzene",
+                atoms: [
+                    { element: 'C', x: 100, y: 100 },
+                    { element: 'C', x: 150, y: 50 },
+                    { element: 'C', x: 200, y: 100 },
+                    { element: 'C', x: 200, y: 150 },
+                    { element: 'C', x: 150, y: 200 },
+                    { element: 'C', x: 100, y: 150 },
+                    { element: 'H', x: 75, y: 75 },
+                    { element: 'H', x: 175, y: 25 },
+                    { element: 'H', x: 225, y: 75 },
+                    { element: 'H', x: 225, y: 175 },
+                    { element: 'H', x: 175, y: 225 },
+                    { element: 'H', x: 75, y: 175 }
+                ],
+                bonds: [
+                    { atom1Index: 0, atom2Index: 1, bondType: 'single' },
+                    { atom1Index: 1, atom2Index: 2, bondType: 'double' },
+                    { atom1Index: 2, atom2Index: 3, bondType: 'single' },
+                    { atom1Index: 3, atom2Index: 4, bondType: 'double' },
+                    { atom1Index: 4, atom2Index: 5, bondType: 'single' },
+                    { atom1Index: 5, atom2Index: 0, bondType: 'double' },
+                    { atom1Index: 0, atom2Index: 6, bondType: 'single' },
+                    { atom1Index: 1, atom2Index: 7, bondType: 'single' },
+                    { atom1Index: 2, atom2Index: 8, bondType: 'single' },
+                    { atom1Index: 3, atom2Index: 9, bondType: 'single' },
+                    { atom1Index: 4, atom2Index: 10, bondType: 'single' },
+                    { atom1Index: 5, atom2Index: 11, bondType: 'single' }
+                ]
+            },
+            {
+                name: "propane",
+                atoms: [
+                    { element: 'C', x: 50, y: 100 },  // Atom 0
+                    { element: 'C', x: 150, y: 100 }, // Atom 1
+                    { element: 'C', x: 250, y: 100 }, // Atom 2
+                    { element: 'H', x: 30, y: 80 },  // Atom 3
+                    { element: 'H', x: 30, y: 120 },  // Atom 4
+                    { element: 'H', x: 170, y: 80 },  // Atom 5
+                    { element: 'H', x: 170, y: 120 }, // Atom 6
+                    { element: 'H', x: 270, y: 80 },  // Atom 7
+                    { element: 'H', x: 270, y: 120 }   // Atom 8
+                ],
+                bonds: [
+                    { atom1Index: 0, atom2Index: 1, bondType: 'single' }, // C-C
+                    { atom1Index: 1, atom2Index: 2, bondType: 'single' }, // C-C
+                    { atom1Index: 0, atom2Index: 3, bondType: 'single' }, // C-H
+                    { atom1Index: 0, atom2Index: 4, bondType: 'single' }, // C-H
+                    { atom1Index: 1, atom2Index: 5, bondType: 'single' }, // C-H
+                    { atom1Index: 1, atom2Index: 6, bondType: 'single' }, // C-H
+                    { atom1Index: 2, atom2Index: 7, bondType: 'single' }, // C-H
+                    { atom1Index: 2, atom2Index: 8, bondType: 'single' }  // C-H
+                ]
+            },
+            {
+                name: "ethene",
+                atoms: [
+                    { element: 'C', x: 100, y: 100 }, // Atom 0
+                    { element: 'C', x: 200, y: 100 }, // Atom 1
+                    { element: 'H', x: 80, y: 80 },   // Atom 2
+                    { element: 'H', x: 80, y: 120 },  // Atom 3
+                    { element: 'H', x: 220, y: 80 },  // Atom 4
+                    { element: 'H', x: 220, y: 120 }  // Atom 5
+                ],
+                bonds: [
+                    { atom1Index: 0, atom2Index: 1, bondType: 'double' }, // C=C
+                    { atom1Index: 0, atom2Index: 2, bondType: 'single' }, // C-H
+                    { atom1Index: 0, atom2Index: 3, bondType: 'single' }, // C-H
+                    { atom1Index: 1, atom2Index: 4, bondType: 'single' }, // C-H
+                    { atom1Index: 1, atom2Index: 5, bondType: 'single' }  // C-H
+                ]
+            },
+            {
+                name: "methane",
+                atoms: [
+                    { element: 'C', x: 100, y: 100 }, // Atom 0
+                    { element: 'H', x: 80, y: 80 },   // Atom 1
+                    { element: 'H', x: 120, y: 80 },   // Atom 2
+                    { element: 'H', x: 100, y: 120 }, // Atom 3
+                    { element: 'H', x: 100, y: 60 }   // Atom 4
+                ],
+                bonds: [
+                    { atom1Index: 0, atom2Index: 1, bondType: 'single' }, // C-H
+                    { atom1Index: 0, atom2Index: 2, bondType: 'single' }, // C-H
+                    { atom1Index: 0, atom2Index: 3, bondType: 'single' }, // C-H
+                    { atom1Index: 0, atom2Index: 4, bondType: 'single' }  // C-H
+                ]
+            },
+            {
+                name: "formaldehyde",
+                atoms: [
+                    { element: 'C', x: 100, y: 100 }, // Atom 0
+                    { element: 'O', x: 200, y: 100 }, // Atom 1
+                    { element: 'H', x: 80, y: 100 },  // Atom 2
+                    { element: 'H', x: 220, y: 100 }  // Atom 3
+                ],
+                bonds: [
+                    { atom1Index: 0, atom2Index: 1, bondType: 'double' }, // C=O
+                    { atom1Index: 0, atom2Index: 2, bondType: 'single' }, // C-H
+                    { atom1Index: 0, atom2Index: 3, bondType: 'single' }  // C-H
+                ]
+            },
+            {
+                name: "acetic acid",
+                atoms: [
+                    { element: 'C', x: 50, y: 100 },  // Atom 0
+                    { element: 'C', x: 150, y: 100 }, // Atom 1
+                    { element: 'O', x: 250, y: 100 }, // Atom 2
+                    { element: 'O', x: 150, y: 50 },  // Atom 3
+                    { element: 'H', x: 30, y: 80 },  // Atom 4
+                    { element: 'H', x: 30, y: 120 },  // Atom 5
+                    { element: 'H', x: 170, y: 80 },  // Atom 6
+                    { element: 'H', x: 170, y: 120 }, // Atom 7
+                    { element: 'H', x: 270, y: 80 }   // Atom 8
+                ],
+                bonds: [
+                    { atom1Index: 0, atom2Index: 1, bondType: 'single' }, // C-C
+                    { atom1Index: 1, atom2Index: 2, bondType: 'double' }, // C=O
+                    { atom1Index: 1, atom2Index: 3, bondType: 'single' }, // C-O
+                    { atom1Index: 0, atom2Index: 4, bondType: 'single' }, // C-H
+                    { atom1Index: 0, atom2Index: 5, bondType: 'single' }, // C-H
+                    { atom1Index: 3, atom2Index: 6, bondType: 'single' }, // O-H
+                    { atom1Index: 2, atom2Index: 7, bondType: 'single' }, // O-H
+                    { atom1Index: 1, atom2Index: 8, bondType: 'single' }  // C-H
+                ]
+            },
+            {
+                name: "propene",
+                atoms: [
+                    { element: 'C', x: 50, y: 100 },  // Atom 0
+                    { element: 'C', x: 150, y: 100 }, // Atom 1
+                    { element: 'C', x: 250, y: 100 }, // Atom 2
+                   { element: 'H', x: 30, y: 80 },  // Atom 3
+                    { element: 'H', x: 30, y: 120 },  // Atom 4
+                 //   { element: 'H', x: 170, y: 80 },  // Atom 5
+                    { element: 'H', x: 170, y: 120 }, // Atom 6
+                    { element: 'H', x: 270, y: 80 },  // Atom 7
+                    { element: 'H', x: 270, y: 120 },   // Atom 8
+					{ element: 'H', x: 300, y: 100 }   // Atom 8
+                ],
+                bonds: [
+                    { atom1Index: 0, atom2Index: 1, bondType: 'double' }, // C=C
+                    { atom1Index: 1, atom2Index: 2, bondType: 'single' }, // C-C
+                    { atom1Index: 0, atom2Index: 3, bondType: 'single' }, // C-H
+                    { atom1Index: 0, atom2Index: 4, bondType: 'single' }, // C-H
+                   /// { atom1Index: 1, atom2Index: 5, bondType: 'single' }, // C-H
+                    { atom1Index: 1, atom2Index: 5, bondType: 'single' }, // C-H
+                    { atom1Index: 2, atom2Index: 6, bondType: 'single' }, // C-H
+                    { atom1Index: 2, atom2Index: 7, bondType: 'single' },  // C-H
+					{ atom1Index: 2, atom2Index: 8, bondType: 'single' }  // C-H
+                ]
+            },  {
+        name: "butane",
+        atoms: [
+            { element: 'C', x: 50, y: 100 },  // Atom 0
+            { element: 'C', x: 150, y: 100 }, // Atom 1
+            { element: 'C', x: 250, y: 100 }, // Atom 2
+            { element: 'C', x: 350, y: 100 }, // Atom 3
+            { element: 'H', x: 30, y: 80 },  // Atom 4
+            { element: 'H', x: 30, y: 120 },  // Atom 5
+            { element: 'H', x: 170, y: 80 },  // Atom 6
+            { element: 'H', x: 170, y: 120 }, // Atom 7
+            { element: 'H', x: 270, y: 80 },  // Atom 8
+            { element: 'H', x: 270, y: 120 }, // Atom 9
+            { element: 'H', x: 370, y: 80 },  // Atom 10
+            { element: 'H', x: 370, y: 120 }  // Atom 11
+        ],
+        bonds: [
+            { atom1Index: 0, atom2Index: 1, bondType: 'single' }, // C-C
+            { atom1Index: 1, atom2Index: 2, bondType: 'single' }, // C-C
+            { atom1Index: 2, atom2Index: 3, bondType: 'single' }, // C-C
+            { atom1Index: 0, atom2Index: 4, bondType: 'single' }, // C-H
+            { atom1Index: 0, atom2Index: 5, bondType: 'single' }, // C-H
+            { atom1Index: 1, atom2Index: 6, bondType: 'single' }, // C-H
+            { atom1Index: 1, atom2Index: 7, bondType: 'single' }, // C-H
+            { atom1Index: 2, atom2Index: 8, bondType: 'single' }, // C-H
+            { atom1Index: 2, atom2Index: 9, bondType: 'single' }, // C-H
+            { atom1Index: 3, atom2Index: 10, bondType: 'single' }, // C-H
+            { atom1Index: 3, atom2Index: 11, bondType: 'single' }  // C-H
+        ]
+    },			
+    {
+        name: "cyclopentane",
+        atoms: [
+            { element: 'C', x: 100, y: 100 }, // Atom 0
+            { element: 'C', x: 150, y: 50 },  // Atom 1
+            { element: 'C', x: 200, y: 100 }, // Atom 2
+            { element: 'C', x: 200, y: 150 }, // Atom 3
+            { element: 'C', x: 150, y: 200 }, // Atom 4
+            { element: 'H', x: 80, y: 80 },  // Atom 5
+            { element: 'H', x: 170, y: 30 },  // Atom 6
+            { element: 'H', x: 220, y: 80 },  // Atom 7
+            { element: 'H', x: 220, y: 170 }, // Atom 8
+            { element: 'H', x: 170, y: 220 }, // Atom 9
+            { element: 'H', x: 80, y: 170 }  // Atom 10
+        ],
+        bonds: [
+            { atom1Index: 0, atom2Index: 1, bondType: 'single' }, // C-C
+            { atom1Index: 1, atom2Index: 2, bondType: 'single' }, // C-C
+            { atom1Index: 2, atom2Index: 3, bondType: 'single' }, // C-C
+            { atom1Index: 3, atom2Index: 4, bondType: 'single' }, // C-C
+            { atom1Index: 4, atom2Index: 0, bondType: 'single' }, // C-C
+            { atom1Index: 0, atom2Index: 5, bondType: 'single' }, // C-H
+            { atom1Index: 1, atom2Index: 6, bondType: 'single' }, // C-H
+            { atom1Index: 2, atom2Index: 7, bondType: 'single' }, // C-H
+            { atom1Index: 3, atom2Index: 8, bondType: 'single' }, // C-H
+            { atom1Index: 4, atom2Index: 9, bondType: 'single' }, // C-H
+            { atom1Index: 0, atom2Index: 10, bondType: 'single' }  // C-H
+        ]
+    },
+             {
+        name: "ammonia",
+        atoms: [
+            { element: 'N', x: 100, y: 100 }, // Atom 0
+            { element: 'H', x: 80, y: 80 },   // Atom 1
+            { element: 'H', x: 120, y: 80 },  // Atom 2
+            { element: 'H', x: 100, y: 120 }  // Atom 3
+        ],
+        bonds: [
+            { atom1Index: 0, atom2Index: 1, bondType: 'single' }, // N-H
+            { atom1Index: 0, atom2Index: 2, bondType: 'single' },  // N-H
+            { atom1Index: 0, atom2Index: 3, bondType: 'single' }   // N-H
+        ]
+    },
+    {
+        name: "water",
+        atoms: [
+            { element: 'O', x: 100, y: 100 }, // Atom 0
+            { element: 'H', x: 80, y: 80 },    // Atom 1
+            { element: 'H', x: 120, y: 80 }    // Atom 2
+        ],
+        bonds: [
+            { atom1Index: 0, atom2Index: 1, bondType: 'single' }, // O-H
+            { atom1Index: 0, atom2Index: 2, bondType: 'single' }  // O-H
+        ]
+    },
+    {
+        name: "hydrogen peroxide",
+        atoms: [
+            { element: 'O', x: 100, y: 100 }, // Atom 0
+            { element: 'O', x: 200, y: 100 }, // Atom 1
+            { element: 'H', x: 80, y: 80 },   // Atom 2
+            { element: 'H', x: 220, y: 80 }   // Atom 3
+        ],
+        bonds: [
+            { atom1Index: 0, atom2Index: 1, bondType: 'single' }, // O-O
+            { atom1Index: 0, atom2Index: 2, bondType: 'single' }, // O-H
+            { atom1Index: 1, atom2Index: 3, bondType: 'single' } // O-H
+        ]
+    },
+    {
+        name: "carbon dioxide",
+        atoms: [
+            { element: 'C', x: 100, y: 100 }, // Atom 0
+            { element: 'O', x: 200, y: 100 }, // Atom 1
+            { element: 'O', x: 0, y: 100 }    // Atom 2
+        ],
+        bonds: [
+            { atom1Index: 0, atom2Index: 1, bondType: 'double' }, // C=O
+            { atom1Index: 0, atom2Index: 2, bondType: 'double' }  // C=O
+        ]
+    },
+    {
+        name: "nitrogen gas",
+        atoms: [
+            { element: 'N', x: 100, y: 100 }, // Atom 0
+            { element: 'N', x: 200, y: 100 }  // Atom 1
+        ],
+        bonds: [
+            { atom1Index: 0, atom2Index: 1, bondType: 'triple' } // N≡N
+        ]
+    },
+    {
+        name: "hydrogen cyanide",
+        atoms: [
+            { element: 'C', x: 100, y: 100 }, // Atom 0
+            { element: 'N', x: 200, y: 100 }, // Atom 1
+            { element: 'H', x: 80, y: 100 }   // Atom 2
+        ],
+        bonds: [
+            { atom1Index: 0, atom2Index: 1, bondType: 'triple' }, // C≡N
+            { atom1Index: 0, atom2Index: 2, bondType: 'single' }  // C-H
+        ]
+    },
+    {
+        name: "sulfur dioxide",
+        atoms: [
+            { element: 'S', x: 100, y: 100 }, // Atom 0
+            { element: 'O', x: 200, y: 100 }, // Atom 1
+            { element: 'O', x: 0, y: 100 }    // Atom 2
+        ],
+        bonds: [
+            { atom1Index: 0, atom2Index: 1, bondType: 'double' }, // S=O
+            { atom1Index: 0, atom2Index: 2, bondType: 'double' }  // S=O
+        ]
+    },
+    {
+        name: "ozone",
+        atoms: [
+            { element: 'O', x: 100, y: 100 }, // Atom 0
+            { element: 'O', x: 200, y: 100 }, // Atom 1
+            { element: 'O', x: 150, y: 150 }  // Atom 2
+        ],
+        bonds: [
+            { atom1Index: 0, atom2Index: 1, bondType: 'single' }, // O-O
+            { atom1Index: 1, atom2Index: 2, bondType: 'double' }  // O=O
+        ]
+    },
+    {
+        name: "phosphine",
+        atoms: [
+            { element: 'P', x: 100, y: 100 }, // Atom 0
+            { element: 'H', x: 80, y: 80 },   // Atom 1
+            { element: 'H', x: 120, y: 80 }, // Atom 2
+            { element: 'H', x: 100, y: 120 } // Atom 3
+        ],
+        bonds: [
+            { atom1Index: 0, atom2Index: 1, bondType: 'single' }, // P-H
+            { atom1Index: 0, atom2Index: 2, bondType: 'single' }, // P-H
+            { atom1Index: 0, atom2Index: 3, bondType: 'single' }  // P-H
+        ]
+    },
+    {
+        name: "hydrogen sulfide",
+        atoms: [
+            { element: 'S', x: 100, y: 100 }, // Atom 0
+            { element: 'H', x: 80, y: 80 },   // Atom 1
+            { element: 'H', x: 120, y: 80 }   // Atom 2
+        ],
+        bonds: [
+            { atom1Index: 0, atom2Index: 1, bondType: 'single' }, // S-H
+            { atom1Index: 0, atom2Index: 2, bondType: 'single' }  // S-H
+        ]
+    },
+    {
+        name: "carbon monoxide",
+        atoms: [
+            { element: 'C', x: 100, y: 100 }, // Atom 0
+            { element: 'O', x: 200, y: 100 }  // Atom 1
+        ],
+        bonds: [
+            { atom1Index: 0, atom2Index: 1, bondType: 'triple' } // C≡O
+        ]
+    },
+    {
+        name: "nitrous oxide",
+        atoms: [
+            { element: 'N', x: 100, y: 100 }, // Atom 0
+            { element: 'N', x: 200, y: 100 }, // Atom 1
+            { element: 'O', x: 300, y: 100 }  // Atom 2
+        ],
+        bonds: [
+            { atom1Index: 0, atom2Index: 1, bondType: 'double' }, // N=N
+            { atom1Index: 1, atom2Index: 2, bondType: 'double' }  // N=O
+        ]
+    },
+    {
+        name: "sulfur hexafluoride",
+        atoms: [
+            { element: 'S', x: 100, y: 100 }, // Atom 0
+            { element: 'F', x: 200, y: 100 }, // Atom 1
+            { element: 'F', x: 0, y: 100 },   // Atom 2
+            { element: 'F', x: 100, y: 200 }, // Atom 3
+            { element: 'F', x: 100, y: 0 },   // Atom 4
+            { element: 'F', x: 150, y: 150 },  // Atom 5
+            { element: 'F', x: 50, y: 50 }    // Atom 6
+        ],
+        bonds: [
+            { atom1Index: 0, atom2Index: 1, bondType: 'single' }, // S-F
+            { atom1Index: 0, atom2Index: 2, bondType: 'single' },  // S-F
+            { atom1Index: 0, atom2Index: 3, bondType: 'single' },  // S-F
+            { atom1Index: 0, atom2Index: 4, bondType: 'single' },  // S-F
+            { atom1Index: 0, atom2Index: 5, bondType: 'single' }, // S-F
+            { atom1Index: 0, atom2Index: 6, bondType: 'single' }  // S-F
+        ]
+    },
+    {
+        name: "chlorine gas",
+        atoms: [
+            { element: 'Cl', x: 100, y: 100 }, // Atom 0
+            { element: 'Cl', x: 200, y: 100 }  // Atom 1
+        ],
+        bonds: [
+            { atom1Index: 0, atom2Index: 1, bondType: 'single' } // Cl-Cl
+        ]
+    },
+    {
+        name: "hydrogen chloride",
+        atoms: [
+            { element: 'H', x: 100, y: 100 }, // Atom 0
+            { element: 'Cl', x: 200, y: 100 }  // Atom 1
+        ],
+        bonds: [
+            { atom1Index: 0, atom2Index: 1, bondType: 'single' } // H-Cl
+        ]
+    },
+    {
+        name: "carbon tetrachloride",
+        atoms: [
+            { element: 'C', x: 100, y: 100 }, // Atom 0
+            { element: 'Cl', x: 200, y: 100 }, // Atom 1
+            { element: 'Cl', x: 0, y: 100 },  // Atom 2
+            { element: 'Cl', x: 100, y: 200 }, // Atom 3
+            { element: 'Cl', x: 100, y: 0 }   // Atom 4
+        ],
+        bonds: [
+            { atom1Index: 0, atom2Index: 1, bondType: 'single' }, // C-Cl
+            { atom1Index: 0, atom2Index: 2, bondType: 'single' },  // C-Cl
+            { atom1Index: 0, atom2Index: 3, bondType: 'single' },  // C-Cl
+            { atom1Index: 0, atom2Index: 4, bondType: 'single' }  // C-Cl
+        ]
+    },
+        ];
+
+        // Element colors
+const elementColors = {
+    'C': 'black',      // Carbon
+    'H': 'gray',       // Hydrogen
+    'O': 'red',        // Oxygen
+    'N': 'blue',       // Nitrogen
+    'P': 'purple',     // Phosphorus
+    'Si': 'orange',    // Silicon
+    'S': 'yellow',     // Sulfur
+    'F': 'green',      // Fluorine
+    'Cl': 'lime',      // Chlorine
+    'Br': 'darkorange', // Bromine
+    'I': 'darkviolet',  // Iodine
+    'Na': 'darkblue',  // Sodium
+    'K': 'violet',     // Potassium
+    'Ca': 'darkgreen', // Calcium
+    'Mg': 'teal',      // Magnesium
+    'Fe': 'brown',     // Iron
+    'Cu': 'copper',    // Copper
+    'Zn': 'darkgray',  // Zinc
+    'Ag': 'silver',    // Silver
+    'Au': 'gold',      // Gold
+    'Pb': 'dimgray',   // Lead
+    'Al': 'lightgray', // Aluminum
+    'He': 'pink',      // Helium
+    'Ne': 'lightblue', // Neon
+    'Ar': 'cyan',      // Argon
+    'Li': 'crimson',   // Lithium
+    'Be': 'darkred',   // Beryllium
+    'B': 'saddlebrown' // Boron
+};
+
+        // Current molecule index and score
+        let currentMoleculeIndex = 0;
+        let score = 0;
+
+        // Canvas and context
+        const canvas = document.getElementById('moleculeCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Function to calculate canvas size based on molecule dimensions
+        function calculateCanvasSize(molecule) {
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            molecule.atoms.forEach(atom => {
+                if (atom.x < minX) minX = atom.x;
+                if (atom.y < minY) minY = atom.y;
+                if (atom.x > maxX) maxX = atom.x;
+                if (atom.y > maxY) maxY = atom.y;
+            });
+            const padding = 50; // Add padding around the molecule
+            return {
+                width: maxX - minX + 3 * padding,
+                height: maxY - minY + 3 * padding
+            };
+        }
+
+        // Function to draw a molecule
+function drawMolecule(molecule) {
+    const { width, height } = calculateCanvasSize(molecule);
+    canvas.width = width;
+    canvas.height = height;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw bonds
+    molecule.bonds.forEach(bond => {
+        const atom1 = molecule.atoms[bond.atom1Index];
+        const atom2 = molecule.atoms[bond.atom2Index];
+
+        // Calculate the bond vector
+        const dx = atom2.x - atom1.x;
+        const dy = atom2.y - atom1.y;
+
+        // Calculate the perpendicular vector (normalized)
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const perpDx = -dy / length; // Rotate 90 degrees counterclockwise
+        const perpDy = dx / length;
+
+        // Offset distance for double and triple bonds
+        const offset = 3;
+
+        // Draw the bond
+        ctx.beginPath();
+        ctx.moveTo(atom1.x, atom1.y);
+        ctx.lineTo(atom2.x, atom2.y);
+
+        if (bond.bondType === 'double') {
+            // Draw a second line offset perpendicularly
+            ctx.moveTo(atom1.x + perpDx * offset, atom1.y + perpDy * offset);
+            ctx.lineTo(atom2.x + perpDx * offset, atom2.y + perpDy * offset);
+        } else if (bond.bondType === 'triple') {
+            // Draw two additional lines offset perpendicularly
+            ctx.moveTo(atom1.x + perpDx * offset, atom1.y + perpDy * offset);
+            ctx.lineTo(atom2.x + perpDx * offset, atom2.y + perpDy * offset);
+            ctx.moveTo(atom1.x - perpDx * offset, atom1.y - perpDy * offset);
+            ctx.lineTo(atom2.x - perpDx * offset, atom2.y - perpDy * offset);
+        }
+
+        ctx.stroke();
+    });
+
+    // Draw atoms (on top of bonds)
+    molecule.atoms.forEach(atom => {
+        ctx.beginPath();
+        ctx.arc(atom.x, atom.y, 10, 0, 2 * Math.PI);
+        if (atom.element === 'C') {
+            // Draw a black dot for carbon
+            ctx.fillStyle = elementColors[atom.element];
+            ctx.fill();
+        } else {
+            // Draw colored circles for other elements
+            ctx.fillStyle = elementColors[atom.element];
+            ctx.fill();
+            ctx.strokeStyle = 'black';
+            ctx.stroke();
+            ctx.fillStyle = 'black';
+            ctx.fillText(atom.element, atom.x - 5, atom.y + 5);
+        }});
+}
+   
+
+        // Function to check the answer
+        function checkAnswer() {
+            const userAnswer = document.getElementById('answerInput').value.trim().toLowerCase();
+            const correctAnswer = molecules[currentMoleculeIndex].name;
+            const correctLetters = correctAnswer.length;
+            const wrongLetters = Math.abs(userAnswer.length - correctLetters);
+
+            if (userAnswer === correctAnswer) {
+                // Correct answer
+                score += correctLetters;
+                document.getElementById('feedback').textContent = "Correct!";
+            } else {
+                // Incorrect answer
+                score -= wrongLetters + Math.floor(correctLetters / 2);
+                document.getElementById('feedback').textContent = `Incorrect. The correct answer is ${correctAnswer}.`;
+            }
+
+            // Update score
+            document.getElementById('score').textContent = `Score: ${score}`;
+
+            // Move to the next molecule
+            currentMoleculeIndex = (currentMoleculeIndex + 1) % molecules.length;
+            drawMolecule(molecules[currentMoleculeIndex]);
+            document.getElementById('answerInput').value = ""; // Clear input
+        }
+
+        // Draw the first molecule when the page loads
+        window.onload = () => drawMolecule(molecules[currentMoleculeIndex]);
+    </script>
+</body>
+</html>

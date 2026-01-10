@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>TTHL Interpreter</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    table, th, td { border: 1px solid #333; border-collapse: collapse; padding: 5px; text-align: center; }
+    th { background-color: #f0f0f0; }
+    select { margin-bottom: 15px; font-size: 16px; }
+    #container { display: flex; flex-direction: column; height: 100vh; }
+    #editorContainer { display: flex; flex: 1; }
+    #codeEditor { flex: 1; height: 100%; font-family: monospace; }
+    #console { flex: 1; height: 100%; border: 1px solid #ccc; padding: 10px; overflow-y: auto; font-family: monospace; background: #f8f8f8; }
+    #runButton { padding: 10px 20px; font-size: 16px; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h2>TTHL Interpreter</h2>
+    <button id="runButton">Run Code</button>
+    <div id="editorContainer">
+      <textarea id="codeEditor" spellcheck="false">var k = {1,0}
+out(k)
+out({1,0} & {1,{1,0}})
+
+if(k, i) {
+  out("This runs for each element in k:", i)
+}</textarea>
+      <div id="console"></div>
+    </div>
+  </div>
+
+  <script>
+    // ---- TTHL Interpreter ----
+    class TTHLInterpreter {
+      constructor() {
+        this.vars = {};
+        this.console = document.getElementById('console');
+        this.initOperators();
+      }
+      
+      initOperators() {
+        this.operators = {
+          '&': (a, b) => this.andOp(a, b),
+          '|': (a, b) => this.orOp(a, b),
+          '^': (a, b) => this.xorOp(a, b),
+          '!': (a) => this.notOp(a),
+          '~': (a, b) => this.xnorOp(a, b),
+          '->': (a, b) => this.impliesOp(a, b),
+          '<-': (a, b) => this.converseOp(a, b),
+          '\\': (a, b) => this.diffOp(a, b),
+          '∆': (a, b) => this.symDiffOp(a, b),
+          '∩': (a, b) => this.intersectOp(a, b),
+          '∪': (a, b) => this.unionOp(a, b),
+          '×': (a, b) => this.cartesianProductOp(a, b),
+          '⊆': (a, b) => this.subsetOp(a, b),
+          '⊂': (a, b) => this.properSubsetOp(a, b),
+          '⊇': (a, b) => this.supersetOp(a, b),
+          '⊃': (a, b) => this.properSupersetOp(a, b)
+        };
+      }
+      
+      log(message) {
+        this.console.innerHTML += message + '<br>';
+      }
+      
+      clearConsole() {
+        this.console.innerHTML = '';
+      }
+      
+      // Deep equality check
+      deepEqual(a, b) {
+        if (typeof a === "number" && typeof b === "number") return a === b;
+        if (Array.isArray(a) && Array.isArray(b)) {
+          if (a.length !== b.length) return false;
+          return a.every(el => b.some(el2 => this.deepEqual(el, el2)));
+        }
+        return false;
+      }
+      
+      // Add unique element to array
+      addUnique(arr, elem) {
+        for (let item of arr) {
+          if (this.deepEqual(item, elem)) return;
+        }
+        arr.push(elem);
+      }
+      
+      // Simplify a set
+      simplify(x) {
+        if (typeof x === "number") return x;
+        if (Array.isArray(x)) {
+          if (x.length === 1) return x[0];
+          let simplified = x.map(el => this.simplify(el));
+          let result = [];
+          simplified.forEach(el => this.addUnique(result, el));
+          if (result.length === 0) return 0;
+          if (result.length === 1 && typeof result[0] === "number") return result[0];
+          result.sort((a,b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
+          return result;
+        }
+        return x;
+      }
+      
+      // Convert to set
+      toSet(x) {
+        return Array.isArray(x) ? x : [x];
+      }
+      
+      // Display element
+      displayElement(x) {
+        if (typeof x === "number") return x.toString();
+        if (Array.isArray(x)) {
+          let sim = this.simplify(x);
+          if (typeof sim === "number") return sim.toString();
+          let elems = sim.map(el => this.displayElement(el));
+          let unique = [...new Set(elems)].sort();
+          return `{${unique.join(",")}}`;
+        }
+        return x.toString();
+      }
+      
+      // ---- Operations ----
+      andOp(P, Q) {
+        if (typeof P === "number" && typeof Q === "number") {
+          return (P === 1 && Q === 1) ? 1 : 0;
+        }
+        let setP = this.toSet(P), setQ = this.toSet(Q);
+        let result = [];
+        for (let x of setP) {
+          for (let y of setQ) {
+            let r = this.andOp(x, y);
+            this.addUnique(result, r);
+          }
+        }
+        return this.simplify(result);
+      }
+      
+      orOp(P, Q) {
+        if (typeof P === "number" && typeof Q === "number") {
+          return (P === 1 || Q === 1) ? 1 : 0;
+        }
+        let setP = this.toSet(P), setQ = this.toSet(Q);
+        let result = [];
+        for (let x of setP) {
+          for (let y of setQ) {
+            let r = this.orOp(x, y);
+            this.addUnique(result, r);
+          }
+        }
+        return this.simplify(result);
+      }
+      
+      xorOp(P, Q) {
+        if (typeof P === "number" && typeof Q === "number") {
+          return (P === Q) ? 0 : 1;
+        }
+        let setP = this.toSet(P), setQ = this.toSet(Q);
+        let result = [];
+        for (let x of setP) {
+          for (let y of setQ) {
+            let r = this.xorOp(x, y);
+            this.addUnique(result, r);
+          }
+        }
+        return this.simplify(result);
+      }
+      
+      notOp(P) {
+        if (typeof P === "number") return (P === 1 ? 0 : 1);
+        let setP = this.toSet(P);
+        let result = [];
+        for (let x of setP) {
+          let r = this.notOp(x);
+          this.addUnique(result, r);
+        }
+        return this.simplify(result);
+      }
+      
+      nandOp(P, Q) {
+        return this.notOp(this.andOp(P, Q));
+      }
+      
+      xnorOp(P, Q) {
+        return this.notOp(this.xorOp(P, Q));
+      }
+      
+      impliesOp(P, Q) {
+        return this.orOp(this.notOp(P), Q);
+      }
+      
+      norOp(P, Q) {
+        return this.andOp(this.notOp(P), this.notOp(Q));
+      }
+      
+      nimpliesOp(P, Q) {
+        return this.notOp(this.impliesOp(P, Q));
+      }
+      
+      converseOp(P, Q) {
+        return this.impliesOp(Q, P);
+      }
+      
+      nconverseOp(P, Q) {
+        return this.notOp(this.converseOp(P, Q));
+      }
+      
+      diffOp(P, Q) {
+        let setP = this.toSet(P), setQ = this.toSet(Q);
+        return this.simplify(setP.filter(x => !setQ.some(y => this.deepEqual(x, y))));
+      }
+      
+      symDiffOp(P, Q) {
+        let setP = this.toSet(P), setQ = this.toSet(Q);
+        let diffPQ = setP.filter(x => !setQ.some(y => this.deepEqual(x, y)));
+        let diffQP = setQ.filter(x => !setP.some(y => this.deepEqual(x, y)));
+        return this.simplify([...diffPQ, ...diffQP]);
+      }
+      
+      intersectOp(P, Q) {
+        let setP = this.toSet(P), setQ = this.toSet(Q);
+        let intersection = setP.filter(x => setQ.some(y => this.deepEqual(x, y)));
+        return this.simplify(intersection);
+      }
+      
+      unionOp(P, Q) {
+        let setP = this.toSet(P), setQ = this.toSet(Q);
+        return this.simplify([...setP, ...setQ.filter(x => !setP.some(y => this.deepEqual(x, y)))]);
+      }
+      
+      cartesianProductOp(P, Q) {
+        let setP = this.toSet(P), setQ = this.toSet(Q);
+        let product = setP.flatMap(x => setQ.map(y => [x, y]));
+        return this.simplify(product);
+      }
+      
+      subsetOp(P, Q) {
+        let setP = this.toSet(P), setQ = this.toSet(Q);
+        return setP.every(x => setQ.some(y => this.deepEqual(x, y))) ? 1 : 0;
+      }
+      
+      properSubsetOp(P, Q) {
+        let setP = this.toSet(P), setQ = this.toSet(Q);
+        return (setP.every(x => setQ.some(y => this.deepEqual(x, y))) && 
+               setQ.some(x => !setP.some(y => this.deepEqual(x, y)))) ? 1 : 0;
+      }
+      
+      supersetOp(P, Q) {
+        return this.subsetOp(Q, P);
+      }
+      
+      properSupersetOp(P, Q) {
+        return this.properSubsetOp(Q, P);
+      }
+      
+      // ---- Parser and Execution ----
+      parseValue(str) {
+        str = str.trim();
+        
+        // Number
+        if (/^[01]$/.test(str)) return parseInt(str);
+        
+        // Variable
+        if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(str)) {
+          if (this.vars[str] === undefined) {
+            throw new Error(`Variable '${str}' not defined`);
+          }
+          return this.vars[str];
+        }
+        
+        // String literal
+        if (str.startsWith('"') && str.endsWith('"')) {
+          return str.slice(1, -1);
+        }
+        
+        // Set literal
+        if (str.startsWith('{') && str.endsWith('}')) {
+          let content = str.slice(1, -1).trim();
+          if (content === '') return [];
+          
+          // Handle nested sets by counting braces
+          let elements = [];
+          let current = '';
+          let braceCount = 0;
+          
+          for (let char of content) {
+            if (char === '{') braceCount++;
+            if (char === '}') braceCount--;
+            
+            if (char === ',' && braceCount === 0) {
+              elements.push(current.trim());
+              current = '';
+            } else {
+              current += char;
+            }
+          }
+          
+          if (current) elements.push(current.trim());
+          
+          let parsedElements = elements.map(e => this.parseValue(e));
+          return this.simplify(parsedElements);
+        }
+        
+        throw new Error(`Invalid value: ${str}`);
+      }
+      
+      parseExpression(tokens) {
+        // Handle parentheses
+        if (tokens[0] === '(') {
+          let balance = 1;
+          let i = 1;
+          while (i < tokens.length && balance > 0) {
+            if (tokens[i] === '(') balance++;
+            if (tokens[i] === ')') balance--;
+            i++;
+          }
+          if (balance !== 0) throw new Error("Unbalanced parentheses");
+          
+          let innerExpr = tokens.slice(1, i-1);
+          let remaining = tokens.slice(i);
+          let result = this.parseExpression(innerExpr);
+          
+          if (remaining.length === 0) return result;
+          return this.parseBinaryOp([result, ...remaining]);
+        }
+        
+        // Handle unary operators
+        if (tokens[0] === '!') {
+          let operand = this.parseExpression(tokens.slice(1));
+          return this.notOp(operand);
+        }
+        
+        // Handle simple values
+        if (tokens.length === 1) {
+          return this.parseValue(tokens[0]);
+        }
+        
+        // Handle binary operators
+        return this.parseBinaryOp(tokens);
+      }
+      
+      parseBinaryOp(tokens) {
+        // Find the operator with lowest precedence (right associative)
+        let opIndex = -1;
+        let opPrecedence = Infinity;
+        const precedence = {
+          '->': 1, '<-': 1,
+          '|': 2, '&': 3,
+          '^': 4, '~': 4,
+          '\\': 5, '∆': 5,
+          '∩': 6, '∪': 6,
+          '×': 7,
+          '⊆': 8, '⊂': 8, '⊇': 8, '⊃': 8
+        };
+        
+        let balance = 0;
+        for (let i = 0; i < tokens.length; i++) {
+          let token = tokens[i];
+          if (token === '(') balance++;
+          if (token === ')') balance--;
+          if (balance < 0) throw new Error("Unbalanced parentheses");
+          
+          if (balance === 0 && precedence[token] !== undefined && precedence[token] <= opPrecedence) {
+            opIndex = i;
+            opPrecedence = precedence[token];
+          }
+        }
+        
+        if (opIndex === -1) {
+          throw new Error(`Invalid expression: ${tokens.join(' ')}`);
+        }
+        
+        let left = tokens.slice(0, opIndex);
+        let op = tokens[opIndex];
+        let right = tokens.slice(opIndex + 1);
+        
+        if (!this.operators[op]) {
+          throw new Error(`Unknown operator: ${op}`);
+        }
+        
+        let leftVal = this.parseExpression(left);
+        let rightVal = this.parseExpression(right);
+        
+        return this.operators[op](leftVal, rightVal);
+      }
+      
+      tokenize(code) {
+        // Match operators, identifiers, numbers, strings, sets, and comments
+        const tokenRegex = /([(){}\[\]]|->|<-|&&|\|\||[|&^~!\\∆∩∪×⊆⊂⊇⊃]|[a-zA-Z_][a-zA-Z0-9_]*|{[^{}]*}|[01])|"(?:\\.|[^"\\])*"|\/\/.*|\/\*[\s\S]*?\*\//g;
+        
+        let tokens = [];
+        let match;
+        while ((match = tokenRegex.exec(code)) !== null) {
+          let token = match[0];
+          
+          // Skip comments
+          if (token.startsWith('//') || token.startsWith('/*')) continue;
+          
+          tokens.push(token);
+        }
+        
+        return tokens;
+      }
+      
+      executeLine(line) {
+        line = line.trim();
+        if (line === '') return;
+        
+        // Handle variable assignment
+        if (line.startsWith('var ')) {
+          let parts = line.slice(4).split('=').map(p => p.trim());
+          if (parts.length !== 2) throw new Error("Invalid variable assignment");
+          
+          let varName = parts[0];
+          let tokens = this.tokenize(parts[1]);
+          let value = this.parseExpression(tokens);
+          
+          this.vars[varName] = value;
+          return;
+        }
+        
+        // Handle out() function
+        if (line.startsWith('out(') && line.endsWith(')')) {
+          let argsStr = line.slice(4, -1).trim();
+          let args = [];
+          let currentArg = '';
+          let inString = false;
+          let braceLevel = 0;
+          
+          for (let char of argsStr) {
+            if (char === '"') inString = !inString;
+            if (!inString) {
+              if (char === '{') braceLevel++;
+              if (char === '}') braceLevel--;
+              if (char === ',' && braceLevel === 0) {
+                args.push(currentArg.trim());
+                currentArg = '';
+                continue;
+              }
+            }
+            currentArg += char;
+          }
+          if (currentArg) args.push(currentArg.trim());
+          
+          let output = '';
+          for (let arg of args) {
+            if (arg.startsWith('"') && arg.endsWith('"')) {
+              output += arg.slice(1, -1) + ' ';
+            } else {
+              let tokens = this.tokenize(arg);
+              let value = this.parseExpression(tokens);
+              output += this.displayElement(value) + ' ';
+            }
+          }
+          
+          this.log(output.trim());
+          return;
+        }
+        
+        // Handle if statement
+        if (line.startsWith('if(')) {
+          let endParen = line.indexOf(')');
+          if (endParen === -1) throw new Error("Missing closing parenthesis in if statement");
+          
+          let argsStr = line.slice(3, endParen).trim();
+          let body = line.slice(endParen + 1).trim();
+          
+          if (!body.startsWith('{') || !body.endsWith('}')) {
+            throw new Error("If body must be enclosed in braces");
+          }
+          body = body.slice(1, -1).trim();
+          
+          // Parse if arguments
+          let args = [];
+          let currentArg = '';
+          let braceLevel = 0;
+          
+          for (let char of argsStr) {
+            if (char === '{') braceLevel++;
+            if (char === '}') braceLevel--;
+            if (char === ',' && braceLevel === 0) {
+              args.push(currentArg.trim());
+              currentArg = '';
+              continue;
+            }
+            currentArg += char;
+          }
+          if (currentArg) args.push(currentArg.trim());
+          
+          if (args.length !== 2) throw new Error("If requires exactly 2 arguments");
+          
+          let conditionTokens = this.tokenize(args[0]);
+          let condition = this.parseExpression(conditionTokens);
+          let varName = args[1].trim();
+          
+          let set = this.toSet(condition);
+          for (let element of set) {
+            // Create a new scope for the if block
+            let oldVarValue = this.vars[varName];
+            this.vars[varName] = element;
+            
+            // Execute the body
+            this.execute(body);
+            
+            // Restore the variable
+            if (oldVarValue !== undefined) {
+              this.vars[varName] = oldVarValue;
+            } else {
+              delete this.vars[varName];
+            }
+          }
+          
+          return;
+        }
+        
+        // Handle standalone expressions
+        let tokens = this.tokenize(line);
+        let result = this.parseExpression(tokens);
+        this.log(this.displayElement(result));
+      }
+      
+      execute(code) {
+        this.clearConsole();
+        
+        // Split into lines but handle multi-line statements
+        let lines = [];
+        let currentLine = '';
+        let braceLevel = 0;
+        
+        for (let char of code) {
+          if (char === '\n' && braceLevel === 0) {
+            if (currentLine.trim()) {
+              lines.push(currentLine);
+              currentLine = '';
+            }
+          } else {
+            currentLine += char;
+            if (char === '{') braceLevel++;
+            if (char === '}') braceLevel--;
+          }
+        }
+        
+        if (currentLine.trim()) lines.push(currentLine);
+        
+        for (let line of lines) {
+          try {
+            this.executeLine(line);
+          } catch (e) {
+            this.log(`Error: ${e.message}`);
+          }
+        }
+      }
+    }
+    
+    // Initialize interpreter and set up event listeners
+    const interpreter = new TTHLInterpreter();
+    document.getElementById('runButton').addEventListener('click', () => {
+      const code = document.getElementById('codeEditor').value;
+      interpreter.execute(code);
+    });
+  </script>
+</body>
+</html>

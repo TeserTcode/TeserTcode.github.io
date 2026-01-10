@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TT Language Writer</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 1em;
+    background: #f0f0f0;
+  }
+  #controls {
+    margin-bottom: 1em;
+  }
+  canvas {
+    background: white;
+    border: 1px solid #ccc;
+    cursor: grab;
+  }
+  canvas:active {
+    cursor: grabbing;
+  }
+</style>
+</head>
+<body>
+
+<div id="controls">
+  <input id="inputText" type="text" size="30" placeholder="Type text here" value="killet" />
+  <select id="formatSelect">
+    <option value="auto">Auto</option>
+    <option value="1">Format 1</option>
+    <option value="2">Format 2</option>
+    <option value="3">Format 3</option>
+    <option value="4">Format 4</option>
+  </select>
+  <label>Letter spacing:
+    <input id="letterSpacing" type="number" min="10" max="200" step="5" value="110" />
+  </label>
+  <button id="drawBtn">Draw</button>
+</div>
+
+<canvas id="canvas" width="1200" height="500"></canvas>
+
+<script>
+(() => {
+  const vowels = "eauıoüiö";
+  const consonants = "qwrtypğsdfghjklşzxcvbnm";
+  const digits = "0123456789";
+  const emptyVowel = "empty";  // file name for empty vowel placeholder
+  const emptyConst = "empty";  // file name for empty consonant placeholder
+
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+
+  // Drag & zoom variables
+  let offsetX = 0;
+  let offsetY = 0;
+  let scale = 1;
+  let isDragging = false;
+  let dragStartX, dragStartY;
+
+  // UI Elements
+  const inputText = document.getElementById("inputText");
+  const formatSelect = document.getElementById("formatSelect");
+  const letterSpacingInput = document.getElementById("letterSpacing");
+  const drawBtn = document.getElementById("drawBtn");
+
+  // Load image helper with caching
+  const imageCache = new Map();
+  async function loadImage(char) {
+    if (imageCache.has(char)) return imageCache.get(char);
+    const img = new Image();
+    let filename;
+
+    if (char === emptyVowel || char === emptyConst) filename = `tthletter/empty.png`;
+    else if (digits.includes(char)) filename = `tthletter/${char}.png`;
+    else filename = `tthletter/${char}.png`;
+
+    return new Promise((resolve) => {
+      img.onload = () => {
+        imageCache.set(char, img);
+        resolve(img);
+      };
+      img.onerror = () => {
+        console.warn(`Failed to load image for '${char}' from ${filename}`);
+        resolve(null);
+      };
+      img.src = filename;
+    });
+  }
+
+  // Load start loop images (A1.png to A4.png)
+  const startLoopImgs = {};
+  async function loadStartLoopImages() {
+    for (let i = 1; i <= 4; i++) {
+      const img = new Image();
+      const filename = `tthletter/A${i}.png`;
+      startLoopImgs[i] = await new Promise((resolve) => {
+        img.onload = () => resolve(img);
+        img.onerror = () => { console.warn(`Failed to load start loop image ${filename}`); resolve(null); };
+        img.src = filename;
+      });
+    }
+  }
+
+  // Format determination (simple heuristic)
+  function determineFormat(text) {
+    // Just pick 1 for demo, you can add complex logic here
+    return 1;
+  }
+
+  // Prepare sequences: match vowels and consonants with empty placeholders to align length
+  function prepareSequences(text, format) {
+    // extract vowels and consonants in order from text
+    const textLower = text.toLowerCase();
+
+    // For format: 1 = ABABAB..., 2 = BABABA..., 3 = ABAABA..., 4 = BABABB...
+    // For simplicity, treat format 1 and 2 strictly alternating vowels and const
+    // format 3 and 4 do a "loop" with different line starts - for now we do basic ABAB alternation
+
+    // The pattern determines where vowels and consonants go
+    // We build an array of slots, filling vowels and consonants or empty placeholders as needed.
+
+    // First count vowels and consonants in text:
+    const vowelsInText = [...textLower].filter(ch => vowels.includes(ch));
+    const constsInText = [...textLower].filter(ch => consonants.includes(ch));
+
+    // The total length is the max of vowels + consonants counts (or text length)
+    // We'll build arrays with placeholders to align them
+
+    // Let's build two arrays: vowelSlots and constSlots, length = max counts
+    // The position depends on format:
+
+    // For simplicity now, just align vowels and consonants as they appear, skipping empty
+
+    // We return just arrays of vowels and consonants in order, no empties for drawing
+
+    return {
+      vowels: vowelsInText.length ? vowelsInText : [],
+      consonants: constsInText.length ? constsInText : [],
+      digits: [...textLower].filter(ch => digits.includes(ch))
+    };
+  }
+
+  // Draw the TT language line and letters
+  async function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(offsetX, offsetY);
+    ctx.scale(scale, scale);
+
+    const text = inputText.value.trim();
+    if (!text) {
+      ctx.restore();
+      return;
+    }
+
+    // Determine format
+    let format = formatSelect.value === "auto" ? determineFormat(text) : parseInt(formatSelect.value);
+
+    // Load start loop image for chosen format
+    const startLoopImg = startLoopImgs[format] || null;
+
+    // Prepare sequences
+    const { vowels: vowelSeq, consonants: constSeq, digits: digitSeq } = prepareSequences(text, format);
+
+    // Base Y coordinates
+    const baseY = 300;
+    const vowelY = baseY - 200; // vowels above line
+    const constY = baseY + 10;  // consonants below line
+    const digitY = baseY - 90;  // digits on baseline
+    const startLineX = 20;
+
+    // Letter spacing
+    const letterSpacing = parseInt(letterSpacingInput.value) || 110;
+
+    // Draw start loop on left
+    if (startLoopImg) {
+      ctx.drawImage(startLoopImg, 0, baseY - 200, 100, 200);
+    }
+
+    // Draw baseline line (horizontal)
+    ctx.strokeStyle = "#444";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(startLineX + 100, baseY);
+    ctx.lineTo(canvas.width - 20, baseY);
+    ctx.stroke();
+
+    // Draw vowels
+    let currentVX = startLineX + 120;
+    for (const ch of vowelSeq) {
+      const img = await loadImage(ch);
+      if (img) {
+        ctx.drawImage(img, currentVX, vowelY, 100, 200);
+      }
+      currentVX += letterSpacing;
+    }
+
+    // Draw consonants
+    let currentCX = startLineX + 120;
+    for (const ch of constSeq) {
+      const img = await loadImage(ch);
+      if (img) {
+        ctx.drawImage(img, currentCX, constY, 100, 200);
+      }
+      currentCX += letterSpacing;
+    }
+
+    // Draw digits on baseline
+    let currentDX = startLineX + 120;
+    for (const ch of digitSeq) {
+      const img = await loadImage(ch);
+      if (img) {
+        ctx.drawImage(img, currentDX, digitY, 100, 200);
+      }
+      currentDX += letterSpacing;
+    }
+
+    ctx.restore();
+  }
+
+  // Initialize canvas drag and zoom handlers
+  function initCanvasInteraction() {
+    canvas.onmousedown = e => {
+      isDragging = true;
+      dragStartX = e.clientX - offsetX;
+      dragStartY = e.clientY - offsetY;
+      canvas.style.cursor = "grabbing";
+    };
+    canvas.onmouseup = e => {
+      isDragging = false;
+      canvas.style.cursor = "grab";
+    };
+    canvas.onmouseleave = e => {
+      isDragging = false;
+      canvas.style.cursor = "grab";
+    };
+    canvas.onmousemove = e => {
+      if (!isDragging) return;
+      offsetX = e.clientX - dragStartX;
+      offsetY = e.clientY - dragStartY;
+      draw();
+    };
+    canvas.onwheel = e => {
+      e.preventDefault();
+      const zoomSpeed = 0.001;
+      let newScale = scale - e.deltaY * zoomSpeed;
+      newScale = Math.min(Math.max(0.1, newScale), 5);
+      scale = newScale;
+      draw();
+    };
+  }
+
+  // Setup
+  async function main() {
+    await loadStartLoopImages();
+    initCanvasInteraction();
+    drawBtn.onclick = draw;
+    inputText.oninput = draw;
+    formatSelect.onchange = draw;
+    letterSpacingInput.oninput = draw;
+    draw();
+  }
+
+  main();
+})();
+</script>
+
+</body>
+</html>

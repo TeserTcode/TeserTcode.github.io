@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Finite Simple Groups Explorer</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #111; color: #fff; }
+        .group-card { border: 1px solid #444; padding: 1rem; margin: 1rem; background: #222; }
+        .canvas-container { width: 300px; height: 300px; position: relative; }
+        .dot { 
+            width: 10px; height: 10px; background: white; border-radius: 50%; 
+            position: absolute; transition: all 0.5s ease; /* Smooth transition */
+        }
+        .math { font-family: "Times New Roman", serif; }
+        button { margin-top: 1rem; padding: 0.5rem 1rem; background: #444; color: #fff; border: none; cursor: pointer; }
+        button:hover { background: #666; }
+        input { margin-top: 0.5rem; padding: 0.5rem; background: #333; color: #fff; border: 1px solid #444; }
+        .description { margin-top: 1rem; font-size: 0.9rem; color: #ccc; }
+    </style>
+</head>
+<body>
+    <h1>Finite Simple Groups Explorer</h1>
+    <div id="mainGrid"></div>
+
+    <script>
+        // Finite Simple Groups Data
+        const groups = {
+            cyclic: {
+                name: "Cyclic ℤₙ",
+                desc: "Rotation group of order n",
+                example: "ℤ₅ acting on pentagon",
+                init: (n) => ({
+                    size: n,
+                    action: (dots) => rotateDots(dots, 360 / n), // Rotate by 360/n°
+                    description: `
+                        The <strong>cyclic group ℤₙ</strong> is the group of rotations by multiples of 360°/n.
+                        It is the simplest finite group and is isomorphic to the integers modulo n under addition.
+                        Cyclic groups are fundamental in group theory and appear in symmetry operations of regular polygons.
+                    `
+                })
+            },
+            alternating: {
+                name: "Alternating Aₙ",
+                desc: "Even permutations of n elements",
+                example: "A₄ acting on 4 elements",
+                init: (n) => ({
+                    size: n,
+                    action: (dots) => permuteDots(dots, getRandomEvenPermutation(n)), // Random even permutation
+                    description: `
+                        The <strong>alternating group Aₙ</strong> consists of all even permutations of n elements.
+                        It is a simple group for n ≥ 5 and plays a key role in the study of symmetry and the classification of finite simple groups.
+                        Aₙ is the kernel of the sign homomorphism from the symmetric group Sₙ to {±1}.
+                    `
+                })
+            },
+            mathieuM11: {
+                name: "Mathieu M₁₁",
+                desc: "Sporadic group, sharply 4-transitive on 11 objects",
+                example: "M₁₁ acting on 11 elements",
+                size: 11,
+                action: (dots) => permuteDots(dots, getRandomM11Permutation()), // Random M₁₁ permutation
+                description: `
+                    The <strong>Mathieu group M₁₁</strong> is one of the 26 sporadic groups, discovered by Émile Mathieu in 1861.
+                    It is sharply 4-transitive on 11 points, meaning it can map any 4 points to any other 4 points in a unique way.
+                    M₁₁ is the smallest sporadic group and has order 7920.
+                `
+            },
+            mathieuM12: {
+                name: "Mathieu M₁₂",
+                desc: "Sporadic group, strictly 5-transitive on 12 objects",
+                example: "M₁₂ acting on 12 elements",
+                size: 12,
+                action: (dots) => permuteDots(dots, getRandomM12Permutation()), // Random M₁₂ permutation
+                description: `
+                    The <strong>Mathieu group M₁₂</strong> is another sporadic group discovered by Mathieu.
+                    It is strictly 5-transitive on 12 points and preserves a Steiner system S(5,6,12).
+                    M₁₂ has order 95040 and is closely related to the extended ternary Golay code.
+                `
+            },
+            jankoJ1: {
+                name: "Janko J₁",
+                desc: "Sporadic group, order 175560",
+                example: "J₁ acting on 266 points",
+                size: 7, // Simplified representation
+                action: (dots) => permuteDots(dots, getRandomJ1Permutation()), // Random J₁ permutation
+                description: `
+                    The <strong>Janko group J₁</strong> is the first of the Janko sporadic groups, discovered by Zvonimir Janko in 1965.
+                    It has order 175560 and is the smallest sporadic group not belonging to the Mathieu family.
+                    J₁ acts on 266 points and has a rich subgroup structure.
+                `
+            },
+            mathieuM22: {
+                name: "Mathieu M₂₂",
+                desc: "Sporadic group, 3-transitive on 22 points",
+                example: "M₂₂ acting on 22 points",
+                size: 22,
+                action: (dots) => permuteDots(dots, getRandomM22Permutation()), // Random M₂₂ permutation
+                description: `
+                    The <strong>Mathieu group M₂₂</strong> is a sporadic group with a 3-transitive action on 22 points.
+                    It preserves a Steiner system S(3,6,22) with 77 hexads.
+                    M₂₂ has order 443520 and is the stabilizer of a point in M₂₃.
+                `
+            },
+            mathieuM23: {
+                name: "Mathieu M₂₃",
+                desc: "Sporadic group, 4-transitive on 23 points",
+                example: "M₂₃ acting on 23 points",
+                size: 23,
+                action: (dots) => permuteDots(dots, getRandomM23Permutation()), // Random M₂₃ permutation
+                description: `
+                    The <strong>Mathieu group M₂₃</strong> is a sporadic group with a 4-transitive action on 23 points.
+                    It preserves a Steiner system S(4,7,23) and has order 10200960.
+                    M₂₃ is one of the five Mathieu groups and plays a key role in the theory of sporadic groups.
+                `
+            },
+            jankoJ2: {
+                name: "Janko J₂",
+                desc: "Sporadic group, order 604800",
+                example: "J₂ acting on 100 points",
+                size: 10, // Simplified representation
+                action: (dots) => permuteDots(dots, getRandomJ2Permutation()), // Random J₂ permutation
+                description: `
+                    The <strong>Janko group J₂</strong> is the second Janko sporadic group, discovered in 1968.
+                    It has order 604800 and acts on 100 points.
+                    J₂ is related to the Hall-Janko graph and has applications in coding theory.
+                `
+            },
+            // Add more groups here...
+        };
+
+        // Helper Functions
+        function rotateDots(dots, angle) {
+            const center = { x: 150, y: 150 }; // Center of the canvas
+            const radius = 100; // Radius of the circle
+            dots.forEach((dot, i) => {
+                const currentAngle = Math.atan2(dot.offsetTop - center.y, dot.offsetLeft - center.x) * 180 / Math.PI;
+                const newAngle = currentAngle + angle;
+                const x = center.x + radius * Math.cos((newAngle * Math.PI) / 180);
+                const y = center.y + radius * Math.sin((newAngle * Math.PI) / 180);
+                dot.style.left = `${x}px`;
+                dot.style.top = `${y}px`;
+            });
+        }
+
+        function permuteDots(dots, permutation) {
+            const positions = dots.map(dot => ({ x: dot.offsetLeft, y: dot.offsetTop }));
+            dots.forEach((dot, i) => {
+                const newPos = positions[permutation[i]];
+                dot.style.left = `${newPos.x}px`;
+                dot.style.top = `${newPos.y}px`;
+            });
+        }
+
+        // Generate Random Even Permutation for Aₙ
+        function getRandomEvenPermutation(n) {
+            let permutation = Array.from({ length: n }, (_, i) => i); // Identity permutation
+            let isEven = false;
+
+            // Generate a random even permutation
+            while (!isEven) {
+                // Randomly shuffle the permutation
+                for (let i = n - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [permutation[i], permutation[j]] = [permutation[j], permutation[i]];
+                }
+
+                // Check if the permutation is even
+                isEven = isPermutationEven(permutation);
+            }
+
+            return permutation;
+        }
+
+        // Check if a permutation is even
+        function isPermutationEven(permutation) {
+            let inversions = 0;
+            for (let i = 0; i < permutation.length; i++) {
+                for (let j = i + 1; j < permutation.length; j++) {
+                    if (permutation[i] > permutation[j]) inversions++;
+                }
+            }
+            return inversions % 2 === 0;
+        }
+
+        // M₁₁ Permutations
+        const M11_GENERATORS = [
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0],  // (1,2,3,4,5,6,7,8,9,10,11)
+            [2, 6, 10, 7, 3, 9, 4, 5, 1, 8, 0]  // (3,7,11,8)(4,10,5,6)
+        ];
+
+        function getRandomM11Permutation() {
+            // Generate a random permutation by composing generators
+            let permutation = Array.from({ length: 11 }, (_, i) => i); // Identity permutation
+            for (let i = 0; i < 10; i++) { // Apply 10 random generator actions
+                const generator = M11_GENERATORS[Math.floor(Math.random() * M11_GENERATORS.length)];
+                permutation = composePermutations(permutation, generator);
+            }
+            return permutation;
+        }
+
+        // M₁₂ Permutations
+        const M12_GENERATORS = [
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0],  // (1,2,3,4,5,6,7,8,9,10,11,12)
+            [2, 10, 1, 4, 3, 9, 5, 7, 6, 8, 11, 0]   // (3,11,2)(4,10,5,6)
+        ];
+
+        function getRandomM12Permutation() {
+            // Generate a random permutation by composing generators
+            let permutation = Array.from({ length: 12 }, (_, i) => i); // Identity permutation
+            for (let i = 0; i < 10; i++) { // Apply 10 random generator actions
+                const generator = M12_GENERATORS[Math.floor(Math.random() * M12_GENERATORS.length)];
+                permutation = composePermutations(permutation, generator);
+            }
+            return permutation;
+        }
+
+        // J₁ Permutations (simplified)
+        const J1_GENERATORS = [
+            [1, 2, 3, 4, 5, 6, 0],  // (1,2,3,4,5,6,7)
+            [2, 3, 1, 5, 6, 4, 0]   // (1,2,3)(4,5,6)
+        ];
+
+        function getRandomJ1Permutation() {
+            // Generate a random permutation by composing generators
+            let permutation = Array.from({ length: 7 }, (_, i) => i); // Identity permutation
+            for (let i = 0; i < 10; i++) { // Apply 10 random generator actions
+                const generator = J1_GENERATORS[Math.floor(Math.random() * J1_GENERATORS.length)];
+                permutation = composePermutations(permutation, generator);
+            }
+            return permutation;
+        }
+
+        // M₂₂ Permutations
+        const M22_GENERATORS = [
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 0],  // (1,2,3,...,22)
+            [2, 3, 1, 5, 6, 4, 8, 9, 7, 11, 12, 10, 14, 15, 13, 17, 18, 16, 20, 21, 19, 0]   // (1,2,3)(4,5,6)...(19,20,21)
+        ];
+
+        function getRandomM22Permutation() {
+            // Generate a random permutation by composing generators
+            let permutation = Array.from({ length: 22 }, (_, i) => i); // Identity permutation
+            for (let i = 0; i < 10; i++) { // Apply 10 random generator actions
+                const generator = M22_GENERATORS[Math.floor(Math.random() * M22_GENERATORS.length)];
+                permutation = composePermutations(permutation, generator);
+            }
+            return permutation;
+        }
+
+        // M₂₃ Permutations
+        const M23_GENERATORS = [
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 0],  // (1,2,3,...,23)
+            [2, 3, 1, 5, 6, 4, 8, 9, 7, 11, 12, 10, 14, 15, 13, 17, 18, 16, 20, 21, 19, 22, 0]   // (1,2,3)(4,5,6)...(19,20,21)
+        ];
+
+        function getRandomM23Permutation() {
+            // Generate a random permutation by composing generators
+            let permutation = Array.from({ length: 23 }, (_, i) => i); // Identity permutation
+            for (let i = 0; i < 10; i++) { // Apply 10 random generator actions
+                const generator = M23_GENERATORS[Math.floor(Math.random() * M23_GENERATORS.length)];
+                permutation = composePermutations(permutation, generator);
+            }
+            return permutation;
+        }
+
+        // J₂ Permutations (simplified)
+        const J2_GENERATORS = [
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 0],  // (1,2,3,4,5,6,7,8,9,10)
+            [2, 3, 1, 5, 6, 4, 8, 9, 7, 0]   // (1,2,3)(4,5,6)(7,8,9)
+        ];
+
+        function getRandomJ2Permutation() {
+            // Generate a random permutation by composing generators
+            let permutation = Array.from({ length: 10 }, (_, i) => i); // Identity permutation
+            for (let i = 0; i < 10; i++) { // Apply 10 random generator actions
+                const generator = J2_GENERATORS[Math.floor(Math.random() * J2_GENERATORS.length)];
+                permutation = composePermutations(permutation, generator);
+            }
+            return permutation;
+        }
+
+        // Compose two permutations
+        function composePermutations(p1, p2) {
+            return p1.map((_, i) => p1[p2[i]]);
+        }
+
+        // Group Visualizer
+        class GroupVisualizer {
+            constructor(group, container) {
+                this.group = group;
+                this.container = container;
+                this.dots = [];
+                this.init();
+            }
+
+            init() {
+                // Create dots
+                const center = { x: 150, y: 150 }; // Center of the canvas
+                const radius = 100; // Radius of the circle
+                for (let i = 0; i < this.group.size; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'dot';
+                    const theta = (i * (360 / this.group.size));
+                    const x = center.x + radius * Math.cos((theta * Math.PI) / 180);
+                    const y = center.y + radius * Math.sin((theta * Math.PI) / 180);
+                    dot.style.left = `${x}px`;
+                    dot.style.top = `${y}px`;
+                    this.container.appendChild(dot);
+                    this.dots.push(dot);
+                }
+            }
+
+            performAction() {
+                this.group.action(this.dots);
+            }
+        }
+
+        // Create Group Cards
+        const grid = document.getElementById('mainGrid');
+
+        // Cyclic Group ℤₙ
+        const cyclicCard = document.createElement('div');
+        cyclicCard.className = 'group-card';
+        cyclicCard.innerHTML = `
+            <h3 class="math">Cyclic ℤₙ</h3>
+            <div class="canvas-container"></div>
+            <div class="math">Rotation group of order n</div>
+            <p>Example: ℤ₅ acting on pentagon</p>
+            <input type="number" id="cyclicN" placeholder="Enter n" min="2" value="5">
+            <button class="act-btn">Act</button>
+            <div class="description">${groups.cyclic.init(5).description}</div>
+        `;
+        const cyclicContainer = cyclicCard.querySelector('.canvas-container');
+        const cyclicInput = cyclicCard.querySelector('input');
+        let cyclicViz;
+        cyclicCard.querySelector('button').addEventListener('click', () => {
+            const n = parseInt(cyclicInput.value);
+            if (n >= 2) {
+                cyclicContainer.innerHTML = ''; // Clear previous dots
+                cyclicViz = new GroupVisualizer(groups.cyclic.init(n), cyclicContainer);
+                cyclicViz.performAction();
+            }
+        });
+        grid.appendChild(cyclicCard);
+
+        // Alternating Group Aₙ
+        const alternatingCard = document.createElement('div');
+        alternatingCard.className = 'group-card';
+        alternatingCard.innerHTML = `
+            <h3 class="math">Alternating Aₙ</h3>
+            <div class="canvas-container"></div>
+            <div class="math">Even permutations of n elements</div>
+            <p>Example: A₄ acting on 4 elements</p>
+            <input type="number" id="alternatingN" placeholder="Enter n" min="3" value="4">
+            <button class="act-btn">Act</button>
+            <div class="description">${groups.alternating.init(4).description}</div>
+        `;
+        const alternatingContainer = alternatingCard.querySelector('.canvas-container');
+        const alternatingInput = alternatingCard.querySelector('input');
+        let alternatingViz;
+        alternatingCard.querySelector('button').addEventListener('click', () => {
+            const n = parseInt(alternatingInput.value);
+            if (n >= 3) {
+                alternatingContainer.innerHTML = ''; // Clear previous dots
+                alternatingViz = new GroupVisualizer(groups.alternating.init(n), alternatingContainer);
+                alternatingViz.performAction();
+            }
+        });
+        grid.appendChild(alternatingCard);
+
+        // Mathieu Group M₁₁
+        const mathieuM11Card = document.createElement('div');
+        mathieuM11Card.className = 'group-card';
+        mathieuM11Card.innerHTML = `
+            <h3 class="math">Mathieu M₁₁</h3>
+            <div class="canvas-container"></div>
+            <div class="math">Sporadic group, sharply 4-transitive on 11 objects</div>
+            <p>Example: M₁₁ acting on 11 elements</p>
+            <button class="act-btn">Act</button>
+            <div class="description">${groups.mathieuM11.description}</div>
+        `;
+        const mathieuM11Container = mathieuM11Card.querySelector('.canvas-container');
+        const mathieuM11Viz = new GroupVisualizer(groups.mathieuM11, mathieuM11Container);
+        mathieuM11Card.querySelector('button').addEventListener('click', () => mathieuM11Viz.performAction());
+        grid.appendChild(mathieuM11Card);
+
+        // Mathieu Group M₁₂
+        const mathieuM12Card = document.createElement('div');
+        mathieuM12Card.className = 'group-card';
+        mathieuM12Card.innerHTML = `
+            <h3 class="math">Mathieu M₁₂</h3>
+            <div class="canvas-container"></div>
+            <div class="math">Sporadic group, strictly 5-transitive on 12 objects</div>
+            <p>Example: M₁₂ acting on 12 elements</p>
+            <button class="act-btn">Act</button>
+            <div class="description">${groups.mathieuM12.description}</div>
+        `;
+        const mathieuM12Container = mathieuM12Card.querySelector('.canvas-container');
+        const mathieuM12Viz = new GroupVisualizer(groups.mathieuM12, mathieuM12Container);
+        mathieuM12Card.querySelector('button').addEventListener('click', () => mathieuM12Viz.performAction());
+        grid.appendChild(mathieuM12Card);
+
+        // Janko Group J₁
+        const jankoJ1Card = document.createElement('div');
+        jankoJ1Card.className = 'group-card';
+        jankoJ1Card.innerHTML = `
+            <h3 class="math">Janko J₁</h3>
+            <div class="canvas-container"></div>
+            <div class="math">Sporadic group, order 175560</div>
+            <p>Example: J₁ acting on 7 points</p>
+            <button class="act-btn">Act</button>
+            <div class="description">${groups.jankoJ1.description}</div>
+        `;
+        const jankoJ1Container = jankoJ1Card.querySelector('.canvas-container');
+        const jankoJ1Viz = new GroupVisualizer(groups.jankoJ1, jankoJ1Container);
+        jankoJ1Card.querySelector('button').addEventListener('click', () => jankoJ1Viz.performAction());
+        grid.appendChild(jankoJ1Card);
+
+        // Mathieu Group M₂₂
+        const mathieuM22Card = document.createElement('div');
+        mathieuM22Card.className = 'group-card';
+        mathieuM22Card.innerHTML = `
+            <h3 class="math">Mathieu M₂₂</h3>
+            <div class="canvas-container"></div>
+            <div class="math">Sporadic group, 3-transitive on 22 points</div>
+            <p>Example: M₂₂ acting on 22 points</p>
+            <button class="act-btn">Act</button>
+            <div class="description">${groups.mathieuM22.description}</div>
+        `;
+        const mathieuM22Container = mathieuM22Card.querySelector('.canvas-container');
+        const mathieuM22Viz = new GroupVisualizer(groups.mathieuM22, mathieuM22Container);
+        mathieuM22Card.querySelector('button').addEventListener('click', () => mathieuM22Viz.performAction());
+        grid.appendChild(mathieuM22Card);
+
+        // Mathieu Group M₂₃
+        const mathieuM23Card = document.createElement('div');
+        mathieuM23Card.className = 'group-card';
+        mathieuM23Card.innerHTML = `
+            <h3 class="math">Mathieu M₂₃</h3>
+            <div class="canvas-container"></div>
+            <div class="math">Sporadic group, 4-transitive on 23 points</div>
+            <p>Example: M₂₃ acting on 23 points</p>
+            <button class="act-btn">Act</button>
+            <div class="description">${groups.mathieuM23.description}</div>
+        `;
+        const mathieuM23Container = mathieuM23Card.querySelector('.canvas-container');
+        const mathieuM23Viz = new GroupVisualizer(groups.mathieuM23, mathieuM23Container);
+        mathieuM23Card.querySelector('button').addEventListener('click', () => mathieuM23Viz.performAction());
+        grid.appendChild(mathieuM23Card);
+
+        // Janko Group J₂
+        const jankoJ2Card = document.createElement('div');
+        jankoJ2Card.className = 'group-card';
+        jankoJ2Card.innerHTML = `
+            <h3 class="math">Janko J₂</h3>
+            <div class="canvas-container"></div>
+            <div class="math">Sporadic group, order 604800</div>
+            <p>Example: J₂ acting on 10 points</p>
+            <button class="act-btn">Act</button>
+            <div class="description">${groups.jankoJ2.description}</div>
+        `;
+        const jankoJ2Container = jankoJ2Card.querySelector('.canvas-container');
+        const jankoJ2Viz = new GroupVisualizer(groups.jankoJ2, jankoJ2Container);
+        jankoJ2Card.querySelector('button').addEventListener('click', () => jankoJ2Viz.performAction());
+        grid.appendChild(jankoJ2Card);
+    </script>
+</body>
+</html>

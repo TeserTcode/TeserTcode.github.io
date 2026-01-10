@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<label>N: <input type="number" id="N" value="128"></label>
+<label>Iterations n: <input type="number" id="iterations" value="0"></label>
+<input type="file" id="imgLoader">
+<button onclick="makeGIF()">Make GIF</button>
+<button onclick="makeLyapunov()">Lyapunov</button>
+<br>
+<canvas id="canvas"></canvas>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+<script>
+let canvas=document.getElementById("canvas");
+let ctx=canvas.getContext("2d");
+let original=null;
+
+function createGradient(N){
+    let img=ctx.createImageData(N,N);
+    for(let y=0;y<N;y++){
+        for(let x=0;x<N;x++){
+            let idx=(y*N+x)*4;
+            img.data[idx]=x*255/(N-1);    // Red
+            img.data[idx+1]=y*255/(N-1);  // Green
+            img.data[idx+2]=0;            // Blue
+            img.data[idx+3]=255;
+        }
+    }
+    ctx.putImageData(img,0,0);
+    original=ctx.getImageData(0,0,N,N);
+}
+
+function loadImage(e){
+    let file=e.target.files[0];
+    if(!file) return;
+    let reader=new FileReader();
+    reader.onload=function(evt){
+        let img=new Image();
+        img.onload=function(){
+            let N=parseInt(document.getElementById("N").value);
+            canvas.width=canvas.height=N;
+            ctx.drawImage(img,0,0,N,N);
+            original=ctx.getImageData(0,0,N,N);
+        }
+        img.src=evt.target.result;
+    }
+    reader.readAsDataURL(file);
+}
+
+function applyArnold(n){
+    if(!original) return;
+    let N=parseInt(document.getElementById("N").value);
+    let data=original.data.slice();
+    
+    for(let k=0;k<n;k++){
+        let tmp=new Uint8ClampedArray(data.length);
+        for(let y=0;y<N;y++){
+            for(let x=0;x<N;x++){
+                let newX=(x+y)%N;
+                let newY=(x+2*y)%N;
+                let src=(y*N+x)*4;
+                let dst=(newY*N+newX)*4;
+                tmp[dst]=data[src];
+                tmp[dst+1]=data[src+1];
+                tmp[dst+2]=data[src+2];
+                tmp[dst+3]=data[src+3];
+            }
+        }
+        data=tmp;
+    }
+    
+    ctx.putImageData(new ImageData(data,N,N),0,0);
+}
+
+// Auto-generate when iterations change
+document.getElementById("iterations").addEventListener("input",()=>{
+    let n=parseInt(document.getElementById("iterations").value);
+    applyArnold(n);
+});
+
+document.getElementById("imgLoader").addEventListener("change",loadImage);
+
+// Initial gradient
+canvas.width=canvas.height=parseInt(document.getElementById("N").value);
+createGradient(parseInt(document.getElementById("N").value));
+
+// GIF maker
+function makeGIF(){
+    if(!original) return;
+    let N=parseInt(document.getElementById("N").value);
+    let totalFrames=3*N;
+    let gif=new GIF({workers:2,quality:10,width:N,height:N});
+    for(let i=0;i<totalFrames;i++){
+        applyArnold(i);
+        gif.addFrame(ctx,{copy:true,delay:50});
+    }
+    gif.on('finished',function(blob){ 
+        let url=URL.createObjectURL(blob);
+        let a=document.createElement('a');
+        a.href=url; a.download='arnold.gif'; a.click();
+    });
+    gif.render();
+    original=ctx.getImageData(0,0,N,N); // restore
+}
+
+// Lyapunov exponent image
+function makeLyapunov(){
+    let N=parseInt(document.getElementById("N").value);
+    let img=ctx.createImageData(N,N);
+    for(let y=0;y<N;y++){
+        for(let x=0;x<N;x++){
+            let a=x/N*0.5+0.5; // param 1
+            let b=y/N*0.5+0.5; // param 2
+            let r=1e-10;
+            let n=100;
+            let val=0;
+            for(let i=0;i<n;i++){
+                r=r*(a+b*(1-r));
+                val+=Math.log(Math.abs(a+b*(1-2*r)+1e-10));
+            }
+            val/=n;
+            let c=Math.min(255,Math.max(0,128+val*50));
+            let idx=(y*N+x)*4;
+            img.data[idx]=c;
+            img.data[idx+1]=c;
+            img.data[idx+2]=c;
+            img.data[idx+3]=255;
+        }
+    }
+    ctx.putImageData(img,0,0);
+}
+</script>
+</body>
+</html>

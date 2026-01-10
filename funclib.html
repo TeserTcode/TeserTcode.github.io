@@ -1272,19 +1272,31 @@ Functi
 </div>
 
 <div>
-    <h3>Einstein Series (n, x)</h3>
-    <p>Function for 'Einstein Series': <code>einsteinseries(a, b) = \sum_{i=-5}^{5} \sum_{j=-5}^{5} \frac{1}{(i + jb)^a}, \quad (i, j) \neq (0, 0)</code>.</p>
-    <button onclick="setFunction('einsteinseries(4, x)')">Set to Einstein Series (4,x)</button>
-	<button onclick="setFunction('einsteinseries(8, x)')">Set to Einstein Series (8,x)</button>
-	<button onclick="setFunction('einsteinseries(16, x)')">Set to Einstein Series (16,x)</button>
+    <h3>eisenstein Series (n, x)</h3>
+    <p>Function for 'eisenstein Series': <code>eisensteinseries(a, b) = \sum_{i=-5}^{5} \sum_{j=-5}^{5} \frac{1}{(i + jb)^a}, \quad (i, j) \neq (0, 0)</code>.</p>
+    <button onclick="setFunction('eisensteinseries(4, x)')">Set to eisenstein Series (4,x)</button>
+	<button onclick="setFunction('eisensteinseries(8, x)')">Set to eisenstein Series (8,x)</button>
+	<button onclick="setFunction('eisensteinseries(16, x)')">Set to eisenstein Series (16,x)</button>
 </div>
 
 <div>
-    <h3>Fourier Einstein Function (n, x)</h3>
-    <p>Function for 'Fourier Einstein': <code>fouriereinstein(a, b) = 2 \cdot \sum_{i=-5}^{5} \sum_{j=-5}^{5} \frac{1}{(i + jb)^a} \cdot ZZZ(a)</code>.</p>
-    <button onclick="setFunction('fouriereinstein(4, x)')">Set to Fourier Einstein (4,x)</button>
-	<button onclick="setFunction('fouriereinstein(8, x)')">Set to Fourier Einstein (8,x)</button>
-	<button onclick="setFunction('fouriereinstein(16, x)')">Set to Fourier Einstein (16,x)</button>
+    <h3>Fourier eisenstein Function (n, x)</h3>
+    <p>Function for 'Fourier eisenstein': <code>fouriereisenstein(a, b) = 2 \cdot \sum_{i=-5}^{5} \sum_{j=-5}^{5} \frac{1}{(i + jb)^a} \cdot ZZZ(a)</code>.</p>
+    <button onclick="setFunction('fouriereisenstein(4, x)')">Set to Fourier eisenstein (4,x)</button>
+	<button onclick="setFunction('fouriereisenstein(8, x)')">Set to Fourier eisenstein (8,x)</button>
+	<button onclick="setFunction('fouriereisenstein(16, x)')">Set to Fourier eisenstein (16,x)</button>
+</div>
+
+<div>
+    <h3>Ramanujan L (q)</h3>
+    <p>Function for 'ramanujanl': <code>fouriereisenstein(a, b) = G_2(q)</code>.</p>
+    <button onclick="setFunction('ramanujanl(x)')">Set to Fourier ramanujanl(x)</button>
+	 <h3>Ramanujan M (q)</h3>
+    <p>Function for 'ramanujann': <code>fouriereisenstein(a, b) = G_4(q)</code>.</p>
+    <button onclick="setFunction('ramanujann(x)')">Set to Fourier ramanujanm(x)</button>
+	 <h3>Ramanujan N (q)</h3>
+    <p>Function for 'ramanujanm': <code>fouriereisenstein(a, b) = G_6(q)</code>.</p>
+    <button onclick="setFunction('ramanujanm(x)')">Set to Fourier ramanujann(x)</button>
 </div>
 
 <div>
@@ -1417,7 +1429,7 @@ Functi
  <h2 onclick="toggleCategory('ppolygonal')">Polygonal Functions</h2> 
  <div id="ppolygonal" style="display:none; padding-left: 20px;">
  <div>
- <div>
+ 
  <div>
     <h3>Polygonal Function</h3>
     <p>Function: <code>polygonal(a, b) = ((a - 2) * b^2 - (a - 4) * b) / 2</code></p>
@@ -1481,9 +1493,17 @@ Functi
     <p>Function: <code>reversesuperstar(b)</code></p>
     <button onclick="setFunction('reversesuperstar(x)')">Set to Reverse Superstar</button>
 </div>
-    <h3>Trigonal (b)</h3>
+    <h3>Triangular (b)</h3>
     <p>Function for 'Trigonal': <code>trigonal(b)</code> is a geometric function involving complex numbers.</p>
-    <button onclick="setFunction('trigonal(x)')">Set to Trigonal</button>
+    <button onclick="setFunction('triangular(x)')">Set to triangular</button>
+</div>
+
+
+    <h3>Trapezoidal (b)</h3>
+    <p>Function for 'Trapezoidal': <code>trapezoidal(i,j)</code> Tp_i,j=T_i - T_j-1</p>
+    <button onclick="setFunction('trapezoidal(x,2)')">Set to trapezoidal(x,2)</button>
+	<button onclick="setFunction('trapezoidal(2,x)')">Set to trapezoidal(2,x)</button>
+	<button onclick="setFunction('trapezoidal(x,i)')">Set to trapezoidal(x,i)</button>
 </div>
 
 <div>
@@ -1542,14 +1562,14 @@ Functi
     <h3>Gnomon (b)</h3>
     <p>Function for 'Gnomon': <code>gnomon(b) = 2b + 1</code>.</p>
     <button onclick="setFunction('gnomon(x)')">Set to Gnomon</button>
-</div>
+
 
 <div>
     <h3>Pronic</h3>
     <p>Function for 'Pronic': <code>pronic(b) = b(b + 1)</code>.</p>
     <button onclick="setFunction('pronic(x)')">Set to Pronic</button>
 </div>
- </div>
+
  <h2 onclick="toggleCategory('polyhedral')">Polyhedral Functions</h2> 
  <div id="polyhedral" style="display:none; padding-left: 20px;">
  <div>
@@ -2290,10 +2310,10 @@ Functi
     <button onclick="setFunction('thomea(x)')">Set to thomea(x)</button>
 	<button onclick="setFunction('thomea(x,0.1)')">Set to thomea(x,0.1)</button>
 	<button onclick="setFunction('thomea(x,0.05)')">Set to thomea(x,0.05)</button>
-	 <h3>getdenomeinstein(x)</h3> 
-    <button onclick="setFunction('getdenomeinstein(x)')">Set to getdenomeinstein(x)</button>
-<button onclick="setFunction('getdenomeinstein(x,0.1)')">Set to getdenomeinstein(x,0.1)</button>	
-<button onclick="setFunction('getdenomeinstein(x,0.05)')">Set to getdenomeinstein(x,0.05)</button>
+	 <h3>getdenomeisenstein(x)</h3> 
+    <button onclick="setFunction('getdenomeisenstein(x)')">Set to getdenomeisenstein(x)</button>
+<button onclick="setFunction('getdenomeisenstein(x,0.1)')">Set to getdenomeisenstein(x,0.1)</button>	
+<button onclick="setFunction('getdenomeisenstein(x,0.05)')">Set to getdenomeisenstein(x,0.05)</button>
 	<h3>getdenom(x)</h3> 
     <button onclick="setFunction('getdenom(x)')">Set to getdenom(x)</button>
 	 <button onclick="setFunction('getdenom(x,0.1)')">Set to getdenom(x,0.1)</button>
@@ -2416,7 +2436,7 @@ Functi
 
     <h3>liouville(x)</h3>
     <button onclick="setFunction('liouville(floor(x))')">Set to liouville(x)</button>
-
+newto
     <h3>distinctprimefactors(x)</h3>
     <button onclick="setFunction('distinctprimefactors(floor(x))')">Set to distinctprimefactors(x)</button>
 
@@ -2502,8 +2522,8 @@ Functi
     <p>Function for 'Fermi-Dirac': <code>fermidirac(b) = 1 / (1 + e^b)</code>.</p>
     <button onclick="setFunction('fermidirac(x)')">Set to fermidirac(x)</button>
 
-    <h3>Bose-Einstein</h3>
-    <p>Function for 'Bose-Einstein': <code>boseeinstein(b, a) = b^a / (e^(b - globalc) - 1)</code>.</p>
+    <h3>Bose-einstein</h3>
+    <p>Function for 'Bose-einstein': <code>boseeinstein(b, a) = b^a / (e^(b - globalc) - 1)</code>.</p>
         <button onclick="setFunction('boseeinstein(x, 1)')">Set to boseeinstein(x, 1)</button>
 	<button onclick="setFunction('boseeinstein(x, 2)')">Set to boseeinstein(x, 2)</button>
 	<button onclick="setFunction('boseeinstein(x, i)')">Set to boseeinstein(x, i)</button>
@@ -2511,20 +2531,20 @@ Functi
 	<button onclick="setFunction('boseeinstein(2, 1)')">Set to boseeinstein(2, x)</button>
 	<button onclick="setFunction('boseeinstein(i, 1)')">Set to boseeinstein(i, x)</button>
 
-    <h3>Einstein 1</h3>
-    <p>Function for 'Einstein 1': <code>einstein1(b) = b^2 e^b / (e^b - 1)^2</code>.</p>
+    <h3>einstein 1</h3>
+    <p>Function for 'einstein 1': <code>einstein1(b) = b^2 e^b / (e^b - 1)^2</code>.</p>
     <button onclick="setFunction('einstein1(x)')">Set to einstein1(x)</button>
 
-    <h3>Einstein 2</h3>
-    <p>Function for 'Einstein 2': <code>einstein2(b) = b / (e^b - 1)</code>.</p>
+    <h3>einstein 2</h3>
+    <p>Function for 'einstein 2': <code>einstein2(b) = b / (e^b - 1)</code>.</p>
     <button onclick="setFunction('einstein2(x)')">Set to einstein2(x)</button>
 
-    <h3>Einstein 3</h3>
-    <p>Function for 'Einstein 3': <code>einstein3(b) = log(1 - e^-b)</code>.</p>
+    <h3>einstein 3</h3>
+    <p>Function for 'einstein 3': <code>einstein3(b) = log(1 - e^-b)</code>.</p>
     <button onclick="setFunction('einstein3(x)')">Set to einstein3(x)</button>
 
-    <h3>Einstein 4</h3>
-    <p>Function for 'Einstein 4': <code>einstein4(b) = (b / (e^b - 1)) - log(1 - e^-b)</code>.</p>
+    <h3>einstein 4</h3>
+    <p>Function for 'einstein 4': <code>einstein4(b) = (b / (e^b - 1)) - log(1 - e^-b)</code>.</p>
     <button onclick="setFunction('einstein4(x)')">Set to einstein4(x)</button>
 
     <h3>Probit</h3>

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cayley Graph Visualizer</title>
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        #container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        #graph-container {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ccc;
+            background: white;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            padding: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+        }
+        .permutation-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .permutation-block {
+            display: flex;
+            gap: 5px;
+            padding: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            align-items: center;
+        }
+        .permutation-item {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #a0d8f0;
+            border: 2px solid #004080;
+            border-radius: 5px;
+            cursor: move;
+            user-select: none;
+        }
+        .permutation-item.dragging {
+            opacity: 0.5;
+        }
+        button {
+            padding: 8px 15px;
+            background: #004080;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0060a0;
+        }
+        .generator-controls {
+            display: flex;
+            gap: 10px;
+        }
+        input[type="number"] {
+            padding: 5px;
+            width: 60px;
+        }
+        .reroll-btn {
+            background: #9C27B0;
+            margin-left: auto;
+        }
+        .reroll-btn:hover {
+            background: #7B1FA2;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>Cayley Graph Visualizer</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="n">Number of elements (n):</label>
+                <input type="number" id="n" min="2" max="10" value="5">
+            </div>
+            <div class="control-group">
+                <label for="k">Number of generators (k):</label>
+                <input type="number" id="k" min="1" max="5" value="2">
+            </div>
+            <div class="control-group">
+                <button onclick="generateGraph()">Generate Graph</button>
+                <button onclick="regenerateAllPermutations()">Randomize All</button>
+            </div>
+        </div>
+        
+        <div class="permutation-container">
+            <h3>Generator Permutations</h3>
+            <div id="permutationBlocks"></div>
+        </div>
+        
+        <div id="graph-container"></div>
+    </div>
+
+    <script>
+        let network;
+        let nodes = [];
+        let edges = [];
+        let permutations = [];
+        let n = 5;
+        let k = 2;
+        let draggedItem = null;
+        
+        window.onload = function() {
+            updatePermutationInputs();
+            generateGraph();
+            setupDragAndDrop();
+        };
+        
+        function setupDragAndDrop() {
+            document.addEventListener('mousedown', function(e) {
+                if (e.target.classList.contains('permutation-item')) {
+                    draggedItem = e.target;
+                    draggedItem.classList.add('dragging');
+                    document.addEventListener('mousemove', dragItem);
+                    document.addEventListener('mouseup', dropItem);
+                }
+            });
+        }
+        
+        function dragItem(e) {
+            if (!draggedItem) return;
+            
+            const items = document.querySelectorAll('.permutation-item');
+            items.forEach(item => {
+                const rect = item.getBoundingClientRect();
+                const isOver = e.clientX >= rect.left && e.clientX <= rect.right &&
+                               e.clientY >= rect.top && e.clientY <= rect.bottom;
+                item.style.borderColor = isOver ? '#ff0000' : '#004080';
+            });
+        }
+        
+        function dropItem(e) {
+            if (!draggedItem) return;
+            
+            const items = document.querySelectorAll('.permutation-item');
+            let dropTarget = null;
+            
+            items.forEach(item => {
+                const rect = item.getBoundingClientRect();
+                const isOver = e.clientX >= rect.left && e.clientX <= rect.right &&
+                               e.clientY >= rect.top && e.clientY <= rect.bottom;
+                
+                item.style.borderColor = '#004080';
+                
+                if (isOver && item !== draggedItem && 
+                    item.parentElement === draggedItem.parentElement) {
+                    dropTarget = item;
+                }
+            });
+            
+            if (dropTarget) {
+                const temp = draggedItem.textContent;
+                draggedItem.textContent = dropTarget.textContent;
+                dropTarget.textContent = temp;
+                
+                const block = draggedItem.parentElement;
+                const genIndex = parseInt(block.dataset.genIndex);
+                const pos1 = parseInt(draggedItem.dataset.posIndex);
+                const pos2 = parseInt(dropTarget.dataset.posIndex);
+                
+                [permutations[genIndex][pos1], permutations[genIndex][pos2]] = 
+                [permutations[genIndex][pos2], permutations[genIndex][pos1]];
+                
+                generateGraph();
+            }
+            
+            draggedItem.classList.remove('dragging');
+            draggedItem = null;
+            document.removeEventListener('mousemove', dragItem);
+            document.removeEventListener('mouseup', dropItem);
+        }
+        
+        function updatePermutationInputs() {
+            n = parseInt(document.getElementById('n').value);
+            k = parseInt(document.getElementById('k').value);
+            
+            if (k < 1) {
+                k = 1;
+                document.getElementById('k').value = 1;
+            }
+            
+            const container = document.getElementById('permutationBlocks');
+            container.innerHTML = '';
+            
+            // Adjust number of generators
+            while (permutations.length < k) {
+                // Add identity permutation for new generators
+                permutations.push(Array.from({length: n}, (_, i) => i + 1));
+            }
+            while (permutations.length > k) {
+                permutations.pop();
+            }
+            
+            // Update existing permutations to match new size
+            permutations = permutations.map(perm => {
+                if (perm.length < n) {
+                    return [...perm, ...Array.from({length: n - perm.length}, (_, i) => i + perm.length + 1)];
+                } else if (perm.length > n) {
+                    return perm.slice(0, n);
+                }
+                return perm;
+            });
+            
+            // Create draggable blocks for each permutation
+            permutations.forEach((perm, idx) => {
+                const block = document.createElement('div');
+                block.className = 'permutation-block';
+                block.dataset.genIndex = idx;
+                
+                const label = document.createElement('span');
+                label.textContent = `Generator ${idx+1}: `;
+                block.appendChild(label);
+                
+                for (let i = 0; i < n; i++) {
+                    const item = document.createElement('div');
+                    item.className = 'permutation-item';
+                    item.textContent = perm[i];
+                    item.dataset.posIndex = i;
+                    block.appendChild(item);
+                }
+                
+                // Add reroll button for this generator
+                const rerollBtn = document.createElement('button');
+                rerollBtn.className = 'reroll-btn';
+                rerollBtn.textContent = 'Reroll';
+                rerollBtn.onclick = () => rerollGenerator(idx);
+                block.appendChild(rerollBtn);
+                
+                container.appendChild(block);
+            });
+        }
+        
+        function rerollGenerator(index) {
+            permutations[index] = generateRandomPermutation(n);
+            updatePermutationInputs();
+            generateGraph();
+        }
+        
+        function generateGraph() {
+            n = parseInt(document.getElementById('n').value);
+            k = parseInt(document.getElementById('k').value);
+            
+            // Validate all permutations
+            for (let i = 0; i < permutations.length; i++) {
+                const perm = permutations[i];
+                const unique = new Set(perm);
+                
+                if (perm.length !== n || unique.size !== n || Math.min(...perm) !== 1 || Math.max(...perm) !== n) {
+                    alert(`Generator ${i+1} is not a valid permutation of {1,...,${n}}`);
+                    return;
+                }
+            }
+            
+            calculateGroup();
+            drawGraph();
+        }
+        
+        function regenerateAllPermutations() {
+            n = parseInt(document.getElementById('n').value);
+            k = parseInt(document.getElementById('k').value);
+            
+            // Keep first generator as rotation if it exists
+            if (permutations.length > 0) {
+                permutations[0] = Array.from({length: n}, (_, i) => (i % n) + 1);
+            }
+            
+            // Keep second generator as transposition if it exists
+            if (permutations.length > 1 && n >= 2) {
+                const transposition = Array.from({length: n}, (_, i) => i + 1);
+                [transposition[0], transposition[1]] = [transposition[1], transposition[0]];
+                permutations[1] = transposition;
+            }
+            
+            // Randomize remaining generators
+            for (let i = 2; i < permutations.length; i++) {
+                permutations[i] = generateRandomPermutation(n);
+            }
+            
+            updatePermutationInputs();
+            generateGraph();
+        }
+        
+        function generateRandomPermutation(length) {
+            let arr = Array.from({length}, (_, i) => i + 1);
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+        
+        function composePermutations(a, b) {
+            return a.map((val, idx) => b[val - 1]);
+        }
+        
+        function permutationToString(perm) {
+            return perm.join(',');
+        }
+        
+        function calculateGroup() {
+            const identity = Array.from({length: n}, (_, i) => i + 1);
+            const visited = new Set();
+            const queue = [identity];
+            visited.add(permutationToString(identity));
+            
+            // Generate all group elements by composing generators
+            while (queue.length > 0) {
+                const current = queue.shift();
+                
+                for (let i = 0; i < permutations.length; i++) {
+                    const newPerm = composePermutations(current, permutations[i]);
+                    const key = permutationToString(newPerm);
+                    
+                    if (!visited.has(key)) {
+                        visited.add(key);
+                        queue.push(newPerm);
+                    }
+                }
+            }
+            
+            // Create nodes and edges for the graph
+            nodes = [];
+            edges = [];
+            const nodeMap = new Map();
+            
+            // Create nodes
+            let nodeId = 1;
+            visited.forEach(permStr => {
+                const perm = permStr.split(',').map(Number);
+                const isIdentity = perm.every((val, idx) => val === idx + 1);
+                
+                nodes.push({
+                    id: nodeId,
+                    label: perm.slice(0, 3).join(',') + (perm.length > 3 ? '...' : ''),
+                    title: perm.join(','),
+                    color: isIdentity ? {background: '#ffcc00', border: '#cc9900'} : undefined,
+                    font: { size: 14 }
+                });
+                
+                nodeMap.set(permStr, nodeId);
+                nodeId++;
+            });
+            
+            // Create edges
+            visited.forEach(permStr => {
+                const perm = permStr.split(',').map(Number);
+                const fromId = nodeMap.get(permStr);
+                
+                for (let i = 0; i < permutations.length; i++) {
+                    const neighbor = composePermutations(perm, permutations[i]);
+                    const neighborKey = permutationToString(neighbor);
+                    const toId = nodeMap.get(neighborKey);
+                    
+                    edges.push({
+                        from: fromId,
+                        to: toId,
+                        color: {color: getGeneratorColor(i)},
+                        arrows: 'to',
+                        smooth: {type: 'curvedCW', roundness: 0.2},
+                        width: 1.5
+                    });
+                }
+            });
+        }
+        
+        function getGeneratorColor(index) {
+            const colors = ['#FF5252', '#4CAF50', '#2196F3', '#FFC107', '#9C27B0'];
+            return colors[index % colors.length];
+        }
+        
+        function drawGraph() {
+            const container = document.getElementById('graph-container');
+            const data = {
+                nodes: nodes,
+                edges: edges
+            };
+            
+            const options = {
+                nodes: {
+                    shape: "box",
+                    color: {
+                        background: "#a0d8f0",
+                        border: "#004080",
+                        highlight: { background: "#0080ff", border: "#004080" }
+                    },
+                    font: { size: 14 }
+                },
+                edges: {
+                    smooth: { enabled: true, type: "curvedCW" },
+                    font: { align: "top", size: 10 }
+                },
+                physics: {
+                    enabled: true,
+                    stabilization: { 
+                        iterations: 150,
+                        fit: true
+                    },
+                    solver: 'forceAtlas2Based',
+                    forceAtlas2Based: {
+                        gravitationalConstant: -50,
+                        centralGravity: 0.01,
+                        springLength: 100,
+                        springConstant: 0.08
+                    }
+                },
+                interaction: {
+                    hover: true,
+                    tooltipDelay: 100,
+                    multiselect: true,
+                    zoomView: true
+                },
+                layout: {
+                    improvedLayout: true
+                }
+            };
+            
+            if (network) {
+                network.destroy();
+            }
+            
+            network = new vis.Network(container, data, options);
+            
+            network.once("stabilizationIterationsDone", function() {
+                network.fit({animation: {duration: 1000, easingFunction: 'easeInOutQuad'}});
+            });
+        }
+    </script>
+</body>
+</html>

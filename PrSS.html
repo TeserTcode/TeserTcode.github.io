@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrSS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        .table-container {
+            margin: 20px auto;
+            position: relative;
+            width: 80%;
+            max-width: 500px;
+        }
+        .table-row {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+            position: relative;
+            height: 40px;
+        }
+        .cell {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: background-color 1s;
+            box-sizing: border-box;
+        }
+        .arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            transition: left 1s, transform 1s, opacity 0.5s;
+            opacity: 1;
+        }
+        .arrow-up {
+            border-width: 0 10px 20px 10px;
+            border-color: transparent transparent black transparent;
+            top: -20px;
+            transform: rotate(180deg);
+        }
+        .arrow-down {
+            border-width: 20px 10px 0 10px;
+            border-color: black transparent transparent transparent;
+            bottom: -20px;
+            transform: rotate(180deg);
+        }
+        .highlight-red {
+            background-color: red !important;
+        }
+        .highlight-green {
+            background-color: green !important;
+        }
+        .highlight-grey {
+            background-color: grey !important;
+            transition: background-color 2s; /* Make the fade to original color slower */
+        }
+        .copy {
+            animation: insertAnimation 0.5s forwards;
+        }
+        @keyframes insertAnimation {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>PrSS: Primitive Sequence Sysytem</h1>
+    <input type="text" id="inputNumbers" value="0,1,2,3">
+    <input type="number" id="inputW" value="2" min="1">
+    <label for="speedSlider">Animation Speed:</label>
+    <input type="range" id="speedSlider" min="0.1" max="2" value="1" step="0.1">
+    <span id="speedValue">1x</span>
+    <br><br>
+    <button onclick="createTable()">Expand</button>
+    <button onclick="reExpand()">Re-Expand</button>
+    <button onclick="startSGH()">SGH</button>
+    <div class="table-container">
+        <div id="table" class="table-row"></div>
+        <div id="arrowUp" class="arrow arrow-up"></div>
+        <div id="arrowDown" class="arrow arrow-down"></div>
+    </div>
+
+    <script>
+	
+        let animationInterval;
+        let speed = 1;
+        let sghActive = false;
+        document.getElementById('speedSlider').addEventListener('input', function() {
+            speed = parseFloat(this.value);
+            document.getElementById('speedValue').textContent = speed + 'x';
+        });
+
+            const arrowUp = document.getElementById('arrowUp');
+            const arrowDown = document.getElementById('arrowDown');
+		
+		arrowUp.style.opacity = 0;
+        arrowDown.style.opacity = 0;
+        function createTable() {
+
+		
+            const input = document.getElementById('inputNumbers').value;
+			if(input.length<1){sghActive = false; return;}
+            const w = parseInt(document.getElementById('inputW').value, 10);
+            const numbers = input.split(',').map(num => parseInt(num.trim(), 10));
+            const table = document.getElementById('table');
+            table.innerHTML = '';
+            numbers.forEach(num => {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.textContent = num;
+                table.appendChild(cell);
+            });
+
+            animate(numbers, w);
+        }
+        function animate(numbers, w) {
+            const cells = document.querySelectorAll('.cell');
+            const lastIndex = cells.length - 1;
+            let initialLeft = `${cells[lastIndex].offsetLeft + cells[lastIndex].offsetWidth / 2 + 10}px`;
+
+            const arrowUp = document.getElementById('arrowUp');
+            const arrowDown = document.getElementById('arrowDown');
+            
+            arrowUp.style.left = initialLeft;
+            arrowDown.style.left = initialLeft;
+         arrowUp.style.opacity = 100;
+                            arrowDown.style.opacity = 100;
+            setTimeout(() => {
+			       
+                let lowerIndex = lastIndex;
+                for (let i = lastIndex - 1; i >= 0; i--) {
+                    if (numbers[i] < numbers[lastIndex]) {
+                        lowerIndex = i;
+                        break;
+                    }
+                }
+
+                arrowUp.style.left = `${cells[lastIndex].offsetLeft + cells[lastIndex].offsetWidth / 4}px`;
+
+                setTimeout(() => {
+                    arrowDown.style.left = `${cells[lowerIndex].offsetLeft + cells[lowerIndex].offsetWidth / 4}px`;
+
+                    setTimeout(() => {
+                        cells[lastIndex].classList.add('highlight-grey');
+
+                        for (let i = lowerIndex; i < lastIndex; i++) {
+                            cells[i].classList.add('highlight-red');
+                        }
+
+                        for (let i = 0; i < lowerIndex; i++) {
+                            cells[i].classList.add('highlight-green');
+                        }
+
+                        setTimeout(() => {
+                            arrowUp.style.opacity = 0;
+                            arrowDown.style.opacity = 0;
+
+                            setTimeout(() => {
+                                cells[lastIndex].classList.remove('highlight-grey');
+                                cells[lastIndex].remove();
+
+                                const redCells = Array.from(document.querySelectorAll('.highlight-red'));
+                                const table = document.getElementById('table');
+
+                                function copySection() {
+                                    redCells.forEach(cell => {
+                                        const copyCell = cell.cloneNode(true);
+                                        copyCell.classList.add('copy');
+										copyCell.classList.remove('highlight-red');
+                                        table.appendChild(copyCell);
+                                    });
+                                }
+
+                                // Add `w-1` copies with animation
+                                for (let j = 0; j < w - 1; j++) {
+                                    setTimeout(copySection, j * 500 * (1/speed));
+                                }
+
+                                // Reset colors after copying
+                                setTimeout(() => {
+                                    cells.forEach(cell => {
+                                        cell.classList.remove('highlight-red', 'highlight-green');
+                                    });
+                                }, w * 500 * (1/speed) + 500);
+
+                                // Allow SGH to restart only after fading
+                                setTimeout(() => {
+                                  
+                                }, w * 500 * (1/speed) + 1000);
+                                  
+                            }, 1000 * (1/speed));
+                        }, 1000 * (1/speed));
+                    }, 100 * (1/speed));
+                }, 1000 * (1/speed));
+            }, 500 * (1/speed));
+        }
+
+        function reExpand() {
+            const cells = Array.from(document.querySelectorAll('.cell'));
+            const input = cells.map(cell => cell.textContent).join(',');
+            document.getElementById('inputNumbers').value = input;
+            createTable();
+        }
+
+        function startSGH() {
+		createTable();
+		sghActive = false;
+		const w = parseInt(document.getElementById('inputW').value, 10);
+		setTimeout(runSGH, (w * 1500 * (1 / speed) + 2000) * (1 / speed) + 1500);
+    if (!sghActive) {
+        
+        sghActive = true;
+
+        function runSGH() {
+            if (sghActive) {
+                reExpand();
+                setTimeout(runSGH, (w * 1500 * (1 / speed) + 2000) * (1 / speed) + 1500);
+            }
+        }
+        runSGH();
+    }
+}
+    </script>
+</body>
+</html>

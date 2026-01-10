@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wave Function Collapse Image Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .controls {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="file"], input[type="number"], input[type="range"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .canvas-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .canvas-wrapper {
+            background-color: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            max-width: 100%;
+        }
+        .status {
+            margin-top: 10px;
+            font-style: italic;
+            color: #666;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Wave Function Collapse Image Generator</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="imageInput">Input PNG Image:</label>
+                <input type="file" id="imageInput" accept=".png">
+            </div>
+            
+            <div class="control-group">
+                <label for="areaSize">Area Size (e.g., 3 for 3x3):</label>
+                <input type="number" id="areaSize" min="1" max="10" value="3">
+            </div>
+            
+            <div class="control-group">
+                <label for="blockSize">Block Size (e.g., 2 for 2x2 pixels):</label>
+                <input type="number" id="blockSize" min="1" max="10" value="1">
+            </div>
+            
+            <div class="control-group">
+                <label for="canvasSize">Canvas Size (e.g., 64 for 64x64):</label>
+                <input type="number" id="canvasSize" min="16" max="256" value="64">
+            </div>
+            
+            <div class="control-group">
+                <label for="tolerance">Tolerance (0-765):</label>
+                <input type="range" id="tolerance" min="0" max="765" value="0">
+                <span id="toleranceValue">0</span>
+            </div>
+            
+            <div class="control-group">
+                <label>
+                    <input type="checkbox" id="enableRotation"> Enable Rotation
+                </label>
+            </div>
+            
+            <div class="control-group">
+                <label>
+                    <input type="checkbox" id="enableMirroring"> Enable Mirroring
+                </label>
+            </div>
+            
+            <button id="generateBtn">Generate</button>
+            <div id="status" class="status"></div>
+            <div id="error" class="error"></div>
+        </div>
+        
+        <div class="canvas-container">
+            <div class="canvas-wrapper">
+                <h3>Input Image</h3>
+                <canvas id="inputCanvas"></canvas>
+            </div>
+            
+            <div class="canvas-wrapper">
+                <h3>Generated Output</h3>
+                <canvas id="outputCanvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM elements
+        const imageInput = document.getElementById('imageInput');
+        const areaSizeInput = document.getElementById('areaSize');
+        const blockSizeInput = document.getElementById('blockSize');
+        const canvasSizeInput = document.getElementById('canvasSize');
+        const toleranceInput = document.getElementById('tolerance');
+        const toleranceValue = document.getElementById('toleranceValue');
+        const enableRotation = document.getElementById('enableRotation');
+        const enableMirroring = document.getElementById('enableMirroring');
+        const generateBtn = document.getElementById('generateBtn');
+        const status = document.getElementById('status');
+        const error = document.getElementById('error');
+        const inputCanvas = document.getElementById('inputCanvas');
+        const outputCanvas = document.getElementById('outputCanvas');
+        
+        // Update tolerance value display
+        toleranceInput.addEventListener('input', () => {
+            toleranceValue.textContent = toleranceInput.value;
+        });
+        
+        // Global variables
+        let inputImage = null;
+        let patterns = [];
+        let patternRules = {};
+        
+        // Load image when selected
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    inputImage = img;
+                    drawInputImage();
+                    error.textContent = '';
+                };
+                img.onerror = function() {
+                    error.textContent = 'Error loading image';
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        // Draw input image to canvas
+        function drawInputImage() {
+            const ctx = inputCanvas.getContext('2d');
+            inputCanvas.width = inputImage.width;
+            inputCanvas.height = inputImage.height;
+            ctx.drawImage(inputImage, 0, 0);
+        }
+        
+        // Generate button click handler
+        generateBtn.addEventListener('click', function() {
+            if (!inputImage) {
+                error.textContent = 'Please select an image first';
+                return;
+            }
+            
+            generateBtn.disabled = true;
+            status.textContent = 'Processing...';
+            error.textContent = '';
+            
+            // Use setTimeout to allow UI to update before starting heavy processing
+            setTimeout(() => {
+                try {
+                    generateWFC();
+                } catch (err) {
+                    error.textContent = 'Error during generation: ' + err.message;
+                    generateBtn.disabled = false;
+                    status.textContent = '';
+                }
+            }, 100);
+        });
+        
+        // Main WFC generation function
+        function generateWFC() {
+            const areaSize = parseInt(areaSizeInput.value);
+            const blockSize = parseInt(blockSizeInput.value);
+            const canvasSize = parseInt(canvasSizeInput.value);
+            const tolerance = parseInt(toleranceInput.value);
+            const rotationEnabled = enableRotation.checked;
+            const mirroringEnabled = enableMirroring.checked;
+            
+            // Extract patterns from input image
+            extractPatterns(areaSize, blockSize, rotationEnabled, mirroringEnabled, tolerance);
+            
+            // Set up output canvas
+            outputCanvas.width = canvasSize;
+            outputCanvas.height = canvasSize;
+            const outputCtx = outputCanvas.getContext('2d');
+            
+            // Initialize wave function
+            const wave = initializeWave(canvasSize, areaSize);
+            
+            // Run the collapse algorithm
+            collapseWave(wave, outputCtx, areaSize, blockSize, canvasSize);
+            
+            generateBtn.disabled = false;
+            status.textContent = 'Generation complete!';
+        }
+        
+        // Extract patterns from the input image
+        function extractPatterns(areaSize, blockSize, rotationEnabled, mirroringEnabled, tolerance) {
+            patterns = [];
+            patternRules = {};
+            
+            const ctx = inputCanvas.getContext('2d');
+            const imageData = ctx.getImageData(0, 0, inputCanvas.width, inputCanvas.height);
+            const width = inputCanvas.width;
+            const height = inputCanvas.height;
+            
+            // Iterate through the image to extract patterns
+            for (let y = 0; y <= height - areaSize * blockSize; y += blockSize) {
+                for (let x = 0; x <= width - areaSize * blockSize; x += blockSize) {
+                    // Extract pattern at (x, y)
+                    const pattern = extractPattern(imageData, x, y, areaSize, blockSize, width);
+                    patterns.push(pattern);
+                    
+                    // Generate variants if enabled
+                    if (rotationEnabled) {
+                        patterns.push(rotatePattern(pattern, areaSize));
+                        patterns.push(rotatePattern(rotatePattern(pattern, areaSize), areaSize));
+                        patterns.push(rotatePattern(rotatePattern(rotatePattern(pattern, areaSize), areaSize), areaSize));
+                    }
+                    
+                    if (mirroringEnabled) {
+                        patterns.push(mirrorPattern(pattern, areaSize));
+                    }
+                }
+            }
+            
+            // Remove duplicates based on tolerance
+            patterns = removeDuplicatePatterns(patterns, tolerance);
+            
+            // Generate rules for pattern adjacency
+            generatePatternRules(areaSize, tolerance);
+        }
+        
+        // Extract a pattern from the image at the given position
+        function extractPattern(imageData, x, y, areaSize, blockSize, width) {
+            const pattern = [];
+            
+            for (let ay = 0; ay < areaSize; ay++) {
+                const row = [];
+                for (let ax = 0; ax < areaSize; ax++) {
+                    // Average color in the block
+                    let r = 0, g = 0, b = 0, count = 0;
+                    
+                    for (let by = 0; by < blockSize; by++) {
+                        for (let bx = 0; bx < blockSize; bx++) {
+                            const px = (x + ax * blockSize + bx) * 4;
+                            const py = (y + ay * blockSize + by) * width * 4;
+                            const idx = px + py;
+                            
+                            r += imageData.data[idx];
+                            g += imageData.data[idx + 1];
+                            b += imageData.data[idx + 2];
+                            count++;
+                        }
+                    }
+                    
+                    row.push([
+                        Math.round(r / count),
+                        Math.round(g / count),
+                        Math.round(b / count)
+                    ]);
+                }
+                pattern.push(row);
+            }
+            
+            return pattern;
+        }
+        
+        // Rotate a pattern 90 degrees clockwise
+        function rotatePattern(pattern, areaSize) {
+            const rotated = [];
+            
+            for (let x = 0; x < areaSize; x++) {
+                const row = [];
+                for (let y = areaSize - 1; y >= 0; y--) {
+                    row.push(pattern[y][x]);
+                }
+                rotated.push(row);
+            }
+            
+            return rotated;
+        }
+        
+        // Mirror a pattern horizontally
+        function mirrorPattern(pattern, areaSize) {
+            const mirrored = [];
+            
+            for (let y = 0; y < areaSize; y++) {
+                const row = [];
+                for (let x = areaSize - 1; x >= 0; x--) {
+                    row.push(pattern[y][x]);
+                }
+                mirrored.push(row);
+            }
+            
+            return mirrored;
+        }
+        
+        // Remove duplicate patterns based on tolerance
+        function removeDuplicatePatterns(patterns, tolerance) {
+            const uniquePatterns = [];
+            
+            for (const pattern of patterns) {
+                let isDuplicate = false;
+                
+                for (const uniquePattern of uniquePatterns) {
+                    if (patternsSimilar(pattern, uniquePattern, tolerance)) {
+                        isDuplicate = true;
+                        break;
+                    }
+                }
+                
+                if (!isDuplicate) {
+                    uniquePatterns.push(pattern);
+                }
+            }
+            
+            return uniquePatterns;
+        }
+        
+        // Check if two patterns are similar within tolerance
+        function patternsSimilar(pattern1, pattern2, tolerance) {
+            const areaSize = pattern1.length;
+            
+            for (let y = 0; y < areaSize; y++) {
+                for (let x = 0; x < areaSize; x++) {
+                    const color1 = pattern1[y][x];
+                    const color2 = pattern2[y][x];
+                    
+                    const diff = Math.abs(color1[0] - color2[0]) + 
+                                 Math.abs(color1[1] - color2[1]) + 
+                                 Math.abs(color1[2] - color2[2]);
+                    
+                    if (diff > tolerance) {
+                        return false;
+                    }
+                }
+            }
+            
+            return true;
+        }
+        
+        // Generate rules for pattern adjacency
+        function generatePatternRules(areaSize, tolerance) {
+            patternRules = {};
+            
+            // For each pattern, determine which patterns can be adjacent to it
+            for (let i = 0; i < patterns.length; i++) {
+                patternRules[i] = {
+                    top: [],
+                    right: [],
+                    bottom: [],
+                    left: []
+                };
+                
+                for (let j = 0; j < patterns.length; j++) {
+                    if (i === j) continue;
+                    
+                    // Check top adjacency (pattern i's top edge vs pattern j's bottom edge)
+                    let topMatch = true;
+                    for (let x = 0; x < areaSize; x++) {
+                        const color1 = patterns[i][0][x];
+                        const color2 = patterns[j][areaSize - 1][x];
+                        
+                        const diff = Math.abs(color1[0] - color2[0]) + 
+                                     Math.abs(color1[1] - color2[1]) + 
+                                     Math.abs(color1[2] - color2[2]);
+                        
+                        if (diff > tolerance) {
+                            topMatch = false;
+                            break;
+                        }
+                    }
+                    if (topMatch) patternRules[i].top.push(j);
+                    
+                    // Check right adjacency (pattern i's right edge vs pattern j's left edge)
+                    let rightMatch = true;
+                    for (let y = 0; y < areaSize; y++) {
+                        const color1 = patterns[i][y][areaSize - 1];
+                        const color2 = patterns[j][y][0];
+                        
+                        const diff = Math.abs(color1[0] - color2[0]) + 
+                                     Math.abs(color1[1] - color2[1]) + 
+                                     Math.abs(color1[2] - color2[2]);
+                        
+                        if (diff > tolerance) {
+                            rightMatch = false;
+                            break;
+                        }
+                    }
+                    if (rightMatch) patternRules[i].right.push(j);
+                    
+                    // Check bottom adjacency (pattern i's bottom edge vs pattern j's top edge)
+                    let bottomMatch = true;
+                    for (let x = 0; x < areaSize; x++) {
+                        const color1 = patterns[i][areaSize - 1][x];
+                        const color2 = patterns[j][0][x];
+                        
+                        const diff = Math.abs(color1[0] - color2[0]) + 
+                                     Math.abs(color1[1] - color2[1]) + 
+                                     Math.abs(color1[2] - color2[2]);
+                        
+                        if (diff > tolerance) {
+                            bottomMatch = false;
+                            break;
+                        }
+                    }
+                    if (bottomMatch) patternRules[i].bottom.push(j);
+                    
+                    // Check left adjacency (pattern i's left edge vs pattern j's right edge)
+                    let leftMatch = true;
+                    for (let y = 0; y < areaSize; y++) {
+                        const color1 = patterns[i][y][0];
+                        const color2 = patterns[j][y][areaSize - 1];
+                        
+                        const diff = Math.abs(color1[0] - color2[0]) + 
+                                     Math.abs(color1[1] - color2[1]) + 
+                                     Math.abs(color1[2] - color2[2]);
+                        
+                        if (diff > tolerance) {
+                            leftMatch = false;
+                            break;
+                        }
+                    }
+                    if (leftMatch) patternRules[i].left.push(j);
+                }
+            }
+        }
+        
+        // Initialize the wave function
+        function initializeWave(canvasSize, areaSize) {
+            const gridSize = Math.ceil(canvasSize / areaSize);
+            const wave = [];
+            
+            for (let y = 0; y < gridSize; y++) {
+                const row = [];
+                for (let x = 0; x < gridSize; x++) {
+                    // Initially, all patterns are possible at each position
+                    row.push({
+                        possible: Array(patterns.length).fill(true),
+                        collapsed: false,
+                        entropy: patterns.length
+                    });
+                }
+                wave.push(row);
+            }
+            
+            return wave;
+        }
+        
+        // Collapse the wave function to generate the output
+        function collapseWave(wave, outputCtx, areaSize, blockSize, canvasSize) {
+            const gridSize = wave.length;
+            const outputSize = gridSize * areaSize * blockSize;
+            
+            // Create output image data
+            const outputImageData = outputCtx.createImageData(outputSize, outputSize);
+            
+            // Collapse cells until all are collapsed
+            while (true) {
+                // Find the cell with the lowest entropy (but not collapsed)
+                let minEntropy = Infinity;
+                let minEntropyCells = [];
+                
+                for (let y = 0; y < gridSize; y++) {
+                    for (let x = 0; x < gridSize; x++) {
+                        const cell = wave[y][x];
+                        if (!cell.collapsed && cell.entropy < minEntropy) {
+                            minEntropy = cell.entropy;
+                            minEntropyCells = [{x, y}];
+                        } else if (!cell.collapsed && cell.entropy === minEntropy) {
+                            minEntropyCells.push({x, y});
+                        }
+                    }
+                }
+                
+                // If all cells are collapsed, we're done
+                if (minEntropyCells.length === 0) break;
+                
+                // Randomly select one of the minimum entropy cells
+                const selectedCell = minEntropyCells[Math.floor(Math.random() * minEntropyCells.length)];
+                const x = selectedCell.x;
+                const y = selectedCell.y;
+                
+                // Collapse this cell
+                collapseCell(wave, x, y);
+                
+                // Propagate the constraints
+                propagateConstraints(wave, x, y);
+            }
+            
+            // Render the result
+            renderOutput(wave, outputImageData, areaSize, blockSize);
+            outputCtx.putImageData(outputImageData, 0, 0);
+            
+            // Scale to fit the canvas if needed
+            if (outputSize !== canvasSize) {
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = outputSize;
+                tempCanvas.height = outputSize;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.putImageData(outputImageData, 0, 0);
+                
+                outputCtx.clearRect(0, 0, canvasSize, canvasSize);
+                outputCtx.drawImage(tempCanvas, 0, 0, canvasSize, canvasSize);
+            }
+        }
+        
+        // Collapse a specific cell
+        function collapseCell(wave, x, y) {
+            const cell = wave[y][x];
+            
+            // Get the indices of possible patterns
+            const possibleIndices = [];
+            for (let i = 0; i < cell.possible.length; i++) {
+                if (cell.possible[i]) {
+                    possibleIndices.push(i);
+                }
+            }
+            
+            // Randomly select one pattern
+            if (possibleIndices.length > 0) {
+                const selectedIndex = possibleIndices[Math.floor(Math.random() * possibleIndices.length)];
+                
+                // Collapse to this pattern
+                for (let i = 0; i < cell.possible.length; i++) {
+                    cell.possible[i] = (i === selectedIndex);
+                }
+                
+                cell.collapsed = true;
+                cell.entropy = 1;
+            } else {
+                // If no patterns are possible, this is a contradiction
+                // In a real implementation, we might need to backtrack
+                // For simplicity, we'll just mark it as collapsed with no pattern
+                cell.collapsed = true;
+                cell.entropy = 0;
+            }
+        }
+        
+        // Propagate constraints after collapsing a cell
+        function propagateConstraints(wave, x, y) {
+            const queue = [{x, y}];
+            
+            while (queue.length > 0) {
+                const current = queue.shift();
+                const cx = current.x;
+                const cy = current.y;
+                const cell = wave[cy][cx];
+                
+                // If the cell is collapsed, propagate to neighbors
+                if (cell.collapsed) {
+                    // Find which pattern this cell collapsed to
+                    let patternIndex = -1;
+                    for (let i = 0; i < cell.possible.length; i++) {
+                        if (cell.possible[i]) {
+                            patternIndex = i;
+                            break;
+                        }
+                    }
+                    
+                    if (patternIndex === -1) continue;
+                    
+                    // Check all four neighbors
+                    const neighbors = [
+                        {x: cx, y: cy - 1, direction: 'top'},    // Top neighbor
+                        {x: cx + 1, y: cy, direction: 'right'},  // Right neighbor
+                        {x: cx, y: cy + 1, direction: 'bottom'}, // Bottom neighbor
+                        {x: cx - 1, y: cy, direction: 'left'}    // Left neighbor
+                    ];
+                    
+                    for (const neighbor of neighbors) {
+                        const nx = neighbor.x;
+                        const ny = neighbor.y;
+                        
+                        // Skip if out of bounds
+                        if (nx < 0 || nx >= wave[0].length || ny < 0 || ny >= wave.length) continue;
+                        
+                        const neighborCell = wave[ny][nx];
+                        if (neighborCell.collapsed) continue;
+                        
+                        // Get the allowed patterns for this neighbor based on the current cell's pattern
+                        const allowedPatterns = patternRules[patternIndex][neighbor.direction];
+                        
+                        // Update the neighbor's possibilities
+                        let changed = false;
+                        for (let i = 0; i < neighborCell.possible.length; i++) {
+                            if (neighborCell.possible[i] && !allowedPatterns.includes(i)) {
+                                neighborCell.possible[i] = false;
+                                changed = true;
+                                neighborCell.entropy--;
+                            }
+                        }
+                        
+                        // If the neighbor's possibilities changed, add it to the queue
+                        if (changed) {
+                            queue.push({x: nx, y: ny});
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Render the output based on the collapsed wave
+        function renderOutput(wave, outputImageData, areaSize, blockSize) {
+            const gridSize = wave.length;
+            const outputSize = gridSize * areaSize * blockSize;
+            
+            for (let gy = 0; gy < gridSize; gy++) {
+                for (let gx = 0; gx < gridSize; gx++) {
+                    const cell = wave[gy][gx];
+                    
+                    // Find the pattern for this cell
+                    let patternIndex = -1;
+                    for (let i = 0; i < cell.possible.length; i++) {
+                        if (cell.possible[i]) {
+                            patternIndex = i;
+                            break;
+                        }
+                    }
+                    
+                    // If no pattern is selected (contradiction), use black
+                    const pattern = patternIndex >= 0 ? patterns[patternIndex] : null;
+                    
+                    // Render each pixel in the cell
+                    for (let py = 0; py < areaSize; py++) {
+                        for (let px = 0; px < areaSize; px++) {
+                            const color = pattern ? pattern[py][px] : [0, 0, 0];
+                            
+                            // Draw the block (blockSize x blockSize pixels)
+                            for (let by = 0; by < blockSize; by++) {
+                                for (let bx = 0; bx < blockSize; bx++) {
+                                    const outputX = gx * areaSize * blockSize + px * blockSize + bx;
+                                    const outputY = gy * areaSize * blockSize + py * blockSize + by;
+                                    
+                                    if (outputX < outputSize && outputY < outputSize) {
+                                        const idx = (outputY * outputSize + outputX) * 4;
+                                        outputImageData.data[idx] = color[0];     // R
+                                        outputImageData.data[idx + 1] = color[1]; // G
+                                        outputImageData.data[idx + 2] = color[2]; // B
+                                        outputImageData.data[idx + 3] = 255;      // A
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

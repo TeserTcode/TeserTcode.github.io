@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>N-Dimensional Attractor Simulator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; }
+        canvas { border: 1px solid black; margin: 20px; }
+        .controls { display: flex; gap: 10px; flex-wrap: wrap; }
+        .controls input { width: 150px; }
+        .textbox { display: flex; flex-direction: column; }
+    </style>
+</head>
+<body>
+    <h2>N-Dimensional Attractor Simulator</h2>
+    <canvas id="attractorCanvas" width="800" height="600"></canvas>
+    
+    <div class="controls">
+        <div id="equations-container"></div>
+        
+        <div>
+            <label for="numDimensions">Number of Dimensions:</label>
+            <input type="number" id="numDimensions" value="3" min="2" max="10">
+        </div>
+        <div>
+            <label for="stepSize">Step Size:</label>
+            <input type="number" id="stepSize" value="0.01" step="0.001">
+        </div>
+        <div>
+            <label for="numParticles">Particles:</label>
+            <input type="number" id="numParticles" value="100">
+        </div>
+        <div>
+            <label for="spread">Initial Spread:</label>
+            <input type="number" id="spread" value="2" step="1">
+        </div>
+        <label for="baseColor">Base Color:</label>
+        <select id="baseColor" onchange="updateBaseColor()">
+            <option value="#FF0000">Red</option>
+            <option value="#00FF00">Green</option>
+            <option value="#0000FF">Blue</option>
+            <option value="#FFFFFF">White</option>
+            <option value="#000000">Black</option>
+            <option value="#FFFF00">Yellow</option>
+        </select>
+
+        <div id="dimensionContainer"></div>
+
+        <button onclick="addDimension()">Add Dimension</button>
+        <button onclick="startSimulation()">Start Simulation</button>
+        <button onclick="stopSimulation()">Stop Simulation</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('attractorCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let stepSize, numParticles, spread, numDimensions;
+        let equations = [];
+        let animationId;
+
+        let dimensionIndex = 0;
+        const dimensionsData = [];
+
+        function generateEquationInputs() {
+            const container = document.getElementById('equations-container');
+            container.innerHTML = ''; // Clear existing inputs
+            numDimensions = parseInt(document.getElementById('numDimensions').value);
+
+            for (let i = 0; i < numDimensions; i++) {
+                const variableName = String.fromCharCode(97 + i); // a, b, c, ...
+                const div = document.createElement('div');
+                div.className = 'textbox';
+                div.innerHTML = ` 
+                    <label for="func${variableName}">d${variableName}/dt:</label>
+                    <input type="text" id="func${variableName}" value="${variableName === 'a' ? '10 * (b - a)' : variableName === 'b' ? 'a * (28 - c) - b' : 'a * b - 8/3 * c'}">
+                `;
+                container.appendChild(div);
+            }
+        }
+
+        document.getElementById('numDimensions').addEventListener('change', generateEquationInputs);
+        generateEquationInputs(); // Initialize for default value of 3 dimensions
+
+        function startSimulation() {
+            cancelAnimationFrame(animationId);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'rgb(0, 0, 0)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            particles = [];
+            stepSize = parseFloat(document.getElementById('stepSize').value);
+            numParticles = parseInt(document.getElementById('numParticles').value);
+            spread = parseFloat(document.getElementById('spread').value);
+
+            equations = [];
+            for (let i = 0; i < numDimensions; i++) {
+                const variableName = String.fromCharCode(97 + i);
+                equations.push(document.getElementById(`func${variableName}`).value);
+            }
+
+            for (let i = 0; i < numParticles; i++) {
+                const data = Array(numDimensions).fill(0).map(() => spread * (Math.random() - 0.5));
+                particles.push({ data });
+            }
+
+            simulate();
+        }
+
+        function stopSimulation() {
+            cancelAnimationFrame(animationId);
+        }
+
+        function simulate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (const p of particles) {
+                euler(p);
+                const [x, y] = projectTo2D(p.data);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(400 + x * 10, 300 - y * 10, 2, 2);
+            }
+
+            animationId = requestAnimationFrame(simulate);
+        }
+
+        function euler(p) {
+            const derivatives = Array(numDimensions).fill(0);
+            
+            for (let i = 0; i < numDimensions; i++) {
+                const expr = equations[i];
+                const scope = {};
+                for (let j = 0; j < numDimensions; j++) {
+                    scope[String.fromCharCode(97 + j)] = p.data[j];
+                }
+                derivatives[i] = math.evaluate(expr, scope);
+            }
+
+            for (let i = 0; i < numDimensions; i++) {
+                p.data[i] += stepSize * derivatives[i];
+            }
+        }
+
+        function projectTo2D(data) {
+            let x = 0;
+            let y = 0;
+
+            for (let i = 0; i < numDimensions; i++) {
+                const dim = dimensionsData[i];
+                const value = data[i];
+                
+                // Calculate projection based on base vectors
+                x += dim.aX * value * dim.aS;
+                y += dim.aY * value * dim.aS;
+            }
+
+            return [x, y];
+        }
+
+        function addDimension() {
+            const container = document.getElementById('dimensionContainer');
+            const row = document.createElement('div');
+            row.className = 'dim-row';
+            row.dataset.index = dimensionIndex;
+
+            row.innerHTML = `
+                <label>Dim ${dimensionIndex + 1}</label>
+                <input type="number" placeholder="aX" step="0.01" value="${dimensionsData[dimensionIndex]?.aX || 0}" onchange="saveDimension(${dimensionIndex})">
+                <input type="number" placeholder="aY" step="0.01" value="${dimensionsData[dimensionIndex]?.aY || 0}" onchange="saveDimension(${dimensionIndex})">
+                <input type="number" placeholder="aS" step="0.01" value="${dimensionsData[dimensionIndex]?.aS || 1}" onchange="saveDimension(${dimensionIndex})">
+                <input type="number" placeholder="aR" step="0.01" value="${dimensionsData[dimensionIndex]?.aR || 0}" onchange="saveDimension(${dimensionIndex})">
+                <input type="number" placeholder="aG" step="0.01" value="${dimensionsData[dimensionIndex]?.aG || 0}" onchange="saveDimension(${dimensionIndex})">
+                <input type="number" placeholder="aB" step="0.01" value="${dimensionsData[dimensionIndex]?.aB || 0}" onchange="saveDimension(${dimensionIndex})">
+                <input type="number" placeholder="aA" step="0.01" value="${dimensionsData[dimensionIndex]?.aA || 1}" onchange="saveDimension(${dimensionIndex})">
+                <button onclick="removeDimension(${dimensionIndex})">Remove</button>
+            `;
+
+            container.appendChild(row);
+            saveDimension(dimensionIndex);
+            dimensionIndex++;
+        }
+
+        function saveDimension(index) {
+            const row = document.querySelector(`.dim-row[data-index="${index}"]`);
+            const inputs = row.querySelectorAll('input');
+
+            dimensionsData[index] = {
+                aX: parseFloat(inputs[0].value),
+                aY: parseFloat(inputs[1].value),
+                aS: parseFloat(inputs[2].value),
+                aR: parseFloat(inputs[3].value),
+                aG: parseFloat(inputs[4].value),
+                aB: parseFloat(inputs[5].value),
+                aA: parseFloat(inputs[6].value),
+            };
+        }
+
+        function removeDimension(index) {
+            const row = document.querySelector(`.dim-row[data-index="${index}"]`);
+            row.remove();
+            dimensionsData.splice(index, 1);
+            dimensionIndex--;
+        }
+
+        function updateBaseColor() {
+            const baseColor = document.getElementById('baseColor').value;
+            for (const particle of particles) {
+                particle.color = baseColor;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Apollonian Quadrilateral</title>
+    <style>
+     
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Apollonian Quadrilateral</h1>
+    </div>
+    
+    <div class="container">
+        <div class="canvas-container">
+            <canvas id="mainCanvas" width="800" height="700"></canvas>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <h2>Visualization Controls</h2>
+                
+                <div class="slider-container">
+                    <label for="zoom">Zoom Level</label>
+                    <input type="range" id="zoom" min="10" max="200" value="100">
+                    <div class="value-display">
+                        <span>Close</span>
+                        <span id="zoom-value">100%</span>
+                        <span>Far</span>
+                    </div>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="color-intensity">Color Intensity</label>
+                    <input type="range" id="color-intensity" min="1" max="10" value="2">
+                    <div class="value-display">
+                        <span>Subtle</span>
+                        <span id="intensity-value">5</span>
+                        <span>Vivid</span>
+                    </div>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="resolution">Resolution</label>
+                    <input type="range" id="resolution" min="1" max="10" value="5">
+                    <div class="value-display">
+                        <span>Fast</span>
+                        <span id="resolution-value">5</span>
+                        <span>Detailed</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h2>Color Formula</h2>
+                <div class="button-group">
+                    <button id="btn-log" class="active">log|a×c-b×d|</button>
+                    <button id="btn-sin">sin(value)</button>
+                    <button id="btn-min">min(log|a×c-b×d|)</button>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="amplitude">Amplitude</label>
+                    <input type="range" id="amplitude" min="1" max="20" value="5">
+                    <div class="value-display">
+                        <span>1</span>
+                        <span id="amplitude-value">5</span>
+                        <span>20</span>
+                    </div>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="phase">Phase</label>
+                    <input type="range" id="phase" min="0" max="628" value="0">
+                    <div class="value-display">
+                        <span>0</span>
+                        <span id="phase-value">0</span>
+                        <span>2π</span>
+                    </div>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="vibrance">Vibrance</label>
+                    <input type="range" id="vibrance" min="0" max="2" value="1" step="0.1">
+                    <div class="value-display">
+                        <span>0</span>
+                        <span id="vibrance-value">1.0</span>
+                        <span>2.0</span>
+                    </div>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="saturation">Saturation</label>
+                    <input type="range" id="saturation" min="0" max="1" value="0.5" step="0.1">
+                    <div class="value-display">
+                        <span>0</span>
+                        <span id="saturation-value">0.5</span>
+                        <span>1.0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h2>Circle Overlays</h2>
+                <div class="button-group">
+                    <button id="btn-ratio">Ratio R</button>
+                    <button id="btn-powers">Powers of a</button>
+                    <button id="btn-all-corners">All Corners</button>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="a-param">Parameter a</label>
+                    <input type="range" id="a-param" min="1.1" max="2.0" value="1.2" step="0.1">
+                    <div class="value-display">
+                        <span>1.1</span>
+                        <span id="a-value">1.2</span>
+                        <span>2.0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="status" id="status">
+                Drag a point to begin
+            </div>
+            
+            <div class="point-info">
+                <div class="point">
+                    <div class="point-color" style="background-color: #FF5252;"></div>
+                    <span>Point A</span>
+                </div>
+                <div class="point">
+                    <div class="point-color" style="background-color: #FFEB3B;"></div>
+                    <span>Point B</span>
+                </div>
+                <div class="point">
+                    <div class="point-color" style="background-color: #4CAF50;"></div>
+                    <span>Point C</span>
+                </div>
+                <div class="point">
+                    <div class="point-color" style="background-color: #2196F3;"></div>
+                    <span>Point D</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Control elements
+        const zoomSlider = document.getElementById('zoom');
+        const zoomValue = document.getElementById('zoom-value');
+        const intensitySlider = document.getElementById('color-intensity');
+        const intensityValue = document.getElementById('intensity-value');
+        const resolutionSlider = document.getElementById('resolution');
+        const resolutionValue = document.getElementById('resolution-value');
+        const amplitudeSlider = document.getElementById('amplitude');
+        const amplitudeValue = document.getElementById('amplitude-value');
+        const phaseSlider = document.getElementById('phase');
+        const phaseValue = document.getElementById('phase-value');
+        const vibranceSlider = document.getElementById('vibrance');
+        const vibranceValue = document.getElementById('vibrance-value');
+        const saturationSlider = document.getElementById('saturation');
+        const saturationValue = document.getElementById('saturation-value');
+        const aParamSlider = document.getElementById('a-param');
+        const aValue = document.getElementById('a-value');
+        const status = document.getElementById('status');
+        
+        // Button elements
+        const btnLog = document.getElementById('btn-log');
+        const btnSin = document.getElementById('btn-sin');
+        const btnMin = document.getElementById('btn-min');
+        const btnRatio = document.getElementById('btn-ratio');
+        const btnPowers = document.getElementById('btn-powers');
+        const btnAllCorners = document.getElementById('btn-all-corners');
+        
+        // Initial state
+        let points = [];
+        let selectedPoint = null;
+        let isDragging = false;
+        let unitSize = 1;
+        let zoom = 100;
+        let colorIntensity = 2;
+        let resolution = 5;
+        let lastMovedPointIndex = null;
+        let colorMode = 'log'; // 'log', 'sin', 'min'
+        let showRatio = false;
+        let showPowers = false;
+        let showAllCorners = false;
+        let amplitude = 5;
+        let phase = 0;
+        let vibrance = 1;
+        let saturation = 0.5;
+        let aParam = 1.2;
+        
+        // Initialize points with 1 unit difference
+        function initializePoints() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const offset = 150;
+            
+            points = [
+                { x: centerX - offset, y: centerY - offset, color: '#FF5252', label: 'A' },
+                { x: centerX + offset, y: centerY - offset, color: '#FFEB3B', label: 'B' },
+                { x: centerX + offset, y: centerY + offset, color: '#4CAF50', label: 'C' },
+                { x: centerX - offset, y: centerY + offset, color: '#2196F3', label: 'D' }
+            ];
+        }
+        
+        // Calculate distance between two points
+        function distance(p1, p2) {
+            return Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2);
+        }
+        
+        // Calculate the product of opposite edges
+        function calculateOppositeProducts(pointsArray) {
+            const a = distance(pointsArray[0], pointsArray[1]);
+            const b = distance(pointsArray[1], pointsArray[2]);
+            const c = distance(pointsArray[2], pointsArray[3]);
+            const d = distance(pointsArray[3], pointsArray[0]);
+            
+            return {
+                ac: a * c,
+                bd: b * d,
+                difference: Math.abs(a * c - b * d)
+            };
+        }
+        
+        // Calculate the ratio R = |A-C|/|B-D|
+        function calculateRatio() {
+            const AC = distance(points[0], points[2]);
+            const BD = distance(points[1], points[3]);
+            return AC / BD;
+        }
+        
+        // Check if the quadrilateral is Apollonian (opposite edge products equal)
+        function isApollonian(pointsArray) {
+            const products = calculateOppositeProducts(pointsArray);
+            return Math.abs(products.ac - products.bd) < 0.1;
+        }
+        
+        // Find the valid position for the dragged point to maintain Apollonian property
+        function findValidPosition(draggedIndex, targetX, targetY) {
+            // For a true Apollonian quadrilateral, we would solve the equation system
+            // Here we use a simplified approach for demonstration
+            
+            // Store the original position
+            const originalX = points[draggedIndex].x;
+            const originalY = points[draggedIndex].y;
+            
+            // Move the point to target position
+            points[draggedIndex].x = targetX;
+            points[draggedIndex].y = targetY;
+            
+            // Check if this position is valid
+            const isValid = isApollonian(points);
+            
+            if (!isValid) {
+                // If not valid, try to find a nearby valid position
+                // This is a simplified approach - in practice, you'd solve the equations
+                const searchRadius = 50;
+                const steps = 20;
+                
+                let bestX = targetX;
+                let bestY = targetY;
+                let minDifference = Infinity;
+                
+                for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / steps) {
+                    const testX = targetX + searchRadius * Math.cos(angle);
+                    const testY = targetY + searchRadius * Math.sin(angle);
+                    
+                    points[draggedIndex].x = testX;
+                    points[draggedIndex].y = testY;
+                    
+                    const products = calculateOppositeProducts(points);
+                    const difference = Math.abs(products.ac - products.bd);
+                    
+                    if (difference < minDifference) {
+                        minDifference = difference;
+                        bestX = testX;
+                        bestY = testY;
+                    }
+                }
+                
+                // Restore the original position
+                points[draggedIndex].x = originalX;
+                points[draggedIndex].y = originalY;
+                
+                return { x: bestX, y: bestY, isValid: minDifference < 0.1 };
+            }
+            
+            // Restore the original position
+            points[draggedIndex].x = originalX;
+            points[draggedIndex].y = originalY;
+            
+            return { x: targetX, y: targetY, isValid: true };
+        }
+        
+        // Calculate color based on the selected formula
+        function calculateColorForPoint(x, y, pointIndex) {
+            // Create a temporary copy of points with the test position
+            const tempPoints = [...points];
+            tempPoints[pointIndex] = { x, y };
+            
+            // Calculate the products for this hypothetical position
+            const products = calculateOppositeProducts(tempPoints);
+            let value;
+            
+            if (colorMode === 'min') {
+                // Calculate minimum of log|a*c-b*d| for any corner
+                let minValue = Infinity;
+                for (let i = 0; i < 4; i++) {
+                    const tempPoints2 = [...points];
+                    tempPoints2[i] = { x, y };
+                    const products2 = calculateOppositeProducts(tempPoints2);
+                    const logValue = Math.log(Math.max(0.001, products2.difference));
+                    minValue = Math.min(minValue, logValue);
+                }
+                value = minValue;
+            } else {
+                // Standard log calculation
+                const logValue = Math.log(Math.max(0.001, products.difference));
+                value = logValue;
+            }
+            
+            // Apply sine transformation if selected
+            if (colorMode === 'sin') {
+                value = Math.sin(value * amplitude + phase / 100) * vibrance + saturation;
+            }
+            
+            // Normalize the value for color mapping
+            const normalizedValue = Math.min(1, Math.max(0, 
+                (value + 5) / 10 * colorIntensity / 5));
+            
+            // Map to a color gradient (blue -> green -> yellow -> red)
+            if (normalizedValue < 0.25) {
+                // Blue to green
+                const t = normalizedValue / 0.25;
+                return `rgb(0, ${Math.floor(255 * t)}, ${Math.floor(255 * (1 - t))})`;
+            } else if (normalizedValue < 0.5) {
+                // Green to yellow
+                const t = (normalizedValue - 0.25) / 0.25;
+                return `rgb(${Math.floor(255 * t)}, 255, 0)`;
+            } else if (normalizedValue < 0.75) {
+                // Yellow to orange
+                const t = (normalizedValue - 0.5) / 0.25;
+                return `rgb(255, ${Math.floor(255 * (1 - t))}, 0)`;
+            } else {
+                // Orange to red
+                const t = (normalizedValue - 0.75) / 0.25;
+                return `rgb(255, ${Math.floor(100 * (1 - t))}, 0)`;
+            }
+        }
+        
+        // Draw the color visualization based on the last moved point
+        function drawColorVisualization() {
+            if (lastMovedPointIndex === null) return;
+            
+            const step = Math.max(1, 10 - resolution);
+            
+            for (let x = 0; x < canvas.width; x += step) {
+                for (let y = 0; y < canvas.height; y += step) {
+                    const color = calculateColorForPoint(x, y, lastMovedPointIndex);
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x, y, step, step);
+                }
+            }
+        }
+        
+        // Draw the ratio circle
+        function drawRatioCircle() {
+            if (!showRatio) return;
+            
+            const ratio = calculateRatio();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = ratio * 100;
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // Draw ratio text
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`R = ${ratio.toFixed(2)}`, centerX, centerY - radius - 10);
+        }
+        
+        // Draw circles for powers of a
+        function drawPowerCircles() {
+            if (!showPowers) return;
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            
+            for (let n = -10; n <= 10; n++) {
+                const radius = Math.pow(aParam, n) * 50;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                // Draw label for every few circles to avoid clutter
+                if (n % 3 === 0) {
+                    ctx.fillStyle = 'white';
+                    ctx.font = '12px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`a^${n}`, centerX, centerY - radius - 5);
+                }
+            }
+            
+            ctx.setLineDash([]);
+        }
+        
+        // Draw circles for all corners
+        function drawAllCornerCircles() {
+            if (!showAllCorners) return;
+            
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.lineWidth = 2;
+            
+            points.forEach(point => {
+                // Draw multiple circles around each point
+                for (let i = 1; i <= 5; i++) {
+                    const radius = i * 30;
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            });
+        }
+        
+        // Draw the quadrilateral and points
+        function draw() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw the color visualization
+            drawColorVisualization();
+            
+            // Draw the circle overlays
+            drawRatioCircle();
+            drawPowerCircles();
+            drawAllCornerCircles();
+            
+            // Draw the quadrilateral
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.closePath();
+            
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // Draw the points
+            points.forEach((point, index) => {
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 10, 0, Math.PI * 2);
+                ctx.fillStyle = point.color;
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Draw point label
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(point.label, point.x, point.y);
+            });
+            
+            // Draw the unit indicator
+            ctx.beginPath();
+            ctx.moveTo(30, canvas.height - 30);
+            ctx.lineTo(30 + unitSize * 50, canvas.height - 30);
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = 'white';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('1 unit', 30, canvas.height - 45);
+            
+            // Update status
+            const products = calculateOppositeProducts(points);
+            const logValue = Math.log(Math.max(0.001, products.difference));
+            const ratio = calculateRatio();
+            
+            let modeText = '';
+            if (colorMode === 'log') modeText = 'log|a×c-b×d|';
+            else if (colorMode === 'sin') modeText = 'sin(value)';
+            else if (colorMode === 'min') modeText = 'min(log|a×c-b×d|)';
+            
+            if (lastMovedPointIndex !== null) {
+                status.textContent = `Point ${points[lastMovedPointIndex].label} | ${modeText} = ${logValue.toFixed(2)} | R = ${ratio.toFixed(2)}`;
+            } else {
+                status.textContent = `Drag a point | ${modeText} = ${logValue.toFixed(2)} | R = ${ratio.toFixed(2)}`;
+            }
+        }
+        
+        // Handle mouse events
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            // Check if clicking on a point
+            for (let i = 0; i < points.length; i++) {
+                const point = points[i];
+                if (Math.sqrt((point.x - mouseX) ** 2 + (point.y - mouseY) ** 2) < 15) {
+                    selectedPoint = i;
+                    isDragging = true;
+                    canvas.style.cursor = 'grabbing';
+                    status.textContent = `Dragging point ${points[i].label}`;
+                    break;
+                }
+            }
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            if (!isDragging || selectedPoint === null) {
+                // Change cursor when hovering over points
+                let overPoint = false;
+                for (const point of points) {
+                    if (Math.sqrt((point.x - mouseX) ** 2 + (point.y - mouseY) ** 2) < 15) {
+                        overPoint = true;
+                        break;
+                    }
+                }
+                canvas.style.cursor = overPoint ? 'grab' : 'default';
+                return;
+            }
+            
+            // Find valid position for the point
+            const validPos = findValidPosition(selectedPoint, mouseX, mouseY);
+            
+            // Update the point position
+            points[selectedPoint].x = validPos.x;
+            points[selectedPoint].y = validPos.y;
+            
+            // Update last moved point
+            lastMovedPointIndex = selectedPoint;
+            
+            draw();
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+            selectedPoint = null;
+            canvas.style.cursor = 'default';
+            draw();
+        });
+        
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+            selectedPoint = null;
+            canvas.style.cursor = 'default';
+            draw();
+        });
+        
+        // Handle zoom changes
+        zoomSlider.addEventListener('input', () => {
+            zoom = parseInt(zoomSlider.value);
+            zoomValue.textContent = `${zoom}%`;
+            unitSize = zoom / 100; // Scale unit size based on zoom
+            
+            // Reinitialize points with new unit size
+            initializePoints();
+            lastMovedPointIndex = null;
+            draw();
+        });
+        
+        // Handle color intensity changes
+        intensitySlider.addEventListener('input', () => {
+            colorIntensity = parseInt(intensitySlider.value);
+            intensityValue.textContent = colorIntensity;
+            draw();
+        });
+        
+        // Handle resolution changes
+        resolutionSlider.addEventListener('input', () => {
+            resolution = parseInt(resolutionSlider.value);
+            resolutionValue.textContent = resolution;
+            draw();
+        });
+        
+        // Handle amplitude changes
+        amplitudeSlider.addEventListener('input', () => {
+            amplitude = parseInt(amplitudeSlider.value);
+            amplitudeValue.textContent = amplitude;
+            draw();
+        });
+        
+        // Handle phase changes
+        phaseSlider.addEventListener('input', () => {
+            phase = parseInt(phaseSlider.value);
+            phaseValue.textContent = phase;
+            draw();
+        });
+        
+        // Handle vibrance changes
+        vibranceSlider.addEventListener('input', () => {
+            vibrance = parseFloat(vibranceSlider.value);
+            vibranceValue.textContent = vibrance.toFixed(1);
+            draw();
+        });
+        
+        // Handle saturation changes
+        saturationSlider.addEventListener('input', () => {
+            saturation = parseFloat(saturationSlider.value);
+            saturationValue.textContent = saturation.toFixed(1);
+            draw();
+        });
+        
+        // Handle a parameter changes
+        aParamSlider.addEventListener('input', () => {
+            aParam = parseFloat(aParamSlider.value);
+            aValue.textContent = aParam.toFixed(1);
+            draw();
+        });
+        
+        // Handle color mode button clicks
+        btnLog.addEventListener('click', () => {
+            colorMode = 'log';
+            btnLog.classList.add('active');
+            btnSin.classList.remove('active');
+            btnMin.classList.remove('active');
+            draw();
+        });
+        
+        btnSin.addEventListener('click', () => {
+            colorMode = 'sin';
+            btnLog.classList.remove('active');
+            btnSin.classList.add('active');
+            btnMin.classList.remove('active');
+            draw();
+        });
+        
+        btnMin.addEventListener('click', () => {
+            colorMode = 'min';
+            btnLog.classList.remove('active');
+            btnSin.classList.remove('active');
+            btnMin.classList.add('active');
+            draw();
+        });
+        
+        // Handle circle overlay button clicks
+        btnRatio.addEventListener('click', () => {
+            showRatio = !showRatio;
+            btnRatio.classList.toggle('active', showRatio);
+            draw();
+        });
+        
+        btnPowers.addEventListener('click', () => {
+            showPowers = !showPowers;
+            btnPowers.classList.toggle('active', showPowers);
+            draw();
+        });
+        
+        btnAllCorners.addEventListener('click', () => {
+            showAllCorners = !showAllCorners;
+            btnAllCorners.classList.toggle('active', showAllCorners);
+            draw();
+        });
+        
+        // Initialize and draw
+        initializePoints();
+        draw();
+    </script>
+</body>
+</html>

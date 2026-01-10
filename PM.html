@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Projectile Motion Simulator</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+             display: flex;
+            flex-direction: row;
+        }
+        #container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        #controls-container {
+        
+            width: 320px;
+            height: 90vh;
+            overflow-y: auto;
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .control-group {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .control-group h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            margin: 5px 0;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        canvas {
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        #graph-container {
+            display: flex;
+            flex-direction: collumn;
+            gap: 20px;
+        }
+        #realtime-stats {
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        #results {
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .checkbox-group input {
+            width: auto;
+            margin-right: 10px;
+        }
+        .stat-value {
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="container">
+        <div id="controls-container">
+            <div class="control-group">
+                <h3>Basic Parameters</h3>
+                <label>Mass (kg): <input type="number" id="mass" value="1" min="0.001" step="0.001"></label>
+                <label>Throw Height (m): <input type="number" id="height" value="1.5" min="0" step="0.1"></label>
+                <label>Throw Angle (°): <input type="number" id="angle" value="45" min="0" max="90" step="1"></label>
+                <label>Throw Speed (m/s): <input type="number" id="speed" value="20" min="0" step="1"></label>
+        <select onchange="setPreset('speed', this.value)">
+           <option value="1.4">Walking Speed</option>
+    <option value="10">Running Speed</option>
+    <option value="27">Cycling Speed</option>
+    <option value="46">Fast Baseball Pitch</option>
+    <option value="1225">Speed of Sound (Air)</option>
+    <option value="343">Speed of Sound (Water)</option>
+    <option value="1500">Speed of Sound (Steel)</option>
+    <option value="11186">Escape Velocity (Earth)</option>
+    <option value="299792458">Speed of Light</option>
+    <option value="37000">Fastest Human-Made Object (Parker Solar Probe)</option>
+            </select>
+            </div>
+
+            <div class="control-group">
+                <h3>Environment</h3>
+                <label>Gravity (m/s²): <input type="number" id="gravity" value="9.81" min="0" step="0.01"></label>
+                <select onchange="setPreset('gravity', this.value)">
+                
+    <option value="9.81">Earth</option>
+    <option value="1.62">Moon</option>
+    <option value="3.71">Mars</option>
+    <option value="24.79">Jupiter</option>
+    <option value="8.87">Venus</option>
+    <option value="10.44">Saturn</option>
+    <option value="11.15">Uranus</option>
+    <option value="11.95">Neptune</option>
+    <option value="274">Sun</option>
+    <option value="0.58">Pluto</option>
+        <option value="0.0000001">Small Asteroid</option>
+    <option value="1000000000000">Supermassive Black Hole</option>
+                </select>
+                
+                <label>Fluid Density (kg/m³): <input type="number" id="airDensity" value="1.225" min="0" step="0.001"></label>
+                <select onchange="setPreset('airDensity', this.value)">
+                    <option value="">Select Preset...</option>
+                    <option value="1.225">Air (Earth)</option>
+                    <option value="0.02">Mars Atmosphere</option>
+                    <option value="1000">Water</option>
+                    <option value="0">Vacuum</option>
+                     <option value="13600">Mercury</option>
+    <option value="870">Gasoline</option>
+    <option value="900">Oil</option>
+    <option value="5.51">Venus Atmosphere</option>
+    <option value="13.1">Saturn’s Clouds</option>
+</select>
+            </div>
+
+            <div class="control-group">
+                <h3>Projectile Properties</h3>
+                <label>Material Density (kg/m³): <input type="number" id="material" value="7874" min="0" step="1"></label>
+                <select onchange="setPreset('material', this.value)">
+    <option value="2">Feathers</option>
+    <option value="7874">Iron</option>
+    <option value="19300">Gold</option>
+    <option value="22590">Osmium</option>
+    <option value="2700">Aluminum</option>
+    <option value="8900">Copper</option>
+    <option value="500">Wood</option>
+    <option value="11340">Lead</option>
+    <option value="8000">Steel</option>
+    <option value="920">Ice</option>
+                </select>
+                
+                <label>Diameter (m): <input type="number" id="diameter" value="0.1" min="0.001" step="0.001"></label>
+                <select onchange="setPreset('diameter', this.value)">
+                    <option value="">Select Preset...</option>
+                    <option value="0.01">Small (1cm)</option>
+                    <option value="0.1">Medium (10cm)</option>
+                    <option value="0.5">Large (50cm)</option>
+                      <option value="">Select Preset...</option>
+    <option value="0.000001">Colloid</option>
+    <option value="0.0001">Grain of Sand</option>
+    <option value="0.01">Pebble</option>
+    <option value="0.5">Boulder</option>
+    <option value="1">Exercise Ball</option>
+    <option value="1000">Small Moon</option>
+    <option value="12742000">Earth</option>
+    <option value="1391400000">Sun</option>
+                </select>
+                
+                <label>Drag Coefficient: <input type="number" id="dragCoeff" value="0.47" min="0" step="0.01"></label>
+                <select onchange="setPreset('dragCoeff', this.value)">
+                    <option value="">Select Preset...</option>
+                    <option value="0.47">Sphere</option>
+                    <option value="0.38">Semisphere</option>
+                    <option value="0.50">Cone</option>
+                    <option value="1.06">Cylinder</option>
+                    <option value="0.04">Streamlined Body</option>
+                      <option value="0.295">Tear Drop</option>
+                       <option value="0.8">Parachute</option>
+    <option value="0.9">Disk</option>
+     <option value="1.28">Cube</option>
+                    <option value="2">Flat Plane Perpendicular</option>
+                     <option value="0">Neglect</option>
+                </select>
+                
+                <label>Lift Coefficient: <input type="number" id="lift" value="0" min="0" step="0.01"></label>
+                <select onchange="setPreset('lift', this.value)">
+                    <option value="0">None</option>
+    <option value="0.1">Low</option>
+    <option value="0.3">Medium</option>
+    <option value="0.6">High</option>
+    <option value="1.2">Extreme</option>
+    <option value="0.8">Glider Wing</option>
+    <option value="1.5">Plane Wing</option>
+    <option value="0.2">Frisbee</option>
+    <option value="0.05">Dart</option>
+    <option value="2">Bird Wing</option>
+            </div>
+
+            <div class="control-group">
+                <h3>Advanced Features</h3>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="enableRelativity" checked>
+                    <label for="enableRelativity">Enable Relativistic Effects</label>
+                </div>
+                <label>Speed of Light (m/s): <input type="number" id="speedOfLight" value="299792458" min="1" step="1"></label>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="enableBuoyancy" checked>
+                    <label for="enableBuoyancy">Enable Buoyancy</label>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="enableDecay">
+                    <label for="enableDecay">Enable Mass Decay</label>
+                </div>
+                <label>Half-life (s): <input type="number" id="halfLife" value="10" min="0.1" step="0.1" disabled></label>
+       <select onchange="setPreset('halfLife', this.value)">
+       <option value="0.00000000000000000000001">Hydrogen-7</option>
+       <option value="0.000000000000001">Pion</option>
+    <option value="0.000000000001">Muon</option>
+        <option value="0.1">Thorium-214</option>
+            <option value="0.25">Astatine-196</option>
+                <option value="0.5">Lead-184</option>
+    <option value="1">Radon-220</option>
+    <option value="88">Francium-223</option>
+    <option value="1600">Carbon-14</option>
+    <option value="24100">Plutonium-239</option>
+    <option value="4500000000">Uranium-238</option>
+    <option value="100000000000000000">Thorium-232</option>
+           </div>
+
+            <div class="control-group">
+                <h3>Simulation Controls</h3>
+                <label>Mark Interval (s): <input type="number" id="markInterval" value="1" min="0.1" step="0.1"></label>
+                <button onclick="simulate(true)">Fast Draw</button>
+                <button onclick="simulate(false)">Animate</button>
+                <button onclick="resetSimulation()">Reset</button>
+            </div>
+        </div>
+            </div>
+        <div id="graph-container">
+            <canvas id="canvas" width="800" height="500"></canvas>
+            
+            <div id="realtime-stats">
+                <h2>Real-time Parameters</h2>
+                <table>
+                    <tr>
+                        <th>Time (s)</th>
+                        <td id="stat-time" class="stat-value">-</td>
+                    </tr>
+                    <tr>
+                        <th>Position (m)</th>
+                        <td id="stat-position" class="stat-value">-</td>
+                    </tr>
+                    <tr>
+                        <th>Velocity (m/s)</th>
+                        <td id="stat-velocity" class="stat-value">-</td>
+                    </tr>
+                    <tr>
+                        <th>Speed (m/s)</th>
+                        <td id="stat-speed" class="stat-value">-</td>
+                    </tr>
+                    <tr>
+                        <th>Altitude (m)</th>
+                        <td id="stat-altitude" class="stat-value">-</td>
+                    </tr>
+                    <tr>
+                        <th>Kinetic Energy (J)</th>
+                        <td id="stat-ke" class="stat-value">-</td>
+                    </tr>
+                    <tr>
+                        <th>Potential Energy (J)</th>
+                        <td id="stat-pe" class="stat-value">-</td>
+                    </tr>
+                    <tr>
+                        <th>Momentum (kg·m/s)</th>
+                        <td id="stat-momentum" class="stat-value">-</td>
+                    </tr>
+                    <tr>
+                        <th>Drag Force (N)</th>
+                        <td id="stat-drag" class="stat-value">-</td>
+                    </tr>
+                    <tr>
+                        <th>Buoyancy Force (N)</th>
+                        <td id="stat-buoyancy" class="stat-value">-</td>
+                    </tr>
+                    <tr>
+                        <th>Relativistic Factor</th>
+                        <td id="stat-gamma" class="stat-value">-</td>
+                    </tr>
+                    <tr>
+                        <th>Mass (kg)</th>
+                        <td id="stat-mass" class="stat-value">-</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div id="results">
+                <h2>Simulation Results</h2>
+                <p>No simulation data yet. Click "Fast Draw" or "Animate" to run a simulation.</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        let animationId = null;
+        let currentTrajectory = [];
+        let maxValues = {};
+        let scale = 1;
+        
+        // Enable/disable half-life input based on decay checkbox
+        document.getElementById("enableDecay").addEventListener("change", function() {
+            document.getElementById("halfLife").disabled = !this.checked;
+        });
+        
+        function setPreset(id, value) {
+            if (value) document.getElementById(id).value = value;
+        }
+        
+        function resetSimulation() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            document.getElementById("results").innerHTML = "<h2>Simulation Results</h2><p>No simulation data yet. Click \"Fast Draw\" or \"Animate\" to run a simulation.</p>";
+            resetStats();
+        }
+        
+        function resetStats() {
+            const statElements = document.querySelectorAll(".stat-value");
+            statElements.forEach(el => el.textContent = "-");
+        }
+        
+        function updateStats(state, mass, time, dragForce, buoyancyForce, gamma) {
+            const [x, y, vx, vy] = state;
+            const v = Math.sqrt(vx*vx + vy*vy);
+            const ke = 0.5 * mass * v * v;
+            const pe = mass * getGravity() * y;
+            const momentum = mass * v;
+            
+            document.getElementById("stat-time").textContent = time.toFixed(3);
+            document.getElementById("stat-position").textContent = `(${x.toFixed(2)}, ${y.toFixed(2)})`;
+            document.getElementById("stat-velocity").textContent = `(${vx.toFixed(2)}, ${vy.toFixed(2)})`;
+            document.getElementById("stat-speed").textContent = v.toFixed(2);
+            document.getElementById("stat-altitude").textContent = y.toFixed(2);
+            document.getElementById("stat-ke").textContent = ke.toFixed(2);
+            document.getElementById("stat-pe").textContent = pe.toFixed(2);
+            document.getElementById("stat-momentum").textContent = momentum.toFixed(2);
+            document.getElementById("stat-drag").textContent = dragForce.toFixed(4);
+            document.getElementById("stat-buoyancy").textContent = buoyancyForce.toFixed(4);
+            document.getElementById("stat-gamma").textContent = gamma.toFixed(8);
+            document.getElementById("stat-mass").textContent = mass.toFixed(6);
+        }
+        
+        function getGravity() {
+            return parseFloat(document.getElementById("gravity").value);
+        }
+        
+        function getMassAtTime(initialMass, time, halfLife) {
+            if (!halfLife || halfLife <= 0) return initialMass;
+            return initialMass * Math.pow(0.5, time / halfLife);
+        }
+        
+        function rk4Step(f, state, dt, time, mass, halfLife) {
+            let currentMass = getMassAtTime(mass, time, halfLife);
+            let k1 = f(state, currentMass);
+            
+            let mass2 = getMassAtTime(mass, time + 0.5*dt, halfLife);
+            let k2 = f(state.map((s, i) => s + 0.5 * dt * k1[i]), mass2);
+            
+            let mass3 = getMassAtTime(mass, time + 0.5*dt, halfLife);
+            let k3 = f(state.map((s, i) => s + 0.5 * dt * k2[i]), mass3);
+            
+            let mass4 = getMassAtTime(mass, time + dt, halfLife);
+            let k4 = f(state.map((s, i) => s + dt * k3[i]), mass4);
+            
+            return state.map((s, i) => s + (dt / 6) * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]));
+        }
+
+        function simulate(fastDraw) {
+            // Reset previous simulation
+            resetSimulation();
+            
+            // Get input values
+            const initialMass = parseFloat(document.getElementById("mass").value);
+            const initialY = parseFloat(document.getElementById("height").value);
+            const airDensity = parseFloat(document.getElementById("airDensity").value);
+            const dragCoeff = parseFloat(document.getElementById("dragCoeff").value);
+            const materialDensity = parseFloat(document.getElementById("material").value);
+            const diameter = parseFloat(document.getElementById("diameter").value);
+            const lift = parseFloat(document.getElementById("lift").value);
+            const gravity = getGravity();
+            const enableRelativity = document.getElementById("enableRelativity").checked;
+            const c = enableRelativity ? parseFloat(document.getElementById("speedOfLight").value) : Infinity;
+            const angle = parseFloat(document.getElementById("angle").value) * Math.PI / 180;
+            const initialSpeed = parseFloat(document.getElementById("speed").value);
+            const markInterval = parseFloat(document.getElementById("markInterval").value);
+            const enableBuoyancy = document.getElementById("enableBuoyancy").checked;
+            const enableDecay = document.getElementById("enableDecay").checked;
+            const halfLife = enableDecay ? parseFloat(document.getElementById("halfLife").value) : 0;
+            
+            // Calculate derived properties
+            const r = diameter / 2;
+            const area =  initialMass / materialDensity;
+            const volume = (4/3) * Math.PI * r * r * r;
+            const initialVx = initialSpeed * Math.cos(angle);
+            const initialVy = initialSpeed * Math.sin(angle);
+            
+            // Initialize state
+            let state = [0, initialY, initialVx, initialVy];
+            let time = 0;
+            const dt = 0.01;
+            let trajectory = [];
+            maxValues = {
+                x: 0,
+                y: initialY,
+                speed: initialSpeed,
+                ke: 0.5 * initialMass * initialSpeed * initialSpeed,
+                time: 0
+            };
+            
+            // Equations of motion
+            function equations([x, y, vx, vy], mass) {
+                const v = Math.sqrt(vx*vx + vy*vy);
+                
+                // Calculate relativistic effects if enabled
+                let gamma = 1;
+                let v_prime = v;
+                let vx_prime = vx;
+                let vy_prime = vy;
+                
+                if (enableRelativity && v > 0) {
+                    gamma = 1 / Math.sqrt(1 - (v*v)/(c*c));
+                    v_prime = v * gamma;
+                    vx_prime = (vx / v) * v_prime;
+                    vy_prime = (vy / v) * v_prime;
+                }
+                
+                // Calculate forces
+                let dragForce = 0.5 * airDensity * v_prime * v_prime * dragCoeff * area;
+                let liftForce = 0.5 * airDensity * v_prime * v_prime * lift * area;
+                
+                // Calculate buoyancy if enabled
+                let buoyancyForce = 0;
+                if (enableBuoyancy && y > 0) {
+                    buoyancyForce = airDensity * volume * gravity;
+                }
+                
+                // Calculate acceleration components
+                let ax = (-dragForce * (vx_prime / v_prime)) / mass;
+                let ay = (-gravity - (dragForce * (vy_prime / v_prime))) / mass + liftForce / mass + buoyancyForce / mass;
+                
+                // Update max values
+                if (x > maxValues.x) maxValues.x = x;
+                if (y > maxValues.y) maxValues.y = y;
+                if (v > maxValues.speed) maxValues.speed = v;
+                const currentKE = 0.5 * mass * v * v;
+                if (currentKE > maxValues.ke) maxValues.ke = currentKE;
+                maxValues.time = time;
+                
+                // Update stats in real-time during animation
+                if (!fastDraw) {
+                    updateStats([x, y, vx, vy], mass, time, dragForce, buoyancyForce, gamma);
+                }
+                
+                return [vx_prime, vy_prime, ax, ay];
+            }
+            
+            // Run simulation until projectile hits the ground
+            while (state[1] > 0) {
+                // Record state
+                const currentMass = getMassAtTime(initialMass, time, halfLife);
+                trajectory.push({
+                    state: [...state],
+                    time: time,
+                    mass: currentMass
+                });
+                
+                // Calculate forces for stats (for fast draw)
+                if (fastDraw) {
+                    const v = Math.sqrt(state[2]*state[2] + state[3]*state[3]);
+                    let v_prime = v;
+                    if (enableRelativity && v > 0) {
+                        const gamma = 1 / Math.sqrt(1 - (v*v)/(c*c));
+                        v_prime = v * gamma;
+                    }
+                    const dragForce = 0.5 * airDensity * v_prime * v_prime * dragCoeff * area;
+                    const buoyancyForce = enableBuoyancy ? airDensity * volume * gravity : 0;
+                    const gamma = enableRelativity ? 1 / Math.sqrt(1 - (v*v)/(c*c)) : 1;
+                    updateStats(state, currentMass, time, dragForce, buoyancyForce, gamma);
+                }
+                
+                // Step forward
+                state = rk4Step(equations, state, dt, time, initialMass, halfLife);
+                time += dt;
+            }
+            
+            // Add final point
+            trajectory.push({
+                state: [...state],
+                time: time,
+                mass: getMassAtTime(initialMass, time, halfLife)
+            });
+            currentTrajectory = trajectory;
+            
+            // Calculate final results
+            const finalTime = time;
+            const distance = state[0];
+            const impactAngle = Math.atan2(state[3], state[2]) * 180 / Math.PI;
+            const impactSpeed = Math.sqrt(state[2]*state[2] + state[3]*state[3]);
+            
+            // Display results
+            const resultsHTML = `
+                <h2>Simulation Results</h2>
+                <table>
+                    <tr>
+                        <th>Maximum Height</th>
+                        <td>${maxValues.y.toFixed(2)} m</td>
+                    </tr>
+                    <tr>
+                        <th>Horizontal Distance</th>
+                        <td>${distance.toFixed(2)} m</td>
+                    </tr>
+                    <tr>
+                        <th>Flight Time</th>
+                        <td>${finalTime.toFixed(2)} s</td>
+                    </tr>
+                    <tr>
+                        <th>Impact Speed</th>
+                        <td>${impactSpeed.toFixed(2)} m/s</td>
+                    </tr>
+                    <tr>
+                        <th>Impact Angle</th>
+                        <td>${impactAngle.toFixed(1)}°</td>
+                    </tr>
+                    <tr>
+                        <th>Maximum Speed</th>
+                        <td>${maxValues.speed.toFixed(2)} m/s</td>
+                    </tr>
+                    <tr>
+                        <th>Maximum Kinetic Energy</th>
+                        <td>${maxValues.ke.toFixed(2)} J</td>
+                    </tr>
+                    <tr>
+                        <th>Final Mass</th>
+                        <td>${getMassAtTime(initialMass, finalTime, halfLife).toFixed(6)} kg</td>
+                    </tr>
+                </table>
+            `;
+            document.getElementById("results").innerHTML = resultsHTML;
+            
+            // Calculate scale for drawing
+            const maxX = Math.max(...trajectory.map(p => p.state[0]));
+            const maxY = Math.max(...trajectory.map(p => p.state[1]));
+            const scaleX = canvas.width / (maxX * 1.1);
+            const scaleY = canvas.height / (Math.max(maxY, initialY) * 1.1);
+            scale = Math.min(scaleX, scaleY);
+            
+            // Draw ground
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.strokeStyle = "#000";
+            ctx.stroke();
+            
+            if (fastDraw) {
+                // Fast draw - render entire trajectory at once
+                ctx.beginPath();
+                trajectory.forEach(({state}, i) => {
+                    const px = state[0] * scale;
+                    const py = canvas.height - state[1] * scale;
+                    if (i === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                });
+                ctx.strokeStyle = "#00f";
+                ctx.stroke();
+                
+                // Add marks at intervals
+                ctx.fillStyle = "#f00";
+                trajectory.forEach(({state, time}) => {
+                    if (time % markInterval < dt/2) {
+                        const px = state[0] * scale;
+                        const py = canvas.height - state[1] * scale;
+                        ctx.beginPath();
+                        ctx.arc(px, py, 3, 0, 2 * Math.PI);
+                        ctx.fill();
+                    }
+                });
+                
+                // Show final stats
+                const finalState = trajectory[trajectory.length-1];
+                const v = Math.sqrt(finalState.state[2]*finalState.state[2] + finalState.state[3]*finalState.state[3]);
+                const dragForce = 0.5 * airDensity * v * v * dragCoeff * area;
+                const buoyancyForce = enableBuoyancy ? airDensity * volume * gravity : 0;
+                const gamma = enableRelativity ? 1 / Math.sqrt(1 - (v*v)/(c*c)) : 1;
+                updateStats(finalState.state, finalState.mass, finalState.time, dragForce, buoyancyForce, gamma);
+            } else {
+                // Animate - render frame by frame
+                let index = 0;
+                
+                function animate() {
+                    if (index >= trajectory.length) {
+                        // Animation complete
+                        return;
+                    }
+                    
+                    const {state, time, mass} = trajectory[index];
+                    const px = state[0] * scale;
+                    const py = canvas.height - state[1] * scale;
+                    
+                    // Draw point
+                    ctx.fillStyle = "#00f";
+                    ctx.fillRect(px, py, 1, 1);
+                    
+                    // Add mark at interval
+                    if (time % markInterval < dt/2) {
+                        ctx.fillStyle = "#f00";
+                        ctx.beginPath();
+                        ctx.arc(px, py, 3, 0, 2 * Math.PI);
+                        ctx.fill();
+                    }
+                    
+                    // Calculate forces for stats
+                    const v = Math.sqrt(state[2]*state[2] + state[3]*state[3]);
+                    let v_prime = v;
+                    if (enableRelativity && v > 0) {
+                        const gamma = 1 / Math.sqrt(1 - (v*v)/(c*c));
+                        v_prime = v * gamma;
+                    }
+                    const dragForce = 0.5 * airDensity * v_prime * v_prime * dragCoeff * area;
+                    const buoyancyForce = enableBuoyancy ? airDensity * volume * gravity : 0;
+                    const gamma = enableRelativity ? 1 / Math.sqrt(1 - (v*v)/(c*c)) : 1;
+                    
+                    // Update stats
+                    updateStats(state, mass, time, dragForce, buoyancyForce, gamma);
+                    
+                    index++;
+                    animationId = requestAnimationFrame(animate);
+                }
+                
+                animate();
+            }
+        }
+    </script>
+</body>
+</html>

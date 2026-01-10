@@ -35,7 +35,7 @@
       <option value="55block">5x5 Block Text</option>
         <option value="turkify">Turkify</option>
         <option value="fancy">Fancy Unicode</option>
-         <option value="bold">Bald</option>
+         <option value="bold">Bold</option>
           <option value="italic">Italic</option>
            <option value="boldItalic">Bold Italic</option>
             <option value="script">Script</option>
@@ -57,6 +57,15 @@
     <option value="doubleLetters">Doubles</option>
     <option value="invisibleVowels">Invisible Vowels</option>
     <option value="zalgo">Zalgo</option>
+    <option value="zalgo_light">Zalgo Light</option>
+<option value="zalgo_heavy">Zalgo Heavy</option>
+<option value="zalgo_up">Zalgo Up</option>
+<option value="zalgo_down">Zalgo Down</option>
+<option value="zalgo_mid">Zalgo Mid</option>
+<option value="zalgo_chaos">Zalgo Chaos</option>
+<option value="zalgo_ultra">Zalgo Ultra</option>
+<option value="zalgo_omni">Zalgo Omni</option>
+
     <option value="reverseText">Reverse</option>
     <option value="wideText">Wide Text</option>
     <option value="bubbleText">Bubble Letters</option>
@@ -68,6 +77,9 @@
     <button onclick="loadExample1()">Quick Fox</button>
     <button onclick="loadExample2()">School Uniforms</button>
     <button onclick="loadExample3()">Macbeth</button>
+    <button onclick="loadExample4()">Capitals</button>
+    <button onclick="loadExample5()">Numbers</button>
+    <button onclick="loadExample6()">Allchar</button>
 
     <script>
         function translateText() {
@@ -117,7 +129,45 @@
                 });
 
                 output = output.replace(/e\s/g, " ");
-            } 
+            } else if (translationType === "zalgo_light") {
+    const zalgoChars = ['̖', '̗', '̘', '̙', '̜'];
+    output = output.split("").map(char => char + zalgoChars[Math.floor(Math.random() * zalgoChars.length)]).join("");
+}
+
+else if (translationType === "zalgo_heavy") {
+    const zalgoChars = ['̳', '̾', '͇', '͉', '͍', '͎', '͒', '͘', '͜', '͢', '͠'];
+    output = output.split("").map(char => char + zalgoChars[Math.floor(Math.random() * zalgoChars.length)]).join("");
+}
+
+else if (translationType === "zalgo_up") {
+    const zalgoChars = ['̍', '̎', '̄', '̅', '̿', '͆', '͊', '͋', '͌'];
+    output = output.split("").map(char => char + zalgoChars[Math.floor(Math.random() * zalgoChars.length)]).join("");
+}
+
+else if (translationType === "zalgo_down") {
+    const zalgoChars = ['̖', '̗', '̘', '̙', '̜', '̝', '̞', '̟', '̠'];
+    output = output.split("").map(char => char + zalgoChars[Math.floor(Math.random() * zalgoChars.length)]).join("");
+}
+
+else if (translationType === "zalgo_mid") {
+    const zalgoChars = ['̵', '̶', '̷', '̸', '̷', '̴'];
+    output = output.split("").map(char => char + zalgoChars[Math.floor(Math.random() * zalgoChars.length)]).join("");
+}
+
+else if (translationType === "zalgo_chaos") {
+    const zalgoChars = ['̍', '̎', '̄', '̅', '̿', '͆', '͊', '͋', '͌', '̖', '̗', '̘', '̙', '̜', '̝', '̞', '̟', '̠', '̵', '̶', '̷', '̸', '̷', '̴'];
+    output = output.split("").map(char => char + zalgoChars[Math.floor(Math.random() * zalgoChars.length)]).join("");
+}else if (translationType === "zalgo_ultra") {
+    const zalgoChars = ['̍', '̎', '̄', '̅', '̿', '͆', '͊', '͋', '͌', '̖', '̗', '̘', '̙', '̜', '̝', '̞', '̟', '̠', '̵', '̶', '̷', '̸', '̷', '̴'];
+    output = output.split("").map(char => char + Array.from({length: 5}, () => zalgoChars[Math.floor(Math.random() * zalgoChars.length)]).join("")).join("");
+}
+
+else if (translationType === "zalgo_omni") {
+    const zalgoChars = ['̍', '̎', '̄', '̅', '̿', '͆', '͊', '͋', '͌', '̖', '̗', '̘', '̙', '̜', '̝', '̞', '̟', '̠', '̵', '̶', '̷', '̸', '̷', '̴', '͡', '͢', '͠', '͜͡', '͡͝', '͟', '͞', '͜͠', '͘', '͜', '͢͜', '͡͠'];
+    output = output.split("").map(char => char + Array.from({length: 10}, () => zalgoChars[Math.floor(Math.random() * zalgoChars.length)]).join("")).join("");
+}
+
+
             else if (translationType === "fancy") {
                 const fancyMap = {
                     'A': '𝒜', 'B': '𝐵', 'C': '𝒞', 'D': '𝒟', 'E': '𝐸', 'F': '𝐹', 'G': '𝒢', 'H': '𝐻',
@@ -341,7 +391,7 @@ else if (translationType === "bubbleText") {
     output = output.split("").map(char => bubbleMap[char] || char).join("");
 }else if (translationType === "35block") {
    const letterMap = {
-        'A': [" _ ", "# #", "###", "# #", "# #"],
+        'A': [" # ", "# #", "###", "# #", "# #"],
         'B': ["## ", "# #", "## ", "# #", "## "],
         'C': [" ##", "#  ", "#  ", "#  ", " ##"],
         'D': ["## ", "# #", "# #", "# #", "## "],
@@ -793,6 +843,28 @@ output = finalOutput.join("\n\n");
     "Nor heaven peep throug the blanket of the dark,\n" +
     "To cry ‘Hold, hold!’";
         }
+        
+        function loadExample4() {
+    document.getElementById("inputText").value = "Capital Letters Are Used At The Beginning Of Sentences And For Proper Nouns. For Example, Names Like John, Cities Like Paris, And Countries Like Canada Always Start With A Capital Letter. Additionally, The Pronoun 'I' Is Always Capitalized In English.";
+        }
+   function loadExample5() {
+        document.getElementById("inputText").value = 
+        "Pi: 3.14159265358979323846\n e: 2.71828182845904523536\n phi: 1.61803398874989484820\n sqrt(2): 1.41421356237309504880\n lemniscate constant: 2.62205755429211981046.";
+}
+function loadExample6() {
+    document.getElementById("inputText").value = 
+        "Hello WORLD! \n" +
+        "Did you know that 123 + 456 = 579? \n" +
+        "Symbols like @, #, $, %, &, and * are used in passwords!\n" +
+        "Punctuation marks: , . ; : ? ! - () \" ' ...\n" +
+        "Fun Fact: The quick brown fox jumps over the lazy dog.\n" +
+        "Numbers: 1, 2, 3, 4, 5, 6, 7, 8, 9, 0\n" +
+        "CAPITAL LETTERS: A B C D E F G H I J K L M N O P Q R S T U V W X Y Z\n" +
+        "small letters: a b c d e f g h i j k l m n o p q r s t u v w x y z\n" +
+        "Special Characters: ~ ` ! @ # $ % ^ & * ( ) _ + - = { } [ ] | \\ : ; \" ' < > , . ? /\n" +
+        "Mix it all: A1! B2@ C3# D4$ E5% F6^ G7& H8* I9( J0)\n" +
+        "End of example. ";
+}
     </script>
 </body>
 </html>

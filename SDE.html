@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Segmented Display — Enhanced with Character Editor</title>
+<style>
+  body { font-family: system-ui, sans-serif; background:#f6f7fb; color:#111; padding:18px; }
+  label { display:block; font-size:13px; margin-top:8px; margin-bottom:4px; }
+  textarea,input,select,button { width:100%; font-family:monospace; font-size:13px; box-sizing:border-box; }
+  textarea { height:100px; resize:vertical; }
+  .row { display:flex; gap:8px; margin-top:8px; }
+  canvas { image-rendering:pixelated; border:1px solid #ccc; display:block; margin-top:10px; }
+  .swatch { width:26px; height:18px; border:1px solid #aaa; border-radius:3px; display:inline-block; margin-right:6px; }
+  .char-editor { margin-top: 20px; border: 1px solid #ccc; padding: 10px; border-radius: 5px; }
+  .char-preview { display: flex; align-items: center; margin-bottom: 10px; }
+  .char-preview canvas { margin: 0 10px 0 0; }
+  .segments { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+  .segment { padding: 5px 10px; border: 1px solid #ccc; border-radius: 3px; cursor: pointer; }
+  .segment.active { background: #00ff66; color: #000; }
+  .config-buttons { display: flex; gap: 5px; margin-top: 10px; }
+</style>
+</head>
+<body>
+<h1>Segmented Display — Enhanced with Character Editor</h1>
+
+<label>Template image</label>
+<input type="file" id="imgfile" accept="image/*">
+
+<label>Text to display</label>
+<input id="textToShow" value="0123456789">
+
+<label>Config (segmentNumber : digitsOn)</label>
+<textarea id="configText">1:135790
+2:23670
+3:45670
+4:890</textarea>
+
+<div class="row">
+  <div style="flex:1"><label>BG</label><input type="color" id="bgColor" value="#000000"></div>
+  <div style="flex:1"><label>ON</label><input type="color" id="onColor" value="#00ff66"></div>
+  <div style="flex:1"><label>OFF</label><input type="color" id="offColor" value="#444444"></div>
+</div>
+
+<div class="row">
+  <button id="detectBtn">Detect Segments</button>
+  <button id="renderBtn">Render</button>
+  <select id="filterSel">
+    <option value="none">No Filter</option>
+    <option value="glow">Glow</option>
+    <option value="glow2">Enhanced Glow</option>
+    <option value="blur">Blur</option>
+    <option value="sharpen">Sharpen</option>
+    <option value="edge">Edge Detect</option>
+    <option value="emboss">Emboss</option>
+    <option value="outline">Outline</option>
+  </select>
+  <label style="flex:1">Kernel size<input type="number" id="kernelSize" min="3" step="2" value="3"></label>
+</div>
+
+<div class="row">
+  <label style="flex:1">Spacing (px)<input type="number" id="charSpace" value="-10"></label>
+</div>
+
+<div id="mapping"></div>
+
+<div class="char-editor">
+  <h3>Character Editor</h3>
+  <div class="char-preview">
+    <canvas id="charPreview" width="100" height="150"></canvas>
+    <div>
+      <label>Character</label>
+      <input type="text" id="editChar" maxlength="1" value="0">
+      <div class="segments" id="segmentControls"></div>
+      <div class="config-buttons">
+        <button id="updateCharBtn">Update Character</button>
+        <button id="saveConfigBtn">Save Config</button>
+        <button id="loadConfigBtn">Load Config</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr>
+<canvas id="result"></canvas>
+
+<script>
+const tempCanvas=document.createElement('canvas');
+const tctx=tempCanvas.getContext('2d');
+let img=null, segs=[], segMap={}, config={};
+
+function rgbToHsl(r,g,b){
+  r/=255;g/=255;b/=255;
+  const max=Math.max(r,g,b),min=Math.min(r,g,b);
+  let h=0,s=0,l=(max+min)/2;
+  if(max!==min){
+    const d=max-min;
+    s=l>0.5?d/(2-max-min):d/(max+min);
+    switch(max){
+      case r:h=(g-b)/d+(g<b?6:0);break;
+      case g:h=(b-r)/d+2;break;
+      case b:h=(r-g)/d+4;break;
+    }h/=6;
+  }
+  return{h:h*360,s,l};
+}
+function colorKey(r,g,b){return r+","+g+","+b;}
+function hexToRgb(hex){hex=hex.replace('#','');if(hex.length===3)hex=hex.split('').map(x=>x+x).join('');const n=parseInt(hex,16);return{r:(n>>16)&255,g:(n>>8)&255,b:n&255};}
+function rgbDist(a,b){return Math.sqrt((a.r-b.r)**2+(a.g-b.g)**2+(a.b-b.b)**2);}
+
+document.getElementById('imgfile').onchange=e=>{
+  const f=e.target.files[0]; if(!f)return;
+  const url=URL.createObjectURL(f);
+  img=new Image();
+  img.onload=()=>{
+    tempCanvas.width=img.width; tempCanvas.height=img.height;
+    tctx.drawImage(img,0,0);
+  };
+  img.src=url;
+};
+
+document.getElementById('detectBtn').onclick=()=>{
+  if(!img)return alert('Load image first');
+  const w=tempCanvas.width,h=tempCanvas.height;
+  const data=tctx.getImageData(0,0,w,h).data;
+  const found={};
+  for(let i=0;i<data.length;i+=4){
+    const r=data[i],g=data[i+1],b=data[i+2],a=data[i+3];
+    if(a<30)continue;
+    const hsl=rgbToHsl(r,g,b);
+    if(hsl.s<0.25||hsl.l>0.9)continue;
+    const k=colorKey(r,g,b);
+    if(!found[k])found[k]={r,g,b,count:0,h:hsl.h};
+    found[k].count++;
+  }
+  segs=Object.values(found).sort((a,b)=>a.h-b.h);
+  segs.forEach((s,i)=>s.id=i+1);
+  segMap={}; segs.forEach(s=>segMap[colorKey(s.r,s.g,s.b)]=s);
+  const mapDiv=document.getElementById('mapping');
+  mapDiv.innerHTML="<b>Segments detected:</b><br>";
+  segs.forEach(s=>{
+    const sw=document.createElement('span');
+    sw.className='swatch'; sw.style.background=`rgb(${s.r},${s.g},${s.b})`;
+    mapDiv.appendChild(sw);
+    mapDiv.append(` ${s.id} `);
+  });
+  
+  // Initialize config
+  config = parseConfig();
+  updateSegmentControls();
+  updateCharPreview();
+};
+
+document.getElementById('renderBtn').onclick=()=>{
+  if(!img||!segs.length)return alert('Detect segments first');
+  config = parseConfig();
+  const text=document.getElementById('textToShow').value;
+  const bg=hexToRgb(document.getElementById('bgColor').value);
+  const on=hexToRgb(document.getElementById('onColor').value);
+  const off=hexToRgb(document.getElementById('offColor').value);
+  const filt=document.getElementById('filterSel').value;
+  const ksize=parseInt(document.getElementById('kernelSize').value)||3;
+  const spacing=parseInt(document.getElementById('charSpace').value)||0;
+
+  const w=tempCanvas.width,h=tempCanvas.height;
+  const src=tctx.getImageData(0,0,w,h);
+  const resultCanvas=document.getElementById('result');
+  const rctx=resultCanvas.getContext('2d');
+  resultCanvas.width=text.length*w + (text.length-1)*spacing;
+  resultCanvas.height=h;
+  rctx.fillStyle='#fff';rctx.fillRect(0,0,resultCanvas.width,h);
+
+  for(let ci=0;ci<text.length;ci++){
+    const ch=text[ci];
+    const imgData=new ImageData(w,h);
+    for(let i=0;i<src.data.length;i+=4){
+      const r=src.data[i],g=src.data[i+1],b=src.data[i+2],a=src.data[i+3];
+      const hsl=rgbToHsl(r,g,b);
+      if(hsl.l>0.92||a<30){
+        imgData.data[i]=bg.r;imgData.data[i+1]=bg.g;imgData.data[i+2]=bg.b;imgData.data[i+3]=255;continue;
+      }
+      const seg=segMap[colorKey(r,g,b)];
+      if(seg){
+        const onNow=(config[seg.id]||new Set()).has(ch);
+        const c=onNow?on:off;
+        imgData.data[i]=c.r;imgData.data[i+1]=c.g;imgData.data[i+2]=c.b;imgData.data[i+3]=255;
+      }else{
+        imgData.data[i]=r;imgData.data[i+1]=g;imgData.data[i+2]=b;imgData.data[i+3]=a;
+      }
+    }
+    let temp=document.createElement('canvas');
+    temp.width=w; temp.height=h;
+    temp.getContext('2d').putImageData(imgData,0,0);
+    if(filt!=='none')applyFilter(temp,filt,ksize);
+    rctx.drawImage(temp,ci*(w+spacing),0);
+  }
+};
+
+function parseConfig(){
+  const lines=document.getElementById('configText').value.trim().split(/\r?\n/);
+  const map={};
+  for(const L of lines){
+    const m=L.match(/^(\d+)\s*:\s*([\dA-Za-z]+)/);
+    if(!m)continue;
+    const seg=+m[1];
+    const chars=new Set(m[2].split(''));
+    map[seg]=chars;
+  }
+  return map;
+}
+
+function updateConfigText(){
+  const lines = [];
+  for(const segId in config){
+    if(config.hasOwnProperty(segId)){
+      lines.push(`${segId}:${Array.from(config[segId]).join('')}`);
+    }
+  }
+  document.getElementById('configText').value = lines.join('\n');
+}
+
+function updateSegmentControls(){
+  const container = document.getElementById('segmentControls');
+  container.innerHTML = '';
+  
+  segs.forEach(seg => {
+    const btn = document.createElement('div');
+    btn.className = 'segment';
+    btn.textContent = seg.id;
+    btn.dataset.segment = seg.id;
+    
+    const char = document.getElementById('editChar').value;
+    btn.classList.toggle('active', config[seg.id] && config[seg.id].has(char));
+    
+    btn.onclick = () => {
+      const char = document.getElementById('editChar').value;
+      if(!config[seg.id]) config[seg.id] = new Set();
+      
+      if(config[seg.id].has(char)){
+        config[seg.id].delete(char);
+        btn.classList.remove('active');
+      } else {
+        config[seg.id].add(char);
+        btn.classList.add('active');
+      }
+      updateConfigText();
+      updateCharPreview();
+    };
+    
+    container.appendChild(btn);
+  });
+}
+
+function updateCharPreview(){
+  if(!img || !segs.length) return;
+  
+  const char = document.getElementById('editChar').value;
+  const bg = hexToRgb(document.getElementById('bgColor').value);
+  const on = hexToRgb(document.getElementById('onColor').value);
+  const off = hexToRgb(document.getElementById('offColor').value);
+  
+  const w = tempCanvas.width, h = tempCanvas.height;
+  const src = tctx.getImageData(0, 0, w, h);
+  const previewCanvas = document.getElementById('charPreview');
+  const pctx = previewCanvas.getContext('2d');
+  
+  previewCanvas.width = w;
+  previewCanvas.height = h;
+  
+  const imgData = new ImageData(w, h);
+  for(let i = 0; i < src.data.length; i += 4){
+    const r = src.data[i], g = src.data[i+1], b = src.data[i+2], a = src.data[i+3];
+    const hsl = rgbToHsl(r, g, b);
+    if(hsl.l > 0.92 || a < 30){
+      imgData.data[i] = bg.r; imgData.data[i+1] = bg.g; imgData.data[i+2] = bg.b; imgData.data[i+3] = 255;
+      continue;
+    }
+    const seg = segMap[colorKey(r, g, b)];
+    if(seg){
+      const onNow = (config[seg.id] || new Set()).has(char);
+      const c = onNow ? on : off;
+      imgData.data[i] = c.r; imgData.data[i+1] = c.g; imgData.data[i+2] = c.b; imgData.data[i+3] = 255;
+    } else {
+      imgData.data[i] = r; imgData.data[i+1] = g; imgData.data[i+2] = b; imgData.data[i+3] = a;
+    }
+  }
+  pctx.putImageData(imgData, 0, 0);
+}
+
+document.getElementById('editChar').oninput = () => {
+  updateSegmentControls();
+  updateCharPreview();
+};
+
+document.getElementById('updateCharBtn').onclick = () => {
+  updateConfigText();
+  updateCharPreview();
+};
+
+document.getElementById('saveConfigBtn').onclick = () => {
+  const data = document.getElementById('configText').value;
+  const blob = new Blob([data], {type: 'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'segment-config.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+document.getElementById('loadConfigBtn').onclick = () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.txt';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if(!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('configText').value = e.target.result;
+      config = parseConfig();
+      updateSegmentControls();
+      updateCharPreview();
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+};
+
+/* --- enhanced convolution filters --- */
+function applyFilter(cv,type,size){
+  const ctx=cv.getContext('2d');
+  const w=cv.width,h=cv.height;
+  const img=ctx.getImageData(0,0,w,h);
+  const d=img.data;
+  const out=new Uint8ClampedArray(d.length);
+  const K=makeKernel(type,size);
+  const norm=K.flat().reduce((a,b)=>a+b,0)||1;
+  const rad=Math.floor(size/2);
+  
+  for(let y=rad;y<h-rad;y++){
+    for(let x=rad;x<w-rad;x++){
+      let sr=0,sg=0,sb=0;
+      for(let ky=-rad;ky<=rad;ky++){
+        for(let kx=-rad;kx<=rad;kx++){
+          const idx=((y+ky)*w+(x+kx))*4;
+          const k=K[ky+rad][kx+rad];
+          sr+=d[idx]*k; sg+=d[idx+1]*k; sb+=d[idx+2]*k;
+        }
+      }
+      const o=(y*w+x)*4;
+      out[o]=clamp(sr/norm); out[o+1]=clamp(sg/norm); out[o+2]=clamp(sb/norm); out[o+3]=255;
+    }
+  }
+  ctx.putImageData(new ImageData(out,w,h),0,0);
+}
+function clamp(v){return Math.max(0,Math.min(255,v));}
+
+function makeKernel(type,size){
+  const k=[];
+  const mid=Math.floor(size/2);
+  for(let y=0;y<size;y++){k[y]=Array(size).fill(0);}
+  
+  if(type==='blur'){
+    for(let y=0;y<size;y++)for(let x=0;x<size;x++)k[y][x]=1;
+  }else if(type==='glow'){
+    for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+      const dist=Math.sqrt((y-mid)**2+(x-mid)**2);
+      k[y][x]=Math.max(0,1-dist/(mid+1));
+    }
+    k[mid][mid]=2;
+  }else if(type==='glow2'){
+    for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+      const dist=Math.sqrt((y-mid)**2+(x-mid)**2);
+      k[y][x]=Math.exp(-dist*2/(mid+1));
+    }
+    k[mid][mid]=2;
+  }else if(type==='sharpen'){
+    for(let y=0;y<size;y++)for(let x=0;x<size;x++)k[y][x]=-1;
+    k[mid][mid]=size*size;
+  }else if(type==='edge'){
+    for(let y=0;y<size;y++)for(let x=0;x<size;x++)k[y][x]=-1;
+    k[mid][mid]=(size*size)-1;
+  }else if(type==='emboss'){
+    for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+      k[y][x]=(y-mid)+(x-mid);
+    }
+    k[mid][mid]=1;
+  }else if(type==='outline'){
+    for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+      if(y===mid && x===mid) k[y][x]=(size*size)-1;
+      else k[y][x]=-1;
+    }
+  }
+  return k;
+}
+</script>
+</body>
+</html>

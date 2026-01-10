@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polynomial Factorer</title>
+    <style>
+        body { font-family: Arial; max-width: 900px; margin: 0 auto; padding: 20px; }
+        .container { background: white; padding: 20px; border-radius: 8px; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .checkbox-group { display: flex; align-items: center; margin-bottom: 15px; }
+        button { background: #4CAF50; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
+        .results { margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 4px; }
+        canvas { border: 1px solid #ddd; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Polynomial Factorer</h1>
+        
+        <div class="input-section">
+            <div class="input-group">
+                <label for="polynomial">Polynomial (e.g., 3x^3-2x^2+5x-1):</label>
+                <input type="text" id="polynomial" value="x^4-3x^3+3x^2-3x+2">
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="useComplex" checked>
+                <label for="useComplex">Use Complex Numbers</label>
+            </div>
+            
+            <div class="input-group">
+                <label for="accuracy">Significant Figures:</label>
+                <input type="number" id="accuracy" min="1" max="15" value="6">
+            </div>
+            
+            <div class="input-group">
+                <label for="epsilon">Newton Method Epsilon:</label>
+                <input type="text" id="epsilon" value="1e-10">
+            </div>
+            
+            <button id="factorButton">Factor Polynomial</button>
+        </div>
+        
+        <div class="results">
+            <h3>Factorization Result:</h3>
+            <div id="factorizationResult">Enter a polynomial and click "Factor Polynomial"</div>
+            <div id="rootsResult"></div>
+        </div>
+        
+        <div style="margin-top: 20px; display: flex; flex-direction: column; align-items: center;">
+            <h3>Domain Coloring</h3>
+            <canvas id="domainCanvas" width="510" height="510"></canvas>
+            <h3>Real Graph</h3>
+            <canvas id="realGraphCanvas" width="510" height="255"></canvas>
+        </div>
+    </div>
+
+    <script>
+        class Polynomial {
+            constructor(coefficients) {
+                this.coefficients = coefficients.map(c => new Complex(c.real, c.imag));
+                this.degree = coefficients.length - 1;
+            }
+            
+            evaluate(z) {
+                let result = new Complex(0, 0);
+                for (let i = 0; i <= this.degree; i++) {
+                    const term = z.pow(this.degree - i).multiply(this.coefficients[i]);
+                    result = result.add(term);
+                }
+                return result;
+            }
+            
+            evaluateReal(x) {
+                let result = 0;
+                for (let i = 0; i <= this.degree; i++) {
+                    result += this.coefficients[i].real * Math.pow(x, this.degree - i);
+                }
+                return result;
+            }
+            
+            derivative() {
+                if (this.degree === 0) return new Polynomial([new Complex(0, 0)]);
+                const derivCoeffs = [];
+                for (let i = 0; i < this.degree; i++) {
+                    derivCoeffs.push(this.coefficients[i].multiply(new Complex(this.degree - i, 0)));
+                }
+                return new Polynomial(derivCoeffs);
+            }
+            
+            syntheticDivision(root) {
+                if (this.degree === 0) return null;
+                const newCoeffs = [this.coefficients[0]];
+                for (let i = 1; i <= this.degree; i++) {
+                    const prev = newCoeffs[i-1];
+                    newCoeffs.push(prev.multiply(root).add(this.coefficients[i]));
+                }
+                const remainder = newCoeffs.pop();
+                return { quotient: new Polynomial(newCoeffs), remainder: remainder };
+            }
+        }
+
+        class Complex {
+            constructor(real, imag) {
+                this.real = real;
+                this.imag = imag;
+            }
+            
+            add(other) { return new Complex(this.real + other.real, this.imag + other.imag); }
+            subtract(other) { return new Complex(this.real - other.real, this.imag - other.imag); }
+            multiply(other) {
+                return new Complex(
+                    this.real * other.real - this.imag * other.imag,
+                    this.real * other.imag + this.imag * other.real
+                );
+            }
+            divide(other) {
+                const denom = other.real * other.real + other.imag * other.imag;
+                return new Complex(
+                    (this.real * other.real + this.imag * other.imag) / denom,
+                    (this.imag * other.real - this.real * other.imag) / denom
+                );
+            }
+            pow(n) {
+                if (n === 0) return new Complex(1, 0);
+                let result = new Complex(1, 0);
+                let base = this;
+                if (n < 0) { base = new Complex(1, 0).divide(base); n = -n; }
+                while (n > 0) {
+                    if (n % 2 === 1) result = result.multiply(base);
+                    base = base.multiply(base);
+                    n = Math.floor(n / 2);
+                }
+                return result;
+            }
+            magnitude() { return Math.sqrt(this.real * this.real + this.imag * this.imag); }
+            conjugate() { return new Complex(this.real, -this.imag); }
+            
+            toString(sf = 6) {
+                const roundIfClose = (num) => Math.abs(num - Math.round(num)) < 1e-10 ? Math.round(num) : num;
+                const rReal = roundIfClose(this.real);
+                const rImag = roundIfClose(this.imag);
+                
+                const fmt = (num) => Math.abs(num - Math.round(num)) < 1e-10 ? Math.round(num).toString() : num.toPrecision(sf);
+                
+                if (rImag === 0) return fmt(rReal);
+                if (rReal === 0) {
+                    if (rImag === 1) return 'i';
+                    if (rImag === -1) return '-i';
+                    return fmt(rImag) + 'i';
+                }
+                if (rImag === 1) return fmt(rReal) + '+i';
+                if (rImag === -1) return fmt(rReal) + '-i';
+                return fmt(rReal) + (rImag > 0 ? '+' : '') + fmt(rImag) + 'i';
+            }
+            
+            isZero(tol = 1e-10) { return Math.abs(this.real) < tol && Math.abs(this.imag) < tol; }
+            roundIfClose() {
+                return new Complex(
+                    Math.abs(this.real - Math.round(this.real)) < 1e-10 ? Math.round(this.real) : this.real,
+                    Math.abs(this.imag - Math.round(this.imag)) < 1e-10 ? Math.round(this.imag) : this.imag
+                );
+            }
+        }
+
+        function parsePolynomial(str) {
+            str = str.replace(/\s/g, '').toLowerCase();
+            if (str.startsWith('-')) str = '0' + str;
+            const terms = str.split(/(?=[+-])/);
+            
+            let maxDegree = 0;
+            for (const term of terms) {
+                if (term.includes('x')) {
+                    if (term.includes('^')) {
+                        maxDegree = Math.max(maxDegree, parseInt(term.split('^')[1]));
+                    } else {
+                        maxDegree = Math.max(maxDegree, 1);
+                    }
+                }
+            }
+            
+            const coeffs = new Array(maxDegree + 1).fill(0).map(() => new Complex(0, 0));
+            
+            for (const term of terms) {
+                if (term === '+' || term === '-') continue;
+                let coeffStr, deg;
+                
+                if (term.includes('x')) {
+                    if (term.includes('^')) {
+                        const parts = term.split('x^');
+                        coeffStr = parts[0] || '1';
+                        deg = parseInt(parts[1]);
+                    } else {
+                        const parts = term.split('x');
+                        coeffStr = parts[0] || '1';
+                        deg = 1;
+                    }
+                } else {
+                    coeffStr = term;
+                    deg = 0;
+                }
+                
+                if (coeffStr === '+') coeffStr = '1';
+                if (coeffStr === '-') coeffStr = '-1';
+                
+                coeffs[maxDegree - deg] = new Complex(parseFloat(coeffStr), 0);
+            }
+            
+            return new Polynomial(coeffs);
+        }
+
+        function newtonsMethod(poly, initialGuess, epsilon, maxIter = 1000) {
+            const deriv = poly.derivative();
+            let z = initialGuess;
+            for (let i = 0; i < maxIter; i++) {
+                const fz = poly.evaluate(z);
+                const fzp = deriv.evaluate(z);
+                if (fzp.magnitude() < 1e-15) {
+                    z = new Complex(Math.random() * 4 - 2, Math.random() * 4 - 2);
+                    continue;
+                }
+                const delta = fz.divide(fzp);
+                z = z.subtract(delta);
+                if (delta.magnitude() < epsilon) return z;
+            }
+            return null;
+        }
+
+        function findRoots(poly, epsilon) {
+            let roots = [];
+            let currentPoly = poly;
+            
+            for (let i = 0; i < poly.degree; i++) {
+                let root = null;
+                for (let attempt = 0; attempt < 10; attempt++) {
+                    root = newtonsMethod(currentPoly, 
+                        new Complex(Math.random() * 4 - 2, Math.random() * 4 - 2), epsilon);
+                    if (root) break;
+                }
+                if (!root) continue;
+                
+                roots.push(root);
+                const divResult = currentPoly.syntheticDivision(root);
+                if (divResult && divResult.quotient) {
+                    currentPoly = divResult.quotient;
+                } else break;
+            }
+            
+            return roots.map(root => polishRoot(poly, root, epsilon));
+        }
+
+        function polishRoot(poly, root, epsilon) {
+            const deriv = poly.derivative();
+            let z = root;
+            for (let i = 0; i < 10; i++) {
+                const fz = poly.evaluate(z);
+                const fzp = deriv.evaluate(z);
+                if (fzp.magnitude() < 1e-15) break;
+                const delta = fz.divide(fzp);
+                z = z.subtract(delta);
+                if (delta.magnitude() < epsilon) break;
+            }
+            return z;
+        }
+
+        function formatFactorization(poly, roots, useComplex, sf) {
+            const roundedRoots = roots.map(r => r.roundIfClose());
+            
+            // Always find all roots (including complex), but display differently based on useComplex
+            const realRoots = [];
+            const complexRoots = [];
+            
+            for (const root of roundedRoots) {
+                if (Math.abs(root.imag) < 1e-10) {
+                    realRoots.push(new Complex(root.real, 0));
+                } else {
+                    complexRoots.push(root);
+                }
+            }
+            
+            let result = '';
+            const lead = poly.coefficients[0].roundIfClose();
+            if (Math.abs(lead.real - 1) > 1e-10) result += lead.toString(sf);
+            
+            if (useComplex) {
+                // Show all roots as linear factors
+                for (const root of [...realRoots, ...complexRoots]) {
+                    if (root.isZero()) result += 'x';
+                    else result += `(x - ${root.toString(sf)})`;
+                }
+            } else {
+                // Show real roots as linear factors, complex pairs as quadratics
+                for (const root of realRoots) {
+                    if (root.isZero()) result += 'x';
+                    else result += `(x - ${root.real})`;
+                }
+                
+                // Pair complex conjugates
+                const used = new Set();
+                for (let i = 0; i < complexRoots.length; i++) {
+                    if (used.has(i)) continue;
+                    for (let j = i + 1; j < complexRoots.length; j++) {
+                        if (used.has(j)) continue;
+                        if (Math.abs(complexRoots[i].real - complexRoots[j].real) < 1e-10 &&
+                            Math.abs(complexRoots[i].imag + complexRoots[j].imag) < 1e-10) {
+                            
+                            const a = complexRoots[i].real;
+                            const b = complexRoots[i].imag;
+                            let quadratic = 'x^2';
+                            if (Math.abs(a) > 1e-10) {
+                                quadratic += ` - ${(2 * Math.abs(a)).toPrecision(sf)}x`;
+                            }
+                            quadratic += ` + ${(a*a + b*b).toPrecision(sf)}`;
+                            result += `(${quadratic})`;
+                            used.add(i);
+                            used.add(j);
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            return result;
+        }
+
+        function createDomainColoring(poly, canvas, B) {
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width, h = canvas.height;
+            const minR = -B * 1.2, maxR = B * 1.2;
+            const minI = -B * 1.2, maxI = B * 1.2;
+            
+            const imgData = ctx.createImageData(w, h);
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    const real = minR + x * (maxR - minR) / w;
+                    const imag = maxI - y * (maxI - minI) / h;
+                    const z = new Complex(real, imag);
+                    const fz = poly.evaluate(z);
+                    
+                    const mag = fz.magnitude();
+                    const phase = Math.atan2(fz.imag, fz.real);
+                    const hue = (phase + Math.PI) / (2 * Math.PI);
+                    const val = 1 / (1 + Math.log1p(mag) / 10);
+                    
+                    const rgb = hsvToRgb(hue, 1, val);
+                    const idx = (y * w + x) * 4;
+                    imgData.data[idx] = rgb.r;
+                    imgData.data[idx + 1] = rgb.g;
+                    imgData.data[idx + 2] = rgb.b;
+                    imgData.data[idx + 3] = 255;
+                }
+            }
+            ctx.putImageData(imgData, 0, 0);
+        }
+
+        function createRealGraph(poly, canvas, B) {
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width, h = canvas.height;
+            const minX = -B * 1.5, maxX = B * 1.5;
+            
+            let minY = Infinity, maxY = -Infinity;
+            for (let x = minX; x <= maxX; x += (maxX - minX) / 1000) {
+                const y = poly.evaluateReal(x);
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+            }
+            minY -= (maxY - minY) * 0.1;
+            maxY += (maxY - minY) * 0.1;
+            
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, w, h);
+            
+            // Axes
+            ctx.strokeStyle = 'gray';
+            ctx.beginPath();
+            ctx.moveTo(0, h - (0 - minY) / (maxY - minY) * h);
+            ctx.lineTo(w, h - (0 - minY) / (maxY - minY) * h);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo((0 - minX) / (maxX - minX) * w, 0);
+            ctx.lineTo((0 - minX) / (maxX - minX) * w, h);
+            ctx.stroke();
+            
+            // Graph
+            ctx.strokeStyle = 'blue';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let i = 0; i < w; i++) {
+                const x = minX + i * (maxX - minX) / w;
+                const y = poly.evaluateReal(x);
+                const pixelY = h - (y - minY) / (maxY - minY) * h;
+                if (i === 0) ctx.moveTo(i, pixelY);
+                else ctx.lineTo(i, pixelY);
+            }
+            ctx.stroke();
+        }
+
+        function hsvToRgb(h, s, v) {
+            const i = Math.floor(h * 6);
+            const f = h * 6 - i;
+            const p = v * (1 - s);
+            const q = v * (1 - f * s);
+            const t = v * (1 - (1 - f) * s);
+            let r, g, b;
+            switch (i % 6) {
+                case 0: r = v; g = t; b = p; break;
+                case 1: r = q; g = v; b = p; break;
+                case 2: r = p; g = v; b = t; break;
+                case 3: r = p; g = q; b = v; break;
+                case 4: r = t; g = p; b = v; break;
+                case 5: r = v; g = p; b = q; break;
+            }
+            return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
+        }
+
+        function factorPolynomial() {
+            const polyStr = document.getElementById('polynomial').value;
+            const useComplex = document.getElementById('useComplex').checked;
+            const sf = parseInt(document.getElementById('accuracy').value);
+            const epsilon = parseFloat(document.getElementById('epsilon').value);
+            
+            const resultDiv = document.getElementById('factorizationResult');
+            const rootsDiv = document.getElementById('rootsResult');
+            const domainCanvas = document.getElementById('domainCanvas');
+            const realCanvas = document.getElementById('realGraphCanvas');
+            
+            try {
+                const poly = parsePolynomial(polyStr);
+                const roots = findRoots(poly, epsilon);
+                
+                const factorization = formatFactorization(poly, roots, useComplex, sf);
+                resultDiv.textContent = factorization;
+                
+                // Display roots
+                let rootsText = 'Roots: ';
+                roots.forEach((root, i) => {
+                    rootsText += root.toString(sf);
+                    if (i < roots.length - 1) rootsText += ', ';
+                });
+                rootsDiv.textContent = rootsText;
+                
+                let B = 1;
+                for (const root of roots) {
+                    B = Math.max(B, Math.abs(root.real), Math.abs(root.imag));
+                }
+                B = Math.max(B, 1);
+                
+                createDomainColoring(poly, domainCanvas, B);
+                createRealGraph(poly, realCanvas, B);
+                
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + error.message;
+            }
+        }
+
+        document.getElementById('factorButton').addEventListener('click', factorPolynomial);
+        window.addEventListener('load', factorPolynomial);
+    </script>
+</body>
+</html>

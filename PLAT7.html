@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Advanced Platonic Explorer</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <style>
+        /* Custom User Styles */
+        :root { 
+            --accent: #4db6ac; 
+            --bg: #121212; 
+            --panel: #1e1e1e; 
+            --text: #ddd; 
+            --custom-bg: #99b; /* New background for specific elements */
+        }
+        
+        /* Apply Custom Styles from Prompt */
+        body { 
+            margin: 0; 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: 'Segoe UI', sans-serif; 
+            overflow: hidden; 
+        }
+        
+        h2 { 
+            margin: 0 0 10px 0; 
+            color: var(--accent); 
+            font-weight: 300; 
+            border-bottom: 1px solid #333; 
+            padding-bottom: 5px; 
+            /* Custom Box Shadow for H2 */
+            box-shadow: gray 0px 0px 60px -6px; 
+        }
+        
+        #solid-name {
+            /* H1 style is applied to solid-name element */
+            margin: 0; 
+            font-size: 2em; 
+            letter-spacing: 2px; 
+            color: var(--accent);
+            /* Custom Box Shadow for H1 */
+            box-shadow: #222 0px 0px 60px -6px;
+        }
+
+        /* Specific panel styling for the requested look */
+        .panel { 
+            background-color: var(--custom-bg); /* Custom #bbd background */
+            font-family: Cambria math, serif; /* Custom font */
+            margin: 5px; 
+            padding: 5px; 
+            text-align: center; 
+            border: 5px solid #000; 
+            border-top: 10px solid black; 
+            box-shadow: inset gray 0px 0px 60px -6px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+        }
+        .left-panel { border-right: 1px solid #333; }
+        .right-panel { border-right: none; border-left: 1px solid #333; }
+        
+        /* Layout - Ensure container is the full viewport */
+        #container { 
+            display: grid; 
+            grid-template-columns: 280px 1fr 300px; 
+            height: 100vh; 
+        }
+        
+        #view3d { 
+            position: relative; 
+            width: 100%; 
+            height: 100%; 
+            background: radial-gradient(circle at center, #2a2a2a, #000); 
+        }
+
+        /* Image and Overlay adjustments */
+        #bottom-info { 
+            position: absolute; 
+            bottom: 30px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            text-align: center; 
+            pointer-events: none; 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8); 
+        }
+        
+        /* Centered Image and Fix Squished Image */
+        #polygraph-img {
+            display: none; 
+            width: 100%; 
+            max-width: 100%; /* Ensure it's not wider than its container */
+            height: auto; /* Fix squished image by using auto height */
+            object-fit: contain; 
+            background: white; 
+            margin-top: 10px; 
+            border-radius: 4px;
+            /* Center the image using absolute positioning inside #view3d */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Remove bottom-left toggle box and place it top-center */
+        .toggle-box { 
+            position: absolute; 
+            top: 20px; 
+            left: 50%; /* Center alignment */
+            transform: translateX(-50%); /* Center alignment */
+            background: rgba(0,0,0,0.7); 
+            padding: 10px; 
+            border-radius: 4px; 
+            z-index: 10; 
+            display: flex; /* Display horizontally */
+            gap: 15px; 
+        }
+        
+        .toggle-row { 
+            font-size: 0.9em; 
+            cursor: pointer; 
+            display: inline-block; /* Inline-block for horizontal layout */
+        }
+        
+        /* Other existing styles for consistency */
+        h3 { margin: 0; font-size: 1em; color: #fff; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-row { display: flex; justify-content: space-between; font-size: 0.9em; padding: 4px 0; border-bottom: 1px solid #2a2a2a; }
+        .stat-val { color: #fff; font-family: monospace; }
+        .btn-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+        button { background: #2a2a2a; color: #fff; border: 1px solid #333; padding: 8px; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #333; color: #fff; }
+        button.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; }
+        .control-group { margin-bottom: 10px; }
+        .control-label { display: flex; justify-content: space-between; font-size: 0.85em; margin-bottom: 5px; color: #aaa; }
+        input[type=range] { width: 100%; cursor: pointer; accent-color: var(--accent); }
+        .formula-box { background: #181818; padding: 8px; font-size: 0.85em; border-left: 3px solid #444; margin-bottom: 5px; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #333; }
+    </style>
+</head>
+<body>
+
+<div id="container">
+    <div class="panel left-panel">
+        <h2>Data</h2>
+        <div id="stats-content"></div>
+        
+        <h3>Geometric Properties</h3>
+        <div class="stat-row"><span class="stat-label">Symmetry:</span> <span class="stat-val" id="sym-group">-</span></div>
+        <div class="stat-row"><span class="stat-label">Dehn Angle:</span> <span class="stat-val" id="dehn-angle">-</span></div>
+        
+        <h3>Efficiency</h3>
+        <div class="stat-row"><span class="stat-label">Roundness:</span> <span class="stat-val" id="round-val">0%</span></div>
+        <div class="stat-row"><span class="stat-label">Vol / Outer Sphere:</span> <span class="stat-val" id="fill-outer">-</span></div>
+        <div class="stat-row"><span class="stat-label">Solid / Inner Sphere:</span> <span class="stat-val" id="left-inner">-</span></div>
+
+        <h3>Diagrams</h3>
+        <img id="polygraph-img" src="" class="polygraph-view" alt="Graph">
+        <div id="coxeter-container" style="opacity:0.6; filter:invert(1)"></div>
+    </div>
+
+    <div id="view3d">
+        <div class="toggle-box">
+            <label class="toggle-row"><input type="radio" name="viewmode" value="solid" checked> Solid Morph (Radius)</label>
+            <label class="toggle-row"><input type="radio" name="viewmode" value="wire"> Wireframe (Edges)</label>
+            <label class="toggle-row"><input type="radio" name="viewmode" value="2d"> 2D Graph</label>
+            <label class="toggle-row"><input type="radio" name="viewmode" value="stereo"> Stereographic</label>
+        </div>
+
+        <div id="bottom-info">
+            <h1 id="solid-name">Tetrahedron</h1>
+            <div><span id="schlafli"></span> &bull; <span id="wythoff"></span></div>
+        </div>
+        
+        <canvas id="stereo-canvas" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:100%; height:100%;"></canvas>
+    </div>
+
+    <div class="panel right-panel">
+        <h2>Controls</h2>
+        
+        <h3>Select Target</h3>
+        <div class="btn-group">
+            <button onclick="setTarget('tetrahedron')" class="active">Tetra</button>
+            <button onclick="setTarget('cube')">Cube</button>
+            <button onclick="setTarget('octahedron')">Octa</button>
+            <button onclick="setTarget('dodecahedron')">Dodec</button>
+            <button onclick="setTarget('icosahedron')">Icosa</button>
+        </div>
+
+        <h3>Transformation</h3>
+        <div class="control-group">
+            <div class="control-label"><span>Morph Progress</span> <span id="morph-val">100%</span></div>
+            <input type="range" id="morphSlider" min="0" max="1" step="0.001" value="1">
+        </div>
+        <div class="control-group">
+            <div class="control-label"><span>Roundness</span></div>
+            <input type="range" id="roundSlider" min="0" max="1" step="0.01" value="0">
+        </div>
+
+        <h3>View Settings</h3>
+        <div class="control-group">
+            <div class="control-label"><span>Zoom</span></div>
+            <input type="range" id="zoomSlider" min="1.5" max="6" step="0.1" value="3.5">
+        </div>
+        <div class="control-group">
+            <div class="control-label"><span>Quality (Resolution)</span> <span id="quality-val">128</span></div>
+            <input type="range" id="qualitySlider" min="16" max="256" step="16" value="128">
+        </div>
+        <div class="control-group">
+            <div class="control-label"><span>Rotation Speed</span></div>
+            <input type="range" id="speedSlider" min="0" max="0.05" step="0.001" value="0.005">
+        </div>
+        
+        <h3>Stereo Settings</h3>
+        <div class="control-group">
+            <div class="control-label"><span>Projection Point (h)</span> <span id="h-val">1.0</span></div>
+            <input type="range" id="hSlider" min="0.1" max="5" step="0.01" value="2">
+        </div>
+        <div class="control-group">
+            <div class="control-label"><span>Complex Rotation (a)</span> <span id="a-val">0.0</span></div>
+            <input type="range" id="aSlider" min="-1" max="1" step="0.01" value="0">
+        </div>
+
+
+        <h3>Formulas (Side $a$)</h3>
+        <div id="formula-container"></div>
+    </div>
+</div>
+
+<script>
+
+    // --- COMPLEX NUMBER UTILITIES ---
+    // A simple complex number object for algebra
+    class Complex {
+        constructor(re, im) {
+            this.re = re;
+            this.im = im;
+        }
+    }
+    const I = new Complex(0, 1);
+    
+    function add(z1, z2) { return new Complex(z1.re + z2.re, z1.im + z2.im); }
+    function sub(z1, z2) { return new Complex(z1.re - z2.re, z1.im - z2.im); }
+    function mul(z1, z2) { 
+        return new Complex(z1.re * z2.re - z1.im * z2.im, z1.re * z2.im + z1.im * z2.re); 
+    }
+    function div(z1, z2) {
+        const d = z2.re * z2.re + z2.im * z2.im;
+        if (d === 0) return new Complex(NaN, NaN); // Handle division by zero
+        return new Complex((z1.re * z2.re + z1.im * z2.im) / d, (z1.im * z2.re - z1.re * z2.im) / d);
+    }
+    function conj(z) { return new Complex(z.re, -z.im); }
+    function pow(z, n) {
+        const r = Math.sqrt(z.re * z.re + z.im * z.im);
+        const theta = Math.atan2(z.im, z.re);
+        const newR = Math.pow(r, n);
+        const newTheta = n * theta;
+        return new Complex(newR * Math.cos(newTheta), newR * Math.sin(newTheta));
+    }
+    function abs(z) {
+        return Math.sqrt(z.re * z.re + z.im * z.im);
+    }
+    // Placeholder for modular transform, not strictly used in current functions but defined for completeness
+    function modulartransformtq(z) { return z; } 
+
+    // --- STEREO/MOBIUS LOGIC ---
+    function rotationmobius(z, a_val) {
+        const a = new Complex(a_val, 0); // Assuming 'a' is a real parameter from slider
+        const num = add(z, a);
+        const a_conj = conj(a);
+        const den = sub(new Complex(1, 0), mul(z, a_conj));
+        return div(num, den);
+    }
+
+    function projectstereograph(x, y, z, a_val, h_val) {
+        // Projecting onto z=h plane from (0, 0, 1) on the sphere
+        // Equation for projection from (0, 0, N) onto z=h: 
+        // X_plane = h*x/(N-z), Y_plane = h*y/(N-z)
+        // Here, the projection point seems to be (0, 0, h_val) for a sphere *centered at (0,0,0)* of radius 1.
+        // The original code implies projection *from* z=h *onto* the complex plane z=0, or a projection from (0,0,1) onto z=h.
+        // The formula: z_plane = (x + i*y) / (h - z) looks like a projection from (0,0,h) onto z=0.
+        
+        // Let's use the standard Stereographic projection from the North Pole (0, 0, 1) to the plane z=0
+        // P' = (x/(1-z), y/(1-z), 0) -> Complex: z' = (x + iy) / (1-z)
+        
+        const N = 1; // North Pole for projection
+        
+        // The user-provided formula:
+        // const denominator = sub(h, z); -> The user's 'h' is the pole.
+        // We'll stick to the user's provided logic which implies projection from (0, 0, h_val) onto the plane z=0
+        const denominator = h_val - z;
+        
+        if (Math.abs(denominator) < 1e-6) return new Complex(NaN, NaN); // Point at the pole
+        
+        const complexProjection = div(new Complex(x, y), new Complex(denominator, 0));
+        
+        // Final transformation using Mobius rotation
+        return rotationmobius(complexProjection, a_val);
+    }
+
+    const stereoprojectPolyCache = new Map();
+    
+    // We need the duals map which contains normalized vertices
+    const dualsMap = new Map(); 
+
+    // Fill dualsMap with normalized vertices (The duals' vertices are the faces' normals)
+    function normalize(v) { 
+        const l = Math.sqrt(v[0]**2 + v[1]**2 + v[2]**2); 
+        return [v[0]/l, v[1]/l, v[2]/l]; 
+    }
+    function getIcosaVertices() {let phi=(1+Math.sqrt(5))/2;
+     //  const phi = (1 + Math.sqrt(5))/4;
+            const vertices = [];
+            // All cyclic permutations of (0, ±1/2, ±phi)
+       
+                const signs = [[1,1], [1,-1], [-1,1], [-1,-1]];
+                for (const [s1, s2] of signs) {
+                    const coords = [0, 0.5*s1, phi*s2];
+                    // Rotate coordinates for all cyclic permutations
+                    vertices.push([...coords]);
+                    vertices.push([coords[2], coords[0], coords[1]]);
+                    vertices.push([coords[1], coords[2], coords[0]]);
+                }
+            
+            return vertices;
+    }
+    function getDodecaNormals() {let phi=(1+Math.sqrt(5))/2;
+     //   const phi = (1 + Math.sqrt(5))/4;
+            const vertices = [];
+            
+            // All sign changes of (±phi, ±phi, ±phi)
+            for (const x of [-phi, phi]) {
+                for (const y of [-phi, phi]) {
+                    for (const z of [-phi, phi]) {
+                        vertices.push([x, y, z]);
+                    }
+                }
+            }
+            
+            // All even permutations of (±(3+√5)/4, ±1/2, 0)
+            const t = (3 + Math.sqrt(5))/4;
+            const s = 0.5;
+            const evenPerms = [
+                [t, s, 0],[s, 0, t],[0, t, s],
+                [-t, s, 0],[-s, 0, t],[0, t, -s],
+                [t, -s, 0],[s, 0, -t],[0, -t, s],
+                [-t, -s, 0],[-s, 0, -t],[0, -t, -s],
+            ];
+            
+            return vertices.concat(evenPerms);
+    }
+    dualsMap.set("dtetrahedron", { vertices: [[-1,-1,-1], [-1,1,1], [1,-1,1], [1,1,-1]] });
+    dualsMap.set("tetrahedron", { vertices: [[1,1,1], [1,-1,-1], [-1,1,-1], [-1,-1,1]] });
+    dualsMap.set("octahedron", { vertices: [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]] });
+    dualsMap.set("cube", { vertices: [[1,1,1],[-1,1,1],[1,-1,1],[-1,-1,1],[1,1,-1],[-1,1,-1],[1,-1,-1],[-1,-1,-1]] });
+    dualsMap.set("icosahedronn", { vertices: getIcosaVertices() });
+    dualsMap.set("dodecahedron", { vertices: getDodecaNormals() });
+    
+    // Final Stereographic Function
+    function stereoproject(Ch, S, h_val, a_val, type = "stereo", repeat = 0) {
+        // The user's formula applies a Mobius transform *before* the polynomial calculation
+        const C = rotationmobius(Ch, a_val); 
+        const cacheKey = `${S}|${a_val}|${h_val}|${type}|${repeat}`;
+
+        if (!stereoprojectPolyCache.has(cacheKey)) {
+            function normalizeCoordinates(vertices) {
+                return vertices.map(v => normalize(v)); // Reuse the normalize function
+            }
+            
+            // Get the vertices of the dual solid (these correspond to the face centers of the primary solid)
+            const rawVertices = dualsMap.get(S).vertices;
+            const normalizedVertices = normalizeCoordinates(rawVertices);
+            
+            // Project the dual vertices onto the complex plane
+            const projectedPoints = normalizedVertices
+                .map(v => projectstereograph(v[0], v[1], v[2]+1, 0, h_val)) // Note: a=0 here for the projection step
+                .filter(p => !isNaN(p.re)); // Filter out pole points
+                
+            const polyFunc = (c) => {
+                let result = new Complex(1, 0);
+                for (const z of projectedPoints) {
+                    if (repeat === 1) {
+                         // This part requires a modulartransformtq which is a placeholder
+                         result = mul(result, sub(modulartransformtq(c), z));
+                    } else {
+                        result = mul(result, sub(c, z));
+                    }
+                }
+                return result;
+            };
+            stereoprojectPolyCache.set(cacheKey, polyFunc);
+        }
+        return stereoprojectPolyCache.get(cacheKey)(C);
+    }
+    
+    // Polyhedral Complex Functions (copied from prompt)
+    function stereodtetrahedron(x, a = 0, h = 1) { return stereoproject(x, "dtetrahedron", h, a); }
+    function stereotetrahedron(x, a = 0, h = 1) { return stereoproject(x, "tetrahedron", h, a); } // h=1 (pole) for simplicity
+    function stereocube(x, a = 0, h = 1) { return stereoproject(x, "cube", h, a); }
+    function stereooctahedron(x, a = 0, h = 1) { return stereoproject(x, "octahedron", h, a); }
+    function stereododecahedron(x, a = 0, h = 1) { return stereoproject(x, "dodecahedron", h, a); }
+    function stereoicosahedron(x, a = 0, h = 1) { return stereoproject(x, "icosahedron", h, a); }
+
+    // Ratios based on the dual relationship
+    function stereoptetrahedron(x, a = 0, h = 2) {
+        // The dual of the Tetrahedron is the Tetrahedron itself
+        return div(pow(stereotetrahedron(x, a, h), 3), pow(stereodtetrahedron(x, a, h), 3)); 
+    } 
+    function stereopcube(x, a = 0, h = 2) { 
+        // Dual is Octahedron
+        return div(pow(stereocube(x, a, h), 3), pow(stereooctahedron(x, a, h), 4));
+    }
+    function stereopoctahedron(x, a = 0, h = 2) { 
+        // Dual is Cube (Octahedron is self-dual via Cube polynomial)
+        // The provided formula uses the inverse of stereopcube
+        const p_cube = stereopcube(x, a, h);
+        return div(new Complex(1, 0), p_cube);
+    }
+    function stereopdodecahedron(x, a = 0, h = 2) { 
+        // Dual is Icosahedron
+        return div(pow(stereododecahedron(x, a, h), 3), pow(stereoicosahedron(x, a, h), 5));
+    }
+    function stereopicosahedron(x, a = 0, h = 2) {
+        return div( pow(stereoicosahedron(x, a, h), 5),pow(stereododecahedron(x, a, h), 3));
+    }
+
+    // Map to quickly select the correct P-function
+    const pFuncMap = {
+        'tetrahedron': stereoptetrahedron,
+        'cube': stereopcube,
+        'octahedron': stereopoctahedron,
+        'dodecahedron': stereopdodecahedron,
+        'icosahedron': stereopicosahedron
+    };
+
+    // Domain Coloring function (simple version: HSL based on argument and magnitude)
+    function domainColoring(z) {
+        if (isNaN(z.re) || isNaN(z.im)) return { r: 0, g: 0, b: 0 };
+        
+        const magnitude = abs(z);
+        const argument = Math.atan2(z.im, z.re);
+        
+        // Hue is based on the argument (angle)
+        const h = (argument / (2 * Math.PI) + 0.5) % 1; 
+        
+        // Saturation is fixed high
+        const s = 0.8;
+        
+        // Lightness is based on log magnitude (to show more detail near 0)
+        const l = 0.5 + Math.min(0.1 * (Math.log(magnitude) * 0.8),0.3);
+
+        // Convert HSL to RGB (simplified from Three.js Color object logic)
+        const C = (1 - Math.abs(2 * l - 1)) * s;
+        const X = C * (1 - Math.abs((h * 6) % 2 - 1));
+        const m = l - C / 2;
+
+        let r, g, b;
+        if (h < 1/6) { r = C; g = X; b = 0; }
+        else if (h < 2/6) { r = X; g = C; b = 0; }
+        else if (h < 3/6) { r = 0; g = C; b = X; }
+        else if (h < 4/6) { r = 0; g = X; b = C; }
+        else if (h < 5/6) { r = X; g = 0; b = C; }
+        else { r = C; g = 0; b = X; }
+
+        return { r: Math.round((r + m) * 255), g: Math.round((g + m) * 255), b: Math.round((b + m) * 255) };
+    }
+
+    // --- 1. DATA DEFINITIONS ---
+    const phi = (1 + Math.sqrt(5)) / 2;
+    
+    const solidsData = {
+        // ... (Original solidsData remains the same)
+        tetrahedron: {
+            name: "Tetrahedron", schlafli: "{3, 3}", wythoff: "3 | 2 3",
+            vertices: 4, edges: 6, faces: 4,
+            symGroup: "Td",
+            hue: 0.0,
+            formulas: { area: "a^2\\sqrt{3}", vol: "\\frac{a^3}{6\\sqrt{2}}", r_out: "\\frac{\\sqrt{6}}{4}a", r_in: "\\frac{a}{2\\sqrt{6}}" },
+            vals: { vol: 0.11785, r_out: 0.6123, r_in: 0.2041 },
+            dehnAngle: "Arccos(1/3)",
+            normals: [[1,1,1], [1,-1,-1], [-1,1,-1], [-1,-1,1]].map(v => normalize(v)),
+            h_scale: 0.5 
+        },
+        cube: {
+            name: "Cube", schlafli: "{4, 3}", wythoff: "3 | 2 4",
+            vertices: 8, edges: 12, faces: 6,
+            symGroup: "Oh",
+            hue: 0.15,
+            formulas: { area: "6a^2", vol: "a^3", r_out: "\\frac{\\sqrt{3}}{2}a", r_in: "\\frac{a}{2}" },
+            vals: { vol: 1.0, r_out: 0.866, r_in: 0.5 },
+            dehnAngle: "\\pi/2 = 90^\\circ",
+            normals: [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]],
+            h_scale: 1.0
+        },
+        octahedron: {
+            name: "Octahedron", schlafli: "{3, 4}", wythoff: "4 | 2 3",
+            vertices: 6, edges: 12, faces: 8,
+            symGroup: "Oh",
+            hue: 0.33,
+            formulas: { area: "2a^2\\sqrt{3}", vol: "\\frac{\\sqrt{2}}{3}a^3", r_out: "\\frac{\\sqrt{2}}{2}a", r_in: "\\frac{a}{\\sqrt{6}}" },
+            vals: { vol: 0.4714, r_out: 0.707, r_in: 0.408 },
+            dehnAngle: "\\text{arccos}(-1/3) \\approx 109.5^\\circ",
+            normals: [[1,1,1],[-1,1,1],[1,-1,1],[-1,-1,1],[1,1,-1],[-1,1,-1],[1,-1,-1],[-1,-1,-1]].map(v => normalize(v)),
+            h_scale: 0.7
+        },
+        dodecahedron: {
+            name: "Dodecahedron", schlafli: "{5, 3}", wythoff: "3 | 2 5",
+            vertices: 20, edges: 30, faces: 12,
+            symGroup: "Ih",
+            hue: 0.6,
+            formulas: { area: "3\\sqrt{25+10\\sqrt{5}}a^2", vol: "\\frac{15+7\\sqrt{5}}{4}a^3", r_out: "\\frac{\\sqrt{3}(1+\\sqrt{5})}{4}a", r_in: "\\frac{\\sqrt{25+11\\sqrt{5}}}{2\\sqrt{10}}a" },
+            vals: { vol: 7.663, r_out: 1.401, r_in: 1.113 },
+            dehnAngle: "2\\arctan(\\phi) \\approx 116.6^\\circ",
+            normals: getIcosaVertices().map(v => normalize(v)), 
+            h_scale: 1.0
+        },
+        icosahedron: {
+            name: "Icosahedron", schlafli: "{3, 5}", wythoff: "5 | 2 3",
+            vertices: 12, edges: 30, faces: 20,
+            symGroup: "Ih",
+            hue: 0.8,
+            formulas: { area: "5\\sqrt{3}a^2", vol: "\\frac{5(3+\\sqrt{5})}{12}a^3", r_out: "\\frac{\\sqrt{10+2\\sqrt{5}}}{2}a", r_in: "\\frac{\\sqrt{3}(3+\\sqrt{5})}{12}a" },
+            vals: { vol: 2.1817, r_out: 0.951, r_in: 0.7557 },
+            dehnAngle: "\\text{arccos}(-\\sqrt{5}/3) \\approx 138.2^\\circ",
+            normals: getDodecaNormals().map(v => normalize(v)),
+            h_scale: 1.0
+        }
+    };
+
+    // Functions normalize, getIcosaVertices, getDodecaNormals are defined above and used
+    // in dualsMap setup.
+
+    // --- 2. THREE.JS SETUP ---
+    const scene = new THREE.Scene();
+    const view3dContainer = document.getElementById('view3d');
+    const camera = new THREE.PerspectiveCamera(45, view3dContainer.clientWidth / view3dContainer.clientHeight, 0.1, 100);
+    camera.position.z = 3.5;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(view3dContainer.clientWidth, view3dContainer.clientHeight);
+    view3dContainer.appendChild(renderer.domElement);
+
+    // Lighting
+    const ambLight = new THREE.AmbientLight(0x404040, 1.5);
+    scene.add(ambLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    dirLight.position.set(5, 10, 7);
+    scene.add(dirLight);
+    const backLight = new THREE.DirectionalLight(0x404040, 0.5);
+    backLight.position.set(-5, -5, -10);
+    scene.add(backLight);
+
+    // -- Groups for switching modes --
+    const solidGroup = new THREE.Group();
+    const wireGroup = new THREE.Group();
+    scene.add(solidGroup);
+    scene.add(wireGroup);
+
+    // 1. Solid Mesh (Morphing Sphere)
+    let geometry = new THREE.SphereGeometry(1, 128, 128);
+    var globalBasePos = geometry.attributes.position.array.slice(); // Use var for dynamic update
+    
+    // Create custom color buffer
+    const colors = new Float32Array(geometry.attributes.position.count * 3);
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    const material = new THREE.MeshStandardMaterial({ 
+        vertexColors: true, 
+        roughness: 0.3, 
+        metalness: 0.2,
+        flatShading: false
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    solidGroup.add(mesh);
+
+    // 2. Wireframe Helper (Real Edges)
+    let currentWireframe = null;
+    
+    // 3. Stereo Canvas Setup
+    const stereoCanvas = document.getElementById('stereo-canvas');
+    const stereoContext = stereoCanvas.getContext('2d');
+
+    // --- 3. STATE & LOGIC ---
+    let state = {
+        prev: 'tetrahedron',
+        curr: 'tetrahedron',
+        t: 1.0,  
+        round: 0.0,
+        view: 'solid', // Initial fix: Start in 'solid' mode
+        animating: false,
+        h: 2.0, // Stereographic Pole height
+        a: 0.0  // Complex Rotation Mobius parameter
+    };
+
+    function getRadius(type, x, y, z) {
+        // ... (Original getRadius function remains the same)
+        const d = solidsData[type];
+        const len = Math.sqrt(x*x + y*y + z*z);
+        const nx = x/len, ny = y/len, nz = z/len;
+        
+        let minR = Infinity;
+        for(let n of d.normals) {
+            const dot = nx*n[0] + ny*n[1] + nz*n[2];
+            if(dot > 1e-6) {
+                const r = d.h_scale / dot;
+                if(r < minR) minR = r;
+            }
+        }
+        return minR;
+    }
+
+    // Overriding the updateGeometry loop to use globalBasePos
+    window.updateGeometry = function() {
+        if(state.view === 'stereo') {
+            renderStereographic();
+            return;
+        }
+
+        // Ensure base matches current geometry count
+        if (globalBasePos.length !== mesh.geometry.attributes.position.count * 3) {
+             const q = parseInt(document.getElementById('qualitySlider').value);
+             const tempGeo = new THREE.SphereGeometry(1, q, q);
+             globalBasePos = tempGeo.attributes.position.array.slice();
+             tempGeo.dispose();
+        }
+        
+        const pos = mesh.geometry.attributes.position.array;
+        const col = mesh.geometry.attributes.color.array;
+        const count = mesh.geometry.attributes.position.count;
+        
+        const data1 = solidsData[state.prev];
+        const data2 = solidsData[state.curr];
+        const t = state.t; 
+        const rFactor = state.round; 
+
+        // Hue Lerp
+        const h1 = data1.hue;
+        const h2 = data2.hue;
+        const h = h1 + (h2 - h1) * t;
+        const colorObj = new THREE.Color();
+
+        for (let i = 0; i < count; i++) {
+            const ix = i * 3;
+            const vx = globalBasePos[ix], vy = globalBasePos[ix+1], vz = globalBasePos[ix+2];
+
+            const rPoly1 = getRadius(state.prev, vx, vy, vz);
+            const rPoly2 = getRadius(state.curr, vx, vy, vz);
+            
+            const st = t * t * (3 - 2 * t);
+            let rPoly = rPoly1 * (1 - st) + rPoly2 * st;
+
+            const finalR = rPoly * (1 - rFactor) + 1.0 * rFactor;
+
+            pos[ix] = vx * finalR;
+            pos[ix+1] = vy * finalR;
+            pos[ix+2] = vz * finalR;
+
+            const br = 0.2 + 0.5 * (finalR / (1.0 + (1-rFactor)*0.5)); 
+            colorObj.setHSL(h, 0.8, br);
+            
+            col[ix] = colorObj.r;
+            col[ix+1] = colorObj.g;
+            col[ix+2] = colorObj.b;
+        }
+
+        mesh.geometry.attributes.position.needsUpdate = true;
+        mesh.geometry.attributes.color.needsUpdate = true;
+        mesh.geometry.computeVertexNormals();
+        updateEfficiencyStats(data2, rFactor);
+    }
+
+    function updateEfficiencyStats(data, roundness) {
+        // ... (Original updateEfficiencyStats function remains the same)
+        const ratio_out = data.vals.vol / ((4/3)*Math.PI * Math.pow(data.vals.r_out, 3));
+        const vol_in = (4/3)*Math.PI * Math.pow(data.vals.r_in, 3);
+        const ratio_in_waste = (data.vals.vol - vol_in) / data.vals.vol;
+
+        const filled = (ratio_out * 100 * (1-roundness)) + (100 * roundness);
+        const wasted = (ratio_in_waste * 100 * (1-roundness)) + (0 * roundness);
+
+        document.getElementById('fill-outer').innerText = filled.toFixed(1) + "%";
+        document.getElementById('left-inner').innerText = wasted.toFixed(1) + "%";
+        document.getElementById('round-val').innerText = Math.round(roundness * 100) + "%";
+    }
+    
+    // --- STEREOGRAPHIC RENDERER ---
+    function renderStereographic() {
+        if (!pFuncMap[state.curr]) return;
+
+        const width = stereoCanvas.width;
+        const height = stereoCanvas.height;
+        const imageData = stereoContext.createImageData(width, height);
+        const data = imageData.data;
+        
+        const pFunc = pFuncMap[state.curr];
+        const h_val = state.h;
+        const a_val = state.a;
+        
+        // Define the bounds for the complex plane view
+        const range = 5; // Display region is [-range, range] in real and imaginary
+        const scaleX = width / (2 * range);
+        const scaleY = height / (2 * range);
+        
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                // Map pixel coordinates to complex coordinates
+                const re = (x - width / 2) / scaleX;
+                const im = (height / 2 - y) / scaleY; // Flip Y axis
+                
+                const z = new Complex(re, im);
+                
+                // Evaluate the polyhedral complex function
+                const pz = pFunc(z, a_val, h_val); 
+                
+                // Domain Coloring
+                const color = domainColoring(pz);
+                
+                const index = (y * width + x) * 4;
+                data[index] = color.r;     // R
+                data[index + 1] = color.g; // G
+                data[index + 2] = color.b; // B
+                data[index + 3] = 255;     // A
+            }
+        }
+        
+        stereoContext.putImageData(imageData, 0, 0);
+    }
+    
+    // --- 4. WIREFRAME GENERATOR ---
+    function updateWireframeMesh(type) {
+        // ... (Original updateWireframeMesh function remains the same)
+        while(wireGroup.children.length > 0){ 
+            wireGroup.remove(wireGroup.children[0]); 
+        }
+
+        let geom;
+        const s = 1.2; 
+        if(type === 'tetrahedron') geom = new THREE.TetrahedronGeometry(1); 
+        else if(type === 'cube') geom = new THREE.BoxGeometry(1.2,1.2,1.2); 
+        else if(type === 'octahedron') geom = new THREE.OctahedronGeometry(1);
+        else if(type === 'dodecahedron') geom = new THREE.DodecahedronGeometry(1);
+        else if(type === 'icosahedron') geom = new THREE.IcosahedronGeometry(1);
+
+        const edges = new THREE.EdgesGeometry(geom);
+        const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x4db6ac, linewidth: 2 }));
+        
+        wireGroup.add(line);
+        currentWireframe = line;
+    }
+
+    // --- 5. UI & EVENTS ---
+
+    window.setTarget = function(type) {
+        if(state.curr === type) return;
+        
+        document.querySelectorAll('.btn-group button').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+
+        state.prev = state.curr;
+        state.curr = type;
+        
+        state.t = 0.0;
+        document.getElementById('morphSlider').value = 0;
+        state.animating = true;
+
+        updateUI(type);
+        updateWireframeMesh(type);
+    };
+
+    function updateUI(type) {
+        const d = solidsData[type];
+        
+        // ... (Original updateUI function remains the same)
+        document.getElementById('solid-name').innerText = d.name;
+        document.getElementById('schlafli').innerText = "Schläfli: " + d.schlafli;
+        document.getElementById('wythoff').innerText = "Wythoff: " + d.wythoff;
+        document.getElementById('sym-group').innerText = d.symGroup;
+        document.getElementById('dehn-angle').innerText = `$$${d.dehnAngle}$$`;
+
+        document.getElementById('stats-content').innerHTML = `
+            <div class="stat-row"><span class="stat-label">Faces:</span> <span class="stat-val">${d.faces}</span></div>
+            <div class="stat-row"><span class="stat-label">Vertices:</span> <span class="stat-val">${d.vertices}</span></div>
+            <div class="stat-row"><span class="stat-label">Edges:</span> <span class="stat-val">${d.edges}</span></div>
+        `;
+
+        const f = d.formulas;
+        document.getElementById('formula-container').innerHTML = `
+            <div class="formula-box">Surface: $$${f.area}$$</div>
+            <div class="formula-box">Volume: $$${f.vol}$$</div>
+            <div class="formula-box">Circumradius: $$${f.r_out}$$</div>
+            <div class="formula-box">Inradius: $$${f.r_in}$$</div>
+        `;
+        
+        if(window.MathJax) MathJax.typesetPromise();
+        
+        // Re-render stereo if in stereo mode
+        if (state.view === 'stereo') {
+            renderStereographic();
+        }
+    }
+
+    // Sliders
+    document.getElementById('morphSlider').addEventListener('input', (e) => {
+        state.t = parseFloat(e.target.value);
+        state.animating = false; 
+        document.getElementById('morph-val').innerText = Math.round(state.t * 100) + "%";
+        updateGeometry();
+    });
+
+    document.getElementById('roundSlider').addEventListener('input', (e) => {
+        state.round = parseFloat(e.target.value);
+        updateGeometry();
+    });
+
+    document.getElementById('zoomSlider').addEventListener('input', (e) => {
+        camera.position.z = parseFloat(e.target.value);
+    });
+
+    document.getElementById('qualitySlider').addEventListener('input', (e) => {
+        const q = parseInt(e.target.value);
+        document.getElementById('quality-val').innerText = q;
+        
+        solidGroup.remove(mesh);
+        geometry.dispose();
+        geometry = new THREE.SphereGeometry(1, q, q);
+        const colors = new Float32Array(geometry.attributes.position.count * 3);
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        
+        mesh.geometry = geometry;
+        solidGroup.add(mesh);
+        
+        updateGeometry();
+    });
+    
+    // New Stereo Sliders
+    document.getElementById('hSlider').addEventListener('input', (e) => {
+        state.h = parseFloat(e.target.value);
+        document.getElementById('h-val').innerText = state.h.toFixed(2);
+        if (state.view === 'stereo') renderStereographic();
+    });
+    document.getElementById('aSlider').addEventListener('input', (e) => {
+        state.a = parseFloat(e.target.value);
+        document.getElementById('a-val').innerText = state.a.toFixed(2);
+        if (state.view === 'stereo') renderStereographic();
+    });
+
+
+    // View Toggles
+    document.querySelectorAll('input[name="viewmode"]').forEach(r => {
+        r.addEventListener('change', (e) => {
+            state.view = e.target.value;
+            const polyImg = document.getElementById('polygraph-img');
+            const cvs = renderer.domElement;
+            const bInfo = document.getElementById('bottom-info');
+            const stereoCvs = document.getElementById('stereo-canvas');
+            
+            // Hide all overlays
+            polyImg.style.display = 'none';
+            stereoCvs.style.display = 'none';
+            cvs.style.opacity = 1;
+            bInfo.style.display = 'block';
+            solidGroup.visible = false;
+            wireGroup.visible = false;
+            
+            // Show appropriate view
+            if(state.view === 'solid') {
+                solidGroup.visible = true;
+            } else if(state.view === 'wire') {
+                wireGroup.visible = true;
+            } else if(state.view === '2d') {
+                polyImg.style.display = 'block';
+                polyImg.src = `./polygraph/${solidsData[state.curr].name}.png`;
+                polyImg.alt = "2D Graph (Placeholder)";
+                cvs.style.opacity = 0.1;
+                bInfo.style.display = 'none';
+            } else if(state.view === 'stereo') {
+                stereoCvs.style.display = 'block';
+                bInfo.style.display = 'none';
+                cvs.style.opacity = 0; // Hide 3D view completely
+                
+                // Ensure canvas is sized correctly before rendering
+                const parent = stereoCvs.parentElement;
+                stereoCvs.width = parent.clientWidth;
+                stereoCvs.height = parent.clientHeight;
+                renderStereographic();
+            }
+        });
+    });
+
+    // --- 6. ANIMATION LOOP ---
+    function animate() {
+        requestAnimationFrame(animate);
+        
+        // Rotation only applies to 3D views
+        if(state.view === 'solid' || state.view === 'wire') {
+            const spd = parseFloat(document.getElementById('speedSlider').value);
+            solidGroup.rotation.y += spd;
+            solidGroup.rotation.x += spd * 0.5;
+            wireGroup.rotation.copy(solidGroup.rotation);
+        }
+
+        // Morph Logic
+        if(state.animating) {
+            state.t += 0.015;
+            if(state.t >= 1) {
+                state.t = 1;
+                state.animating = false;
+                state.prev = state.curr; 
+            }
+            document.getElementById('morphSlider').value = state.t;
+            document.getElementById('morph-val').innerText = Math.round(state.t * 100) + "%";
+            if (state.view !== 'stereo') updateGeometry();
+        }
+
+        if (state.view !== 'stereo') {
+            renderer.render(scene, camera);
+        }
+    }
+
+    // Init
+    window.addEventListener('resize', () => {
+        const width = view3dContainer.clientWidth;
+        const height = view3dContainer.clientHeight;
+        
+        renderer.setSize(width, height);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        
+        // Resize stereo canvas if visible
+        if (state.view === 'stereo') {
+            stereoCanvas.width = width;
+            stereoCanvas.height = height;
+            renderStereographic();
+        }
+    });
+    
+    // Kickoff
+    updateUI('tetrahedron');
+    updateWireframeMesh('tetrahedron');
+    // Initial view fix: wireframe is hidden at start. Solid is visible.
+    solidGroup.visible = true;
+    wireGroup.visible = false; 
+    
+    renderer.setSize(view3dContainer.clientWidth, view3dContainer.clientHeight);
+    updateGeometry();
+    animate();
+
+</script>
+</body>
+</html>

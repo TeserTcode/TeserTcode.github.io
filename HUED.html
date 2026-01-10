@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Grey Distinguisher</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background: #222;
+      color: white;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    #colorBox {
+      width: 200px;
+      height: 200px;
+      margin: 20px auto;
+      border: 2px solid white;
+    }
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 90%;
+      height: 40px;
+      border-radius: 5px;
+      margin: 20px 0;
+      background: linear-gradient(to right,
+        hsl(0, 100%, 50%) 0%,
+        hsl(60, 100%, 50%) 17%,
+        hsl(120, 100%, 50%) 33%,
+        hsl(180, 100%, 50%) 50%,
+        hsl(240, 100%, 50%) 67%,
+        hsl(300, 100%, 50%) 83%,
+        hsl(360, 100%, 50%) 100%);
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 40px;
+      background: white;
+      cursor: pointer;
+      border: 1px solid black;
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 20px;
+      height: 40px;
+      background: white;
+      cursor: pointer;
+      border: 1px solid black;
+    }
+    canvas {
+      margin: 10px;
+      border: 1px solid #444;
+      background: #000;
+      cursor: pointer;
+    }
+    .graph-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .graph-box {
+      margin: 10px;
+      padding: 10px;
+      background: #333;
+      border-radius: 5px;
+    }
+    .stats-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    .color-stats {
+      margin: 10px;
+      padding: 10px;
+      background: #333;
+      border-radius: 5px;
+      min-width: 200px;
+    }
+    .progress-bar {
+      height: 20px;
+      background: #555;
+      border-radius: 10px;
+      margin: 5px 0;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(to right, #0f0, #ff0, #f00);
+    }
+    .overall-stats {
+      margin: 20px auto;
+      padding: 20px;
+      background: #333;
+      border-radius: 5px;
+      max-width: 600px;
+    }
+    h2 {
+      margin-top: 30px;
+      border-bottom: 1px solid #444;
+      padding-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Grey Distinguisher</h1>
+<div id="colorBox"></div>
+<input type="range" id="hueSlider" min="0" max="360" value="0" step="1">
+<div>Guess Hue: <span id="hueValue">0</span>°</div>
+<div id="status"></div>
+
+<div id="results" style="display: none;">
+  <h2>Color Range Performance</h2>
+  <div class="stats-container" id="colorStats"></div>
+  
+  <h2>Overall Performance</h2>
+  <div class="overall-stats" id="overallStats"></div>
+  
+  <h2>Detailed Analysis</h2>
+  <div class="graph-container">
+    <div class="graph-box">
+      <canvas id="graph1" width="300" height="300" title="Hue–Saturation"></canvas>
+      <div>Hue vs Saturation</div>
+    </div>
+    <div class="graph-box">
+      <canvas id="graph2" width="300" height="300" title="Hue–Value"></canvas>
+      <div>Hue vs Value</div>
+    </div>
+    <div class="graph-box">
+      <canvas id="graph3" width="300" height="300" title="Saturation–Value"></canvas>
+      <div>Saturation vs Value</div>
+    </div>
+    <div class="graph-box">
+      <canvas id="graph4" width="300" height="300" title="Saturation vs Error"></canvas>
+      <div>Saturation vs Error</div>
+    </div>
+    <div class="graph-box">
+      <canvas id="graph5" width="300" height="300" title="Value vs Error"></canvas>
+      <div>Value vs Error</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const N = 100;
+const colors = [];
+let results = [];
+
+function randomHSV() {
+  return {
+    h: Math.random() * 360,
+    s: Math.random(),
+    v: Math.random()
+  };
+}
+
+function HSVtoRGB(h, s, v) {
+  let c = v * s;
+  let x = c * (1 - Math.abs((h / 60) % 2 - 1));
+  let m = v - c;
+  let r, g, b;
+  if (h < 60) [r, g, b] = [c, x, 0];
+  else if (h < 120) [r, g, b] = [x, c, 0];
+  else if (h < 180) [r, g, b] = [0, c, x];
+  else if (h < 240) [r, g, b] = [0, x, c];
+  else if (h < 300) [r, g, b] = [x, 0, c];
+  else [r, g, b] = [c, 0, x];
+  return `rgb(${Math.round((r + m) * 255)},${Math.round((g + m) * 255)},${Math.round((b + m) * 255)})`;
+}
+
+function hueError(h1, h2) {
+  let d = Math.abs(h1 - h2) % 360;
+  return Math.min(d, 360 - d);
+}
+
+function generateDifficultColors() {
+  for (let i = 0; i < N; i++) {
+    let h = Math.random() * 360;
+    let s, v;
+
+   s = 0.05 + 0.15 * Math.random(); // near grey
+      v = 0.1 + 0.9 * Math.random() * Math.random() * Math.random();   // full range
+    colors.push({ h, s, v });
+  }
+}
+generateDifficultColors();
+
+let current = 0;
+const box = document.getElementById("colorBox");
+const slider = document.getElementById("hueSlider");
+const hueVal = document.getElementById("hueValue");
+const status = document.getElementById("status");
+
+function showColor(i) {
+  const hsv = colors[i];
+  box.style.background = HSVtoRGB(hsv.h, hsv.s, hsv.v);
+}
+
+slider.oninput = () => {
+  hueVal.textContent = slider.value;
+};
+
+slider.onchange = () => {
+  const guess = parseFloat(slider.value);
+  const real = colors[current];
+  const err = hueError(guess, real.h);
+  results.push({ ...real, guess, err });
+  current++;
+  if (current < N) {
+    showColor(current);
+    status.textContent = `Color ${current + 1} of ${N}`;
+  } else {
+    status.textContent = "Done!";
+    box.style.background = "#000";
+    slider.style.display = "none";
+    document.getElementById("results").style.display = "block";
+    drawAllGraphs();
+    showColorStats();
+    showOverallStats();
+  }
+};
+
+showColor(current);
+status.textContent = `Color ${current + 1} of ${N}`;
+
+// --- STATISTICS ---
+
+function showColorStats() {
+  const colorRanges = [
+    { name: "Red", min: 0, max: 30, color: "hsl(0, 100%, 50%)" },
+    { name: "Orange", min: 30, max: 60, color: "hsl(30, 100%, 50%)" },
+    { name: "Yellow", min: 60, max: 90, color: "hsl(60, 100%, 50%)" },
+    { name: "Lime", min: 90, max: 120, color: "hsl(90, 100%, 50%)" },
+    { name: "Green", min: 120, max: 180, color: "hsl(120, 100%, 50%)" },
+    { name: "Cyan", min: 180, max: 210, color: "hsl(180, 100%, 50%)" },
+    { name: "Blue", min: 210, max: 270, color: "hsl(240, 100%, 50%)" },
+    { name: "Purple", min: 270, max: 300, color: "hsl(270, 100%, 50%)" },
+    { name: "Pink", min: 300, max: 360, color: "hsl(330, 100%, 50%)" }
+  ];
+
+  const container = document.getElementById("colorStats");
+  container.innerHTML = "";
+
+  colorRanges.forEach(range => {
+    const rangeResults = results.filter(r => r.h >= range.min && r.h < range.max);
+    const count = rangeResults.length;
+    if (count === 0) return;
+
+    const avgError = rangeResults.reduce((sum, r) => sum + r.err, 0) / count;
+    const maxPossibleError = 180;
+    const accuracy = 100 - (avgError / maxPossibleError * 100);
+    
+    const colorBox = document.createElement("div");
+    colorBox.className = "color-stats";
+    colorBox.style.borderLeft = `5px solid ${range.color}`;
+    
+    colorBox.innerHTML = `
+      <h3>${range.name}</h3>
+      <div>Colors: ${count}</div>
+      <div>Avg Error: ${avgError.toFixed(1)}°</div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: ${accuracy}%"></div>
+      </div>
+      <div>Accuracy: ${accuracy.toFixed(1)}%</div>
+    `;
+    
+    container.appendChild(colorBox);
+  });
+}
+
+function showOverallStats() {
+  const total = results.length;
+  const avgError = results.reduce((sum, r) => sum + r.err, 0) / total;
+  const maxPossibleError = 180;
+  const accuracy = 100 - (avgError / maxPossibleError * 100);
+  
+  // Calculate performance by difficulty
+  const easy = results.filter(r => r.s > 0.8 && r.v > 0.3 && r.v < 0.7).length;
+  const medium = results.filter(r => 
+    (r.s > 0.3 && r.s < 0.6 && (r.v < 0.3 || r.v > 0.7)) || 
+    (r.s > 0.6 && r.s < 0.8 && (r.v < 0.2 || r.v > 0.8))
+  ).length;
+  const hard = results.filter(r => r.s < 0.2).length;
+  
+  const container = document.getElementById("overallStats");
+  container.innerHTML = `
+    <div style="font-size: 1.2em; margin-bottom: 10px;">Your Overall Performance</div>
+    <div style="display: flex; justify-content: space-between;">
+      <div>
+        <div>Average Error: <strong>${avgError.toFixed(1)}°</strong></div>
+        <div>Overall Accuracy: <strong>${accuracy.toFixed(1)}%</strong></div>
+      </div>
+      <div>
+        <div>Best at: <strong>${getBestColorRange()}</strong></div>
+        <div>Needs work: <strong>${getWorstColorRange()}</strong></div>
+      </div>
+    </div>
+    <div class="progress-bar" style="margin-top: 15px; height: 30px;">
+      <div class="progress-fill" style="width: ${accuracy}%"></div>
+    </div>
+    <div style="margin-top: 20px;">
+      <div>Difficulty Breakdown:</div>
+      <div style="display: flex; margin-top: 5px;">
+        <div style="flex: ${easy}; background: #4CAF50; padding: 5px; text-align: center;">Easy: ${easy}</div>
+        <div style="flex: ${medium}; background: #FFC107; padding: 5px; text-align: center;">Medium: ${medium}</div>
+        <div style="flex: ${hard}; background: #F44336; padding: 5px; text-align: center;">Hard: ${hard}</div>
+      </div>
+    </div>
+  `;
+}
+
+function getBestColorRange() {
+  const colorRanges = [
+    { name: "Red", min: 0, max: 30 },
+    { name: "Orange", min: 30, max: 60 },
+    { name: "Yellow", min: 60, max: 90 },
+    { name: "Lime", min: 90, max: 120 },
+    { name: "Green", min: 120, max: 180 },
+    { name: "Cyan", min: 180, max: 210 },
+    { name: "Blue", min: 210, max: 270 },
+    { name: "Purple", min: 270, max: 300 },
+    { name: "Pink", min: 300, max: 360 }
+  ];
+  
+  let bestRange = "";
+  let lowestError = Infinity;
+  
+  colorRanges.forEach(range => {
+    const rangeResults = results.filter(r => r.h >= range.min && r.h < range.max);
+    if (rangeResults.length === 0) return;
+    
+    const avgError = rangeResults.reduce((sum, r) => sum + r.err, 0) / rangeResults.length;
+    if (avgError < lowestError) {
+      lowestError = avgError;
+      bestRange = range.name;
+    }
+  });
+  
+  return bestRange;
+}
+
+function getWorstColorRange() {
+  const colorRanges = [
+    { name: "Red", min: 0, max: 30 },
+    { name: "Orange", min: 30, max: 60 },
+    { name: "Yellow", min: 60, max: 90 },
+    { name: "Lime", min: 90, max: 120 },
+    { name: "Green", min: 120, max: 180 },
+    { name: "Cyan", min: 180, max: 210 },
+    { name: "Blue", min: 210, max: 270 },
+    { name: "Purple", min: 270, max: 300 },
+    { name: "Pink", min: 300, max: 360 }
+  ];
+  
+  let worstRange = "";
+  let highestError = -Infinity;
+  
+  colorRanges.forEach(range => {
+    const rangeResults = results.filter(r => r.h >= range.min && r.h < range.max);
+    if (rangeResults.length === 0) return;
+    
+    const avgError = rangeResults.reduce((sum, r) => sum + r.err, 0) / rangeResults.length;
+    if (avgError > highestError) {
+      highestError = avgError;
+      worstRange = range.name;
+    }
+  });
+  
+  return worstRange;
+}
+
+// --- GRAPH DRAWING ---
+
+function drawAllGraphs() {
+  drawSmoothGraph("graph1", "h", "s", (x, y) => HSVtoRGB(x * 360, y, 1));
+  drawSmoothGraph("graph2", "h", "v", (x, y) => HSVtoRGB(x * 360, 1, y));
+  drawSmoothGraph("graph3", "s", "v", (x, y) => HSVtoRGB(0, x, y));
+  drawScatterGraph("graph4", "s", "err", "Saturation", "Error (°)");
+  drawScatterGraph("graph5", "v", "err", "Value", "Error (°)");
+}
+
+function smoothstep(t) {
+  return t * t * (3 - 2 * t);
+}
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+function lerpColor(c1, c2, t) {
+  return [
+    Math.round(lerp(c1[0], c2[0], t)),
+    Math.round(lerp(c1[1], c2[1], t)),
+    Math.round(lerp(c1[2], c2[2], t)),
+  ];
+}
+
+function errColor(err) {
+  const cyan   = [0, 255, 255];
+  const blue   = [0, 0, 255];
+  const green  = [0, 255, 0];
+  const orange = [192, 64, 0];
+  const red    = [255, 0, 0];
+  const pink   = [85, 85, 85];
+  const purple = [128, 0, 128];
+
+  if (err <= 5) {
+    let t = smoothstep(err / 5);
+    return lerpColor(cyan, blue, t);
+  } else if (err <= 10) {
+    let t = smoothstep((err - 5) / 5);
+    return lerpColor(blue, green, t);
+  } else if (err <= 20) {
+    let t = smoothstep((err - 10) / 10);
+    return lerpColor(green, orange, t);
+  } else if (err <= 30) {
+    let t = smoothstep((err - 20) / 10);
+    return lerpColor(orange, red, t);
+  } else if (err <= 60) {
+    let t = smoothstep((err - 30) / 30);
+    return lerpColor(red, pink, t);
+  } else {
+    let t = smoothstep((err - 60) / 120);
+    return lerpColor(pink, purple, t);
+  }
+}
+
+function drawSmoothGraph(id, keyX, keyY, overlayFunc) {
+  const canvas = document.getElementById(id);
+  const ctx = canvas.getContext("2d");
+  const img = ctx.createImageData(canvas.width, canvas.height);
+  const overlay = new Uint8ClampedArray(img.data.length);
+
+  const overlayOn = { value: false };
+  canvas.onclick = () => {
+    overlayOn.value = !overlayOn.value;
+    render();
+  };
+
+  function render() {
+    for (let y = 0; y < canvas.height; y++) {
+      for (let x = 0; x < canvas.width; x++) {
+        const fx = x / canvas.width;
+        const fy = 1 - y / canvas.height;
+        let closest = null;
+        let minDist = Infinity;
+
+        for (const pt of results) {
+          const px = keyX === "h" ? pt.h / 360 : pt[keyX];
+          const py = keyY === "h" ? pt.h / 360 : pt[keyY];
+          const dx = fx - px, dy = fy - py;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < minDist) {
+            minDist = d2;
+            closest = pt;
+          }
+        }
+
+        const index = (y * canvas.width + x) * 4;
+        const [r, g, b] = errColor(closest.err);
+        img.data[index] = r;
+        img.data[index + 1] = g;
+        img.data[index + 2] = b;
+        img.data[index + 3] = 255;
+
+        if (overlayOn.value) {
+          const rgb = overlayFunc(fx, fy).match(/\d+/g).map(Number);
+          overlay[index] = rgb[0];
+          overlay[index + 1] = rgb[1];
+          overlay[index + 2] = rgb[2];
+          overlay[index + 3] = 90; // transparency
+        }
+      }
+    }
+
+    ctx.putImageData(img, 0, 0);
+    if (overlayOn.value) {
+      const overlayImg = new ImageData(overlay, canvas.width, canvas.height);
+      ctx.putImageData(overlayImg, 0, 0);
+    }
+  }
+
+  render();
+}
+
+function drawScatterGraph(id, keyX, keyY, xLabel, yLabel) {
+  const canvas = document.getElementById(id);
+  const ctx = canvas.getContext("2d");
+  
+  // Clear canvas
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Draw axes
+  ctx.strokeStyle = "#666";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(30, 20);
+  ctx.lineTo(30, canvas.height - 30);
+  ctx.lineTo(canvas.width - 20, canvas.height - 30);
+  ctx.stroke();
+  
+  // Draw labels
+  ctx.fillStyle = "#fff";
+  ctx.font = "12px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(xLabel, canvas.width / 2, canvas.height - 10);
+  ctx.save();
+  ctx.translate(10, canvas.height / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = "center";
+  ctx.fillText(yLabel, 0, 0);
+  ctx.restore();
+  
+  // Draw data points
+  const xValues = results.map(r => r[keyX]);
+  const yValues = results.map(r => r[keyY]);
+  
+  const xMin = Math.min(...xValues);
+  const xMax = Math.max(...xValues);
+  const yMin = Math.min(...yValues);
+  const yMax = Math.max(...yValues);
+  
+  const xScale = (canvas.width - 50) / (xMax - xMin);
+  const yScale = (canvas.height - 50) / (yMax - yMin);
+  
+  // Draw grid lines
+  ctx.strokeStyle = "#333";
+  ctx.lineWidth = 0.5;
+  
+  // X-axis grid
+  const xSteps = 5;
+  for (let i = 0; i <= xSteps; i++) {
+    const x = 30 + (i / xSteps) * (canvas.width - 50);
+    ctx.beginPath();
+    ctx.moveTo(x, 20);
+    ctx.lineTo(x, canvas.height - 30);
+    ctx.stroke();
+    
+    const value = xMin + (i / xSteps) * (xMax - xMin);
+    ctx.fillText(value.toFixed(1), x, canvas.height - 15);
+  }
+  
+  // Y-axis grid
+  const ySteps = 5;
+  for (let i = 0; i <= ySteps; i++) {
+    const y = canvas.height - 30 - (i / ySteps) * (canvas.height - 50);
+    ctx.beginPath();
+    ctx.moveTo(30, y);
+    ctx.lineTo(canvas.width - 20, y);
+    ctx.stroke();
+    
+    const value = yMin + (i / ySteps) * (yMax - yMin);
+    ctx.fillText(value.toFixed(0), 20, y + 4);
+  }
+  
+  // Draw points
+  for (let i = 0; i < results.length; i++) {
+    const x = 30 + (xValues[i] - xMin) * xScale;
+    const y = canvas.height - 30 - (yValues[i] - yMin) * yScale;
+    
+    const err = results[i].err;
+    const [r, g, b] = errColor(err);
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.beginPath();
+    ctx.arc(x, y, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  // Add trend line
+  if (results.length > 10) {
+    const points = results.map((r, i) => ({
+      x: xValues[i],
+      y: yValues[i]
+    }));
+    
+    // Simple linear regression
+    const n = points.length;
+    const sumX = points.reduce((sum, p) => sum + p.x, 0);
+    const sumY = points.reduce((sum, p) => sum + p.y, 0);
+    const sumXY = points.reduce((sum, p) => sum + p.x * p.y, 0);
+    const sumXX = points.reduce((sum, p) => sum + p.x * p.x, 0);
+    
+    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
+    
+    const x1 = xMin;
+    const y1 = slope * x1 + intercept;
+    const x2 = xMax;
+    const y2 = slope * x2 + intercept;
+    
+    const graphX1 = 30 + (x1 - xMin) * xScale;
+    const graphY1 = canvas.height - 30 - (y1 - yMin) * yScale;
+    const graphX2 = 30 + (x2 - xMin) * xScale;
+    const graphY2 = canvas.height - 30 - (y2 - yMin) * yScale;
+    
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(graphX1, graphY1);
+    ctx.lineTo(graphX2, graphY2);
+    ctx.stroke();
+    
+    // Display R² value
+    const yMean = sumY / n;
+    const ssTot = points.reduce((sum, p) => sum + Math.pow(p.y - yMean, 2), 0);
+    const ssRes = points.reduce((sum, p) => sum + Math.pow(p.y - (slope * p.x + intercept), 2), 0);
+    const rSquared = 1 - (ssRes / ssTot);
+    
+    ctx.fillStyle = "#fff";
+    ctx.font = "12px sans-serif";
+    ctx.textAlign = "right";
+    ctx.fillText(`R² = ${rSquared.toFixed(2)}`, canvas.width - 25, 25);
+  }
+}
+</script>
+
+</body>
+</html>

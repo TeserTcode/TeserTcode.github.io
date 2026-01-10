@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Paley Graph - Circular Layout</title>
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 10px; }
+    #graph { width: 100%; height: 85vh; border: 1px solid #ccc; margin-top: 10px; }
+    input { width: 60px; }
+  </style>
+</head>
+<body>
+
+<h2>Paley Graph Viewer - Circular Layout</h2>
+<label>Enter a prime <b>q ≡ 1 mod 4</b>:</label>
+<input type="number" id="q" value="13" />
+<button onclick="drawPaley()">Generate</button>
+
+<div id="graph"></div>
+
+<script>
+function isQuadraticResidue(n, q) {
+  n = n % q;
+  for (let x = 1; x < q; x++) {
+    if ((x * x) % q === n) return true;
+  }
+  return false;
+}
+
+function isPrime(n) {
+  if (n < 2) return false;
+  for (let i = 2; i * i <= n; i++) {
+    if (n % i === 0) return false;
+  }
+  return true;
+}
+
+function drawPaley() {
+  const q = parseInt(document.getElementById("q").value);
+  if (!isPrime(q) || q % 4 !== 1) {
+    alert("Please enter a prime number q such that q ≡ 1 mod 4.");
+   // return;
+  }
+
+  const radius = 200;
+  const centerX = 0, centerY = 0;
+  const angleStep = (2 * Math.PI) / q;
+
+  const nodes = [];
+  for (let i = 0; i < q; i++) {
+    const angle = i * angleStep;
+    const x = centerX + radius * Math.cos(angle);
+    const y = centerY + radius * Math.sin(angle);
+    nodes.push({ id: i, label: i.toString(), x, y, fixed: true });
+  }
+
+  const edges = [];
+  for (let i = 0; i < q; i++) {
+    for (let j = i + 1; j < q; j++) {
+      const diff = (i - j + q) % q;
+      if (isQuadraticResidue(diff, q)) {
+        edges.push({ from: i, to: j });
+      }
+    }
+  }
+
+  const container = document.getElementById("graph");
+  const data = {
+    nodes: new vis.DataSet(nodes),
+    edges: new vis.DataSet(edges)
+  };
+
+  const options = {
+    physics: false,
+    nodes: {
+      shape: "dot",
+      size: 20,
+      font: { size: 16 }
+    },
+    edges: {
+      width: 2,
+      color: "#888"
+    }
+  };
+
+  new vis.Network(container, data, options);
+}
+
+drawPaley(); // Draw initial graph for q = 13
+</script>
+
+</body>
+</html>

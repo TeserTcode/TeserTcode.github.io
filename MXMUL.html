@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Matrix Multiplication Visualizer</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; background: #222; color: #eee; }
+  table { border-collapse: collapse; margin: 10px 0; }
+  td { padding: 5px; text-align: center; }
+  input { width: 50px; text-align: center; }
+  .matrix { display: inline-block; margin-right: 50px; }
+  .highlightA { background: cyan; }
+  .highlightB { background: yellow; }
+  .container { display: flex; flex-wrap: wrap; }
+  button { margin: 5px; }
+  .breakdown { margin-top: 20px; font-family: monospace; }
+</style>
+</head>
+<body>
+
+<h2>Matrix Multiplication</h2>
+
+<div>
+  <label>Rows A: <input type="number" id="rowsA" value="2" min="1" max="10"></label>
+  <label>Cols A / Rows: <input type="number" id="colsA" value="3" min="1" max="10"></label>
+  <label>Cols B: <input type="number" id="colsB" value="2" min="1" max="10"></label>
+  <button onclick="resizeMatrices()">Resize</button>
+</div>
+
+<div class="container">
+  <div class="matrix">
+    <h3>Matrix A</h3>
+    <div id="matrixA"></div>
+    <button onclick="randomizeA(-10,10)">Random A (-10 to 10)</button>
+    <button onclick="randomizeA(0,10)">Random A (0 to 10)</button>
+    <button onclick="randomizeA(-1,1)">Random A (-1,0,1)</button>
+  </div>
+
+  <div class="matrix">
+    <h3>Matrix B</h3>
+    <div id="matrixB"></div>
+    <button onclick="randomizeB(-10,10)">Random B (-10 to 10)</button>
+    <button onclick="randomizeB(0,10)">Random B (0 to 10)</button>
+    <button onclick="randomizeB(-1,1)">Random B (-1,0,1)</button>
+  </div>
+
+  <div class="matrix">
+    <h3>Matrix C = A*B</h3>
+	<h3>Hover over to highlight</h3>
+    <div id="matrixC"></div>
+  </div>
+</div>
+
+<div class="breakdown">
+  <div id="formula1"></div>
+  <div id="formula2"></div>
+</div>
+
+<script>
+let A = [], B = [], C = [];
+let m = 2, n = 3, p = 2;
+
+function resizeMatrices() {
+  m = parseInt(document.getElementById('rowsA').value);
+  n = parseInt(document.getElementById('colsA').value);
+  p = parseInt(document.getElementById('colsB').value);
+  initMatrices();
+}
+
+function initMatrices() {
+  A = Array.from({length:m},()=>Array(n).fill(0));
+  B = Array.from({length:n},()=>Array(p).fill(0));
+  C = Array.from({length:m},()=>Array(p).fill(0));
+  renderMatrix('matrixA', A, 'A');
+  renderMatrix('matrixB', B, 'B');
+  computeC();
+  renderMatrix('matrixC', C, 'C');
+  clearBreakdown();
+}
+
+function renderMatrix(containerId, matrix, matrixName) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  const table = document.createElement('table');
+  matrix.forEach((row,i)=>{
+    const tr = document.createElement('tr');
+    row.forEach((val,j)=>{
+      const td = document.createElement('td');
+      if(matrixName === 'C'){
+        td.textContent = val;
+        td.onmouseover = ()=>highlightDot(i,j);
+        td.onmouseout = ()=>clearHighlights();
+      } else {
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.value = val;
+        input.oninput = (e)=>{
+          matrix[i][j] = parseFloat(e.target.value) || 0;
+          computeC();
+          renderMatrix('matrixC', C, 'C');
+        };
+        td.appendChild(input);
+      }
+      tr.appendChild(td);
+    });
+    table.appendChild(tr);
+  });
+  container.appendChild(table);
+}
+
+function randomizeMatrix(matrix, min, max, customVals) {
+  for(let i=0;i<matrix.length;i++){
+    for(let j=0;j<matrix[0].length;j++){
+      if(customVals){
+        matrix[i][j] = customVals[Math.floor(Math.random()*customVals.length)];
+      } else {
+        matrix[i][j] = Math.floor(Math.random()*(max-min+1))+min;
+      }
+    }
+  }
+}
+
+function randomizeA(min,max,customVals) { randomizeMatrix(A,min,max,customVals); renderMatrix('matrixA', A, 'A'); computeC(); renderMatrix('matrixC', C, 'C'); clearBreakdown(); }
+function randomizeB(min,max,customVals) { randomizeMatrix(B,min,max,customVals); renderMatrix('matrixB', B, 'B'); computeC(); renderMatrix('matrixC', C, 'C'); clearBreakdown(); }
+
+function computeC() {
+  C = Array.from({length:m},()=>Array(p).fill(0));
+  for(let i=0;i<m;i++){
+    for(let j=0;j<p;j++){
+      for(let k=0;k<n;k++){
+        C[i][j] += A[i][k]*B[k][j];
+      }
+    }
+  }
+}
+
+function highlightDot(row,col){
+  const matrixATable = document.getElementById('matrixA').querySelector('table');
+  const matrixBTable = document.getElementById('matrixB').querySelector('table');
+  const formula1 = [];
+  const formula2 = [];
+  for(let k=0;k<n;k++){
+    matrixATable.rows[row].cells[k].classList.add('highlightA');
+    matrixBTable.rows[k].cells[col].classList.add('highlightB');
+    formula1.push(`${A[row][k]}*${B[k][col]}`);
+    formula2.push(`${A[row][k]*B[k][col]}`);
+  }
+  document.getElementById('formula1').textContent = formula1.join(' + ') + ' = ' + C[row][col];
+  document.getElementById('formula2').textContent = formula2.join(' + ') + ' = ' + C[row][col];
+}
+
+function clearHighlights(){
+  const matrixATable = document.getElementById('matrixA').querySelector('table');
+  const matrixBTable = document.getElementById('matrixB').querySelector('table');
+  if(matrixATable) for(let i=0;i<matrixATable.rows.length;i++) for(let j=0;j<matrixATable.rows[0].cells.length;j++) matrixATable.rows[i].cells[j].classList.remove('highlightA');
+  if(matrixBTable) for(let i=0;i<matrixBTable.rows.length;i++) for(let j=0;j<matrixBTable.rows[0].cells.length;j++) matrixBTable.rows[i].cells[j].classList.remove('highlightB');
+  clearBreakdown();
+}
+
+function clearBreakdown(){
+  document.getElementById('formula1').textContent = '';
+  document.getElementById('formula2').textContent = '';
+}
+
+initMatrices();
+</script>
+
+</body>
+</html>

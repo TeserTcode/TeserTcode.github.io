@@ -1,0 +1,405 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Farey Sequence Visualizer</title>
+</head>
+<body>
+
+<h3>Farey Sequence Visualizer</h3>
+
+Mode:
+<select id="modeSelect" onchange="draw()">
+  <option value="boxes">Boxes</option>
+  <option value="semicircle">Semicircle Overlay</option>
+
+  <option value="sunburst">Sunburst</option>
+  <option value="sunburst_overlay">Sunburst Overlay</option>
+</select><br><br>
+
+n:
+<input type="number" id="nInput" value="9" min="1"><br><br>
+
+Canvas width:
+<input type="number" id="wInput" value="400"><br>
+Canvas height:
+<input type="number" id="hInput" value="400"><br><br>
+
+Color scheme:
+<select id="colorScheme">
+  <option value="classic">Classic (black)</option>
+  <option value="denGreen">Denominator → green</option>
+  <option value="numRed">Numerator → red</option>
+  <option value="rgbND">Numerator red / Denominator green</option>
+  <option value="blueDen">Blue by denominator</option>
+  <option value="heat">Heat map</option>
+  <option value="rainbow">Rainbow (index)</option>
+  <option value="grayDen">Grayscale denominator</option>
+  <option value="invert">Inverted classic</option>
+  <option value="levelRainbow">Level Rainbow (Semicircle/Polygon)</option>
+  <option value="sunburstRainbow">Sunburst Rainbow</option>
+</select><br><br>
+
+Grid:
+<input type="checkbox" id="gridCheck" checked>
+Width:
+<input type="number" id="gridWidth" value="3">
+Color:
+<input type="color" id="gridColor" value="#000000"><br><br>
+
+Show sequence text:
+<input type="checkbox" id="textCheck" checked><br><br>
+
+<button onclick="draw()">Draw</button>
+
+<br><br>
+
+<canvas id="c"></canvas>
+<pre id="seqText"></pre>
+<div id="areaText"></div>
+
+<script>
+// Farey sequence of order n
+function farey(n){
+  let a=0,b=1,c=1,d=n;
+  let seq=[[0,1]];
+  while(c<=n){
+    let k=Math.floor((n+b)/d);
+    let e=k*c-a;
+    let f=k*d-b;
+    seq.push([c,d]);
+    a=c; b=d;
+    c=e; d=f;
+  }
+  return seq;
+}
+
+// Coloring function
+function colorFor(a,b,i,len,scheme,mode,level){
+  let t = b / len;
+  switch(scheme){
+    case "classic": return "rgb(0,0,0)";
+    case "invert": return "rgb(255,255,255)";
+    case "denGreen": return `rgb(0,${Math.floor(255*t)},0)`;
+    case "numRed": return `rgb(${Math.floor(255*a/b)},0,0)`;
+    case "rgbND": return `rgb(${Math.floor(255*a/b)},${Math.floor(255*b/len)},0)`;
+    case "blueDen": return `rgb(0,0,${Math.floor(255*t)})`;
+    case "grayDen":
+      let g=Math.floor(255*t);
+      return `rgb(${g},${g},${g})`;
+    case "heat":
+      return `rgb(${Math.floor(255*t)},${Math.floor(255*(1-t))},0)`;
+    case "rainbow":
+      let h=i/len;
+      return `hsl(${360*h},100%,50%)`;
+    case "levelRainbow":
+      if (mode === "semicircle" || mode === "polygon") {
+        return `hsl(${level * 30},100%,50%)`;
+      }
+      return `hsl(${i * 360 / len},100%,50%)`;
+    case "sunburstRainbow":
+      return `hsl(${i * 360 / len},100%,50%)`;
+  }
+  return "black";
+}
+
+// Function to generate all 8 symmetric coordinates for a point (a,b)
+function generateSymmetricPoints(a, b) {
+  return [
+    [a, b],    // Q1
+    [b, a],    // Q2 (rotated 90°)
+    [-b, a],   // Q3
+    [-a, b],   // Q4
+    [-a, -b],  // Q5
+    [-b, -a],  // Q6
+    [b, -a],   // Q7
+    [a, -b]    // Q8
+  ];
+}
+
+// Function to calculate angle of a point (x,y) from origin
+function calculateAngle(x, y) {
+  let angle = Math.atan2(y, x);
+  if (angle < 0) angle += 2 * Math.PI; // Normalize to 0-2π
+  return angle;
+}
+
+// Function to sort points by angle and remove duplicates
+function sortPointsByAngle(points) {
+  // Remove duplicate points
+  let uniquePoints = [];
+  let seen = new Set();
+  
+  for (let point of points) {
+    let key = `${point[0]},${point[1]}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniquePoints.push(point);
+    }
+  }
+  
+  // Sort by angle
+  return uniquePoints.sort((a, b) => {
+    let angleA = calculateAngle(a[0], a[1]);
+    let angleB = calculateAngle(b[0], b[1]);
+    return angleA - angleB;
+  });
+}
+
+// Draw function
+function draw(){
+  let mode = modeSelect.value;
+  let n = +nInput.value;
+  let W = +wInput.value;
+  let H = +hInput.value;
+
+  let canvas = c;
+  canvas.width = W;
+  canvas.height = H;
+  let ctx = canvas.getContext("2d");
+
+  let seq = farey(n);
+  let maxDen = n;
+
+  // Background
+  ctx.fillStyle = "white";
+  ctx.fillRect(0,0,W,H);
+
+  if(mode === "boxes"){
+    let cols = seq.length;
+    let cw = W / cols;
+    let ch = H / maxDen;
+
+    for(let i=0;i<seq.length;i++){
+      let a = seq[i][0];
+      let b = seq[i][1];
+
+      let x = i*cw;
+      let y = (maxDen-b)*ch;
+
+      ctx.fillStyle = colorFor(a,b,i,maxDen,colorScheme.value,mode);
+      ctx.fillRect(x,y,cw,ch);
+    }
+
+    if(gridCheck.checked){
+      ctx.strokeStyle = gridColor.value;
+      ctx.lineWidth = +gridWidth.value;
+
+      for(let i=0;i<=cols;i++){
+        let x = i*cw;
+        ctx.beginPath();
+        ctx.moveTo(x,0);
+        ctx.lineTo(x,H);
+        ctx.stroke();
+      }
+      for(let j=0;j<=maxDen;j++){
+        let y = j*ch;
+        ctx.beginPath();
+        ctx.moveTo(0,y);
+        ctx.lineTo(W,y);
+        ctx.stroke();
+      }
+    }
+
+  } else if(mode === "semicircle"){
+    // Semicircle overlay method
+    let fractionsByLevel = [[seq[0],[seq[seq.length-1]]]]; // start level F0-Fn
+
+    // Generate levels based on denominator (step by step)
+    let levels = [];
+    for(let k=1;k<=n;k++){
+      let level = seq.filter(p=>p[1]===k && !(p[0]===0 && p[1]===1) && !(p[0]===1 && p[1]===1));
+      if(level.length>0) levels.push(level);
+    }
+
+    let points = [0,1]; // initial x positions
+    // Map fractions to x-coordinates
+    let xMap = {};
+    for(let f of seq){
+      xMap[`${f[0]}/${f[1]}`] = W*(f[0]/f[1]);
+    }
+
+    // Draw semicircle overlay level by level
+    for(let lev=0;lev<=levels.length;lev++){
+      let newPoints = [];
+      if(lev===0){
+        newPoints = [0.5]; // first mediant
+      } else if(lev-1<levels.length){
+        for(let f of levels[lev-1]){
+          newPoints.push(f[0]/f[1]);
+        }
+      }
+
+      // Merge with previous points and sort
+      let allPoints = points.concat(newPoints);
+      allPoints.sort((a,b)=>a-b);
+
+      // Draw semicircle between consecutive points
+      for(let i=0;i<allPoints.length-1;i++){
+        let x0 = allPoints[i]*W;
+        let x1 = allPoints[i+1]*W;
+        let cx = (x0+x1)/2;
+        let r = (x1-x0)/2;
+        ctx.beginPath();
+        ctx.arc(cx,H/2,r,Math.PI,0,false);
+        // Color based on left fraction denominator
+        let frac = seq.find(f=>f[0]/f[1]===allPoints[i]);
+        let color = frac ? colorFor(frac[0],frac[1],i,n,colorScheme.value,mode,lev) : "black";
+        ctx.strokeStyle=color;
+        ctx.lineWidth=2;
+        ctx.stroke();
+      }
+
+      // Update points
+      points = allPoints;
+    }
+  } 
+   else if(mode === "sunburst" || mode === "sunburst_overlay") {
+    let centerX = W / 2;
+    let centerY = H / 2;
+    let maxRadius = Math.min(W, H) / 2 - 20;
+    
+    // Calculate area
+    let area = 4 * (seq.length - 1);
+    document.getElementById("areaText").innerHTML = 
+      `Area of sunburst for F${n}: 4*(|F${n}|-1) = 4*(${seq.length}-1) = ${area}`;
+    
+    if(mode === "sunburst_overlay") {
+      // Draw all sequences from 1 to n
+      for(let currentN = 1; currentN <= n; currentN++) {
+        let currentSeq = farey(currentN);
+        
+        // Collect all points for this sequence
+        let allPoints = [];
+        
+        // Generate all symmetric points for all fractions
+        for(let i = 0; i < currentSeq.length; i++) {
+          let a = currentSeq[i][0];
+          let b = currentSeq[i][1];
+          
+          // Get all 8 symmetric points for this fraction
+          let symmetricPoints = generateSymmetricPoints(a, b);
+          allPoints.push(...symmetricPoints);
+        }
+        
+        // Sort all points by angle
+        let sortedPoints = sortPointsByAngle(allPoints);
+        
+        // Draw the sunburst
+        if(sortedPoints.length > 0) {
+          ctx.beginPath();
+          
+          // Convert first point to canvas coordinates
+          let firstPoint = sortedPoints[0];
+          let firstRadius = maxRadius * (currentN / n) * 
+                          (Math.sqrt(firstPoint[0]*firstPoint[0] + firstPoint[1]*firstPoint[1]) / Math.sqrt(2*currentN*currentN));
+          let firstAngle = calculateAngle(firstPoint[0], firstPoint[1]);
+          let firstX = centerX + Math.cos(firstAngle) * firstRadius;
+          let firstY = centerY + Math.sin(firstAngle) * firstRadius;
+          ctx.moveTo(firstX, firstY);
+          
+          // Connect all points in sorted order
+          for(let i = 1; i < sortedPoints.length; i++) {
+            let point = sortedPoints[i];
+            let radius = maxRadius * (currentN / n) * 
+                        (Math.sqrt(point[0]*point[0] + point[1]*point[1]) / Math.sqrt(2*currentN*currentN));
+            let angle = calculateAngle(point[0], point[1]);
+            let x = centerX + Math.cos(angle) * radius;
+            let y = centerY + Math.sin(angle) * radius;
+            ctx.lineTo(x, y);
+          }
+          
+          ctx.closePath();
+          
+          // Set color
+          if(colorScheme.value === "sunburstRainbow") {
+            ctx.strokeStyle = `hsl(${(currentN * 360 / n)}, 100%, 50%)`;
+            ctx.fillStyle = `hsla(${(currentN * 360 / n)}, 100%, 50%, 0.1)`;
+            ctx.fill();
+          } else {
+            ctx.strokeStyle = colorFor(currentN, n, currentN, n, colorScheme.value, mode);
+          }
+          
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      }
+    } else {
+      // Draw single sunburst for sequence n
+      
+      // Collect all points
+      let allPoints = [];
+      
+      // Generate all symmetric points for all fractions
+      for(let i = 0; i < seq.length; i++) {
+        let a = seq[i][0];
+        let b = seq[i][1];
+        
+        // Get all 8 symmetric points for this fraction
+        let symmetricPoints = generateSymmetricPoints(a, b);
+        allPoints.push(...symmetricPoints);
+      }
+      
+      // Sort all points by angle
+      let sortedPoints = sortPointsByAngle(allPoints);
+      
+      // Draw the sunburst
+      if(sortedPoints.length > 0) {
+        ctx.beginPath();
+        
+        // Convert first point to canvas coordinates
+        let firstPoint = sortedPoints[0];
+        let firstRadius = maxRadius * 
+                        (Math.sqrt(firstPoint[0]*firstPoint[0] + firstPoint[1]*firstPoint[1]) / Math.sqrt(2*n*n));
+        let firstAngle = calculateAngle(firstPoint[0], firstPoint[1]);
+        let firstX = centerX + Math.cos(firstAngle) * firstRadius;
+        let firstY = centerY + Math.sin(firstAngle) * firstRadius;
+        ctx.moveTo(firstX, firstY);
+        
+        // Connect all points in sorted order
+        for(let i = 1; i < sortedPoints.length; i++) {
+          let point = sortedPoints[i];
+          let radius = maxRadius * 
+                      (Math.sqrt(point[0]*point[0] + point[1]*point[1]) / Math.sqrt(2*n*n));
+          let angle = calculateAngle(point[0], point[1]);
+          let x = centerX + Math.cos(angle) * radius;
+          let y = centerY + Math.sin(angle) * radius;
+          ctx.lineTo(x, y);
+        }
+        
+        ctx.closePath();
+        
+        // Fill and stroke
+        if(colorScheme.value === "sunburstRainbow") {
+          let gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, maxRadius);
+          gradient.addColorStop(0, 'rgba(255,0,0,0.5)');
+          gradient.addColorStop(0.5, 'rgba(0,255,0,0.5)');
+          gradient.addColorStop(1, 'rgba(0,0,255,0.5)');
+          ctx.fillStyle = gradient;
+        } else {
+          ctx.fillStyle = 'rgba(200,200,255,0.5)';
+        }
+        ctx.fill();
+        
+        ctx.strokeStyle = colorFor(1, 1, 0, n, colorScheme.value, mode);
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Sequence text
+  if(textCheck.checked){
+    let s1 = seq.map(p=>`${p[0]}/${p[1]}`).join(", ");
+    let s2 = "{"+seq.map(p=>p[0]).join(",")+"}/{"+seq.map(p=>p[1]).join(",")+"}";
+    seqText.textContent = "F"+n+" = {"+s1+"}\n\n"+s2;
+  } else {
+    seqText.textContent = "";
+  }
+}
+
+draw();
+</script>
+
+</body>
+</html>

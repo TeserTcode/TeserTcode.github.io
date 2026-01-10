@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Modular Calendar PNG Generator</title>
+  <style>
+    :root{--bg:#fff;--fg:#222;--muted:#bbb;--accent:#2b7cff}
+    body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#f5f7fb;color:var(--fg);margin:0;padding:24px;}
+    .app{max-width:920px;margin:0 auto;background:white;padding:18px;border-radius:12px;box-shadow:0 6px 18px rgba(18,36,63,.08)}
+    h1{margin:0 0 12px;font-size:20px}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+    label{font-size:13px}
+    select,input[type=number]{padding:6px 8px;border-radius:6px;border:1px solid #e2e8f0}
+    button{background:var(--accent);color:white;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
+    button:active{transform:translateY(1px)}
+    .canvas-wrap{display:flex;gap:18px;align-items:flex-start}
+    canvas{background:linear-gradient(180deg,#fff,#fbfdff);border-radius:8px;box-shadow:0 4px 14px rgba(16,24,40,.06)}
+    .info{font-size:13px;color:#445;max-width:320px}
+    .small{font-size:12px;color:var(--muted)}
+    .types{display:flex;gap:6px;flex-wrap:wrap}
+    .types button{background:#eef3ff;color:var(--accent);padding:6px 8px;border-radius:6px}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>Modular Calendar PNG Generator</h1>
+    <div class="controls">
+      <label>Calendar type
+        <div class="types" id="typeButtons"></div>
+      </label>
+      <label>Year
+        <input id="year" type="number" value="2025" min="1" style="width:90px"/>
+      </label>
+      <label>Month
+        <select id="month"></select>
+      </label>
+      <label>Week starts
+        <select id="startDay"><option value="1">Monday</option><option value="0">Sunday</option></select>
+      </label>
+      <label>Tile size
+        <select id="tileSize"><option>96</option><option>80</option><option>64</option><option>48</option></select>
+      </label>
+      <button id="render">Render</button>
+      <button id="export">Export PNG</button>
+      <button id="download">Download PNG</button>
+    </div>
+    <div class="canvas-wrap">
+      <canvas id="calCanvas" width="800" height="640"></canvas>
+      <div class="info">
+        <p class="small">Usage: choose a calendar type, set year/month (for some calendar systems these are mapped to that system's year/month), and click Render. Days not in the chosen month are drawn gray. Click Export to get the PNG preview; Download will save it.</p>
+        <p class="small">To add a calendar system, register it in the <code>calendarTypes</code> array in the code. Each type must provide <code>id, name, monthNames(year)</code> and <code>getMonth(year,month)</code> which returns <code>{days: number, monthIndex, year}</code> and optionally a mapping from the month/day grid to labels.</p>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ------------------------- Modular calendar engine -------------------------
+   - calendarTypes is an array you can extend with new calendar implementations.
+   - Each type must implement getMonth(year, monthIndex) where monthIndex is 1-based
+     (1..12 for many calendars). It must return an object with:
+       - days (number of days in that month)
+       - year (mapped year if different system)
+       - monthIndex (mapped 1-based month index)
+       - startWeekday (0=Sunday .. 6=Saturday) of the 1st day in that calendar system
+   - monthNames(year) should return an array of month labels for the UI if desired.
+   - This file includes Gregorian (built-in) and a Tabular Hijri (Islamic) example.
+------------------------------------------------------------------------------*/
+
+const calendarTypes = [];
+
+// --- Gregorian (standard) ---
+calendarTypes.push({
+  id: 'gregorian',
+  name: 'Gregorian',
+  monthNames: (y) => ["January","February","March","April","May","June","July","August","September","October","November","December"],
+  getMonth: (y,m)=>{
+    // m: 1..12
+    const mm = m - 1;
+    const jsDate = new Date(y, mm, 1);
+    const days = new Date(y, mm+1, 0).getDate();
+    const startWeekday = jsDate.getDay(); // 0..6 (Sun..Sat)
+    return {days, year: y, monthIndex: m, startWeekday};
+  }
+});
+
+// --- Tabular Islamic (Hijri) -- simple arithmetic model (30-year cycle) ---
+// Note: this is the "arithmetical" (Tabular) Islamic calendar, not astronomically adjusted.
+calendarTypes.push({
+  id: 'hijri_tabular',
+  name: 'Hijri (Tabular)',
+  monthNames: (y)=>["Muharram","Safar","Rabi' al-awwal","Rabi' al-thani","Jumada al-awwal","Jumada al-thani","Rajab","Sha'ban","Ramadan","Shawwal","Dhu al-Qadah","Dhu al-Hijjah"],
+  // Converts a (Gregorian) year/month input to an approximate Hijri month/year using a simple algorithm.
+  // We accept user's numeric entry as a nominal year/month to convert — for many use-cases you'll supply Hijri directly.
+  getMonth: (y,m)=>{
+    // Convert an approximate Gregorian date to Hijri using arithmetic conversion (Kuwaiti algorithm would be better with libs).
+    // We'll compute the Julian Day then convert to Islamic by known formula.
+    function gregorianToJD(yy,mm,dd){
+      let a = Math.floor((14-mm)/12);
+      let y2 = yy+4800-a;
+      let m2 = mm + 12*a -3;
+      return dd + Math.floor((153*m2+2)/5) + 365*y2 + Math.floor(y2/4) - Math.floor(y2/100) + Math.floor(y2/400) - 32045;
+    }
+    // take the 1st day of provided month as reference
+    const jd = gregorianToJD(y,m,1);
+    // Islamic date from JD
+    const islamicEpoch = 1948439.5; // approx
+    const days = Math.floor(jd - 1948439.5);
+    const islamicYear = Math.floor((30*days + 10646) / 10631);
+    const month = Math.min(12, Math.ceil((days - 29 - islamicYear*354 - Math.floor((3 + 11*islamicYear)/30)) / 29.5)+1);
+    // get number of days in that islamic month (tabular): months alternate 30-29 with Dhu al-Hijjah possibly 30 in leap years
+    function isIslamicLeap(y){ return ((11*y + 14) % 30) < 11; }
+    function daysInIslamicMonth(y,m){
+      if(m % 2 === 1) return 30; // odd months 30
+      if(m!==12) return 29;
+      return isIslamicLeap(y) ? 30 : 29;
+    }
+    const dcount = daysInIslamicMonth(islamicYear, month);
+    // compute weekday: convert back to Gregorian JS Date for weekday convenience
+    // approximate by mapping JD to weekday
+    const weekday = (Math.floor(jd + 1.5) % 7); // 0=Sunday..6=Saturday
+    return {days: dcount, year: islamicYear, monthIndex: month, startWeekday: weekday};
+  }
+});
+
+// utility: add more types by calling registerCalendarType
+function registerCalendarType(obj){ calendarTypes.push(obj); renderTypeButtons(); }
+
+/* ------------------------ UI wiring & calendar drawing ----------------------*/
+const canvas = document.getElementById('calCanvas');
+const ctx = canvas.getContext('2d');
+const yearInput = document.getElementById('year');
+const monthSelect = document.getElementById('month');
+const startDaySelect = document.getElementById('startDay');
+const tileSizeSelect = document.getElementById('tileSize');
+const typeButtons = document.getElementById('typeButtons');
+let activeType = calendarTypes[0].id;
+
+function renderTypeButtons(){
+  typeButtons.innerHTML = '';
+  calendarTypes.forEach(t=>{
+    const btn = document.createElement('button');
+    btn.textContent = t.name;
+    btn.onclick = ()=>{ activeType = t.id; updateMonthNames(); }
+    if(t.id === activeType) btn.style.boxShadow = 'inset 0 -2px 0 rgba(0,0,0,0.06)';
+    typeButtons.appendChild(btn);
+  });
+}
+renderTypeButtons();
+
+function updateMonthNames(){
+  const type = calendarTypes.find(x=>x.id===activeType);
+  const y = parseInt(yearInput.value,10)||2025;
+  const names = type.monthNames ? type.monthNames(y) : Array.from({length:12},(_,i)=>`M${i+1}`);
+  monthSelect.innerHTML = '';
+  names.forEach((n,i)=>{ const opt=document.createElement('option'); opt.value = i+1; opt.textContent = `${i+1} — ${n}`; monthSelect.appendChild(opt); });
+}
+updateMonthNames();
+
+// populate tile sizes
+(function(){ const sel = tileSizeSelect; sel.value = '96'; })();
+
+function clearCanvas(){ ctx.clearRect(0,0,canvas.width,canvas.height); }
+
+function drawCalendar() {
+  clearCanvas();
+  const tile = parseInt(tileSizeSelect.value, 10) || 96;
+  const padding = 28;
+  const cols = 7;
+  const rows = 6; // enough to fit any month
+  canvas.width = cols * tile + padding * 2;
+  canvas.height = rows * tile + 160;
+  ctx.textBaseline = "top";
+  // background
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // header
+  const type = calendarTypes.find((x) => x.id === activeType);
+  const y = parseInt(yearInput.value, 10) || 2025;
+  const m = parseInt(monthSelect.value, 10) || 1;
+  const info = type.getMonth(y, m);
+
+  const monthLabel =
+    (type.monthNames
+      ? type.monthNames(info.year)[info.monthIndex - 1]
+      : `Month ${info.monthIndex}`) +
+    " " +
+    info.year;
+  ctx.font = "600 20px system-ui,Segoe UI,Roboto";
+  ctx.fillStyle = "#09203f";
+  ctx.fillText(monthLabel, padding, 12);
+
+  // weekday labels starting from chosen start day
+  const weekStart = parseInt(startDaySelect.value, 10); // 1 for Monday, 0 for Sunday
+  const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const displayWeekdays = [];
+  for (let i = 0; i < 7; i++) {
+    displayWeekdays.push(weekdayNames[(weekStart + i) % 7]);
+  }
+  ctx.font = "600 12px system-ui,Segoe UI,Roboto";
+  for (let c = 0; c < 7; c++) {
+    const x = padding + c * tile;
+    ctx.fillStyle = "#374151";
+    ctx.fillText(displayWeekdays[c], x + 10, 52);
+  }
+
+  // compute grid numbers
+  const firstWeekday = ((info.startWeekday - weekStart) + 7) % 7; // 0..6
+  const days = info.days;
+
+  const cells = new Array(rows * cols).fill(null);
+  let dayCounter = 1 - firstWeekday;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      cells[r * cols + c] = dayCounter;
+      dayCounter++;
+    }
+  }
+
+  // draw grid
+  ctx.strokeStyle = "#e6eef9";
+  ctx.lineWidth = 1;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const x = padding + c * tile;
+      const yPos = 80 + r * tile;
+
+      const val = cells[r * cols + c];
+      const inMonth = val >= 1 && val <= days;
+
+      // weekend check (0=Sun,6=Sat in standard; shifted by weekStart)
+      const weekdayIndex = (c + weekStart) % 7;
+      const isWeekend = weekdayIndex === 0 || weekdayIndex === 6;
+
+      // background
+      if (isWeekend) {
+        ctx.fillStyle = "#ffdddd"; // light red
+      } else {
+        ctx.fillStyle = "#ffffff";
+      }
+      ctx.fillRect(x + 1, yPos + 1, tile - 2, tile - 2);
+
+      // border
+      ctx.strokeRect(x + 0.5, yPos + 0.5, tile - 1, tile - 1);
+
+      // day num
+      if (inMonth) {
+        ctx.font = "600 16px system-ui,Segoe UI,Roboto";
+        ctx.fillStyle = "#0b2240";
+        ctx.fillText(val.toString(), x + 10, yPos + 8);
+      }
+    }
+  }
+}
+
+
+// initial render
+drawCalendar();
+
+// control buttons
+document.getElementById('render').addEventListener('click', ()=>{ drawCalendar(); });
+document.getElementById('export').addEventListener('click', ()=>{
+  // open PNG in new tab for preview
+  const data = canvas.toDataURL('image/png');
+  const w = window.open('about:blank','_blank');
+  if(w){ w.document.write(`<img src="${data}" alt="calendar"/>`); w.document.title = 'Calendar PNG'; }
+});
+
+document.getElementById('download').addEventListener('click', ()=>{
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  const y = yearInput.value||'2025';
+  const m = monthSelect.value||'1';
+  a.download = `calendar_${activeType}_${y}-${m}.png`;
+  a.click();
+});
+
+// update month list when year or type changes
+yearInput.addEventListener('change', updateMonthNames);
+
+// fill months on load
+updateMonthNames();
+
+// expose registerCalendarType globally so you can add types from the console or other scripts
+window.registerCalendarType = registerCalendarType;
+</script>
+</body>
+</html>

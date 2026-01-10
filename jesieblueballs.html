@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jessie Cyan: The Mystery o' Ye Blue Balls</title>
+    <style>
+        /* General Body Styles */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #0a0a1a;
+            font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+            color: #e0e0ff;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            user-select: none; /* Prevent text selection */
+        }
+
+        /* Title Screen Styles */
+        .title-container {
+            text-align: center;
+            z-index: 10;
+            position: relative;
+            padding: 2rem;
+            background-color: rgba(10, 10, 26, 0.7);
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(100, 150, 255, 0.3);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(100, 150, 255, 0.2);
+            transition: opacity 1s ease-out, transform 1s ease-out;
+        }
+
+        .title-container.hidden {
+            opacity: 0;
+            transform: translateY(-50px);
+            pointer-events: none; /* Disable interaction when hidden */
+        }
+
+        .main-title {
+            font-size: clamp(2rem, 5vw, 3.5rem); /* Responsive font size */
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            font-size: clamp(1rem, 2.5vw, 1.8rem); /* Responsive font size */
+            margin-top: 0;
+            font-style: italic;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        .blue-balls {
+            display: inline-block;
+            font-family: 'Arial Black', sans-serif;
+            color: #00a8ff;
+            text-shadow: 0 0 10px #00a8ff, 0 0 20px #00a8ff, 3px 3px 0 #003366;
+            font-size: clamp(3rem, 7vw, 4.5rem); /* Responsive font size */
+            transform: rotate(-5deg);
+            background: linear-gradient(135deg, #00a8ff, #0062ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            padding: 0 10px;
+            margin: 0 5px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .blue-balls::before {
+            content: "";
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            background: linear-gradient(135deg, #00a8ff, #0062ff);
+            z-index: -1;
+            border-radius: 10px;
+            opacity: 0.3;
+            filter: blur(8px);
+        }
+
+        .blue-balls::after {
+            content: "";
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border: 3px solid #00a8ff;
+            border-radius: 8px;
+            z-index: -1;
+            opacity: 0.5;
+        }
+
+        .start-button {
+            margin-top: 2rem;
+            padding: 0.8rem 2.5rem;
+            font-size: clamp(1rem, 2.5vw, 1.5rem); /* Responsive font size */
+            background: linear-gradient(135deg, #00a8ff, #0062ff);
+            border: none;
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(0, 168, 255, 0.5);
+            font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+            letter-spacing: 0.5px;
+        }
+
+        .start-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(0, 168, 255, 0.8);
+        }
+
+        .background-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.7;
+        }
+
+        .credits {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 0.8rem;
+            opacity: 0.7;
+            z-index: 10;
+        }
+
+        /* Game Canvas Styles */
+        #gameCanvas {
+            border: 4px solid #00a8ff;
+            box-shadow: 0 0 20px rgba(0, 168, 255, 0.5);
+            background-color: #1a1a3a;
+            display: none; /* Hidden by default */
+            max-width: 90%; /* Responsive width */
+            max-height: 90vh; /* Responsive height */
+            transition: opacity 1s ease-in;
+            border-radius: 10px;
+            aspect-ratio: 800 / 500; /* Maintain aspect ratio */
+        }
+
+        #gameCanvas.visible {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Game UI Styles */
+        #gameUI {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 18px;
+            text-shadow: 1px 1px 2px black;
+            z-index: 11; /* Above game canvas */
+            display: none; /* Hidden by default */
+        }
+
+        #gameUI.visible {
+            display: block;
+        }
+
+        /* Message Box Styles (Game Over, Level Complete) */
+        .message-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(10, 10, 26, 0.9);
+            border: 2px solid #00a8ff;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 0 30px rgba(0, 168, 255, 0.5);
+            z-index: 20;
+            display: none; /* Hidden by default */
+            font-size: 1.2rem;
+            max-width: 80%;
+        }
+
+        .message-box h2 {
+            margin-top: 0;
+            color: #00a8ff;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            margin-bottom: 15px;
+        }
+
+        .message-box p {
+            margin-bottom: 20px;
+            line-height: 1.5;
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+        }
+
+        .message-box button {
+            padding: 10px 25px;
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            background: linear-gradient(135deg, #00a8ff, #0062ff);
+            border: none;
+            color: white;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(0, 168, 255, 0.5);
+        }
+
+        .message-box button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 168, 255, 0.8);
+        }
+
+        /* Mobile Controls Overlay */
+        #mobileControls {
+            display: none; /* Hidden by default, shown on small screens */
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            width: 100%;
+            z-index: 15;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        #mobileControls button {
+            background-color: rgba(0, 168, 255, 0.7);
+            border: 2px solid #0062ff;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            color: white;
+            box-shadow: 0 0 10px rgba(0, 168, 255, 0.5);
+            transition: background-color 0.2s ease;
+        }
+
+        #mobileControls button:active {
+            background-color: #0062ff;
+        }
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 768px) {
+            #gameCanvas {
+                width: 100%;
+                height: auto; /* Let height adjust to maintain aspect ratio */
+            }
+            #mobileControls {
+                display: flex;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Title Screen -->
+    <!-- Changed div to canvas for background -->
+    <canvas class="background-canvas" id="backgroundCanvas" width="1" height="1"></canvas>
+    
+    <div class="title-container" id="titleScreen">
+        <h1 class="main-title">Jessie Cyan:<br>The Mystery o' Ye <span class="blue-balls">Blue Balls</span></h1>
+        <p class="subtitle">A platforming adventure through chromatic chaos</p>
+        <button class="start-button" id="startButton">Begin the Quest</button>
+    </div>
+    
+    <div class="credits">© 2023 Jessie Cyan Productions</div>
+
+    <!-- Game Elements -->
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+    
+    <div id="gameUI">
+        <div>Score: <span id="score">0</span></div>
+        <div>Level: <span id="levelDisplay">1</span></div>
+    </div>
+
+    <!-- Message Boxes -->
+    <div id="gameOverBox" class="message-box">
+        <h2>GAME OVER!</h2>
+        <p id="gameOverMessage"></p>
+        <button id="retryButton">Retry Level</button>
+    </div>
+
+    <div id="levelCompleteBox" class="message-box">
+        <h2>LEVEL COMPLETE!</h2>
+        <p id="levelCompleteMessage"></p>
+        <button id="nextLevelButton">Next Level</button>
+    </div>
+
+    <div id="gameWonBox" class="message-box">
+        <h2>CONGRATULATIONS!</h2>
+        <p>You have solved The Mystery o' Ye Blue Balls!</p>
+        <button id="playAgainButton">Play Again</button>
+    </div>
+
+    <!-- Mobile Controls -->
+    <div id="mobileControls">
+        <button id="mobileLeft">&larr;</button>
+        <button id="mobileJump">&uarr;</button>
+        <button id="mobileDash">DASH</button>
+        <button id="mobileRight">&rarr;</button>
+    </div>
+
+    <script>
+        // --- Game Setup and Initialization ---
+        const backgroundCanvas = document.getElementById('backgroundCanvas');
+        const bgCtx = backgroundCanvas.getContext('2d');
+        const titleScreen = document.getElementById('titleScreen');
+        const startButton = document.getElementById('startButton');
+
+        const gameCanvas = document.getElementById('gameCanvas');
+        const ctx = gameCanvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const levelDisplay = document.getElementById('levelDisplay');
+        const gameUI = document.getElementById('gameUI');
+
+        const gameOverBox = document.getElementById('gameOverBox');
+        const gameOverMessage = document.getElementById('gameOverMessage');
+        const retryButton = document.getElementById('retryButton'); 
+
+        const levelCompleteBox = document.getElementById('levelCompleteBox');
+        const levelCompleteMessage = document.getElementById('levelCompleteMessage');
+        const nextLevelButton = document.getElementById('nextLevelButton');
+
+        const gameWonBox = document.getElementById('gameWonBox');
+        const playAgainButton = document.getElementById('playAgainButton');
+
+        const mobileLeft = document.getElementById('mobileLeft');
+        const mobileJump = document.getElementById('mobileJump');
+        const mobileDash = document.getElementById('mobileDash');
+        const mobileRight = document.getElementById('mobileRight');
+
+        // Game state variables
+        let score = 0;
+        let currentLevelIndex = 0;
+        let gameRunning = false;
+        let animationFrameId; // To store requestAnimationFrame ID for stopping the loop
+
+        // Player properties
+        const player = {
+            x: 0,
+            y: 0,
+            width: 30,
+            height: 50,
+            speed: 4,
+            jumpForce: 10,
+            velY: 0,
+            isJumping: false,
+            doubleJumpAvailable: true,
+            isDashing: false,
+            dashSpeed: 15,
+            dashDuration: 100, // ms
+            dashCooldown: 500, // ms
+            lastDashTime: 0,
+            color: '#00a8ff',
+            facingRight: true, // For player animation/direction
+            animationFrame: 0,
+            animationTimer: 0,
+            animationSpeed: 100 // ms per frame
+        };
+
+        // Input handling
+        const keys = {
+            left: false,
+            right: false,
+            up: false,
+            dash: false
+        };
+
+        // Particles array for visual effects
+        const particles = [];
+
+        // Screen shake effect
+        let screenShake = {
+            x: 0,
+            y: 0,
+            intensity: 0,
+            duration: 0,
+            decay: 0.9
+        };
+
+        // Current time for animations
+        let currentTime = 0;
+
+        // --- Level Data ---
+        // Define levels with platforms, collectibles, hazards, and enemies
+        const levelsData = [
+            {   // Level 1: Basic Introduction
+                platforms: [
+                    { x: 0, y: 460, width: 800, height: 40, color: '#333366' }, // Ground
+                    { x: 100, y: 350, width: 150, height: 20, color: '#444477' },
+                    { x: 300, y: 300, width: 150, height: 20, color: '#444477' },
+                    { x: 500, y: 250, width: 150, height: 20, color: '#444477' },
+                    { x: 700, y: 200, width: 100, height: 20, color: '#444477' }
+                ],
+                balls: [
+                    { x: 150, y: 320, radius: 15, color: '#00a8ff', collected: false, isExitBall: false },
+                    { x: 350, y: 270, radius: 15, color: '#00a8ff', collected: false, isExitBall: false },
+                    { x: 550, y: 220, radius: 15, color: '#00a8ff', collected: false, isExitBall: true } // Exit ball
+                ],
+                chemicalHazards: [],
+                chromaticHazards: [],
+                enemies: [
+                    { x: 650, y: 420, width: 40, height: 40, speed: 2, direction: -1, minX: 600, maxX: 750, color: '#ff5555' }
+                ],
+                staticObjects: [
+                    { x: 10, y: 400, width: 30, height: 50, type: 'beaker', color: '#88aaff' },
+                    { x: 700, y: 400, width: 80, height: 30, type: 'console', color: '#555588' }
+                ],
+                playerStart: { x: 50, y: 400 }
+            },
+            {   // Level 2: Chemical Challenge
+                platforms: [
+                    { x: 0, y: 460, width: 800, height: 40, color: '#333366' },
+                    { x: 80, y: 380, width: 120, height: 20, color: '#444477' },
+                    { x: 250, y: 300, width: 180, height: 20, color: '#444477' },
+                    { x: 480, y: 220, width: 150, height: 20, color: '#444477' },
+                    { x: 680, y: 150, width: 100, height: 20, color: '#444477' },
+                    { x: 400, y: 400, width: 100, height: 20, color: '#444477' } // Mid-level platform
+                ],
+                balls: [
+                    { x: 130, y: 350, radius: 15, color: '#00a8ff', collected: false, isExitBall: false },
+                    { x: 340, y: 270, radius: 15, color: '#00a8ff', collected: false, isExitBall: false },
+                    { x: 550, y: 190, radius: 15, color: '#00a8ff', collected: false, isExitBall: false },
+                    { x: 730, y: 120, radius: 15, color: '#00a8ff', collected: false, isExitBall: true }
+                ],
+                chemicalHazards: [
+                    { x: 260, y: 280, width: 160, height: 20, color: '#00ff00', type: 'acid' }, // Acid pool on a platform
+                    { x: 50, y: 440, width: 100, height: 20, color: '#00ff00', type: 'acid' } // Acid on ground
+                ],
+                chromaticHazards: [],
+                enemies: [
+                    { x: 450, y: 360, width: 40, height: 40, speed: 3, direction: 1, minX: 400, maxX: 460, color: '#ff5555' },
+                    { x: 700, y: 420, width: 40, height: 40, speed: 2, direction: -1, minX: 680, maxX: 750, color: '#ff5555' }
+                ],
+                staticObjects: [
+                    { x: 200, y: 400, width: 40, height: 60, type: 'beaker', color: '#bbffbb' },
+                    { x: 500, y: 350, width: 100, height: 40, type: 'console', color: '#666699' },
+                    { x: 650, y: 280, width: 20, height: 100, type: 'pipe', color: '#778899' }
+                ],
+                playerStart: { x: 50, y: 400 }
+            },
+            {   // Level 3: Chromatic Chaos
+                platforms: [
+                    { x: 0, y: 460, width: 800, height: 40, color: '#333366' },
+                    { x: 50, y: 380, width: 100, height: 20, color: '#444477' },
+                    { x: 200, y: 320, width: 120, height: 20, color: '#444477' },
+                    { x: 380, y: 260, width: 140, height: 20, color: '#444477' },
+                    { x: 600, y: 200, width: 100, height: 20, color: '#444477' },
+                    { x: 150, y: 150, width: 100, height: 20, color: '#444477' },
+                    { x: 450, y: 100, width: 100, height: 20, color: '#444477' }
+                ],
+                balls: [
+                    { x: 100, y: 350, radius: 15, color: '#00a8ff', collected: false, isExitBall: false },
+                    { x: 260, y: 290, radius: 15, color: '#00a8ff', collected: false, isExitBall: false },
+                    { x: 450, y: 230, radius: 15, color: '#00a8ff', collected: false, isExitBall: false },
+                    { x: 650, y: 170, radius: 15, color: '#00a8ff', collected: false, isExitBall: false },
+                    { x: 500, y: 70, radius: 15, color: '#00a8ff', collected: false, isExitBall: true }
+                ],
+                chemicalHazards: [
+                    { x: 60, y: 440, width: 80, height: 20, color: '#00ff00', type: 'acid' },
+                    { x: 400, y: 440, width: 150, height: 20, color: '#00ff00', type: 'acid' }
+                ],
+                chromaticHazards: [
+                    { x: 280, y: 0, width: 20, height: 300, color: '#ff00ff', type: 'laser', damage: true }, // Vertical laser
+                    { x: 500, y: 180, width: 300, height: 20, color: '#ff00ff', type: 'laser', damage: true }  // Horizontal laser
+                ],
+                enemies: [
+                    { x: 120, y: 420, width: 40, height: 40, speed: 2.5, direction: 1, minX: 50, maxX: 150, color: '#ff5555' },
+                    { x: 300, y: 420, width: 40, height: 40, speed: 3, direction: -1, minX: 250, maxX: 350, color: '#ff5555' },
+                    { x: 650, y: 420, width: 40, height: 40, speed: 2, direction: 1, minX: 600, maxX: 700, color: '#ff5555' }
+                ],
+                staticObjects: [
+                    { x: 10, y: 200, width: 50, height: 80, type: 'beaker', color: '#ffcc00' },
+                    { x: 750, y: 400, width: 30, height: 60, type: 'beaker', color: '#cc00ff' },
+                    { x: 180, y: 100, width: 80, height: 30, type: 'console', color: '#7777aa' },
+                    { x: 350, y: 350, width: 20, height: 100, type: 'pipe', color: '#99aabb' }
+                ],
+                playerStart: { x: 50, y: 400 }
+            },
+            {   // Level 4: The Gauntlet
+                platforms: [
+                    { x: 0, y: 460, width: 800, height: 40, color: '#333366' },
+                    { x: 100, y: 380, width: 100, height: 20, color: '#444477' },
+                    { x: 250, y: 300, width: 80, height: 20, color: '#444477' },
+                    { x: 400, y: 220, width: 150, height: 20, color: '#444477' },
+                    { x: 600, y: 140, width: 100, height: 20, color: '#444477' },
+                    { x: 700, y: 60, width: 80, height: 20, color: '#444477' }
+                ],
+                balls: [
+                    { x: 150, y: 350, radius: 15, color: '#00a8ff', collected: false, isExitBall: false },
+                    { x: 475, y: 190, radius: 15, color: '#00a8ff', collected: false, isExitBall: false },
+                    { x: 740, y: 30, radius: 15, color: '#00a8ff', collected: false, isExitBall: true }
+                ],
+                chemicalHazards: [
+                    { x: 0, y: 440, width: 50, height: 20, color: '#00ff00', type: 'acid' },
+                    { x: 350, y: 440, width: 100, height: 20, color: '#00ff00', type: 'acid' },
+                    { x: 550, y: 440, width: 80, height: 20, color: '#00ff00', type: 'acid' },
+                    { x: 260, y: 280, width: 60, height: 20, color: '#00ff00', type: 'acid' } // On a small platform
+                ],
+                chromaticHazards: [
+                    { x: 200, y: 0, width: 20, height: 250, color: '#ff00ff', type: 'laser', damage: true },
+                    { x: 580, y: 250, width: 20, height: 200, color: '#ff00ff', type: 'laser', damage: true }
+                ],
+                enemies: [
+                    { x: 150, y: 420, width: 40, height: 40, speed: 2, direction: 1, minX: 100, maxX: 200, color: '#ff5555' },
+                    { x: 300, y: 100, width: 40, height: 40, speed: 3, direction: -1, minX: 250, maxX: 350, color: '#ff5555' }
+                ],
+                staticObjects: [
+                    { x: 50, y: 20, width: 40, height: 40, type: 'console', color: '#aaaaaa' },
+                    { x: 750, y: 400, width: 20, height: 50, type: 'pipe', color: '#99aabb' }
+                ],
+                playerStart: { x: 50, y: 400 } // Start on ground, clear of first acid
+            },
+            {   // Level 5: Final Challenge
+                platforms: [
+                    { x: 0, y: 460, width: 800, height: 40, color: '#333366' }, // Ground
+                    { x: 50, y: 380, width: 120, height: 20, color: '#444477' },
+                    { x: 200, y: 320, width: 100, height: 20, color: '#444477' },
+                    { x: 350, y: 260, width: 150, height: 20, color: '#444477' },
+                    { x: 550, y: 200, width: 120, height: 20, color: '#444477' },
+                    { x: 700, y: 140, width: 80, height: 20, color: '#444477' },
+                    { x: 300, y: 100, width: 80, height: 20, color: '#444477' } // High platform
+                ],
+                balls: [
+                    { x: 100, y: 350, radius: 15, color: '#00a8ff', collected: false, isExitBall: false },
+                    { x: 250, y: 290, radius: 15, color: '#00a8ff', collected: false, isExitBall: false },
+                    { x: 425, y: 230, radius: 15, color: '#00a8ff', collected: false, isExitBall: false },
+                    { x: 600, y: 170, radius: 15, color: '#00a8ff', collected: false, isExitBall: false },
+                    { x: 340, y: 70, radius: 15, color: '#00a8ff', collected: false, isExitBall: true } // Final exit ball
+                ],
+                chemicalHazards: [
+                    { x: 180, y: 440, width: 100, height: 20, color: '#00ff00', type: 'acid' },
+                    { x: 500, y: 440, width: 150, height: 20, color: '#00ff00', type: 'acid' },
+                    { x: 70, y: 360, width: 80, height: 20, color: '#00ff00', type: 'acid' } // On platform 1
+                ],
+                chromaticHazards: [
+                    { x: 150, y: 0, width: 20, height: 350, color: '#ff00ff', type: 'laser', damage: true },
+                    { x: 450, y: 0, width: 20, height: 200, color: '#ff00ff', type: 'laser', damage: true },
+                    { x: 0, y: 180, width: 100, height: 20, color: '#ff00ff', type: 'laser', damage: true }
+                ],
+                enemies: [
+                    { x: 300, y: 420, width: 40, height: 40, speed: 2, direction: -1, minX: 280, maxX: 400, color: '#ff5555' },
+                    { x: 700, y: 420, width: 40, height: 40, speed: 2.5, direction: 1, minX: 680, maxX: 750, color: '#ff5555' },
+                    { x: 570, y: 160, width: 40, height: 40, speed: 3, direction: -1, minX: 550, maxX: 600, color: '#ff5555' }
+                ],
+                staticObjects: [
+                    { x: 10, y: 250, width: 30, height: 50, type: 'beaker', color: '#cceeaa' },
+                    { x: 700, y: 30, width: 80, height: 30, type: 'console', color: '#444455' },
+                    { x: 250, y: 50, width: 20, height: 100, type: 'pipe', color: '#bbaa99' }
+                ],
+                playerStart: { x: 50, y: 400 } // Start on ground, clear of initial acid/laser
+            }
+        ];
+
+        let currentLevel; // Current level object being played
+
+        // --- Game Functions ---
+
+        /**
+         * Draws the intricate background for the title screen.
+         */
+        function drawTitleBackground() {
+            // Only draw if canvas has valid dimensions
+            if (backgroundCanvas.width === 0 || backgroundCanvas.height === 0) {
+                console.log("Background canvas has zero dimension, skipping draw.");
+                return;
+            }
+
+            bgCtx.clearRect(0, 0, backgroundCanvas.width, backgroundCanvas.height);
+            // Gradient base
+            const gradient = bgCtx.createLinearGradient(0, 0, backgroundCanvas.width, backgroundCanvas.height);
+            gradient.addColorStop(0, '#0a0a2a');
+            gradient.addColorStop(1, '#1a1a4a');
+            bgCtx.fillStyle = gradient;
+            bgCtx.fillRect(0, 0, backgroundCanvas.width, backgroundCanvas.height);
+            
+            // Complex patterns
+            bgCtx.strokeStyle = 'rgba(0, 168, 255, 0.1)';
+            bgCtx.lineWidth = 1;
+            
+            // Grid of arcs
+            const size = 80;
+            for (let x = 0; x < backgroundCanvas.width; x += size) {
+                for (let y = 0; y < backgroundCanvas.height; y += size) {
+                    bgCtx.beginPath();
+                    bgCtx.arc(x, y, size * 0.4, 0, Math.PI * 2 * Math.random());
+                    bgCtx.stroke();
+                    
+                    bgCtx.beginPath();
+                    bgCtx.moveTo(x, y);
+                    bgCtx.lineTo(x + size * 0.8 * Math.random(), y + size * 0.8 * Math.random());
+                    bgCtx.stroke();
+                }
+            }
+            
+            // Floating orbs
+            for (let i = 0; i < 15; i++) {
+                const x = Math.random() * backgroundCanvas.width;
+                const y = Math.random() * backgroundCanvas.height;
+                const radius = 20 + Math.random() * 50;
+                const gradientOrb = bgCtx.createRadialGradient(x, y, 0, x, y, radius);
+                gradientOrb.addColorStop(0, `rgba(0, 168, 255, ${0.2 + Math.random() * 0.3})`);
+                gradientOrb.addColorStop(1, 'rgba(0, 168, 255, 0)');
+                
+                bgCtx.beginPath();
+                bgCtx.fillStyle = gradientOrb;
+                bgCtx.arc(x, y, radius, 0, Math.PI * 2);
+                bgCtx.fill();
+            }
+            
+            // Subtle noise
+            const imageData = bgCtx.getImageData(0, 0, backgroundCanvas.width, backgroundCanvas.height);
+            const data = imageData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                if (Math.random() > 0.7) {
+                    const val = Math.floor(Math.random() * 10);
+                    data[i] += val;      // R
+                    data[i + 1] += val; // G
+                    data[i + 2] += val; // B
+                }
+            }
+            bgCtx.putImageData(imageData, 0, 0);
+        }
+
+        /**
+         * Resizes the canvas elements to fit the window.
+         */
+        function resizeCanvas() {
+            // Explicitly set width and height based on window dimensions
+            backgroundCanvas.width = window.innerWidth;
+            backgroundCanvas.height = window.innerHeight;
+            console.log(`Resizing backgroundCanvas to: ${backgroundCanvas.width}x${backgroundCanvas.height}`);
+            drawTitleBackground();
+
+            // Adjust game canvas size while maintaining aspect ratio
+            const aspectRatio = 800 / 500;
+            let newWidth = window.innerWidth * 0.9;
+            let newHeight = window.innerHeight * 0.9;
+
+            if (newWidth / aspectRatio > newHeight) {
+                newWidth = newHeight * aspectRatio;
+            } else {
+                newHeight = newWidth / aspectRatio;
+            }
+            gameCanvas.width = newWidth;
+            gameCanvas.height = newHeight;
+        }
+
+        /**
+         * Initializes or reloads the current level data.
+         */
+        function loadLevel() {
+            currentLevel = JSON.parse(JSON.stringify(levelsData[currentLevelIndex])); // Deep copy to allow modification
+            
+            player.x = currentLevel.playerStart.x;
+            player.y = currentLevel.playerStart.y;
+            player.velY = 0;
+            player.isJumping = false;
+            player.doubleJumpAvailable = true;
+            player.isDashing = false;
+
+            score = 0; // Reset score for new level
+            updateUI();
+        }
+
+        /**
+         * Updates the game UI elements (score, level number).
+         */
+        function updateUI() {
+            scoreElement.textContent = score;
+            levelDisplay.textContent = currentLevelIndex + 1;
+        }
+
+        /**
+         * Displays a message box (Game Over, Level Complete, Game Won).
+         * @param {HTMLElement} boxElement - The message box DOM element to display.
+         * @param {string} message - The message text to show (optional).
+         */
+        function showMessageBox(boxElement, message = '') {
+            gameRunning = false;
+            cancelAnimationFrame(animationFrameId); // Stop the game loop
+            if (message) {
+                if (boxElement === gameOverBox) gameOverMessage.textContent = message;
+                if (boxElement === levelCompleteBox) levelCompleteMessage.textContent = message;
+            }
+            boxElement.style.display = 'block';
+        }
+
+        /**
+         * Hides all message boxes.
+         */
+        function hideMessageBoxes() {
+            gameOverBox.style.display = 'none';
+            levelCompleteBox.style.display = 'none';
+            gameWonBox.style.display = 'none';
+        }
+
+        /**
+         * Transitions to the next level or finishes the game.
+         */
+        function nextLevel() {
+            hideMessageBoxes();
+            currentLevelIndex++;
+            if (currentLevelIndex < levelsData.length) {
+                loadLevel();
+                gameRunning = true;
+                animationFrameId = requestAnimationFrame(gameLoop);
+            } else {
+                // Game completed!
+                showMessageBox(gameWonBox);
+            }
+        }
+
+        /**
+         * Resets the current level after game over.
+         */
+        function retryLevel() {
+            hideMessageBoxes();
+            loadLevel(); // Reload current level state
+            gameRunning = true;
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        /**
+         * Starts the game from the title screen.
+         */
+        function startGame() {
+            titleScreen.classList.add('hidden'); // Hide title screen with animation
+            setTimeout(() => {
+                titleScreen.style.display = 'none'; // Fully hide after animation
+                gameCanvas.classList.add('visible'); // Show game canvas
+                gameUI.classList.add('visible'); // Show game UI
+                loadLevel();
+                gameRunning = true;
+                animationFrameId = requestAnimationFrame(gameLoop); // Start game loop
+            }, 1000); // Match CSS transition duration
+        }
+
+        // --- Game Loop and Updates ---
+
+        let lastTime = 0;
+        /**
+         * Main game loop responsible for updating and rendering the game.
+         * @param {number} newTime - The current time provided by requestAnimationFrame.
+         */
+        function gameLoop(newTime) {
+            if (!gameRunning) return; // Stop if game is not running
+
+            const deltaTime = newTime - lastTime;
+            lastTime = newTime;
+            currentTime = newTime; // Update global currentTime
+
+            update(deltaTime);
+            render();
+
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        /**
+         * Updates the game state (player, enemies, collisions, etc.).
+         * @param {number} deltaTime - Time elapsed since the last frame in milliseconds.
+         */
+        function update(deltaTime) {
+            // Player horizontal movement
+            if (keys.left) {
+                player.x -= player.speed;
+                player.facingRight = false;
+            }
+            if (keys.right) {
+                player.x += player.speed;
+                player.facingRight = true;
+            }
+
+            // Player dash
+            if (keys.dash && !player.isDashing && (currentTime - player.lastDashTime > player.dashCooldown)) {
+                player.isDashing = true;
+                player.lastDashTime = currentTime;
+                setTimeout(() => {
+                    player.isDashing = false;
+                }, player.dashDuration);
+            }
+
+            if (player.isDashing) {
+                player.x += player.facingRight ? player.dashSpeed : -player.dashSpeed;
+            }
+
+            // Jumping (including double jump)
+            if (keys.up && !player.isJumping) {
+                player.velY = -player.jumpForce;
+                player.isJumping = true;
+                player.doubleJumpAvailable = true; // Reset double jump on first jump
+                createParticles(player.x + player.width / 2, player.y + player.height, 10, '#ffffff'); // Jump particles
+            } else if (keys.up && player.isJumping && player.doubleJumpAvailable && player.velY > -player.jumpForce / 2) {
+                // Allows double jump mid-air but not if already falling too fast
+                player.velY = -player.jumpForce * 0.8; // Slightly less powerful double jump
+                player.doubleJumpAvailable = false;
+                createParticles(player.x + player.width / 2, player.y + player.height / 2, 10, '#ffff00'); // Double jump particles
+            }
+            // Reset 'up' key state to prevent continuous jumping if held down
+            keys.up = false;
+
+            // Apply gravity
+            player.velY += 0.4; // Gravity strength
+            player.y += player.velY;
+
+            // Platform collision
+            let onPlatform = false;
+            currentLevel.platforms.forEach(platform => {
+                if (player.x < platform.x + platform.width &&
+                    player.x + player.width > platform.x &&
+                    player.y + player.height > platform.y &&
+                    player.y + player.height <= platform.y + platform.height + Math.abs(player.velY) && // check collision slightly below current pos
+                    player.velY >= 0) { // Only apply if falling
+                    
+                    player.y = platform.y - player.height;
+                    player.velY = 0;
+                    player.isJumping = false;
+                    player.doubleJumpAvailable = true; // Reset double jump when landing
+                    onPlatform = true;
+                }
+            });
+
+            // If not on any platform and not jumping, ensure isJumping is true (falling)
+            if (!onPlatform && !player.isJumping && player.velY === 0) {
+                 player.isJumping = true; // Player is falling if not on a platform
+            }
+
+            // Screen boundaries
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > gameCanvas.width) player.x = gameCanvas.width - player.width;
+            if (player.y > gameCanvas.height) {
+                showMessageBox(gameOverBox, "You fell into the abyss!");
+            }
+
+            // Player animation update
+            player.animationTimer += deltaTime;
+            if (player.animationTimer > player.animationSpeed) {
+                player.animationFrame = (player.animationFrame + 1) % 2; // Simple 2-frame animation
+                player.animationTimer = 0;
+            }
+
+            // Collect balls
+            let allNonExitBallsCollected = true;
+            let exitBallCollected = false;
+
+            currentLevel.balls.forEach(ball => {
+                if (!ball.collected) {
+                    const dx = (player.x + player.width / 2) - ball.x;
+                    const dy = (player.y + player.height / 2) - ball.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < player.width / 2 + ball.radius) {
+                        ball.collected = true;
+                        score++;
+                        scoreElement.textContent = score;
+                        createParticles(ball.x, ball.y, 20, ball.color); // Particles on collection
+                        applyScreenShake(5, 200); // Small shake on collection
+
+                        if (ball.isExitBall) {
+                            exitBallCollected = true;
+                        }
+                    }
+                }
+                if (!ball.isExitBall && !ball.collected) {
+                    allNonExitBallsCollected = false;
+                }
+            });
+
+            // Check for level completion
+            if (allNonExitBallsCollected && exitBallCollected) {
+                showMessageBox(levelCompleteBox, `Level ${currentLevelIndex + 1} complete! Prepare for the next challenge.`);
+            }
+
+            // Enemy movement and collision
+            currentLevel.enemies.forEach(enemy => {
+                enemy.x += enemy.speed * enemy.direction;
+                // Enemy platform boundaries
+                if (enemy.x < enemy.minX || enemy.x + enemy.width > enemy.maxX) {
+                    enemy.direction *= -1;
+                }
+                
+                // Enemy collision with player
+                if (player.x < enemy.x + enemy.width &&
+                    player.x + player.width > enemy.x &&
+                    player.y < enemy.y + enemy.height &&
+                    player.y + player.height > enemy.y) {
+                    
+                    showMessageBox(gameOverBox, "You were caught by a patrolling enemy!");
+                    applyScreenShake(15, 500); // Stronger shake on hit
+                }
+            });
+
+            // Chemical Hazard collision (Acid)
+            currentLevel.chemicalHazards.forEach(hazard => {
+               /* if (player.x < hazard.x + hazard.width &&
+                    player.x + player.width > hazard.x &&
+                    player.y + player.height > hazard.y &&
+                    player.y < hazard.y + hazard.height) {
+                    
+                    showMessageBox(gameOverBox, "You touched the toxic goo!");
+                    applyScreenShake(15, 500);
+               }*/
+            });
+
+            // Chromatic Hazard collision (Laser)
+            currentLevel.chromaticHazards.forEach(hazard => {
+                if (player.x < hazard.x + hazard.width &&
+                    player.x + player.width > hazard.x &&
+                    player.y < hazard.y + hazard.height &&
+                    player.y + player.height > hazard.y) {
+                    
+                    showMessageBox(gameOverBox, "You were vaporized by a chromatic beam!");
+                    applyScreenShake(20, 600); // Even stronger shake
+                }
+            });
+
+            // Update particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.1; // Gravity for particles
+                p.alpha -= 0.02; // Fade out
+                if (p.alpha <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            // Update screen shake
+            if (screenShake.duration > 0) {
+                screenShake.x = (Math.random() - 0.5) * 2 * screenShake.intensity;
+                screenShake.y = (Math.random() - 0.5) * 2 * screenShake.intensity;
+                screenShake.intensity *= screenShake.decay;
+                screenShake.duration -= deltaTime;
+                if (screenShake.duration <= 0) {
+                    screenShake.x = 0;
+                    screenShake.y = 0;
+                    screenShake.intensity = 0;
+                }
+            }
+        }
+
+        /**
+         * Renders all game elements onto the canvas.
+         */
+        function render() {
+            // Apply screen shake offset to the canvas
+            ctx.save();
+            ctx.translate(screenShake.x, screenShake.y);
+
+            // Clear canvas
+            ctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+            
+            // Draw lab background
+            ctx.fillStyle = '#1a1a3a'; // Dark base
+            ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+
+            // Draw wall texture (subtle vertical lines)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < gameCanvas.width; x += 20) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, gameCanvas.height);
+                ctx.stroke();
+            }
+
+            // Draw lab pipes (simple horizontal/vertical lines)
+            ctx.strokeStyle = '#556677';
+            ctx.lineWidth = 5;
+            // Top pipes
+            ctx.beginPath();
+            ctx.moveTo(0, 30); ctx.lineTo(gameCanvas.width, 30); ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(0, 60); ctx.lineTo(gameCanvas.width, 60); ctx.stroke();
+            // Vertical pipes (randomized)
+            for (let i = 0; i < 5; i++) {
+                const pipeX = 100 + i * 150;
+                ctx.beginPath();
+                ctx.moveTo(pipeX, 0);
+                ctx.lineTo(pipeX, gameCanvas.height);
+                ctx.stroke();
+            }
+
+            // Draw platforms
+            currentLevel.platforms.forEach(platform => {
+                ctx.fillStyle = platform.color;
+                ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+                // Add metallic texture (gradients and lines)
+                const grad = ctx.createLinearGradient(platform.x, platform.y, platform.x, platform.y + platform.height);
+                grad.addColorStop(0, 'rgba(255,255,255,0.2)');
+                grad.addColorStop(0.5, 'rgba(0,0,0,0.2)');
+                grad.addColorStop(1, 'rgba(255,255,255,0.2)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+
+                ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(platform.x, platform.y, platform.width, platform.height);
+                for (let i = 0; i < platform.width; i += 15) {
+                    ctx.beginPath();
+                    ctx.moveTo(platform.x + i, platform.y);
+                    ctx.lineTo(platform.x + i, platform.y + platform.height);
+                    ctx.stroke();
+                }
+            });
+            
+            // Draw static lab objects
+            currentLevel.staticObjects.forEach(obj => {
+                if (obj.type === 'beaker') {
+                    ctx.fillStyle = obj.color;
+                    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(obj.x, obj.y);
+                    ctx.lineTo(obj.x + obj.width, obj.y);
+                    ctx.lineTo(obj.x + obj.width * 0.8, obj.y + obj.height);
+                    ctx.lineTo(obj.x + obj.width * 0.2, obj.y + obj.height);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    // Liquid inside
+                    ctx.fillStyle = 'rgba(0,200,255,0.5)'; // Blue liquid
+                    ctx.fillRect(obj.x + obj.width * 0.2, obj.y + obj.height * 0.5, obj.width * 0.6, obj.height * 0.5);
+                } else if (obj.type === 'console') {
+                    ctx.fillStyle = obj.color;
+                    ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+                    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(obj.x, obj.y, obj.width, obj.height);
+                    // Buttons/lights
+                    ctx.fillStyle = 'rgba(255,0,0,0.7)';
+                    ctx.beginPath();
+                    ctx.arc(obj.x + obj.width * 0.2, obj.y + obj.height * 0.3, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = 'rgba(0,255,0,0.7)';
+                    ctx.beginPath();
+                    ctx.arc(obj.x + obj.width * 0.5, obj.y + obj.height * 0.3, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = 'rgba(0,0,255,0.7)';
+                    ctx.beginPath();
+                    ctx.arc(obj.x + obj.width * 0.8, obj.y + obj.height * 0.3, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (obj.type === 'pipe') {
+                    ctx.fillStyle = obj.color;
+                    ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+                    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(obj.x, obj.y, obj.width, obj.height);
+                    // Joints
+                    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                    for (let i = 0; i < obj.height; i += 20) {
+                        ctx.fillRect(obj.x, obj.y + i, obj.width, 5);
+                    }
+                }
+            });
+
+            // Draw chemical hazards (Acid)
+            currentLevel.chemicalHazards.forEach(hazard => {
+                ctx.fillStyle = hazard.color; // Acid green
+                // Bubbling effect
+                const bubbleOffset = Math.sin(currentTime / 200) * 2;
+                ctx.beginPath();
+                ctx.moveTo(hazard.x, hazard.y + hazard.height);
+                ctx.lineTo(hazard.x + hazard.width, hazard.y + hazard.height);
+                ctx.bezierCurveTo(hazard.x + hazard.width * 0.75, hazard.y + bubbleOffset,
+                                  hazard.x + hazard.width * 0.25, hazard.y - bubbleOffset,
+                                  hazard.x, hazard.y + hazard.height);
+                ctx.fill();
+                ctx.shadowColor = hazard.color;
+                ctx.shadowBlur = 15;
+                ctx.fill(); // Draw again for blur effect
+                ctx.shadowBlur = 0;
+            });
+
+            // Draw chromatic hazards (Laser)
+            currentLevel.chromaticHazards.forEach(hazard => {
+                ctx.fillStyle = hazard.color; // Laser magenta
+                const laserPulse = (Math.sin(currentTime / 100) + 1) / 2; // Pulsing effect
+                ctx.globalAlpha = 0.5 + laserPulse * 0.3; // Vary alpha
+                ctx.fillRect(hazard.x, hazard.y, hazard.width, hazard.height);
+                ctx.shadowColor = hazard.color;
+                ctx.shadowBlur = 10 + laserPulse * 5; // Vary blur
+                ctx.fillRect(hazard.x, hazard.y, hazard.width, hazard.height); // Draw again for blur
+                ctx.shadowBlur = 0;
+                ctx.globalAlpha = 1; // Reset alpha
+            });
+
+            // Draw enemies
+            currentLevel.enemies.forEach(enemy => {
+                ctx.fillStyle = enemy.color;
+                ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+                // Enemy glow
+                ctx.shadowColor = enemy.color;
+                ctx.shadowBlur = 8;
+                ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+                ctx.shadowBlur = 0;
+
+                // Enemy eyes
+                ctx.fillStyle = 'white';
+                ctx.fillRect(enemy.x + 5, enemy.y + 10, 8, 8);
+                ctx.fillRect(enemy.x + enemy.width - 13, enemy.y + 10, 8, 8);
+                ctx.fillStyle = 'black';
+                ctx.fillRect(enemy.x + (enemy.direction === 1 ? enemy.width - 11 : 7), enemy.y + 12, 4, 4);
+            });
+
+            // Draw balls
+            currentLevel.balls.forEach(ball => {
+                if (!ball.collected) {
+                    ctx.beginPath();
+                    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = ball.color;
+                    ctx.fill();
+                    
+                    // Ball glow effect
+                    ctx.shadowColor = ball.color;
+                    ctx.shadowBlur = 15;
+                    ctx.beginPath(); 
+                    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+
+                    // Add a subtle sparkle effect
+                    ctx.fillStyle = `rgba(255, 255, 255, ${0.7 + Math.sin(currentTime / 100) * 0.3})`;
+                    ctx.beginPath();
+                    ctx.arc(ball.x + ball.radius * 0.5, ball.y - ball.radius * 0.5, ball.radius * 0.3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+            
+            // Draw player
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            // Player glow
+            ctx.shadowColor = player.color;
+            ctx.shadowBlur = 10;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.shadowBlur = 0;
+            
+            // Player animation (simple squish/stretch)
+            let eyeXOffset = player.facingRight ? 0 : 5; // Eyes look direction
+            let bodyOffset = player.animationFrame === 0 ? 0 : (player.isJumping ? -2 : 2); // Simple bob/squish
+
+            // Draw player body
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y + bodyOffset, player.width, player.height - Math.abs(bodyOffset));
+
+            // Draw player eyes
+            ctx.fillStyle = 'white';
+            ctx.fillRect(player.x + 5 + eyeXOffset, player.y + 10, 8, 8);
+            ctx.fillRect(player.x + player.width - 13 - eyeXOffset, player.y + 10, 8, 8);
+            // Pupils
+            ctx.fillStyle = 'black';
+            ctx.fillRect(player.x + 7 + eyeXOffset, player.y + 12, 4, 4);
+            ctx.fillRect(player.x + player.width - 11 - eyeXOffset, player.y + 12, 4, 4);
+
+            // Draw particles
+            particles.forEach(p => {
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            });
+
+            // Restore canvas state to remove screen shake offset
+            ctx.restore();
+        }
+
+        /**
+         * Creates a burst of particles at a given position.
+         * @param {number} x - X coordinate for particles.
+         * @param {number} y - Y coordinate for particles.
+         * @param {number} count - Number of particles to create.
+         * @param {string} color - Color of the particles.
+         */
+        function createParticles(x, y, count, color) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 5, // Random horizontal velocity
+                    vy: (Math.random() - 0.5) * 5, // Random vertical velocity
+                    radius: Math.random() * 3 + 1, // Random radius
+                    color: color,
+                    alpha: 1
+                });
+            }
+        }
+
+        /**
+         * Applies a screen shake effect.
+         * @param {number} intensity - How strong the shake is.
+         * @param {number} duration - How long the shake lasts in milliseconds.
+         */
+        function applyScreenShake(intensity, duration) {
+            screenShake.intensity = intensity;
+            screenShake.duration = duration;
+        }
+
+        // --- Event Listeners ---
+
+        // Title Screen button
+        startButton.addEventListener('click', startGame);
+        
+        // Game control buttons (Keyboard)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'A' || e.key === 'a') keys.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'D' || e.key === 'd') keys.right = true;
+            if (e.key === 'ArrowUp' || e.key === 'W' || e.key === 'w' || e.key === ' ') keys.up = true; // Jump/double jump
+            if (e.key === 'Shift' || e.key === 'C' || e.key === 'c') keys.dash = true; // Dash
+
+            // Restart game on 'R' or 'Enter' if game over/level complete
+            if ((e.key === 'R' || e.key === 'r' || e.key === 'Enter') && gameOverBox.style.display === 'block') {
+                retryButton.click();
+            }
+            if ((e.key === 'N' || e.key === 'n' || e.key === 'Enter') && levelCompleteBox.style.display === 'block') {
+                nextLevelButton.click();
+            }
+            if ((e.key === 'P' || e.key === 'p' || e.key === 'Enter') && gameWonBox.style.display === 'block') {
+                playAgainButton.click();
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'A' || e.key === 'a') keys.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'D' || e.key === 'd') keys.right = false;
+            if (e.key === 'Shift' || e.key === 'C' || e.key === 'c') keys.dash = false;
+            // 'up' key is not reset on keyup to allow for single tap double jump logic
+        });
+
+        // Message box buttons
+        retryButton.addEventListener('click', retryLevel);
+        nextLevelButton.addEventListener('click', nextLevel);
+        playAgainButton.addEventListener('click', () => {
+            hideMessageBoxes();
+            currentLevelIndex = 0; // Reset to first level
+            startGame(); // Go back to game (or title screen if desired, but restarting game for simplicity)
+        });
+
+        // Mobile Controls (Touch/Click)
+        mobileLeft.addEventListener('touchstart', (e) => { e.preventDefault(); keys.left = true; }, { passive: false });
+        mobileLeft.addEventListener('touchend', (e) => { e.preventDefault(); keys.left = false; });
+        mobileLeft.addEventListener('mousedown', (e) => { e.preventDefault(); keys.left = true; });
+        mobileLeft.addEventListener('mouseup', (e) => { e.preventDefault(); keys.left = false; });
+
+        mobileRight.addEventListener('touchstart', (e) => { e.preventDefault(); keys.right = true; }, { passive: false });
+        mobileRight.addEventListener('touchend', (e) => { e.preventDefault(); keys.right = false; });
+        mobileRight.addEventListener('mousedown', (e) => { e.preventDefault(); keys.right = true; });
+        mobileRight.addEventListener('mouseup', (e) => { e.preventDefault(); keys.right = false; });
+
+        mobileJump.addEventListener('touchstart', (e) => { e.preventDefault(); keys.up = true; }, { passive: false });
+        mobileJump.addEventListener('touchend', (e) => { e.preventDefault(); keys.up = false; });
+        mobileJump.addEventListener('mousedown', (e) => { e.preventDefault(); keys.up = true; });
+        mobileJump.addEventListener('mouseup', (e) => { e.preventDefault(); keys.up = false; });
+
+        mobileDash.addEventListener('touchstart', (e) => { e.preventDefault(); keys.dash = true; }, { passive: false });
+        mobileDash.addEventListener('touchend', (e) => { e.preventDefault(); keys.dash = false; });
+        mobileDash.addEventListener('mousedown', (e) => { e.preventDefault(); keys.dash = true; });
+        mobileDash.addEventListener('mouseup', (e) => { e.preventDefault(); keys.dash = false; });
+
+
+        // Initial setup on window load
+        window.onload = function () {
+            resizeCanvas(); // Set initial canvas sizes
+            window.addEventListener('resize', resizeCanvas); // Handle window resize
+        };
+    </script>
+</body>
+</html>

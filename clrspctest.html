@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Color Space Roundtrip Test</title>
+  <style>
+    body {
+      font-family: monospace;
+      background: #111;
+      color: #0f0;
+      padding: 1em;
+    }
+    .bad {
+      color: red;
+      font-weight: bold;
+    }
+    pre {
+      white-space: pre-wrap;
+    }
+    button {
+      background: #333;
+      color: #0f0;
+      border: 1px solid #0f0;
+      padding: 2px 6px;
+      margin-left: 10px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0f0;
+      color: #000;
+    }
+    .image-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .image-pair {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .image-label {
+      color: white;
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+    canvas {
+      border: 1px solid #444;
+      max-width: 300px;
+    }
+    .test-result {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .upload-container {
+      margin: 20px 0;
+      padding: 10px;
+      border: 1px dashed #0f0;
+    }
+    .loading {
+      color: #0f0;
+      font-style: italic;
+    }
+    .space-results {
+      margin-top: 20px;
+      border-top: 1px solid #333;
+      padding-top: 10px;
+    }
+    .clear-btn {
+      margin-left: 10px;
+      background: #500;
+    }
+    .clear-btn:hover {
+      background: #f00;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Color Space Roundtrip & Co-Roundtrip Test</h1>
+
+<div class="upload-container">
+  <h3>Upload Custom Image</h3>
+  <input type="file" id="imageUpload" accept="image/*">
+  <p>Or use default image: <button id="useDefault">Load Default Image</button></p>
+</div>
+
+<pre id="report">Running tests...</pre>
+<div id="imageResults"></div>
+
+<script src="clrspc.js"></script>
+<script>
+const colorSpaces = ['rgb', 'hsv', 'hsl', 'hsi', 'hsm', 'hsg', 'hsh', 'hwb', 'cmy', 'hcl', 'srgb', 'scrgb', 'ecirgb', 'lch', 'ycbcr', 'xyz', 'yjk', 'lab', 'uvw', 'lms', 'ydbdr', 'yiq', 'ycocg', 'ycocgr', 'yuv', 'ypbpr', 'bt', 'bt2020', 'bt470', 'smpte240m', 'jpegycbcr', 'bt4706', 'itut871', 'ycbcrturbo', 'tsl', 'luv', 'oklab', 'lcw', 'lct', 'ypo', 'yrl', 'jzazbz', 'jzczhz', 'pqlms', 'hlglms', 'pqxyz', 'hlgxyz', 'ictcp', 'hlgictcp', 'ictcpqc2']
+
+
+
+
+
+
+
+
+
+// Global variables
+let currentImage = null;
+const DEFAULT_IMAGE_URL = 'https://tesertcode.github.io/flowers.png';
+
+// DOM elements
+const imageUpload = document.getElementById('imageUpload');
+const useDefaultBtn = document.getElementById('useDefault');
+const report = document.getElementById('report');
+const imageResults = document.getElementById('imageResults');
+
+// Track active canvases to clean up memory
+const activeCanvases = new Map();
+
+// Event listeners
+imageUpload.addEventListener('change', handleImageUpload);
+useDefaultBtn.addEventListener('click', loadDefaultImage);
+
+function generateRandomRGB(n = 30) {
+  return Array.from({ length: n }, () =>
+    [0, 1, 2].map(() => Math.floor(Math.random() * 256))
+  );
+}
+
+function rgbError(rgb1, rgb2) {
+  let total = 0, count = 0;
+  for (let i = 0; i < 3; i++) {
+    const a = rgb1[i], b = rgb2[i];
+    if (isNaN(a) || isNaN(b)) continue;
+    total += Math.abs(a - b) / 255;
+    count++;
+  }
+  return count ? (total / count) * 100 : 100;
+}
+
+function vectorError(vec1, vec2) {
+  let total = 0, count = 0;
+  for (let i = 0; i < vec1.length; i++) {
+    const a = +vec1[i], b = +vec2[i];
+    if (!isFinite(a) || !isFinite(b)) continue;
+    const range = Math.max(1, Math.abs(a), Math.abs(b));
+    total += Math.abs(a - b) / range;
+    count++;
+  }
+  return count ? (total / count) * 100 : 100;
+}
+
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function safeCall(fn, args) {
+  try {
+    const result = fn(...args);
+    return result.map(v => +v);
+  } catch {
+    return null;
+  }
+}
+
+function getErrorColor(val) {
+  const num = parseFloat(val);
+  if (num < 0.1) return 'cyan';
+  if (num < 1) return '#00f';
+  if (num < 5) return 'green';
+  if (num < 10) return 'lime';
+  if (num < 30) return 'yellow';
+  if (num < 50) return 'orange';
+  return 'red';
+}
+
+function isProblem(val) {
+  const num = parseFloat(val);
+  return num >= 30;
+}
+
+function createButton(text, onClick, className = '') {
+  const btn = document.createElement('button');
+  btn.textContent = text;
+  btn.onclick = onClick;
+  if (className) btn.className = className;
+  return btn;
+}
+
+function loadImage(imageSrc, callback) {
+  const img = new Image();
+  img.crossOrigin = "Anonymous";
+  img.onload = function() {
+    currentImage = img;
+    if (callback) callback();
+  };
+  img.onerror = function() {
+    console.error("Failed to load image");
+    alert("Failed to load image. Please try another one.");
+  };
+  img.src = imageSrc;
+}
+
+function loadDefaultImage() {
+  loadImage(DEFAULT_IMAGE_URL, runTests);
+}
+
+function handleImageUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    loadImage(event.target.result, runTests);
+  };
+  reader.readAsDataURL(file);
+}
+
+function cleanupSpaceResults(space) {
+  if (activeCanvases.has(space)) {
+    // Clear all canvases for this space
+    const canvases = activeCanvases.get(space);
+    canvases.forEach(canvas => {
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+    activeCanvases.delete(space);
+  }
+  
+  // Remove DOM elements
+  const existingResults = document.getElementById(`results-${space}`);
+  if (existingResults) {
+    existingResults.remove();
+  }
+}
+
+function processImageForSpace(space) {
+  if (!currentImage) {
+    alert("Please load an image first (upload or use default)");
+    return;
+  }
+
+  const fnTo = window['rgbTo' + capitalize(space)];
+  const fnFrom = window[space.toLowerCase() + 'ToRgb'];
+  
+  if (!fnTo || !fnFrom) {
+    alert(`Conversion functions not available for ${space}`);
+    return;
+  }
+
+  // Clean up previous results for this space
+  cleanupSpaceResults(space);
+
+  // Create new container
+  const resultsContainer = document.createElement('div');
+  resultsContainer.id = `results-${space}`;
+  resultsContainer.className = 'space-results';
+  
+  // Add header with clear button
+  const header = document.createElement('div');
+  header.innerHTML = `<h3>${space.toUpperCase()} Results</h3>`;
+  header.appendChild(createButton('Clear', () => cleanupSpaceResults(space), 'clear-btn'));
+  resultsContainer.appendChild(header);
+  
+  // Show loading message
+  const container = document.createElement('div');
+  container.className = 'image-container';
+  container.innerHTML = `<div class="loading">Processing ${space.toUpperCase()}... Please wait</div>`;
+  resultsContainer.appendChild(container);
+  
+  imageResults.appendChild(resultsContainer);
+  
+  // Process in a timeout to allow UI to update
+  setTimeout(() => {
+    try {
+      // Create canvas elements
+      const originalCanvas = document.createElement('canvas');
+      const roundtripCanvas = document.createElement('canvas');
+      const differenceCanvas = document.createElement('canvas');
+      const coRoundtripCanvas = document.createElement('canvas');
+      const coDifferenceCanvas = document.createElement('canvas');
+      
+      const width = Math.min(300, currentImage.width);
+      const height = Math.min(300, currentImage.height);
+      
+      [originalCanvas, roundtripCanvas, differenceCanvas, coRoundtripCanvas, coDifferenceCanvas].forEach(canvas => {
+        canvas.width = width;
+        canvas.height = height;
+      });
+      
+      // Store canvases for cleanup
+      activeCanvases.set(space, [originalCanvas, roundtripCanvas, differenceCanvas, coRoundtripCanvas, coDifferenceCanvas]);
+      
+      // Draw original image
+      const originalCtx = originalCanvas.getContext('2d');
+      originalCtx.drawImage(currentImage, 0, 0, width, height);
+      
+      // Process roundtrip (RGB -> Space -> RGB)
+      const roundtripCtx = roundtripCanvas.getContext('2d');
+      roundtripCtx.drawImage(currentImage, 0, 0, width, height);
+      const roundtripImageData = roundtripCtx.getImageData(0, 0, width, height);
+      
+      // Process co-roundtrip (Space -> RGB -> Space -> RGB)
+      const coRoundtripCtx = coRoundtripCanvas.getContext('2d');
+      coRoundtripCtx.drawImage(currentImage, 0, 0, width, height);
+      const coRoundtripImageData = coRoundtripCtx.getImageData(0, 0, width, height);
+      
+      // Temporary canvas for intermediate step
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = width;
+      tempCanvas.height = height;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.drawImage(currentImage, 0, 0, width, height);
+      const tempImageData = tempCtx.getImageData(0, 0, width, height);
+      
+      // Process pixels
+      let rgbErrorSum = 0;
+      let coErrorSum = 0;
+      let pixelCount = 0;
+      
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const i = (y * width + x) * 4;
+          const r = tempImageData.data[i];
+          const g = tempImageData.data[i + 1];
+          const b = tempImageData.data[i + 2];
+          
+          // Roundtrip processing
+          const mid = safeCall(fnTo, [r, g, b]);
+          if (!mid) continue;
+          
+          const back = safeCall(fnFrom, mid);
+          if (!back) continue;
+          
+          roundtripImageData.data[i] = back[0];
+          roundtripImageData.data[i + 1] = back[1];
+          roundtripImageData.data[i + 2] = back[2];
+          
+          rgbErrorSum += rgbError([r, g, b], back);
+          
+          // Co-roundtrip processing
+          const rgb2 = safeCall(fnFrom, mid);
+          if (!rgb2) continue;
+          
+          const mid2 = safeCall(fnTo, rgb2);
+          if (!mid2) continue;
+          
+          const back2 = safeCall(fnFrom, mid2);
+          if (!back2) continue;
+          
+          coRoundtripImageData.data[i] = back2[0];
+          coRoundtripImageData.data[i + 1] = back2[1];
+          coRoundtripImageData.data[i + 2] = back2[2];
+          
+          coErrorSum += rgbError([r, g, b], back2);
+          
+          pixelCount++;
+        }
+      }
+      
+      // Put the processed image data back
+      roundtripCtx.putImageData(roundtripImageData, 0, 0);
+      coRoundtripCtx.putImageData(coRoundtripImageData, 0, 0);
+      
+      // Create difference images
+      createDifferenceImage(originalCanvas, roundtripCanvas, differenceCanvas);
+      createDifferenceImage(originalCanvas, coRoundtripCanvas, coDifferenceCanvas);
+      
+      // Calculate average errors
+      const avgRGBError = (rgbErrorSum / pixelCount).toFixed(2);
+      const avgCOError = (coErrorSum / pixelCount).toFixed(2);
+      
+      // Create image pairs with labels
+      const originalPair = document.createElement('div');
+      originalPair.className = 'image-pair';
+      originalPair.innerHTML = '<div class="image-label">Original</div>';
+      originalPair.appendChild(originalCanvas);
+      
+      const roundtripPair = document.createElement('div');
+      roundtripPair.className = 'image-pair';
+      roundtripPair.innerHTML = `<div class="image-label">Roundtrip (Error: ${avgRGBError}%)</div>`;
+      roundtripPair.appendChild(roundtripCanvas);
+      
+      const differencePair = document.createElement('div');
+      differencePair.className = 'image-pair';
+      differencePair.innerHTML = '<div class="image-label">Difference</div>';
+      differencePair.appendChild(differenceCanvas);
+      
+      const coRoundtripPair = document.createElement('div');
+      coRoundtripPair.className = 'image-pair';
+      coRoundtripPair.innerHTML = `<div class="image-label">Co-Roundtrip (Error: ${avgCOError}%)</div>`;
+      coRoundtripPair.appendChild(coRoundtripCanvas);
+      
+      const coDifferencePair = document.createElement('div');
+      coDifferencePair.className = 'image-pair';
+      coDifferencePair.innerHTML = '<div class="image-label">Co-Difference</div>';
+      coDifferencePair.appendChild(coDifferenceCanvas);
+      
+      // Update the container with results
+      container.innerHTML = '';
+      container.appendChild(originalPair);
+      container.appendChild(roundtripPair);
+      container.appendChild(differencePair);
+      container.appendChild(coRoundtripPair);
+      container.appendChild(coDifferencePair);
+      
+    } catch (error) {
+      console.error(`Error processing ${space}:`, error);
+      container.innerHTML = `<span class="bad">Error processing ${space.toUpperCase()}</span>`;
+    }
+  }, 100);
+}
+
+function createDifferenceImage(srcCanvas1, srcCanvas2, destCanvas) {
+  const ctx1 = srcCanvas1.getContext('2d');
+  const ctx2 = srcCanvas2.getContext('2d');
+  const destCtx = destCanvas.getContext('2d');
+  
+  const width = srcCanvas1.width;
+  const height = srcCanvas1.height;
+  
+  const imgData1 = ctx1.getImageData(0, 0, width, height);
+  const imgData2 = ctx2.getImageData(0, 0, width, height);
+  const diffData = destCtx.createImageData(width, height);
+  
+  for (let i = 0; i < imgData1.data.length; i += 4) {
+    diffData.data[i] = Math.abs(imgData1.data[i] - imgData2.data[i]);
+    diffData.data[i + 1] = Math.abs(imgData1.data[i + 1] - imgData2.data[i + 1]);
+    diffData.data[i + 2] = Math.abs(imgData1.data[i + 2] - imgData2.data[i + 2]);
+    diffData.data[i + 3] = 255;
+  }
+  
+  destCtx.putImageData(diffData, 0, 0);
+}
+
+function runTests() {
+  const rgbList = generateRandomRGB(30);
+  const results = [];
+  
+  // Clear all previous results
+  imageResults.innerHTML = '';
+  activeCanvases.clear();
+
+  for (const space of colorSpaces) {
+    const fnTo = window['rgbTo' + capitalize(space)];
+    const fnFrom = window[space.toLowerCase() + 'ToRgb'];
+
+    if (!fnTo || !fnFrom) {
+      results.push(`<span class="bad">(!) ${space.toUpperCase()}: missing function</span>`);
+      continue;
+    }
+
+    let rgbErr = 0, coErr = 0, fail = false;
+
+    for (const rgb of rgbList) {
+      const mid = safeCall(fnTo, rgb);
+      const back = mid ? safeCall(fnFrom, mid) : null;
+      if (!mid || !back) {
+        fail = true;
+        break;
+      }
+      rgbErr += rgbError(rgb, back);
+
+      const rgb2 = safeCall(fnFrom, mid);
+      const mid2 = rgb2 ? safeCall(fnTo, rgb2) : null;
+      if (!rgb2 || !mid2) {
+        fail = true;
+        break;
+      }
+      coErr += vectorError(mid, mid2);
+    }
+
+    if (fail) {
+      results.push(`<span class="bad">(!) ${space.toUpperCase()}: conversion error</span>`);
+      continue;
+    }
+
+    const avgRGBErr = (rgbErr / rgbList.length).toFixed(3);
+    const avgCOErr = (coErr / rgbList.length).toFixed(3);
+
+    const rgbColor = getErrorColor(avgRGBErr);
+    const coColor = getErrorColor(avgCOErr);
+
+    const hasProblem = isProblem(avgRGBErr) || isProblem(avgCOErr);
+    const prefix = hasProblem ? '(!) ' : '';
+
+    const label = space.toUpperCase();
+    const status = `${prefix}${label} <span style="color:${rgbColor}">rgb ±${avgRGBErr}%</span> <span style="color:${coColor}">co ±${avgCOErr}%</span>`;
+    
+    const resultDiv = document.createElement('div');
+    resultDiv.className = 'test-result';
+    resultDiv.innerHTML = status;
+    
+    const btn = createButton('Show Images', () => processImageForSpace(space));
+    resultDiv.appendChild(btn);
+    
+    results.push(resultDiv);
+  }
+
+  report.innerHTML = '';
+  results.forEach(result => {
+    if (typeof result === 'string') {
+      report.innerHTML += result + '\n';
+    } else {
+      report.appendChild(result);
+    }
+  });
+}
+
+// Initial test run with random colors (no image loaded yet)
+runTests();
+</script>
+
+</body>
+</html>

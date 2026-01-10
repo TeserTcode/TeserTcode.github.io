@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Complex Arnold Tongues – Stable Build</title>
+<style>
+body { text-align:center; }
+canvas { border:1px solid black; }
+</style>
+</head>
+<body>
+
+<h2>Complex Circle Map – Arnold Tongues</h2>
+
+<div>
+Ω ∈ <input id="omin" value="0" size="4"> –
+<input id="omax" value="6.28" size="4">
+K ∈ <input id="kmin" value="0" size="4"> –
+<input id="kmax" value="10" size="4">
+Iterations <input id="iters" value="300" size="4">
+
+<br><br>
+
+Wave:
+<select id="wave">
+<option value="0">sin</option>
+<option value="1">sin³</option>
+<option value="2">sin⁵</option>
+<option value="3">cos</option>
+<option value="4">cos²</option>
+<option value="5">abs(sin)</option>
+<option value="6">triangle</option>
+<option value="7">saw</option>
+<option value="8">tanh(sin)</option>
+<option value="9">sin(x+sin3x)</option>
+<option value="10">sin·cos irrational</option>
+<option value="11">fract chaos</option>
+<option value="12">signed sqrt</option>
+<option value="13">sin·exp(-sin²)</option>
+</select>
+
+<br><br>
+
+Lyapunov norm:
+<select id="lyap">
+<option value="0">|z|</option>
+<option value="1">|z|²</option>
+<option value="2">|Re|+|Im|</option>
+<option value="3">|Re|+Im</option>
+<option value="4">Re+|Im|</option>
+<option value="5">sqrt(z²)</option>
+<option value="6">sin²(|z|)</option>
+<option value="7">cos²(|z|)</option>
+<option value="8">exp(-|z|²)</option>
+<option value="9">1/(1+|z|²)</option>
+<option value="10">|sin(Re)|+|cos(Im)|</option>
+</select>
+
+<br><br>
+
+Parameter mode:
+<select id="pmode">
+<option value="0">Ω & K vary</option>
+<option value="1">K fixed</option>
+<option value="2">Ω fixed</option>
+</select>
+
+Fixed Ω <input id="Ofix" value="1" size="4">
+Fixed K <input id="Kfix" value="1" size="4">
+
+<br><br>
+
+Color:
+<select id="color">
+<option value="0">Blue–Yellow</option>
+<option value="1">Red–Green</option>
+<option value="2">Cyan–Magenta</option>
+<option value="3">Orange–Purple</option>
+<option value="4">Rainbow</option>
+<option value="5">Grayscale</option>
+<option value="6">Domain</option>
+</select>
+
+<button onclick="render()">Draw</button>
+</div>
+
+<br>
+
+<canvas id="glcanvas" width="900" height="900"></canvas>
+<br>
+<canvas id="phase" width="300" height="300"></canvas>
+<p>φ–θ plane (drag)</p>
+
+<!-- ================= FRAGMENT SHADER ================= -->
+<script id="fs" type="x-shader/x-fragment">
+precision highp float;
+
+uniform vec2 R;
+uniform float omin, omax, kmin, kmax, phi, theta, Ofix, Kfix;
+uniform int iters, lyap, color, wave, pmode;
+
+float f(float x){
+  if(wave==0) return sin(x);
+  if(wave==1) return pow(sin(x),3.0);
+  if(wave==2) return pow(sin(x),5.0);
+  if(wave==3) return cos(x);
+  if(wave==4) return cos(x)*cos(x);
+  if(wave==5) return abs(sin(x));
+  if(wave==6) return asin(sin(x))*2.0/3.14159265;
+  if(wave==7) return 2.0*(x/6.2831853-floor(0.5+x/6.2831853));
+  
+  if(wave==9) return sin(x+sin(3.0*x));
+  if(wave==10) return sin(x)*cos(1.41421356*x);
+  if(wave==11) return fract(sin(x)*43758.5453)-0.5;
+  if(wave==12) return sign(sin(x))*sqrt(abs(sin(x)));
+  if(wave==13) return sin(x)*exp(-sin(x)*sin(x));
+  return sin(x);
+}
+
+float fp(float x){
+  if(wave==0) return cos(x);
+  if(wave==1) return 3.0*sin(x)*sin(x)*cos(x);
+  if(wave==2) return 5.0*pow(sin(x),4.0)*cos(x);
+  if(wave==3) return -sin(x);
+  if(wave==4) return -2.0*sin(x)*cos(x);
+  if(wave==5) return cos(x)*sign(sin(x));
+  if(wave==6) return 2.0/3.14159265*sign(cos(x));
+  if(wave==7) return 1.0/3.14159265;
+  if(wave==8) return cos(x)*(1.0-pow(tanh(sin(x)),2.0));
+  return cos(x);
+}
+
+float norm(vec2 z){
+  float r = length(z);
+  if(lyap==0) return r;
+  if(lyap==1) return r*r;
+  if(lyap==2) return abs(z.x)+abs(z.y);
+  if(lyap==3) return abs(z.x)+z.y;
+  if(lyap==4) return z.x+abs(z.y);
+  if(lyap==5) return sqrt(r*r);
+  if(lyap==6) return sin(r)*sin(r);
+  if(lyap==7) return cos(r)*cos(r);
+  if(lyap==8) return exp(-r*r);
+  if(lyap==9) return 1.0/(1.0+r*r);
+  return abs(sin(z.x))+abs(cos(z.y));
+}
+
+vec3 palette(float t){
+  t=clamp(t,0.0,1.0);
+  if(color==0) return mix(vec3(0,0,0.5),vec3(1,1,0),t);
+  if(color==1) return mix(vec3(0,0.5,0),vec3(1,0,0),t);
+  if(color==2) return mix(vec3(0,1,1),vec3(1,0,1),t);
+  if(color==3) return mix(vec3(1,0.5,0),vec3(0.5,0,1),t);
+  if(color==4) return vec3(t,0.5,1.0-t);
+  return vec3(t);
+}
+
+vec3 domain(vec2 z){
+  float a=atan(z.y,z.x);
+  float m=log(1.0+length(z));
+  return vec3(
+    0.5+0.5*cos(a),
+    0.5+0.5*cos(a+2.1),
+    0.5+0.5*cos(a+4.2)
+  )/(1.0+m);
+}
+
+void main(){
+  vec2 uv = gl_FragCoord.xy/R;
+
+  float Om = (pmode==2) ? Ofix : mix(omin,omax,uv.x);
+  float K0 = (pmode==1) ? Kfix : mix(kmin,kmax,uv.y);
+
+  vec2 K = vec2(K0*cos(phi), K0*sin(phi));
+  vec2 O = vec2(Om*cos(theta), Om*sin(theta));
+
+  vec2 z = vec2(0.5,0.0);
+  float ly = 0.0;
+
+  for(int i=0;i<1000;i++){
+    if(i>=iters) break;
+    vec2 d = vec2(1.0,0.0) + K*fp(z.x);
+    ly += log(norm(d)+1e-12);
+    z += O + K*f(z.x);
+    z = mod(z,6.2831853);
+  }
+
+  ly /= float(iters);
+  gl_FragColor = vec4((color==6)?domain(z):palette(ly),1.0);
+}
+</script>
+
+<!-- ================= JAVASCRIPT ================= -->
+<script>
+const canvas = document.getElementById("glcanvas");
+const gl = canvas.getContext("webgl");
+
+function compile(type, src){
+  const sh = gl.createShader(type);
+  gl.shaderSource(sh, src);
+  gl.compileShader(sh);
+  if(!gl.getShaderParameter(sh, gl.COMPILE_STATUS)){
+    console.error(gl.getShaderInfoLog(sh));
+    throw "Shader compile failed";
+  }
+  return sh;
+}
+
+const vs = compile(gl.VERTEX_SHADER,
+  "attribute vec2 p; void main(){ gl_Position=vec4(p,0,1); }"
+);
+const fs = compile(gl.FRAGMENT_SHADER,
+  document.getElementById("fs").textContent
+);
+
+const prog = gl.createProgram();
+gl.attachShader(prog,vs);
+gl.attachShader(prog,fs);
+gl.linkProgram(prog);
+
+if(!gl.getProgramParameter(prog,gl.LINK_STATUS)){
+  console.error(gl.getProgramInfoLog(prog));
+  throw "Program link failed";
+}
+gl.useProgram(prog);
+
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([
+  -1,-1, 1,-1, -1,1, 1,1
+]),gl.STATIC_DRAW);
+
+const loc = gl.getAttribLocation(prog,"p");
+gl.enableVertexAttribArray(loc);
+gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+
+const U = n => gl.getUniformLocation(prog,n);
+
+let Phi=0, Theta=0;
+
+function render(){
+  gl.uniform2f(U("R"),canvas.width,canvas.height);
+  gl.uniform1f(U("omin"),+omin.value);
+  gl.uniform1f(U("omax"),+omax.value);
+  gl.uniform1f(U("kmin"),+kmin.value);
+  gl.uniform1f(U("kmax"),+kmax.value);
+  gl.uniform1f(U("phi"),Phi);
+  gl.uniform1f(U("theta"),Theta);
+  gl.uniform1f(U("Ofix"),+Ofix.value);
+  gl.uniform1f(U("Kfix"),+Kfix.value);
+  gl.uniform1i(U("iters"),+iters.value);
+  gl.uniform1i(U("lyap"),+lyap.value);
+  gl.uniform1i(U("color"),+color.value);
+  gl.uniform1i(U("wave"),+wave.value);
+  gl.uniform1i(U("pmode"),+pmode.value);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+}
+
+const pc=document.getElementById("phase");
+pc.onmousemove=e=>{
+  if(e.buttons){
+    Phi=e.offsetX/pc.width*2*Math.PI;
+    Theta=e.offsetY/pc.height*2*Math.PI;
+    render();
+  }
+};
+
+render();
+</script>
+
+</body>
+</html>

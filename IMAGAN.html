@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Spritesheet Analyzer</title>
+  <style>
+    canvas { display: none; }
+    #sprite-list img { width: 32px; height: 32px; image-rendering: pixelated; margin-right: 10px; }
+    #sprite-list div { display: flex; align-items: center; margin-bottom: 5px; }
+    .color-swatch { width: 12px; height: 12px; display: inline-block; margin-right: 2px; border: 1px solid #000; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Spritesheet Analyzer</h1>
+  <input type="file" id="spritesheet" accept="image/*">
+  <input type="number" id="spriteWidth" placeholder="Sprite Width" value="32">
+  <input type="number" id="spriteHeight" placeholder="Sprite Height" value="32">
+  <select id="sortMetric">
+    <option value="colorfulness">Colorfulness</option>
+    <option value="contrast">Contrast</option>
+    <option value="brightness">Brightness</option>
+    <option value="uniqueColors">Unique Colors</option>
+    <option value="complexity">Complexity</option>
+    <option value="edgeDensity">Edge Density</option>
+    <option value="opacityMean">Opacity Mean</option>
+    <option value="saturation">Saturation</option>
+    <option value="hueVariance">Hue Variance</option>
+    <option value="colorEntropy">Color Entropy</option>
+    <option value="dominantHue">Dominant Hue</option>
+    <option value="aspectRatio">Aspect Ratio</option>
+    <option value="emptyPixels">Empty Pixels %</option>
+    <option value="colorMatch">Color Match</option>
+  </select>
+  <div id="palette"></div>
+  <button id="analyze">List Sprites</button>
+  <div id="sprite-list"></div>
+  <canvas id="canvas"></canvas>
+  <script>
+    const analyzeBtn = document.getElementById('analyze');
+    const spriteList = document.getElementById('sprite-list');
+    const sortMetricSelect = document.getElementById('sortMetric');
+    let globalPalette = [];
+    let selectedColor = null;
+
+    function getImageData(ctx, x, y, w, h) {
+      return ctx.getImageData(x, y, w, h);
+    }
+
+    function getColorKey(r, g, b) {
+      return `${r},${g},${b}`;
+    }
+
+    function rgbToHsl(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+
+      if (max === min) {
+        h = s = 0;
+      } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch(max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+      return [h, s, l];
+    }
+
+    function calculateMetrics(imageData) {
+      const data = imageData.data;
+      let totalR = 0, totalG = 0, totalB = 0, total = 0;
+      let minL = 255, maxL = 0;
+      let uniqueColors = new Set();
+      let complexitySum = 0, edges = 0;
+      let colorCounts = new Map();
+      let opacitySum = 0, saturationSum = 0, hueSum = 0;
+      const width = imageData.width;
+      const height = imageData.height;
+
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const i = (y * width + x) * 4;
+          const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+          const brightness = (r + g + b) / 3;
+
+          totalR += r;
+          totalG += g;
+          totalB += b;
+          total++;
+          minL = Math.min(minL, brightness);
+          maxL = Math.max(maxL, brightness);
+
+          const key = getColorKey(r, g, b);
+          if (a > 0) {
+            uniqueColors.add(key);
+            colorCounts.set(key, (colorCounts.get(key) || 0) + 1);
+            globalPalette.push(key);
+          }
+
+          opacitySum += a;
+          const [h, s] = rgbToHsl(r, g, b);
+          saturationSum += s;
+          hueSum += h;
+
+          if (x < width - 1 && y < height - 1) {
+            const m = [
+              [data[i], data[i+4]],
+              [data[i + width*4], data[i + width*4 + 4]]
+            ];
+            const determinant = (m[0][0] * m[1][1] - m[0][1] * m[1][0]) / 255;
+            complexitySum += Math.abs(determinant);
+          }
+        }
+      }
+
+      const colorMatch = selectedColor ? (colorCounts.get(selectedColor) || 0) / total : 0;
+      const entropy = -[...colorCounts.values()].reduce((acc, v) => {
+        const p = v / total;
+        return acc + p * Math.log2(p);
+      }, 0);
+
+      return {
+        colorfulness: (Math.abs(totalR - totalG) + Math.abs(totalG - totalB) + Math.abs(totalB - totalR)) / total,
+        brightness: (totalR + totalG + totalB) / (3 * total),
+        contrast: maxL - minL,
+        uniqueColors: uniqueColors.size,
+        complexity: complexitySum,
+        edgeDensity: edges / total,
+        opacityMean: opacitySum / (total * 255),
+        saturation: saturationSum / total,
+        hueVariance: hueSum / total,
+        colorEntropy: entropy,
+        dominantHue: hueSum / total,
+        aspectRatio: imageData.width / imageData.height,
+        emptyPixels: 1 - (opacitySum / (total * 255)),
+        colorMatch,
+        colorCounts
+      };
+    }
+
+    function drawPalette(palette) {
+      const unique = Array.from(new Set(palette));
+      const paletteDiv = document.getElementById("palette");
+      paletteDiv.innerHTML = "";
+      unique.forEach(color => {
+        const swatch = document.createElement("span");
+        swatch.className = "color-swatch";
+        swatch.style.backgroundColor = `rgb(${color})`;
+        swatch.title = color;
+        swatch.onclick = () => {
+          selectedColor = color;
+          sortMetricSelect.value = "colorMatch";
+          analyzeBtn.click();
+        };
+        paletteDiv.appendChild(swatch);
+      });
+    }
+
+    analyzeBtn.onclick = () => {
+      const file = document.getElementById('spritesheet').files[0];
+      const spriteWidth = parseInt(document.getElementById('spriteWidth').value);
+      const spriteHeight = parseInt(document.getElementById('spriteHeight').value);
+      const sortMetric = document.getElementById('sortMetric').value;
+
+      if (!file) return;
+      globalPalette = [];
+
+      const img = new Image();
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+
+          const metrics = [];
+          for (let y = 0; y < img.height; y += spriteHeight) {
+            for (let x = 0; x < img.width; x += spriteWidth) {
+              const data = getImageData(ctx, x, y, spriteWidth, spriteHeight);
+              const spriteCanvas = document.createElement('canvas');
+              const spriteCtx = spriteCanvas.getContext('2d');
+              spriteCanvas.width = spriteWidth;
+              spriteCanvas.height = spriteHeight;
+              spriteCtx.putImageData(data, 0, 0);
+              const url = spriteCanvas.toDataURL();
+
+              const metric = calculateMetrics(data);
+              metric.url = url;
+              metrics.push(metric);
+            }
+          }
+
+          const normalized = normalizeMetrics(metrics);
+          drawPalette(globalPalette);
+          spriteList.innerHTML = '';
+          normalized.sort((a, b) => b[sortMetric] - a[sortMetric]);
+
+          for (const sprite of normalized) {
+            const div = document.createElement('div');
+            const img = new Image();
+            img.src = sprite.url;
+            div.appendChild(img);
+            const info = document.createElement('span');
+            info.textContent = `Colorfulness: ${sprite.colorfulness.toFixed(2)}, Contrast: ${sprite.contrast.toFixed(2)}, Brightness: ${sprite.brightness.toFixed(2)}, UniqueColors: ${sprite.uniqueColors}, Complexity: ${sprite.complexity.toFixed(2)}`;
+            div.appendChild(info);
+            spriteList.appendChild(div);
+          }
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    function normalizeMetrics(metrics) {
+      const keys = Object.keys(metrics[0]).filter(k => typeof metrics[0][k] === 'number');
+      for (const key of keys) {
+        const values = metrics.map(m => m[key]);
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        for (const metric of metrics) {
+          metric[key] = (metric[key] - min) / (max - min || 1);
+        }
+      }
+      return metrics;
+    }
+  </script>
+</body>
+</html>

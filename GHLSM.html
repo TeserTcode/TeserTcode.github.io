@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Generalized Particle Simulator</title>
+  <style>
+    body { background: #111; color: #eee; font-family: sans-serif; padding: 10px; }
+    canvas { border: 1px solid #555; background: black; display: block; margin: 10px 0; }
+    table, th, td { border: 1px solid #555; border-collapse: collapse; padding: 5px; }
+    select, input, button { margin: 2px; }
+    .legend div { display: inline-block; margin-right: 10px; }
+    .legend span { display: inline-block; width: 16px; height: 16px; margin-right: 5px; vertical-align: middle; }
+    .controls input[type="number"] { width: 60px; }
+  </style>
+</head>
+<body>
+  <h2>Generalized Particle Simulator</h2>
+
+  <label>Preset:
+    <select id="presetSelect"></select>
+    <button onclick="loadPreset()">Load</button>
+    <button onclick="saveConfig()">Save</button>
+    <input type="file" id="loadInput" accept=".json" onchange="loadConfig(event)">
+  </label>
+
+  <div class="legend">
+    <strong>Legend:</strong>
+    <div><span style="background: orange"></span>hl</div>
+    <div><span style="background: lime"></span>ll</div>
+    <div><span style="background: cyan"></span>lh</div>
+    <div><span style="background: red"></span>hh</div>
+    <div><span style="background: gray"></span>nn</div>
+  </div>
+
+  <div class="controls">
+    <h3>Particle Counts</h3>
+    hl: <input type="number" id="num_hl" value="5" min="0">
+    ll: <input type="number" id="num_ll" value="5" min="0">
+    lh: <input type="number" id="num_lh" value="5" min="0">
+    hh: <input type="number" id="num_hh" value="5" min="0">
+    nn: <input type="number" id="num_nn" value="5" min="0">
+    <button onclick="applyParticleCounts()">Apply</button>
+
+    <h3>Global Force Multipliers</h3>
+    Before (scale distance): <input type="number" id="globalBefore" value="1" step="0.1">
+    After (scale force): <input type="number" id="globalAfter" value="1" step="0.1">
+  </div>
+
+  <canvas id="canvas" width="800" height="600"></canvas>
+
+  <h3>Interaction Rules</h3>
+  <table id="ruleTable">
+    <tr><th>From</th><th>To</th><th>Law</th><th>Power</th><th>Param</th><th>Strength</th><th>Action</th></tr>
+  </table>
+  <button onclick="addRule()">Add Rule</button>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    const types = ["hl", "ll", "lh", "hh", "nn"];
+    const colors = { hl: "orange", ll: "lime", lh: "cyan", hh: "red", nn: "gray" };
+    const particles = [];
+    const rules = [];
+
+    let globalBefore = 1, globalAfter = 1;
+
+    const presets = {
+      "Basic": {
+        particles: ["hl", "hl", "ll", "ll", "lh", "lh", "hh", "hh"],Complex Domain Coloring
+Dark Mode
+?
+Function (e.g., '2^x'): 
+2^x
+
+        rules: [
+          ["hl", "hl", "1", 2, 0.6, 0.9],
+          ["hl", "ll", "sin", 2, 0.2, 0.1],
+          ["lh", "hl", "3", 1, 0.5, -0.8],
+          ["ll", "ll", "linear", 1, 0.3, 0.3],
+          ["hh", "lh", "exp", 1, 0.4, -0.7]
+        ]
+      }
+    };
+
+    const forceLaws = {
+      "1": r => r === 0 ? 0 : 1 / r,
+      "2": r => r === 0 ? 0 : 1 / (r * r),
+      "3": r => r === 0 ? 0 : 1 / (r * r * r),
+      "log": r => Math.log(1 + r),
+      "linear": r => r,
+      "exp": r => Math.exp(-r),
+      "sin": r => Math.sin(r)
+    };
+
+    let dragging = null;
+
+    function initParticles(typeList) {
+      particles.length = 0;
+      for (let t of typeList) {
+        particles.push({
+          type: t,
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: 0, vy: 0, trail: []
+        });
+      }
+    }
+
+    function applyForces() {
+      globalBefore = parseFloat(document.getElementById("globalBefore").value) || 1;
+      globalAfter = parseFloat(document.getElementById("globalAfter").value) || 1;
+
+      for (let p of particles) { p.ax = 0; p.ay = 0; }
+      for (let [from, to, law, power, param, strength] of rules) {
+        for (let a of particles) {
+          if (a.type !== to) continue;
+          for (let b of particles) {
+            if (b.type !== from || a === b) continue;
+            const dx = b.x - a.x, dy = b.y - a.y;
+            let d = Math.sqrt(dx * dx + dy * dy);
+            if (d < 1 || d > 200) continue;
+            const base = forceLaws[law] || (() => 0);
+            const scaledD = globalBefore * Math.pow(d, power);
+            const f = globalAfter * strength * base(param * scaledD);
+            const nx = dx / d, ny = dy / d;
+            a.ax += f * nx;
+            a.ay += f * ny;
+          }
+        }
+      }
+    }
+
+    function updateParticles() {
+      applyForces();
+      for (let p of particles) {
+        p.vx += p.ax;
+        p.vy += p.ay;
+        p.vx *= 0.95;
+        p.vy *= 0.95;
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+        p.x = Math.max(0, Math.min(canvas.width, p.x));
+        p.y = Math.max(0, Math.min(canvas.height, p.y));
+        p.trail.push([p.x, p.y]);
+        if (p.trail.length > 20) p.trail.shift();
+      }
+    }
+
+    function drawParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let p of particles) {
+        ctx.beginPath();
+        ctx.strokeStyle = colors[p.type];
+        ctx.globalAlpha = 0.3;
+        for (let i = 1; i < p.trail.length; i++) {
+          const [x0, y0] = p.trail[i - 1];
+          const [x1, y1] = p.trail[i];
+          ctx.moveTo(x0, y0);
+          ctx.lineTo(x1, y1);
+        }
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        ctx.beginPath();
+        ctx.fillStyle = colors[p.type];
+        ctx.arc(p.x, p.y, 4, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+    }
+
+    function loop() {
+      updateParticles();
+      drawParticles();
+      requestAnimationFrame(loop);
+    }
+
+    canvas.addEventListener("mousedown", e => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+      for (let p of particles) {
+        if ((p.x - mx) ** 2 + (p.y - my) ** 2 < 16) {
+          dragging = p;
+          break;
+        }
+      }
+    });
+
+    canvas.addEventListener("mousemove", e => {
+      if (dragging) {
+        const rect = canvas.getBoundingClientRect();
+        dragging.x = e.clientX - rect.left;
+        dragging.y = e.clientY - rect.top;
+      }
+    });
+
+    canvas.addEventListener("mouseup", () => dragging = null);
+
+    function updateRuleTable() {
+      const table = document.getElementById("ruleTable");
+      while (table.rows.length > 1) table.deleteRow(1);
+      rules.forEach((rule, i) => {
+        const row = table.insertRow();
+        rule.forEach((val, j) => {
+          const cell = row.insertCell();
+          const input = document.createElement("input");
+          input.value = val;
+          input.size = 5;
+          input.onchange = () => rule[j] = j < 2 ? input.value : parseFloat(input.value);
+          cell.appendChild(input);
+        });
+        const del = row.insertCell();
+        const btn = document.createElement("button");
+        btn.textContent = "✖";
+        btn.onclick = () => { rules.splice(i, 1); updateRuleTable(); };
+        del.appendChild(btn);
+      });
+    }
+
+    function addRule() {
+      rules.push(["hl", "ll", "1", 2, 0.5, 0.5]);
+      updateRuleTable();
+    }
+
+    function applyParticleCounts() {
+      const newList = [];
+      for (let t of types) {
+        const count = parseInt(document.getElementById("num_" + t).value) || 0;
+        for (let i = 0; i < count; i++) newList.push(t);
+      }
+      initParticles(newList);
+    }
+
+    function loadPreset() {
+      const name = document.getElementById("presetSelect").value;
+      if (!presets[name]) return;
+      const { particles: pts, rules: rls } = presets[name];
+      initParticles(pts);
+      rules.length = 0;
+      for (let r of rls) rules.push([...r]);
+      updateRuleTable();
+    }
+
+    function saveConfig() {
+      const blob = new Blob([JSON.stringify({ particles: particles.map(p => p.type), rules })], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "particles.json";
+      a.click();
+    }
+
+    function loadConfig(event) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const config = JSON.parse(e.target.result);
+        initParticles(config.particles || []);
+        rules.length = 0;
+        for (let r of config.rules || []) rules.push([...r]);
+        updateRuleTable();
+      };
+      reader.readAsText(event.target.files[0]);
+    }
+
+    for (let name in presets) {
+      const o = document.createElement("option");
+      o.value = name;
+      o.textContent = name;
+      document.getElementById("presetSelect").appendChild(o);
+    }
+
+    loadPreset(); // load first preset
+    loop();
+  </script>
+</body>
+</html>

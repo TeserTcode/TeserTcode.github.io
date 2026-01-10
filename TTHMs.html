@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hamiltonian Path Viewer</title>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      color: white;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    canvas {
+      background: #222;
+      margin-top: 10px;
+    }
+    select {
+      margin-top: 10px;
+      padding: 5px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Hamiltonian Path Viewer</h2>
+<select id="levelSelect"></select>
+<canvas id="canvas" width="600" height="600"></canvas>
+
+<script>
+function mulberry32(a) {
+  return function () {
+    var t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+}
+
+function createHamiltonianPatha(size, seed, complexity = 0.5, curvature = 0.5) {
+  const total = size * size;
+  const visited = Array.from({ length: size }, () => Array(size).fill(false));
+  const path = [];
+  const rng = mulberry32(seed);
+
+  const dirs = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+
+  function mod(n, m) {
+    return ((n % m) + m) % m;
+  }
+
+  function neighbors(x, y) {
+    const result = [];
+    for (const [dx, dy] of dirs) {
+      const nx = mod(x + dx, size);
+      const ny = mod(y + dy, size);
+      if (!visited[ny][nx]) {
+        result.push([nx, ny]);
+      }
+    }
+    return result;
+  }
+
+  let x = Math.floor(rng() * size);
+  let y = Math.floor(rng() * size);
+  visited[y][x] = true;
+  path.push([x, y]);
+
+  for (let step = 1; step < total; step++) {
+    let nbrs = neighbors(x, y);
+    if (nbrs.length === 0) break;
+
+    nbrs.sort((a, b) => {
+      const aNbrs = neighbors(a[0], a[1]).length;
+      const bNbrs = neighbors(b[0], b[1]).length;
+      if (aNbrs !== bNbrs && rng() < 1 - complexity * 0.6) return aNbrs - bNbrs;
+      return rng() - 0.5;
+    });
+
+    [x, y] = nbrs[0];
+    visited[y][x] = true;
+    path.push([x, y]);
+  }
+
+  return path.length === total ? path : null;
+}
+
+function createHamiltonianPath(size, seed, complexity = 0.5, curvature = 0.5, maxRetries = 12000) {
+  let currentSeed = seed % 12389;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const path = createHamiltonianPatha(size, currentSeed, complexity, curvature);
+    if (path) return path;
+    currentSeed = (currentSeed * 2) % 10000000 + 1 + 10000000 * attempt;
+  }
+  return null;
+}
+
+const levels = Array.from({ length: 50 }, (_, i) => {
+  const gridSize = Math.min(15, 5 + Math.floor(i / 5));
+  const numDensity = 0.15 + (i / 50) * 0.1;
+  const seed = i;
+  const complexity = 0.2 + (i / 49) * 0.7;
+  const curvature = 0.6 + 0.3 * Math.sin((i / 49) * 5 * Math.PI);
+  return { id: i, gridSize, numDensity, seed, complexity, curvature };
+});
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const levelSelect = document.getElementById("levelSelect");
+
+levels.forEach(level => {
+  const option = document.createElement("option");
+  option.value = level.id;
+  option.textContent = `Level ${level.id} (Grid: ${level.gridSize}x${level.gridSize})`;
+  levelSelect.appendChild(option);
+});
+
+let path = [], gridSize = 0, invalidPath = false;
+
+function drawPath() {
+  if (!path.length) return;
+  const tw = canvas.width / gridSize, th = canvas.height / gridSize, now = Date.now();
+  const thickness = Math.max(2, tw / 8);
+  ctx.lineWidth = thickness;
+  ctx.lineCap = "round";
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (path.length === 1) {
+    const [x, y] = path[0], px = x * tw + tw / 2, py = y * th + th / 2;
+    ctx.fillStyle = 'blue';
+    ctx.beginPath();
+    ctx.arc(px, py, thickness, 0, Math.PI * 2);
+    ctx.fill();
+    return;
+  }
+
+  const segments = [];
+  let currentSegment = [path[0]];
+  for (let i = 1; i < path.length; i++) {
+    const prev = path[i - 1], curr = path[i];
+    const dx = Math.min(Math.abs(curr[0] - prev[0]), gridSize - Math.abs(curr[0] - prev[0]));
+    const dy = Math.min(Math.abs(curr[1] - prev[1]), gridSize - Math.abs(curr[1] - prev[1]));
+    if (dx > 1 || dy > 1) {
+      segments.push(currentSegment);
+      currentSegment = [curr];
+    } else {
+      currentSegment.push(curr);
+    }
+  }
+  segments.push(currentSegment);
+
+  segments.forEach(segment => {
+    if (segment.length < 2) return;
+    for (let i = 0; i < segment.length - 1; i++) {
+      const [x1, y1] = segment[i], [x2, y2] = segment[i + 1];
+      const px1 = x1 * tw + tw / 2, py1 = y1 * th + th / 2;
+      const px2 = x2 * tw + tw / 2, py2 = y2 * th + th / 2;
+      const dx = x2 - x1, dy = y2 - y1;
+      const distanceSquared = dx * dx + dy * dy;
+
+      ctx.strokeStyle = invalidPath ? (Math.floor(now / 200) % 2 === 0 ? "red" : "black") : 'blue';
+      if (distanceSquared > 1) {
+        let wrappedX = x2, wrappedY = y2;
+        if (Math.abs(x2 - x1) > 1) wrappedX = x2 > x1 ? x2 - gridSize : x2 + gridSize;
+        if (Math.abs(y2 - y1) > 1) wrappedY = y2 > y1 ? y2 - gridSize : y2 + gridSize;
+        const wrappedPx2 = wrappedX * tw + tw / 2, wrappedPy2 = wrappedY * th + th / 2;
+        ctx.beginPath(); ctx.moveTo(px1, py1); ctx.lineTo(wrappedPx2, wrappedPy2); ctx.stroke();
+        continue;
+      }
+      ctx.beginPath(); ctx.moveTo(px1, py1); ctx.lineTo(px2, py2); ctx.stroke();
+    }
+  });
+}
+
+function loadLevel(levelId) {
+  const level = levels.find(l => l.id == levelId);
+  gridSize = level.gridSize;
+  path = createHamiltonianPath(gridSize, level.seed, level.complexity, level.curvature);
+  invalidPath = !path;
+  drawPath();
+}
+
+levelSelect.addEventListener("change", () => {
+  loadLevel(levelSelect.value);
+});
+
+loadLevel(0);
+setInterval(drawPath, 100); // Animate blinking/redraw
+</script>
+</body>
+</html>

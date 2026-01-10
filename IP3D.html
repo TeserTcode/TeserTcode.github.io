@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Shape Drawer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .controls {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .visualization {
+            flex: 2;
+            min-width: 400px;
+            height: 500px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .input-section {
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 8px;
+        }
+
+        .input-type-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .input-type {
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .input-type.active {
+            background: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .input-type:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .function-input {
+            display: none;
+        }
+
+        .function-input.active {
+            display: block;
+        }
+
+        .function-input textarea {
+            width: 100%;
+            height: 80px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            padding: 10px;
+            font-family: monospace;
+            resize: vertical;
+        }
+
+        .function-input input {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .param-range {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .param-range input {
+            flex: 1;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        button.primary {
+            background: linear-gradient(135deg, #3498db, #8e44ad);
+        }
+
+        .examples {
+            margin-top: 30px;
+        }
+
+        .example-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .example {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .example:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .visualization-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .visualization-controls button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .visualization {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>3D Shape Drawer</h1>
+            <p class="subtitle">Visualize mathematical functions in 3D space</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="controls">
+                <div class="input-section">
+                    <h2>Input Type</h2>
+                    <div class="input-type-selector">
+                        <div class="input-type active" data-type="implicit">Implicit</div>
+                        <div class="input-type" data-type="explicit">Explicit</div>
+                        <div class="input-type" data-type="parametric">Parametric</div>
+                        <div class="input-type" data-type="radial">Radial</div>
+                        <div class="input-type" data-type="heightmap">Heightmap</div>
+                    </div>
+                    
+                    <div class="function-inputs">
+                        <div class="function-input active" id="implicit-input">
+                            <h3>Implicit Function f(x,y,z)=0</h3>
+                            <textarea id="implicit-func">x^2 + y^2 + z^2 - 1</textarea>
+                            <div class="param-range">
+                                <input type="number" id="implicit-min" value="-2" step="0.1">
+                                <input type="number" id="implicit-max" value="2" step="0.1">
+                            </div>
+                        </div>
+                        
+                        <div class="function-input" id="explicit-input">
+                            <h3>Explicit Function z=f(x,y)</h3>
+                            <textarea id="explicit-func">sin(x) * cos(y)</textarea>
+                            <div class="param-range">
+                                <input type="number" id="explicit-x-min" value="-3" step="0.1">
+                                <input type="number" id="explicit-x-max" value="3" step="0.1">
+                                <input type="number" id="explicit-y-min" value="-3" step="0.1">
+                                <input type="number" id="explicit-y-max" value="3" step="0.1">
+                            </div>
+                        </div>
+                        
+                        <div class="function-input" id="parametric-input">
+                            <h3>Parametric Functions</h3>
+                            <input type="text" id="parametric-fx" placeholder="fx(u,v)" value="cos(u)*sin(v)">
+                            <input type="text" id="parametric-fy" placeholder="fy(u,v)" value="sin(u)*sin(v)">
+                            <input type="text" id="parametric-fz" placeholder="fz(u,v)" value="cos(v)">
+                            <div class="param-range">
+                                <input type="number" id="parametric-u-min" value="0" step="0.1">
+                                <input type="number" id="parametric-u-max" value="6.283" step="0.1">
+                                <input type="number" id="parametric-v-min" value="0" step="0.1">
+                                <input type="number" id="parametric-v-max" value="3.141" step="0.1">
+                            </div>
+                        </div>
+                        
+                        <div class="function-input" id="radial-input">
+                            <h3>Radial Function r=f(θ,φ)</h3>
+                            <textarea id="radial-func">1</textarea>
+                            <div class="param-range">
+                                <input type="number" id="radial-t-min" value="0" step="0.1">
+                                <input type="number" id="radial-t-max" value="6.283" step="0.1">
+                                <input type="number" id="radial-p-min" value="0" step="0.1">
+                                <input type="number" id="radial-p-max" value="3.141" step="0.1">
+                            </div>
+                        </div>
+                        
+                        <div class="function-input" id="heightmap-input">
+                            <h3>Heightmap Function z=f(x,y)</h3>
+                            <textarea id="heightmap-func">sin(sqrt(x^2 + y^2))</textarea>
+                            <div class="param-range">
+                                <input type="number" id="heightmap-x-min" value="-3" step="0.1">
+                                <input type="number" id="heightmap-x-max" value="3" step="0.1">
+                                <input type="number" id="heightmap-y-min" value="-3" step="0.1">
+                                <input type="number" id="heightmap-y-max" value="3" step="0.1">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="primary" id="draw-button">Draw Shape</button>
+                        <button id="reset-button">Reset View</button>
+                    </div>
+                </div>
+                
+                <div class="examples">
+                    <h2>Examples</h2>
+                    <div class="example-list">
+                        <div class="example" data-type="implicit" data-func="x^2 + y^2 + z^2 - 1">Sphere</div>
+                        <div class="example" data-type="implicit" data-func="x^2 + y^2 - z^2">Cone</div>
+                        <div class="example" data-type="explicit" data-func="sin(x) * cos(y)">Wave Surface</div>
+                        <div class="example" data-type="parametric" data-fx="cos(u)*(3+cos(v))" data-fy="sin(u)*(3+cos(v))" data-fz="sin(v)">Torus</div>
+                        <div class="example" data-type="radial" data-func="1 + 0.3*sin(6*t)*sin(3*p)">Star Shape</div>
+                        <div class="example" data-type="heightmap" data-func="sin(sqrt(x^2 + y^2))">Radial Wave</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="visualization">
+                <div id="canvas-container"></div>
+                <div class="info-panel">
+                    <div>Vertices: <span id="vertex-count">0</span></div>
+                    <div>Faces: <span id="face-count">0</span></div>
+                </div>
+                <div class="visualization-controls">
+                    <button id="rotate-toggle">⟳</button>
+                    <button id="zoom-in">+</button>
+                    <button id="zoom-out">-</button>
+                </div>
+            </div>
+        </div>
+    </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script> <script src="clrspc.js"></script> <script src="mthfnc.js"></script> <script src="polyhedra.js"></script>
+    <script>
+        // Initialize Three.js scene
+        let scene, camera, renderer, mesh;
+        let isRotating = true;
+        
+        function initThreeJS() {
+            // Get the container element
+            const container = document.getElementById('canvas-container');
+            
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+            
+            // Create camera
+            camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.z = 5;
+            
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderer.domElement);
+            
+            // Add lights - improved lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight1.position.set(1, 1, 1);
+            scene.add(directionalLight1);
+            
+            const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.5);
+            directionalLight2.position.set(-1, -1, -1);
+            scene.add(directionalLight2);
+            
+            // Add initial geometry - make it more visible
+            const geometry = new THREE.SphereGeometry(1, 32, 32);
+            const material = new THREE.MeshPhongMaterial({ 
+                color: 0x3498db,
+                shininess: 100,
+                side: THREE.DoubleSide
+            });
+            mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
+            
+            // Add a grid helper for better spatial reference
+            const gridHelper = new THREE.GridHelper(10, 10);
+            scene.add(gridHelper);
+            
+            // Add axes helper
+            const axesHelper = new THREE.AxesHelper(2);
+            scene.add(axesHelper);
+            
+            // Start animation loop
+            animate();
+            
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize);
+            
+            // Initial draw
+            updateInfoPanel();
+        }
+        
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (isRotating && mesh) {
+                mesh.rotation.x += 0.005;
+                mesh.rotation.y += 0.01;
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        function updateInfoPanel() {
+            if (mesh && mesh.geometry) {
+                document.getElementById('vertex-count').textContent = mesh.geometry.attributes.position.count;
+                document.getElementById('face-count').textContent = mesh.geometry.index ? mesh.geometry.index.count / 3 : 0;
+            }
+        }
+        
+        // Input type switching
+        document.querySelectorAll('.input-type').forEach(type => {
+            type.addEventListener('click', function() {
+                document.querySelectorAll('.input-type').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                const inputType = this.getAttribute('data-type');
+                document.querySelectorAll('.function-input').forEach(input => {
+                    input.classList.remove('active');
+                });
+                document.getElementById(`${inputType}-input`).classList.add('active');
+            });
+        });
+        
+        // Example selection
+        document.querySelectorAll('.example').forEach(example => {
+            example.addEventListener('click', function() {
+                const type = this.getAttribute('data-type');
+                const func = this.getAttribute('data-func');
+                const fx = this.getAttribute('data-fx');
+                const fy = this.getAttribute('data-fy');
+                const fz = this.getAttribute('data-fz');
+                
+                // Switch to the correct input type
+                document.querySelectorAll('.input-type').forEach(t => t.classList.remove('active'));
+                document.querySelector(`.input-type[data-type="${type}"]`).classList.add('active');
+                
+                document.querySelectorAll('.function-input').forEach(input => {
+                    input.classList.remove('active');
+                });
+                document.getElementById(`${type}-input`).classList.add('active');
+                
+                // Set the function values
+                if (func) {
+                    document.getElementById(`${type}-func`).value = func;
+                }
+                
+                if (fx && fy && fz) {
+                    document.getElementById('parametric-fx').value = fx;
+                    document.getElementById('parametric-fy').value = fy;
+                    document.getElementById('parametric-fz').value = fz;
+                }
+            });
+        });
+        
+        // Draw button functionality
+        document.getElementById('draw-button').addEventListener('click', function() {
+            const activeType = document.querySelector('.input-type.active').getAttribute('data-type');
+            
+            // Remove existing mesh
+            if (mesh) {
+                scene.remove(mesh);
+                mesh.geometry.dispose();
+                mesh.material.dispose();
+            }
+            
+            let geometry;
+            
+            try {
+                switch(activeType) {
+                    case 'implicit':
+                        geometry = createImplicitGeometry();
+                        break;
+                    case 'explicit':
+                        geometry = createExplicitGeometry();
+                        break;
+                    case 'parametric':
+                        geometry = createParametricGeometry();
+                        break;
+                    case 'radial':
+                        geometry = createRadialGeometry();
+                        break;
+                    case 'heightmap':
+                        geometry = createHeightmapGeometry();
+                        break;
+                }
+                
+                const material = new THREE.MeshPhongMaterial({ 
+                    color: 0x3498db,
+                    shininess: 100,
+                    side: THREE.DoubleSide,
+                    wireframe: false
+                });
+                
+                mesh = new THREE.Mesh(geometry, material);
+                scene.add(mesh);
+                
+                // Update info panel
+                updateInfoPanel();
+                
+            } catch (error) {
+                alert('Error creating geometry: ' + error.message);
+                console.error(error);
+            }
+        });
+        
+        // Reset view button
+        document.getElementById('reset-button').addEventListener('click', function() {
+            if (mesh) {
+                mesh.rotation.x = 0;
+                mesh.rotation.y = 0;
+                mesh.rotation.z = 0;
+            }
+            camera.position.set(0, 0, 5);
+            camera.lookAt(0, 0, 0);
+        });
+        
+        // Visualization controls
+        document.getElementById('rotate-toggle').addEventListener('click', function() {
+            isRotating = !isRotating;
+            this.style.background = isRotating ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.1)';
+        });
+        
+        document.getElementById('zoom-in').addEventListener('click', function() {
+            camera.position.z -= 0.5;
+        });
+        
+        document.getElementById('zoom-out').addEventListener('click', function() {
+            camera.position.z += 0.5;
+        });
+        
+        // Geometry creation functions
+        function createImplicitGeometry() {
+            // For now, create a sphere as placeholder
+            // In a real implementation, you would use Marching Cubes
+            return new THREE.SphereGeometry(1, 32, 32);
+        }
+        
+        function createExplicitGeometry() {
+            const funcStr = document.getElementById('explicit-func').value;
+            const xMin = parseFloat(document.getElementById('explicit-x-min').value);
+            const xMax = parseFloat(document.getElementById('explicit-x-max').value);
+            const yMin = parseFloat(document.getElementById('explicit-y-min').value);
+            const yMax = parseFloat(document.getElementById('explicit-y-max').value);
+            
+            const segments = 50;
+            const geometry = new THREE.PlaneGeometry(xMax - xMin, yMax - yMin, segments, segments);
+            
+            // Rotate to make it horizontal
+            geometry.rotateX(-Math.PI / 2);
+            
+            const positions = geometry.attributes.position.array;
+            
+            for (let i = 0; i < positions.length; i += 3) {
+                const x = positions[i] + (xMin + xMax) / 2;
+                const y = positions[i + 2]; // z coordinate becomes y after rotation
+                
+                try {
+                    const scope = { x, y };
+                    const z = math.evaluate(funcStr, scope);
+                    positions[i + 1] = z; // Set height
+                } catch (e) {
+                    positions[i + 1] = 0;
+                }
+            }
+            
+            geometry.attributes.position.needsUpdate = true;
+            geometry.computeVertexNormals();
+            
+            return geometry;
+        }
+        
+        function createParametricGeometry() {
+            const fxStr = document.getElementById('parametric-fx').value;
+            const fyStr = document.getElementById('parametric-fy').value;
+            const fzStr = document.getElementById('parametric-fz').value;
+            const uMin = parseFloat(document.getElementById('parametric-u-min').value);
+            const uMax = parseFloat(document.getElementById('parametric-u-max').value);
+            const vMin = parseFloat(document.getElementById('parametric-v-min').value);
+            const vMax = parseFloat(document.getElementById('parametric-v-max').value);
+            
+            const func = (u, v, target) => {
+                const uVal = u * (uMax - uMin) + uMin;
+                const vVal = v * (vMax - vMin) + vMin;
+                
+                try {
+                    const scope = { u: uVal, v: vVal };
+                    const x = math.evaluate(fxStr, scope);
+                    const y = math.evaluate(fyStr, scope);
+                    const z = math.evaluate(fzStr, scope);
+                    target.set(x, y, z);
+                } catch (e) {
+                    target.set(0, 0, 0);
+                }
+            };
+            
+            return new THREE.ParametricGeometry(func, 50, 50);
+        }
+        
+        function createRadialGeometry() {
+            const funcStr = document.getElementById('radial-func').value;
+            
+            // Create a sphere and modify based on radial function
+            const geometry = new THREE.SphereGeometry(1, 64, 64);
+            const positions = geometry.attributes.position.array;
+            
+            for (let i = 0; i < positions.length; i += 3) {
+                const x = positions[i];
+                const y = positions[i + 1];
+                const z = positions[i + 2];
+                
+                // Convert to spherical coordinates
+                const r = Math.sqrt(x*x + y*y + z*z);
+                const theta = Math.atan2(y, x);
+                const phi = Math.acos(z / r);
+                
+                try {
+                    const scope = { t: theta, p: phi };
+                    const newR = math.evaluate(funcStr, scope);
+                    
+                    // Convert back to cartesian
+                    positions[i] = newR * Math.sin(phi) * Math.cos(theta);
+                    positions[i + 1] = newR * Math.sin(phi) * Math.sin(theta);
+                    positions[i + 2] = newR * Math.cos(phi);
+                } catch (e) {
+                    // Keep original position
+                }
+            }
+            
+            geometry.attributes.position.needsUpdate = true;
+            geometry.computeVertexNormals();
+            
+            return geometry;
+        }
+        
+        function createHeightmapGeometry() {
+            return createExplicitGeometry(); // Same implementation for now
+        }
+        
+        // Initialize the application when the page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            initThreeJS();
+        });
+    </script>
+</body>
+</html>

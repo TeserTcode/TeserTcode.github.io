@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hyperbolic Color Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for slider thumbs */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #ffffff;
+            border: 2px solid #4f46e5;
+            border-radius: 50%;
+            cursor: pointer;
+            margin-top: -6px;
+        }
+        input[type=range]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #ffffff;
+            border: 2px solid #4f46e5;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex items-center justify-center min-h-screen p-4">
+
+    <!-- Main Application Container -->
+    <div id="appContainer" class="w-full max-w-2xl bg-white rounded-2xl shadow-lg p-6 md:p-8 space-y-6">
+        <div class="text-center">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Hyperbolic Color Simulator</h1>
+            <p class="text-gray-600 mt-2">Use cone fatigue to perceive colors outside the standard RGB gamut.</p>
+        </div>
+
+        <!-- LMS Sliders -->
+        <div class="space-y-4">
+            <!-- L Cone Slider -->
+            <div>
+                <label for="l-slider" class="flex justify-between font-medium text-lg">
+                    <span>L Cone</span>
+                    <span id="l-value" class="font-mono text-indigo-600">128</span>
+                </label>
+                <input id="l-slider" type="range" min="-255" max="512" value="128" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+            </div>
+            <!-- M Cone Slider -->
+            <div>
+                <label for="m-slider" class="flex justify-between font-medium text-lg">
+                    <span>M Cone</span>
+                    <span id="m-value" class="font-mono text-indigo-600">128</span>
+                </label>
+                <input id="m-slider" type="range" min="-255" max="512" value="128" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+            </div>
+            <!-- S Cone Slider -->
+            <div>
+                <label for="s-slider" class="flex justify-between font-medium text-lg">
+                    <span>S Cone</span>
+                    <span id="s-value" class="font-mono text-indigo-600">128</span>
+                </label>
+                <input id="s-slider" type="range" min="-255" max="512" value="128" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+            </div>
+        </div>
+
+        <!-- Color Previews and Info -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
+            <!-- Tiring Color -->
+            <div>
+                <h3 class="font-semibold text-lg">1. Adapting Color</h3>
+                <p class="text-sm text-gray-500 mb-2">Stare at the dot on this color.</p>
+                <div id="tiring-color-box" class="w-full h-32 rounded-lg border border-gray-200 shadow-inner flex items-center justify-center" style="background-color: rgb(128, 128, 128);">
+                    <div class="w-2 h-2 bg-black rounded-full"></div>
+                </div>
+                <p id="tiring-color-rgb" class="font-mono mt-2 text-sm">rgb(128, 128, 128)</p>
+            </div>
+            <!-- Stare Color -->
+            <div>
+                <h3 class="font-semibold text-lg">2. Target Color</h3>
+                <p class="text-sm text-gray-500 mb-2">This will appear after adaptation.</p>
+                <div id="stare-color-box" class="w-full h-32 rounded-lg border border-gray-200 shadow-inner" style="background-color: rgb(128, 128, 128);"></div>
+                <p id="stare-color-rgb" class="font-mono mt-2 text-sm">rgb(128, 128, 128)</p>
+            </div>
+        </div>
+        
+        <!-- Hyperbolic RGB Info -->
+         <div class="text-center bg-gray-50 p-4 rounded-lg">
+            <h3 class="font-semibold">Calculated (Imaginary) RGB</h3>
+            <p id="hyperbolic-rgb" class="font-mono text-indigo-700 text-lg">rgb(128, 128, 128)</p>
+            <p class="text-xs text-gray-500">This is the target color in the extended gamut.</p>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex flex-col sm:flex-row items-center gap-4 pt-4 border-t border-gray-200">
+            <div class="flex-grow w-full sm:w-auto">
+                <label for="time-input" class="font-medium">Adaptation Time (sec):</label>
+                <input id="time-input" type="number" value="30" class="mt-1 w-full sm:w-32 p-2 border border-gray-300 rounded-lg text-center">
+            </div>
+            <button id="start-btn" class="w-full sm:w-auto bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-indigo-700 transition-colors duration-300 shadow-md">
+                Start Simulation
+            </button>
+        </div>
+    </div>
+
+    <!-- Fullscreen Simulation Overlay -->
+    <div id="simulationOverlay" class="fixed inset-0 bg-gray-500 flex flex-col items-center justify-center z-50" style="display: none;">
+        <div id="fixation-point" class="w-3 h-3 bg-black rounded-full absolute"></div>
+        <div id="countdown" class="text-white text-6xl font-mono absolute top-10"></div>
+        <button id="reset-btn" class="absolute bottom-10 bg-white/20 text-white font-bold py-2 px-6 rounded-lg hover:bg-white/40 backdrop-blur-sm" style="display: none;">Reset</button>
+    </div>
+
+    <script>
+        // --- DOM Element References ---
+        const lSlider = document.getElementById('l-slider');
+        const mSlider = document.getElementById('m-slider');
+        const sSlider = document.getElementById('s-slider');
+        const lValue = document.getElementById('l-value');
+        const mValue = document.getElementById('m-value');
+        const sValue = document.getElementById('s-value');
+        const tiringColorBox = document.getElementById('tiring-color-box');
+        const stareColorBox = document.getElementById('stare-color-box');
+        const tiringColorRgb = document.getElementById('tiring-color-rgb');
+        const stareColorRgb = document.getElementById('stare-color-rgb');
+        const hyperbolicRgbText = document.getElementById('hyperbolic-rgb');
+        const timeInput = document.getElementById('time-input');
+        const startBtn = document.getElementById('start-btn');
+        const appContainer = document.getElementById('appContainer');
+        const simulationOverlay = document.getElementById('simulationOverlay');
+        const countdownElem = document.getElementById('countdown');
+        const resetBtn = document.getElementById('reset-btn');
+        const fixationPoint = document.getElementById('fixation-point');
+
+        // --- Global variables for animation ---
+        let animationFrameId;
+
+        // --- Core Logic: Color Conversions ---
+
+        /**
+         * Multiplies a 3-element vector by a 3x3 matrix.
+         * @param {number} c1 - First component of the vector (e.g., R or L).
+         * @param {number} c2 - Second component of the vector (e.g., G or M).
+         * @param {number} c3 - Third component of the vector (e.g., B or S).
+         * @param {number[][]} mtx - The 3x3 matrix.
+         * @returns {number[]} The resulting 3-element vector.
+         */
+        function matrixMult(c1, c2, c3, mtx) {
+            const newC1 = c1 * mtx[0][0] + c2 * mtx[0][1] + c3 * mtx[0][2];
+            const newC2 = c1 * mtx[1][0] + c2 * mtx[1][1] + c3 * mtx[1][2];
+            const newC3 = c1 * mtx[2][0] + c2 * mtx[2][1] + c3 * mtx[2][2];
+            return [newC1, newC2, newC3];
+        }
+
+        /**
+         * Converts LMS cone values to RGB.
+         * Uses the inverse matrices provided in the prompt.
+         */
+        function lmsToRgb(l, m, s) {
+            const mtx_inv2 = [
+                [2.364, -0.896, -0.468],
+                [-0.515, 1.426, 0.088],
+                [0.005, -0.014, 1.009]
+            ];
+            const mtx_inv1 = [
+                [1.947, -1.14, 0.364],
+                [0.689, 0.348, 0.000],
+                [0.000, 0.000, 1.934]
+            ];
+            
+            // Apply matrices in reverse order for inverse transformation
+            const [l1, m1, s1] = matrixMult(l, m, s, mtx_inv1);
+            const [r, g, b] = matrixMult(l1, m1, s1, mtx_inv2);
+            
+            return [r, g, b];
+        }
+
+        /**
+         * Clamps a number between a min and max value.
+         */
+        function clamp(value, min, max) {
+            return Math.max(min, Math.min(value, max));
+        }
+
+        // --- UI Update Logic ---
+
+        /**
+         * Updates the entire UI based on the current slider values.
+         */
+        function updateUI() {
+            const l = parseFloat(lSlider.value);
+            const m = parseFloat(mSlider.value);
+            const s = parseFloat(sSlider.value);
+
+            lValue.textContent = l.toFixed(0);
+            mValue.textContent = m.toFixed(0);
+            sValue.textContent = s.toFixed(0);
+
+            // 1. Calculate the target "hyperbolic" RGB color
+            const hyperbolicRgb = lmsToRgb(l, m, s);
+            const [hr, hg, hb] = hyperbolicRgb;
+            hyperbolicRgbText.textContent = `rgb(${hr.toFixed(0)}, ${hg.toFixed(0)}, ${hb.toFixed(0)})`;
+
+            // 2. Calculate the "tiring" color needed to produce the aftereffect
+            const tiringRgb = [0, 0, 0];
+            if (hr > 255) { tiringRgb[1] = 255; tiringRgb[2] = 255; }
+            if (hg > 255) { tiringRgb[0] = 255; tiringRgb[2] = 255; }
+            if (hb > 255) { tiringRgb[0] = 255; tiringRgb[1] = 255; }
+            if (hr < 0) { tiringRgb[0] = 255; }
+            if (hg < 0) { tiringRgb[1] = 255; }
+            if (hb < 0) { tiringRgb[2] = 255; }
+            
+            const [tr, tg, tb] = tiringRgb;
+            tiringColorBox.style.backgroundColor = `rgb(${tr}, ${tg}, ${tb})`;
+            tiringColorRgb.textContent = `rgb(${tr}, ${tg}, ${tb})`;
+            
+            // Adjust fixation dot color for visibility
+            const dotContainer = tiringColorBox.children[0];
+            dotContainer.style.backgroundColor = (tr < 128 && tg < 128 && tb < 128) ? 'white' : 'black';
+
+
+            // 3. Calculate the "stare" color, which is the hyperbolic color clamped to the displayable [0, 255] gamut.
+            const stareRgb = [
+                clamp(hr, 0, 255),
+                clamp(hg, 0, 255),
+                clamp(hb, 0, 255)
+            ];
+            const [sr, sg, sb] = stareRgb.map(c => Math.round(c));
+            stareColorBox.style.backgroundColor = `rgb(${sr}, ${sg}, ${sb})`;
+            stareColorRgb.textContent = `rgb(${sr}, ${sg}, ${sb})`;
+        }
+
+        // --- Simulation Flow ---
+
+        /**
+         * Starts the simulation with a gradual fade-in for the adapting color.
+         */
+        function startSimulation() {
+            // Get current colors and duration from UI state
+            const stareColor = stareColorBox.style.backgroundColor;
+            const tiringColorString = tiringColorBox.style.backgroundColor;
+            const targetTiringRgb = tiringColorString.match(/\d+/g).map(Number);
+            const startTiringRgb = [128, 128, 128]; // Start from neutral gray
+            
+            let durationMs = parseInt(timeInput.value, 10) * 1000;
+            if (isNaN(durationMs) || durationMs <= 0) {
+                durationMs = 30000;
+                timeInput.value = 30;
+            }
+
+            // Hide main app, show overlay
+            appContainer.style.display = 'none';
+            simulationOverlay.style.display = 'flex';
+            resetBtn.style.display = 'none';
+            fixationPoint.style.display = 'block';
+
+            let startTime = null;
+
+            // This function runs every frame during the adaptation phase
+            function adaptationLoop(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+                const progress = Math.min(elapsed / durationMs, 1.0);
+
+                // Linearly interpolate each color channel from gray to the target tiring color
+                const r = startTiringRgb[0] + (targetTiringRgb[0] - startTiringRgb[0]) * progress;
+                const g = startTiringRgb[1] + (targetTiringRgb[1] - startTiringRgb[1]) * progress;
+                const b = startTiringRgb[2] + (targetTiringRgb[2] - startTiringRgb[2]) * progress;
+
+                const currentBgColor = `rgb(${r}, ${g}, ${b})`;
+                simulationOverlay.style.backgroundColor = currentBgColor;
+                
+                // Adjust fixation dot for visibility against the changing background
+                fixationPoint.style.backgroundColor = (r < 128 && g < 128 && b < 128) ? 'white' : 'black';
+
+
+                // Update countdown timer
+                const secondsRemaining = Math.ceil((durationMs - elapsed) / 1000);
+                countdownElem.textContent = secondsRemaining > 0 ? secondsRemaining : '';
+
+                if (progress < 1) {
+                    // Continue the loop if time is not up
+                    animationFrameId = requestAnimationFrame(adaptationLoop);
+                } else {
+                    // Phase 2: Adaptation finished, switch to stare color
+                    simulationOverlay.style.backgroundColor = stareColor;
+                    countdownElem.textContent = '';
+                    fixationPoint.style.display = 'none'; // Hide dot to see the pure color aftereffect
+                    resetBtn.style.display = 'block';
+                }
+            }
+            // Start the animation loop
+            animationFrameId = requestAnimationFrame(adaptationLoop);
+        }
+
+        function resetSimulation() {
+            cancelAnimationFrame(animationFrameId); // Stop the animation loop
+            simulationOverlay.style.display = 'none';
+            appContainer.style.display = 'block';
+        }
+
+        // --- Event Listeners ---
+        lSlider.addEventListener('input', updateUI);
+        mSlider.addEventListener('input', updateUI);
+        sSlider.addEventListener('input', updateUI);
+        startBtn.addEventListener('click', startSimulation);
+        resetBtn.addEventListener('click', resetSimulation);
+
+        // Initial UI update on load
+        window.addEventListener('load', updateUI);
+    </script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Monitoring System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        .status {
+            margin-bottom: 20px;
+        }
+        .status p {
+            margin: 5px 0;
+        }
+        .warning {
+            color: red;
+        }
+        .alert {
+            color: orange;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌱 Bitki Durumu</h1>
+        <div id="status" class="status">
+            <!-- Status will be updated here -->
+        </div>
+    </div>
+
+    <script>
+// Function to generate noise with increased fluctuations
+function generateNoise(value, noiseRange) {
+    return value + (Math.random() - 0.5) * noiseRange * 4;
+}
+
+// Function to stabilize conditions
+function stabilizeConditions(humidity, temperature, phValue) {
+    let messages = [];
+
+    if (humidity < 35.0) {
+        messages.push("🔴 Uyarı: Nem çok düşük! Sulama açılıyor...");
+        humidity += 10.0;
+    } else if (humidity > 65.0) {
+        messages.push("🔴 Uyarı: Nem çok yüksek! Havalandırma açılıyor...");
+        humidity -= 10.0;
+    }
+
+    if (temperature < 18.0) {
+        messages.push("🔴 Uyarı: Sıcaklık çok düşük! Isıtıcı açılıyor...");
+        temperature += 3.0;
+    } else if (temperature > 28.0) {
+        messages.push("🔴 Uyarı: Sıcaklık çok yüksek! Soğutma açılıyor...");
+        temperature -= 3.0;
+    }
+
+    if (phValue < 5.0) {
+        messages.push("🔴 Uyarı: pH çok düşük! Alkalin ekleniyor...");
+        phValue += 0.5;
+    } else if (phValue > 7.8) {
+        messages.push("🔴 Uyarı: pH çok yüksek! Asidik çözüm ekleniyor...");
+        phValue -= 0.5;
+    }
+
+    return { humidity, temperature, phValue, messages };
+}
+
+// Function to detect diseases
+function diseaseDetection(temperature, humidity, phValue) {
+    let messages = [];
+
+    if (temperature > 33.0 && humidity < 30.0 && phValue < 5.5) {
+        messages.push("⚠️ Hastalık: Mantar enfeksiyonu riski!");
+    } else if (temperature < 16.0 && humidity > 75.0) {
+        messages.push("⚠️ Hastalık: Bakteriyel enfeksiyon riski!");
+    } else if (phValue > 7.6) {
+        messages.push("⚠️ Hastalık: Toprak dengesiz, kök hastalıkları oluşabilir!");
+    }
+
+    return messages;
+}
+
+// Function to simulate sensor failure
+function sensorFailure() {
+    return Math.random() < 0.1; // 10% chance of sensor failure
+}
+
+// Function to update the status on the page
+function updateStatus() {
+    let humidity = generateNoise(50.0, 10.0);
+    let temperature = generateNoise(22.0, 5.0);
+    let light = generateNoise(10000.0, 1000.0);
+    let pressure = generateNoise(1013.25, 5.0);
+    let altitude = generateNoise(50.0, 10.0);
+    let phValue = generateNoise(6.5, 1.0);
+    let soilMoisture = Math.floor(Math.random() * 1024);
+    let gasValue = Math.floor(Math.random() * 1024);
+
+    if (sensorFailure()) {
+        console.log("🚨 Sensör Hatası: Nem sensörü bozuldu! Tahmini değer atanıyor...");
+        humidity = 50.0;
+    }
+
+    let stabilized = stabilizeConditions(humidity, temperature, phValue);
+    let diseaseMessages = diseaseDetection(temperature, humidity, phValue);
+
+    let statusDiv = document.getElementById('status');
+    statusDiv.innerHTML = `
+        <p>Nem: ${stabilized.humidity.toFixed(2)} %</p>
+        <p>Sıcaklık: ${stabilized.temperature.toFixed(2)} °C</p>
+        <p>Işık: ${light.toFixed(2)} Lux</p>
+        <p>Basınç: ${pressure.toFixed(2)} hPa</p>
+        <p>Yükseklik: ${altitude.toFixed(2)} m</p>
+        <p>pH: ${stabilized.phValue.toFixed(2)}</p>
+        <p>Toprak Nem: ${soilMoisture}</p>
+        <p>Gaz Sensörü: ${gasValue}</p>
+        ${stabilized.messages.map(msg => `<p class="warning">${msg}</p>`).join('')}
+        ${diseaseMessages.map(msg => `<p class="alert">${msg}</p>`).join('')}
+    `;
+}
+
+// Update the status every 2 seconds
+setInterval(updateStatus, 2000);
+
+// Initial update
+updateStatus();
+</script>
+</body>
+</html>

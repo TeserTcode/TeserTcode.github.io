@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Mosaic from Spritesheet</title>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      padding: 1em;
+      background-color: #f0f4f8; /* Light background */
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 1.5em;
+      text-align: center;
+    }
+    .controls {
+      background-color: #ffffff;
+      padding: 1.5em 2em;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2em;
+      width: 100%;
+      max-width: 600px;
+      box-sizing: border-box;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.8em;
+      font-weight: 600;
+      color: #555;
+    }
+    input[type="file"],
+    input[type="number"],
+    select {
+      width: calc(100% - 1em); /* Adjust for padding */
+      padding: 0.7em 0.5em;
+      margin-top: 0.3em;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1em;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
+    }
+    input[type="file"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+      border-color: #007bff;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    }
+    .input-group {
+      display: flex;
+      gap: 1em;
+      margin-bottom: 0.8em;
+    }
+    .input-group label {
+      flex: 1;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      padding: 0.9em 1.5em;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.1em;
+      font-weight: 600;
+      margin-top: 1.5em;
+      width: 100%;
+      transition: background-color 0.3s ease, transform 0.1s ease;
+      box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+    }
+    button:hover {
+      background-color: #0056b3;
+      transform: translateY(-2px);
+    }
+    button:active {
+      background-color: #004085;
+      transform: translateY(0);
+    }
+    canvas {
+      border: 2px solid #ddd;
+      margin-top: 1em;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      background-color: #e9ecef; /* Placeholder background for canvas */
+      max-width: 100%; /* Ensure canvas is responsive */
+      height: auto; /* Maintain aspect ratio */
+    }
+    .message-box {
+      background-color: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeeba;
+      border-radius: 8px;
+      padding: 1em;
+      margin-top: 1em;
+      text-align: center;
+      display: none; /* Hidden by default */
+      max-width: 600px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .message-box.show {
+      display: block;
+    }
+
+    @media (max-width: 768px) {
+      .input-group {
+        flex-direction: column;
+        gap: 0;
+      }
+      .input-group label {
+        margin-bottom: 0.8em;
+      }
+      .controls {
+        padding: 1em 1.5em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Image Mosaic Generator</h1>
+
+  <div class="controls">
+    <label>Matching Method:
+      <select id="matchMethod">
+        <option value="color">Average Color</option>
+        <option value="contrast">Contrast</option>
+        <option value="shape">Edge Strength</option>
+        <option value="luminance">Average Luminance</option>
+        <option value="histogram">Color Histogram</option>
+        <option value="texture">Texture (Luminance Variance)</option>
+        <option value="edgeOrientation">Edge Orientation Histogram</option>
+        <option value="combined">Combined (Color + Shape + Contrast)</option>
+        <option value="combinedAll">Combined All Features</option>
+      </select>
+    </label>
+
+    <label>Upload Target Image: <input type="file" id="targetImage" accept="image/*"></label>
+    <label>Upload Spritesheet: <input type="file" id="spritesheet" accept="image/*"></label>
+
+    <div class="input-group">
+      <label>Grid Rows: <input type="number" id="rows" value="20" min="1"></label>
+      <label>Grid Columns: <input type="number" id="cols" value="20" min="1"></label>
+    </div>
+    <div class="input-group">
+      <label>Sprite Width (px): <input type="number" id="spriteW" value="32" min="1"></label>
+      <label>Sprite Height (px): <input type="number" id="spriteH" value="32" min="1"></label>
+    </div>
+
+    <button id="generate">Generate Mosaic</button>
+  </div>
+
+  <div id="messageBox" class="message-box"></div>
+
+  <canvas id="outputCanvas"></canvas>
+
+ <script>
+  // Get DOM elements
+  const targetInput = document.getElementById("targetImage");
+  const spriteInput = document.getElementById("spritesheet");
+  const generateBtn = document.getElementById("generate");
+  const matchMethod = document.getElementById("matchMethod");
+  const canvas = document.getElementById("outputCanvas");
+  const ctx = canvas.getContext("2d");
+  const messageBox = document.getElementById("messageBox");
+
+  let targetImg = null; // Stores the target image
+  let spriteImg = null; // Stores the spritesheet image
+
+  // Event listener for target image file input
+  targetInput.addEventListener("change", e => {
+    // Load the selected image file
+    loadImageFromFile(e.target.files[0])
+      .then(img => {
+        targetImg = img;
+        showMessage("Target image loaded successfully!", "success");
+      })
+      .catch(error => showMessage("Error loading target image: " + error.message, "error"));
+  });
+
+  // Event listener for spritesheet file input
+  spriteInput.addEventListener("change", e => {
+    // Load the selected image file
+    loadImageFromFile(e.target.files[0])
+      .then(img => {
+        spriteImg = img;
+        showMessage("Spritesheet loaded successfully!", "success");
+      })
+      .catch(error => showMessage("Error loading spritesheet: " + error.message, "error"));
+  });
+
+  // Event listener for the generate button
+  generateBtn.addEventListener("click", () => {
+    // Get user-defined parameters
+    const rows = parseInt(document.getElementById("rows").value);
+    const cols = parseInt(document.getElementById("cols").value);
+    const sw = parseInt(document.getElementById("spriteW").value); // Sprite width
+    const sh = parseInt(document.getElementById("spriteH").value); // Sprite height
+    const method = matchMethod.value; // Selected matching method
+
+    // Validate inputs
+    if (!targetImg || !spriteImg) {
+      showMessage("Please upload both a target image and a spritesheet.", "warning");
+      return;
+    }
+    if (isNaN(rows) || rows <= 0 || isNaN(cols) || cols <= 0 || isNaN(sw) || sw <= 0 || isNaN(sh) || sh <= 0) {
+      showMessage("Please enter valid positive numbers for grid dimensions and sprite sizes.", "warning");
+      return;
+    }
+
+    showMessage("Generating mosaic... This may take a moment.", "info");
+
+    // Slice the spritesheet into individual sprites
+    const spriteList = sliceSpritesheet(spriteImg, sw, sh);
+    if (spriteList.length === 0) {
+        showMessage("No sprites found in the spritesheet with the given dimensions. Adjust sprite width/height.", "error");
+        return;
+    }
+
+    // Pre-calculate features for all sprites
+    // This optimization prevents recalculating features for each tile comparison
+    const spriteFeatures = spriteList.map(sprite => {
+      const data = getImageData(sprite, sw, sh);
+      return extractFeatures(data, method);
+    });
+
+    // Calculate the total dimensions of the output mosaic
+    const targetW = cols * sw;
+    const targetH = rows * sh;
+
+    // Create an offscreen canvas to draw the scaled target image
+    // This allows us to get pixel data from the scaled target image without drawing it to the visible canvas
+    const offscreen = document.createElement("canvas");
+    offscreen.width = targetW;
+    offscreen.height = targetH;
+    const octx = offscreen.getContext("2d");
+    octx.drawImage(targetImg, 0, 0, targetW, targetH); // Draw scaled target image
+
+    // Set the output canvas dimensions
+    canvas.width = targetW;
+    canvas.height = targetH;
+
+    // Generate the mosaic tile by tile
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const x = col * sw;
+        const y = row * sh;
+
+        // Get image data for the current tile area from the scaled target image
+        const tileData = octx.getImageData(x, y, sw, sh);
+        // Extract features for the current tile
+        const tileFeature = extractFeatures(tileData, method);
+
+        let bestIndex = 0; // Index of the best matching sprite
+        let bestDist = Infinity; // Smallest distance found so far
+
+        // Iterate through all pre-calculated sprite features to find the best match
+        spriteFeatures.forEach((feat, i) => {
+          // Calculate the distance between the current tile's features and the sprite's features
+          const dist = featureDistance(feat, tileFeature, method);
+          if (dist < bestDist) {
+            bestDist = dist;
+            bestIndex = i;
+          }
+        });
+
+        // Draw the best matching sprite onto the output canvas at the current tile position
+        ctx.drawImage(spriteList[bestIndex], 0, 0, sw, sh, x, y, sw, sh);
+      }
+    }
+    showMessage("Mosaic generated successfully!", "success");
+  });
+
+  /**
+   * Displays a message in the message box.
+   * @param {string} message - The message to display.
+   * @param {string} type - The type of message ('success', 'warning', 'error', 'info').
+   */
+  function showMessage(message, type) {
+    messageBox.textContent = message;
+    messageBox.className = `message-box show`; // Reset classes
+    if (type === "success") {
+      messageBox.style.backgroundColor = "#d4edda";
+      messageBox.style.color = "#155724";
+      messageBox.style.borderColor = "#c3e6cb";
+    } else if (type === "warning") {
+      messageBox.style.backgroundColor = "#fff3cd";
+      messageBox.style.color = "#856404";
+      messageBox.style.borderColor = "#ffeeba";
+    } else if (type === "error") {
+      messageBox.style.backgroundColor = "#f8d7da";
+      messageBox.style.color = "#721c24";
+      messageBox.style.borderColor = "#f5c6cb";
+    } else if (type === "info") {
+      messageBox.style.backgroundColor = "#d1ecf1";
+      messageBox.style.color = "#0c5460";
+      messageBox.style.borderColor = "#bee5eb";
+    }
+    // Optionally hide after some time for non-error messages
+    if (type !== "error") {
+      setTimeout(() => {
+        messageBox.classList.remove("show");
+      }, 5000);
+    }
+  }
+
+
+  /**
+   * Loads an image from a File object.
+   * @param {File} file - The image file to load.
+   * @returns {Promise<HTMLImageElement>} A promise that resolves with the loaded image.
+   */
+  function loadImageFromFile(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Failed to load image."));
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  /**
+   * Slices a spritesheet image into individual sprite images.
+   * @param {HTMLImageElement} img - The spritesheet image.
+   * @param {number} sw - The width of a single sprite.
+   * @param {number} sh - The height of a single sprite.
+   * @returns {HTMLImageElement[]} An array of individual sprite images.
+   */
+  function sliceSpritesheet(img, sw, sh) {
+    const sprites = [];
+    // Calculate how many columns and rows of sprites are in the spritesheet
+    const cols = Math.floor(img.width / sw);
+    const rows = Math.floor(img.height / sh);
+
+    // Create a temporary canvas to draw and extract each sprite
+    const tmpCanvas = document.createElement("canvas");
+    tmpCanvas.width = sw;
+    tmpCanvas.height = sh;
+    const tctx = tmpCanvas.getContext("2d");
+
+    // Loop through each sprite position in the spritesheet
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        tctx.clearRect(0, 0, sw, sh); // Clear the temporary canvas
+        // Draw the current sprite from the spritesheet onto the temporary canvas
+        tctx.drawImage(img, x * sw, y * sh, sw, sh, 0, 0, sw, sh);
+        // Create a new Image object for the extracted sprite
+        const sprite = new Image();
+        sprite.src = tmpCanvas.toDataURL(); // Convert canvas content to data URL
+        sprites.push(sprite); // Add to the list of sprites
+      }
+    }
+    return sprites;
+  }
+
+  /**
+   * Gets the ImageData object for a given image.
+   * @param {HTMLImageElement} img - The image to get data from.
+   * @param {number} w - The width of the image data.
+   * @param {number} h - The height of the image data.
+   * @returns {ImageData} The ImageData object.
+   */
+  function getImageData(img, w, h) {
+    const tmp = document.createElement("canvas");
+    tmp.width = w;
+    tmp.height = h;
+    const ctx = tmp.getContext("2d");
+    ctx.drawImage(img, 0, 0, w, h);
+    return ctx.getImageData(0, 0, w, h);
+  }
+
+  /**
+   * Extracts features from ImageData based on the specified method.
+   * @param {ImageData} data - The ImageData object.
+   * @param {string} method - The matching method to use.
+   * @returns {object} An object containing the extracted features.
+   */
+  function extractFeatures(data, method) {
+    const features = {};
+
+    // Always calculate basic features as they might be used in combined methods
+    features.avgColor = getAverageColorFromData(data);
+    features.contrast = getContrastFromData(data);
+    features.edge = getEdgeStrength(data);
+    features.luminance = getAverageLuminanceFromData(data);
+    features.histogram = getHistogramFromData(data, 8); // 8 bins per channel
+    features.texture = getTextureVarianceFromData(data);
+    features.edgeOrientation = getEdgeOrientationHistogram(data, 8); // 8 orientation bins
+
+    switch (method) {
+      case "color": return { avgColor: features.avgColor };
+      case "contrast": return { contrast: features.contrast };
+      case "shape": return { edge: features.edge };
+      case "luminance": return { luminance: features.luminance };
+      case "histogram": return { histogram: features.histogram };
+      case "texture": return { texture: features.texture };
+      case "edgeOrientation": return { edgeOrientation: features.edgeOrientation };
+      case "combined": return { // Original combined method
+        avgColor: features.avgColor,
+        contrast: features.contrast,
+        edge: features.edge
+      };
+      case "combinedAll": return features; // Return all calculated features
+      default: return { avgColor: features.avgColor }; // Default to color if method is unknown
+    }
+  }
+
+  /**
+   * Calculates the distance between two feature sets based on the specified method.
+   * @param {object} a - Features of the first image/tile.
+   * @param {object} b - Features of the second image/tile.
+   * @param {string} method - The matching method.
+   * @returns {number} The calculated distance.
+   */
+  function featureDistance(a, b, method) {
+    let d = 0;
+    switch (method) {
+      case "color":
+        d = colorDistance(a.avgColor, b.avgColor);
+        break;
+      case "contrast":
+        d = Math.abs(a.contrast - b.contrast);
+        break;
+      case "shape":
+        d = Math.abs(a.edge - b.edge);
+        break;
+      case "luminance":
+        d = Math.abs(a.luminance - b.luminance);
+        break;
+      case "histogram":
+        d = histogramDistance(a.histogram, b.histogram);
+        break;
+      case "texture":
+        d = Math.abs(a.texture - b.texture);
+        break;
+      case "edgeOrientation":
+        d = histogramDistance(a.edgeOrientation, b.edgeOrientation);
+        break;
+      case "combined": // Original combined method
+        d = (
+          colorDistance(a.avgColor, b.avgColor) * 1 +
+          Math.abs(a.contrast - b.contrast) * 0.5 +
+          Math.abs(a.edge - b.edge) * 2
+        );
+        break;
+      case "combinedAll": // New combined method with all features
+        // Assign weights based on perceived importance. These can be tuned.
+        d = (
+          colorDistance(a.avgColor, b.avgColor) * 1.5 + // Color is often very important
+          Math.abs(a.contrast - b.contrast) * 0.7 +
+          Math.abs(a.edge - b.edge) * 1.8 + // Edge strength is good for shape
+          Math.abs(a.luminance - b.luminance) * 0.8 +
+          histogramDistance(a.histogram, b.histogram) * 2.0 + // Histogram can be strong
+          Math.abs(a.texture - b.texture) * 0.6 +
+          histogramDistance(a.edgeOrientation, b.edgeOrientation) * 1.2 // Edge orientation for detailed shape
+        );
+        break;
+      default: // Default to color distance
+        d = colorDistance(a.avgColor, b.avgColor);
+        break;
+    }
+    return d;
+  }
+
+  /**
+   * Calculates the Euclidean distance between two RGB color arrays.
+   * @param {number[]} a - First color [r, g, b].
+   * @param {number[]} b - Second color [r, g, b].
+   * @returns {number} The distance.
+   */
+  function colorDistance(a, b) {
+    return Math.sqrt(
+      (a[0] - b[0]) ** 2 +
+      (a[1] - b[1]) ** 2 +
+      (a[2] - b[2]) ** 2
+    );
+  }
+
+  /**
+   * Calculates the average RGB color from ImageData.
+   * @param {ImageData} data - The ImageData object.
+   * @returns {number[]} An array [r, g, b] representing the average color.
+   */
+  function getAverageColorFromData(data) {
+    let r = 0, g = 0, b = 0;
+    const pixels = data.data;
+    const len = pixels.length / 4; // Number of pixels
+    for (let i = 0; i < pixels.length; i += 4) {
+      r += pixels[i];
+      g += pixels[i + 1];
+      b += pixels[i + 2];
+    }
+    return [r / len, g / len, b / len];
+  }
+
+  /**
+   * Calculates the contrast (standard deviation of luminance) from ImageData.
+   * @param {ImageData} data - The ImageData object.
+   * @returns {number} The contrast value.
+   */
+  function getContrastFromData(data) {
+    let sum = 0, sumSq = 0;
+    const len = data.data.length / 4; // Number of pixels
+    for (let i = 0; i < data.data.length; i += 4) {
+      // Calculate luminance (Y) for each pixel
+      const y = 0.299 * data.data[i] + 0.587 * data.data[i + 1] + 0.114 * data.data[i + 2];
+      sum += y;
+      sumSq += y * y;
+    }
+    const mean = sum / len;
+    const variance = sumSq / len - mean * mean;
+    return Math.sqrt(variance); // Standard deviation as contrast
+  }
+
+  /**
+   * Calculates the average edge strength using a simple gradient approximation.
+   * @param {ImageData} data - The ImageData object.
+   * @returns {number} The average edge strength.
+   */
+  function getEdgeStrength(data) {
+    const w = data.width;
+    const h = data.height;
+    const gray = new Float32Array(w * h); // Store grayscale values
+
+    // Convert to grayscale
+    for (let i = 0; i < data.data.length; i += 4) {
+      const y = 0.299 * data.data[i] + 0.587 * data.data[i + 1] + 0.114 * data.data[i + 2];
+      gray[i / 4] = y;
+    }
+
+    let sum = 0;
+    // Iterate through inner pixels to avoid boundary issues for gradient calculation
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const idx = y * w + x;
+        // Simple gradient approximation (difference with neighbors)
+        const gx = gray[idx - 1] - gray[idx + 1]; // Horizontal gradient
+        const gy = gray[idx - w] - gray[idx + w]; // Vertical gradient
+        sum += Math.sqrt(gx * gx + gy * gy); // Magnitude of gradient
+      }
+    }
+    // Normalize by the number of pixels considered
+    return sum / ((w - 2) * (h - 2));
+  }
+
+  /**
+   * Calculates the average luminance (brightness) from ImageData.
+   * @param {ImageData} data - The ImageData object.
+   * @returns {number} The average luminance.
+   */
+  function getAverageLuminanceFromData(data) {
+    let sumLuminance = 0;
+    const pixels = data.data;
+    const len = pixels.length / 4; // Number of pixels
+    for (let i = 0; i < pixels.length; i += 4) {
+      // Standard luminance calculation
+      sumLuminance += 0.299 * pixels[i] + 0.587 * pixels[i + 1] + 0.114 * pixels[i + 2];
+    }
+    return sumLuminance / len;
+  }
+
+  /**
+   * Calculates a 3D color histogram (RGB) from ImageData.
+   * @param {ImageData} data - The ImageData object.
+   * @param {number} binsPerChannel - Number of bins for each R, G, B channel (e.g., 8).
+   * @returns {Float32Array} A normalized 1D array representing the 3D histogram.
+   */
+  function getHistogramFromData(data, binsPerChannel) {
+    const numBins = binsPerChannel * binsPerChannel * binsPerChannel;
+    const histogram = new Float32Array(numBins).fill(0);
+    const binSize = 256 / binsPerChannel; // Size of each bin (e.g., 256/8 = 32)
+
+    const pixels = data.data;
+    const totalPixels = pixels.length / 4;
+
+    for (let i = 0; i < pixels.length; i += 4) {
+      const r = pixels[i];
+      const g = pixels[i + 1];
+      const b = pixels[i + 2];
+
+      // Determine the bin index for each channel
+      const rBin = Math.min(Math.floor(r / binSize), binsPerChannel - 1);
+      const gBin = Math.min(Math.floor(g / binSize), binsPerChannel - 1);
+      const bBin = Math.min(Math.floor(b / binSize), binsPerChannel - 1);
+
+      // Calculate the 1D index for the 3D histogram
+      const index = rBin * binsPerChannel * binsPerChannel + gBin * binsPerChannel + bBin;
+      histogram[index]++;
+    }
+
+    // Normalize the histogram
+    for (let i = 0; i < numBins; i++) {
+      histogram[i] /= totalPixels;
+    }
+    return histogram;
+  }
+
+  /**
+   * Calculates the distance between two histograms using Sum of Squared Differences.
+   * @param {Float32Array} hist1 - The first histogram.
+   * @param {Float32Array} hist2 - The second histogram.
+   * @returns {number} The SSD distance.
+   */
+  function histogramDistance(hist1, hist2) {
+    let sumSqDiff = 0;
+    for (let i = 0; i < hist1.length; i++) {
+      sumSqDiff += (hist1[i] - hist2[i]) ** 2;
+    }
+    return Math.sqrt(sumSqDiff); // Return Euclidean distance of the histogram vectors
+  }
+
+  /**
+   * Calculates the variance of luminance values as a simple texture measure.
+   * @param {ImageData} data - The ImageData object.
+   * @returns {number} The luminance variance.
+   */
+  function getTextureVarianceFromData(data) {
+    let sum = 0, sumSq = 0;
+    const len = data.data.length / 4; // Number of pixels
+    if (len === 0) return 0;
+
+    for (let i = 0; i < data.data.length; i += 4) {
+      const y = 0.299 * data.data[i] + 0.587 * data.data[i + 1] + 0.114 * data.data[i + 2];
+      sum += y;
+      sumSq += y * y;
+    }
+    const mean = sum / len;
+    const variance = sumSq / len - mean * mean;
+    return variance; // Return variance directly
+  }
+
+  /**
+   * Calculates a histogram of edge orientations.
+   * @param {ImageData} data - The ImageData object.
+   * @param {number} numBins - Number of bins for orientation (e.g., 8).
+   * @returns {Float32Array} A normalized 1D array representing the edge orientation histogram.
+   */
+  function getEdgeOrientationHistogram(data, numBins) {
+    const w = data.width;
+    const h = data.height;
+    const gray = new Float32Array(w * h);
+    const orientationHistogram = new Float32Array(numBins).fill(0);
+    const angleRange = Math.PI; // Orientations from 0 to PI (180 degrees)
+    const binSize = angleRange / numBins; // Size of each orientation bin
+
+    // Convert to grayscale
+    for (let i = 0; i < data.data.length; i += 4) {
+      const y = 0.299 * data.data[i] + 0.587 * data.data[i + 1] + 0.114 * data.data[i + 2];
+      gray[i / 4] = y;
+    }
+
+    let totalEdges = 0;
+    // Iterate through inner pixels for gradient calculation
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const idx = y * w + x;
+        // Simple gradient approximation (Sobel-like)
+        const gx = (gray[idx + 1] - gray[idx - 1]);
+        const gy = (gray[idx + w] - gray[idx - w]);
+
+        const magnitude = Math.sqrt(gx * gx + gy * gy);
+
+        // Only consider significant edges
+        if (magnitude > 10) { // Threshold to ignore weak "edges" (noise)
+          let angle = Math.atan2(gy, gx); // Angle in radians from -PI to PI
+          // Map angle to 0 to PI range for orientation (direction doesn't matter, only alignment)
+          if (angle < 0) {
+            angle += Math.PI;
+          }
+
+          // Determine the bin index
+          const binIndex = Math.min(Math.floor(angle / binSize), numBins - 1);
+          orientationHistogram[binIndex]++;
+          totalEdges++;
+        }
+      }
+    }
+
+    // Normalize the histogram
+    if (totalEdges > 0) {
+      for (let i = 0; i < numBins; i++) {
+        orientationHistogram[i] /= totalEdges;
+      }
+    }
+    return orientationHistogram;
+  }
+
+  // Initial message on load
+  window.onload = () => {
+    showMessage("Upload images and click 'Generate Mosaic' to begin!", "info");
+  };
+
+</script>
+
+</body>
+</html>

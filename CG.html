@@ -117,8 +117,22 @@
 <label>Trail Width: <input type="number" id="trailWidth" value="5" min="1"></label>
 
 <canvas id="chaosCanvas" width="1000" height="1000"></canvas>
-
+<br><br><br>
+<button id="save">Save Image</button>
+<button id="fullscreen">Fullscreen</button>
 <script>
+    document.getElementById("fullscreen").addEventListener("click", () => {
+    if (canvas.requestFullscreen) canvas.requestFullscreen();
+    else if (canvas.mozRequestFullScreen) canvas.mozRequestFullScreen(); // Firefox
+    else if (canvas.webkitRequestFullscreen) canvas.webkitRequestFullscreen(); // Chrome, Safari, Opera
+    else if (canvas.msRequestFullscreen) canvas.msRequestFullscreen(); // IE/Edge
+});
+    document.getElementById("save").addEventListener("click", () => {
+    const link = document.createElement('a');
+    link.download = 'chaos-game.png';
+    link.href = canvas.toDataURL();
+    link.click();
+});
 const canvas = document.getElementById("chaosCanvas");
 const ctx = canvas.getContext("2d");
 let running = false;

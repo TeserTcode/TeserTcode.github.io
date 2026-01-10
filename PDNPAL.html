@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Advanced Color Palette Generator</title>
+    <style>
+        body { font-family: sans-serif; padding: 1em; background-color: #fdfdfd; color: #333; }
+        div { margin-bottom: 1em; }
+        label { display: inline-block; width: 160px; }
+        #palettePreview { border: 1px solid #ccc; padding: 5px; margin-top: 1em; background-color: #fff; }
+        .ninerColor, .trioColor { margin: 2px; }
+        #generatorInputs > div { border: 1px solid #eee; padding: 10px; margin-top: 10px; border-radius: 4px; }
+        select, button, input { font-family: inherit; font-size: 1em; padding: 4px; border-radius: 4px; border: 1px solid #ccc; }
+        button { background-color: #007bff; color: white; border-color: #007bff; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        hr { border: 0; border-top: 1px solid #eee; }
+    </style>
+</head>
+<body>
+    <h1>Advanced Color Palette Generator</h1>
+    
+    <div>
+        <label for="method">Generation Method:</label>
+        <select id="method">
+            <option value="14hues">Hues (16 + Dark + B&W)</option>
+            <option value="blocks">Color Blocks (Distinct)</option>
+            <option value="chromic">Chromic Variants</option>
+            <option value="primary">Primary Mixer</option>
+            <option value="niners">Niners (10 Colors)</option>
+            <option value="trioniners">Trio Niners (3 Colors)</option>
+        </select>
+    </div>
+
+    <div id="generatorInputs">
+        <div id="chromicInputs" style="display:none;">
+            <label for="chromicBaseColor">Base Color:</label>
+            <input type="color" id="chromicBaseColor" value="#d43a3a">
+        </div>
+        <div id="primaryInputs" style="display:none;">
+            <label>Primary Colors:</label>
+            <input type="color" id="primaryColor1" value="#ff0000">
+            <input type="color" id="primaryColor2" value="#00ff00">
+            <input type="color" id="primaryColor3" value="#0000ff">
+        </div>
+        <div id="ninersInputs" style="display:none;">
+            <label>Base Colors (10):</label><br>
+            <input type="color" class="ninerColor" value="#e6194B"> <input type="color" class="ninerColor" value="#3cb44b"> <input type="color" class="ninerColor" value="#ffe119"> <input type="color" class="ninerColor" value="#4363d8"> <input type="color" class="ninerColor" value="#f58231"> <input type="color" class="ninerColor" value="#911eb4"> <input type="color" class="ninerColor" value="#42d4f4"> <input type="color" class="ninerColor" value="#f032e6"> <input type="color" class="ninerColor" value="#bfef45"> <input type="color" class="ninerColor" value="#fabed4">
+        </div>
+        <div id="trioNinersInputs" style="display:none;">
+            <label>Base Colors (3):</label><br>
+            <input type="color" class="trioColor" value="#1E90FF">
+            <input type="color" class="trioColor" value="#FF6347">
+            <input type="color" class="trioColor" value="#32CD32">
+        </div>
+    </div>
+    
+    <hr>
+    <h3>Adjustments & Final Conversion</h3>
+    
+    <div>
+        <label for="finalConversion">Final Conversion:</label>
+        <select id="finalConversion">
+            <option value="none">Original (No Conversion)</option>
+            <option value="toSpace">RGB to [Space]</option>
+            <option value="fromSpace">[Space] to RGB</option>
+        </select>
+    </div>
+
+    <div>
+        <label for="conversionSpace">Conversion Space:</label>
+        <select id="conversionSpace"></select>
+    </div>
+
+    <div>
+        <label for="lightnessControl">Lightness Control:</label>
+        <select id="lightnessControl">
+            <option value="sum">Sum</option>
+            <option value="max">Max</option>
+            <option value="median">Median</option>
+            <option value="midrange">Midrange</option>
+            <option value="weighted">Weighted</option>
+            <option value="min">Min</option>
+        </select>
+    </div>
+    
+    <div>
+        <label for="lightnessScale">Lightness Scale:</label>
+        <input type="range" id="lightnessScale" min="0" max="765" value="384">
+        <span id="lightnessValue">384</span>
+    </div>
+    
+    <div>
+        <label for="lightnessAdjust">Lightness Adjust:</label>
+        <input type="range" id="lightnessAdjust" min="-100" max="100" value="0">
+        <span id="lightnessAdjustValue">0%</span>
+    </div>
+    
+    <div>
+        <label for="contrast">Contrast:</label>
+        <input type="range" id="contrast" min="-1" max="1" step="0.1" value="0">
+        <span id="contrastValue">0</span>
+    </div>
+    
+    <div>
+        <label for="saturation">Saturation:</label>
+        <input type="range" id="saturation" min="0" max="3" step="0.1" value="1">
+        <span id="saturationValue">1</span>
+    </div>
+    
+    <div>
+        <label for="hueShift">Hue Shift:</label>
+        <input type="range" id="hueShift" min="0" max="360" value="0">
+        <span id="hueShiftValue">0</span>
+    </div>
+    
+    <div>
+        <label for="noise">Noise:</label>
+        <input type="range" id="noise" min="0" max="50" value="0">
+        <span id="noiseValue">0</span>
+    </div>
+    
+    <div>
+        <label for="filterColor">Color Filter:</label>
+        <input type="color" id="filterColor" value="#ffffff">
+    </div>
+    
+    <div>
+        <label for="mixingMode">Mixing Mode:</label>
+        <select id="mixingMode">
+            <option value="mix">Mix</option><option value="add">Add</option><option value="subtract">Subtract</option><option value="negate">Negate</option><option value="colordodge">Color Dodge</option><option value="glow">Glow</option><option value="xor">XOR</option><option value="or">OR</option><option value="and">AND</option><option value="nand">NAND</option><option value="nor">NOR</option><option value="xnor">XNOR</option>
+        </select>
+    </div>
+    
+    <div>
+        <label for="mixPercentage">Mix Percentage:</label>
+        <input type="range" id="mixPercentage" min="0" max="100" value="0">
+        <span id="mixPercentageValue">0%</span>
+    </div>
+    
+    <hr>
+
+    <button id="generate">Generate Palette</button>
+    <button id="download">Download Palette</button>
+    
+    <div id="palettePreview" style="display: flex; flex-wrap: wrap; width: 800px;"></div>
+     <script src="clrspc.js"></script>
+  
+    <script>
+        // --- INITIALIZATION & UI ---
+        const ui = {
+            method: document.getElementById('method'),
+            chromicInputs: document.getElementById('chromicInputs'),
+            primaryInputs: document.getElementById('primaryInputs'),
+            ninersInputs: document.getElementById('ninersInputs'),
+            trioNinersInputs: document.getElementById('trioNinersInputs'),
+            conversionSpaceSelect: document.getElementById('conversionSpace'),
+        };
+
+        const allColorSpaces = ['rgb','hsv','hsl','hwb','hcl','lch','ycbcr','xyz','hsi','hsm','hsh','hsg','yjk','lab','cmyk','cmy','uvw','lms','ydbdr','yiq','lcw','lct','ycocg','ycocgr','yuv','ypbpr','tsl','luv','srgb','scrgb','ecirgb','rxy','oklab','ypo','yrl'];
+        
+        function populateColorSpaces() {
+            allColorSpaces.forEach(space => {
+                const option = document.createElement('option');
+                option.value = space; option.textContent = space.toUpperCase();
+                ui.conversionSpaceSelect.appendChild(option);
+            });
+            ui.conversionSpaceSelect.value = 'hsl';
+        }
+
+        function updateGeneratorInputs() {
+            const method = ui.method.value;
+            ['chromicInputs', 'primaryInputs', 'ninersInputs', 'trioNinersInputs'].forEach(key => ui[key].style.display = 'none');
+            if (method === 'chromic') ui.chromicInputs.style.display = 'block';
+            else if (method === 'primary') ui.primaryInputs.style.display = 'block';
+            else if (method === 'niners') ui.ninersInputs.style.display = 'block';
+            else if (method === 'trioniners') ui.trioNinersInputs.style.display = 'block';
+        }
+        
+        document.querySelectorAll('input[type="range"]').forEach(slider => {
+            const display = document.getElementById(slider.id.replace('Scale','Value').replace('Adjust','AdjustValue'));
+            if(display) slider.addEventListener('input', () => { display.textContent = slider.id.includes('Adjust') ? `${slider.value}%` : slider.value; });
+        });
+
+        // --- MAIN GENERATION LOGIC ---
+        document.getElementById('generate').addEventListener('click', function() {
+            const method = ui.method.value;
+            let colors = [];
+            
+            switch(method) {
+                case '14hues':      colors = generateHuesDarkBW(); break;
+                case 'blocks':      colors = generateColorBlocksDistinct(); break;
+                case 'chromic':     colors = generateChromic(); break;
+                case 'primary':     colors = generatePrimaryMixer(); break;
+                case 'niners':      colors = generateNiners(document.querySelectorAll('.ninerColor')); break;
+                case 'trioniners':  colors = generateTrioNiners(); break;
+            }
+            
+            const adjustedColors = applyAllAdjustments(colors);
+            const finalColors = applyFinalConversion(adjustedColors);
+            displayPalette(finalColors);
+        });
+        
+        // --- GENERATOR FUNCTIONS ---
+        function generateHuesDarkBW() {
+            let baseColors = [];
+            const lightnessScale = parseInt(document.getElementById('lightnessScale').value);
+            const lightnessMethod = document.getElementById('lightnessControl').value;
+            for (let i=0; i<16; i++) baseColors.push(getRGBFromHue(i * 22.5, lightnessScale, lightnessMethod));
+            let colors = [...baseColors];
+            colors.push(...baseColors.map(c => hslToRgb(...rgbToHsl(...c).map((v,i) => i === 2 ? v * 0.7 : v))));
+            const grayscaleCount = 96 - colors.length;
+            for (let i=0; i<grayscaleCount; i++) { const g = Math.floor(i*255/(grayscaleCount-1)); colors.push([g,g,g]);}
+            return colors.slice(0, 96);
+        }
+        
+        function generateColorBlocksDistinct() {
+            let colors = []; const h = [0,20,40,60,120,150,180,210,240,270,300,330];
+            for (const hue of h) colors.push(hslToRgb(hue,1,0.5),hslToRgb(hue,1,0.3),hslToRgb(hue,1,0.7),hslToRgb(hue,0.5,0.5),hslToRgb(hue+10,0.9,0.6),hslToRgb(hue+10,0.9,0.4),hslToRgb(hue-10,0.9,0.8),hslToRgb(hue-10,0.4,0.6));
+            return colors.slice(0, 96);
+        }
+        
+        function generateChromic() {
+            let colors = []; const [baseH,baseS,baseL] = rgbToHsl(...hexToRgb(document.getElementById('chromicBaseColor').value));
+            for (let i=0; i<8; i++) for (let j=0; j<12; j++) { const l=(i/7)*0.8+0.1, s=(j/11)*0.9+0.1, h=(baseH+(l-baseL)*30+360)%360; colors.push(hslToRgb(h,s,l));}
+            return colors.slice(0, 96);
+        }
+
+        function generatePrimaryMixer() {
+            const p1=hexToRgb(document.getElementById('primaryColor1').value), p2=hexToRgb(document.getElementById('primaryColor2').value), p3=hexToRgb(document.getElementById('primaryColor3').value);
+            const mixRgb=(c1,c2)=>[ (c1[0]+c2[0])/2, (c1[1]+c2[1])/2, (c1[2]+c2[2])/2 ]; const p=[p1,p2,p3], s=[mixRgb(p1,p2),mixRgb(p2,p3),mixRgb(p3,p1)];
+            const t=[mixRgb(p[0],s[0]),mixRgb(p[1],s[0]),mixRgb(p[1],s[1]),mixRgb(p[2],s[1]),mixRgb(p[2],s[2]),mixRgb(p[0],s[2])]; const q=t.flatMap(c=>s.map(d=>mixRgb(c,d))).slice(0,18);
+            const base= [...p,...s,...t,...q].map(c=>c.map(Math.round)); const dark=base.map(c=>hslToRgb(...rgbToHsl(...c).map((v,i)=>i===2?v*0.6:v)));
+            const grayCount=96-base.length-dark.length; const grays=Array.from({length:grayCount},(_,i)=>{const g=Math.floor(i*255/(grayCount-1));return[g,g,g];});
+            return [...base, ...dark, ...grays].slice(0, 96);
+        }
+
+        function generateNiners(inputs) {
+            let colors = []; const base=Array.from(inputs).map(i=>hexToRgb(i.value));
+            for(const c of base){ const [h,s,l]=rgbToHsl(...c); colors.push(hslToRgb(h,s,l),hslToRgb(h,s,Math.min(1,l*1.3)),hslToRgb(h,s,l*0.7),hslToRgb(h,Math.min(1,s*1.4),l),hslToRgb(h,s*0.6,l),hslToRgb(h,Math.min(1,s*1.3),Math.min(1,l*1.2)),hslToRgb(h,s*0.7,Math.min(1,l*1.2)),hslToRgb(h,Math.min(1,s*1.3),l*0.8),hslToRgb(h,s*0.7,l*0.8));}
+            return colors;
+        }
+
+        function generateTrioNiners() {
+            const base=generateNiners(document.querySelectorAll('.trioColor')); let colors=[...base];
+            colors.push(...base.map(c=>{const[h,s,l]=rgbToHsl(...c);return hslToRgb(h,s*0.5,l);}));
+            colors.push(...base.map(c=>{const[h,s,l]=rgbToHsl(...c);return hslToRgb((h+20)%360,s,l);}));
+            const grayCount=96-colors.length; for(let i=0;i<grayCount;i++){const g=Math.floor(i*255/(Math.max(1,grayCount-1)));colors.push([g,g,g]);}
+            return colors.slice(0,96);
+        }
+
+        // --- ADJUSTMENT & CONVERSION FUNCTIONS ---
+        function applyAllAdjustments(colors) {
+            const s = { // Settings object
+                contrast: parseFloat(document.getElementById('contrast').value),
+                saturation: parseFloat(document.getElementById('saturation').value),
+                hueShift: parseInt(document.getElementById('hueShift').value),
+                lightnessAdjust: 1 + (parseInt(document.getElementById('lightnessAdjust').value) / 100),
+                noise: parseInt(document.getElementById('noise').value) / 100,
+                filterColor: hexToRgb(document.getElementById('filterColor').value),
+                mixingMode: document.getElementById('mixingMode').value,
+                mixPercentage: parseInt(document.getElementById('mixPercentage').value) / 100
+            };
+
+            return colors.map(color => {
+                let [h, sat, l] = rgbToHsl(...color);
+                h = (h + s.hueShift + 360) % 360; sat *= s.saturation; l *= s.lightnessAdjust;
+                let tempColor = hslToRgb(h, sat, l);
+                if (s.contrast !== 0) { const f = 1.0 + s.contrast; tempColor = tempColor.map(c => 128 + (c - 128) * f); }
+                if (s.noise > 0) tempColor = tempColor.map(c => c + (Math.random() - 0.5) * 255 * s.noise);
+                if (s.mixPercentage > 0) tempColor = applyMixingMode(tempColor, s.filterColor, s.mixingMode, s.mixPercentage);
+                return tempColor.map(c => Math.min(255, Math.max(0, Math.round(c))));
+            });
+        }
+        
+function applyFinalConversion(colors) {
+    const conversionType = document.getElementById('finalConversion').value;
+    const spaceName = ui.conversionSpaceSelect.value;
+    if (conversionType === 'none' || spaceName === 'rgb') return colors;
+
+    return colors.map(color => {
+        try {
+            let result;
+            if (conversionType === 'toSpace') {
+                const funcName = `rgbTo${spaceName.charAt(0).toUpperCase() + spaceName.slice(1)}`;
+                const toSpaceFn = window.color[funcName];
+                // Check if the function exists before calling it
+                result = toSpaceFn ? toSpaceFn(...color) : color;
+            } else { // fromSpace
+                const funcName = `${spaceName}ToRgb`;
+                const fromSpaceFn = window.color[funcName];
+                // Check if the function exists before calling it
+                result = fromSpaceFn ? fromSpaceFn(...color) : color;
+            }
+            // Clamp result to be valid for RGB display
+            return result.slice(0, 3).map(c => Math.min(255, Math.max(0, Math.round(c))));
+        } catch (e) {
+            // Correctly call the function from the window.color object
+            // and provide a more useful warning message.
+            console.warn(`Conversion failed for [${color}] using space "${spaceName}". Error: ${e.message}. Fallback CMY:`, window.color.rgbToCmy(...color));
+            return color; // If conversion fails, return the original color
+        }
+    });
+}
+        
+        function applyMixingMode(c1,c2,m,a){let r,g,b;const[r1,g1,b1]=c1,[r2,g2,b2]=c2;const mix=(v1,v2)=>v1*(1-a)+v2*a;switch(m){case'add':r=r1+r2*a;g=g1+g2*a;b=b1+b2*a;break;case'subtract':r=r1-r2*a;g=g1-g2*a;b=b1-b2*a;break;case'negate':r=255-Math.abs(255-r1-r2*a);g=255-Math.abs(255-g1-g2*a);b=255-Math.abs(255-b1-b2*a);break;case'colordodge':r=r1+(r1*r2*a)/(255-r2||1);g=g1+(g1*g2*a)/(255-g2||1);b=b1+(b1*b2*a)/(255-b2||1);break;case'glow':r=r1+(255-r1)*(r2/255)*a;g=g1+(255-g1)*(g2/255)*a;b=b1+(255-b1)*(b2/255)*a;break;case'xor':r=mix(r1,r1^r2);g=mix(g1,g1^g2);b=mix(b1,b1^b2);break;case'or':r=mix(r1,r1|r2);g=mix(g1,g1|g2);b=mix(b1,b1|b2);break;case'and':r=mix(r1,r1&r2);g=mix(g1,g1&g2);b=mix(b1,b1&b2);break;case'nand':r=mix(r1,255-(r1&r2));g=mix(g1,255-(g1&g2));b=mix(b1,255-(b1&b2));break;case'nor':r=mix(r1,255-(r1|r2));g=mix(g1,255-(g1|g2));b=mix(b1,255-(b1|b2));break;case'xnor':r=mix(r1,255-(r1^r2));g=mix(g1,255-(g1^g2));b=mix(b1,255-(b1^b2));break;default:r=mix(r1,r2);g=mix(g1,g2);b=mix(b1,b2);break;}return[r,g,b];}
+        function getRGBFromHue(hue,lt,m){let r,g,b;const h=hue/60,c=255,x=c*(1-Math.abs(h%2-1));if(h<1){r=c;g=x;b=0;}else if(h<2){r=x;g=c;b=0;}else if(h<3){r=0;g=c;b=x;}else if(h<4){r=0;g=x;b=c;}else if(h<5){r=x;g=0;b=c;}else{r=c;g=0;b=x;}const v=[r,g,b].sort((a,b)=>a-b),s=r+g+b;let f=1;if(s>0){if(m==='sum')f=lt/s;else if(m==='max'&&v[2]>0)f=lt/v[2];else if(m==='median'&&v[1]>0)f=lt/v[1];else if(m==='midrange'&&(v[0]+v[2])>0)f=lt/((v[0]+v[2])/2);else if(m==='weighted'&&(v[0]+2*v[1]+v[2])>0)f=lt/((v[0]+2*v[1]+v[2])/4);else if(m==='min'&&v[0]>0)f=lt/v[0];}return[r*f,g*f,b*f].map(v=>Math.min(255,Math.max(0,Math.round(v))));}
+       
+        function hexToRgb(hex){const bigint=parseInt(hex.slice(1),16);return[(bigint>>16)&255,(bigint>>8)&255,bigint&255];}
+        function displayPalette(colors){const p=document.getElementById('palettePreview');p.innerHTML='';for(const c of colors){const d=document.createElement('div');d.style.cssText=`width:50px;height:50px;background-color:rgb(${c[0]},${c[1]},${c[2]});border:1px solid #333`;p.appendChild(d);}}
+        document.getElementById('download').addEventListener('click',function(){const c=Array.from(document.getElementById('palettePreview').getElementsByTagName('div')).map(d=>{const[r,g,b]=d.style.backgroundColor.match(/\d+/g).map(Number);const t=v=>v.toString(16).padStart(2,'0');return`FF${t(r)}${t(g)}${t(b)}`.toUpperCase();}).join('\r\n');if(!c){alert('Palette is empty.');return;}const b=new Blob([c],{type:'text/plain'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='palette.txt';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);});
+        
+        // --- STARTUP ---
+        ui.method.addEventListener('change', updateGeneratorInputs);
+        document.addEventListener('DOMContentLoaded', () => {
+            populateColorSpaces();
+            updateGeneratorInputs();
+            document.getElementById('generate').click();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fish Clade Browser (Multi-DB)</title>
+<style>
+  body { font-family: sans-serif; margin: 20px; }
+  button, select { margin: 5px; padding: 5px; }
+  .section { margin-top: 20px; }
+  .info { border: 1px solid #ccc; padding: 10px; margin-top: 10px; }
+  img { max-width: 150px; margin: 5px; border: 1px solid #ddd; }
+</style>
+</head>
+<body>
+<h1>🐟 Fish Clade Browser (Open Tree of Life + Databases)</h1>
+
+<button id="startBtn">Start with Fish</button>
+<div id="selectors"></div>
+<div id="speciesInfo" class="info"></div>
+
+<script>
+const startClades = [
+  "Myxini",              // Hagfish
+  "Petromyzontiformes",  // Lampreys
+  "Chondrichthyes",      // Cartilaginous fishes
+  "Actinopterygii",      // Ray-finned fishes
+  "Sarcopterygii"        // Lobe-finned fishes
+];
+
+let lineage = [];
+
+document.getElementById("startBtn").addEventListener("click", () => {
+  lineage = [];
+  document.getElementById("selectors").innerHTML = "";
+  document.getElementById("speciesInfo").innerHTML = "";
+  addCladeSelector(startClades, "Clade");
+});
+
+function addCladeSelector(names, label) {
+  const container = document.getElementById("selectors");
+  const wrapper = document.createElement("div");
+  wrapper.className = "section";
+
+  const sel = document.createElement("select");
+  const opt0 = document.createElement("option");
+  opt0.textContent = `-- Select ${label} --`;
+  opt0.value = "";
+  sel.appendChild(opt0);
+
+  names.forEach(n => {
+    const opt = document.createElement("option");
+    opt.value = n;
+    opt.textContent = n;
+    sel.appendChild(opt);
+  });
+
+  sel.addEventListener("change", async () => {
+    if (!sel.value) return;
+    // reset lower levels
+    wrapper.nextAll?.forEach(el => el.remove());
+    document.getElementById("speciesInfo").innerHTML = "";
+
+    const chosenName = sel.value;
+    const ottId = await resolveOTT(chosenName);
+    if (!ottId) {
+      alert("Could not resolve taxon: " + chosenName);
+      return;
+    }
+    const taxon = await getTaxonInfo(ottId);
+    lineage.push({ name: chosenName, id: ottId, rank: taxon.rank });
+
+    if (taxon.rank === "species" || !taxon.children || taxon.children.length === 0) {
+      showSpeciesInfo(chosenName);
+    } else {
+      const childNames = taxon.children.map(c => c.unique_name || c.name);
+      addCladeSelector(childNames, taxon.rank || "Taxon");
+    }
+  });
+
+  wrapper.appendChild(sel);
+  container.appendChild(wrapper);
+}
+
+// --- OTL API ---
+async function resolveOTT(name) {
+  const res = await fetch("https://api.opentreeoflife.org/v3/tnrs/match_names", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ names: [name] })
+  });
+  const data = await res.json();
+  try {
+    return data.results[0].matches[0].taxon.ott_id;
+  } catch {
+    return null;
+  }
+}
+
+async function getTaxonInfo(ottId) {
+  const res = await fetch("https://api.opentreeoflife.org/v3/taxonomy/taxon_info", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ ott_id: ottId, include_children: true })
+  });
+  return await res.json();
+}
+
+// --- Species Info ---
+async function showSpeciesInfo(name) {
+  const infoDiv = document.getElementById("speciesInfo");
+  infoDiv.innerHTML = `<h3>Species: ${name}</h3><p>Loading...</p>`;
+
+  let html = `<h3>${name}</h3>`;
+
+  // FishBase
+  try {
+    const res = await fetch(`https://fishbase.ropensci.org/species?Genus=${encodeURIComponent(name.split(" ")[0])}&Species=${encodeURIComponent(name.split(" ")[1]||"")}`);
+    const data = await res.json();
+    const record = data.data?.[0];
+    if (record) {
+      html += `<p><b>FishBase:</b> Length ${record.Length} cm, Env ${record.DemersPelag || ""}</p>`;
+    } else {
+      html += `<p><b>FishBase:</b> Not found</p>`;
+    }
+  } catch { html += `<p><b>FishBase:</b> Error</p>`; }
+
+  // WoRMS
+  try {
+    const res = await fetch(`https://www.marinespecies.org/rest/AphiaRecordsByName/${encodeURIComponent(name)}?like=false&marine_only=true`);
+    const worms = await res.json();
+    if (worms && worms.length > 0) {
+      html += `<p><b>WoRMS AphiaID:</b> ${worms[0].AphiaID}, Status: ${worms[0].status}</p>`;
+    } else {
+      html += `<p><b>WoRMS:</b> Not found</p>`;
+    }
+  } catch { html += `<p><b>WoRMS:</b> Error</p>`; }
+
+  // LarvalBase
+  html += `<p><a href="https://www.larvalbase.org/search.php?Genus=${encodeURIComponent(name.split(" ")[0])}&Species=${encodeURIComponent(name.split(" ")[1]||"")}" target="_blank">🔗 LarvalBase</a></p>`;
+
+  // Eschmeyer Catalog (link only)
+  html += `<p><a href="https://researcharchive.calacademy.org/research/ichthyology/catalog/fishcatmain.asp" target="_blank">🔗 Eschmeyer's Catalog of Fishes (search manually)</a></p>`;
+
+  // Pelagic Trait DB
+  html += `<p><a href="https://www.seanoe.org/data/00612/72451/" target="_blank">🔗 Pelagic Species Trait Database</a></p>`;
+
+  // Google Images (Custom Search API - requires key)
+  html += `<div><b>Images:</b><br>`;
+  const apiKey = "YOUR_GOOGLE_API_KEY"; // <-- replace
+  const cx = "YOUR_SEARCH_ENGINE_ID";   // <-- replace
+  try {
+    const res = await fetch(`https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(name)}&cx=${cx}&key=${apiKey}&searchType=image&num=5`);
+    const imgs = await res.json();
+    if (imgs.items) {
+      imgs.items.forEach(img => {
+        html += `<img src="${img.link}" alt="${name}">`;
+      });
+    }
+  } catch {
+    html += `<p>(Images require Google API key)</p>`;
+  }
+  html += `</div>`;
+
+  infoDiv.innerHTML = html;
+}
+</script>
+</body>
+</html>

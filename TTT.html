@@ -25,6 +25,7 @@
             align-items: center;
             height: 100vh;
             font-family: Arial, sans-serif;
+            transition: transform 0.5s, background-color 0.5s;
         }
         
         #textbox {
@@ -45,32 +46,264 @@
             background-color: #333;
             border: 2px solid white;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
         }
         
         #button:hover {
             background-color: #555;
         }
+        
+        .circle {
+            border-radius: 50%;
+        }
+        
+        .triangle {
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        }
+        
+        .square {
+            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+        }
+        
+        .pentagon {
+            clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+        }
+        
+        .hexagon {
+            clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+        }
+        
+        .septagon {
+            clip-path: polygon(50% 0%, 85% 15%, 100% 50%, 85% 85%, 50% 100%, 15% 85%, 0% 50%, 15% 15%);
+        }
+        
+        .octagon {
+            clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+        }
+        
+        .star {
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+        }
+        
+        .unreal {
+            clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%, 20% 40%, 40% 20%, 60% 40%, 80% 20%, 60% 60%, 80% 80%, 60% 100%, 40% 80%, 20% 60%, 0% 80%);
+        }
+        
+        .message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 24px;
+            background-color: rgba(0,0,0,0.8);
+            padding: 20px;
+            border: 2px solid white;
+            z-index: 100;
+            display: none;
+            text-align: center;
+        }
+        
+        .hint-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 18px;
+            background-color: rgba(0,0,0,0.9);
+            padding: 20px;
+            border: 2px solid white;
+            z-index: 100;
+            display: none;
+            width: 80%;
+            max-width: 600px;
+            text-align: center;
+        }
+        
+        .stage-instruction {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
     <textarea id="textbox" placeholder="Enter command"></textarea>
-    <div id="button"></div>
+    <div id="button">CLICK</div>
+    <div id="message" class="message"></div>
+    <div id="hint-box" class="hint-box"></div>
 
     <script>
+        // Function definitions
+        const functionDefinitions = {
+            "poissondistpmf": "function poissondistpmf(l,k){return div(mul(pow(l,k),exp(sub(0,l))),factorial(k))}",
+            "normaldistpdf": "function normaldistpdf(m,s,x){return div(1,mul(s,sqrt(mul(2,PI)))) * exp(-0.5 * pow(div(sub(x,m),s),2))}",
+            "binomialdistpmf": "function binomialdistpmf(n,p,k){return mul(combinations(n,k), pow(p,k), pow(sub(1,p),sub(n,k)))}",
+            "fibonacci": "function fibonacci(n){return n < 2 ? n : add(fibonacci(sub(n,1)),fibonacci(sub(n,2)))}",
+            "factorial": "function factorial(n){return n <= 1 ? 1 : mul(n,factorial(sub(n,1)))}"
+        };
+
+        // Special message triggers
+        const specialMessages = [
+            "lenny", "blockbite", "spooky", "neverending", "mule", 
+            "ahead", "gandalfpotter", "sparky", "robotop"
+        ];
+
+        // Secret command variables
+        let secretStage = 0;
+        let secretValues = {};
+        const difficultWords = [
+            "mitochondria", "leukemia", "abswurmbachite", "phosphorylation",
+            "tetrahemihexahedron", "hypochondriac", "pleurothotonus",
+            "pterodactylus", "ergocalciferol"
+        ];
+        let currentWords = [];
+        let binaryNumbers = [];
+        let currentColor = '';
+        let binaryEquation = {};
+
         document.getElementById('button').addEventListener('click', function() {
             const input = document.getElementById('textbox').value.trim();
             
             if (!input) return;
-			
-			if(input=='light'){
-			document.body.style.backgroundColor = 'white';
-			return;
-			}
-			if(input=='dark'){
-			document.body.style.backgroundColor = 'black';
-			return;
-			}
+            
+            // Check for D[number] dice command
+            if (input.startsWith('D[') && input.endsWith(']')) {
+                const max = parseInt(input.substring(2, input.length - 1));
+                if (!isNaN(max) && max > 0) {
+                    rollDice(max);
+                }
+                return;
+            }
+            
+            // Handle secret command stages
+            if (secretStage > 0) {
+                handleSecretStage(input);
+                return;
+            }
+            
+            // Check for special commands
+            switch(input.toLowerCase()) {
+                case 'light':
+                    document.body.style.backgroundColor = 'white';
+                    document.getElementById('textbox').style.backgroundColor = '#ddd';
+                    document.getElementById('textbox').style.color = 'black';
+                    return;
+                case 'dark':
+                    document.body.style.backgroundColor = 'black';
+                    document.getElementById('textbox').style.backgroundColor = '#222';
+                    document.getElementById('textbox').style.color = 'white';
+                    return;
+                case 'ip':
+                    fetch('https://api.ipify.org?format=json')
+                        .then(response => response.json())
+                        .then(data => {
+                            document.getElementById('textbox').value = `Your IP: ${data.ip}`;
+                        })
+                        .catch(() => {
+                            document.getElementById('textbox').value = 'Could not fetch IP';
+                        });
+                    return;
+                case 'hub':
+                    window.open('index.html', '_self');
+                    return;
+                case 'github':
+                    window.open('https://github.com/TeserTcode/TeserTcode.github.io', '_blank');
+                    return;
+                case 'rotate':
+                    document.body.style.transform = 'rotate(180deg)';
+                    setTimeout(() => {
+                        document.body.style.transform = 'rotate(0deg)';
+                    }, 1000);
+                    return;
+                case 'triangle':
+                case 'square':
+                case 'circle':
+                case 'pentagon':
+                case 'hexagon':
+                case 'septagon':
+                case 'octagon':
+                    // Remove all shape classes first
+                    const button = document.getElementById('button');
+                    button.classList.remove('triangle', 'square', 'circle', 
+                                          'pentagon', 'hexagon', 'septagon', 'octagon',
+                                          'star', 'unreal');
+                    // Add the selected shape class
+                    button.classList.add(input.toLowerCase());
+                    return;
+                case 'dragon':
+                    window.open('https://tiermaker.com/categories/art/tesert-dragons-17937287', '_blank');
+                    return;
+                case 'math':
+                    window.open('https://tiermaker.com/create/math-functions-tsrt-17937287', '_blank');
+                    return;
+                case 'uuq':
+                case 'UUQ':
+                case 'alt':
+                    window.open('', '_blank');
+                    return;
+                case 'random':
+                    document.body.style.backgroundColor = `#${Math.floor(Math.random()*16777215).toString(16)}`;
+                    return;
+                case 'time':
+                    document.getElementById('textbox').value = new Date().toLocaleTimeString();
+                    return;
+                case 'date':
+                    document.getElementById('textbox').value = new Date().toLocaleDateString();
+                    return;
+                case 'secret':
+                    startSecretChallenge();
+                    return;
+                case 'flip':
+                    document.getElementById('button').style.transform = 'rotateY(180deg)';
+                    setTimeout(() => {
+                        document.getElementById('button').style.transform = 'rotateY(0deg)';
+                    }, 1000);
+                    return;
+                case 'big':
+                    document.getElementById('button').style.transform = 'scale(1.5)';
+                    setTimeout(() => {
+                        document.getElementById('button').style.transform = 'scale(1)';
+                    }, 1000);
+                    return;
+                case 'small':
+                    document.getElementById('button').style.transform = 'scale(0.5)';
+                    setTimeout(() => {
+                        document.getElementById('button').style.transform = 'scale(1)';
+                    }, 1000);
+                    return;
+            }
+            
+            // Check for special message triggers
+            if (specialMessages.includes(input.toLowerCase())) {
+                showMessage("What are you poking around for?");
+                return;
+            }
+            
+            // Check for code[NAME] command
+            if (input.toLowerCase().startsWith('code')) {
+                const filename = input.substring(4);
+                if (filename) {
+                    window.open(`https://raw.githubusercontent.com/TeserTcode/TeserTcode.github.io/refs/heads/gh-pages/${filename}.html`, '_blank');
+                }
+                return;
+            }
+            
+            // Check for define[function] command
+            if (input.toLowerCase().startsWith('define[')) {
+                const funcName = input.substring(7, input.length - 1);
+                if (functionDefinitions[funcName]) {
+                    document.getElementById('textbox').value = functionDefinitions[funcName];
+                } else {
+                    document.getElementById('textbox').value = `No definition found for ${funcName}`;
+                }
+                return;
+            }
             
             // Check if input ends with .HTML or .html
             if (input.toUpperCase().endsWith('.HTML') || input.toLowerCase().endsWith('.html')) {
@@ -104,6 +337,235 @@
                 }
             }
         });
+        
+        function showMessage(msg) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = msg;
+            messageDiv.style.display = 'block';
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 3000);
+        }
+        
+        function showHintBox(html) {
+            const hintBox = document.getElementById('hint-box');
+            hintBox.innerHTML = html;
+            hintBox.style.display = 'block';
+        }
+        
+        function hideHintBox() {
+            document.getElementById('hint-box').style.display = 'none';
+        }
+        
+        function rollDice(max) {
+            const button = document.getElementById('button');
+            const originalText = button.textContent;
+            const originalClass = button.className;
+            
+            // Crazy animation sequence
+            button.textContent = '...';
+            button.classList.add('pentagon');
+            
+            const animations = [
+                () => button.classList.replace('pentagon', 'star'),
+                () => button.classList.replace('star', 'octagon'),
+                () => button.classList.replace('octagon', 'unreal'),
+                () => button.classList.replace('unreal', 'circle'),
+                () => button.classList.replace('circle', 'square'),
+                () => button.style.transform = 'rotateY(180deg)',
+                () => button.style.transform = 'rotateX(180deg)',
+                () => button.style.transform = 'rotateY(0deg) rotateX(0deg) scale(1.5)',
+                () => button.style.transform = 'rotate(360deg) scale(1)'
+            ];
+            
+            let i = 0;
+            const animate = () => {
+                if (i < animations.length) {
+                    animations[i]();
+                    i++;
+                    setTimeout(animate, 200);
+                } else {
+                    // Final result
+                    const result = Math.floor(Math.random() * max) + 1;
+                    button.textContent = result;
+                    button.className = originalClass;
+                    button.style.transform = '';
+                    
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                    }, 2000);
+                }
+            };
+            
+            animate();
+        }
+        
+        function startSecretChallenge() {
+            secretStage = 1;
+            // Generate random numbers for stage 1
+            secretValues = {
+                a: Math.floor(Math.random() * 10) + 1,
+                b: Math.floor(Math.random() * 10) + 1,
+                c: Math.floor(Math.random() * 10) + 1,
+                d: Math.floor(Math.random() * 10) + 1
+            };
+            
+            document.getElementById('textbox').value = '';
+            showMessage(`${secretValues.a} ${secretValues.b} ${secretValues.c} ${secretValues.d} ? ` 
+                       );
+        }
+        
+        function handleSecretStage(input) {
+            switch(secretStage) {
+                case 1: // Number calculation stage
+                    const correctAnswer = secretValues.d + 
+                                        (secretValues.d - secretValues.c) + 
+                                        (secretValues.d - 2*secretValues.c + secretValues.b) + 
+                                        (secretValues.d - 3*secretValues.c + 3*secretValues.b - secretValues.a);
+                    
+                    if (parseInt(input) === correctAnswer) {
+                        secretStage = 2;
+                        // Select 3 random difficult words
+                        currentWords = [];
+                        const shuffled = [...difficultWords].sort(() => 0.5 - Math.random());
+                        currentWords = shuffled.slice(0, 3);
+                        
+                        // Create versions with errors
+                        const wordQuestions = currentWords.map(word => {
+                            if (Math.random() > 0.5) {
+                                // Add error
+                                const pos = Math.floor(Math.random() * word.length);
+                                return word.substring(0, pos) + word.charAt(pos).toUpperCase() + word.substring(pos + 1);
+                            } else {
+                                // Remove letter
+                                const pos = Math.floor(Math.random() * word.length);
+                                return word.substring(0, pos) + word.substring(pos + 1);
+                            }
+                        });
+                        
+                        showMessage(
+                                    `${wordQuestions.join(' ')}`);
+                    } else {
+                        showMessage("-");
+                    }
+                    break;
+                    
+                case 2: // Word correction stage
+                    const answers = input.split(' ').map(a => a.trim().toLowerCase());
+                    let allCorrect = true;
+                    
+                    for (let i = 0; i < currentWords.length; i++) {
+                        if (answers[i] !== currentWords[i].toLowerCase()) {
+                            allCorrect = false;
+                            break;
+                        }
+                    }
+                    
+                    if (allCorrect) {
+                        secretStage = 3;
+                        // Generate 10 random 5-digit numbers consisting of 0, 1, 2
+                        binaryNumbers = [];
+                        for (let i = 0; i < 10; i++) {
+                            let num = '';
+                            for (let j = 0; j < 5; j++) {
+                                num += Math.floor(Math.random() * 3); // 0, 1, or 2
+                            }
+                            // Make some negative
+                            if (Math.random() > 0.5) {
+                                num = '-' + num;
+                            }
+                            binaryNumbers.push(parseInt(num));
+                        }
+                        
+                        const sum = binaryNumbers.reduce((a, b) => a + b, 0);
+                        secretValues.sum = sum;
+                        
+                        showMessage(`${binaryNumbers.join(' ')}`);
+                    } else {
+                        showMessage("-");
+                    }
+                    break;
+                    
+                case 3: // Number sum stage
+                    if (parseInt(input) === secretValues.sum) {
+                        secretStage = 4;
+                        // Set random background color
+                        currentColor = `#${Math.floor(Math.random()*16777215).toString(16)}`;
+                        document.body.style.backgroundColor = currentColor;
+                        
+                        showMessage("?");
+                    } else {
+                        showMessage("-");
+                    }
+                    break;
+                    
+                case 4: // Color hex stage
+                    if (input.toLowerCase() === currentColor.toLowerCase()) {
+                        secretStage = 5;
+                        // Generate binary equation
+                        binaryEquation = {
+                            a: Math.floor(Math.random() * 5) + 1,
+                            b: Math.floor(Math.random() * 3) + 2,
+                            c: Math.floor(Math.random() * 3) + 1,
+                            d: Math.floor(Math.random() * 20) + 1
+                        };
+                        
+                        // Convert to binary strings
+                        const aBin = binaryEquation.a.toString(2);
+                        const bBin = binaryEquation.b.toString(2);
+                        const cBin = binaryEquation.c.toString(2);
+                        const dBin = binaryEquation.d.toString(2);
+                        
+                        showMessage(
+                                   `${aBin}*${bBin}^${cBin}=${dBin}+?`);
+                    } else {
+                        showMessage("Wrong color code! Try again.");
+                    }
+                    break;
+                    
+                case 5: // Binary equation stage
+                    const correctEquationAnswer = binaryEquation.a * Math.pow(binaryEquation.b, binaryEquation.c) - binaryEquation.d;
+                    
+                    if (parseInt(input) === correctEquationAnswer) {
+                        secretStage = 6;
+                        showMessage("Final Stage: Enter the correct character to pass");
+                    } else {
+                        showMessage("Wrong answer to the equation! Try again.");
+                    }
+                    break;
+                    
+                case 6: // Final stage
+                    if (input === "I") {
+                        secretStage = 0;
+                        showMessage("Congratulations! You completed all stages!");
+                        
+                        // Show hint box with commands
+                        const hints = [
+                            "light - Switch to light mode",
+                            "dark - Switch to dark mode",
+                            "ip - Show your IP address",
+                            "code[NAME] - Open raw GitHub file",
+                            "define[FUNC] - Show function definition",
+                            "D[N] - Roll a dice (1-N)",
+                            "triangle, square, etc - Change button shape",
+                            "random - Random background color",
+                            "secret - Start the secret challenge",
+                            "github - Open GitHub repository"
+                        ];
+                        
+                        showHintBox(
+                            "<h2>Secret Commands Unlocked!</h2><br>" +
+                            hints.join("<br>") +
+                            "<br><br><button onclick='hideHintBox()'>Close</button>"
+                        );
+                    } else {
+                        showMessage("Wrong character! Try again.");
+                    }
+                    break;
+            }
+            
+            document.getElementById('textbox').value = '';
+        }
     </script>
 </body>
 </html>

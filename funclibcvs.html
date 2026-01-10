@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mthfnc Manager</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  display: flex;
+  height: 100vh;
+  margin: 0;
+  overflow: hidden;
+}
+.column {
+  flex: 1;
+  padding: 8px;
+  overflow-y: auto;
+  border-right: 1px solid #ccc;
+}
+#groupsColumn {
+  border-right: none;
+}
+.group {
+  border: 1px solid #888;
+  border-radius: 5px;
+  margin: 4px 0;
+  padding: 5px;
+  background: #f9f9f9;
+  cursor: pointer;
+  position: relative;
+}
+.group:hover {
+  background: #e8e8e8;
+}
+.group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.group-children {
+  margin-left: 16px;
+  display: none;
+}
+.group.open > .group-children {
+  display: block;
+}
+.function {
+  background: #ddd;
+  border-radius: 4px;
+  padding: 3px 6px;
+  margin: 2px 0;
+  cursor: grab;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.function:hover {
+  background: #ccc;
+}
+.btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #333;
+}
+.btn:hover {
+  color: red;
+}
+#footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  background: rgba(240,240,240,0.95);
+  border-top: 1px solid #aaa;
+  padding: 6px 10px;
+  box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+  z-index: 10;
+}
+#footer-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+#footer-right {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+}
+input, button {
+  font-size: 14px;
+  padding: 4px 8px;
+}
+.highlight {
+  outline: 2px dashed #00a;
+}
+</style>
+</head>
+<body>
+  <div class="column" id="functionsColumn">
+    <h3>Ungrouped Functions</h3>
+    <div id="functionsList"></div>
+  </div>
+  <div class="column" id="groupsColumn">
+    <h3>Groups</h3>
+    <div id="groupsList"></div>
+  </div>
+
+  <div id="footer">
+    <div id="footer-left">
+      🔍 <input type="text" id="searchInput" placeholder="Search functions..." style="margin-left:4px;">
+    </div>
+    <div id="footer-right">
+      <button id="addGroupBtn">➕ Add Group</button>
+      <button id="saveCsvBtn">💾 Save CSV</button>
+      <button id="loadCsvBtn">📂 Load CSV</button>
+      <button id="exportJsonBtn">⬇️ Export JSON</button>
+      <button id="importJsonBtn">⬆️ Import JSON</button>
+    </div>
+  </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/exporters/GLTFExporter.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/exporters/STLExporter.min.js"></script> 
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ccapture.js@1.1.0/build/CCapture.all.min.js"></script>
+
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/exporters/STLExporter.js"></script>
+
+<script>
+const functionsList = document.getElementById("functionsList");
+const groupsList = document.getElementById("groupsList");
+const searchInput = document.getElementById("searchInput");
+
+let allFuncs = {};
+let groups = [];
+let dragData = null;
+
+function init() {
+  if (typeof importAllFunctionsToMath === "function") importAllFunctionsToMath();
+  for (let k in window) {
+    if (typeof window[k] === "function" && window[k].name) {
+      allFuncs[k] = { name: k, group: null };
+    }
+  }
+  renderAll();
+}
+
+function renderAll() {
+  renderFunctions();
+  renderGroups();
+}
+
+function renderFunctions() {
+  const query = searchInput.value.trim().toLowerCase();
+  functionsList.innerHTML = "";
+  Object.values(allFuncs).forEach(fn => {
+    if (!fn.group && fn.name.toLowerCase().includes(query)) {
+      const div = document.createElement("div");
+      div.className = "function";
+      div.draggable = true;
+      div.textContent = fn.name;
+
+      const tools = document.createElement("span");
+      const del = document.createElement("button");
+      del.className = "btn";
+      del.textContent = "✖";
+      del.onclick = () => { delete allFuncs[fn.name]; renderAll(); };
+      tools.appendChild(del);
+      div.appendChild(tools);
+
+      div.addEventListener("dragstart", e => dragData = { type: "function", name: fn.name });
+      functionsList.appendChild(div);
+    }
+  });
+}
+
+function renderGroups(parentId = null, container = groupsList) {
+  container.innerHTML = "";
+  groups
+    .filter(g => g.parent === parentId)
+    .sort((a,b)=>b.created - a.created)
+    .forEach(g => {
+      const div = document.createElement("div");
+      div.className = "group";
+      div.dataset.id = g.id;
+
+      const header = document.createElement("div");
+      header.className = "group-header";
+
+      const title = document.createElement("span");
+      title.textContent = g.name + (g.description ? " — " + g.description : "");
+      header.appendChild(title);
+
+      const btns = document.createElement("div");
+      const open = document.createElement("button");
+      open.className = "btn";
+      open.textContent = g.open ? "–" : "+";
+      open.onclick = e => {
+        e.stopPropagation();
+        g.open = !g.open;
+        div.classList.toggle("open", g.open);
+      };
+      const rename = document.createElement("button");
+      rename.className = "btn";
+      rename.textContent = "✎";
+      rename.onclick = e => {
+        e.stopPropagation();
+        const newName = prompt("Rename group:", g.name);
+        if (newName) g.name = newName;
+        const newDesc = prompt("Description:", g.description || "");
+        if (newDesc !== null) g.description = newDesc;
+        renderAll();
+      };
+      const addsub = document.createElement("button");
+      addsub.className = "btn";
+      addsub.textContent = "➕";
+      addsub.onclick = e => {
+        e.stopPropagation();
+        const name = prompt("Subgroup name?");
+        if (!name) return;
+        const desc = prompt("Description?");
+        groups.push({ id: Date.now()+"", name, description: desc || "", parent: g.id, created: Date.now(), open:true });
+        renderAll();
+      };
+      const del = document.createElement("button");
+      del.className = "btn";
+      del.textContent = "✖";
+      del.onclick = e => {
+        e.stopPropagation();
+        if (confirm("Delete group and its contents?")) {
+          deleteGroup(g.id);
+          renderAll();
+        }
+      };
+      btns.append(open, rename, addsub, del);
+      header.appendChild(btns);
+
+      div.appendChild(header);
+
+      const children = document.createElement("div");
+      children.className = "group-children";
+
+      for (let fn of Object.values(allFuncs)) {
+        if (fn.group === g.id) {
+          const fdiv = document.createElement("div");
+          fdiv.className = "function";
+          fdiv.textContent = fn.name;
+          const delBtn = document.createElement("button");
+          delBtn.className = "btn";
+          delBtn.textContent = "✖";
+          delBtn.onclick = e => { fn.group = null; renderAll(); };
+          const renameBtn = document.createElement("button");
+          renameBtn.className = "btn";
+          renameBtn.textContent = "✎";
+          renameBtn.onclick = e => {
+            const newName = prompt("Rename function:", fn.name);
+            if (newName && !allFuncs[newName]) {
+              delete allFuncs[fn.name];
+              fn.name = newName;
+              allFuncs[newName] = fn;
+              renderAll();
+            }
+          };
+          fdiv.append(renameBtn, delBtn);
+          fdiv.draggable = true;
+          fdiv.addEventListener("dragstart", e => dragData = { type: "function", name: fn.name });
+          children.appendChild(fdiv);
+        }
+      }
+
+      const subgroupContainer = document.createElement("div");
+      subgroupContainer.className = "group-children";
+      renderGroups(g.id, subgroupContainer);
+      children.appendChild(subgroupContainer);
+
+      div.appendChild(children);
+
+      div.addEventListener("dragover", e => { e.preventDefault(); div.classList.add("highlight"); });
+      div.addEventListener("dragleave", e => div.classList.remove("highlight"));
+      div.addEventListener("drop", e => {
+        e.preventDefault();
+        div.classList.remove("highlight");
+        if (dragData) {
+          if (dragData.type === "function") {
+            allFuncs[dragData.name].group = g.id;
+          } else if (dragData.type === "group") {
+            const grp = groups.find(x=>x.id===dragData.id);
+            if (grp && grp.id !== g.id && !isDescendantOf(g.id, grp.id)) grp.parent = g.id;
+          }
+          renderAll();
+        }
+      });
+
+      div.draggable = true;
+      div.addEventListener("dragstart", e => dragData = { type: "group", id: g.id });
+
+      div.classList.toggle("open", g.open);
+      container.appendChild(div);
+    });
+}
+
+function isDescendantOf(parentId, childId) {
+  let current = groups.find(g => g.id === parentId);
+  while (current) {
+    if (current.parent === childId) return true;
+    current = groups.find(g => g.id === current.parent);
+  }
+  return false;
+}
+
+function deleteGroup(id) {
+  const children = groups.filter(g => g.parent === id);
+  children.forEach(c => deleteGroup(c.id));
+  groups = groups.filter(g => g.id !== id);
+  for (let fn of Object.values(allFuncs)) if (fn.group === id) fn.group = null;
+}
+
+document.getElementById("addGroupBtn").onclick = () => {
+  const name = prompt("Group name?");
+  if (!name) return;
+  const desc = prompt("Description?");
+  groups.push({ id: Date.now()+"", name, description: desc || "", parent: null, created: Date.now(), open:true });
+  renderAll();
+};
+searchInput.oninput = renderFunctions;
+
+document.getElementById("saveCsvBtn").onclick = () => {
+  let csv = "type,id,parent,name,description,function\n";
+  for (let g of groups)
+    csv += `group,${g.id},${g.parent||""},"${g.name}","${g.description||""}",\n`;
+  for (let fn of Object.values(allFuncs))
+    csv += `function,,${fn.group||""},"${fn.name}",,\n`;
+  const blob = new Blob([csv], {type:"text/csv"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "groups.csv";
+  a.click();
+};
+
+document.getElementById("loadCsvBtn").onclick = async () => {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".csv";
+  input.onchange = async e => {
+    const file = e.target.files[0];
+    const text = await file.text();
+    parseCsv(text);
+    renderAll();
+  };
+  input.click();
+};
+
+function parseCsv(csv) {
+  groups = [];
+  for (let fn of Object.values(allFuncs)) fn.group = null;
+  const lines = csv.split(/\r?\n/).slice(1);
+  for (let line of lines) {
+    if (!line.trim()) continue;
+    const [type,id,parent,name,desc] = line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(x=>x.replace(/^"|"$/g,''));
+    if (type === "group") groups.push({ id, name, description: desc, parent: parent || null, created: Date.now(), open:true });
+    if (type === "function" && name && parent && allFuncs[name]) allFuncs[name].group = parent;
+  }
+}
+
+document.getElementById("exportJsonBtn").onclick = () => {
+  const blob = new Blob([JSON.stringify({groups, allFuncs}, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "groups.json";
+  a.click();
+};
+document.getElementById("importJsonBtn").onclick = async () => {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".json";
+  input.onchange = async e => {
+    const file = e.target.files[0];
+    const text = await file.text();
+    const data = JSON.parse(text);
+    groups = data.groups || [];
+    allFuncs = data.allFuncs || allFuncs;
+    renderAll();
+  };
+  input.click();
+};
+
+init();
+</script>
+</body>
+</html>

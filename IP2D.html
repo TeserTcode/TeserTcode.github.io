@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Implicit & Parametric 2D Shape Drawer</title>
+<!-- mathjs for parsing user expressions -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+<!-- user-provided optional scripts (kept as includes if you use them) -->
+<script src="clrspc.js"></script>
+<script src="mthfnc.js"></script>
+<script src="polyhedra.js"></script>
+<style>
+  body{font-family:system-ui,Segoe UI,Roboto,Arial; margin:12px;}
+  .row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+  label{font-size:13px}
+  select,input,textarea,button{font-size:13px}
+  textarea{width:100%;height:72px}
+  .panel{max-width:980px}
+  canvas{border:1px solid #ddd;background:#fff}
+  .controls{display:grid;grid-template-columns:1fr 320px;gap:12px}
+  .small{width:110px}
+  .muted{color:#666;font-size:12px}
+</style>
+</head>
+<body>
+<h2>Implicit 2D Shape Drawer — explicit / parametric / radial / heightmap</h2>
+<div class="panel">
+  <div class="controls">
+    <div>
+      <div class="row">
+        <label>Mode:</label>
+        <select id="mode">
+          <option value="implicit">Implicit (f(x,y)=0)</option>
+          <option value="explicit">Explicit (y = f(x))</option>
+          <option value="param">Parametric (x(t), y(t))</option>
+          <option value="radial">Radial / Polar (r(θ) or r(θ,p))</option>
+          <option value="heightmap">Heightmap (f(x,y) → grayscale)</option>
+        </select>
+        <label class="muted" style="margin-left:12px">Resolution:</label>
+        <input id="res" type="range" min="80" max="800" value="320" style="width:160px" />
+        <span id="resVal" class="muted">320</span>
+      </div>
+
+      <div style="margin-top:6px">
+        <label>Domain:</label>
+        <input id="xmin" class="small" value="-2"> <input id="xmax" class="small" value="2">
+        <input id="ymin" class="small" value="-2"> <input id="ymax" class="small" value="2">
+      </div>
+
+      <div style="margin-top:8px">
+        <label for="expr">Function / Expressions</label>
+        <textarea id="expr">x^2 + y^2 - 1</textarea>
+        <div class="muted">Use variables <code>x,y,t,u,v,p,θ,theta</code>. For parametric, enter two comma-separated expressions like <code>cos(t), sin(t)</code>.</div>
+      </div>
+
+      <div style="margin-top:8px" class="row">
+        <button id="draw">Draw</button>
+        <button id="clear">Clear</button>
+        <label class="muted" style="margin-left:16px">Contour threshold:</label>
+        <input id="threshold" type="number" value="0" step="any" class="small">
+      </div>
+
+      <div style="margin-top:8px" class="row">
+        <label>Line width:</label>
+        <input id="lw" type="number" value="2" class="small">
+        <label style="margin-left:8px">Color:</label>
+        <input id="color" type="color" value="#2b6cb0">
+        <label style="margin-left:8px">Fill (implicit):</label>
+        <input id="fillChk" type="checkbox">
+      </div>
+
+      <div style="margin-top:8px" class="row">
+        <label class="muted">Samples / steps control (higher → more detail)</label>
+      </div>
+
+    </div>
+
+    <div>
+      <canvas id="cnv" width="640" height="640"></canvas>
+      <div class="muted" style="margin-top:6px">Tip: press Draw. For parametric set domain as t-min/t-max using xmin/xmax.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('cnv');
+  const ctx = canvas.getContext('2d');
+  const modeEl = document.getElementById('mode');
+  const exprEl = document.getElementById('expr');
+  const drawBtn = document.getElementById('draw');
+  const clearBtn = document.getElementById('clear');
+  const resEl = document.getElementById('res');
+  const resVal = document.getElementById('resVal');
+  const xminEl=document.getElementById('xmin');
+  const xmaxEl=document.getElementById('xmax');
+  const yminEl=document.getElementById('ymin');
+  const ymaxEl=document.getElementById('ymax');
+  const thresholdEl=document.getElementById('threshold');
+  const colorEl=document.getElementById('color');
+  const lwEl=document.getElementById('lw');
+  const fillChk=document.getElementById('fillChk');
+
+  resEl.addEventListener('input', ()=>{resVal.textContent = resEl.value});
+
+  function mapToCanvas(x,y,domain){
+    const [xmin,xmax,ymin,ymax] = domain;
+    const X = (x - xmin)/(xmax-xmin)*canvas.width;
+    const Y = canvas.height - (y - ymin)/(ymax-ymin)*canvas.height;
+    return [X,Y];
+  }
+
+  function clear(){ ctx.clearRect(0,0,canvas.width,canvas.height); }
+  clearBtn.onclick = clear;
+
+  function compileExpression(expr){
+    // mathjs: allow ^ as power
+    try{
+      const node = math.parse(expr);
+      const code = node.compile();
+      return code;
+    }catch(e){ throw new Error('Parse error: '+e.message); }
+  }
+
+  function evalCode(code, scope){
+    return code.evaluate(scope);
+  }
+
+  // Simple marching squares implementation for single contour value
+  function marchingSquares(values, w, h, domain, thresh){
+    // values: Float32Array length (w+1)*(h+1)
+    const lines = [];
+    function v(i,j){return values[j*(w+1)+i]}
+    for(let j=0;j<h;j++){
+      for(let i=0;i<w;i++){
+        const x0 = i/w*(domain[1]-domain[0])+domain[0];
+        const x1 = (i+1)/w*(domain[1]-domain[0])+domain[0];
+        const y0 = j/h*(domain[3]-domain[2])+domain[2];
+        const y1 = (j+1)/h*(domain[3]-domain[2])+domain[2];
+        const f00 = v(i,j)-thresh;
+        const f10 = v(i+1,j)-thresh;
+        const f01 = v(i,j+1)-thresh;
+        const f11 = v(i+1,j+1)-thresh;
+        const corners = [f00,f10,f11,f01];
+        const idx = corners.map(c=>c>0?1:0).reduce((a,b,ii)=>a|(b<<ii),0);
+        // edges: interpolate between corners
+        const interp = (a,b,ta,tb)=>{ return ta/(ta-tb)*(b-a)+a };
+        const pts = [];
+        // Case table for 16 possibilities (we'll draw segments for each case)
+        if(idx===0||idx===15) continue;
+        // compute edge points
+        const leftY = interp(y0,y1,f00,f01);
+        const rightY = interp(y0,y1,f10,f11);
+        const bottomX = interp(x0,x1,f00,f10);
+        const topX = interp(x0,x1,f01,f11);
+        // map to canvas
+        const pLeft = mapToCanvas(x0,leftY,domain);
+        const pRight = mapToCanvas(x1,rightY,domain);
+        const pBottom = mapToCanvas(bottomX,y0,domain);
+        const pTop = mapToCanvas(topX,y1,domain);
+        // simplistic case handling
+        switch(idx){
+          case 1: lines.push([pBottom,pLeft]); break;
+          case 2: lines.push([pRight,pBottom]); break;
+          case 3: lines.push([pRight,pLeft]); break;
+          case 4: lines.push([pTop,pRight]); break;
+          case 5: lines.push([pBottom,pLeft]); lines.push([pTop,pRight]); break;
+          case 6: lines.push([pBottom,pTop]); break;
+          case 7: lines.push([pTop,pLeft]); break;
+          case 8: lines.push([pLeft,pTop]); break;
+          case 9: lines.push([pBottom,pTop]); break;
+          case 10: lines.push([pBottom,pRight]); lines.push([pLeft,pTop]); break;
+          case 11: lines.push([pRight,pTop]); break;
+          case 12: lines.push([pLeft,pRight]); break;
+          case 13: lines.push([pBottom,pRight]); break;
+          case 14: lines.push([pBottom,pLeft]); break;
+        }
+      }
+    }
+    return lines;
+  }
+
+  function drawLines(lines, style){
+    ctx.lineWidth = style.lineWidth||2;
+    ctx.strokeStyle = style.color||'#000';
+    ctx.beginPath();
+    for(const seg of lines){
+      ctx.moveTo(seg[0][0],seg[0][1]);
+      ctx.lineTo(seg[1][0],seg[1][1]);
+    }
+    ctx.stroke();
+  }
+
+  function drawParametric(xfn, yfn, tmin, tmax, steps, style){
+    ctx.lineWidth = style.lineWidth||2; ctx.strokeStyle = style.color;
+    ctx.beginPath();
+    let started=false;
+    for(let i=0;i<=steps;i++){
+      const t = tmin + (tmax-tmin)*i/steps;
+      let sx = xfn.evaluate({t});
+      let sy = yfn.evaluate({t});
+      if(!isFinite(sx)||!isFinite(sy)){ started=false; continue; }
+      const [X,Y] = mapToCanvas(sx,sy,[+xminEl.value,+xmaxEl.value,+yminEl.value,+ymaxEl.value]);
+      if(!started){ ctx.moveTo(X,Y); started=true; } else ctx.lineTo(X,Y);
+    }
+    ctx.stroke();
+  }
+
+  function drawExplicit(fcode, xmin,xmax, steps, style){
+    ctx.lineWidth = style.lineWidth||2; ctx.strokeStyle = style.color;
+    ctx.beginPath();
+    let started=false;
+    for(let i=0;i<=steps;i++){
+      const x = xmin + (xmax-xmin)*i/steps;
+      let y = fcode.evaluate({x});
+      if(!isFinite(y)){ started=false; continue; }
+      const [X,Y] = mapToCanvas(x,y,[+xminEl.value,+xmaxEl.value,+yminEl.value,+ymaxEl.value]);
+      if(!started){ ctx.moveTo(X,Y); started=true; } else ctx.lineTo(X,Y);
+    }
+    ctx.stroke();
+  }
+
+  drawBtn.onclick = ()=>{
+    clear();
+    const mode = modeEl.value;
+    const res = +resEl.value;
+    const steps = Math.round(res);
+    const xmin = +xminEl.value, xmax=+xmaxEl.value, ymin=+yminEl.value, ymax=+ymaxEl.value;
+    const domain = [xmin,xmax,ymin,ymax];
+    const thresh = +thresholdEl.value;
+    const color = colorEl.value;
+    const lw = +lwEl.value;
+    const expr = exprEl.value.trim();
+    try{
+      if(!expr){ throw new Error('Empty expression'); }
+      if(mode==='implicit'){
+        // sample a grid of values f(x,y)
+        const w = Math.max(40, Math.round(steps/2));
+        const h = Math.max(40, Math.round(steps/2));
+        const values = new Float32Array((w+1)*(h+1));
+        const code = compileExpression(expr);
+        for(let j=0;j<=h;j++){
+          const y = ymin + (ymax-ymin)*(j/h);
+          for(let i=0;i<=w;i++){
+            const x = xmin + (xmax-xmin)*(i/w);
+            let val = code.evaluate({x,y,theta:(x),t:(x),p:(y)});
+            if(typeof val === 'object' && val.entries) val = val.entries[0];
+            values[j*(w+1)+i] = Number(val);
+          }
+        }
+        const lines = marchingSquares(values,w,h,domain,thresh);
+        if(fillChk.checked){
+          // quick fill using odd-even rule by drawing many vertical stripes based on sign
+          ctx.fillStyle = color+'44';
+          for(let i=0;i<canvas.width;i+=2){
+            // map to domain x
+            const x = xmin + (xmax-xmin)*(i/canvas.width);
+            // find y intervals where sign>thresh by sampling downwards
+            let inside=false; let startY=0;
+            for(let py=0;py<=canvas.height;py++){
+              const y = ymin + (ymax-ymin)*(1 - py/canvas.height);
+              const v = (compileExpression(expr).evaluate({x,y}));
+              if(v>thresh && !inside){ inside=true; startY=py; }
+              if((v<=thresh||py===canvas.height) && inside){ ctx.fillRect(i,startY,2,py-startY); inside=false; }
+            }
+          }
+        }
+        drawLines(lines,{lineWidth:lw,color});
+      } else if(mode==='explicit'){
+        const fcode = compileExpression(expr);
+        drawExplicit(fcode,xmin,xmax,steps,{lineWidth:lw,color});
+      } else if(mode==='param'){
+        // expecting "xexpr, yexpr"
+        const parts = expr.split(',');
+        if(parts.length<2) throw new Error('Parametric mode expects two comma-separated expressions: x(t), y(t)');
+        const xfn = compileExpression(parts[0]);
+        const yfn = compileExpression(parts[1]);
+        drawParametric(xfn,yfn,xmin,xmax,steps,{lineWidth:lw,color});
+      } else if(mode==='radial'){
+        // radial: r(theta, p?) where theta in [xmin,xmax] by default -pi..pi
+        // we treat xmin,xmax as theta-min/theta-max and ymin,ymax may carry parameter p range
+        const code = compileExpression(expr);
+        const tmin = xmin, tmax = xmax; const pmin=ymin,pmax=ymax;
+        ctx.lineWidth = lw; ctx.strokeStyle = color; ctx.beginPath();
+        let started=false;
+        for(let i=0;i<=steps;i++){
+          const theta = tmin + (tmax-tmin)*i/steps;
+          const p = pmin + (pmax-pmin)*(i/steps);
+          let r = code.evaluate({theta,θ:theta,t:theta,p});
+          if(!isFinite(r)) { started=false; continue; }
+          const x = r*Math.cos(theta);
+          const y = r*Math.sin(theta);
+          const [X,Y] = mapToCanvas(x,y,domain);
+          if(!started){ ctx.moveTo(X,Y); started=true } else ctx.lineTo(X,Y);
+        }
+        ctx.stroke();
+      } else if(mode==='heightmap'){
+        // render grayscale map of f(x,y)
+        const w = canvas.width, h=canvas.height;
+        const code = compileExpression(expr);
+        const img = ctx.createImageData(w,h);
+        let min=Infinity, max=-Infinity;
+        const samples = new Float32Array(w*h);
+        for(let j=0;j<h;j++){
+          const y = ymin + (ymax-ymin)*(1 - j/(h-1));
+          for(let i=0;i<w;i++){
+            const x = xmin + (xmax-xmin)*(i/(w-1));
+            let v = code.evaluate({x,y}); v = Number(v);
+            samples[j*w+i]=v; if(v<min)min=v; if(v>max)max=v;
+          }
+        }
+        const range = (max-min)||1;
+        for(let j=0;j<h;j++){
+          for(let i=0;i<w;i++){
+            const v = (samples[j*w+i]-min)/range;
+            const c = Math.round(255*v);
+            const idx = (j*w+i)*4; img.data[idx]=c; img.data[idx+1]=c; img.data[idx+2]=c; img.data[idx+3]=255;
+          }
+        }
+        ctx.putImageData(img,0,0);
+      }
+    }catch(e){
+      alert('Error: '+e.message);
+      console.error(e);
+    }
+  };
+
+})();
+</script>
+</body>
+</html>

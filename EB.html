@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bağlaç mı Edat mı?</title>
+    <style>
+        body {
+		font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            background-color: #000; /* Arkaplan siyah */
+            color: #fff; /* Yazı rengi beyaz */
+        }
+
+        .container {
+            background-color: #333; /* Konteyner arkaplan rengi */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        #cumle {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .buttons button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+        }
+
+        #edat {
+            background-color: #3498db; /* Mavi */
+        }
+
+        #baglac {
+            background-color: #e74c3c; /* Kırmızı */
+        }
+
+        #hicbiri {
+            background-color: #95a5a6; /* Gri */
+        }
+
+        #ikiside {
+            background-color: #9b59b6; /* Mor */
+        }
+
+        #puan {
+            font-size: 1.2em;
+            margin-top: 20px;
+        }
+
+        #tekrarBasla {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: #2ecc71; /* Yeşil */
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .edat {
+            background-color: #3498db; /* Mavi */
+        }
+
+        .baglac {
+            background-color: #e74c3c; /* Kırmızı */
+        }
+
+        .hicbiri {
+            background-color: #95a5a6; /* Gri */
+        }
+
+        .ikiside {
+            background-color: #9b59b6; /* Mor */
+        }
+
+        #hataListesi {
+            margin-top: 20px;
+            text-align: left;
+            color: #fff;
+        }
+
+        .altiCizili {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bağlaç mı Edat mı?</h1>
+        <p id="cumle"></p>
+        <div class="buttons">
+            <button id="edat">Edat</button>
+            <button id="baglac">Bağlaç</button>
+            <button id="hicbiri">Hiçbiri</button>
+            <button id="ikiside">İkisi de</button>
+        </div>
+        <p id="puan">Puan: 0</p>
+        <button id="tekrarBasla">Tekrar Başla</button>
+        <div id="hataListesi">
+            <h2>Hatalar:</h2>
+            <ul id="hataListesiUl"></ul>
+        </div>
+    </div>
+    <script>
+        let puan = 0;
+        let mevcutCumle;
+        const hataListesi = [];
+
+
+const cumleler = [
+     // EDATLAR
+    { cumle: "Ali ile Ayşe parka gitti.", tip: "edat", lokasyon: "E ile" },
+    { cumle: "Sadece seni düşünüyorum.", tip: "edat", lokasyon: "E sadece" },
+    { cumle: "Bu soruyu çözmek için çok çalıştım.", tip: "edat", lokasyon: "E için" },
+    { cumle: "O, ders çalışırken müzik dinler.", tip: "hicbiri", lokasyon: "H - " },
+    { cumle: "Deniz gibi mavi gözleri vardı.", tip: "edat", lokasyon: "E gibi" },
+    { cumle: "Onun kadar hızlı koşan yok.", tip: "edat", lokasyon: "E kadar" },
+    { cumle: "Yağmur yüzünden pikniğe gidemedik.", tip: "edat", lokasyon: "E yüzünden" },
+    { cumle: "Şehir dışına doğru ilerledi.", tip: "edat", lokasyon: "E doğru" },
+    { cumle: "Çok çalışmama rağmen sınavda hedeflediğim başarıyı yakalayamadım.", tip: "edat", lokasyon: "E rağmen" },
+    { cumle: "Senin yerine Ahmet gelsin.", tip: "edat", lokasyon: "E yerine" },
+
+    // BAĞLAÇLAR
+    { cumle: "Hem kitap okudum hem de film izledim.", tip: "baglac", lokasyon: "B hem" },
+    { cumle: "Ya bu deveyi güdersin ya bu diyardan gidersin.", tip: "baglac", lokasyon: "B ya" },
+    { cumle: "Ne güzel ne de çirkin.", tip: "baglac", lokasyon: "B ne" },
+    { cumle: "Ancak seni görmeye geldim.", tip: "baglac", lokasyon: "B ancak" },
+    { cumle: "O kadar çalıştı ama başarılı olamadı.", tip: "baglac", lokasyon: "B ama" },
+    { cumle: "Hem üşüdüm hem de acıktım.", tip: "baglac", lokasyon: "B hem" },
+    { cumle: "Lakin bu kararın sonuçları ağır olabilir.", tip: "baglac", lokasyon: "B lakin" },
+    { cumle: "Fakat sana güveniyorum.", tip: "baglac", lokasyon: "B fakat" },
+    { cumle: "Beni aradı ve çok mutlu oldu.", tip: "baglac", lokasyon: "B ve" },
+    { cumle: "Eğer istersen, sana yardım ederim.", tip: "baglac", lokasyon: "B eğer" },
+	
+	    // *** HİÇBİRİ (NE EDAT NE BAĞLAÇ) ***
+    { cumle: "Bugün hava çok güzel.", tip: "hicbiri", lokasyon: "H -" },
+    { cumle: "Saat kaç oldu?", tip: "hicbiri", lokasyon: "H -" },
+    { cumle: "Çocuk parkta oynuyor.", tip: "hicbiri", lokasyon: "H -" },
+    { cumle: "Evimiz denize çok yakın.", tip: "hicbiri", lokasyon: "H -" },
+    { cumle: "Bu araba geçen sene daha ucuzdu.", tip: "hicbiri", lokasyon: "H -" },
+    { cumle: "Telefonumun şarjı bitmek üzere.", tip: "hicbiri", lokasyon: "H -" },
+	
+	 { cumle: "Sana her zaman güvendim ama yanıldım.", tip: "ikiside", lokasyon: "İ ama" },
+    { cumle: "Senin için geldim, çünkü seni seviyorum.", tip: "ikiside", lokasyon: "İ için çünkü" },
+    { cumle: "Ali ve Ayşe, sınavdan sonra birlikte dışarı çıktı.", tip: "ikiside", lokasyon: "İ ve sonra" },
+    { cumle: "O kadar yemek yedim ki hala aç hissediyorum.", tip: "ikiside", lokasyon: "İ kadar ki" },
+    { cumle: "Annesi ile babası tatile çıktı, fakat o evde kaldı.", tip: "ikiside", lokasyon: "İ ile fakat" },
+    { cumle: "Çalışmadığın halde sınavdan geçtiğin için çok şanslısın.", tip: "ikiside", lokasyon: "İ halde için" },
+    { cumle: "Deniz gibi gözlerin var ve bu çok güzel.", tip: "ikiside", lokasyon: "İ gibi ve" },
+
+	// *** EDATLAR ***
+    { cumle: "Ali ile Ayşe, parkta uzun bir yürüyüş yaptılar ve gün batımını izlediler.", tip: "edat", lokasyon: "E ile" },
+    { cumle: "Sadece senin için bu kadar çabalıyorum, başka hiçbir şey düşünmüyorum.", tip: "edat", lokasyon: "E sadece" },
+    { cumle: "Bu projeyi tamamlamak için gece gündüz demeden çalıştım.", tip: "edat", lokasyon: "E için" },
+    { cumle: "O, kitap okurken birden uyuyakaldı ve rüyasında kendini bir masal diyarında buldu.", tip: "edat", lokasyon: "E -ken" },
+    { cumle: "Deniz gibi derin ve mavi gözleri vardı, insanı içine çekiyordu.", tip: "edat", lokasyon: "E gibi" },
+    { cumle: "Onun kadar hızlı koşan birini daha önce hiç görmemiştim.", tip: "edat", lokasyon: "E kadar" },
+    { cumle: "Yağmur yüzünden bütün planlarımız suya düştü ve evde kalmak zorunda kaldık.", tip: "edat", lokasyon: "E yüzünden" },
+    { cumle: "Şehir dışına doğru ilerlerken manzara giderek daha da güzelleşiyordu.", tip: "edat", lokasyon: "E doğru" },
+    { cumle: "Bu evi sana rağmen aldım çünkü buranın bana huzur vereceğini düşündüm.", tip: "ikiside", lokasyon: "İ rağmen çünkü" },
+    { cumle: "Senin yerine Ahmet gelsin, çünkü bu işi daha iyi o yapabilir.", tip: "edat", lokasyon: "E yerine" },
+    { cumle: "Sabaha karşı uyandım ve bir daha uyuyamadım, çünkü aklıma bir sürü şey takıldı.", tip: "ikiside", lokasyon: "İ karşı çünkü" },
+    { cumle: "Arabayı aldıktan sonra hemen sigorta yaptırdı, çünkü güvende olmak istiyordu.", tip: "ikiside", lokasyon: "İ sonra çünkü" },
+    { cumle: "Bunu açıklamak adına bir örnek vereyim, belki o zaman daha iyi anlarsın.", tip: "edat", lokasyon: "E adına" },
+    { cumle: "Herkesin önünde konuşmaya çekiniyorum, çünkü hata yapmaktan korkuyorum.", tip: "ikiside", lokasyon: "İ önünde çünkü" },
+    { cumle: "Seninle beraber bu zorlu yolu aşabiliriz, yeter ki inanalım.", tip: "edat", lokasyon: "E beraber" },
+    { cumle: "Bu sorunu çözmek üzere bir ekip kuruldu ve hemen çalışmalara başladı.", tip: "edat", lokasyon: "E üzere" },
+    { cumle: "O, her şeye rağmen gülümsemeyi başardı ve herkesi şaşırttı.", tip: "edat", lokasyon: "E rağmen" },
+    { cumle: "Bu kadar çalışmama karşın hala istediğim sonucu alamadım.", tip: "edat", lokasyon: "E karşın" },
+    { cumle: "Senin için her şeyi yaparım, çünkü sen benim için çok önemlisin.", tip: "edat", lokasyon: "E için" },
+    { cumle: "Bu kitabı okuduktan sonra hayata bakış açım tamamen değişti.", tip: "edat", lokasyon: "E sonra" },
+    { cumle: "O, herkesten farklı olarak bu sorunu çözmeyi başardı.", tip: "edat", lokasyon: "E olarak" },
+    { cumle: "Bu kadar çabalamama rağmen hala istediğim sonucu alamadım.", tip: "edat", lokasyon: "E rağmen" },
+    { cumle: "Seninle beraber bu zorlu yolu aşabiliriz, yeter ki inanalım.", tip: "edat", lokasyon: "E beraber" },
+    { cumle: "Bu sorunu çözmek üzere bir ekip kuruldu ve hemen çalışmalara başladı.", tip: "edat", lokasyon: "E üzere" },
+    { cumle: "O, her şeye rağmen gülümsemeyi başardı ve herkesi şaşırttı.", tip: "edat", lokasyon: "E rağmen" },
+
+    // *** BAĞLAÇLAR ***
+    { cumle: "Hem kitap okudum hem de film izledim, böylece hem eğlendim hem de öğrendim.", tip: "baglac", lokasyon: "B hem" },
+    { cumle: "Ya bu deveyi güdersin ya bu diyardan gidersin, başka seçeneğin yok.", tip: "baglac", lokasyon: "B ya" },
+    { cumle: "Ne güzel ne de çirkin, tam olarak orta karar bir görünümü vardı.", tip: "baglac", lokasyon: "B ne" },
+    { cumle: "Ancak seni görmeye geldim, çünkü seni özledim.", tip: "baglac", lokasyon: "B ancak" },
+    { cumle: "O kadar çalıştı ama başarılı olamadı, çünkü doğru stratejiyi izlemedi.", tip: "baglac", lokasyon: "B ama" },
+    { cumle: "Hem üşüdüm hem de acıktım, bu yüzden hemen eve gitmeye karar verdim.", tip: "baglac", lokasyon: "B hem" },
+    { cumle: "Lakin bu kararın sonuçları ağır olabilir, bu yüzden iyi düşünmelisin.", tip: "baglac", lokasyon: "B lakin" },
+    { cumle: "Fakat sana güveniyorum, çünkü sen her zaman doğruyu yaparsın.", tip: "baglac", lokasyon: "B fakat" },
+    { cumle: "Beni aradı ve çok mutlu oldu, çünkü uzun zamandır görüşmemiştik.", tip: "baglac", lokasyon: "B ve" },
+    { cumle: "Eğer istersen, sana yardım ederim, çünkü senin başarılı olmanı istiyorum.", tip: "baglac", lokasyon: "B eğer" },
+    { cumle: "Şu an için sessizim, çünkü yeterince konuştum ve artık dinlemek istiyorum.", tip: "baglac", lokasyon: "B çünkü" },
+    { cumle: "Yağmur yağdı ve yollar tamamen su doldu, bu yüzden dışarı çıkmak imkansız hale geldi.", tip: "baglac", lokasyon: "B ve" },
+    { cumle: "Ne ders çalıştı ne de oyun oynadı, bütün gün boş boş oturdu ve hiçbir şey yapmadı.", tip: "baglac", lokasyon: "B ne" },
+    { cumle: "Dolayısıyla, bu işi yapamayız, çünkü yeterli kaynağımız yok.", tip: "baglac", lokasyon: "B dolayısıyla" },
+    { cumle: "Hem yoruldum hem de canım sıkıldı, bu yüzden biraz dinlenmeye karar verdim.", tip: "baglac", lokasyon: "B hem" },
+    { cumle: "Ya bu işi bitirirsin ya da başka birini buluruz, karar senin.", tip: "baglac", lokasyon: "B ya" },
+    { cumle: "Ne güzel bir gün ne de kötü bir gün, tam anlamıyla sıradan bir gündü.", tip: "baglac", lokasyon: "B ne" },
+    { cumle: "Ancak seninle konuşmak istiyorum, çünkü seni özledim.", tip: "baglac", lokasyon: "B ancak" },
+    { cumle: "O kadar çalıştı ama başarılı olamadı, çünkü doğru yöntemi kullanmadı.", tip: "baglac", lokasyon: "B ama" },
+    { cumle: "Hem üşüdüm hem de acıktım, bu yüzden hemen eve gitmeye karar verdim.", tip: "baglac", lokasyon: "B hem" },
+    { cumle: "Lakin bu kararın sonuçları ağır olabilir, bu yüzden iyi düşünmelisin.", tip: "baglac", lokasyon: "B lakin" },
+    { cumle: "Fakat sana güveniyorum, çünkü sen her zaman doğruyu yaparsın.", tip: "baglac", lokasyon: "B fakat" },
+    { cumle: "Beni aradı ve çok mutlu oldu, çünkü uzun zamandır görüşmemiştik.", tip: "baglac", lokasyon: "B ve" },
+    { cumle: "Eğer istersen, sana yardım ederim, çünkü senin başarılı olmanı istiyorum.", tip: "baglac", lokasyon: "B eğer" },
+    { cumle: "Şu an için sessizim, çünkü yeterince konuştum ve artık dinlemek istiyorum.", tip: "baglac", lokasyon: "B çünkü" },
+
+
+    // *** HİÇBİRİ (NE EDAT NE BAĞLAÇ) ***
+    { cumle: "Bugün hava çok güzel, insanın içini açıyor.", tip: "hicbiri", lokasyon: "H -" },
+    { cumle: "Saat kaç oldu, acaba yemek saati geldi mi?", tip: "hicbiri", lokasyon: "H -" },
+    { cumle: "Çocuk parkta oynuyor, annesi ise onu izliyor.", tip: "hicbiri", lokasyon: "H -" },
+    { cumle: "Evimiz denize çok yakın, bu yüzden her sabah deniz manzarası eşliğinde kahvaltı yapıyoruz.", tip: "hicbiri", lokasyon: "H -" },
+    { cumle: "Bu araba geçen sene daha ucuzdu, şimdi fiyatlar çok arttı.", tip: "hicbiri", lokasyon: "H -" },
+    { cumle: "Telefonumun şarjı bitmek üzere, bu yüzden hemen şarja takmam gerekiyor.", tip: "hicbiri", lokasyon: "H -" },
+    { cumle: "Bugün okulda çok yoruldum, eve gidince hemen dinleneceğim.", tip: "hicbiri", lokasyon: "H -" },
+    { cumle: "Bu kitabı okumak beni çok etkiledi, herkese tavsiye ederim.", tip: "hicbiri", lokasyon: "H -" },
+    
+    
+    { cumle: "Bugün işte çok yoğundum, eve geldiğimde kendimi bitkin hissettim.", tip: "hicbiri", lokasyon: "H -" },
+    { cumle: "Bu yemek çok lezzetli, tarifini mutlaka almalıyım.", tip: "hicbiri", lokasyon: "H -" },
+    { cumle: "Bugün arkadaşlarımla buluştum, çok güzel vakit geçirdik.", tip: "hicbiri", lokasyon: "H -" },
+    { cumle: "Bu şarkıyı her dinlediğimde kendimi mutlu hissediyorum.", tip: "hicbiri", lokasyon: "H -" },
+    { cumle: "Bugün hava çok sıcak, dışarı çıkmak istemiyorum.", tip: "hicbiri", lokasyon: "H -" },
+    { cumle: "Bu kitabı okumak beni çok etkiledi, herkese tavsiye ederim.", tip: "hicbiri", lokasyon: "H -" },
+    
+    { cumle: "Bu filmi daha önce izlemiştim, ama tekrar izlemek istiyorum.", tip: "bağlaç", lokasyon: "B ama" },
+    { cumle: "Bugün işte çok yoğundum, eve geldiğimde kendimi bitkin hissettim.", tip: "hicbiri", lokasyon: "H -" },
+    { cumle: "Bu yemek çok lezzetli, tarifini mutlaka almalıyım.", tip: "hicbiri", lokasyon: "H -" },
+    { cumle: "Bugün arkadaşlarımla buluştum, çok güzel vakit geçirdik.", tip: "hicbiri", lokasyon: "H -" },
+    { cumle: "Bu şarkıyı her dinlediğimde kendimi mutlu hissediyorum.", tip: "hicbiri", lokasyon: "H -" },
+    { cumle: "Bugün hava çok sıcak, dışarı çıkmak istemiyorum.", tip: "hicbiri", lokasyon: "H -" },
+    { cumle: "Bu kitabı okumak beni çok etkiledi, herkese tavsiye ederim.", tip: "hicbiri", lokasyon: "H -" },
+    
+
+    // *** İKİSİ DE (HEM EDAT HEM BAĞLAÇ) ***
+    { cumle: "Sana her zaman güvendim ama yanıldım, çünkü sen beni hayal kırıklığına uğrattın.", tip: "ikiside", lokasyon: "İ ama çünkü" },
+    { cumle: "Senin için geldim, çünkü seni seviyorum ve senin yanında olmak istiyorum.", tip: "ikiside", lokasyon: "İ için çünkü" },
+    { cumle: "Ali ve Ayşe, sınavdan sonra birlikte dışarı çıktı ve eğlenceli vakit geçirdi.", tip: "ikiside", lokasyon: "İ ve sonra" },
+    { cumle: "O kadar yemek yedim ki hala aç hissediyorum, çünkü yediklerim beni doyurmadı.", tip: "ikiside", lokasyon: "İ kadar ki" },
+    { cumle: "Annesi ile babası tatile çıktı, fakat o evde kaldı ve yalnız vakit geçirdi.", tip: "ikiside", lokasyon: "İ ile fakat" },
+    { cumle: "Çalışmadığın halde sınavdan geçtiğin için çok şanslısın, çünkü bu herkese nasip olmaz.", tip: "ikiside", lokasyon: "İ halde için" },
+    { cumle: "Deniz gibi gözlerin var ve bu çok güzel, çünkü insanı içine çekiyor.", tip: "ikiside", lokasyon: "İ gibi ve" },
+    { cumle: "Sana her zaman güvendim ama yanıldım, çünkü sen beni hayal kırıklığına uğrattın.", tip: "ikiside", lokasyon: "İ ama çünkü" },
+    { cumle: "Senin için geldim, çünkü seni seviyorum ve senin yanında olmak istiyorum.", tip: "ikiside", lokasyon: "İ için çünkü" },
+    { cumle: "Ali ve Ayşe, sınavdan sonra birlikte dışarı çıktı ve eğlenceli vakit geçirdi.", tip: "ikiside", lokasyon: "İ ve sonra" },
+    { cumle: "O kadar yemek yedim ki hala aç hissediyorum, çünkü yediklerim beni doyurmadı.", tip: "ikiside", lokasyon: "İ kadar ki" },
+    { cumle: "Annesi ile babası tatile çıktı, fakat o evde kaldı ve yalnız vakit geçirdi.", tip: "ikiside", lokasyon: "İ ile fakat" },
+    { cumle: "Çalışmadığın halde sınavdan geçtiğin için çok şanslısın, çünkü bu herkese nasip olmaz.", tip: "ikiside", lokasyon: "İ halde için" },
+    { cumle: "Deniz gibi gözlerin var ve bu çok güzel, çünkü insanı içine çekiyor.", tip: "ikiside", lokasyon: "İ gibi ve" },
+    { cumle: "Sana her zaman güvendim ama yanıldım, çünkü sen beni hayal kırıklığına uğrattın.", tip: "ikiside", lokasyon: "İ ama çünkü" },
+    { cumle: "Senin için geldim, çünkü seni seviyorum ve senin yanında olmak istiyorum.", tip: "ikiside", lokasyon: "İ için çünkü" },
+    { cumle: "Ali ve Ayşe, sınavdan sonra birlikte dışarı çıktı ve eğlenceli vakit geçirdi.", tip: "ikiside", lokasyon: "İ ve sonra" },
+    { cumle: "O kadar yemek yedim ki hala aç hissediyorum, çünkü yediklerim beni doyurmadı.", tip: "ikiside", lokasyon: "İ kadar ki" },
+    { cumle: "Annesi ile babası tatile çıktı, fakat o evde kaldı ve yalnız vakit geçirdi.", tip: "ikiside", lokasyon: "İ ile fakat" },
+    { cumle: "Çalışmadığın halde sınavdan geçtiğin için çok şanslısın, çünkü bu herkese nasip olmaz.", tip: "ikiside", lokasyon: "İ halde için" },
+    { cumle: "Deniz gibi gözlerin var ve bu çok güzel, çünkü insanı içine çekiyor.", tip: "ikiside", lokasyon: "İ gibi ve" },
+    { cumle: "Sana her zaman güvendim ama yanıldım, çünkü sen beni hayal kırıklığına uğrattın.", tip: "ikiside", lokasyon: "İ ama çünkü" },
+    { cumle: "Senin için geldim, çünkü seni seviyorum ve senin yanında olmak istiyorum.", tip: "ikiside", lokasyon: "İ için çünkü" },
+    { cumle: "Ali ve Ayşe, sınavdan sonra birlikte dışarı çıktı ve eğlenceli vakit geçirdi.", tip: "ikiside", lokasyon: "İ ve sonra" },
+    { cumle: "O kadar yemek yedim ki hala aç hissediyorum, çünkü yediklerim beni doyurmadı.", tip: "ikiside", lokasyon: "İ kadar ki" },
+
+{ cumle: "Senden gayrı kimsem yok.", tip: "edat", lokasyon: "E gayrı" },
+{ cumle: "Yardım istemekten başka çaremiz kalmadı.", tip: "edat", lokasyon: "E başka" },
+{ cumle: "Yorgunluktan yatağa bavul gibi düştüm.", tip: "edat", lokasyon: "E gibi" },
+{ cumle: "Çok çalışmama rağmen sınavda hedeflediğim başarıyı yakalayamadım.", tip: "edat", lokasyon: "E rağmen" },
+{ cumle: "Duyduğuma göre bitirme sınavları bir hafta erken gerçekleşecekmiş.", tip: "edat", lokasyon: "E göre" },
+{ cumle: "Şirketteki son değişikliklere dâir bilgi almak istiyorum.", tip: "edat", lokasyon: "E dâir" },
+{ cumle: "Ne kadar zaman olmuş görüşmeyeli.", tip: "edat", lokasyon: "E kadar" },
+{ cumle: "Sürahiyi ağzına kadar doldurdum.", tip: "edat", lokasyon: "E kadar" },
+{ cumle: "Açılış konuşmasını yapmak üzere kürsüye çıktı.", tip: "edat", lokasyon: "E üzere" },
+{ cumle: "Bu raporu bitirebilmek için zamana ihtiyacım var.", tip: "edat", lokasyon: "E için" },
+{ cumle: "Kardeşim hastalığından nâşi gelemedi.", tip: "edat", lokasyon: "E nâşi" },
+
+{ cumle: "İstanbul'a uçakla gideceğim.", tip: "edat", lokasyon: "E ile" },
+{ cumle: "Bu oyuncağı küçük kardeşimle birlikte yaptım.", tip: "edat", lokasyon: "E ile" },
+{ cumle: "Büyük bir sevinçle yanıma geldi.", tip: "edat", lokasyon: "E ile" },
+{ cumle: "Arabanın devrilmesiyle yol trafiğe kapandı.", tip: "edat", lokasyon: "E ile" },
+{ cumle: "Ayvalık'ta denize karşı bir villa almış kendisine.", tip: "edat", lokasyon: "E karşı" },
+{ cumle: "Eve doğru ıslık çalarak yürürken eski bir arkadaşıma rastladım.", tip: "edat", lokasyon: "E doğru" },
+{ cumle: "Otomobilimiz bozulunca şehre kadar yürüdük.", tip: "edat", lokasyon: "E kadar" },
+{ cumle: "Babam yurt dışından döndükten sonra taşınacağız.", tip: "edat", lokasyon: "E sonra" },
+{ cumle: "Gitmeden evvel bahçe düzenlemesini tamamlamalıyız.", tip: "edat", lokasyon: "E evvel" },
+{ cumle: "Ne zamandan beri bu işle meşgulsünüz?", tip: "edat", lokasyon: "E beri" },
+{ cumle: "Ali ile Aydın bize geldiler.", tip: "baglac", lokasyon: "B ile" }, // Bağlaç örneği
+{ cumle: "Bu filmi Ali'yle izlemiştim.", tip: "edat", lokasyon: "E ile" }, // Edat örneği
+{ cumle: "Dağ gibi adam bu hastalığı atlatamadı.", tip: "edat", lokasyon: "E gibi" }, // Sıfat öbeği
+{ cumle: "Sen de herkes kadar çaba göstermelisin.", tip: "edat", lokasyon: "E kadar" }, // Zarf öbeği
+{ cumle: "Dünkü provada repliğimi unuttuğumda utançtan ölecek gibiydim.", tip: "edat", lokasyon: "E gibi" }, // Yüklem
+{ cumle: "Onun gibisi zor bulunur.", tip: "edat", lokasyon: "E gibi" }, // Özne
+
+{ cumle: "İstanbul'un kışını da yazını da sevmem.", tip: "baglac", lokasyon: "B da" },
+{ cumle: "Semih hem yiyor hem söyleniyordu.", tip: "baglac", lokasyon: "B hem" },
+{ cumle: "İsmet ne armut ne de elma toplayabildi.", tip: "baglac", lokasyon: "B ne" },
+{ cumle: "Bu filmin Türkiye'de gösterilmediğini sanıyordum, oysa yanılmışım.", tip: "baglac", lokasyon: "B oysa" },
+{ cumle: "Kiracı evin balkonunun olmadığını söylüyordu, nitekim bunu ev sahibi de doğruladı.", tip: "baglac", lokasyon: "B nitekim" },
+{ cumle: "Bir kedi ancak bu kadar kıvrak olabilir.", tip: "baglac", lokasyon: "B ancak" }, // Sıfat fonksiyonu
+{ cumle: "Şimdi evde olması gerekirken ancak gidebildi.", tip: "baglac", lokasyon: "B ancak" }, // Zarf fonksiyonu
+{ cumle: "Ev çok genişti ancak Demet kısa sürede boyadı.", tip: "baglac", lokasyon: "B ancak" }, // Bağlaç fonksiyonu
+{ cumle: "Sen ki ödevin olduğunu biliyorsun, nasıl olur da bunu yapmazsın?", tip: "baglac", lokasyon: "B ki" },
+{ cumle: "O da bu işleri iyi bilir, değil mi?", tip: "baglac", lokasyon: "B da" },
+{ cumle: "Ev ise yeşillikler içindeydi.", tip: "baglac", lokasyon: "B ise" },
+{ cumle: "Evse yeşillikler içindeydi.", tip: "baglac", lokasyon: "B ise" }, // Bitişik yazım
+
+{ cumle: "Eve geldiğimde gördüm ki musluk açık kalmış.", tip: "baglac", lokasyon: "B ki" },
+
+{ cumle: "Hem kitap okudum hem de film izledim.", tip: "baglac", lokasyon: "B hem" },
+{ cumle: "Ya bu deveyi güdersin ya bu diyardan gidersin.", tip: "baglac", lokasyon: "B ya" },
+{ cumle: "Ne güzel ne de çirkin.", tip: "baglac", lokasyon: "B ne" },
+{ cumle: "Ancak seni görmeye geldim.", tip: "baglac", lokasyon: "B ancak" },
+{ cumle: "O kadar çalıştı ama başarılı olamadı.", tip: "baglac", lokasyon: "B ama" },
+{ cumle: "Hem üşüdüm hem de acıktım.", tip: "baglac", lokasyon: "B hem" },
+{ cumle: "Lakin bu kararın sonuçları ağır olabilir.", tip: "baglac", lokasyon: "B lakin" },
+{ cumle: "Fakat sana güveniyorum.", tip: "baglac", lokasyon: "B fakat" },
+{ cumle: "Beni aradı ve çok mutlu oldu.", tip: "baglac", lokasyon: "B ve" },
+{ cumle: "Eğer istersen, sana yardım ederim.", tip: "baglac", lokasyon: "B eğer" },
+
+];
+
+        function rastgeleCumleSec() {
+            const rastgeleIndex = Math.floor(Math.random() * cumleler.length);
+            return cumleler[rastgeleIndex];
+        }
+
+        function cumleGoster() {
+            mevcutCumle = rastgeleCumleSec();
+            const cumleElement = document.getElementById("cumle");
+            cumleElement.innerHTML = mevcutCumle.cumle;
+            cumleElement.style.backgroundColor = ""; // Stili temizle
+        }
+
+        function highlightKelime(cumle, lokasyon, className) {
+            if (!lokasyon) return cumle; // Lokasyon yoksa cümleyi olduğu gibi döndür
+            const kelime = lokasyon.split(" ")[1]; // "B <kelime>" formatından kelimeyi al
+            if (!kelime) return cumle; // Kelime yoksa cümleyi olduğu gibi döndür
+            const regex = new RegExp(`(${kelime})`, "gi"); // Büyük-küçük harf duyarsız regex
+            return cumle.replace(regex, `<span class="${className}">$1</span>`);
+        }
+
+        function cevapKontrol(cevap) {
+            const puanElement = document.getElementById("puan");
+            const cumleElement = document.getElementById("cumle");
+
+            if (cevap === mevcutCumle.tip) {
+                puan += 1000;
+                puanElement.textContent = `Puan: ${puan}`;
+                alert("Doğru cevap! +1000 puan");
+            } else {
+                puan -= 1000;
+                puanElement.textContent = `Puan: ${puan}`;
+                alert("Yanlış cevap! -1000 puan");
+                hataListesi.push(mevcutCumle);
+                const hataListesiUl = document.getElementById("hataListesiUl");
+                const li = document.createElement("li");
+                li.innerHTML = highlightKelime(mevcutCumle.cumle, mevcutCumle.lokasyon, "altiCizili");
+                hataListesiUl.appendChild(li);
+            }
+
+            // Cümleyi renklendir
+            if (cevap === "hicbiri") {
+                cumleElement.style.backgroundColor = "#95a5a6"; // Gri
+            } else {
+                const renkliCumle = highlightKelime(mevcutCumle.cumle, mevcutCumle.lokasyon, mevcutCumle.tip);
+                cumleElement.innerHTML = renkliCumle;
+            }
+
+            // Yeni cümle göster (stili temizle)
+            setTimeout(cumleGoster, 2000);
+        }
+
+        document.getElementById("edat").addEventListener("click", () => cevapKontrol("edat"));
+        document.getElementById("baglac").addEventListener("click", () => cevapKontrol("baglac"));
+        document.getElementById("hicbiri").addEventListener("click", () => cevapKontrol("hicbiri"));
+        document.getElementById("ikiside").addEventListener("click", () => cevapKontrol("ikiside"));
+
+        document.getElementById("tekrarBasla").addEventListener("click", () => {
+            puan = 0;
+            document.getElementById("puan").textContent = `Puan: ${puan}`;
+            document.getElementById("hataListesiUl").innerHTML = ""; // Hata listesini temizle
+            cumleGoster();
+        });
+
+        // Sayfa yüklendiğinde ilk cümleyi göster
+        cumleGoster();
+    </script>
+</body>
+</html>

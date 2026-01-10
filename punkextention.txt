@@ -1,0 +1,1384 @@
+
+		            <section>
+                <h3>1.Clear loss ???</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Indicates a lost position or a terrible move in chess.</li>
+                </ul>
+            </section>
+
+            <!-- ?? -->
+            <section>
+                <h3>2.Blunder  ??</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Indicates a blunder (a very bad move) in chess.</li>
+                </ul>
+            </section>
+
+            <!-- ?! -->
+            <section>
+                <h3>3.Dubious ?!</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Indicates a dubious move (a questionable move) in chess.</li>
+                    <li><strong>Alternative Use</strong>: Can also be used as an alternative to the interrobang.</li>
+                </ul>
+            </section>
+
+            <!-- !? -->
+            <section>
+                <h3>4.Interesting !?</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Indicates an interesting or speculative move in chess.</li>
+                    <li><strong>Alternative Use</strong>: Can also be used as an alternative to the interrobang.</li>
+                </ul>
+            </section>
+
+            <!-- !! -->
+            <section>
+                <h3>5.Brilliant !!</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Indicates a brilliant move in chess.</li>
+                    <li><strong>Mathematical Use</strong>: Represents double factorial in mathematics (e.g., 5!! = 15).</li>
+                </ul>
+            </section>
+
+            <!-- !!! -->
+            <section>
+                <h3>6. Clear Winning !!!</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Indicates an exceptionally brilliant move in chess.</li>
+                    <li><strong>Mathematical Use</strong>: Represents triple factorial in mathematics (e.g., 5!!! = 10).</li>
+                </ul>
+            </section>
+
+            <!-- (!?!) and (?!!) -->
+            <section>
+                <h3>7.Particularly unusual (!?!) and (?!!)</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Indicates particularly unusual, spectacular, controversial, or unsound moves in chess.</li>
+                </ul>
+            </section>
+
+
+            <!-- ⩲ -->
+            <section>
+                <h3>8.Slight plus for White ⩲</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Slight plus for White (White has a slight advantage).</li>
+                </ul>
+            </section>
+
+            <!-- ⩱ -->
+            <section>
+                <h3>9.Slight plus for Black ⩱</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Slight plus for Black (Black has a slight advantage).</li>
+                </ul>
+            </section>
+
+            <!-- ± -->
+             <section>
+                <h3>10.Clear plus for White ±</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Clear plus for White (White has a clear advantage).</li>
+                    <li><strong>Mathematical Use</strong>: Represents addition or subtraction (e.g., 5 ± 3 means 5 + 3 or 5 - 3).</li>
+                    <li><strong>Statistics Use</strong>: Represents standard deviation (e.g., mean ± standard deviation).</li>
+                </ul>
+            </section>
+
+            <!-- ∓ -->
+            <section>
+                <h3>11.Clear plus for Black ∓</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Clear plus for Black (Black has a clear advantage).</li>
+                    <li><strong>Mathematical Use</strong>: Represents subtraction or addition (e.g., 5 ∓ 3 ± 2 means 5 - 3 + 2 or 5 + 3 - 2).</li>
+                </ul>
+            </section>
+
+            <!-- + − -->
+            <section>
+                <h3>12.Decisive advantage for White + −</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Decisive advantage for White (White has a winning advantage).</li>
+                </ul>
+            </section>
+
+            <!-- − + -->
+            <section>
+                <h3>13.Decisive advantage for Black − +</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Decisive advantage for Black (Black has a winning advantage).</li>
+                </ul>
+            </section>
+
+            <!-- ∞ -->
+            <section>
+                <h3>14.Unclear position ∞</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Unclear position (it is unclear who has an advantage).</li>
+                    <li><strong>Mathematical Use</strong>: Represents infinity, used in limits, and as a lemniscate in mathematics.</li>
+                </ul>
+            </section>
+
+            <!-- ⯹ -->
+            <section>
+                <h3>15.Compensation ⯹</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Compensation (the player down in material has compensation for it).</li>
+                </ul>
+            </section>
+
+            <!-- ⌓ -->
+            <section>
+                <h3>16.Better move ⌓</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Indicates a better move than the one played.</li>
+                </ul>
+            </section>
+
+            <!-- □ -->
+            <section>
+                <h3>17.Available move □</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Indicates the only reasonable move available.</li>
+                <li><strong>Alternative Use</strong>: In geometry, represents a square.</li>
+                <li><strong>Family Tree Use</strong>: Represents a male family member.</li>
+                <li><strong>Phonetics Use</strong>: Represents an unidentifiable or indeterminate segment.</li>
+                <li><strong>Chemistry Use</strong>: Historically used to represent hydrogen (Daltonian symbol).</li>
+                <li><strong>Chess Use</strong>: Indicates the only move available.</li>
+                </ul>
+            </section>
+
+            <!-- Δ -->
+            <section>
+                <h3>18.Plan Δ</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Indicates a future plan this move supports.</li>
+                </ul>
+            </section>
+
+            <!-- ∇ -->
+            <section>
+                <h3>19.Counter ∇</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Indicates countering the opponent's plan.</li>
+                </ul>
+            </section>
+
+            <!-- N -->
+            <section>
+                <h3>20.Novelty N</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Indicates a theoretical novelty.</li>
+                </ul>
+            </section>
+
+            <!-- ↑ -->
+            <section>
+                <h3>21.Adventage ↑</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Indicates an advantage in initiative.</li>
+                </ul>
+            </section>
+
+            <!-- → -->
+            <section>
+                <h3>22.Attack →</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Indicates an attack.</li>
+                </ul>
+            </section>
+
+            <!-- ⇄ -->
+            <section>
+                <h3>23.Counterplay ⇄</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Indicates counterplay.</li>
+                </ul>
+            </section>
+
+            <!-- ↑↑ -->
+            <section>
+                <h3>24.Lead ↑↑</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Indicates a lead in development.</li>
+                    <li><strong>Mathematical Use</strong>: Represents tetration in mathematics.</li>
+                </ul>
+            </section>
+
+            <!-- ○ -->
+            <section>
+                <h3>25.Space ○</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Indicates more space controlled by one player.</li>
+                    <li><strong>Geometry Use</strong>: Represents a circle.</li>
+                    <li><strong>Family Tree Use</strong>: Represents a female family member.</li>
+                    <li><strong>Phonetics Use</strong>: Represents an unidentifiable or indeterminate segment.</li>
+                    <li><strong>Chemistry Use</strong>: Historically used to represent oxygen (Daltonian symbol).</li>
+                </ul>
+            </section>
+
+            <!-- ⊕ -->
+            <section>
+                <h3>26.Zeitnot ⊕</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Indicates time trouble (zeitnot) in chess.</li>
+                    <li><strong>Astronomy Use</strong>: Represents Earth.</li>
+                    <li><strong>Algebra Use</strong>: Represents direct sum.</li>
+                    <li><strong>Morphology Use</strong>: Represents dilation.</li>
+                    <li><strong>Linear Algebra Use</strong>: Represents tensor sum.</li>
+                    <li><strong>Logical Operations Use</strong>: Represents exclusive OR.</li>
+                    <li><strong>Engineering Use</strong>: Represents a start screw drive.</li>
+                </ul>
+            </section>
+
+            <!-- ⊙ -->
+            <section>
+                <h3>27.Zugzwang ⊙</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Indicates zugzwang (a situation where any move worsens the player's position).</li>
+                </ul>
+            </section>
+
+            <!-- ++ -->
+            <section>
+                <h3>28.double check ++</h3>
+                <ul>
+                    <li><strong>Usage</strong>: Indicates double check in chess.</li>
+                    <li><strong>Mathematical Use</strong>: Represents multiplication.</li>
+                    <li><strong>Set Theory Use</strong>: Represents the 2nd next ordinal with a certain property.</li>
+                </ul>
+            </section>
+    
+		
+		
+		
+		        <section>
+            <h2>48. Circled Dot (⊙)</h2>
+            <ul>
+                <li><strong>Chess</strong>: Represents <em>Zugzwang</em>, a situation where any move worsens the player's position.</li>
+                <li><strong>Astronomy</strong>: One of many solar symbols used to represent the Sun.</li>
+                <li><strong>Psychology</strong>: In Jungian psychology, the central dot represents the Ego, while the whole symbol represents the Self.</li>
+                <li><strong>Philosophy</strong>: Used by the Pythagoreans and later Greeks to represent the Monad or The Absolute in monism.</li>
+                <li><strong>Linguistics</strong>: Represents bilabial clicks in phonetic notation.</li>
+                <li><strong>Blissymbols</strong>: Represents an eye in Blissymbols, a symbolic language for communication.</li>
+                <li><strong>Mathematics</strong>:
+                    <ul>
+                        <li>Represents the XNOR gate in logic.</li>
+                        <li>Denotes the Hadamard product (element-wise multiplication of matrices of the same size, e.g., A⊙B).</li>
+                        <li>In geometry, it is often used as a symbol for a circle.</li>
+                    </ul>
+                </li>
+                <li><strong>User Interfaces</strong>: Indicates a selected radio button in forms and interfaces.</li>
+                <li><strong>Culture</strong>: A nazar is a circled-dot-shaped amulet used to ward off the evil eye.</li>
+                <li><strong>Music</strong>: Represents <em>tempus perfectum cum prolatione perfecta</em> in medieval musical notation.</li>
+                <li><strong>Philately</strong>: Indicates a used or canceled stamp.</li>
+                <li><strong>Commerce</strong>: The trademark of the Target Corporation.</li>
+                <li><strong>Freemasonry</strong>: Used as a Masonic symbol.</li>
+                <li><strong>Road Signs</strong>: Represents the city center in European road signs.</li>
+                <li><strong>Scouting</strong>: Symbolizes "End of trail" or "End of the game. Gone home."</li>
+                <li><strong>Indigenous Art</strong>: Represents a "Waterhole" or related concept in Australian Aboriginal art.</li>
+                <li><strong>Philately (Germany)</strong>: In Germany, it symbolizes a "Gestempelte Briefmarke" (canceled stamp), while a star means "postfrisch" (mint stamp).</li>
+                <li><strong>Physics</strong>: Represents a vector facing out of the page.</li>
+                <li><strong>Aerodynamics</strong>: Denotes the center of pressure in aerodynamics.</li>
+            </ul>
+        </section>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		            <!-- ― -->
+            <section>
+                <h3>1. ― (HORIZONTAL BAR)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2015</li>
+                    <li><strong>Category</strong>: Pd, dash</li>
+                    <li><strong>Usage</strong>: Used as a horizontal bar or dash in text.</li>
+                </ul>
+            </section>
+
+            <!-- ⸗ -->
+            <section>
+                <h3>2. ⸗ (DOUBLE OBLIQUE HYPHEN)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2E17</li>
+                    <li><strong>Category</strong>: Pd, dash</li>
+                    <li><strong>Usage</strong>: Used in some scripts as a double oblique hyphen.</li>
+                </ul>
+            </section>
+
+            <!-- ⸚ -->
+            <section>
+                <h3>3. ⸚ (HYPHEN WITH DIAERESIS)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2E1A</li>
+                    <li><strong>Category</strong>: Pd, dash</li>
+                    <li><strong>Usage</strong>: Used as a hyphen with a diaeresis mark.</li>
+                </ul>
+            </section>
+
+            <!-- ⸺ -->
+            <section>
+                <h3>4. ⸺ (TWO-EM DASH)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2E3A</li>
+                    <li><strong>Category</strong>: Pd, dash</li>
+                    <li><strong>Usage</strong>: Used as a long dash in text.</li>
+                </ul>
+            </section>
+
+            <!-- ⸻ -->
+            <section>
+                <h3>5. ⸻ (THREE-EM DASH)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2E3B</li>
+                    <li><strong>Category</strong>: Pd, dash</li>
+                    <li><strong>Usage</strong>: Used as an even longer dash in text.</li>
+                </ul>
+            </section>
+
+            <!-- ⹀ -->
+            <section>
+                <h3>6. ⹀ (DOUBLE HYPHEN)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2E40</li>
+                    <li><strong>Category</strong>: Pd, dash</li>
+                    <li><strong>Usage</strong>: Used as a double hyphen in some scripts.</li>
+                </ul>
+            </section>
+
+            <!-- 〜 -->
+            <section>
+                <h3>7. 〜 (WAVE DASH)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+301C</li>
+                    <li><strong>Category</strong>: Pd, dash</li>
+                    <li><strong>Usage</strong>: Used in East Asian typography as a wave dash.</li>
+                </ul>
+            </section>
+
+            <!-- 〰 -->
+            <section>
+                <h3>8. 〰 (WAVY DASH)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+3030</li>
+                    <li><strong>Category</strong>: Pd, dash</li>
+                    <li><strong>Usage</strong>: Used as a wavy dash in text.</li>
+                </ul>
+            </section>
+
+            <!-- ゠ -->
+            <section>
+                <h3>9. ゠ (KATAKANA-HIRAGANA DOUBLE HYPHEN)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+30A0</li>
+                    <li><strong>Category</strong>: Pd, dash</li>
+                    <li><strong>Usage</strong>: Used in Japanese text as a double hyphen.</li>
+                </ul>
+            </section>
+
+            <!-- ︱ -->
+            <section>
+                <h3>10. ︱ (PRESENTATION FORM FOR VERTICAL EM DASH)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FE31</li>
+                    <li><strong>Category</strong>: Pd, dash</li>
+                    <li><strong>Usage</strong>: Used in vertical text as an em dash.</li>
+                </ul>
+            </section>
+
+            <!-- ︲ -->
+            <section>
+                <h3>11. ︲ (PRESENTATION FORM FOR VERTICAL EN DASH)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FE32</li>
+                    <li><strong>Category</strong>: Pd, dash</li>
+                    <li><strong>Usage</strong>: Used in vertical text as an en dash.</li>
+                </ul>
+            </section>
+
+            <!-- ﹘ -->
+            <section>
+                <h3>12. ﹘ (SMALL EM DASH)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FE58</li>
+                    <li><strong>Category</strong>: Pd, dash</li>
+                    <li><strong>Usage</strong>: Used as a small em dash in text.</li>
+                </ul>
+            </section>
+
+            <!-- ﹣ -->
+            <section>
+                <h3>13. ﹣ (SMALL HYPHEN-MINUS)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FE63</li>
+                    <li><strong>Category</strong>: Pd, dash</li>
+                    <li><strong>Usage</strong>: Used as a small hyphen-minus in text.</li>
+                </ul>
+            </section>
+
+            <!-- － -->
+            <section>
+                <h3>14. － (FULLWIDTH HYPHEN-MINUS)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FF0D</li>
+                    <li><strong>Category</strong>: Pd, dash</li>
+                    <li><strong>Usage</strong>: Used as a fullwidth hyphen-minus in East Asian text.</li>
+                </ul>
+            </section>
+
+            <!-- ֊ -->
+            <section>
+                <h3>15. ֊ (ARMENIAN HYPHEN)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+058A</li>
+                    <li><strong>Category</strong>: Pd, dash</li>
+                    <li><strong>Usage</strong>: Used in Armenian text as a hyphen.</li>
+                </ul>
+            </section>
+
+            <!-- ᐀ -->
+            <section>
+                <h3>16. ᐀ (CANADIAN SYLLABICS HYPHEN)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+1400</li>
+                    <li><strong>Category</strong>: Pd, dash</li>
+                    <li><strong>Usage</strong>: Used in Canadian Aboriginal syllabics as a hyphen.</li>
+                </ul>
+            </section>
+
+            <!-- ־ -->
+            <section>
+                <h3>17. ־ (HEBREW PUNCTUATION MAQAF)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+05BE</li>
+                    <li><strong>Category</strong>: Pd, dash</li>
+                    <li><strong>Usage</strong>: Used in Hebrew text as a hyphen or maqaf.</li>
+                </ul>
+            </section>
+
+            <!-- ᠆ -->
+            <section>
+                <h3>18. ᠆ (MONGOLIAN TODO SOFT HYPHEN)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+1806</li>
+                    <li><strong>Category</strong>: Pd, dash</li>
+                    <li><strong>Usage</strong>: Used in Mongolian Todo script as a soft hyphen.</li>
+                </ul>
+            </section>
+
+            <!-- 𐺭 -->
+            <section>
+                <h3>19. 𐺭 (YEZIDI HYPHENATION MARK)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+10EAD</li>
+                    <li><strong>Category</strong>: Pd, dash</li>
+                    <li><strong>Usage</strong>: Used in Yezidi text as a hyphenation mark.</li>
+                </ul>
+            </section>
+        </section>
+
+        <!-- Quotes -->
+        <section>
+            <h2>Quotes</h2>
+
+            <!-- « » -->
+            <section>
+                <h3>20. « » (LEFT-POINTING DOUBLE ANGLE QUOTATION MARK)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+00AB, U+00BB</li>
+                    <li><strong>Category</strong>: Pi, Pf</li>
+                    <li><strong>Usage</strong>: Used as double angle quotation marks in many languages.</li>
+                </ul>
+            </section>
+
+            <!-- ‘ ’ -->
+            <section>
+                <h3>21. ‘ ’ (LEFT SINGLE QUOTATION MARK)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2018, U+2019</li>
+                    <li><strong>Category</strong>: Pi, Pf</li>
+                    <li><strong>Usage</strong>: Used as single quotation marks.</li>
+                </ul>
+            </section>
+
+            <!-- ‛ -->
+            <section>
+                <h3>22. ‛ (SINGLE HIGH-REVERSED-9 QUOTATION MARK)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+201B</li>
+                    <li><strong>Category</strong>: Pi</li>
+                    <li><strong>Usage</strong>: Used as a single high-reversed-9 quotation mark.</li>
+                </ul>
+            </section>
+
+            <!-- “ ” -->
+            <section>
+                <h3>23. “ ” (LEFT DOUBLE QUOTATION MARK)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+201C, U+201D</li>
+                    <li><strong>Category</strong>: Pi, Pf</li>
+                    <li><strong>Usage</strong>: Used as double quotation marks.</li>
+                </ul>
+            </section>
+
+            <!-- ‟ -->
+            <section>
+                <h3>24. ‟ (DOUBLE HIGH-REVERSED-9 QUOTATION MARK)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+201F</li>
+                    <li><strong>Category</strong>: Pi</li>
+                    <li><strong>Usage</strong>: Used as a double high-reversed-9 quotation mark.</li>
+                </ul>
+            </section>
+
+            <!-- ‹ › -->
+            <section>
+                <h3>25. ‹ › (SINGLE LEFT-POINTING ANGLE QUOTATION MARK)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2039, U+203A</li>
+                    <li><strong>Category</strong>: Pi, Pf</li>
+                    <li><strong>Usage</strong>: Used as single angle quotation marks.</li>
+                </ul>
+            </section>
+
+            <!-- ⸂ ⸃ -->
+            <section>
+                <h3>26. ⸂ ⸃ (LEFT SUBSTITUTION BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2E02, U+2E03</li>
+                    <li><strong>Category</strong>: Pi, Pf</li>
+                    <li><strong>Usage</strong>: Used as substitution brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ⸄ ⸅ -->
+            <section>
+                <h3>27. ⸄ ⸅ (LEFT DOTTED SUBSTITUTION BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2E04, U+2E05</li>
+                    <li><strong>Category</strong>: Pi, Pf</li>
+                    <li><strong>Usage</strong>: Used as dotted substitution brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ⸉ ⸊ -->
+            <section>
+                <h3>28. ⸉ ⸊ (LEFT TRANSPOSITION BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2E09, U+2E0A</li>
+                    <li><strong>Category</strong>: Pi, Pf</li>
+                    <li><strong>Usage</strong>: Used as transposition brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ⸌ ⸍ -->
+            <section>
+                <h3>29. ⸌ ⸍ (LEFT RAISED OMISSION BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2E0C, U+2E0D</li>
+                    <li><strong>Category</strong>: Pi, Pf</li>
+                    <li><strong>Usage</strong>: Used as raised omission brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ⸜ ⸝ -->
+            <section>
+                <h3>30. ⸜ ⸝ (LEFT LOW PARAPHRASE BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2E1C, U+2E1D</li>
+                    <li><strong>Category</strong>: Pi, Pf</li>
+                    <li><strong>Usage</strong>: Used as low paraphrase brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ⸠ ⸡ -->
+            <section>
+                <h3>31. ⸠ ⸡ (LEFT VERTICAL BAR WITH QUILL)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2E20, U+2E21</li>
+                    <li><strong>Category</strong>: Pi, Pf</li>
+                    <li><strong>Usage</strong>: Used as vertical bars with quills.</li>
+                </ul>
+            </section>
+        </section>
+
+        <!-- Brackets -->
+        <section>
+            <h2>Brackets</h2>
+
+            <!-- ( ) -->
+            <section>
+                <h3>32. ( ) (LEFT PARENTHESIS)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+0028, U+0029</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as parentheses.</li>
+                </ul>
+            </section>
+
+            <!-- [ ] -->
+            <section>
+                <h3>33. [ ] (LEFT SQUARE BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+005B, U+005D</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as square brackets.</li>
+                </ul>
+            </section>
+
+            <!-- { } -->
+            <section>
+                <h3>34. { } (LEFT CURLY BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+007B, U+007D</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as curly brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ‚ -->
+            <section>
+                <h3>35. ‚ (SINGLE LOW-9 QUOTATION MARK)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+201A</li>
+                    <li><strong>Category</strong>: Ps</li>
+                    <li><strong>Usage</strong>: Used as a single low-9 quotation mark.</li>
+                </ul>
+            </section>
+
+            <!-- „ -->
+            <section>
+                <h3>36. „ (DOUBLE LOW-9 QUOTATION MARK)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+201E</li>
+                    <li><strong>Category</strong>: Ps</li>
+                    <li><strong>Usage</strong>: Used as a double low-9 quotation mark.</li>
+                </ul>
+            </section>
+
+            <!-- ⁅ ⁆ -->
+            <section>
+                <h3>37. ⁅ ⁆ (LEFT SQUARE BRACKET WITH QUILL)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2045, U+2046</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as square brackets with quills.</li>
+                </ul>
+            </section>
+
+            <!-- ⁽ ⁾ -->
+            <section>
+                <h3>38. ⁽ ⁾ (SUPERSCRIPT LEFT PARENTHESIS)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+207D, U+207E</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as superscript parentheses.</li>
+                </ul>
+            </section>
+
+            <!-- ₍ ₎ -->
+            <section>
+                <h3>39. ₍ ₎ (SUBSCRIPT LEFT PARENTHESIS)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+208D, U+208E</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as subscript parentheses.</li>
+                </ul>
+            </section>
+
+            <!-- ⌈ ⌉ -->
+            <section>
+                <h3>40. ⌈ ⌉ (LEFT CEILING)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2308, U+2309</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as ceiling brackets in mathematics.</li>
+                </ul>
+            </section>
+
+            <!-- ⌊ ⌋ -->
+            <section>
+                <h3>41. ⌊ ⌋ (LEFT FLOOR)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+230A, U+230B</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as floor brackets in mathematics.</li>
+                </ul>
+            </section>
+
+            <!-- 〈 〉 -->
+            <section>
+                <h3>42. 〈 〉 (LEFT-POINTING ANGLE BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2329, U+232A</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as angle brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ❨ ❩ -->
+            <section>
+                <h3>43. ❨ ❩ (MEDIUM LEFT PARENTHESIS ORNAMENT)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2768, U+2769</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as medium parenthesis ornaments.</li>
+                </ul>
+            </section>
+
+            <!-- ❪ ❫ -->
+            <section>
+                <h3>44. ❪ ❫ (MEDIUM FLATTENED LEFT PARENTHESIS ORNAMENT)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+276A, U+276B</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as medium flattened parenthesis ornaments.</li>
+                </ul>
+            </section>
+
+            <!-- ❬ ❭ -->
+            <section>
+                <h3>45. ❬ ❭ (MEDIUM LEFT-POINTING ANGLE BRACKET ORNAMENT)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+276C, U+276D</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as medium angle bracket ornaments.</li>
+                </ul>
+            </section>
+
+            <!-- ❮ ❯ -->
+            <section>
+                <h3>46. ❮ ❯ (HEAVY LEFT-POINTING ANGLE QUOTATION MARK ORNAMENT)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+276E, U+276F</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as heavy angle quotation mark ornaments.</li>
+                </ul>
+            </section>
+
+            <!-- ❰ ❱ -->
+            <section>
+                <h3>47. ❰ ❱ (HEAVY LEFT-POINTING ANGLE BRACKET ORNAMENT)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2770, U+2771</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as heavy angle bracket ornaments.</li>
+                </ul>
+            </section>
+
+            <!-- ❲ ❳ -->
+            <section>
+                <h3>48. ❲ ❳ (LIGHT LEFT TORTOISE SHELL BRACKET ORNAMENT)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2772, U+2773</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as light tortoise shell bracket ornaments.</li>
+                </ul>
+            </section>
+
+            <!-- ❴ ❵ -->
+            <section>
+                <h3>49. ❴ ❵ (MEDIUM LEFT CURLY BRACKET ORNAMENT)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2774, U+2775</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as medium curly bracket ornaments.</li>
+                </ul>
+            </section>
+
+            <!-- ⟅ ⟆ -->
+            <section>
+                <h3>50. ⟅ ⟆ (LEFT S-SHAPED BAG DELIMITER)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+27C5, U+27C6</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as S-shaped bag delimiters.</li>
+                </ul>
+            </section>
+
+            <!-- ⟦ ⟧ -->
+            <section>
+                <h3>51. ⟦ ⟧ (MATHEMATICAL LEFT WHITE SQUARE BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+27E6, U+27E7</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as mathematical white square brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ⟨ ⟩ -->
+            <section>
+                <h3>52. ⟨ ⟩ (MATHEMATICAL LEFT ANGLE BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+27E8, U+27E9</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as mathematical angle brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ⟪ ⟫ -->
+            <section>
+                <h3>53. ⟪ ⟫ (MATHEMATICAL LEFT DOUBLE ANGLE BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+27EA, U+27EB</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as mathematical double angle brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ⟬ ⟭ -->
+            <section>
+                <h3>54. ⟬ ⟭ (MATHEMATICAL LEFT WHITE TORTOISE SHELL BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+27EC, U+27ED</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as mathematical white tortoise shell brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ⟮ ⟯ -->
+            <section>
+                <h3>55. ⟮ ⟯ (MATHEMATICAL LEFT FLATTENED PARENTHESIS)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+27EE, U+27EF</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as mathematical flattened parentheses.</li>
+                </ul>
+            </section>
+
+            <!-- ⦃ ⦄ -->
+            <section>
+                <h3>56. ⦃ ⦄ (LEFT WHITE CURLY BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2983, U+2984</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as white curly brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ⦅ ⦆ -->
+            <section>
+                <h3>57. ⦅ ⦆ (LEFT WHITE PARENTHESIS)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2985, U+2986</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as white parentheses.</li>
+                </ul>
+            </section>
+
+            <!-- ⦇ ⦈ -->
+            <section>
+                <h3>58. ⦇ ⦈ (Z NOTATION LEFT IMAGE BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2987, U+2988</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as Z notation image brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ⦉ ⦊ -->
+            <section>
+                <h3>59. ⦉ ⦊ (Z NOTATION LEFT BINDING BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2989, U+298A</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as Z notation binding brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ⦋ ⦌ -->
+            <section>
+                <h3>60. ⦋ ⦌ (LEFT SQUARE BRACKET WITH UNDERBAR)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+298B, U+298C</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as square brackets with underbars.</li>
+                </ul>
+            </section>
+
+            <!-- ⦍ ⦎ -->
+            <section>
+                <h3>61. ⦍ ⦎ (LEFT SQUARE BRACKET WITH TICK IN TOP CORNER)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+298D, U+298E</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as square brackets with ticks in the top corner.</li>
+                </ul>
+            </section>
+
+            <!-- ⦏ ⦐ -->
+            <section>
+                <h3>62. ⦏ ⦐ (LEFT SQUARE BRACKET WITH TICK IN BOTTOM CORNER)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+298F, U+2990</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as square brackets with ticks in the bottom corner.</li>
+                </ul>
+            </section>
+
+            <!-- ⦑ ⦒ -->
+            <section>
+                <h3>63. ⦑ ⦒ (LEFT ANGLE BRACKET WITH DOT)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2991, U+2992</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as angle brackets with dots.</li>
+                </ul>
+            </section>
+
+            <!-- ⦓ ⦔ -->
+            <section>
+                <h3>64. ⦓ ⦔ (LEFT ARC LESS-THAN BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2993, U+2994</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as arc less-than brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ⦕ ⦖ -->
+            <section>
+                <h3>65. ⦕ ⦖ (DOUBLE LEFT ARC GREATER-THAN BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2995, U+2996</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as double arc greater-than brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ⦗ ⦘ -->
+            <section>
+                <h3>66. ⦗ ⦘ (LEFT BLACK TORTOISE SHELL BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2997, U+2998</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as black tortoise shell brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ⧘ ⧙ -->
+            <section>
+                <h3>67. ⧘ ⧙ (LEFT WIGGLY FENCE)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+29D8, U+29D9</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as wiggly fences.</li>
+                </ul>
+            </section>
+
+            <!-- ⧚ ⧛ -->
+            <section>
+                <h3>68. ⧚ ⧛ (LEFT DOUBLE WIGGLY FENCE)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+29DA, U+29DB</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as double wiggly fences.</li>
+                </ul>
+            </section>
+
+            <!-- ⧼ ⧽ -->
+            <section>
+                <h3>69. ⧼ ⧽ (LEFT-POINTING CURVED ANGLE BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+29FC, U+29FD</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as curved angle brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ⸢ ⸣ -->
+            <section>
+                <h3>70. ⸢ ⸣ (TOP LEFT HALF BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2E22, U+2E23</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as top left half brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ⸤ ⸥ -->
+            <section>
+                <h3>71. ⸤ ⸥ (BOTTOM LEFT HALF BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2E24, U+2E25</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as bottom left half brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ⸦ ⸧ -->
+            <section>
+                <h3>72. ⸦ ⸧ (LEFT SIDEWAYS U BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2E26, U+2E27</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as sideways U brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ⸨ ⸩ -->
+            <section>
+                <h3>73. ⸨ ⸩ (LEFT DOUBLE PARENTHESIS)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2E28, U+2E29</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as double parentheses.</li>
+                </ul>
+            </section>
+
+            <!-- ⹂ -->
+            <section>
+                <h3>74. ⹂ (DOUBLE LOW-REVERSED-9 QUOTATION MARK)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+2E42</li>
+                    <li><strong>Category</strong>: Ps</li>
+                    <li><strong>Usage</strong>: Used as a double low-reversed-9 quotation mark.</li>
+                </ul>
+            </section>
+
+            <!-- 〈 〉 -->
+            <section>
+                <h3>75. 〈 〉 (LEFT ANGLE BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+3008, U+3009</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as angle brackets in East Asian text.</li>
+                </ul>
+            </section>
+
+            <!-- 《 》 -->
+            <section>
+                <h3>76. 《 》 (LEFT DOUBLE ANGLE BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+300A, U+300B</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as double angle brackets in East Asian text.</li>
+                </ul>
+            </section>
+
+            <!-- 「 」 -->
+            <section>
+                <h3>77. 「 」 (LEFT CORNER BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+300C, U+300D</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as corner brackets in East Asian text.</li>
+                </ul>
+            </section>
+
+            <!-- 『 』 -->
+            <section>
+                <h3>78. 『 』 (LEFT WHITE CORNER BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+300E, U+300F</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as white corner brackets in East Asian text.</li>
+                </ul>
+            </section>
+
+            <!-- 【 】 -->
+            <section>
+                <h3>79. 【 】 (LEFT BLACK LENTICULAR BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+3010, U+3011</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as black lenticular brackets in East Asian text.</li>
+                </ul>
+            </section>
+
+            <!-- 〔 〕 -->
+            <section>
+                <h3>80. 〔 〕 (LEFT TORTOISE SHELL BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+3014, U+3015</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as tortoise shell brackets in East Asian text.</li>
+                </ul>
+            </section>
+
+            <!-- 〖 〗 -->
+            <section>
+                <h3>81. 〖 〗 (LEFT WHITE LENTICULAR BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+3016, U+3017</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as white lenticular brackets in East Asian text.</li>
+                </ul>
+            </section>
+
+            <!-- 〘 〙 -->
+            <section>
+                <h3>82. 〘 〙 (LEFT WHITE TORTOISE SHELL BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+3018, U+3019</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as white tortoise shell brackets in East Asian text.</li>
+                </ul>
+            </section>
+
+            <!-- 〚 〛 -->
+            <section>
+                <h3>83. 〚 〛 (LEFT WHITE SQUARE BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+301A, U+301B</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as white square brackets in East Asian text.</li>
+                </ul>
+            </section>
+
+            <!-- 〝 〞 -->
+            <section>
+                <h3>84. 〝 〞 (REVERSED DOUBLE PRIME QUOTATION MARK)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+301D, U+301E</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as reversed double prime quotation marks.</li>
+                </ul>
+            </section>
+
+            <!-- 〟 -->
+            <section>
+                <h3>85. 〟 (LOW DOUBLE PRIME QUOTATION MARK)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+301F</li>
+                    <li><strong>Category</strong>: Pe</li>
+                    <li><strong>Usage</strong>: Used as a low double prime quotation mark.</li>
+                </ul>
+            </section>
+
+            <!-- ﴿ -->
+            <section>
+                <h3>86. ﴿ (ORNATE RIGHT PARENTHESIS)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FD3F</li>
+                    <li><strong>Category</strong>: Ps</li>
+                    <li><strong>Usage</strong>: Used as an ornate right parenthesis.</li>
+                </ul>
+            </section>
+
+            <!-- ︗ ︘ -->
+            <section>
+                <h3>87. ︗ ︘ (PRESENTATION FORM FOR VERTICAL LEFT WHITE LENTICULAR BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FE17, U+FE18</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as vertical white lenticular brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ︵ ︶ -->
+            <section>
+                <h3>88. ︵ ︶ (PRESENTATION FORM FOR VERTICAL LEFT PARENTHESIS)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FE35, U+FE36</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as vertical parentheses.</li>
+                </ul>
+            </section>
+
+            <!-- ︷ ︸ -->
+            <section>
+                <h3>89. ︷ ︸ (PRESENTATION FORM FOR VERTICAL LEFT CURLY BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FE37, U+FE38</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as vertical curly brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ︹ ︺ -->
+            <section>
+                <h3>90. ︹ ︺ (PRESENTATION FORM FOR VERTICAL LEFT TORTOISE SHELL BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FE39, U+FE3A</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as vertical tortoise shell brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ︻ ︼ -->
+            <section>
+                <h3>91. ︻ ︼ (PRESENTATION FORM FOR VERTICAL LEFT BLACK LENTICULAR BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FE3B, U+FE3C</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as vertical black lenticular brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ︽ ︾ -->
+            <section>
+                <h3>92. ︽ ︾ (PRESENTATION FORM FOR VERTICAL LEFT DOUBLE ANGLE BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FE3D, U+FE3E</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as vertical double angle brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ︿ ﹀ -->
+            <section>
+                <h3>93. ︿ ﹀ (PRESENTATION FORM FOR VERTICAL LEFT ANGLE BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FE3F, U+FE40</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as vertical angle brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ﹁ ﹂ -->
+            <section>
+                <h3>94. ﹁ ﹂ (PRESENTATION FORM FOR VERTICAL LEFT CORNER BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FE41, U+FE42</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as vertical corner brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ﹃ ﹄ -->
+            <section>
+                <h3>95. ﹃ ﹄ (PRESENTATION FORM FOR VERTICAL LEFT WHITE CORNER BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FE43, U+FE44</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as vertical white corner brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ﹇ ﹈ -->
+            <section>
+                <h3>96. ﹇ ﹈ (PRESENTATION FORM FOR VERTICAL LEFT SQUARE BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FE47, U+FE48</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as vertical square brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ﹙ ﹚ -->
+            <section>
+                <h3>97. ﹙ ﹚ (SMALL LEFT PARENTHESIS)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FE59, U+FE5A</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as small parentheses.</li>
+                </ul>
+            </section>
+
+            <!-- ﹛ ﹜ -->
+            <section>
+                <h3>98. ﹛ ﹜ (SMALL LEFT CURLY BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FE5B, U+FE5C</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as small curly brackets.</li>
+                </ul>
+            </section>
+
+            <!-- ﹝ ﹞ -->
+            <section>
+                <h3>99. ﹝ ﹞ (SMALL LEFT TORTOISE SHELL BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FE5D, U+FE5E</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as small tortoise shell brackets.</li>
+                </ul>
+            </section>
+
+            <!-- （ ） -->
+            <section>
+                <h3>100. （ ） (FULLWIDTH LEFT PARENTHESIS)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FF08, U+FF09</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as fullwidth parentheses in East Asian text.</li>
+                </ul>
+            </section>
+
+            <!-- ［ ］ -->
+            <section>
+                <h3>101. ［ ］ (FULLWIDTH LEFT SQUARE BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FF3B, U+FF3D</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as fullwidth square brackets in East Asian text.</li>
+                </ul>
+            </section>
+
+            <!-- ｛ ｝ -->
+            <section>
+                <h3>102. ｛ ｝ (FULLWIDTH LEFT CURLY BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FF5B, U+FF5D</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as fullwidth curly brackets in East Asian text.</li>
+                </ul>
+            </section>
+
+            <!-- ｟ ｠ -->
+            <section>
+                <h3>103. ｟ ｠ (FULLWIDTH LEFT WHITE PARENTHESIS)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FF5F, U+FF60</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as fullwidth white parentheses in East Asian text.</li>
+                </ul>
+            </section>
+
+            <!-- ｢ ｣ -->
+            <section>
+                <h3>104. ｢ ｣ (HALFWIDTH LEFT CORNER BRACKET)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+FF62, U+FF63</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as halfwidth corner brackets in East Asian text.</li>
+                </ul>
+            </section>
+
+            <!-- ᚛ ᚜ -->
+            <section>
+                <h3>105. ᚛ ᚜ (OGHAM FEATHER MARK)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+169B, U+169C</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as Ogham feather marks.</li>
+                </ul>
+            </section>
+
+            <!-- ༺ ༻ -->
+            <section>
+                <h3>106. ༺ ༻ (TIBETAN MARK GUG RTAGS GYON)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+0F3A, U+0F3B</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as Tibetan gug rtags marks.</li>
+                </ul>
+            </section>
+
+            <!-- ༼ ༽ -->
+            <section>
+                <h3>107. ༼ ༽ (TIBETAN MARK ANG KHANG GYON)</h3>
+                <ul>
+                    <li><strong>Unicode</strong>: U+0F3C, U+0F3D</li>
+                    <li><strong>Category</strong>: Ps, Pe</li>
+                    <li><strong>Usage</strong>: Used as Tibetan ang khang marks.</li>
+                </ul>
+            </section>
+			</section>

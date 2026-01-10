@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plant Health Dashboard</title>
+  <style>
+    /* Your existing CSS styles */
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .slider-group {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+    .slider-container {
+      display: flex;
+      flex-direction: column;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      margin: 20px 0;
+    }
+    .results {
+      text-align: left;
+      width: 100%;
+      font-size: 0.9rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .result-group {
+      background: #f8f8f8;
+      padding: 15px;
+      border-radius: 8px;
+    }
+    .result-group h3 {
+      margin-top: 0;
+      color: #2c5e2e;
+    }
+    .formula-item {
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #eee;
+    }
+    .formula-name {
+      font-weight: bold;
+      color: #3a7d44;
+    }
+    .formula-value {
+      color: #333;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+      width: 100%;
+      border-bottom: 1px solid #ddd;
+    }
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      background: #f1f1f1;
+      margin-right: 5px;
+      border-radius: 5px 5px 0 0;
+    }
+    .tab.active {
+      background: #4CAF50;
+      color: white;
+    }
+    .tab-content {
+      display: none;
+      width: 100%;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>Plant Health Dashboard 🌱</h1>
+  
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('environment')">Environmental</div>
+    <div class="tab" onclick="switchTab('leaf')">Leaf Color</div>
+    <div class="tab" onclick="switchTab('soil')">Soil Color</div>
+  </div>
+  
+  <!-- Ensure these containers exist in the HTML -->
+  <div class="tab-content active" id="environment">
+    <div class="slider-group" id="environment-sliders"></div>
+  </div>
+  
+  <div class="tab-content" id="leaf">
+    <div class="slider-group" id="leaf-sliders"></div>
+  </div>
+  
+  <div class="tab-content" id="soil">
+    <div class="slider-group" id="soil-sliders"></div>
+  </div>
+  
+  <canvas id="visual" width="400" height="300"></canvas>
+  
+  <div class="results">
+    <div class="result-group">
+      <h3>🌿 Leaf Phytochemicals</h3>
+      <div id="phytochemical-results"></div>
+    </div>
+    <div class="result-group">
+      <h3>🪨 Soil Properties</h3>
+      <div id="soil-results"></div>
+    </div>
+    <div class="result-group">
+      <h3>🌍 Environmental Indices</h3>
+      <div id="environment-results"></div>
+    </div>
+    <div class="result-group">
+      <h3>🔬 Advanced Metrics</h3>
+      <div id="advanced-results"></div>
+    </div>
+  </div>
+
+  <script>
+    // Parameter definitions with realistic ranges and defaults
+    const parameters = {
+      // Environmental
+      't': {name: 'Temperature', min: 0, max: 50, default: 25, unit: '°C', tab: 'environment'},
+      'l': {name: 'Light', min: 0, max: 1000, default: 500, unit: 'lux', tab: 'environment'},
+      'h': {name: 'Air Humidity', min: 0, max: 100, default: 60, unit: '%', tab: 'environment'},
+      's': {name: 'Soil Moisture', min: 0, max: 100, default: 40, unit: '%', tab: 'environment'},
+      'e': {name: 'Soil Conductivity', min: 0, max: 10, default: 1.5, unit: 'mS/cm', tab: 'environment'},
+      
+      // Leaf Color
+      'r': {name: 'Leaf Red', min: 0, max: 255, default: 50, unit: '', tab: 'leaf'},
+      'g': {name: 'Leaf Green', min: 0, max: 255, default: 180, unit: '', tab: 'leaf'},
+      'b': {name: 'Leaf Blue', min: 0, max: 255, default: 30, unit: '', tab: 'leaf'},
+      
+      // Soil Color
+      "r'": {name: 'Soil Red', min: 0, max: 255, default: 120, unit: '', tab: 'soil'},
+      "g'": {name: 'Soil Green', min: 0, max: 255, default: 90, unit: '', tab: 'soil'},
+      "b'": {name: 'Soil Blue', min: 0, max: 255, default: 60, unit: '', tab: 'soil'}
+    };
+
+    const values = {};
+
+    // Initialize the dashboard after DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize sliders for each tab
+      Object.entries(parameters).forEach(([id, param]) => {
+        const container = document.createElement('div');
+        container.className = 'slider-container';
+        
+        const label = document.createElement('label');
+        label.innerText = `${param.name}: ${param.default} ${param.unit}`;
+        
+        const input = document.createElement('input');
+        input.type = 'range';
+        input.min = param.min;
+        input.max = param.max;
+        input.value = param.default;
+        input.step = (param.max - param.min) / 100;
+        
+        input.addEventListener('input', () => {
+          values[id] = parseFloat(input.value);
+          label.innerText = `${param.name}: ${input.value} ${param.unit}`;
+          update();
+        });
+        
+        container.appendChild(label);
+        container.appendChild(input);
+        
+        // Get the container element
+        const tabContainer = document.getElementById(`${param.tab}-sliders`);
+        if (tabContainer) {
+          tabContainer.appendChild(container);
+        } else {
+          console.error(`Container not found: ${param.tab}-sliders`);
+        }
+        
+        values[id] = param.default;
+      });
+
+      // Initial update
+      update();
+    });
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      document.querySelector(`.tab[onclick="switchTab('${tabId}')"]`).classList.add('active');
+    }
+
+    function cielch(r, g, b) {
+      const lab = rgb2lab(r, g, b);
+      const c = Math.sqrt(lab.a * lab.a + lab.b * lab.b);
+      const h = Math.atan2(lab.b, lab.a) * (180 / Math.PI);
+      return { l: lab.l, c, h, a: lab.a, b: lab.b, x: lab.x, y: lab.y, z: lab.z };
+    }
+
+    function rgb2lab(r, g, b) {
+      // Convert RGB to LAB using D65/2° standard illuminant
+      function pivot(x) {
+        return x > 0.008856 ? Math.pow(x, 1/3) : (7.787 * x) + 16/116;
+      }
+      r /= 255; g /= 255; b /= 255;
+      r = r > 0.04045 ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
+      g = g > 0.04045 ? Math.pow((g + 0.055) / 1.055, 2.4) : g / 12.92;
+      b = b > 0.04045 ? Math.pow((b + 0.055) / 1.055, 2.4) : b / 12.92;
+      let x = (r * 0.4124 + g * 0.3576 + b * 0.1805) / 0.95047;
+      let y = (r * 0.2126 + g * 0.7152 + b * 0.0722) / 1.00000;
+      let z = (r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883;
+      x = pivot(x); y = pivot(y); z = pivot(z);
+      return {
+        l: 116 * y - 16,
+        a: 500 * (x - y),
+        b: 200 * (y - z),
+        x, y, z
+      };
+    }
+
+    function update() {
+      const leaf = cielch(values.g, values.r, values.b);
+      const soil = cielch(values["g'"], values["r'"], values["b'"]);
+      
+      // Leaf Phytochemical Formulas
+      const phytochemicals = {
+        'Anthocyanin (BerryBoost)': 474.31 - 5.87*leaf.h - 10.814*leaf.c + 9.586*leaf.a,
+        'Flavonoids (Flare Factor)': 322.9 - 4.7*leaf.h + 2.1*leaf.c + 1.2*leaf.a + 0.4*leaf.b,
+        'Carotenoids (Gold Ratio)': 90.5 + 3.1*leaf.h - 0.9*leaf.c + 1.3*leaf.a - 2.5*leaf.b,
+        'Xanthophylls (Sunstain Index)': 76.2 + 1.7*leaf.h - 0.3*leaf.c + 1.1*leaf.a + 1.8*leaf.b,
+        'Triterpenoids (Shieldscore)': 250.1 + 2.3*leaf.h + 0.6*leaf.c - 1.2*leaf.a - 2.0*leaf.b,
+        'Diterpenes (Smog Rejection)': 112.8 - 0.4*leaf.h + 3.1*leaf.c - 0.9*leaf.a + 1.4*leaf.b,
+        'Monoterpenes (ScentStrength)': 89.4 + 2.8*leaf.h - 1.1*leaf.c + 2.0*leaf.a - 3.2*leaf.b,
+        'Steroids (Hardplant Index)': 342.3 - 3.2*leaf.h + 0.9*leaf.c - 1.7*leaf.a + 1.2*leaf.b,
+        'Flavonols (Crystal Glow)': 298.5 + 1.9*leaf.h + 1.5*leaf.c + 0.8*leaf.a - 0.3*leaf.b,
+        'Chlorophyll (Greencode Level)': 1200*leaf.l - 4.1*leaf.c - 5.2*leaf.h + 3.6*leaf.a - 2.3*leaf.b
+      };
+      
+      // Soil Properties
+      const soilProperties = {
+        'Organic Carbon (HumusCore)': soil.y * 1.8 + 0.5*soil.h - 0.9*soil.c + 2.3*soil.a,
+        'Nitrogen (N-Pulse)': soil.x + 1.1*soil.h + 0.7*soil.c - 1.2*soil.b,
+        'Iron Oxide (RustRichness)': soil.z * 2.4 + 0.8*soil.h + 3.5*soil.c,
+        'Clay Content (SoilSmooth)': 500 - 1.3*soil.l + 2.5*soil.c - 3.1*soil.a + 2.2*soil.b,
+        'Soil pH (pH-Light Factor)': 6.5 + 0.002*(soil.x + soil.y + soil.z) - 0.01*soil.c + 0.005*soil.a - 0.003*soil.b,
+        'Moisture (MudSignal)': soil.l * 2.7 - 1.5*soil.c + 0.4*soil.h,
+        'Decomposition (DecayGlow)': 300 - 2.1*soil.h + 3.2*soil.c - 0.8*soil.a + 0.6*soil.b,
+        'Heavy Metals (ToxicTinge)': soil.z + 1.8*soil.c + 2.3*soil.b - 0.6*soil.a,
+        'Microbial Activity (MycoFlash)': soil.l + 0.9*soil.c - 0.3*soil.h + 1.1*soil.a - 2.4*soil.b,
+        'Phosphates (PhosLight)': soil.y * 0.6 + 0.7*soil.a - 0.8*soil.b + 0.3*soil.h
+      };
+      
+      // Environmental Indices
+      const envIndices = {
+        'Chill Factor (1/t)': 100 / (values.t + 0.01),
+        'Growstorm Index (t*l*h)': values.t * values.l * values.h / 1000,
+        'Dry Drift (h/s)': values.h / (values.s + 0.01),
+        'Mud Surge (s/h)': values.s / (values.h + 0.01),
+        'Aqua Sync (s*h)': values.s * values.h / 100,
+        'Radiant Heat (t*l)': values.t * values.l / 1000,
+        'Blaze Factor (t²*l²)': Math.pow(values.t, 2) * Math.pow(values.l, 2) / 1000000,
+        'Saline Stress (e/s)': values.e / (values.s + 0.01),
+        'Wet Spark (e*s)': values.e * values.s / 100,
+        'Biocharge Index (t*l*h*s)': values.t * values.l * values.h * values.s / 1000000
+      };
+      
+      // Advanced Metrics
+      const advancedMetrics = {
+        'Vitalstorm Growth Index': (values.t * values.l * values.h * values.s) / (values.e + 1),
+        'HueBalance (Leaf-Soil)': Math.abs((values.g / (values.r + 0.01)) - (values["g'"] / (values["r'"] + 0.01))),
+        'EchoField Reflectivity': (values.g + values.r + values.b + values["g'"] + values["r'"] + values["b'"]) / (2 * values.l + 0.01),
+        'Pigment Tension': (values.g + values.r + values.b) / (values.t + values.e + 1),
+        'Fadeflare (Color/Temp²)': (values.g + values.r + values.b) / Math.pow(values.t + 0.01, 2),
+        'Burn Circuit (e*t²/h)': values.e * Math.pow(values.t, 2) / (values.h + 1),
+        'Photon Yield': (values.g + values.r + values.b) / (values.l + values.e + 1),
+        'Oasis Ratio': ((values.s + values.h) * (30 - Math.abs(values.t - 25))) / 100,
+        'Rootburn Index': (values.e * values.l * values.s) / (values["g'"] + values["r'"] + values["b'"] + 1),
+        'PlantScore X': (values.t * values.h * values.s * (values.g + values.r + values.b)) / ((values.e + 1) * (values.l + 0.01))
+      };
+
+      // Update results display
+      function formatResults(data) {
+        return Object.entries(data).map(([name, val]) => 
+          `<div class="formula-item">
+            <span class="formula-name">${name}</span>: 
+            <span class="formula-value">${val.toFixed(2)}</span>
+          </div>`
+        ).join('');
+      }
+
+      document.getElementById('phytochemical-results').innerHTML = formatResults(phytochemicals);
+      document.getElementById('soil-results').innerHTML = formatResults(soilProperties);
+      document.getElementById('environment-results').innerHTML = formatResults(envIndices);
+      document.getElementById('advanced-results').innerHTML = formatResults(advancedMetrics);
+
+      // Update visualization
+// Update visualization
+const ctx = document.getElementById('visual').getContext('2d');
+ctx.clearRect(0, 0, 400, 300);
+
+// Draw sky background gradient based on light intensity
+const skyGradient = ctx.createLinearGradient(0, 0, 0, 300);
+skyGradient.addColorStop(0, values.l > 500 ? '#87CEEB' : '#4682B4'); // Brighter blue for more light
+skyGradient.addColorStop(1, '#E0F7FA');
+ctx.fillStyle = skyGradient;
+ctx.fillRect(0, 0, 400, 300);
+
+// Draw sun with size and glow effect based on light (l) value
+const sunSize = 30 + (values.l / 20); // Scales with light intensity
+const sunGlow = ctx.createRadialGradient(50, 50, sunSize * 0.3, 50, 50, sunSize * 1.5);
+sunGlow.addColorStop(0, `rgba(255, 255, 100, ${values.l/1000})`);
+sunGlow.addColorStop(1, 'rgba(255, 255, 100, 0)');
+
+ctx.beginPath();
+ctx.arc(50, 50, sunSize * 1.5, 0, Math.PI * 2);
+ctx.fillStyle = sunGlow;
+ctx.fill();
+
+ctx.beginPath();
+ctx.arc(50, 50, sunSize, 0, Math.PI * 2);
+ctx.fillStyle = values.l > 600 ? '#FFD700' : '#FFA500'; // Brighter yellow for more light
+ctx.fill();
+
+// Draw soil with color based on soil RGB values and moisture
+const soilColor = `rgb(${values["r'"]}, ${values["g'"]}, ${values["b'"]})`;
+const soilHeight = 30 + (values.s / 5); // Higher soil when more moist
+
+// Soil shadow effect
+ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+ctx.beginPath();
+ctx.ellipse(200, 250, 180, soilHeight * 0.3, 0, 0, Math.PI);
+ctx.fill();
+
+// Main soil
+ctx.fillStyle = soilColor;
+ctx.beginPath();
+ctx.ellipse(200, 250, 180, soilHeight * 0.3, 0, 0, Math.PI);
+ctx.fillRect(20, 250, 360, soilHeight);
+ctx.fill();
+
+// Add soil texture based on moisture
+if (values.s < 30) {
+  // Dry soil cracks
+  ctx.strokeStyle = 'rgba(100, 70, 40, 0.5)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 10; i++) {
+    ctx.beginPath();
+    ctx.moveTo(50 + i * 30, 260);
+    ctx.lineTo(60 + i * 30, 280);
+    ctx.stroke();
+  }
+} else if (values.s > 70) {
+  // Wet soil shine
+  const wetGradient = ctx.createLinearGradient(0, 250, 0, 250 + soilHeight);
+  wetGradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+  wetGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  ctx.fillStyle = wetGradient;
+  ctx.fillRect(20, 250, 360, soilHeight);
+}
+
+// Draw plant stem with thickness based on health
+const stemHealth = (values.g / (values.r + values.b + 1)) * 2; // Green dominance
+const stemWidth = 10 + stemHealth * 5;
+const stemHeight = 100 + (values.h / 2); // Taller with more humidity
+
+// Stem gradient (darker at bottom)
+const stemGradient = ctx.createLinearGradient(0, 150, 0, 150 + stemHeight);
+stemGradient.addColorStop(0, `rgba(50, ${100 + values.g / 3}, 0, ${values.s/100})`);
+stemGradient.addColorStop(1, `rgba(30, 80, 0, ${values.s/100})`);
+
+ctx.fillStyle = stemGradient;
+ctx.fillRect(200 - stemWidth/2, 150, stemWidth, stemHeight);
+
+// Draw leaves with size and color based on health
+const leafHealth = phytochemicals['Chlorophyll (Greencode Level)'] / 1000;
+const leafSize = 30 + leafHealth * 30 / 100000;
+const leafColor = `rgb(${values.r}, ${values.g}, ${values.b})`;
+
+// Main leaf
+ctx.fillStyle = leafColor;
+ctx.beginPath();
+ctx.ellipse(200, 150, leafSize, leafSize/1.5, 0, 0, Math.PI * 2);
+ctx.fill();
+
+// Additional leaves based on health
+if (leafHealth > 0.5) {
+  // Right leaf
+  ctx.save();
+  ctx.translate(200 + stemWidth/2, 180);
+  ctx.rotate(0.5);
+  ctx.beginPath();
+  ctx.ellipse(0, 0, leafSize * 0.8, leafSize/2, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Left leaf
+  ctx.save();
+  ctx.translate(200 - stemWidth/2, 180);
+  ctx.rotate(-0.5);
+  ctx.beginPath();
+  ctx.ellipse(0, 0, leafSize * 0.8, leafSize/2, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+// Add leaf veins if healthy
+if (leafHealth > 0.7) {
+  ctx.strokeStyle = 'rgba(50, 80, 30, 0.7)';
+  ctx.lineWidth = 1;
+  // Main vein
+  ctx.beginPath();
+  ctx.moveTo(200, 150 - leafSize/1.5);
+  ctx.lineTo(200, 150 + leafSize/1.5);
+  ctx.stroke();
+  // Side veins
+  for (let i = 0; i < 5; i++) {
+    ctx.beginPath();
+    ctx.moveTo(200, 150 - leafSize/1.5 + i * leafSize/3);
+    ctx.lineTo(200 + leafSize * 0.8, 150 - leafSize/3 + i * leafSize/4);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(200, 150 - leafSize/1.5 + i * leafSize/3);
+    ctx.lineTo(200 - leafSize * 0.8, 150 - leafSize/3 + i * leafSize/4);
+    ctx.stroke();
+  }
+}
+
+// Add visual indicator for conductivity (e)
+if (values.e > 5) {
+  // Show warning effect for high conductivity
+  ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+  ctx.beginPath();
+  ctx.arc(200, 250 + soilHeight/2, 50 + values.e * 5, 0, Math.PI * 2);
+  ctx.fill();
+}
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waveform Creator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        canvas {
+            border: 1px solid #000;
+            margin-bottom: 20px;
+        }
+        .slider-container {
+            margin-bottom: 10px;
+        }
+        .slider-container label {
+            display: inline-block;
+            width: 150px;
+        }
+        .keyboard {
+            margin-top: 20px;
+        }
+        .keyboard button {
+            padding: 10px;
+            margin: 5px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Waveform Creator</h1>
+    <canvas id="waveformCanvas" width="800" height="200"></canvas>
+
+    <!-- Sliders for waveform parameters -->
+    <div class="slider-container">
+        <label for="sharpness">Sharpness:</label>
+        <input type="range" id="sharpness" min="0" max="1" step="0.01" value="0.5">
+    </div>
+    <div class="slider-container">
+        <label for="attack">Attack:</label>
+        <input type="range" id="attack" min="0" max="1" step="0.01" value="0.1">
+    </div>
+    <div class="slider-container">
+        <label for="decrease">Decrease:</label>
+        <input type="range" id="decrease" min="0" max="1" step="0.01" value="0.1">
+    </div>
+    <div class="slider-container">
+        <label for="noisyness">Noisyness:</label>
+        <input type="range" id="noisyness" min="0" max="1" step="0.01" value="0">
+    </div>
+    <div class="slider-container">
+        <label for="sweep">Sweep:</label>
+        <input type="range" id="sweep" min="0" max="1" step="0.01" value="0">
+    </div>
+    <div class="slider-container">
+        <label for="chirp">Chirp:</label>
+        <input type="range" id="chirp" min="0" max="1" step="0.01" value="0">
+    </div>
+    <div class="slider-container">
+        <label for="modulation">Modulation:</label>
+        <input type="range" id="modulation" min="0" max="1" step="0.01" value="0">
+    </div>
+    <div class="slider-container">
+        <label for="discontinuity">Discontinuity:</label>
+        <input type="range" id="discontinuity" min="0" max="1" step="0.01" value="0">
+    </div>
+    <div class="slider-container">
+        <label for="fractalness">Fractalness:</label>
+        <input type="range" id="fractalness" min="0" max="1" step="0.01" value="0">
+    </div>
+    <div class="slider-container">
+        <label for="holdTime">Hold Time:</label>
+        <input type="range" id="holdTime" min="0" max="1" step="0.01" value="0">
+    </div>
+    <div class="slider-container">
+        <label for="distortion">Distortion:</label>
+        <input type="range" id="distortion" min="0" max="1" step="0.01" value="0">
+    </div>
+    <div class="slider-container">
+        <label for="bitCrush">Bit Crush:</label>
+        <input type="range" id="bitCrush" min="0" max="1" step="0.01" value="0">
+    </div>
+    <div class="slider-container">
+        <label for="waveFold">Wave Fold:</label>
+        <input type="range" id="waveFold" min="0" max="1" step="0.01" value="0">
+    </div>
+    <div class="slider-container">
+        <label for="ringMod">Ring Mod:</label>
+        <input type="range" id="ringMod" min="0" max="1" step="0.01" value="0">
+    </div>
+    <div class="slider-container">
+        <label for="phaseDistort">Phase Distort:</label>
+        <input type="range" id="phaseDistort" min="0" max="1" step="0.01" value="0">
+    </div>
+
+    <!-- Piano Keyboard -->
+    <div class="keyboard">
+        <button data-key="a">A</button>
+        <button data-key="s">S</button>
+        <button data-key="d">D</button>
+        <button data-key="f">F</button>
+        <button data-key="g">G</button>
+        <button data-key="h">H</button>
+        <button data-key="j">J</button>
+        <button data-key="k">K</button>
+        <button data-key="l">L</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('waveformCanvas');
+        const ctx = canvas.getContext('2d');
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let oscillator = null;
+
+        // Sliders
+        const sliders = {
+            sharpness: document.getElementById('sharpness'),
+            attack: document.getElementById('attack'),
+            decrease: document.getElementById('decrease'),
+            noisyness: document.getElementById('noisyness'),
+            sweep: document.getElementById('sweep'),
+            chirp: document.getElementById('chirp'),
+            modulation: document.getElementById('modulation'),
+            discontinuity: document.getElementById('discontinuity'),
+            fractalness: document.getElementById('fractalness'),
+            holdTime: document.getElementById('holdTime'),
+            distortion: document.getElementById('distortion'),
+            bitCrush: document.getElementById('bitCrush'),
+            waveFold: document.getElementById('waveFold'),
+            ringMod: document.getElementById('ringMod'),
+            phaseDistort: document.getElementById('phaseDistort')
+        };
+
+        // Piano keys
+        const keyboardButtons = document.querySelectorAll('.keyboard button');
+
+        // Waveform function f(t, params)
+        function f(t, params) {
+            const {
+                sharpness,
+                attack,
+                decrease,
+                noisyness,
+                sweep,
+                chirp,
+                modulation,
+                discontinuity,
+                fractalness,
+                holdTime,
+                distortion,
+                bitCrush,
+                waveFold,
+                ringMod,
+                phaseDistort
+            } = params;
+
+            let y = 0;
+
+            // Base waveform (sine wave with sharpness)
+            y += Math.sin(t * 2 * Math.PI) * (1 - sharpness);
+
+            // Add noisyness (random noise)
+            y += (Math.random() * 2 - 1) * noisyness;
+
+            // Add sweep effect (frequency modulation over time)
+            y += Math.sin(t * 2 * Math.PI * (1 + sweep * t)) * 0.5;
+
+            // Add chirp effect (frequency increases over time)
+            y += Math.sin(t * 2 * Math.PI * (1 + chirp * t * t)) * 0.5;
+
+            // Add modulation (amplitude modulation)
+            y *= 1 + Math.sin(t * 2 * Math.PI * modulation) * 0.5;
+
+            // Add discontinuity (sudden jumps in the waveform)
+            if (Math.random() < discontinuity) {
+                y += (Math.random() * 2 - 1) * 0.5;
+            }
+
+            // Add fractalness (self-similarity or recursion)
+            if (fractalness > 0) {
+                y += f(t * 2, { ...params, fractalness: fractalness * 0.5 }) * fractalness;
+            }
+
+            // Add distortion (clipping or saturation)
+            y = Math.tanh(y * (1 + distortion));
+
+            // Add bit crush effect (quantization)
+            if (bitCrush > 0) {
+                const levels = Math.pow(2, Math.floor(bitCrush * 8));
+                y = Math.round(y * levels) / levels;
+            }
+
+            // Add wave folding (waveform folding back on itself)
+            y = Math.sin(y * (1 + waveFold) * Math.PI);
+
+            // Add ring modulation (multiply by another oscillator)
+            y *= Math.sin(t * 2 * Math.PI * (1 + ringMod));
+
+            // Add phase distortion (shift phase of the waveform)
+            y = Math.sin(t * 2 * Math.PI + y * phaseDistort * Math.PI);
+
+            // Apply attack and decrease (envelope)
+            if (t < attack) {
+                y *= t / attack; // Attack phase
+            } else if (t < attack + decrease) {
+                y *= 1 - (t - attack) / decrease; // Decrease phase
+            } else {
+                y = 0; // Silence after decrease
+            }
+
+            // Apply hold time (sustain part of the waveform)
+            if (t < holdTime) {
+                y *= 1; // Sustain phase
+            } else {
+                y *= 1 - (t - holdTime) / (1 - holdTime); // Release phase
+            }
+
+            return y;
+        }
+
+        // Draw waveform on canvas
+        function drawWaveform(params) {
+            const width = canvas.width;
+            const height = canvas.height;
+            ctx.clearRect(0, 0, width, height);
+            ctx.beginPath();
+            ctx.moveTo(0, height / 2);
+
+            for (let x = 0; x < width; x++) {
+                const t = (x / width) * 2; // 2 seconds of waveform
+                const y = f(t, params) * (height / 4) + height / 2;
+                ctx.lineTo(x, y);
+            }
+
+            ctx.stroke();
+        }
+
+        // Play sound using the waveform function
+        function playSound(frequency, params) {
+            if (oscillator) {
+                oscillator.stop();
+                oscillator.disconnect();
+            }
+
+            oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            // Use a custom waveform
+            const wave = new Float32Array(1024);
+            for (let i = 0; i < wave.length; i++) {
+                const t = i / wave.length;
+                wave[i] = f(t * 2, params); // Generate waveform values
+            }
+
+            const waveTable = audioContext.createPeriodicWave(wave, new Float32Array(wave.length));
+            oscillator.setPeriodicWave(waveTable);
+
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(1, audioContext.currentTime); // Gain is controlled by the waveform function
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 2); // Stop after 2 seconds
+        }
+
+        // Map keys to frequencies
+        const frequencies = {
+            'a': 220.00, // A3
+            's': 246.94, // B3
+            'd': 261.63, // C4
+            'f': 293.66, // D4
+            'g': 329.63, // E4
+            'h': 349.23, // F4
+            'j': 392.00, // G4
+            'k': 440.00, // A4
+            'l': 493.88  // B4
+        };
+
+        // Handle key press
+        function handleKeyPress(key) {
+            if (frequencies[key]) {
+                const params = {
+                    sharpness: parseFloat(sliders.sharpness.value),
+                    attack: parseFloat(sliders.attack.value),
+                    decrease: parseFloat(sliders.decrease.value),
+                    noisyness: parseFloat(sliders.noisyness.value),
+                    sweep: parseFloat(sliders.sweep.value),
+                    chirp: parseFloat(sliders.chirp.value),
+                    modulation: parseFloat(sliders.modulation.value),
+                    discontinuity: parseFloat(sliders.discontinuity.value),
+                    fractalness: parseFloat(sliders.fractalness.value),
+                    holdTime: parseFloat(sliders.holdTime.value),
+                    distortion: parseFloat(sliders.distortion.value),
+                    bitCrush: parseFloat(sliders.bitCrush.value),
+                    waveFold: parseFloat(sliders.waveFold.value),
+                    ringMod: parseFloat(sliders.ringMod.value),
+                    phaseDistort: parseFloat(sliders.phaseDistort.value)
+                };
+
+                playSound(frequencies[key], params);
+                drawWaveform(params);
+            }
+        }
+
+        // Add event listeners for keyboard buttons
+        keyboardButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const key = button.getAttribute('data-key');
+                handleKeyPress(key);
+            });
+        });
+
+        // Add event listener for computer keyboard
+        document.addEventListener('keydown', (event) => {
+            const key = event.key.toLowerCase();
+            handleKeyPress(key);
+        });
+
+        // Update waveform when sliders change
+        Object.values(sliders).forEach(slider => {
+            slider.addEventListener('input', () => {
+                const params = {
+                    sharpness: parseFloat(sliders.sharpness.value),
+                    attack: parseFloat(sliders.attack.value),
+                    decrease: parseFloat(sliders.decrease.value),
+                    noisyness: parseFloat(sliders.noisyness.value),
+                    sweep: parseFloat(sliders.sweep.value),
+                    chirp: parseFloat(sliders.chirp.value),
+                    modulation: parseFloat(sliders.modulation.value),
+                    discontinuity: parseFloat(sliders.discontinuity.value),
+                    fractalness: parseFloat(sliders.fractalness.value),
+                    holdTime: parseFloat(sliders.holdTime.value),
+                    distortion: parseFloat(sliders.distortion.value),
+                    bitCrush: parseFloat(sliders.bitCrush.value),
+                    waveFold: parseFloat(sliders.waveFold.value),
+                    ringMod: parseFloat(sliders.ringMod.value),
+                    phaseDistort: parseFloat(sliders.phaseDistort.value)
+                };
+
+                drawWaveform(params);
+            });
+        });
+    </script>
+</body>
+</html>

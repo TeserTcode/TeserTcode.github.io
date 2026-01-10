@@ -3,34 +3,53 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Segmented Display — Enhanced with Character Editor</title>
+<title>Segmented Display</title>
 <style>
-  body { font-family: system-ui, sans-serif; background:#f6f7fb; color:#111; padding:18px; }
-  label { display:block; font-size:13px; margin-top:8px; margin-bottom:4px; }
+  body { font-family: system-ui, sans-serif; background:#f6f7fb; color:#111; padding:12px; max-width:800px; margin:0 auto; }
+  label { display:block; font-size:13px; margin-top:6px; margin-bottom:2px; }
   textarea,input,select,button { width:100%; font-family:monospace; font-size:13px; box-sizing:border-box; }
-  textarea { height:100px; resize:vertical; }
-  .row { display:flex; gap:8px; margin-top:8px; }
-  canvas { image-rendering:pixelated; border:1px solid #ccc; display:block; margin-top:10px; }
-  .swatch { width:26px; height:18px; border:1px solid #aaa; border-radius:3px; display:inline-block; margin-right:6px; }
-  .char-editor { margin-top: 20px; border: 1px solid #ccc; padding: 10px; border-radius: 5px; }
-  .char-preview { display: flex; align-items: center; margin-bottom: 10px; }
-  .char-preview canvas { margin: 0 10px 0 0; }
-  .segments { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
-  .segment { padding: 5px 10px; border: 1px solid #ccc; border-radius: 3px; cursor: pointer; }
-  .segment.active { background: #00ff66; color: #000; }
-  .config-buttons { display: flex; gap: 5px; margin-top: 10px; }
+  textarea { height:80px; resize:vertical; }
+  .row { display:flex; gap:6px; margin-top:6px; }
+  canvas { image-rendering:pixelated; border:1px solid #ccc; display:block; margin-top:8px; }
+  .swatch { width:20px; height:14px; border:1px solid #aaa; border-radius:2px; display:inline-block; margin-right:4px; }
+  .char-editor { margin-top:15px; border:1px solid #ccc; padding:8px; border-radius:3px; }
+  .char-preview { display:flex; align-items:center; margin-bottom:8px; }
+  .char-preview canvas { margin:0 8px 0 0; }
+  .segments { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px; }
+  .segment { padding:4px 8px; border:1px solid #ccc; border-radius:2px; cursor:pointer; font-size:12px; }
+  .segment.active { background:#00ff66; color:#000; }
+  .config-buttons { display:flex; gap:4px; margin-top:8px; }
+  .effects-panel { margin-top:15px; border:1px solid #ccc; padding:8px; border-radius:3px; }
+  .effect-slider { margin-bottom:6px; }
+  .effect-slider label { display:block; margin-bottom:2px; font-size:12px; }
+  .effect-slider input { width:100%; height:16px; }
+  .effect-value { float:right; font-weight:bold; font-size:11px; }
+  .compact-row { display:flex; gap:6px; }
+  .compact-row > * { flex:1; }
+  h1 { font-size:18px; margin:0 0 10px 0; }
+  h3 { font-size:14px; margin:0 0 6px 0; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
-<h1>Segmented Display — Enhanced with Character Editor</h1>
+<h1>Segmented Display</h1>
 
-<label>Template image</label>
-<input type="file" id="imgfile" accept="image/*">
+<div class="compact-row">
+  <div>
+    <label>Template</label>
+    <input type="file" id="imgfile" accept="image/*">
+  </div>
+  <div>
+    <label>Text</label>
+    <input id="textToShow" value="0123456789">
+  </div>
+  <div>
+    <label>Spacing</label>
+    <input type="number" id="charSpace" value="-10">
+  </div>
+</div>
 
-<label>Text to display</label>
-<input id="textToShow" value="0123456789">
-
-<label>Config (segmentNumber : digitsOn)</label>
+<label>Config</label>
 <textarea id="configText">
 1:012356789BbCDEFgGIJOPpQRSZT
 2:02356789BCDdeEfFGIJOPQRSZT
@@ -50,33 +69,67 @@
 16:0278aAhKnZzVvXx
 </textarea>
 
-<div class="row">
-  <div style="flex:1"><label>BG</label><input type="color" id="bgColor" value="#000000"></div>
-  <div style="flex:1"><label>ON</label><input type="color" id="onColor" value="#00ff66"></div>
-  <div style="flex:1"><label>OFF</label><input type="color" id="offColor" value="#222222"></div>
+<div class="compact-row">
+  <div><label>BG</label><input type="color" id="bgColor" value="#000000"></div>
+  <div><label>ON</label><input type="color" id="onColor" value="#00ff66"></div>
+  <div><label>OFF</label><input type="color" id="offColor" value="#222222"></div>
 </div>
 
 <div class="row">
-  <button id="detectBtn">Detect Segments</button>
+  <button id="detectBtn">Detect</button>
   <button id="renderBtn">Render</button>
-  <select id="filterSel">
-    <option value="none">No Filter</option>
-    <option value="glow">Glow</option>
-    <option value="glow2">Enhanced Glow</option>
-    <option value="blur">Blur</option>
-    <option value="sharpen">Sharpen</option>
-    <option value="edge">Edge Detect</option>
-    <option value="emboss">Emboss</option>
-    <option value="outline">Outline</option>
-  </select>
-  <label style="flex:1">Kernel size<input type="number" id="kernelSize" min="3" step="2" value="3"></label>
-</div>
-
-<div class="row">
-  <label style="flex:1">Spacing (px)<input type="number" id="charSpace" value="-10"></label>
+  <button id="saveBtn">Save .sgd</button>
+  <button id="loadBtn">Load .sgd</button>
 </div>
 
 <div id="mapping"></div>
+
+<canvas id="result"></canvas>
+
+<div class="effects-panel">
+  <h3>Effects</h3>
+  <div class="compact-row">
+    <div class="effect-slider">
+      <label>Brightness <span class="effect-value" id="brightnessValue">0</span></label>
+      <input type="range" id="brightness" min="-100" max="100" value="0">
+    </div>
+    <div class="effect-slider">
+      <label>Contrast <span class="effect-value" id="contrastValue">0</span></label>
+      <input type="range" id="contrast" min="-100" max="100" value="0">
+    </div>
+  </div>
+  <div class="compact-row">
+    <div class="effect-slider">
+      <label>Sharpness <span class="effect-value" id="sharpnessValue">0</span></label>
+      <input type="range" id="sharpness" min="0" max="500" value="0">
+    </div>
+    <div class="effect-slider">
+      <label>Blur <span class="effect-value" id="blurValue">0</span></label>
+      <input type="range" id="blur" min="0" max="100" value="0">
+    </div>
+  </div>
+  <div class="compact-row">
+    <div class="effect-slider">
+      <label>Pixelation <span class="effect-value" id="pixelationValue">1</span></label>
+      <input type="range" id="pixelation" min="1" max="20" value="1">
+    </div>
+    <div class="effect-slider">
+      <label>Dither <span class="effect-value" id="ditherValue">0</span></label>
+      <input type="range" id="dither" min="0" max="100" value="0">
+    </div>
+  </div>
+  <h3>Glow</h3>
+  <div class="compact-row">
+    <div class="effect-slider">
+      <label>Strength <span class="effect-value" id="glowStrengthValue">0</span></label>
+      <input type="range" id="glowStrength" min="0" max="50" value="0">
+    </div>
+    <div class="effect-slider">
+      <label>Radius <span class="effect-value" id="glowRadiusValue">5</span></label>
+      <input type="range" id="glowRadius" min="1" max="500" value="5">
+    </div>
+  </div>
+</div>
 
 <div class="char-editor">
   <h3>Character Editor</h3>
@@ -87,16 +140,13 @@
       <input type="text" id="editChar" maxlength="1" value="0">
       <div class="segments" id="segmentControls"></div>
       <div class="config-buttons">
-        <button id="updateCharBtn">Update Character</button>
+        <button id="updateCharBtn">Update</button>
         <button id="saveConfigBtn">Save Config</button>
         <button id="loadConfigBtn">Load Config</button>
       </div>
     </div>
   </div>
 </div>
-
-<hr>
-<canvas id="result"></canvas>
 
 <script>
 const tempCanvas=document.createElement('canvas');
@@ -120,7 +170,15 @@ function rgbToHsl(r,g,b){
 }
 function colorKey(r,g,b){return r+","+g+","+b;}
 function hexToRgb(hex){hex=hex.replace('#','');if(hex.length===3)hex=hex.split('').map(x=>x+x).join('');const n=parseInt(hex,16);return{r:(n>>16)&255,g:(n>>8)&255,b:n&255};}
-function rgbDist(a,b){return Math.sqrt((a.r-b.r)**2+(a.g-b.g)**2+(a.b-b.b)**2);}
+
+// Effect sliders value display
+document.querySelectorAll('.effect-slider input').forEach(slider => {
+  const valueSpan = document.getElementById(slider.id + 'Value');
+  valueSpan.textContent = slider.value;
+  slider.addEventListener('input', () => {
+    valueSpan.textContent = slider.value;
+  });
+});
 
 document.getElementById('imgfile').onchange=e=>{
   const f=e.target.files[0]; if(!f)return;
@@ -151,7 +209,7 @@ document.getElementById('detectBtn').onclick=()=>{
   segs.forEach((s,i)=>s.id=i+1);
   segMap={}; segs.forEach(s=>segMap[colorKey(s.r,s.g,s.b)]=s);
   const mapDiv=document.getElementById('mapping');
-  mapDiv.innerHTML="<b>Segments detected:</b><br>";
+  mapDiv.innerHTML="<b>Segments:</b><br>";
   segs.forEach(s=>{
     const sw=document.createElement('span');
     sw.className='swatch'; sw.style.background=`rgb(${s.r},${s.g},${s.b})`;
@@ -159,7 +217,6 @@ document.getElementById('detectBtn').onclick=()=>{
     mapDiv.append(` ${s.id} `);
   });
   
-  // Initialize config
   config = parseConfig();
   updateSegmentControls();
   updateCharPreview();
@@ -172,8 +229,6 @@ document.getElementById('renderBtn').onclick=()=>{
   const bg=hexToRgb(document.getElementById('bgColor').value);
   const on=hexToRgb(document.getElementById('onColor').value);
   const off=hexToRgb(document.getElementById('offColor').value);
-  const filt=document.getElementById('filterSel').value;
-  const ksize=parseInt(document.getElementById('kernelSize').value)||3;
   const spacing=parseInt(document.getElementById('charSpace').value)||0;
 
   const w=tempCanvas.width,h=tempCanvas.height;
@@ -184,6 +239,7 @@ document.getElementById('renderBtn').onclick=()=>{
   resultCanvas.height=h;
   rctx.fillStyle='#fff';rctx.fillRect(0,0,resultCanvas.width,h);
 
+  // First render all characters without effects
   for(let ci=0;ci<text.length;ci++){
     const ch=text[ci];
     const imgData=new ImageData(w,h);
@@ -204,10 +260,13 @@ document.getElementById('renderBtn').onclick=()=>{
     }
     let temp=document.createElement('canvas');
     temp.width=w; temp.height=h;
-    temp.getContext('2d').putImageData(imgData,0,0);
-    if(filt!=='none')applyFilter(temp,filt,ksize);
+    const tempCtx = temp.getContext('2d');
+    tempCtx.putImageData(imgData,0,0);
     rctx.drawImage(temp,ci*(w+spacing),0);
   }
+
+  // Apply effects to the entire combined image
+  applyEffects(resultCanvas);
 };
 
 function parseConfig(){
@@ -244,7 +303,9 @@ function updateSegmentControls(){
     btn.dataset.segment = seg.id;
     
     const char = document.getElementById('editChar').value;
-    if(config[seg.id] && config[seg.id].has(char))btn.classList.toggle('active', config[seg.id] && config[seg.id].has(char));
+    if(config[seg.id] && config[seg.id].has(char)) {
+      btn.classList.add('active');
+    }
     
     btn.onclick = () => {
       const char = document.getElementById('editChar').value;
@@ -342,78 +403,329 @@ document.getElementById('loadConfigBtn').onclick = () => {
   input.click();
 };
 
-/* --- enhanced convolution filters --- */
-function applyFilter(cv,type,size){
-  const ctx=cv.getContext('2d');
-  const w=cv.width,h=cv.height;
-  const img=ctx.getImageData(0,0,w,h);
-  const d=img.data;
-  const out=new Uint8ClampedArray(d.length);
-  const K=makeKernel(type,size);
-  const norm=K.flat().reduce((a,b)=>a+b,0)||1;
-  const rad=Math.floor(size/2);
+// Save/Load .sgd files (ZIP format)
+document.getElementById('saveBtn').onclick = async () => {
+  if(!img||!segs.length)return alert('Render something first');
   
-  for(let y=rad;y<h-rad;y++){
-    for(let x=rad;x<w-rad;x++){
-      let sr=0,sg=0,sb=0;
-      for(let ky=-rad;ky<=rad;ky++){
-        for(let kx=-rad;kx<=rad;kx++){
-          const idx=((y+ky)*w+(x+kx))*4;
-          const k=K[ky+rad][kx+rad];
-          sr+=d[idx]*k; sg+=d[idx+1]*k; sb+=d[idx+2]*k;
+  const configData = document.getElementById('configText').value;
+  const resultCanvas = document.getElementById('result');
+  
+  // Create ZIP using the actual JSZip from CDN
+  const zip = new JSZip();
+  zip.file("config.txt", configData);
+  
+  // Convert canvas to blob and add to zip
+  const blob = await new Promise(resolve => resultCanvas.toBlob(resolve, 'image/png'));
+  zip.file("display.png", blob);
+  
+  // Generate and download ZIP
+  const content = await zip.generateAsync({type:"blob"});
+  const url = URL.createObjectURL(content);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'display.sgd';
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+document.getElementById('loadBtn').onclick = () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.sgd';
+  input.onchange = async e => {
+    const file = e.target.files[0];
+    if(!file) return;
+    
+    try {
+      const zip = await JSZip.loadAsync(file);
+      
+      // Load config
+      const configFile = zip.file("config.txt");
+      if(configFile) {
+        const configText = await configFile.async("text");
+        document.getElementById('configText').value = configText;
+        config = parseConfig();
+        updateSegmentControls();
+        updateCharPreview();
+      }
+      
+      // Load image
+      const imageFile = zip.file("display.png");
+      if(imageFile) {
+        const imageBlob = await imageFile.async("blob");
+        const url = URL.createObjectURL(imageBlob);
+        img = new Image();
+        img.onload = () => {
+          tempCanvas.width = img.width;
+          tempCanvas.height = img.height;
+          tctx.drawImage(img, 0, 0);
+          URL.revokeObjectURL(url);
+        };
+        img.src = url;
+      }
+    } catch(err) {
+      alert('Error loading .sgd file: ' + err.message);
+    }
+  };
+  input.click();
+};
+
+/* --- Enhanced Effects System --- */
+function applyEffects(canvas) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  
+  // Get effect values
+  const brightness = parseInt(document.getElementById('brightness').value);
+  const contrast = parseInt(document.getElementById('contrast').value);
+  const sharpness = parseInt(document.getElementById('sharpness').value);
+  const blur = parseInt(document.getElementById('blur').value);
+  const pixelation = parseInt(document.getElementById('pixelation').value);
+  const dither = parseInt(document.getElementById('dither').value);
+  const glowStrength = parseInt(document.getElementById('glowStrength').value);
+  const glowRadius = parseInt(document.getElementById('glowRadius').value);
+  
+  // Create working canvas
+  const workCanvas = document.createElement('canvas');
+  workCanvas.width = w;
+  workCanvas.height = h;
+  const workCtx = workCanvas.getContext('2d');
+  workCtx.drawImage(canvas, 0, 0);
+  
+  // Apply effects in order
+  if (brightness !== 0 || contrast !== 0) {
+    applyBrightnessContrast(workCanvas, brightness, contrast);
+  }
+  
+  if (sharpness > 0) {
+    applySharpness(workCanvas, sharpness);
+  }
+  
+  if (blur > 0) {
+    applyBlur(workCanvas, blur);
+  }
+  
+  if (pixelation > 1) {
+    applyPixelation(workCanvas, pixelation);
+  }
+  
+  if (dither > 0) {
+    applyDither(workCanvas, dither);
+  }
+  
+  if (glowStrength > 0) {
+    applyGlow(workCanvas, glowStrength, glowRadius);
+  }
+  
+  // Draw final result back to original canvas
+  ctx.drawImage(workCanvas, 0, 0);
+}
+
+function applyBrightnessContrast(canvas, brightness, contrast) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  const imgData = ctx.getImageData(0, 0, w, h);
+  const data = imgData.data;
+  
+  const brightnessFactor = brightness / 100;
+  const contrastFactor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+  
+  for (let i = 0; i < data.length; i += 4) {
+    // Apply brightness
+    let r = data[i] + 255 * brightnessFactor;
+    let g = data[i+1] + 255 * brightnessFactor;
+    let b = data[i+2] + 255 * brightnessFactor;
+    
+    // Apply contrast
+    r = contrastFactor * (r - 128) + 128;
+    g = contrastFactor * (g - 128) + 128;
+    b = contrastFactor * (b - 128) + 128;
+    
+    data[i] = clamp(r);
+    data[i+1] = clamp(g);
+    data[i+2] = clamp(b);
+  }
+  
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function applySharpness(canvas, value) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  const imgData = ctx.getImageData(0, 0, w, h);
+  const data = imgData.data;
+  const tempData = new Uint8ClampedArray(data);
+  
+  const factor = value / 200;
+  
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      for (let c = 0; c < 3; c++) {
+        const idx = (y * w + x) * 4 + c;
+        const orig = tempData[idx];
+        
+        let sum = -tempData[((y-1)*w + x)*4 + c];
+        sum += -tempData[(y*w + (x-1))*4 + c];
+        sum += 5 * orig;
+        sum += -tempData[(y*w + (x+1))*4 + c];
+        sum += -tempData[((y+1)*w + x)*4 + c];
+        
+        data[idx] = clamp(orig * (1 - factor) + sum * factor);
+      }
+    }
+  }
+  
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function applyGlow(canvas, strength, radius) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  
+  // Create blurred version for glow
+  const glowCanvas = document.createElement('canvas');
+  glowCanvas.width = w;
+  glowCanvas.height = h;
+  const glowCtx = glowCanvas.getContext('2d');
+  glowCtx.drawImage(canvas, 0, 0);
+  
+  // Apply blur with specified radius
+  const blurAmount = Math.ceil(radius / 2);
+  for (let i = 0; i < blurAmount; i++) {
+    const imgData = glowCtx.getImageData(0, 0, w, h);
+    const data = imgData.data;
+    const tempData = new Uint8ClampedArray(data);
+    
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        for (let c = 0; c < 3; c++) {
+          let sum = 0;
+          for (let ky = -1; ky <= 1; ky++) {
+            for (let kx = -1; kx <= 1; kx++) {
+              const idx = ((y + ky) * w + (x + kx)) * 4 + c;
+              sum += tempData[idx];
+            }
+          }
+          const idx = (y * w + x) * 4 + c;
+          data[idx] = sum / 9;
         }
       }
-      const o=(y*w+x)*4;
-      out[o]=clamp(sr/norm); out[o+1]=clamp(sg/norm); out[o+2]=clamp(sb/norm); out[o+3]=255;
     }
+    glowCtx.putImageData(imgData, 0, 0);
   }
-  ctx.putImageData(new ImageData(out,w,h),0,0);
-}
-function clamp(v){return Math.max(0,Math.min(255,v));}
-
-function makeKernel(type,size){
-  const k=[];
-  const mid=Math.floor(size/2);
-  for(let y=0;y<size;y++){k[y]=Array(size).fill(0);}
   
-  if(type==='blur'){
-    for(let y=0;y<size;y++)for(let x=0;x<size;x++)k[y][x]=1;
-  }else if(type==='glow'){
-    for(let y=0;y<size;y++)for(let x=0;x<size;x++)k[y][x]=1;
-    k[mid][mid]=-size*size+10;
-	k[mid-1][mid-1]=-1;
-	k[mid-1][mid+1]=-1;
-	k[mid+1][mid-1]=-1;
-	k[mid+1][mid+1]=-1;
-	k[mid-1][mid-0]=-1;
-	k[mid+1][mid-0]=-1;
-	k[mid-0][mid+1]=-1;
-	k[mid-0][mid-1]=-1;
-  }else if(type==='glow2'){
-    for(let y=0;y<size;y++)for(let x=0;x<size;x++){
-      const dist=Math.sqrt((y-mid)**2+(x-mid)**2);
-      k[y][x]=Math.exp(-dist*2/(mid+1));
+  // Get glow image data for additive blending
+  const glowData = glowCtx.getImageData(0, 0, w, h).data;
+  const origData = ctx.getImageData(0, 0, w, h);
+  const finalData = origData.data;
+  
+  // Apply additive glow with white overflow
+  for (let i = 0; i < finalData.length; i += 4) {
+    const glowR = glowData[i];
+    const glowG = glowData[i+1];
+    const glowB = glowData[i+2];
+    
+    // Calculate glow intensity
+    const intensity = (glowR + glowG + glowB) / 3;
+    const glowAdd = (intensity / 255) * strength;
+    
+    // Add glow to original (additive blending)
+    let r = finalData[i] + glowR * glowAdd;
+    let g = finalData[i+1] + glowG * glowAdd;
+    let b = finalData[i+2] + glowB * glowAdd;
+    
+    // If any channel exceeds 255, spread to other channels (white overflow)
+    if (r > 255 || g > 255 || b > 255) {
+      const maxVal = Math.max(r, g, b);
+      if (maxVal > 255) {
+        const overflow = maxVal - 255;
+        // Distribute overflow to all channels
+        r = Math.min(255, r + overflow * 0.5);
+        g = Math.min(255, g + overflow * 0.5);
+        b = Math.min(255, b + overflow * 0.5);
+      }
     }
-    k[mid][mid]=2;
-  }else if(type==='sharpen'){
-    for(let y=0;y<size;y++)for(let x=0;x<size;x++)k[y][x]=-1;
-    k[mid][mid]=size*size;
-  }else if(type==='edge'){
-    for(let y=0;y<size;y++)for(let x=0;x<size;x++)k[y][x]=-1;
-    k[mid][mid]=(size*size)-1;
-  }else if(type==='emboss'){
-    for(let y=0;y<size;y++)for(let x=0;x<size;x++){
-      k[y][x]=(y-mid)+(x-mid);
+    
+    finalData[i] = clamp(r);
+    finalData[i+1] = clamp(g);
+    finalData[i+2] = clamp(b);
+  }
+  
+  ctx.putImageData(origData, 0, 0);
+}
+
+function applyBlur(canvas, value) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  
+  for (let i = 0; i < value; i++) {
+    const imgData = ctx.getImageData(0, 0, w, h);
+    const data = imgData.data;
+    const tempData = new Uint8ClampedArray(data);
+    
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        for (let c = 0; c < 3; c++) {
+          let sum = 0;
+          for (let ky = -1; ky <= 1; ky++) {
+            for (let kx = -1; kx <= 1; kx++) {
+              const idx = ((y + ky) * w + (x + kx)) * 4 + c;
+              sum += tempData[idx];
+            }
+          }
+          const idx = (y * w + x) * 4 + c;
+          data[idx] = sum / 9;
+        }
+      }
     }
-    k[mid][mid]=1;
-  }else if(type==='outline'){
-    for(let y=0;y<size;y++)for(let x=0;x<size;x++){
-      if(y===mid && x===mid) k[y][x]=(size*size)-1;
-      else k[y][x]=-1;
+    ctx.putImageData(imgData, 0, 0);
+  }
+}
+
+function applyPixelation(canvas, value) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  
+  const size = value;
+  const smallW = Math.floor(w / size);
+  const smallH = Math.floor(h / size);
+  
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = smallW;
+  tempCanvas.height = smallH;
+  const tempCtx = tempCanvas.getContext('2d');
+  tempCtx.imageSmoothingEnabled = false;
+  tempCtx.drawImage(canvas, 0, 0, smallW, smallH);
+  
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(tempCanvas, 0, 0, smallW, smallH, 0, 0, w, h);
+  ctx.imageSmoothingEnabled = true;
+}
+
+function applyDither(canvas, value) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  const imgData = ctx.getImageData(0, 0, w, h);
+  const data = imgData.data;
+  
+  const threshold = value / 100;
+  
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const idx = (y * w + x) * 4;
+      
+      const noise = (Math.random() - 0.5) * 255 * threshold;
+      
+      data[idx] = clamp(data[idx] + noise);
+      data[idx+1] = clamp(data[idx+1] + noise);
+      data[idx+2] = clamp(data[idx+2] + noise);
     }
   }
-  return k;
+  
+  ctx.putImageData(imgData, 0, 0);
 }
+
+function clamp(v){return Math.max(0,Math.min(255,v));}
 </script>
 </body>
 </html>

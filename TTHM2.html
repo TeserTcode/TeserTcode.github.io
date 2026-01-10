@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Torus Puzzle 2</title>
+  <style>
+    body{font-family:sans-serif;margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f0f0f0;}
+    #container{max-width:90vw;max-height:90vh;}
+    canvas{display:block;margin:auto;border:2px solid #000;cursor:pointer;max-width:100%;height:auto;}
+    #ui,#main-menu{text-align:center;padding:1em;}
+    .hidden{display:none;}
+    button{margin:0.3em;padding:0.5em 1em;cursor:pointer;border:1px solid #ccc;background:#fff;border-radius:4px;}
+    button:hover{background:#e9e9e9;}
+    .level-btn.completed{background:#90ee90;}
+    #level-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:5px;max-width:600px;margin:1em auto;padding:10px;border:1px solid #ccc;border-radius:8px;}
+    #win-message{font-size:1.5em;color:green;margin-top:1em;min-height:1.5em;}
+  </style>
+</head>
+<body>
+<div id="container">
+  <div id="main-menu">
+    <h1>Torus Puzzle 2</h1>
+    <p>Connect all valid cells with a single line. Numbers and letters must be visited in increasing order.</p>
+    <div id="level-list"></div>
+    <button onclick="resetProgress()">Reset Progress</button>
+  </div>
+  <div id="ui" class="hidden">
+    <button onclick="backToMenu()">Menu</button>
+    <button onclick="resetLevel()">Reset (R)</button>
+    <canvas id="gameCanvas" width="600" height="600"></canvas>
+    <div id="win-message"></div>
+    <button id="next-level-btn" class="hidden" onclick="goToNextLevel()">Next Level</button>
+  </div>
+</div>
+<script>
+const canvas=document.getElementById("gameCanvas"),ctx=canvas.getContext("2d");
+let currentLevel=null,progress=JSON.parse(localStorage.getItem("tthm2_progress")||"[]");
+let board=[],letterBoard=[],path=[],undoStack=[],redoStack=[],walls=[],portals={},gridSize=0,invalidPath=false;
+let levelSolution=[];
+let levelCache = {};
+
+const levels = [];
+for (let i = 0; i < 100; i++) {
+  const level = { id: i, seed: i };
+
+  if (i < 50 || (i >= 80 && i < 90)) {
+    level.gridSize = Math.min(15, 5 + Math.floor(i / 5));
+    level.numDensity = 0.15 + (i / 50) * 0.1;
+    level.complexity = 0.2 + (i / 49) * 0.7;
+    level.curvature = 0.6 + 0.3 * Math.sin((i / 49) * 5 * Math.PI);
+  } else {
+    const baseLevel = 45;
+    level.gridSize = Math.min(15, 5 + Math.floor(baseLevel / 5));
+    level.numDensity = 0.15 + (baseLevel / 50) * 0.1;
+    level.complexity = 0.2 + (baseLevel / 49) * 0.7;
+    level.curvature = 0.6 + 0.3 * Math.sin((baseLevel / 49) * 5 * Math.PI);
+  }
+
+  level.hasHoles = (i >= 50 && i < 60) || (i >= 70 && i < 80) || (i >= 90);
+  level.hasPortals = (i >= 60 && i < 70) || (i >= 70 && i < 80) || (i >= 90);
+  level.hasDualSequence = (i >= 80 && i < 90) || (i >= 90);
+  
+  if (level.hasHoles) {
+    level.holeCount = Math.floor((level.gridSize * level.gridSize) * (0.05 + 0.10 * ((i % 10) / 9)));
+  }
+  if (level.hasPortals) {
+    level.portalPairCount = 2 + Math.floor((i % 10) / 3.5);
+  }
+
+  levels.push(level);
+}
+
+function renderLevelList(){
+  const list=document.getElementById("level-list");
+  list.innerHTML="";
+  levels.forEach(lvl=>{
+    const btn=document.createElement("button");
+    btn.textContent=lvl.id+1;
+    btn.className="level-btn"+(progress.includes(lvl.id)?" completed":"");
+    btn.onclick=()=>startLevel(lvl);
+    list.appendChild(btn);
+  });
+}
+
+function backToMenu(){
+  document.getElementById("ui").classList.add("hidden");
+  document.getElementById("main-menu").classList.remove("hidden");
+  document.getElementById("win-message").textContent="";
+  document.getElementById("next-level-btn").classList.add("hidden");
+  renderLevelList();
+}
+
+function startLevel(level){
+  currentLevel=level;
+  document.getElementById("ui").classList.remove("hidden");
+  document.getElementById("main-menu").classList.add("hidden");
+  document.getElementById("win-message").textContent="";
+  document.getElementById("next-level-btn").classList.add("hidden");
+  
+  gridSize=level.gridSize;
+  path=[]; undoStack=[]; redoStack=[]; invalidPath=false;
+
+  // Check cache first
+  if (levelCache[level.id]) {
+    console.log(`Loading level ${level.id} from cache.`);
+    const cached = levelCache[level.id];
+    walls = cached.walls;
+    portals = cached.portals;
+    board = JSON.parse(JSON.stringify(cached.board));
+    letterBoard = JSON.parse(JSON.stringify(cached.letterBoard));
+    levelSolution = cached.solution;
+    
+    drawGrid();
+    return;
+  }
+
+  console.log(`Generating level ${level.id}...`);
+  
+  let generatedPath = null;
+  let generationAttempts = 0;
+  const MAX_GENERATION_ATTEMPTS = 25;
+
+  let currentComplexity = level.complexity;
+  let currentCurvature = level.curvature;
+  let currentHoleCount = level.hasHoles ? level.holeCount : 0;
+  let attemptWalls;
+
+  while (!generatedPath && generationAttempts < MAX_GENERATION_ATTEMPTS) {
+    generationAttempts++;
+    attemptWalls = [];
+    
+    if (level.hasHoles && currentHoleCount > 0) {
+        const rng = mulberry32(level.seed + generationAttempts);
+        const availableCells = [];
+        for(let y=0; y<gridSize; y++) for(let x=0; x<gridSize; x++) availableCells.push([x,y]);
+        
+        for (let i = 0; i < currentHoleCount && availableCells.length > 0; i++) {
+            const randIndex = Math.floor(rng() * availableCells.length);
+            attemptWalls.push(availableCells.splice(randIndex, 1)[0]);
+        }
+    }
+
+    generatedPath = createHamiltonianPath(gridSize, level.seed + generationAttempts, currentComplexity, currentCurvature, attemptWalls);
+    
+    if (!generatedPath) {
+        console.log(`Generation attempt ${generationAttempts} failed.`);
+        if (generationAttempts > 5 && currentHoleCount > 3) {
+            currentHoleCount = Math.max(2, Math.floor(currentHoleCount * 0.85));
+            console.log(`Reducing hole count to ${currentHoleCount}`);
+        }
+        if (generationAttempts > 15) {
+            currentComplexity = Math.max(0.1, currentComplexity * 0.9);
+            currentCurvature = Math.max(0.1, currentCurvature * 0.9);
+            console.log(`Reducing complexity to ${currentComplexity.toFixed(2)}`);
+        }
+    }
+  }
+
+  if (!generatedPath) {
+      document.getElementById("win-message").textContent = "Fatal: Could not generate a valid level.";
+      walls = []; portals = {}; board = []; letterBoard = [];
+      drawGrid();
+      return;
+  }
+  
+  walls = attemptWalls;
+  levelSolution = generatedPath;
+  board=Array.from({length:gridSize},()=>Array(gridSize).fill(null));
+  letterBoard=Array.from({length:gridSize},()=>Array(gridSize).fill(null));
+  portals = {};
+
+  const validCells = levelSolution.slice();
+  const rng = mulberry32(level.seed);
+
+  if (level.hasPortals && validCells.length >= level.portalPairCount * 2) {
+      for (let i = 0; i < level.portalPairCount; i++) {
+          const randIndex1 = Math.floor(rng() * validCells.length);
+          const [x1, y1] = validCells.splice(randIndex1, 1)[0];
+          
+          const randIndex2 = Math.floor(rng() * validCells.length);
+          const [x2, y2] = validCells.splice(randIndex2, 1)[0];
+          
+          portals[`${x1},${y1}`] = [x2, y2];
+          portals[`${x2},${y2}`] = [x1, y1];
+      }
+  }
+
+  const numCount=Math.max(3,Math.floor((gridSize*gridSize - walls.length) * level.numDensity));
+  const nums=generateWeaklyIncreasingSequence(numCount,99,level.seed+1);
+  const pathCellsForNumbers = levelSolution.filter(([x,y]) => !portals[`${x},${y}`]);
+  for(let i = 0; i < nums.length && i < pathCellsForNumbers.length; i++){
+      const pathIndex = Math.floor(i * (pathCellsForNumbers.length / nums.length));
+      const [x, y] = pathCellsForNumbers[pathIndex];
+      board[y][x] = nums[i];
+  }
+
+  if (level.hasDualSequence) {
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const letterCount = Math.max(3, Math.floor((gridSize * gridSize - walls.length) * level.numDensity * 0.8));
+    const seq = []; let current = 0;
+    const letterRng = mulberry32(level.seed + 100);
+    for (let i = 0; i < letterCount; i++) {
+        const rand = letterRng();
+        if (rand < 0.7 || current >= 25) { seq.push(letters[current]); }
+        else { current = Math.min(25, current + Math.floor(rand * 3) + 1); seq.push(letters[current]); }
+    }
+    const pathCellsForLetters = levelSolution.filter(([x,y]) => !portals[`${x},${y}`] && board[y][x] === null);
+    for (let i = 0; i < seq.length && i < pathCellsForLetters.length; i++) {
+        const pathIndex = Math.floor(i * (pathCellsForLetters.length / seq.length));
+        const [x, y] = pathCellsForLetters[pathIndex];
+        letterBoard[y][x] = seq[i];
+    }
+  }
+
+  console.log(`Caching level ${level.id}.`);
+  levelCache[level.id] = {
+      walls: walls,
+      portals: portals,
+      board: JSON.parse(JSON.stringify(board)),
+      letterBoard: JSON.parse(JSON.stringify(letterBoard)),
+      solution: levelSolution
+  };
+  
+  drawGrid();
+}
+
+function mulberry32(a) {
+  return function() {
+    var t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+}
+
+function createHamiltonianPath(size, seed, complexity = 0.5, curvature = 0.5, walls = [], maxRetries = 5500) {
+  let currentSeed = seed;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const path = createHamiltonianPatha(size, currentSeed, complexity, curvature, walls);
+    if (path) { return path; }
+    currentSeed++;
+  }
+  return null;
+}
+
+function createHamiltonianPatha(size, seed, complexity = 0.5, curvature = 0.5, walls = []) {
+  const total = size * size - walls.length;
+  if (total <= 0) return [];
+  const visited = Array.from({ length: size }, () => Array(size).fill(false));
+  const path = [];
+  const rng = mulberry32(seed);
+
+  const dirs = [[1,0], [0,1], [-1,0], [0,-1]];
+  const mod = (n, m) => ((n % m) + m) % m;
+
+  function isWall(x, y) { return walls.some(w => w[0] === x && w[1] === y); }
+
+  function neighbors(x, y) {
+    const result = [];
+    for (const [dx, dy] of dirs) {
+      const nx = mod(x + dx, size);
+      const ny = mod(y + dy, size);
+      if (!visited[ny][nx] && !isWall(nx,ny)) { result.push([nx, ny]); }
+    }
+    return result;
+  }
+
+  let startX, startY, startAttempts = 0;
+  do {
+    startX = Math.floor(rng() * size);
+    startY = Math.floor(rng() * size);
+    startAttempts++;
+  } while (isWall(startX, startY) && startAttempts < size*size);
+  if(isWall(startX, startY)) return null;
+  
+  let x = startX, y = startY;
+  visited[y][x] = true;
+  path.push([x, y]);
+
+  for (let step = 1; step < total; step++) {
+    let nbrs = neighbors(x, y);
+    if (nbrs.length === 0) break;
+
+    nbrs.sort((a, b) => {
+      const aNbrs = neighbors(a[0], a[1]).length;
+      const bNbrs = neighbors(b[0], b[1]).length;
+      if (aNbrs !== bNbrs  && rng()<1-complexity*0.6) return aNbrs - bNbrs;
+      return rng() - 0.5;
+    });
+
+    [x, y] = nbrs[Math.min(nbrs.length-1,Math.floor(rng()*curvature*2))];
+    visited[y][x] = true;
+    path.push([x, y]);
+  }
+
+  return path.length === total ? path : null;
+}
+
+function generateWeaklyIncreasingSequence(len,max,seed){
+  const seq=[];let current=1;
+  const rng = mulberry32(seed);
+  for(let i=0;i<len;i++){
+    const rand = rng();
+    if(rand<0.7||current>=max)seq.push(current);
+    else seq.push(current=Math.min(max,current+Math.floor(rand*3)+1));
+  }
+  return seq;
+}
+
+function drawGrid(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if (!currentLevel) return;
+  const tw=canvas.width/gridSize,th=canvas.height/gridSize;
+  
+  ctx.strokeStyle="#ccc";ctx.lineWidth=1;
+  for(let x=0;x<=gridSize;x++){ctx.beginPath();ctx.moveTo(x*tw,0);ctx.lineTo(x*tw,canvas.height);ctx.stroke();}
+  for(let y=0;y<=gridSize;y++){ctx.beginPath();ctx.moveTo(0,y*th);ctx.lineTo(canvas.width,y*th);ctx.stroke();}
+  
+  ctx.fillStyle = "#444";
+  walls.forEach(([x, y]) => ctx.fillRect(x * tw, y * th, tw, th));
+  
+  const portalColors = ['#ff00ff', '#00ffff', '#ffff00', '#ff8800', '#00ff88'];
+  let colorIndex = 0;
+  const drawnPortals = new Set();
+  for (const key in portals) {
+    if (drawnPortals.has(key)) continue;
+    const [x1, y1] = key.split(',').map(Number);
+    const [x2, y2] = portals[key];
+    
+    ctx.fillStyle = portalColors[colorIndex % portalColors.length];
+    ctx.beginPath();ctx.arc(x1 * tw + tw / 2, y1 * th + th / 2, tw / 3, 0, 2 * Math.PI);ctx.fill();
+    ctx.beginPath();ctx.arc(x2 * tw + tw / 2, y2 * th + th / 2, tw / 3, 0, 2 * Math.PI);ctx.fill();
+
+    drawnPortals.add(key); drawnPortals.add(`${x2},${y2}`); colorIndex++;
+  }
+  
+  for(let y=0;y<gridSize;y++)for(let x=0;x<gridSize;x++){
+    const val=board[y][x], letter=letterBoard[y][x];
+    if(val!==null || letter!==null){
+      ctx.textAlign="center";ctx.textBaseline="middle";
+      if (val!==null && letter!==null) {
+          ctx.fillStyle="#000";ctx.font=`bold ${Math.floor(th/3)}px sans-serif`;
+          ctx.fillText(val,x*tw+tw/2,y*th+th/3);
+          ctx.fillStyle="darkgreen";ctx.font=`bold ${Math.floor(th/3)}px sans-serif`;
+          ctx.fillText(letter,x*tw+tw/2,y*th+th*2/3);
+      } else if (val !== null) {
+          ctx.fillStyle="#000";ctx.font=`bold ${Math.floor(th/2.5)}px sans-serif`;
+          ctx.fillText(val,x*tw+tw/2,y*th+th/2);
+      } else {
+          ctx.fillStyle="darkgreen";ctx.font=`bold ${Math.floor(th/2.5)}px sans-serif`;
+          ctx.fillText(letter,x*tw+tw/2,y*th+th/2);
+      }
+    }
+  }
+  drawPath();
+}
+
+function drawPath(){
+  if(!path.length)return;
+  const tw=canvas.width/gridSize,th=canvas.height/gridSize;
+  const thickness=Math.max(2,tw/8);ctx.lineWidth=thickness;ctx.lineCap="round";
+  
+  if(path.length===1){
+    const[x,y]=path[0],px=x*tw+tw/2,py=y*th+th/2;
+    ctx.fillStyle=invalidPath?'red':'blue';ctx.beginPath();ctx.arc(px,py,thickness,0,Math.PI*2);ctx.fill();
+    return;
+  }
+  
+  ctx.strokeStyle = invalidPath ? (Math.floor(Date.now()/200)%2===0?"red":"#333") : 'blue';
+
+  for(let i=0;i<path.length-1;i++){
+    const [x1,y1] = path[i];
+    const [x2,y2] = path[i+1];
+
+    let isPortalJump = false;
+    if(portals[`${x1},${y1}`]){
+        const [p_x, p_y] = portals[`${x1},${y1}`];
+        if(p_x === x2 && p_y === y2) isPortalJump = true;
+    }
+    if (isPortalJump) continue;
+
+    const px1=x1*tw+tw/2,py1=y1*th+th/2,px2=x2*tw+tw/2,py2=y2*th+th/2;
+
+    const dx=x2-x1,dy=y2-y1;
+    if(Math.abs(dx) > 1 || Math.abs(dy) > 1){
+        const wrapX = Math.abs(dx) > 1;
+        const wrapY = Math.abs(dy) > 1;
+        const fromEdgeX = px1 - Math.sign(dx) * tw/2;
+        const fromEdgeY = py1 - Math.sign(dy) * th/2;
+        const toEdgeX = px2 + Math.sign(dx) * tw/2;
+        const toEdgeY = py2 + Math.sign(dy) * th/2;
+
+        ctx.beginPath(); ctx.moveTo(px1,py1); ctx.lineTo(wrapX ? fromEdgeX : px1, wrapY ? fromEdgeY : py1); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(px2,py2); ctx.lineTo(wrapX ? toEdgeX : px2, wrapY ? toEdgeY : py2); ctx.stroke();
+    } else {
+        ctx.beginPath();ctx.moveTo(px1,py1);ctx.lineTo(px2,py2);ctx.stroke();
+    }
+  }
+}
+
+function checkVictory(){
+  const targetLength = gridSize * gridSize - walls.length;
+  if(path.length === targetLength && !invalidPath){
+    if(!progress.includes(currentLevel.id)){
+      progress.push(currentLevel.id);
+      localStorage.setItem("tthm2_progress",JSON.stringify(progress));
+    }
+    document.getElementById("win-message").textContent="You Win!";
+    document.getElementById("next-level-btn").classList.remove("hidden");
+  }
+}
+
+canvas.addEventListener("click",e=>{
+  if (path.length > 0) return;
+  const rect=canvas.getBoundingClientRect();
+  const x=Math.floor((e.clientX-rect.left)/(canvas.width/gridSize));
+  const y=Math.floor((e.clientY-rect.top)/(canvas.height/gridSize));
+  if(x>=0&&x<gridSize&&y>=0&&y<gridSize && !walls.some(w=>w[0]===x&&w[1]===y)){
+    path=[[x,y]];undoStack=[JSON.stringify(path)];redoStack=[];
+    updatePathValidity();drawGrid();
+  }
+});
+
+document.addEventListener("keydown",e=>{
+  if(document.getElementById("ui").classList.contains("hidden") || !path.length)return;
+  const key=e.key.toLowerCase();
+  if(key==='r'){resetLevel();return;}
+  if(e.ctrlKey && key==='z'){undoLastMove();return;}
+  if(e.ctrlKey && key==='y'){redoLastMove();return;}
+  
+  const dir={arrowup:[0,-1],arrowdown:[0,1],arrowleft:[-1,0],arrowright:[1,0],w:[0,-1],s:[0,1],a:[-1,0],d:[1,0]}[key];
+  if(!dir)return;
+  e.preventDefault();
+  
+  const[dx,dy]=dir;
+  const[lastX,lastY]=path[path.length-1];
+  let nextX=(lastX+dx+gridSize)%gridSize;
+  let nextY=(lastY+dy+gridSize)%gridSize;
+  
+  if(walls.some(w=>w[0]===nextX&&w[1]===nextY)) return;
+
+  if(path.length>1){
+    const[prevX,prevY]=path[path.length-2];
+    if(nextX===prevX&&nextY===prevY){undoLastMove();return;}
+  }
+
+  const portalKey=`${nextX},${nextY}`;
+  const isPortal=portals[portalKey];
+
+  if(isPortal){
+    const[exitX,exitY]=portals[portalKey];
+    const entranceVisited=path.some(p=>p[0]===nextX&&p[1]===nextY);
+    const exitVisited=path.some(p=>p[0]===exitX&&p[1]===exitY);
+    if(entranceVisited || exitVisited) return;
+    
+    path.push([nextX,nextY]);
+    path.push([exitX,exitY]);
+  } else {
+    if(path.some(p=>p[0]===nextX&&p[1]===nextY)) return;
+    path.push([nextX,nextY]);
+  }
+  
+  undoStack.push(JSON.stringify(path));
+  redoStack=[];
+  updatePathValidity();
+  drawGrid();
+  checkVictory();
+});
+
+function undoLastMove(){
+  if(undoStack.length>1){redoStack.push(undoStack.pop());path=JSON.parse(undoStack[undoStack.length-1]);}
+  else if(undoStack.length===1){redoStack.push(undoStack.pop());path=[];}
+  updatePathValidity();drawGrid();
+}
+
+function redoLastMove(){
+  if(redoStack.length>0){const nextState=redoStack.pop();path=JSON.parse(nextState);undoStack.push(nextState);}
+  updatePathValidity();drawGrid();checkVictory();
+}
+
+function resetLevel(){if(currentLevel)startLevel(currentLevel);}
+function resetProgress(){
+    progress=[];
+    levelCache = {};
+    localStorage.removeItem("tthm2_progress");
+    renderLevelList();
+}
+
+function updatePathValidity(){
+  invalidPath=false;
+  let lastVal=-Infinity;
+  let lastLetter = String.fromCharCode(0);
+  
+  for(let[px,py] of path){
+    const val=board[py][px];
+    if(val!==null){if(val<lastVal){invalidPath=true;break;}lastVal=val;}
+
+    if(currentLevel.hasDualSequence){
+        const letter = letterBoard[py][px];
+        if(letter!==null){if(letter<lastLetter){invalidPath=true;break;}lastLetter=letter;}
+    }
+  }
+}
+
+function goToNextLevel(){
+  const nextLevel=levels.find(lvl=>lvl.id===currentLevel.id+1);
+  if(nextLevel)startLevel(nextLevel);
+  else{document.getElementById("win-message").textContent="All levels completed!";document.getElementById("next-level-btn").classList.add("hidden");}
+}
+
+renderLevelList();
+</script>
+</body>
+</html>

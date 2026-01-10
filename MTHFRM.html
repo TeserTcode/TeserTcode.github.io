@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automated Formula Creator</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- KaTeX for LaTeX rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMeaMurHvanHMIzuy3SNDimOTS8vr4/9gTezVXJHjsSfzvUxK" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Style for the KaTeX output */
+        .katex-display {
+            font-size: 1.5rem;
+        }
+        /* Custom scrollbar for textarea */
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: #2d3748;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background-color: #4a5568;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 flex flex-col items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-6xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white">Automated Formula Creator</h1>
+            <p class="text-lg text-gray-400 mt-2">Translate your math library syntax into beautiful LaTeX formulas.</p>
+        </header>
+
+        <div class="flex flex-col md:flex-row gap-4 w-full h-[60vh] min-h-[400px]">
+            <!-- Input Panel -->
+            <div class="flex-1 flex flex-col bg-gray-800 rounded-lg shadow-lg">
+                <div class="p-4 border-b border-gray-700">
+                    <h2 class="text-xl font-semibold">JS-like Input</h2>
+                </div>
+                <textarea
+                    id="js-input"
+                    onkeyup="convert()"
+                    class="flex-grow p-4 bg-gray-800 text-gray-200 rounded-b-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-lg leading-relaxed"
+                    placeholder="Enter your formula... e.g., div(add(a,b), sub(c,d))"
+                ></textarea>
+            </div>
+
+            <!-- Output Panel -->
+            <div class="flex-1 flex flex-col bg-gray-800 rounded-lg shadow-lg">
+                <div class="p-4 border-b border-gray-700">
+                    <h2 class="text-xl font-semibold">Formatted Output</h2>
+                </div>
+                <div id="formula-output" class="flex-grow p-8 flex items-center justify-center text-white overflow-auto">
+                    <!-- KaTeX will render here -->
+                </div>
+            </div>
+        </div>
+         <footer class="text-center mt-6 text-gray-500">
+            <p>Supported Syntax: add, sub, mul, div, pow, g, leng, mag, factorial, poch, pi, eulerc, bign, for loops, and if/else.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Placeholder text with examples to guide the user
+        const placeholderText = `// Try some examples!
+
+// Variadic functions
+add(a, b, c, d)
+div(numerator, d1, d2, d3)
+
+// Array/vector operations
+g(A, i)
+mag(v)
+
+// Incomplete Gamma Function
+incgamma(a,x)
+
+// Summation Loop
+for(let i=0; i<bign; i++) fi = add(fi, div(1, factorial(i)))
+
+// Iterative Process Loop
+for(let k=0; k<bign; k++) W = pow(W, 2)
+
+// Piecewise Function
+if (x < 0) { 0 } else { mul(x, pi()) }
+`;
+        document.getElementById('js-input').value = placeholderText;
+
+
+        function convert() {
+            const input = document.getElementById('js-input').value;
+            const outputDiv = document.getElementById('formula-output');
+            try {
+                const latexString = parse(input);
+                katex.render(latexString, outputDiv, {
+                    throwOnError: false,
+                    displayMode: true,
+                    macros: {
+                        "\\d": "\\text{d}"
+                    }
+                });
+            } catch (e) {
+                outputDiv.innerHTML = `<span class="text-red-400">Error: ${e.message}</span>`;
+            }
+        }
+
+        /**
+         * Parses the custom JS-like math syntax into a LaTeX string.
+         * @param {string} text The input string.
+         * @returns {string} The LaTeX formatted string.
+         */
+        function parse(text) {
+            // Remove JS-specific keywords and constructs that are not part of the formula
+            let result = text.replace(/\/\/.*/g, '') // Remove comments
+                             .replace(/let .*?;/g, '')     // Remove variable declarations like 'let fi=...'
+                             .replace(/function\s*\w*\s*\(.*?\)\s*\{/g, '') // Remove 'function ... {'
+                             .replace(/\breturn\b/g, '')    // Remove 'return' keyword
+                             .replace(/\}/g, '')           // Remove closing braces
+                             .trim();
+
+            // 1. Handle complex, multi-line structures first
+            result = handleForLoops(result);
+            result = handleIfs(result);
+            
+            // 2. Handle specific function names from the prompt
+            result = result.replace(/incgamma\s*\(\s*(.*?)\s*,\s*(.*?)\s*\)/g, (match, a, x) => {
+                return `\\int_{${parse(x)}}^{${parse('bign')}} {t}^{${parse(a)}-1} {e}^{-t} \\d t`;
+            });
+
+            // 3. Handle constants and parameter-less functions
+            result = result.replace(/bign/g, '\\infty');
+            result = result.replace(/eulerc\(\)/g, 'e');
+            result = result.replace(/pi\(\)/g, '\\pi');
+
+            // 4. Iteratively handle innermost functions until no more changes occur
+            let previous;
+            do {
+                previous = result;
+                result = result.replace(/(\w+)\s*\(([^()]*)\)/g, (match, func, argsStr) => {
+                    // split args, trim, and filter out any empty strings from trailing commas etc.
+                    const args = argsStr.split(',').map(arg => arg.trim()).filter(arg => arg); 
+                    
+                    switch (func) {
+                        // Variadic functions
+                        case 'add':
+                            if (args.length === 0) return match;
+                            return `(${args.join(' + ')})`;
+                        case 'sub':
+                            if (args.length === 0) return match;
+                            return `(${args.join(' - ')})`;
+                        case 'mul':
+                            if (args.length === 0) return match;
+                            return args.join(' \\cdot ');
+                        case 'div':
+                            if (args.length < 2) return match; // Needs at least numerator and one denominator
+                            const numerator = args[0];
+                            const denominator = args.slice(1).join(' \\cdot ');
+                            return `\\frac{${numerator}}{${denominator}}`;
+                        
+                        // Binary functions
+                        case 'pow':
+                            if (args.length !== 2) return match;
+                            return `{${args[0]}}^{${args[1]}}`;
+                        case 'poch':
+                            if (args.length !== 2) return match;
+                            return `({${args[0]}})_{${args[1]}}`;
+                        case 'g':
+                            if (args.length !== 2) return match;
+                            return `{${args[0]}}_{${args[1]}}`;
+                        
+                        // Unary functions
+                        case 'factorial':
+                            if (args.length !== 1) return match;
+                            return `{${args[0]}}!`;
+                        case 'leng':
+                            if (args.length !== 1) return match;
+                            return `|{${args[0]}}|`;
+                        case 'mag':
+                            if (args.length !== 1) return match;
+                            return `|{${args[0]}}|`;
+
+                        default:
+                            return match; // Return original match for functions not in our list (like incgamma)
+                    }
+                });
+            } while (result !== previous);
+
+            // 5. Final cleanup
+            result = result.replace(/\{\((.*?)\)\}/g, '{$1}'); // Clean up {(...)} to {...}
+            
+            return result;
+        }
+
+        function handleForLoops(text) {
+             // Regex for sum/product loops: for(let i=0; i<bign; i++) fi = add(fi, ...)
+            const sumProdRegex = /for\s*\(\s*let\s+(?<iterator>\w+)\s*=\s*(?<start>.*?)\s*;\s*\k<iterator>\s*<\s*(?<end>.*?)\s*;\s*\k<iterator>\+\+\s*\)\s*(?:[\w\s=]+?)\s*=\s*(?<func>add|mul)\(.*?,(.*?)\)/;
+             // Regex for generic iterative loops: for(let k=0; k<bign; k++) W = pow(W, 2)
+            const genericLoopRegex = /for\s*\(\s*let\s+(?<iterator>\w+)\s*=\s*(?<start>.*?)\s*;\s*\k<iterator>\s*<\s*(?<end>.*?)\s*;\s*\k<iterator>\+\+\s*\)\s*(?<variable>\w+)\s*=\s*(.*)/;
+
+            return text.replace(sumProdRegex, (match, iterator, start, end, func, expr) => {
+                const operator = func === 'add' ? '\\sum' : '\\prod';
+                // Recursively parse the inner expression
+                const parsedExpr = parse(expr.trim());
+                return `${operator}_{${iterator}=${parse(start)}}^{${parse(end)}-1} ${parsedExpr}`;
+            }).replace(genericLoopRegex, (match, iterator, start, end, variable, expr) => {
+                 // For complex loops, use the vertical bar notation with Omega
+                 const parsedExpr = parse(expr.trim());
+                 return `\\underset{${iterator}=${parse(start)}}{\\overset{${parse(end)}-1}{|}} \\left( \\Omega = ${parsedExpr} \\right)`;
+            });
+        }
+        
+        function handleIfs(text) {
+            const ifRegex = /if\s*\((.*?)\)\s*\{\s*(.*?)\s*\}\s*else\s*\{\s*(.*?)\s*\}/;
+            return text.replace(ifRegex, (match, condition, trueVal, falseVal) => {
+                const parsedCondition = parse(condition.trim());
+                const parsedTrue = parse(trueVal.trim());
+                const parsedFalse = parse(falseVal.trim());
+                return `\\begin{cases} ${parsedTrue} & \\text{if } ${parsedCondition} \\\\ ${parsedFalse} & \\text{otherwise} \\end{cases}`;
+            });
+        }
+
+        // Initial conversion on page load
+        window.onload = convert;
+
+    </script>
+</body>
+</html>
+

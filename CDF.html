@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distribution Viewer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.7.0/math.min.js"></script>
+    <script src="mthfnc.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+            margin: 0;
+        }
+        #controls {
+            width: 20%;
+            padding: 10px;
+            background-color: #f4f4f4;
+            overflow-y: auto;
+        }
+        #graph-container {
+            width: 80%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        canvas {
+            border: 1px solid #000;
+            margin: 10px;
+        }
+        .param-input {
+            margin: 5px 0;
+        }
+        .param-input label {
+            display: inline-block;
+            width: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <h2>Select Distribution</h2>
+        <select id="distribution-select"></select>
+        <h2>Parameters</h2>
+        <div id="parameters"></div>
+        <h2>Properties</h2>
+        <div id="properties"></div>
+    </div>
+    <div id="graph-container">
+        <canvas id="pdf-cdf-canvas" width="800" height="400"></canvas>
+        <canvas id="mgf-cf-pgf-cgf-canvas" width="800" height="400"></canvas>
+    </div>
+
+    <script>
+        // Function to find all ...distpdf() functions
+        function findDistFunctions() {
+            const functions = [];
+            for (let key in window) {
+                if (key.endsWith('distpdf') && typeof window[key] === 'function') {
+                    functions.push(key);
+                }
+            }
+            return functions;
+        }
+
+        // Function to populate the dropdown
+        function populateDropdown() {
+            const select = document.getElementById('distribution-select');
+            const functions = findDistFunctions();
+            functions.forEach(func => {
+                const option = document.createElement('option');
+                option.value = func;
+                option.textContent = func;
+                select.appendChild(option);
+            });
+        }
+
+        // Function to generate parameter inputs
+        function generateParameterInputs(distFunction) {
+            const paramsDiv = document.getElementById('parameters');
+            paramsDiv.innerHTML = ''; // Clear previous inputs
+
+            // Get the number of parameters (excluding the last space parameter)
+            const paramCount = window[distFunction].length - 1;
+
+            // Example parameter names (adjust based on your function signatures)
+            const paramNames = ['a', 'b', 'aa', 'c', 'd', 'e', 'f']; // Add more if needed
+
+            for (let i = 0; i < paramCount; i++) {
+                const paramName = paramNames[i] || `param${i + 1}`;
+                const inputGroup = document.createElement('div');
+                inputGroup.className = 'param-input';
+
+                const label = document.createElement('label');
+                label.textContent = paramName;
+                inputGroup.appendChild(label);
+
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.value = 1; // Default value
+                input.id = `param-${paramName}`;
+                inputGroup.appendChild(input);
+
+                paramsDiv.appendChild(inputGroup);
+            }
+        }
+
+        // Function to get parameter values
+        function getParameterValues(distFunction) {
+            const paramCount = window[distFunction].length - 1;
+            const paramNames = ['a', 'b', 'aa', 'c', 'd', 'e', 'f']; // Add more if needed
+            const params = [];
+
+            for (let i = 0; i < paramCount; i++) {
+                const paramName = paramNames[i] || `param${i + 1}`;
+                const input = document.getElementById(`param-${paramName}`);
+                if (input) {
+                    params.push(parseFloat(input.value));
+                }
+            }
+
+            return params;
+        }
+
+        // Function to draw PDF and CDF
+        function drawPDFCDF(distFunction, params, spaceParam) {
+            const canvas = document.getElementById('pdf-cdf-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw PDF
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+            for (let x = spaceParam[0]; x <= spaceParam[1]; x += (spaceParam[1] - spaceParam[0]) / canvas.width) {
+                const value = window[distFunction](x, ...params, spaceParam);
+                if (value === undefined || value === null) continue;
+
+                let y;
+                if (math.isComplex(value)) {
+                    // Draw real part (primary curve)
+                    y = canvas.height - math.re(value) * 100; // Scale for visibility
+                    ctx.lineTo(((x - spaceParam[0]) / (spaceParam[1] - spaceParam[0])) * canvas.width, y);
+                    ctx.strokeStyle = 'blue';
+                    ctx.stroke();
+
+                    // Draw imaginary part (lighter curve)
+                    y = canvas.height - math.im(value) * 100; // Scale for visibility
+                    ctx.strokeStyle = 'rgba(0, 0, 255, 0.3)'; // Lighter blue
+                    ctx.beginPath();
+                    ctx.moveTo(((x - spaceParam[0]) / (spaceParam[1] - spaceParam[0])) * canvas.width, canvas.height);
+                    ctx.lineTo(((x - spaceParam[0]) / (spaceParam[1] - spaceParam[0])) * canvas.width, y);
+                    ctx.stroke();
+                } else {
+                    // Draw real-valued function
+                    y = canvas.height - value * 100; // Scale for visibility
+                    ctx.lineTo(((x - spaceParam[0]) / (spaceParam[1] - spaceParam[0])) * canvas.width, y);
+                    ctx.strokeStyle = 'blue';
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Function to draw MGF, CF, PGF, CGF
+        function drawMGFCFPGFCGF(distFunction, params, spaceParam) {
+            const canvas = document.getElementById('mgf-cf-pgf-cgf-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Example drawing logic (replace with actual distribution calculations)
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+            for (let x = spaceParam[0]; x <= spaceParam[1]; x += (spaceParam[1] - spaceParam[0]) / canvas.width) {
+                const value = window[distFunction](x, ...params, spaceParam);
+                if (value === undefined || value === null) continue;
+
+                let y;
+                if (math.isComplex(value)) {
+                    // Draw real part (primary curve)
+                    y = canvas.height - math.re(value) * 100; // Scale for visibility
+                    ctx.lineTo(((x - spaceParam[0]) / (spaceParam[1] - spaceParam[0])) * canvas.width, y);
+                    ctx.strokeStyle = 'red';
+                    ctx.stroke();
+
+                    // Draw imaginary part (lighter curve)
+                    y = canvas.height - math.im(value) * 100; // Scale for visibility
+                    ctx.strokeStyle = 'rgba(255, 0, 0, 0.3)'; // Lighter red
+                    ctx.beginPath();
+                    ctx.moveTo(((x - spaceParam[0]) / (spaceParam[1] - spaceParam[0])) * canvas.width, canvas.height);
+                    ctx.lineTo(((x - spaceParam[0]) / (spaceParam[1] - spaceParam[0])) * canvas.width, y);
+                    ctx.stroke();
+                } else {
+                    // Draw real-valued function
+                    y = canvas.height - value * 100; // Scale for visibility
+                    ctx.lineTo(((x - spaceParam[0]) / (spaceParam[1] - spaceParam[0])) * canvas.width, y);
+                    ctx.strokeStyle = 'red';
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Function to display properties
+        function displayProperties(distFunction, params) {
+            const propertiesDiv = document.getElementById('properties');
+            propertiesDiv.innerHTML = '';
+
+            // Example properties (replace with actual calculations)
+            const properties = {
+                mean: 'N/A',
+                median: 'N/A',
+                mode: 'N/A',
+                variance: 'N/A',
+                skewness: 'N/A',
+                kurtosis: 'N/A',
+                entropy: 'N/A'
+            };
+
+            for (let key in properties) {
+                const p = document.createElement('p');
+                p.textContent = `${key}: ${properties[key]}`;
+                propertiesDiv.appendChild(p);
+            }
+        }
+
+        // Event listener for dropdown change
+        document.getElementById('distribution-select').addEventListener('change', function() {
+            const selectedFunction = this.value;
+            generateParameterInputs(selectedFunction); // Generate parameter inputs
+            const params = getParameterValues(selectedFunction); // Get parameter values
+            const spaceParam = [-10, 10]; // Example space parameter, adjust as needed
+            drawPDFCDF(selectedFunction, params, spaceParam);
+            drawMGFCFPGFCGF(selectedFunction, params, spaceParam);
+            displayProperties(selectedFunction, params);
+        });
+
+        // Initialize dropdown
+        populateDropdown();
+    </script>
+</body>
+</html>

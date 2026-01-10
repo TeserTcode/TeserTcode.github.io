@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Penrose Tiling Viewer</title>
+  <style>
+    body { display: flex; flex-direction: row; font-family: sans-serif; }
+    #controls { margin: 10px; }
+    canvas { border: 1px solid #ccc; cursor: grab; }
+    .scrollbox {
+      width: 250px;
+      height: 300px;
+      overflow: auto;
+      margin: 10px;
+      border: 1px solid #ccc;
+      padding: 5px;
+      font-family: monospace;
+      background: #f8f8f8;
+    }
+    button { margin: 2px; }
+    .button-group { margin: 5px 0; }
+    .stats { margin: 10px 0; font-weight: bold; }
+    select { margin: 5px 0; }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <h3>Penrose Tiling</h3>
+    <label>Run Length (depth): <input type="number" id="depth" value="4" min="1" max="6" /></label>
+    <button onclick="generate()">Generate</button>
+    <div class="button-group">
+      <button onclick="toggleCompact()">Toggle Compact View</button>
+      <button onclick="addZCoordinate()">Toggle Z Coordinate</button>
+    </div>
+    <div>
+      <label>Face Center Method:
+        <select id="centerMethod">
+          <option value="mean">Arithmetic Mean</option>
+          <option value="circumcenter">Circumcenter</option>
+          <option value="centroid">Centroid (Area-weighted)</option>
+          <option value="midpoint">Edge Midpoint Average</option>
+        </select>
+      </label>
+    </div>
+    <div class="stats" id="stats"></div>
+    <canvas id="tilingCanvas" width="600" height="600"></canvas>
+  </div>
+
+  <div class="scrollbox" id="verticesBox"><b>Vertices</b><br/></div>
+  <div class="scrollbox" id="degreesBox"><b>Vertex Degrees</b><br/></div>
+  <div class="scrollbox" id="truncatedDegreesBox"><b>Truncated Degrees</b><br/></div>
+  <div class="scrollbox" id="edgesBox"><b>Edges</b><br/></div>
+  <div class="scrollbox" id="facesBox"><b>Faces</b><br/></div>
+  <div class="scrollbox" id="faceCentersBox"><b>Face Centers</b><br/></div>
+  <div class="scrollbox" id="faceDegreesBox"><b>Face Degrees</b><br/></div>
+  <div class="scrollbox" id="dualEdgesBox"><b>Dual Edges</b><br/></div>
+
+  <script>
+    let points = [], degrees = [], truncatedDegrees = [], edges = [], faces = [], faceCenters = [], faceDegrees = [], dualEdges = [];
+    let compactView = false;
+    let withZCoordinate = false;
+
+    function generate() {
+      const epsilon = 1e-4;
+      const centerEpsilon = 0.01;
+      const r = 30;
+      const pi5 = Math.PI * 2 / 10;
+      const depth = parseInt(document.getElementById("depth").value);
+      const centerMethod = document.getElementById("centerMethod").value;
+      let penrose = "[N]++[N]++[N]++[N]++[N]";
+      const rules = {
+        M: "OA++PA----NA[-OA----MA]++",
+        N: "+OA--PA[---MA--NA]+",
+        O: "-MA++NA[+++OA++PA]-",
+        P: "--OA++++MA[+PA++++NA]--NA",
+      };
+
+      for (let i = 0; i < depth; i++) {
+        let next = "";
+        for (let ch of penrose) {
+          if (ch === 'A') continue;
+          next += rules[ch] || ch;
+        }
+        penrose = next;
+      }
+
+      let x = r * 8, y = r * 8, theta = pi5;
+      let stack = [];
+      points = [];
+      degrees = [];
+      edges = [];
+      const adjSet = [];
+
+      function addPoint(x, y) {
+        for (let i = 0; i < points.length; i++) {
+          const [px, py] = points[i];
+          if (Math.abs(px - x) < epsilon && Math.abs(py - y) < epsilon)
+            return i;
+        }
+        points.push([x, y]);
+        adjSet.push(new Set());
+        return points.length - 1;
+      }
+
+      for (let ch of penrose) {
+        if (ch === 'A') {
+          const nx = x + r * Math.cos(theta);
+          const ny = y + r * Math.sin(theta);
+          const i1 = addPoint(x, y);
+          const i2 = addPoint(nx, ny);
+          if (!adjSet[i1].has(i2)) {
+            adjSet[i1].add(i2);
+            adjSet[i2].add(i1);
+            edges.push([i1, i2]);
+          }
+          x = nx;
+          y = ny;
+        } else if (ch === '+') {
+          theta += pi5;
+        } else if (ch === '-') {
+          theta -= pi5;
+        } else if (ch === '[') {
+          stack.push([x, y, theta]);
+        } else if (ch === ']') {
+          [x, y, theta] = stack.pop();
+        }
+      }
+
+      degrees = adjSet.map(set => set.size);
+
+      // Find faces (quadrilaterals)
+      faces = [];
+      faceCenters = [];
+      const edgeMap = new Map();
+      const vertexFaceCount = new Array(points.length).fill(0);
+      
+      // Build edge map for faster lookup
+      for (let [v0, v1] of edges) {
+        if (!edgeMap.has(v0)) edgeMap.set(v0, new Set());
+        if (!edgeMap.has(v1)) edgeMap.set(v1, new Set());
+        edgeMap.get(v0).add(v1);
+        edgeMap.get(v1).add(v0);
+      }
+
+      // Function to check if center already exists
+      function centerExists(x, y) {
+        for (let [cx, cy] of faceCenters) {
+          if (Math.abs(cx - x) < centerEpsilon && Math.abs(cy - y) < centerEpsilon) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      // Function to calculate face center based on selected method
+      function calculateFaceCenter(faceVertices) {
+        const vertices = faceVertices.map(v => points[v]);
+        
+        switch (centerMethod) {
+          case 'circumcenter':
+            return calculateCircumcenter(vertices);
+          case 'centroid':
+            return calculateCentroid(vertices);
+          case 'midpoint':
+            return calculateMidpointAverage(vertices);
+          case 'mean':
+          default:
+            return calculateArithmeticMean(vertices);
+        }
+      }
+
+      // Arithmetic mean (average of all vertices)
+      function calculateArithmeticMean(vertices) {
+        let x = 0, y = 0;
+        for (let [vx, vy] of vertices) {
+          x += vx;
+          y += vy;
+        }
+        return [x / vertices.length, y / vertices.length];
+      }
+
+      // Circumcenter (equidistant from all vertices)
+      function calculateCircumcenter(vertices) {
+        if (vertices.length === 3) {
+          // For triangles
+          const [x1, y1] = vertices[0];
+          const [x2, y2] = vertices[1];
+          const [x3, y3] = vertices[2];
+          
+          const A = x2 - x1;
+          const B = y2 - y1;
+          const C = x3 - x1;
+          const D = y3 - y1;
+          
+          const E = A*(x1 + x2) + B*(y1 + y2);
+          const F = C*(x1 + x3) + D*(y1 + y3);
+          
+          const G = 2*(A*(y3 - y1) - B*(x3 - x1));
+          
+          if (Math.abs(G) < 1e-6) {
+            // Points are colinear, return midpoint
+            return calculateArithmeticMean(vertices);
+          }
+          
+          const cx = (D*E - B*F) / G;
+          const cy = (A*F - C*E) / G;
+          
+          return [cx, cy];
+        } else {
+          // For quadrilaterals, use intersection of perpendicular bisectors of two sides
+          const [x1, y1] = vertices[0];
+          const [x2, y2] = vertices[1];
+          const [x3, y3] = vertices[2];
+          
+          // Midpoint of first side
+          const mx1 = (x1 + x2) / 2;
+          const my1 = (y1 + y2) / 2;
+          
+          // Slope of first side
+          const dx1 = x2 - x1;
+          const dy1 = y2 - y1;
+          
+          // Slope of perpendicular bisector
+          const pdx1 = -dy1;
+          const pdy1 = dx1;
+          
+          // Midpoint of second side
+          const mx2 = (x2 + x3) / 2;
+          const my2 = (y2 + y3) / 2;
+          
+          // Slope of second side
+          const dx2 = x3 - x2;
+          const dy2 = y3 - y2;
+          
+          // Slope of perpendicular bisector
+          const pdx2 = -dy2;
+          const pdy2 = dx2;
+          
+          // Find intersection of the two perpendicular bisectors
+          const denom = pdx1 * pdy2 - pdy1 * pdx2;
+          
+          if (Math.abs(denom) < 1e-6) {
+            // Lines are parallel, return arithmetic mean
+            return calculateArithmeticMean(vertices);
+          }
+          
+          const t = ((mx2 - mx1) * pdy2 - (my2 - my1) * pdx2) / denom;
+          const cx = mx1 + t * pdx1;
+          const cy = my1 + t * pdy1;
+          
+          return [cx, cy];
+        }
+      }
+
+      // Centroid (area-weighted center)
+      function calculateCentroid(vertices) {
+        if (vertices.length < 3) return calculateArithmeticMean(vertices);
+        
+        let area = 0;
+        let cx = 0;
+        let cy = 0;
+        
+        // Using the shoelace formula
+        for (let i = 0; i < vertices.length; i++) {
+          const [x1, y1] = vertices[i];
+          const [x2, y2] = vertices[(i + 1) % vertices.length];
+          
+          const cross = x1 * y2 - x2 * y1;
+          area += cross;
+          cx += (x1 + x2) * cross;
+          cy += (y1 + y2) * cross;
+        }
+        
+        area /= 2;
+        if (Math.abs(area) < 1e-6) return calculateArithmeticMean(vertices);
+        
+        cx /= (6 * area);
+        cy /= (6 * area);
+        
+        return [cx, cy];
+      }
+
+      // Average of edge midpoints
+      function calculateMidpointAverage(vertices) {
+        let x = 0, y = 0;
+        const n = vertices.length;
+        
+        for (let i = 0; i < n; i++) {
+          const [x1, y1] = vertices[i];
+          const [x2, y2] = vertices[(i + 1) % n];
+          x += (x1 + x2) / 2;
+          y += (y1 + y2) / 2;
+        }
+        
+        return [x / n, y / n];
+      }
+
+      for (let v0 = 0; v0 < points.length; v0++) {
+        const neighbors = Array.from(edgeMap.get(v0) || []);
+        
+        for (let v1 of neighbors) {
+          for (let v2 of Array.from(edgeMap.get(v1) || [])) {
+            if (v2 === v0) continue;
+            for (let v3 of Array.from(edgeMap.get(v2) || [])) {
+              if (v3 === v1) continue;
+              if (edgeMap.get(v3)?.has(v0)) {
+                // Found a quadrilateral face
+                const face = [v0, v1, v2, v3];
+                
+                // Calculate face center using selected method
+                const [centerX, centerY] = calculateFaceCenter(face);
+                
+                // Only add if center is unique
+                if (!centerExists(centerX, centerY)) {
+                  faces.push(face);
+                  faceCenters.push([centerX, centerY]);
+                  // Count this face for each vertex
+                  for (let v of face) {
+                    vertexFaceCount[v]++;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      truncatedDegrees = vertexFaceCount;
+
+      // Find dual edges (connect face centers that share an edge or two vertices)
+      dualEdges = [];
+      const faceEdgeMap = new Map();
+      const faceVertexMap = new Map();
+      const faceAdjSet = new Array(faces.length).fill().map(() => new Set());
+      
+      // Build maps from edges and vertices to faces
+      for (let fi = 0; fi < faces.length; fi++) {
+        const face = faces[fi];
+        
+        // Map vertices to faces
+        for (let v of face) {
+          if (!faceVertexMap.has(v)) faceVertexMap.set(v, new Set());
+          faceVertexMap.get(v).add(fi);
+        }
+        
+        // Map edges to faces
+        for (let i = 0; i < face.length; i++) {
+          const v0 = face[i];
+          const v1 = face[(i + 1) % face.length];
+          const edgeKey = `${Math.min(v0, v1)},${Math.max(v0, v1)}`;
+          if (!faceEdgeMap.has(edgeKey)) faceEdgeMap.set(edgeKey, []);
+          faceEdgeMap.get(edgeKey).push(fi);
+        }
+      }
+      
+      // Create dual edges between faces that share an edge or two vertices
+      const connectedFaces = new Set();
+      
+      // First connect faces that share an edge
+      for (let [edgeKey, faceIndices] of faceEdgeMap) {
+        if (faceIndices.length === 2) {
+          const [f1, f2] = faceIndices;
+          const key = `${Math.min(f1, f2)},${Math.max(f1, f2)}`;
+          if (!connectedFaces.has(key)) {
+            connectedFaces.add(key);
+            dualEdges.push([f1, f2]);
+            faceAdjSet[f1].add(f2);
+            faceAdjSet[f2].add(f1);
+          }
+        }
+      }
+      
+      // Then connect faces that share two vertices but no edge
+      for (let v = 0; v < points.length; v++) {
+        const adjacentFaces = Array.from(faceVertexMap.get(v) || []);
+        for (let i = 0; i < adjacentFaces.length; i++) {
+          for (let j = i + 1; j < adjacentFaces.length; j++) {
+            const f1 = adjacentFaces[i];
+            const f2 = adjacentFaces[j];
+            
+            // Check if they share another vertex
+            const face1 = faces[f1];
+            const face2 = faces[f2];
+            let sharedVertices = 0;
+            for (let v1 of face1) {
+              if (face2.includes(v1)) sharedVertices++;
+              if (sharedVertices >= 2) break;
+            }
+            
+            if (sharedVertices >= 2) {
+              const key = `${Math.min(f1, f2)},${Math.max(f1, f2)}`;
+              if (!connectedFaces.has(key)) {
+                connectedFaces.add(key);
+                dualEdges.push([f1, f2]);
+                faceAdjSet[f1].add(f2);
+                faceAdjSet[f2].add(f1);
+              }
+            }
+          }
+        }
+      }
+
+      // Calculate face degrees (number of connections in dual graph)
+      faceDegrees = faceAdjSet.map(set => set.size);
+
+      updateStats();
+      updateTextboxes();
+      draw();
+    }
+
+    function updateStats() {
+      const verticesCount = points.length;
+      const facesCount = faces.length;
+      const vertexDegreesSum = degrees.reduce((a, b) => a + b, 0);
+      const truncatedDegreesSum = truncatedDegrees.reduce((a, b) => a + b, 0);
+      const faceDegreesSum = faceDegrees.reduce((a, b) => a + b, 0);
+      document.getElementById("stats").innerHTML = `
+        Vertices: ${verticesCount}<br>
+        Faces: ${facesCount}<br>
+        Sum of Vertex Degrees: ${vertexDegreesSum}<br>
+        Sum of Truncated Degrees: ${truncatedDegreesSum}<br>
+        Sum of Face Degrees: ${faceDegreesSum}
+      `;
+    }
+
+    function toggleCompact() {
+      compactView = !compactView;
+      updateTextboxes();
+    }
+
+    function addZCoordinate() {
+      withZCoordinate = !withZCoordinate;
+      updateTextboxes();
+    }
+
+    function formatData(data) {
+      if (compactView) {
+        if (withZCoordinate) {
+          if (Array.isArray(data[0])) {
+            return JSON.stringify(data.map(arr => arr.length === 2 ? [...arr, 0] : arr));
+          } else if (Array.isArray(data[0][0])) {
+            return JSON.stringify(data.map(arr => arr.map(p => p.length === 2 ? [...p, 0] : p)));
+          }
+        }
+        return JSON.stringify(data);
+      } else {
+        if (withZCoordinate) {
+          if (Array.isArray(data[0])) {
+            return JSON.stringify(data.map(arr => arr.length === 2 ? [...arr, 0] : arr), null, 2);
+          } else if (Array.isArray(data[0][0])) {
+            return JSON.stringify(data.map(arr => arr.map(p => p.length === 2 ? [...p, 0] : p)), null, 2);
+          }
+        }
+        return JSON.stringify(data, null, 2);
+      }
+    }
+
+    function updateTextboxes() {
+      document.getElementById("verticesBox").innerText =
+        "Vertices:\n" + formatData(points);
+      document.getElementById("degreesBox").innerText =
+        "Vertex Degrees:\n" + formatData(degrees);
+      document.getElementById("truncatedDegreesBox").innerText =
+        "Truncated Degrees:\n" + formatData(truncatedDegrees);
+      document.getElementById("edgesBox").innerText =
+        "Edges:\n" + formatData(edges);
+      document.getElementById("facesBox").innerText =
+        "Faces:\n" + formatData(faces);
+      document.getElementById("faceCentersBox").innerText =
+        "Face Centers:\n" + formatData(faceCenters);
+      document.getElementById("faceDegreesBox").innerText =
+        "Face Degrees:\n" + formatData(faceDegrees);
+      document.getElementById("dualEdgesBox").innerText =
+        "Dual Edges:\n" + formatData(dualEdges);
+    }
+
+    // Canvas zoom and pan
+    let canvas = document.getElementById("tilingCanvas");
+    let ctx = canvas.getContext("2d");
+    let offsetX = canvas.width / 2, offsetY = canvas.height / 2;
+    let scale = 1;
+
+    let isDragging = false;
+    let dragStart = { x: 0, y: 0 };
+
+    canvas.addEventListener("mousedown", e => {
+      isDragging = true;
+      dragStart.x = e.offsetX;
+      dragStart.y = e.offsetY;
+      canvas.style.cursor = "grabbing";
+    });
+
+    canvas.addEventListener("mouseup", () => {
+      isDragging = false;
+      canvas.style.cursor = "grab";
+    });
+
+    canvas.addEventListener("mousemove", e => {
+      if (isDragging) {
+        offsetX += e.offsetX - dragStart.x;
+        offsetY += e.offsetY - dragStart.y;
+        dragStart.x = e.offsetX;
+        dragStart.y = e.offsetY;
+        draw();
+      }
+    });
+
+    canvas.addEventListener("wheel", e => {
+      e.preventDefault();
+      const factor = Math.exp(-e.deltaY * 0.001);
+      scale *= factor;
+      draw();
+    });
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(offsetX, offsetY);
+      ctx.scale(scale, scale);
+
+      // Draw original edges
+      ctx.strokeStyle = "#FF8C00";
+      ctx.lineWidth = 0.5 / scale;
+      for (let [i, j] of edges) {
+        const [x1, y1] = points[i];
+        const [x2, y2] = points[j];
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+
+      // Draw face centers (dual points)
+      ctx.fillStyle = "blue";
+      for (let [x, y] of faceCenters) {
+        ctx.beginPath();
+        ctx.arc(x, y, 3 / scale, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Draw dual edges
+      ctx.strokeStyle = "#0000FF";
+      ctx.lineWidth = 1 / scale;
+      for (let [i, j] of dualEdges) {
+        const [x1, y1] = faceCenters[i];
+        const [x2, y2] = faceCenters[j];
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    generate(); // Auto-run on page load
+  </script>
+</body>
+</html>

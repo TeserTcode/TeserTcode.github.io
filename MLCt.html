@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Molecule Explorer with Force-Directed Layout</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100%;
+            background-color: #f4f4f4;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+        }
+        #sidebar input, #sidebar button {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        #sidebar .example {
+            cursor: pointer;
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+        #sidebar .example:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h3>Molecule Input</h3>
+        <input type="text" id="moleculeInput" placeholder="Enter molecule (e.g., [C[H][H][H][H]])">
+        <button onclick="loadMolecule()">Load Molecule</button>
+        <h3>Examples</h3>
+        <div class="example" onclick="loadExample('[C[H][H][H][H]]')">Methane (CH₄)</div>
+        <div class="example" onclick="loadExample('[C[C[H][H][H]][H][H][H]]')">Ethane (C₂H₆)</div>
+        <div class="example" onclick="loadExample('[C[C[H][H]][O[H]]]')">Ethanol (C₂H₅OH)</div>
+        <div class="example" onclick="loadExample('[C[C[H][H]][C[H][H]][H]]')">Propane (C₃H₈)</div>
+        <div class="example" onclick="loadExample('[C[C[H][H]][C[H][H]][C[H][H]][H]]')">Butane (C₄H₁₀)</div>
+        <div class="example" onclick="loadExample('[C[C[H][H]][C[H][H]][C[H][H]][C[H][H]][H]]')">Pentane (C₅H₁₂)</div>
+        <div class="example" onclick="loadExample('[C[C[H][H]][C[H][H]][C[H][H]][C[H][H]][C[H][H]][H]]')">Hexane (C₆H₁₄)</div>
+        <div class="example" onclick="loadExample('[C[C[H][H]][C[H][H]][C[H][H]][C[H][H]][C[H][H]][C[H][H]][H]]')">Heptane (C₇H₁₆)</div>
+        <div class="example" onclick="loadExample('[C[C[H][H]][C[H][H]][C[H][H]][C[H][H]][C[H][H]][C[H][H]][C[H][H]][H]]')">Octane (C₈H₁₈)</div>
+        <div class="example" onclick="loadExample('[C[C[H][H]][C[H][H]][C[H][H]][C[H][H]][C[H][H]][C[H][H]][C[H][H]][C[H][H]][H]]')">Nonane (C₉H₂₀)</div>
+        <div class="example" onclick="loadExample('[C[C[H][H]][C[H][H]][C[H][H]][C[H][H]][C[H][H]][C[H][H]][C[H][H]][C[H][H]][C[H][H]][H]]')">Decane (C₁₀H₂₂)</div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Lighting
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(5, 5, 5).normalize();
+        scene.add(light);
+
+        // Camera position
+        camera.position.z = 20;
+
+        // Atomic radii and colors
+        const atomProperties = {
+            C: { radius: 0.7, color: 0x808080 }, // Gray
+            H: { radius: 0.3, color: 0xffffff }, // White
+            O: { radius: 0.66, color: 0xff0000 }, // Red
+            B: { radius: 0.8, color: 0xffa500 }, // Orange
+            N: { radius: 0.71, color: 0x0000ff }, // Blue
+            F: { radius: 0.64, color: 0x00ff00 }, // Green
+            Si: { radius: 1.1, color: 0x808080 }, // Gray
+            P: { radius: 1.0, color: 0xffa500 }, // Orange
+            S: { radius: 1.0, color: 0xffff00 }, // Yellow
+            Cl: { radius: 0.99, color: 0x00ff00 }, // Green
+            Se: { radius: 1.2, color: 0xffa500 }, // Orange
+            Br: { radius: 1.14, color: 0x800080 }, // Purple
+            I: { radius: 1.33, color: 0x800080 }, // Purple
+            Ge: { radius: 1.2, color: 0x808080 }, // Gray
+            As: { radius: 1.2, color: 0xffa500 }, // Orange
+            Sb: { radius: 1.4, color: 0xffa500 }, // Orange
+            Te: { radius: 1.4, color: 0xffff00 }, // Yellow
+            At: { radius: 1.5, color: 0x800080 }, // Purple
+            Ts: { radius: 1.5, color: 0x800080 } // Purple
+        };
+
+        // Function to create an atom
+        function createAtom(symbol, position) {
+            if (symbol == null) return;
+            const geometry = new THREE.SphereGeometry(atomProperties[symbol].radius, 32, 32);
+            const material = new THREE.MeshPhongMaterial({ color: atomProperties[symbol].color });
+            const atom = new THREE.Mesh(geometry, material);
+            atom.position.set(position.x, position.y, position.z);
+            scene.add(atom);
+            return atom;
+        }
+
+        // Function to create a bond
+        function createBond(start, end, type = 'single') {
+            const length = start.distanceTo(end);
+            const geometry = new THREE.CylinderGeometry(0.1, 0.1, length, 8);
+            const material = new THREE.MeshPhongMaterial({ color: 0xcccccc });
+            const bond = new THREE.Mesh(geometry, material);
+
+            // Position and rotate the bond
+            bond.position.copy(start).add(end).multiplyScalar(0.5);
+            bond.lookAt(end);
+            bond.rotateX(Math.PI / 2); // Align cylinder along the bond axis
+            scene.add(bond);
+
+            // Add additional cylinders for double/triple bonds
+            if (type === 'double') {
+                const bond2 = bond.clone();
+                bond2.position.x += 0.2;
+                scene.add(bond2);
+            } else if (type === 'triple') {
+                const bond2 = bond.clone();
+                bond2.position.x += 0.2;
+                scene.add(bond2);
+                const bond3 = bond.clone();
+                bond3.position.x -= 0.2;
+                scene.add(bond3);
+            }
+        }
+
+        // Function to parse the input into a tree structure
+        function parseMolecule(input) {
+            const stack = [];
+            let current = { atom: null, children: [] };
+
+            for (let i = 0; i < input.length; i++) {
+                const char = input[i];
+
+                if (char === '[') {
+                    stack.push(current);
+                    current = { atom: null, children: [] };
+                } else if (char === ']') {
+                    const parent = stack.pop();
+                    parent.children.push(current);
+                    current = parent;
+                } else if (/[A-Za-z]/.test(char)) {
+                    current.atom = char;
+                }
+            }
+
+            return current.children[0]; // Return the root of the tree
+        }
+
+        // Function to calculate positions based on VSEPR theory in 3D
+        function calculatePositions(node, position, angleOffset = 0, depth = 0) {
+            node.position = position;
+
+            const numChildren = node.children.length;
+            let angleStep, distance;
+
+            if (numChildren === 4) {
+                // Tetrahedral geometry
+                angleStep = Math.PI * 2 / 4;
+                distance = 2;
+            } else if (numChildren === 3) {
+                // Trigonal planar geometry
+                angleStep = Math.PI * 2 / 3;
+                distance = 2;
+            } else if (numChildren === 2) {
+                // Linear geometry
+                angleStep = Math.PI;
+                distance = 2;
+            } else {
+                angleStep = Math.PI * 2 / numChildren;
+                distance = 2;
+            }
+
+            // Calculate initial positions for children
+            node.children.forEach((child, index) => {
+                const angle = angleOffset + index * angleStep;
+                const childPosition = new THREE.Vector3(
+                    position.x + distance * Math.cos(angle),
+                    position.y + distance * Math.sin(angle),
+                    position.z + (index % 2 === 0 ? 1 : -1) // Add Z-axis variation for 3D
+                );
+                calculatePositions(child, childPosition, angle, depth + 1);
+            });
+
+            // Force-directed layout parameters
+            const forceStrength = 0.01;
+            const repulsionStrength = 0.1;
+            const bondLength = 1;
+
+            // Collect all atoms and bonds
+            const atoms = [];
+            const bonds = [];
+            function collectAtomsAndBonds(node) {
+                atoms.push(node);
+                node.children.forEach(child => {
+                    bonds.push({ start: node, end: child });
+                    collectAtomsAndBonds(child);
+                });
+            }
+            collectAtomsAndBonds(node);
+
+            // Apply forces iteratively
+            for (let iteration = 0; iteration < 200; iteration++) {
+                // Repulsive forces between all atoms
+                for (let i = 0; i < atoms.length; i++) {
+                    for (let j = i + 1; j < atoms.length; j++) {
+                        const atom1 = atoms[i];
+                        const atom2 = atoms[j];
+                        const delta = new THREE.Vector3().subVectors(atom1.position, atom2.position);
+                        const distance = delta.length();
+                        const force = repulsionStrength / (distance * distance);
+                        delta.normalize().multiplyScalar(force);
+                        atom1.position.add(delta);
+                        atom2.position.sub(delta);
+                    }
+                }
+
+                // Attractive forces between bonded atoms
+                bonds.forEach(bond => {
+                    const delta = new THREE.Vector3().subVectors(bond.end.position, bond.start.position);
+                    const distance = delta.length();
+                    const force = (distance - bondLength) * forceStrength;
+                    delta.normalize().multiplyScalar(force);
+                    bond.start.position.add(delta);
+                    bond.end.position.sub(delta);
+                });
+            }
+        }
+
+        // Function to render the molecule
+        function renderMolecule(root) {
+            const stack = [{ node: root, parentPosition: null }];
+
+            while (stack.length > 0) {
+                const { node, parentPosition } = stack.pop();
+
+                // Create the atom
+                const atom = createAtom(node.atom, node.position);
+
+                // Create the bond to the parent
+                if (parentPosition) {
+                    const bondType = 'single'; // Simplified logic
+                    createBond(parentPosition, node.position, bondType);
+                }
+
+                // Add children to the stack
+                node.children.forEach(child => {
+                    stack.push({ node: child, parentPosition: node.position });
+                });
+            }
+        }
+
+        // Function to load a molecule from input
+        function loadMolecule() {
+            const input = document.getElementById('moleculeInput').value;
+            const root = parseMolecule(input);
+            calculatePositions(root, new THREE.Vector3(0, 0, 0));
+            renderMolecule(root);
+        }
+
+        // Function to load an example molecule
+        function loadExample(example) {
+            document.getElementById('moleculeInput').value = example;
+            loadMolecule();
+        }
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Rotate the entire scene
+            scene.rotation.x += 0.005; // Rotate around the X-axis
+            scene.rotation.y += 0.01;  // Rotate around the Y-axis
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

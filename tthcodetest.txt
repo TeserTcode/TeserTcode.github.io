@@ -1,0 +1,1 @@
+while ( r > 0 ) { if ( (1 not (a mod res)) (1 not (b mod res)) ) {out 3 break } -- res }

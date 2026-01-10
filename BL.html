@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Battery Life Calculator</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .hidden { display: none; }
+    #batteryForm {
+      margin-bottom: 20px;
+    }
+    #graph-container {
+      width: 500px;
+      height: 300px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="batteryForm">
+    <label for="batterySelect">Select Battery Type:</label>
+    <select id="batterySelect">
+      <option value="AAA">AAA (1200mAh)</option>
+      <option value="AA">AA (2700mAh)</option>
+      <option value="C">C (8000mAh)</option>
+      <option value="D">D (12000mAh)</option>
+      <option value="9V">9V Transistor (565mAh)</option>
+      <option value="CR2032">CR2032 (240mAh)</option>
+    </select>
+    <br><br>
+    
+    <label for="capacity">Battery Capacity (mAh):</label>
+    <input type="number" id="capacity" value="1200" readonly><br><br>
+
+    <label for="loadCurrent">Load Current (mA):</label>
+    <input type="number" id="loadCurrent" value="100"><br><br>
+
+    <label for="consumptionRate">Consumption Rate (0.7 default):</label>
+    <input type="number" id="consumptionRate" value="0.7" step="0.1"><br><br>
+
+    <label for="timeAwake">Time Awake (hours):</label>
+    <input type="number" id="timeAwake" value="12" min="1" max="24"><br><br>
+
+    <label for="timeSleep">Time Sleep (hours):</label>
+    <input type="number" id="timeSleep" value="12" min="1" max="24"><br><br>
+
+    <label for="graphWidth">Graph Width:</label>
+    <input type="range" id="graphWidth" min="300" max="600" value="500"><br><br>
+    
+    <label for="graphHeight">Graph Height:</label>
+    <input type="range" id="graphHeight" min="200" max="400" value="300"><br><br>
+  </div>
+
+  <div id="graph-container">
+    <canvas id="batteryGraph"></canvas>
+  </div>
+
+  <script>
+    // Set default battery capacities for presets
+    const batteryCapacities = {
+      "AAA": 1200,
+      "AA": 2700,
+      "C": 8000,
+      "D": 12000,
+      "9V": 565,
+      "CR2032": 240
+    };
+
+    // Set up chart.js for the graph
+    const ctx = document.getElementById('batteryGraph').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [], // Time in hours
+        datasets: [{
+          label: 'Battery Remaining (%)',
+          data: [],
+          borderColor: 'rgba(75, 192, 192, 1)',
+          fill: false,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: false,
+        scales: {
+          y: {
+            min: 0,
+            max: 100
+          }
+        },
+        plugins: {
+          legend: { display: true }
+        }
+      }
+    });
+
+    // Update graph when battery preset is selected
+    document.getElementById('batterySelect').addEventListener('change', function () {
+      const selectedBattery = this.value;
+      const capacity = batteryCapacities[selectedBattery];
+      document.getElementById('capacity').value = capacity;
+      updateGraph();
+    });
+
+    // Update graph on input changes
+    function updateGraph() {
+      const capacity = parseFloat(document.getElementById('capacity').value);
+      const loadCurrent = parseFloat(document.getElementById('loadCurrent').value);
+      const consumptionRate = parseFloat(document.getElementById('consumptionRate').value);
+      const timeAwake = parseFloat(document.getElementById('timeAwake').value);
+      const timeSleep = parseFloat(document.getElementById('timeSleep').value);
+
+      // Calculate battery life in awake and sleep modes
+      const awakeCurrent = loadCurrent * consumptionRate;
+      const sleepCurrent = loadCurrent * 0.1; // Assume 10% of load current during sleep
+
+      // Total battery life in hours
+      const totalBatteryLife = (capacity / ((awakeCurrent * timeAwake + sleepCurrent * timeSleep) / 24));
+
+      // Simulate battery drain over time
+      const timeLabels = [];
+      const batteryData = [];
+      let remainingBattery = 100; // Start with 100%
+
+      for (let hour = 0; hour <= totalBatteryLife; hour++) {
+        timeLabels.push(hour);
+        batteryData.push(remainingBattery);
+
+        // Calculate battery drain for this hour
+        const isAwake = (hour % 24) < timeAwake;
+        const currentDrain = isAwake ? awakeCurrent : sleepCurrent;
+        remainingBattery -= (currentDrain / capacity) * 100;
+        if (remainingBattery < 0) remainingBattery = 0;
+      }
+
+      // Update chart data
+      chart.data.labels = timeLabels;
+      chart.data.datasets[0].data = batteryData;
+      chart.update();
+    }
+
+    // Add event listeners to input fields to update the graph when values change
+    document.getElementById('loadCurrent').addEventListener('input', updateGraph);
+    document.getElementById('consumptionRate').addEventListener('input', updateGraph);
+    document.getElementById('timeAwake').addEventListener('input', updateGraph);
+    document.getElementById('timeSleep').addEventListener('input', updateGraph);
+    document.getElementById('graphWidth').addEventListener('input', function() {
+      document.getElementById('batteryGraph').width = this.value;
+      chart.update();
+    });
+    document.getElementById('graphHeight').addEventListener('input', function() {
+      document.getElementById('batteryGraph').height = this.value;
+      chart.update();
+    });
+
+    // Initialize the graph with default values
+    updateGraph();
+  </script>
+</body>
+</html>

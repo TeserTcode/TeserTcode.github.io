@@ -15,9 +15,11 @@ zoom.oninput=()=>{s=zoom.value/100;back.style.transform=front.style.transform="s
 back.style.top="100px"
 front.style.top="100px"
 back.style.left=x+"px"
+
+function limit(){let max=0,min=-(w*s-window.innerWidth);if(x>max)x=max;if(x<min)x=min;back.style.left=x+"px"}
 document.addEventListener("mousedown",e=>{drag=true;dx=e.clientX-x})
 document.addEventListener("mouseup",()=>drag=false)
-document.addEventListener("mousemove",e=>{if(drag){x=e.clientX-dx;back.style.left=x+"px"}})
+document.addEventListener("mousemove",e=>{if(drag){x=e.clientX-dx;limit()}})
 </script>
 </body>
 </html>

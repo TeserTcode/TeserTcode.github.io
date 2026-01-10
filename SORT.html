@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Sorting Control Lab v2</title>
+<style>
+canvas { 
+  position:absolute; 
+  top:0; 
+  left:0; 
+  border: 1px solid #ccc;
+}
+#preview { 
+  position:absolute; 
+  top:0; 
+  left:380px; 
+}
+#ui { 
+  position:absolute; 
+  top:420px; 
+  left:0; 
+  width:820px; 
+  font-family: sans-serif;
+}
+input, select, button {
+  margin: 2px;
+}
+</style>
+</head>
+<body>
+
+<canvas id="perfect" width="360" height="360"></canvas>
+<canvas id="preview" width="360" height="360"></canvas>
+
+<div id="ui">
+Algorithm:
+<select id="algo"></select>
+
+Color:
+<select id="colorMode">
+<option value="hue">Hue</option>
+<option value="light">Lightness</option>
+<option value="bright">Brightness</option>
+<option value="lab">CIELAB Hue</option>
+<option value="viridis">Viridis</option>
+<option value="gray">Grayscale</option>
+</select>
+
+<br>
+
+Cursor:
+<input type="checkbox" id="cursorOn" checked>
+<input type="color" id="cursorColor" value="#000000">
+<select id="cursorMode">
+<option value="replace">Replace</option>
+<option value="insert">Insert</option>
+</select>
+
+<br>
+
+N:
+<input id="n" type="number" value="50" min="10" max="1000">
+
+Preview size:
+<input id="psize" type="number" value="360" min="100" max="800">
+
+<br><br>
+
+<button onclick="run(true)">Animate (30 sec)</button>
+<button onclick="run(false)">Fast Preview</button>
+
+<br><br>
+
+Audio:
+<input type="checkbox" id="audioOn" checked>
+
+<select id="audioMode">
+<option value="value">Value → Frequency</option>
+<option value="swap">Swap Clicks</option>
+<option value="error">Error Amplitude</option>
+<option value="inverse">Inverse Error</option>
+<option value="harmonic">Harmonic Progress</option>
+<option value="drums">Drum Kit</option>
+<option value="chord">Chord Progressions</option>
+<option value="pulse">Pulse Rhythm</option>
+<option value="glitch">Glitch Effects</option>
+</select>
+
+Volume:
+<input id="audioVolume" type="range" min="0" max="100" value="50">
+
+<button onclick="playAudio()">Play Audio</button>
+
+<br><br>
+
+Video:
+<input type="checkbox" id="videoOn">
+<button onclick="recordVideo()">Record 30 sec Video</button>
+
+<div id="status" style="margin-top: 10px; color: #666;"></div>
+<div id="stats" style="margin-top: 5px; color: #444;"></div>
+</div>
+
+<script>
+/* ================== CANVAS ================== */
+const pCanvas = document.getElementById('perfect');
+const dCanvas = document.getElementById('preview');
+const pCtx = pCanvas.getContext("2d");
+const dCtx = dCanvas.getContext("2d");
+let audioCtx = null;
+
+// Constants
+const TARGET_DURATION = 30; // Always 30 seconds
+let actualFPS = 60; // Will be calculated based on frame count
+
+/* ================== COLOR ================== */
+function colorMap(v){
+  const m = document.getElementById('colorMode').value;
+  if(m === "hue") return `hsl(${v*360},100%,50%)`;
+  if(m === "light") return `hsl(200,100%,${20+v*60}%)`;
+  if(m === "bright" || m === "gray") return `rgb(${v*255},${v*255},${v*255})`;
+  if(m === "viridis"){
+    let r = Math.min(1, Math.max(0, 1.5 - 4*v));
+    let g = Math.min(1, Math.max(0, 4*v - 1));
+    let b = Math.min(1, Math.max(0, 2*v));
+    return `rgb(${r*255},${g*255},${b*255})`;
+  }
+  let h = 240 - v * 240;
+  return `hsl(${h},100%,50%)`;
+}
+
+/* ================== TRACE ================== */
+let frames = [];
+function bump(V, cursor){
+  frames.push({v: V.slice(), c: cursor});
+}
+
+/* ================== SORTS ================== */
+function bubble(V){
+  for(let i = 0; i < V.length; i++) {
+    for(let j = 0; j < V.length - i - 1; j++){
+      bump(V, j);
+      if(V[j] > V[j+1]) [V[j], V[j+1]] = [V[j+1], V[j]];
+    }
+  }
+}
+
+function insertion(V){
+  for(let i = 1; i < V.length; i++){
+    let x = V[i], j = i - 1;
+    while(j >= 0 && V[j] > x){
+      V[j+1] = V[j]; 
+      bump(V, j); 
+      j--;
+    }
+    V[j+1] = x; 
+    bump(V, j+1);
+  }
+}
+
+function selection(V){
+  for(let i = 0; i < V.length; i++){
+    let m = i;
+    for(let j = i+1; j < V.length; j++){
+      bump(V, m);
+      if(V[j] < V[m]) m = j;
+    }
+    [V[i], V[m]] = [V[m], V[i]];
+  }
+}
+
+function merge(V){
+  function mergeSort(arr, l){
+    if(arr.length < 2) return arr;
+    let k = arr.length >> 1;
+    let left = mergeSort(arr.slice(0, k), l);
+    let right = mergeSort(arr.slice(k), l + k);
+    let result = [];
+    
+    while(left.length && right.length){
+      result.push(left[0] < right[0] ? left.shift() : right.shift());
+      V.splice(l, result.length, ...result);
+      bump(V, l);
+    }
+    return result.concat(left, right);
+  }
+  mergeSort(V, 0);
+}
+
+const algorithms = {bubble, insertion, selection, merge};
+const algoSelect = document.getElementById('algo');
+for(let k in algorithms){
+  let o = document.createElement("option");
+  o.value = k;
+  o.textContent = k.charAt(0).toUpperCase() + k.slice(1);
+  algoSelect.appendChild(o);
+}
+algoSelect.value = 'bubble';
+
+/* ================== AUDIO GENERATORS ================== */
+const audioGenerators = {
+  // Value-based frequency
+  value: (value, error, index, totalIndices, t, totalFrames, frame, prevFrame) => {
+    const freq = 200 + value * 2000;
+    const amp = 0.1;
+    return { freq, amp };
+  },
+  
+  // Swap clicks
+  swap: (value, error, index, totalIndices, t, totalFrames, frame, prevFrame) => {
+    let freq = 0;
+    let amp = 0;
+    if(t > 0 && prevFrame && prevFrame.c !== frame.c){
+      freq = 200 + (frame.c/(totalIndices-1)) * 1800;
+      amp = 0.3;
+    }
+    return { freq, amp };
+  },
+  
+  // Error amplitude
+  error: (value, error, index, totalIndices, t, totalFrames, frame, prevFrame) => {
+    const freq = 200 + (index/(totalIndices-1)) * 2000;
+    const amp = error * 0.2;
+    return { freq, amp };
+  },
+  
+  // Inverse error
+  inverse: (value, error, index, totalIndices, t, totalFrames, frame, prevFrame) => {
+    const freq = 200 + (index/(totalIndices-1)) * 2000;
+    const amp = (1 - error) * 0.2;
+    return { freq, amp };
+  },
+  
+  // Harmonic progress
+  harmonic: (value, error, index, totalIndices, t, totalFrames, frame, prevFrame) => {
+    const baseFreq = 110; // A2
+    const harmonic = Math.floor(value * 8) + 1;
+    const freq = baseFreq * harmonic;
+    const amp = 0.08 * (1 - (t / totalFrames));
+    return { freq, amp };
+  },
+  
+  // Drum kit simulation
+  drums: (value, error, index, totalIndices, t, totalFrames, frame, prevFrame) => {
+    let freq = 0;
+    let amp = 0;
+    
+    // Kick drum on swaps
+    if(t > 0 && prevFrame && frame.c !== prevFrame.c){
+      if(value < 0.3) {
+        // Kick drum
+        freq = 60 + value * 20;
+        amp = 0.4;
+      } else if(value < 0.6) {
+        // Snare
+        freq = 200 + value * 100;
+        amp = 0.3;
+      } else {
+        // Hi-hat
+        freq = 8000 + value * 4000;
+        amp = 0.2;
+      }
+    }
+    return { freq, amp };
+  },
+  
+  // Chord progressions
+  chord: (value, error, index, totalIndices, t, totalFrames, frame, prevFrame) => {
+    const chords = [
+      [261.63, 329.63, 392.00], // C major
+      [293.66, 369.99, 440.00], // D minor
+      [329.63, 415.30, 493.88], // E minor
+      [349.23, 440.00, 523.25], // F major
+      [392.00, 493.88, 587.33], // G major
+      [440.00, 554.37, 659.25], // A minor
+      [493.88, 622.25, 739.99]  // B diminished
+    ];
+    
+    const chordIndex = Math.floor((t / totalFrames) * chords.length);
+    const noteIndex = index % 3;
+    const chord = chords[chordIndex % chords.length];
+    
+    const freq = chord[noteIndex];
+    const amp = 0.07 * (1 - error);
+    
+    return { freq, amp };
+  },
+  
+  // Pulse rhythm
+  pulse: (value, error, index, totalIndices, t, totalFrames, frame, prevFrame) => {
+    const pulseRate = 4; // pulses per second
+    const pulseTime = (t / totalFrames) * TARGET_DURATION;
+    const inPulse = Math.sin(pulseTime * Math.PI * 2 * pulseRate) > 0;
+    
+    let freq = 0;
+    let amp = 0;
+    
+    if(inPulse && index % 4 === 0) {
+      freq = 300 + (index % 12) * 50;
+      amp = 0.15 * value;
+    }
+    
+    return { freq, amp };
+  },
+  
+  // Glitch effects
+  glitch: (value, error, index, totalIndices, t, totalFrames, frame, prevFrame) => {
+    let freq = 0;
+    let amp = 0;
+    
+    // Random glitches based on error
+    if(Math.random() < error * 0.3) {
+      freq = 100 + Math.random() * 2000;
+      amp = 0.1 + Math.random() * 0.2;
+      
+      // Sometimes add noise
+      if(Math.random() < 0.3) {
+        // Noise burst
+        freq = 0; // Special flag for noise
+        amp = 0.15;
+      }
+    }
+    
+    return { freq, amp };
+  }
+};
+
+/* ================== GENERATE AUDIO DATA ================== */
+function generateAudioData(totalFrames, audioMode, forVideo = false) {
+  const sampleRate = audioCtx ? audioCtx.sampleRate : 44100;
+  const N = frames[0] ? frames[0].v.length : 50;
+  const sorted = frames[totalFrames-1] ? frames[totalFrames-1].v : [];
+  
+  // Calculate samples for 30 seconds
+  const totalSamples = TARGET_DURATION * sampleRate;
+  const samplesPerFrame = totalSamples / totalFrames;
+  
+  const buffer = audioCtx ? audioCtx.createBuffer(1, totalSamples, sampleRate) : 
+                           { getChannelData: () => new Float32Array(totalSamples) };
+  const data = buffer.getChannelData ? buffer.getChannelData(0) : buffer;
+  
+  const volume = parseInt(document.getElementById('audioVolume').value) / 100;
+  const generator = audioGenerators[audioMode] || audioGenerators.value;
+  
+  // Generate audio data
+  for(let t = 0; t < totalFrames; t++){
+    const frame = frames[t];
+    const prevFrame = t > 0 ? frames[t-1] : null;
+    const values = frame.v;
+    
+    for(let i = 0; i < N; i++){
+      const value = values[i];
+      const error = sorted.length ? Math.abs(value - sorted[i]) : 0;
+      
+      const { freq, amp } = generator(
+        value, error, i, N, t, totalFrames, frame, prevFrame
+      );
+      
+      if(amp > 0 && freq > 0){
+        const startSample = Math.floor(t * samplesPerFrame);
+        const endSample = Math.floor((t + 1) * samplesPerFrame);
+        
+        if(freq === 0) {
+          // Noise for glitch mode
+          for(let s = startSample; s < endSample && s < totalSamples; s++){
+            data[s] += (Math.random() * 2 - 1) * amp * volume;
+          }
+        } else {
+          // Regular tone
+          for(let s = startSample; s < endSample && s < totalSamples; s++){
+            data[s] += Math.sin(2 * Math.PI * freq * s / sampleRate) * amp * volume;
+          }
+        }
+      }
+    }
+  }
+  
+  // Normalize
+  let max = 0;
+  for(let i = 0; i < totalSamples; i++){
+    max = Math.max(max, Math.abs(data[i]));
+  }
+  
+  if(max > 0){
+    const targetMax = 0.8; // Leave some headroom
+    const scale = targetMax / max;
+    for(let i = 0; i < totalSamples; i++){
+      data[i] *= scale;
+    }
+  }
+  
+  return { buffer, data, sampleRate, totalSamples };
+}
+
+/* ================== RUN ================== */
+function run(animated){
+  frames = [];
+  const N = parseInt(document.getElementById('n').value);
+  let V = Array.from({length: N}, (_, i) => i/N);
+  
+  // Shuffle (Fisher-Yates)
+  for(let i = N-1; i > 0; i--){
+    let j = Math.floor(Math.random() * (i+1));
+    [V[i], V[j]] = [V[j], V[i]];
+  }
+  
+  // Run algorithm to generate frames
+  algorithms[algoSelect.value](V);
+  
+  const totalFrames = frames.length;
+  
+  // Calculate actual FPS needed for exactly 30 seconds
+  actualFPS = totalFrames / TARGET_DURATION;
+  
+  // Update stats display
+  document.getElementById('stats').innerHTML = 
+    `Frames: ${totalFrames} | FPS: ${actualFPS.toFixed(2)} | Duration: ${TARGET_DURATION}s`;
+  
+  // Render perfect visualization
+  pCanvas.width = totalFrames;
+  pCanvas.height = N;
+  pCtx.clearRect(0, 0, totalFrames, N);
+  
+  frames.forEach((f, x) => {
+    for(let y = 0; y < N; y++){
+      const baseColor = colorMap(f.v[y]);
+      if(document.getElementById('cursorOn').checked && y === f.c){
+        if(document.getElementById('cursorMode').value === "replace"){
+          pCtx.fillStyle = document.getElementById('cursorColor').value;
+        } else {
+          pCtx.fillStyle = baseColor;
+        }
+        pCtx.fillRect(x, N-y-1, 1, 1);
+      } else {
+        pCtx.fillStyle = baseColor;
+        pCtx.fillRect(x, N-y-1, 1, 1);
+      }
+    }
+  });
+  
+  // Update preview
+  const previewSize = parseInt(document.getElementById('psize').value);
+  dCanvas.width = dCanvas.height = previewSize;
+  dCtx.imageSmoothingEnabled = false;
+  
+  if(animated){
+    document.getElementById('status').textContent = 
+      `Animating ${totalFrames} frames over ${TARGET_DURATION} seconds...`;
+    
+    let currentFrame = 0;
+    let startTime = null;
+    const delayPerFrame = 1000 / actualFPS;
+    
+    function animate(timestamp){
+      if(!startTime) startTime = timestamp;
+      
+      // Calculate which frame to show based on elapsed time
+      const elapsed = timestamp - startTime;
+      const targetFrame = Math.floor(elapsed / delayPerFrame);
+      
+      if(targetFrame >= totalFrames){
+        // Animation complete
+        dCtx.clearRect(0, 0, previewSize, previewSize);
+        dCtx.drawImage(pCanvas, 0, 0, previewSize, previewSize);
+        document.getElementById('status').textContent = 'Animation complete';
+        return;
+      }
+      
+      // Only update if we've advanced to a new frame
+      if(targetFrame > currentFrame){
+        currentFrame = targetFrame;
+        
+        // Clear and draw up to current frame
+        dCtx.clearRect(0, 0, previewSize, previewSize);
+        const sourceWidth = currentFrame;
+        dCtx.drawImage(
+          pCanvas, 
+          0, 0, sourceWidth, N,
+          0, 0, (sourceWidth / totalFrames) * previewSize, previewSize
+        );
+      }
+      
+      requestAnimationFrame(animate);
+    }
+    
+    requestAnimationFrame(animate);
+  } else {
+    // Fast preview - show all frames at once
+    dCtx.drawImage(pCanvas, 0, 0, previewSize, previewSize);
+    document.getElementById('status').textContent = 
+      `Ready: ${totalFrames} frames would animate over ${TARGET_DURATION}s at ${actualFPS.toFixed(2)} FPS`;
+  }
+}
+
+/* ================== AUDIO ================== */
+function playAudio(){
+  if(!document.getElementById('audioOn').checked) {
+    document.getElementById('status').textContent = 'Audio is disabled';
+    return;
+  }
+  
+  if(frames.length === 0){
+    document.getElementById('status').textContent = 'No frames to play. Run animation first.';
+    return;
+  }
+  
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  
+  if(audioCtx.state === 'suspended'){
+    audioCtx.resume();
+  }
+  
+  const totalFrames = frames.length;
+  const audioMode = document.getElementById('audioMode').value;
+  
+  const { buffer } = generateAudioData(totalFrames, audioMode);
+  
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.connect(audioCtx.destination);
+  source.start();
+  
+  document.getElementById('status').textContent = 
+    `Playing ${TARGET_DURATION}s audio (${audioMode} mode)`;
+  
+  source.onended = () => {
+    document.getElementById('status').textContent = 'Audio playback complete';
+  };
+}
+
+/* ================== VIDEO ================== */
+async function recordVideo(){
+  if(!document.getElementById('videoOn').checked) {
+    document.getElementById('status').textContent = 'Video recording is disabled';
+    return;
+  }
+  
+  if(frames.length === 0){
+    document.getElementById('status').textContent = 'No frames to record. Run animation first.';
+    return;
+  }
+  
+  const totalFrames = frames.length;
+  const previewSize = parseInt(document.getElementById('psize').value);
+  const N = frames[0].v.length;
+  const audioMode = document.getElementById('audioMode').value;
+  
+  document.getElementById('status').textContent = 
+    `Preparing ${TARGET_DURATION} second video with ${audioMode} audio...`;
+  
+  // Setup canvas for recording
+  const recordCanvas = document.createElement('canvas');
+  recordCanvas.width = previewSize;
+  recordCanvas.height = previewSize;
+  const recordCtx = recordCanvas.getContext('2d');
+  
+  // Setup canvas stream - use actualFPS calculated from frames
+  const stream = recordCanvas.captureStream(Math.max(1, Math.floor(actualFPS)));
+  
+  // Setup audio context if needed
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  
+  if(audioCtx.state === 'suspended'){
+    await audioCtx.resume();
+  }
+  
+  // Generate audio using the selected method
+  const { buffer: audioBuffer } = generateAudioData(totalFrames, audioMode, true);
+  
+  const audioSource = audioCtx.createBufferSource();
+  audioSource.buffer = audioBuffer;
+  const audioDest = audioCtx.createMediaStreamDestination();
+  audioSource.connect(audioDest);
+  
+  // Combine audio and video
+  const combinedStream = new MediaStream([
+    ...stream.getVideoTracks(),
+    ...audioDest.stream.getAudioTracks()
+  ]);
+  
+  const recorder = new MediaRecorder(combinedStream, { 
+    mimeType: 'video/webm;codecs=vp9,opus',
+    videoBitsPerSecond: 2500000
+  });
+  
+  const chunks = [];
+  
+  recorder.ondataavailable = (e) => {
+    if(e.data.size > 0) chunks.push(e.data);
+  };
+  
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type: 'video/webm' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sorting-${algoSelect.value}-${audioMode}-${TARGET_DURATION}s.webm`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    document.getElementById('status').textContent = 
+      `Video saved! (${TARGET_DURATION}s, ${audioMode} audio)`;
+  };
+  
+  // Start recording
+  recorder.start();
+  document.getElementById('status').textContent = 
+    `Recording ${TARGET_DURATION} second video with ${audioMode} audio...`;
+  
+  // Start audio
+  audioSource.start();
+  
+  // Calculate timing for video frames
+  const frameDelay = TARGET_DURATION * 1000 / totalFrames; // ms per frame
+  let currentFrame = 0;
+  const startTime = Date.now();
+  
+  function recordFrame(){
+    if(currentFrame >= totalFrames){
+      recorder.stop();
+      return;
+    }
+    
+    // Draw current frame
+    recordCtx.clearRect(0, 0, previewSize, previewSize);
+    const sourceWidth = currentFrame + 1; // Show up to current frame
+    recordCtx.drawImage(
+      pCanvas, 
+      0, 0, sourceWidth, N,
+      0, 0, (sourceWidth / totalFrames) * previewSize, previewSize
+    );
+    
+    currentFrame++;
+    
+    // Schedule next frame based on exact timing
+    const elapsed = Date.now() - startTime;
+    const targetTime = currentFrame * frameDelay;
+    const delay = Math.max(0, targetTime - elapsed);
+    
+    setTimeout(recordFrame, delay);
+  }
+  
+  // Start recording frames
+  recordFrame();
+}
+
+// Initialize
+window.addEventListener('load', () => {
+  setTimeout(() => run(false), 100);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Term Definition Challenge</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .game-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .question {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .option {
+            padding: 10px;
+            background-color: #e9e9e9;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .option:hover {
+            background-color: #d9d9d9;
+        }
+        .selected {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .incorrect {
+            background-color: #f44336;
+            color: white;
+        }
+        .correct {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .score {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        .mode-selector {
+            margin-bottom: 20px;
+        }
+        .explanation {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e7f3fe;
+            border-left: 6px solid #2196F3;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Term Definition Challenge</h1>
+        
+        <div class="mode-selector">
+            <label for="difficulty">Select Difficulty:</label>
+            <select id="difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+            </select>
+            <button id="start-btn">Start Game</button>
+        </div>
+        
+        <div class="score">Score: <span id="score-value">0</span></div>
+        
+        <div id="game-area" style="display: none;">
+            <div class="question" id="question"></div>
+            <div class="options" id="options"></div>
+            <div class="explanation" id="explanation"></div>
+            <div class="controls">
+                <button id="next-btn">Next Question</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Placeholder for terms and definitions - to be replaced with actual data
+        const termsData = {
+"Ayet": "Kur’an’ın anlamlı ifadelerine denir. 6666 ayet vardır.", "Cüz": "Kur’an’ın her 20 sayfasına denir.30 cüz vardır.", "Sure": "Kur’an’ın ayetlerinin oluşturduğu bölümleredenir.114 sure vardır.", "Hizb": "Kur’an’ın her beş sayfasına denir.", "Mushaf": "Kur’an’ın ilk kitap haline gelmiş nüshasınadenir. (Hz.Ebu Bekir dönemi)", "Tecvit": "Kur’an’ın usulüne uygun,güzel okunmasınadenir.", "Hatim": "Kur’an’ın baştan sona okunup bitirilmesinedenir.", "Hafızlık": "Kur’an’ın tamamının ezberlenmesidir.", "Mukabele": "Kur’an’ın karşılıklı okunmasına denir.", "Meal": "Kur’an ayetlerinin tam karşılıkları başka dillereaktarılamadığından, ayette anlatılmak istenilenikelimesi kelimesine değil de biraz eksiğiyle başka birdile çevirme, yakın anlamlar verme.", "Tefsir": "İnsanın bilgi birikimi ve Arap diline hakimiyetiölçüsünde Kur’an-ı Kerim metninin içerdiği manalarıortaya çıkarması, yorumlaması.Tercüme: Kur’an’ın başka dillere bire birçevrilmesidir.", "Muhkem ayet":" Anlamı açık, yoruma gerek olmayan,okunduğunda manası hemen anlaşılan ayet demektir.Muteşabih ayet: Manasını anlamak için araştırmaya vedüşünmeye ihtiyaç olan, manası farklı yorumlaraelverişli olan ayetlerdir",
+
+"Kıdem": "Ezelî olmak, başlangıcı bulunmamak demektir.", "Beka": "Varlığının sonu olmamak, ebedî olmakdemektir.", "Vahdaniyet": "Allah’ın (c.c.) bir olması demektir. Allah(c.c.) tektir. Eşi, benzeri, ortağı yoktur.", "Vücud": "Allah’ın (c.c.) var olması demektir.", "Muhalefetün lilhavadis": "Sonradan yaratılmışlarabenzememek demektir.", "Kıyam bi nefsihi": "Var olmak için hiçbir şeye ihtiyaçduymamak demektir.",
+
+"Hayat": "Diri ve canlı olmak demektir. Allah (c.c.)diridir. Tüm varlıkların hayat kaynağı O’dur.", "İlim": "Allah her şeyi bilmesi demektir.", "İrade": "Allah her şeyi dileyebilir", "Semi": "Allah her şeyi işitmesi demektir", "Basar": "Allah her şeyi görmesi demektir.", "Kelam": "Allah konuşması demektir.", "Kudret": "Allah’ın (c.c.) sınırsız güç sahibi olmasıdemektir.", "Tekvin": "Yaratmak demektir. Yüce Allah (c.c.) kudret,ve tekvin sıfatıyla dilediğini yoktan yaratmasıdır.",
+
+"Kelam": "Allah konuşması demektir.", "Kudret": "Allah’ın (c.c.) sınırsız güç sahibi olmasıdemektir.", "Tekvin": "Yaratmak demektir. Yüce Allah (c.c.) kudretve sıfatıyla dilediğini yoktan yaratır.", "İman": "Allah’ın varlığına ve birliğine ve Hz.Muhammed’in getirdiği akidelere kalpten inanmak, dilile söylemektir.", "İnayet": "Allah’a sığınmak ,ona güvenmektir.", "İnsanı kamil" : "Olgunlaşmış,nefsini terbiye etmiş insan", "Teskiye": "Nefis terbiyesi,ruhu arındırma işidir.", "Mağruf" : "Açıkça bilinen iyilikler, kabul edilebilir iyiişlerdir.", "Ahde vefa" : "Nankör olmamak,iyiliği unutmamak", "Sıla-i Rahim" : "Memleketi,eşi dostu, akrabaları ziyaretetmektir.", "İlmiyle amil" : "Bilgisini hayırlı ve güzel işlerdekullanan,laftan çok icraat yapan kimsedir.",
+
+"Sıdk": "“Doğru olmak” demektir. Her peygamberdoğru sözlü dürüst bir insandır.", "Emanet": "“Güvenilir olmak” demektir.Peygamberlerin tümü emin güvenilir kişilerdir.", "İsmet": "“Günah işlememek, günahtan korunmuşolmak” demektir. Peygamberler hayatlarının hiçbirdöneminde şirk ve de küfür sayılan bir günahıişlemedikleri gibi özellikle peygamberlikten sonrabilerek günah işlememişlerdir. İnsan olmaları nedeniylegünah derecesinde olmayan birtakım ufak tefek hatalarıbulunabilir.", "Fetanet": "“Peygamberlerin akıllı, zeki uyanıkolmaları” demektir.", "Tebliğ":" “Peygamberlerin Allah’tan aldıklarıbuyrukları ve de yasakları ümmetlerine eksiksiziletmeleri” demektir.",
+
+"Hadesten taharet": "Abdest almak ve gerektiği hâllerdegusül yapmak", "Necasetten taharet": "Elbiseninve namaz kılınacak yerintemiz olması", "Setri avret": "namaz kılacak kişinin vücudunda örtmesigereken yerleri örtmesi.", "İstikbali kıble": "namazı Kıbleye yönelerek kılmak.", "Vakit": "Namaz vaktinin gelmiş olması", "Niyet": "Kılınacak namaza niyet etmek", "Başlama Tekbir": "Namaza “Allahu ekber.” diyerekbaşlamak", "Kıyam": "Namazda gereken yerlerde ayakta durmak", "Kıraat": "Kur’an’dan ayetler okumak", "Rukü": "Secdeye varmadan önce elleri dizlere koyupyere paralel biçimde eğilmek", "Secde": "Dizleri, elleri, alnı ve burnu yere koyupkapanmak", "Kade-i ahir": "Namaz sonunda “Ettehiyyatü” duasınıokuyacak kadar oturmak", "Kader" : "Yüce Allah’ın her şeyi bilip takdir etmesidir.", "Kaza" : "Kaderin tecelli etmesidir.", "Tevekkül" : "Kulun her türlü önlemi aldıktan sonragücünü aşan kısımları Allah’a bırakmasıdır. Örneğin,bir çiftçi tarlasını eker,sular,gübreler sonrada ürün bololsun diye Allah’a dua eder.", "Rızık" : "Allah’ın verdiği ,yaşamın ikamesi için yarattığıher türlü nimet.", "Hayır ve şer" : "İyilikte kötülükte Allah’ın taktirine bağlıdır", "Cüz’i irade" : "İnsanın sınırlı iradesi", "Külli irade ":"Allah’ın sınırsız iradesi", "Ahde vefa":"İyilikleri unutmamak,dostları arayıp sormak", "Sıla-i rahim" : "Doğup büyüdüğü yerleri ziyaret etmek", "Ameli Salih" : "Güzel iş ve davranışta bulunmak.", "İlmiyle amil" : "Bilgisini hayatına uygulayan", "İnsanı kamil" : "Olgunlaşmış,mükemmelleşmiş insan.", "Kadiri mutlak" : "Her şeye gücü yeten Allah", "Hüsnü zan" : "Olumlu düşünmek,iyi niyetli olmak", "Su-i zan" : "Olumsuz düşünmek,kötü yanını görmek.", "Asr-ı saadet" : "Hz Muhammed’in yaşadığı çağ,dörthalife dönemi", "Ashabı suffa" : "Mescidi nebinin yanında kimsesizleriçin yapılan barınak", "Ravza-i mutahhara": "Hz. Muhammed’in mescidinebinin içindeki mezarının özel adı", "Ashabı suffe": "Hz Muhammet zamanında mescidinebinin bitişiğine kimsesizlerin kalması için yapılanyerde kalanlara verilen isim. Bu mekana suffe denir", "Vakfe": "Haccın farzıdır.Arefe günü Arafatta bir sürebeklemektir.", "Tavaf": "Kabe’nin etrafını dolanmaktır.Haccın farzıdır.", "İhram": "Beyaz dikişsiz hac kıyafeti,haccınfarzlarındandır.", "Sa’y": "Sefa ile Merve tepeleri arasında gidip gelmeyedenir.(3 gidiş 4 geliş)", "Nisap": "Zekât, sadaka-i fıtır ve kurban gibi ibadetler içinkonulan bir zenginlik ölçüsüdür.", "Nisap miktarı": "asgarî zenginlik ölçüsü şeklinde detanımlanabilir. Borcundan ve aslî ihtiyaçlarından fazlaolarak bu kadar mala sahip olan kişi dinen zenginsayılır. Böyle bir kişi, zekât veya sadaka alamayacağıgibi; sadaka-i fıtır vermek ve kurban kesmekle deyükümlü olur.",
+
+"İftar" : "Akşam ezanı vakti,oruç açma zamanı",
+
+"İmsak" : "Sahur vaktinin bittiği vakit,sabah ezanıvakti,oruca başlama zamanıKefaret orucu: Bilerek oruç bozanların bir yaptırımolarak 60 gün oruç tutmasının farz olması.", "Kaza orucu" : "Bir özür nedeniyle Ramazan orucununRamazan dışında bir zamanda tutamadığı gün kadartutulan oruç.", "Mukim": "Oruç tutmakla mükellef olan yolcu olmayan,ikamet halinde olan kimse", "Seferi": "Yolcu hükmünde olan,bulunduğu yerden 90 kmuzağa giden yolcu sayılır,oruç tutmaya bilir,4 rekatlıfarz namazları 2 rekat olarak kılar.kalış süresi 15 günügeçerse nereye giderse gitsin mukim sayılır.", "Teizm" : " âlemin yaratıcı sebebiolan ve varlığı mutlak bir Tanrı inancını savunan felsefîdüşünceyi ifade eder. ", "Deizm": "Tanrı’nın varlığınainanmakla birlikte zamanla Tanrı’nın yaratma dışındakisıfatlarını reddeden düşüncenin adı olmuştur.", "Materyalizm": " başta Tanrı inancı olmak üzere yaratılış,melek, vahiy, peygamberlik, kutsal kitaplar ve ahiretgibi dinî inançları kabul etmez.", "Pozitivizm" : " dini ve metafiziği,insanlığın ilerlemesini engelleyen bilim öncesi düşüncetarzları olarak gören ve sadece modern bilimi temelealan dünya görüşünün adıdır.", "Sekülarizm" : "hukuki konularda, toplumuilgilendiren sosyal kararlarda ve siyaset bilimininişleyişinde din merkezli görüşlerin tamamını reddedendüşüncedir. ", "Agnostisizm" :"insanlarınmutlak bilgiye ve hakikate ulaşamayacağını ifade eder. ", "Ateizm":"Tanrı’nın var olmadığıinancına dayanan felsefe akımıdır.", "Nihilizm": "“Hiççilik” şeklinde Türkçeye tercüme edilen, hayatın anlamını boşluk, hiçlik, anlamsızlıkgibi kavramlara indirger.", "İslamofobi" : "Kişinin bağlı olduğu ulus ya da ırkınüstünlüğüne inanarak onun dışında kalan topluluklarıaşağı ve hor görmesine dayanan tutum ve davranışaırkçılık denir.", "İbrani": "Filistin bölgesinde göçebe olarak yaşayanYahudilerin ismidir. Yahudilere bu ad, Filistinbölgesinde yaşayan yerli halk tarafından verilmiştir.", "İsrail": "Hz. Yakub’un (a.s.) sıfatıdır. Hz. Yakub’un(a.s.) oğullarına ve onların soyundan gelenlere deİsrailoğulları denilmiştir. ismi Yahudiler içingünümüze kadar kullanılmaya devam etmiştir.", "Yahudi": "Hz. Yakub’un (a.s.) 12 oğlundandördüncüsünün ismi Yahuda’dır. ismi de Hz.Yakub’un (a.s.) oğlu Yahuda’nın isminden türetilmiştir.Başka bir görüşe göre Filistin’in güneyinde kurulanYahuda krallığından dolayı İsrailoğulları, - adınıalmıştır.", "Musevi": "Yahudi dininin peygamberi olarak kabul edilen Hz. Musa’ya (a.s.) izafeten Yahudilere Musevi,dinlerine ise Musevilik denilmiştir.", "Berzah" : "Sözlükte “iki şey arasındaki perde, engel” anlamına gelen , dinî terim olarak ölümden sonra başlayıp mahşerdeki dirilişe kadar devam edecek olan kabir hayatına denir. Dünya hayatı ile ahiret hayatı arasındaki bir geçiş dönemini ifade eder.", "Kıyamet":"“dikilmek, ayağa kalkmak, durmak ve canlıların Allah Teala’nın huzurunda saygıyla duracakları gün” anlamlarına gelir.25 ; Kur’anı Kerim’de, bazı ayetlerde dünya düzeninin bozulması ve dünya hayatının sona ermesi olarak tanımlanırken26 bazı ayetlerde de insanların Allah Teala tarafından diriltilmeleri, mahşer yerinde toplanmaları anlamında kullanılır", "Ba’s": "“Öldükten sonra tekrar dirilmek” anlamına gelen , ahiret hayatının evrelerinden biridir.", "Haşir Allah": "Teala’nın insanları diriltip dünyada ikenyaptıkları işlerden hesaba çekmek üzere toplamasınahaşir, toplanma yerine de mahşer denir. Mahşer :Ahirette tüm insanların toplanacağı alan", "Mizan" : "Günah ve sevapların konulacağı tartı.", "Sırat": "Ahirette herkesin geçmeye çalışacağı,günahkarların geçemeyeceği köprü.", "Hesap": "Mahşerde toplanan insanlar muhakeme edilecekler, insanlara sualler sorulacak ve herkes dünyada yaptıklarının hesabını verecektir. Dünya hayatında yapılanlar, görevli melekler tarafından amel defterlerine kaydedilir. herkesin defteri kendisine teslim edilecektir.", "Cennet": "Sözlükte “bitki ve ağaçlarla örtülü yer, bahçe” anlamlarına gelen cennet, iman edip salih amel işleyen müminlerin ebedî olarak kalacakları ve içinde çeşitli nimetlerin bulunduğu mükâfat yurdu demektir.", "Cehennem" : "Sözlükte “derin kuyu” anlamına gelen , dünya hayatında Allah Teala’ya iman etmeyenlerin ve O’nu inkâr edenlerin sürekli kalacağı yer olarak tanımlanır.", "Araf" : "Cennet ve cehennem arasında kalan bölge. Farz-ı kifaye: Dinen sorumlu sayılan kimselerden bazılarının yapmalarıyla diğerlerinden sorumluluğun kalktığı fiiller ve emirlerdir.", "Müsamahakâr Olmak": "“Bağışlamak, ayıplamamak, kolaylık göstermek” gibi anlamlara gelen müsamaha; insanların küçük hatalarını düzeltmelerine fırsat vermek ve onları anlayışla karşılayabilmektir.", "Mütevazı Olmak": "Sözlükte “alçak gönüllü olma, kibirlenmeme, gösterişsiz olma, yumuşak huylu” gibi anlamlara gelen tevazu; kibrin karşıtı olarak kullanılır. Ahlaki bir kavram olarak tevazu; Yüce Allah’ın (c.c.) emirlerine gönülden ve içtenlikle bağlı olma, insanın kendisinin de yaratılmış olduğunu bilerek insanlara karşı büyüklenmemesi anlamlarına gelmektedir.", "Hatemü’n-nebiyyîn": "“Peygamberlerin sonuncusu, kendisinden sonra kesinlikle peygamber gelmeyecek olan” anlamında Hz. Muhammed’in (s.a.v.) sıfatı.", "Tebliğ":"Yüce Allah, insanlara doğru yolu göstermeleri, emir ve yasaklarını onlara bildirmeleri için her topluma peygamber göndermiştir. Peygamberler de Allah’tan (c.c.) aldıkları bilgileri eksiksiz olarak insanlara ulaştırmışlardır. Allah (c.c.) tarafından peygamberlere verilen bu göreve denir.", "Tebyin": "Sözlükte “bir şeyin açığa kavuşması, açıkça söyleme, anlaşılır bir dille açıklama( açıklamak )” anlamına gelir.",
+
+"Teşri" : "Teşri kavramı sözlükte “hüküm koyma, yasama” gibi anlamlara gelir. İslam dininde hüküm koyma yetkisi, Allah’a (c.c.) ve Hz. Peygamber’e aittir.", "Temsil": "Temsil sözlükte “simge, örnek olma, belirgin özellikleri ile yansıtma, birinin veya bir topluluğun adına davranma” gibi anlamlara gelir.", "Üsve-i hasene": "“İnanç, ibadet ve ahlak başta olmak üzere hayatın her alanında Müslümanların kendilerine örnek almaları gereken tek ve en güzel model” anlamında Hz. Muhammed’in (s.a.v.) sıfatı.",
+
+"Kütüb-i sitte": "Hadislerin toplanılmasına hicri ikinci asırda başlanılmıştır. Toplanılan hadisler ise konularına göre sınıflandırılmış ve hadis kaynakları oluşturulmaya başlanmıştır. Üçüncü asırda hadis kitapları çoğalmış ve bunlardan bazıları ön plana çıkmıştır. Günümüze kadar ulaşan bu eserlerden en bilinen altı tanesine Kütüb-i sitte (altı kitap) denir", "Hidayet"	: "“Güzel ve yumuşak bir şekilde yol göstermek” anlamına gelen hidayet , Allah’ın (c.c.) insana dünya ve ahirette huzurun kaynağı olan yolu göstermesidir. Dinî kavram olarak Allah’ın (c.c.) insanlara akıl, düşünme, öğrenme, hatırlama gibi yetenekler vermesi ve insanların da bunları kullanarak doğru yolu bulmasıdır.", "İhsan": "sözlükte “iyilik etme, iyi ve güzel davranma, bağışlama, ikram etme” anlamlarına gelir. Dinî kavram olarak ise insanın daima Allah’ın (c.c.) huzurunda olduğunu bilmesi ve O’nu görüyor gibi yaşamasıdır.", "İhlas": "sözlükte “samimiyet, içtenlik ve karşılıksız sevgi” anlamlarına gelir. Dinî kavram olarak ise insanın bütün söz, davranış, inanç ve ibadetlerinde yalnızca Allah’ın (c.c.) rızasını gözetmesi anlamlarına gelir.", "Takva":"sözlükte “bilinçli davranma, uyanık ve dikkatli olma, sakınma” anlamlarına gelir. Dinî kavram olarak Yüce Allah’a iman edip dinin emir ve yasaklarına uyarak Allah’a (c.c.) karşı gelmekten sakınmak; dünya ve ahirette insana zarar verecek inanç, söz ve davranışlardan uzak durmak anlamlarına gelir. Aynı zamanda haramlardan sakınmak, dinen şüpheli olan durumları ve dinin kötü gördüğü şeyleri terk etmektir.", "Sırat-ı Müstakim": "Kur’an-ı Kerim’in birçok ayetinde geçen sırat-ı müstakim ifadesi, “yol” anlamına gelen sırat kelimesi ile “doğru, doğruluktan şaşmayan” anlamına gelen müstakim kelimelerinin birleşmesinden oluşur. Allah’ın (c.c.) gösterdiği dosdoğru yol ve İslam dini anlamlarında kullanılır.", "İfrat": "söz ve fiillerde ileri gitmek", "tefrit": "gevşek ve ihmalkâr davranmaktır.", "Cihat" :"söz ve fiille bütün kuvvetini harcayarak çalışma, yorulma, aşırı gayret etme anlamına gelir. Dinî kavram olarak ise İslam dininin insanlığın huzuru ve güzelliği için koymuş olduğu ilkelere uygun davranmak amacıyla çalışma ve gayret sarf etme anlamına gelmektedir.", "Salih Amel": "sözlükte “iyi, güzel, yararlı iş ve davranış” anlamına gelir. Dinî kavram olarak Allah’ın (c.c.) rızası uğrunda inanç, ibadet ve ahlakla ilgili konularda yapılan her türlü güzel iş ve davranışta bulunmaya ve Allah’ın (c.c.) yasaklarından kaçınmaya denir.", "Vahiy": "Allah’ın (c.c.) melek aracılığıyla peygamberlere, onların da insanlara bildirdiği, hayatın hangi ilkelere göre yaşanacağını ve nelere uyup nelerden sakınılacağını bildiren ilahî bilgiler ve bu bilgilerin gönderiliş tarzıdır. Dinin ilkeleri tamamıyla haber", "Mütevatir Haber": "Yalan üzere birleşmeleri aklen mümkün olmayan toplulukların aktara geldiği haberlere mütevatir haber denir. Bu haberler nesilden nesile kesintisiz nakledilenhaberlerdir.", "Akl-ı selim": "İnsanın doğru karar vermesini sağlayan, herhangi bir olumsuzluktan veya ortamın kötülüğünden etkilenmeyen, yaratılışındaki temizliğini ve safiyetini koruyan akıldır.", "Akide (çoğulu akaid)": "her türlü inanışı ifade etse de dinin inanç sistemleri için kullanımı yaygınlık kazanmıştır. Hıristiyan akidesi veya İslam akaidi gibi. Akaid inanılan şeyler, akideler, dinî inançlar, gönülden bağlanılandüğüm atmışçasına kesinlikle inanılan şeyler, itikatlar demektir.", "Uluhiyyet": "İlahlık, tanrılık, ibadet edilen varlık ve mabut. İslam’a göre uluhiyyet makamı sadece Allah’a (c.c.) aittir.", "Ubudiyyet": "Kulluk, itaat, boyun eğme, ibadet etme. Allah’ın (c.c.) rızasını elde edebilmek için emirlerini içtenlikle yerine getirip yasaklarından kaçınmak.", "Fıtrat": "Yüce Allah’ın, tüm varlıkları kendi varlığını ve birliğini tanıyabilme gücü ve yeteneği ile yaratması, Haniflik, tevhid ve İslam inancıdır. İnsanın yaratılışında bulunan ve hayatı anlamlandırma çabalarına yön veren, çalışmakla elde edilemeyen ve inanmayı da içeren, insanın doğuştan getirdiği yetenektir.", "İman": "kelime itibariyle bir kimsenin şüphe duymaksızın bir şeyi kabul etmesi, doğrulaması, onaylaması ve tasdik etmesi anlamına gelir. Ayrıca güven vermek, güvenlikte olmak, içten ve yürekten inanmak gibi anlamları da vardır. Dinî terim olarak iman; Allah’ın (c.c.) bir ve tek olduğuna ihlasla (samimiyetle) inanıp Hz. Muhammed’in (s.a.v.) peygamberliğini kabul etmek, onun Kur’an-ı Kerim aracılığıyla getirdiklerine inanmak ve bunlara teslim olmaktır.", "Mükellef" : "Dinin emirlerini yerine getirmek ve yasaklarından kaçınmakla sorumlu tutulan kimseye denir.", "Farz":"belirlenmiş, kesinleştirilmiş şey, pay, nasip gibi anlamlara gelir. Terim olarak ise dinin mükelleften yapılmasını kesin ve bağlayıcı şekilde istediği iş ve davranışlar anlamındadır.", "Vacip": " kelimesi sözlükte yapılması gerekli, zorunlu olan anlamına gelir. Terim olarak ise yapılması farz seviyesinde olmayan fakat sünnetten daha kuvvetli olan dinî hükümler anlamında kullanılmıştır.", "Sünnet":" kelimesi sözlükte yol, âdet, gidişat, huy, karakter, tavır, davranış gibi anlamlara gelir. Terim olarak ise Hz. Peygamber’in farz ve vacip dışında yaptığı veya yapılmasını tavsiye ettiği davranışlar anlamındadır.", "Sünnet-i müekkede": "Hz. Peygamberin farz ve vacibin yanı sıra devamlı yaptığı, çok az terk ettiği iş, davranış ve ibadetlerdir.", "Sünnet-i gayr-i müekkede": "Hz. Peygamberin bazen yapıp bazen terk ettiği iş, davranış ve ibadetlerdir. Mendup: Mendup kelimesi sözlükte istenen, arzulanan, kendisine çağrılan şey demektir. Terim olarak ise dinen yapılması kesinve bağlayıcı olmaksızın istenen ve terkedilmesi kınanmayan işleri ifade eder.", "Caiz": "1. Serbest ve geçerli olma. 2. Din, yasa, örf, âdet ve törelere göre yapılmasında sakınca olmayan; işlenmesine izin verilen şey. 3. İslam’da, yapılması veya yapılmaması konusunda emir bulunmayıp kişinin isteğine bırakılan, işlenmesinden dolayı bir mükâfat veya işlenmemesinden dolayı da bir cezayı gerektirmeyen davranışlar", "Mubah":"kelimesi sözlükte açığa çıkan, açıklanan, serbest bırakılan şey demektir. Dinî bir terim olarak ise mükellefin yapıp yapmamakta serbest bırakıldığı fiiller anlamına gelir.", "Haram":"yasaklanmış yer, koruluk, yasak bölge gibi anlamlara gelir. Dinî bir terim olarak ise Allah’ın (c.c.) kesin olarak yasakladığı söz ve davranışlardemektir.", "Mekruh": "İslam’a göre haram olmadığı halde istenmeyen, hoş görülmeyen söz ve davranışlardır. Mekruhtaki yasaklık haramdaki kadar kesin ve bağlayıcı delillere dayanmaz. Ancak bu durum, mekruhun işlenebileceği anlamına da gelmez.", "Örf": "Bir toplumda uygulana gelen ve nesilden nesile aktarım yoluyla devredilen değer ve davranışlardır.", "Âdet": "bir önceki nesilden görüldüğü şekliyle tekrarlanan toplumsal alışkanlıklardır. Örf ve âdetler bir toplumun duygu, düşünce, tutum ve davranışlarını belirleyen yazısız kural ve uygulamalardır.", "Hikmet": "Bilgelik, yerindelik, isabet etmek ve uygunluk anlamlarına gelen hikmet temel değerlerden biridir.", "İffet": "İffet haramdan uzak durma, kötü söz ve işlerden kaçınma anlamlarına gelir. İnsanların ahlak kurallarına bağlı kalarak namusunu, şerefini ve haysiyetini koruması yanında nefsin aşırı istekleri karşısında ölçülü davranması iffet kapsamında değerlendirilir.",
+
+"Şecaat": "yiğitlik, kahramanlık, cesaret gibi anlamlara gelmektedir. İslam dini, Müslümanların canlarını, mallarını, namuslarını, vatanlarını ve dinlerini korumak için cesur davranmalarını ister. Kültür: toplumların sahip olduğu maddi ve manevi değerlerin bütünüdür. Kültürün maddi unsurları, çoğunlukla günlük yaşamla ilgilidir ve toplumların maddi ihtiyaçlarını karşılar.", "Medeniyet": "Arapçada yerleşik olmak ve şehirli bir hayat tarzı yaşamak gibi anlamlar içerir. Medeniyet, farklı kültürlerin bir araya gelmesiyle oluşur ve evrensel bir nitelik taşır. Örneğin; Türk, Fars ve Arap kültürü birbirlerinden farklı olsa da her biri İslam medeniyetinin bir parçasıdır.", "Fıtır (fitre)": "Gücü yeten Müslümanların sağlıklı olmalarının bir şükrü olarak ramazan ayının sonuna kadar fakirler ödemekle yükümlü oldukları sadaka. İkrar: Saklamayıp doğruca söyleme, açıkça söyleme, bildirme. Benimseme, onama, kabul, tasdik.", "İnfak": "1. Karşılıksız yardım, sadaka verme. 2. Zekât. 3. Kişinin kendisi, ana ve babası, çocukları ve eşi için yapmış olduğu her türlü meşru harcama. 4. Allah’ın (c.c.) rızasını kazanmak için insanın kendisine verilen malların şükrünün bir göstergesi olarak onun emrettiği yerlere harcama yapması, bağışta bulunması.", "İtidal": "1. Aşırı olmama, ılımlılık, ölçülülük, dengelilik, soğukkanlılık. 2. İnsanın yaratılış amacına uygun hareket etmesi, hayatının her anında Kur’an-ı Kerim’i ve Hz. Peygamber’i örnek alarak yaşamayı prensip edinmesi.", "İtikat": "İnanmak, doğruluğuna kalben kararlı olmak; gönülden tasdik ederek inanmak ve zihnin kesin olarak hüküm verdiği şey.", "Taassup": "Bağnazlık, aşırı taraftarlık, tutuculuk, körü körüne bağlılık, fanatizm. tahkiki iman: Hakikate, delile, tefekküre dayanan iman.", "İbadet": "İbadet, Allah’a (c.c.) gönülden isteyerek yönelmek, tapmak, boyun eğmek ve itaat etmektir. Türkçemizde kullanılan kulluk etmek deyimi de aynı anlama gelir.", "Tövbe": "insanın, bilerek veya bilmeyerek yaptığı hata, kusur, büyük ve küçük günah-larından dolayı pişman olup bir daha aynı günahları yapmamaya karar vererek vazgeçmesidir.", "el-Emin": "(doğru, güvenilir)doğruluğundan ve samimiyetinden şüphe edilmeyen karaktere sahipti.", "Âlim": "Allah’ın (c.c.) kitabı başta olmak üzere Hz. Peygamber’in hadislerini ve sünnetini bilen, diğer İslami ilimlerden gerektiği şekilde haberdar olup ileri seviyede bilgi birikimine ulaşan kimse.", "İstişare": "Herhangi bir konuda doğruyu bulmak için sahasında güvenilir bir uzmanın görüşüne başvurulmasıdır.",
+
+"Ahlak": "kelimesi, Arapça ‘hulk’ kelimesinin çoğuludur. Hulk, ‘tabiat, mizaç, huy ve karakter gibi anlamlara gelir.", "Terbiye": "Arapça bir kelime olup, ıslah etmek, düzene koymak, idare etmek, eğitmek, gözetmek anlamlarına gelir. Yüce Allah’ın isimlerinden olan “Rab” ile ilgilidir.", "İftira": "bir kimseyi asılsız olarak suçlamak, ona gerçekte olmayan kötülük ve kusur isnat etmektir. Mahremiyet ihlali: İslami literatürde buna tecessüs denir. Bu kavram insanların gizli hallerini, ayıp ve kusurlarını araştırmak demektir.", "Gıybet": "bir insanın arkasından hoşlanmadığı şekilde konuşmak, bunu başkalarına aktarmaktır.", "Haset": "kıskançlık ve çekememezliktir. Bir kimsenin sahip olduğu imkanları kıskanmak, bu imkanların ortadan kalkmasını istemek anlamına gelir.", "Suizan": "bir kişi hakkında kötü düşünmek ve kötü kanaate sahip olmaktır.", "Hüsnüzan" : "insanlar hakkında iyi düşünmektir.", "İsraf": "İsraf genel olarak tutum ve davranışlarda ölçü dışına çıkmaktır. Yaygın olarak maddiolanakları gereksiz yere tüketmek ve savurganlık anlamında kullanılır.", "Din": "Allah (c.c.) tarafından vahiy yoluyla gönderilen, insanları kendi özgür iradeleriyle iyiye ve doğruya yöneltmeyi amaçlayan ilahi kurallar bütünüdür.", "Mezhep": "dinin anlaşılması ve uygulanmasıyla ilgili olarak zamanla ortaya çıkan fikrî ve beşerî oluşumların genel adı olmuştur.", "Fırka": "kelimesi (çoğulu fırak) sözlükte “ayırmak, bölmek; açıklayıp hükme bağlamak” mânalarına gelen fark kökünden isim olup insanlar arasından ayrılmış belli bir grup ve topluluğu ifade eder.", "Ehl-i Sünnet": "Hz. Peygamber ile sahabenin, dinin temel konularında takip ettikleri yolu benimseyenleEhli Sünnet olarak tanımlanmıştır.", "İcmâ": "İslam âlimlerinin dinî bir meselenin hükmü üzerinde fikir birliği etmelerini ve bütün Müslümanların ortaklaşa benimsedikleri dinî hükümleri ifade eden dinî delil.", "Kıyas": "Fıkıhta, “hakkında açık hüküm bulunmayan bir meselenin hükmünü, aralarındaki ortak özelliğe veya benzerliğe dayanarak hükmü açıkça belirtilen meseleye göre belirlemek” anlamına gelir.", "asr-ı saâdet": "Hz. Peygamber’in yaşadığı devir hakkında kullanılan bir terim.", "batıl" : "Fânî, geçici, devamlı olmayan, yok olan. Dinin özünde olmayan, sonradan uydurulan şeyler", "erdem" : "1. Ahlakın övdüğü iyi olma, alçak gönüllülük, yiğitlik, doğruluk vb. niteliklerin genel adı, fazilet 2. İnsanın ruhsal olgunluğu.", "fazilet" : "Olgunluk, erdemlilik, üstünlük, değer, kıymet.", "Fetva" : "Herhangi bir işin dîne (İslamiyet’e) uygun olup olmadığına dâir İslam âlimleri tarafından verilen cevap.", "hayâ" : "Utanma, çekinme anlamına gelir. Ahlak kavramı olarak, kınanma endişesiyle, kurallara aykırı davranmaktan kaçınma ve bunu sağlayan duygu.", "İçtihat" : "Yasada veya örf ve âdet hukukunda uygulanacak kuralın açıkça ve tereddütsüz olarak bulunmadığı konularda, yargıcın veya hukukçunun düşüncelerinden doğan sonuç. İçtihat yapan kişiye müçtehit denir.", "İnfak" : "Allah’ın hoşnutluğunu kazanma amacıyla kişinin kendi servetinden harcamada bulunması, ihtiyaç sahiplerine aynî ve nakdî yardım etmesi.", "Münafık" : "Kalbi ile inanmadığı halde dili ile inandığını söyleyerek mümin görünen kimse.", "Rivayet" : "Bir şeyi haber vermek veya haber verilen şey. Nakletmek, bildirmek.", "Seciye" : "Yaradılış, huy, karakter. sünnetullah: Allah’ın (c.c.) evren ve evrenin içindeki canlı cansız tüm varlıklar ile ilgili koyduğu kurallar, değişmez yasalar.", "Şer" : "Kötü, fena, kötü iş, bela, musibet.", "Tasavvuf" : "Yün giymek, saf olmak anlamına gelen, kötü huyları terk edip, güzel huylar edinmektir. İslam’ın ahlaki yorumunu esas alan ilim dalı.", "Mektep": "Mektepler, bugünkü anlamda ilkokul seviyesinde okuma yazma eğitimlerinin verildiğiokullardır.", "Daru’l-kurra": "Daru’l-kurra; Kur’an öğretilen ve hâfız yetiştirilen mekteplerin, kıraat eğitimi yapılan medrese veya bölümlerin genel adıdır.", "Daru’l-hadis": "Hadis ilimlerinin öğretildiği ve hadis ilimlerinde uzmanların yetiştirildiği yükseköğretim kurumlarıdır.", "Beytü’l-hikme": "Beytü’l-hikme, İslam medeniyetinde yüksek seviyede ilmî araştırmalar ve tercüme faaliyetlerinin yapıldığı eğitim kurumlarıdır.", "Rasathane": "Rasathane, astronomik gözlemler yapmaya yarayan özel bina ve evlere denir.", "Kelam": "İslam dininin inanç esaslarını ayet, hadis ve aklı kullanarak açıklayan, yorumlayan, ispat eden ve başka dinve inançlardan gelebilecek eleştirilere karşı savunan bilim dalıdır.",
+
+		"Fıkıh": "İbadetleri ve sosyal hayatla ilgili yaşam kurallarını, Kur’an ve sünnetten deliller bularak inceleyen bilim dalıdır.", "Tasavvuf": "sözlükte, saf olmak ve ilk safta bulunmak gibi anlamlara gelir. Tasavvufu benimseyen kimselere sufi denir. Terimolarak ise; İslam’ı, kulluğun gerektirdiği şekildeahlak esasları ve nefis terbiyesi üzerinde yoğunlaşarakyaşama biçimi olarak tanımlanır.", "Züht": "Ahirete yönelmek için dünyadan el etek çekmek. Elde mevcut olsa bile gönülde mal mülk sevgisine yer vermemek.", "Fakr": "Dervişlik, salikin hiçbir şeye sahip olmadığının şuurunda olması, her şeyin gerçek malik ve sahibinin Allah (c.c.) olduğunu idrak etmesi.", "Halvet": "Uzlet, inziva, yalnızlık, tek başına yaşamak topluma karışmamak.", "Sufi": "Mutasavvıf, derviş, eren gibi anlamlara gelir. İhsan: Allah’a (c.c.), O’nu görüyormuş gibi ibadet etmektir.", "İhlas": "Samimiyet, içtenlik, tutum ve davranışlarınızda sadece Allah’ın rızasını gözetmek, sözün öze uymasıdır. Zikir: Anmak, hatırlamak. Allah (c.c.) kelimesini veya “lailahe illallah” cümlesini söylemek ve tekrarlamaktır.", "İrfan": "Marifet, keşf, ilham, sevgi, manevi ve ruhi tecrübe ile elde edilen bilgi, tecrübi bilgidir. Zahid: Dünyadan yüz çevirip, dinin emirlerine titizlikle riayet eden, takva sahibi ve mala, mülke değervermeyen kişi.", "Tezkiye": "Temizlenme. Nefsi manevi kirlerdenarındırma, kusurlardan arıtıp temiz duruma getirme.Seyr-u Sülûk: Bir tarikata girme, intisap etme ve otarikatın gereklerini yerine getirerek manevi bakımdanyol alma.", "Mâsîva": "Allah’ın (c.c.) zatı dışındakibütün varlıklar. İnsanı Allah’tan (c.c.) uzaklaştıran herşey.", "Marifet": "Bilgi. Varlıkların hakikatini ve ilahi sırlarıtefekkür ve ilham yoluyla kavrama, gerçeği bilme.Alevilik kavramı: sözlükte; Ali’ye mensup, Ali’ye ait,Ali taraftarı gibi anlamlara gelmektedir. İslam kültürüneait bir kavram olarak ise Alevilik; Hz. Muhammed’in(s.a.v.) vefatından sonra Hz. Ali’nin (r.a.) halife olmasıgerektiğini savunan, onu sahabilerin en üstünü olarakkabul eden anlayıştır. " ,"Mürşit (Dede)": "Alevilik-Bektaşilikte, görevitibariyle Hz. Muhammed, Hz. Ali ve Hacı BektaşVeli’yi temsil eder. Cem erkânının başkanlığını yapar.Cenaze, musahiplik, nikâh, ad koyma ve sünnettörenlerini yönetir." ,"Rehber": "Yola girmek isteyenleri hazırlar, yolgösterir. Mürşidin en yakın yardımcısıdır." ,"Gözcü": "Rehberin yardımcısıdır. Cemin sessiz vesakinlik içinde geçmesini sağlar. Cemin bekçisidir." ,"Çerağcı (Delilci)": "Cemevinde bulunan aydınlatmaaraçlarını yakar. Buhurdanlıkları ve mumları hazırlar." ,"Zakir (Âşık)": "Cemde tevhit, düvazde imam, mersiye,semah, nevruziye söyler." ,"Süpürgeci (Ferraş)": "Cemevinin temizliği ile meşgulolur." ,"Meydancı": "Cemevinde semahserleri kaldırır. Postlarıyerine dizer." ,"Niyazcı" :"Kurbanları tekbir getirerek keser. Gelenlokmaları alır ve lokmaların dağıtımını sağlar." ,"İbrikçi": "Cemde mürşidin ve cem erenlerinin abdestalmalarını sağlar." ,"Kapıcı": "Ceme gelen erenlerin evlerinin güvenliğinisağlar." ," Peyikçi": "Cem olacağını tüm canlara duyurur.", "Sakacı": "Cemevinde şerbet, saka suyu gibi şeylerin dağıtımını sağlar.", "Musahiplik": "Sözlükte “kardeş tutmak, kardeş edinmek” anlamlarına gelen musahiplik Alevilik- Bektaşilikte evli olan iki kişinin aileleriyle birlikte, kurban keserek hayat boyu yol kardeşi olmaya Hakkın ve halkın huzurunda ikrar verip kardeş olmasıdır.", "Semah":"Alevilik-Bektaşilikte en çok önem verilen uygulamalardan biri de semahtır. İlahî aşkı ruhunda duymak anlamına gelen semah, o aşkla Allah’ın (c.c.) güzel isimlerinden herhangi birinianarak ayakta dönerek yapılır.", "Gülbank":"Alevilik-Bektaşi kültüründe dua, gülbank olarakadlandırılır. Gülbank; Allah’a (c.c.) sığınma, ondan afdileme, dua edip ona yakarma amacıyla okunur.Genellikle kısa ve ahenkli cmlelerden oluşan dualardır. " };
+
+        // Placeholder for groups - to be replaced with actual data
+        const termGroups = [
+            ["Hatim", "Ayet", "Cüz", "Sure", "Mushaf"],
+            ["Tefsir", "Kıraat", "Vahiy"]
+        ];
+
+        let currentQuestion = null;
+        let correctAnswer = null;
+        let score = 0;
+        let selectedDifficulty = "easy";
+        let currentGroup = null;
+
+        // DOM elements
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const scoreEl = document.getElementById('score-value');
+        const gameAreaEl = document.getElementById('game-area');
+        const explanationEl = document.getElementById('explanation');
+        const difficultySelect = document.getElementById('difficulty');
+        const startBtn = document.getElementById('start-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        // Event listeners
+        startBtn.addEventListener('click', startGame);
+        nextBtn.addEventListener('click', nextQuestion);
+        difficultySelect.addEventListener('change', (e) => {
+            selectedDifficulty = e.target.value;
+        });
+
+        function startGame() {
+            score = 0;
+            scoreEl.textContent = score;
+            gameAreaEl.style.display = 'block';
+            generateQuestion();
+        }
+
+        function nextQuestion() {
+            explanationEl.style.display = 'none';
+            generateQuestion();
+        }
+
+        function generateQuestion() {
+            // Clear previous options
+            optionsEl.innerHTML = '';
+            explanationEl.style.display = 'none';
+
+            // Determine if we're asking for term or definition
+            const askTerm = Math.random() < 0.5;
+            
+            // For medium difficulty, select a group
+            if (selectedDifficulty === 'medium') {
+                currentGroup = termGroups[Math.floor(Math.random() * termGroups.length)];
+            } else {
+                currentGroup = null;
+            }
+
+            // Get all terms for the current question context
+            let availableTerms = currentGroup ? 
+                [...currentGroup] : 
+                Object.keys(termsData);
+            
+            // Make sure we have at least 8 terms (if not, fill with random ones)
+            if (availableTerms.length < 8 && selectedDifficulty === 'medium') {
+                const allTerms = Object.keys(termsData);
+                while (availableTerms.length < 8) {
+                    const randomTerm = allTerms[Math.floor(Math.random() * allTerms.length)];
+                    if (!availableTerms.includes(randomTerm)) {
+                        availableTerms.push(randomTerm);
+                    }
+                }
+            }
+
+            // Select correct answer
+            correctAnswer = availableTerms[Math.floor(Math.random() * availableTerms.length)];
+            
+            if (askTerm) {
+                // Ask for term - show definition
+                questionEl.textContent = `Which term corresponds to this definition?\n\n"${termsData[correctAnswer]}"`;
+                
+                // Get options (correct answer + 7 random others)
+                const options = [correctAnswer];
+                while (options.length < 8) {
+                    const randomTerm = availableTerms[Math.floor(Math.random() * availableTerms.length)];
+                    if (!options.includes(randomTerm)) {
+                        options.push(randomTerm);
+                    }
+                }
+                
+                // Shuffle options
+                shuffleArray(options);
+                
+                // Display options
+                options.forEach(option => {
+                    const optionEl = document.createElement('div');
+                    optionEl.className = 'option';
+                    optionEl.textContent = option;
+                    optionEl.addEventListener('click', () => checkAnswer(option, option === correctAnswer));
+                    optionsEl.appendChild(optionEl);
+                });
+            } else {
+                // Ask for definition - show term
+                questionEl.textContent = `What is the correct definition of "${correctAnswer}"?`;
+                
+                // Get options (correct definition + 7 random others)
+                const options = [termsData[correctAnswer]];
+                while (options.length < 8) {
+                    const randomTerm = availableTerms[Math.floor(Math.random() * availableTerms.length)];
+                    if (!options.includes(termsData[randomTerm])) {
+                        options.push(termsData[randomTerm]);
+                    }
+                }
+                
+                // Shuffle options
+                shuffleArray(options);
+                
+                // Display options
+                options.forEach(option => {
+                    const optionEl = document.createElement('div');
+                    optionEl.className = 'option';
+                    optionEl.textContent = option;
+                    optionEl.addEventListener('click', () => checkAnswer(option, option === termsData[correctAnswer]));
+                    optionsEl.appendChild(optionEl);
+                });
+            }
+        }
+
+        function checkAnswer(selectedOption, isCorrect) {
+            const options = document.querySelectorAll('.option');
+            
+            options.forEach(option => {
+                option.style.pointerEvents = 'none'; // Disable further clicks
+                
+                if (option.textContent === selectedOption) {
+                    option.classList.add(isCorrect ? 'selected' : 'incorrect');
+                }
+                
+                if (askTerm) {
+                    if (option.textContent === correctAnswer) {
+                        option.classList.add('correct');
+                    }
+                } else {
+                    if (option.textContent === termsData[correctAnswer]) {
+                        option.classList.add('correct');
+                    }
+                }
+            });
+            
+            if (isCorrect) {
+                score++;
+                scoreEl.textContent = score;
+            } else {
+                explanationEl.textContent = askTerm ? 
+                    `The correct answer is "${correctAnswer}"` : 
+                    `The correct definition is: "${termsData[correctAnswer]}"`;
+                explanationEl.style.display = 'block';
+            }
+        }
+
+        // Helper function to shuffle array
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Track whether we're asking for term or definition
+        let askTerm = false;
+
+        // Initialize
+        function initialize() {
+            // You can add any initialization code here if needed
+        }
+
+        initialize();
+    </script>
+</body>
+</html>

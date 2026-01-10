@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hyperbolic Grid Drawer with Random Walk</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        canvas {
+            border: 1px solid #333;
+            background-color: white;
+            margin: 20px auto;
+            display: block;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 5px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .controls {
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hyperbolic Grid Drawer with Random Walk</h1>
+    <div class="controls">
+        <button id="startBtn">Start Drawing</button>
+        <button id="resetBtn">Reset</button>
+        <div>
+            <label for="steps">Steps per move:</label>
+            <input type="number" id="steps" value="1000" min="100" max="10000" step="100">
+            
+            <label for="curvature">Curvature (k):</label>
+            <input type="number" id="curvature" value="-1.0" step="0.1" min="-5.0" max="-0.1">
+        </div>
+    </div>
+    <canvas id="hyperbolicCanvas" width="800" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById('hyperbolicCanvas');
+        const ctx = canvas.getContext('2d');
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const stepsInput = document.getElementById('steps');
+        const curvatureInput = document.getElementById('curvature');
+        
+        // Canvas dimensions
+        const width = canvas.width;
+        const height = canvas.height;
+        const center = { x: width / 2, y: height / 2 };
+        
+        // Drawing parameters
+        let scale = 50;
+        let curvature = -1.0;
+        let isDrawing = false;
+        let animationId = null;
+        
+        // Current position and path
+        let currentPos = { x: 0, y: 0 };
+        let path = [];
+        
+        // Initialize
+        function init() {
+            ctx.clearRect(0, 0, width, height);
+            drawGrid();
+            currentPos = { x: 0, y: 0 };
+            path = [{ ...currentPos }];
+            drawPath();
+        }
+        
+        // Convert hyperbolic coordinates to canvas coordinates
+        function toCanvasCoords(hx, hy) {
+            return {
+                x: center.x + hx * scale,
+                y: center.y + hy * scale
+            };
+        }
+        
+        // Draw the hyperbolic grid
+        function drawGrid() {
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 0.5;
+            
+            // Draw radial lines (like spokes)
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 12) {
+                ctx.beginPath();
+                const start = toCanvasCoords(0, 0);
+                const end = toCanvasCoords(Math.cos(angle) * 5, Math.sin(angle) * 5);
+                ctx.moveTo(start.x, start.y);
+                ctx.lineTo(end.x, end.y);
+                ctx.stroke();
+            }
+            
+            // Draw hyperbolic circles (like rings)
+            for (let r = 1; r <= 5; r++) {
+                ctx.beginPath();
+                for (let angle = 0; angle < Math.PI * 2; angle += 0.05) {
+                    // In hyperbolic space, "circles" look different but we'll approximate for visualization
+                    const point = toCanvasCoords(
+                        r * Math.cos(angle),
+                        r * Math.sin(angle)
+                    );
+                    if (angle === 0) {
+                        ctx.moveTo(point.x, point.y);
+                    } else {
+                        ctx.lineTo(point.x, point.y);
+                    }
+                }
+                ctx.closePath();
+                ctx.stroke();
+            }
+        }
+        
+        // Draw the current path
+        function drawPath() {
+            if (path.length < 2) return;
+            
+            ctx.strokeStyle = '#3498db';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            const start = toCanvasCoords(path[0].x, path[0].y);
+            ctx.moveTo(start.x, start.y);
+            
+            for (let i = 1; i < path.length; i++) {
+                const point = toCanvasCoords(path[i].x, path[i].y);
+                ctx.lineTo(point.x, point.y);
+            }
+            
+            ctx.stroke();
+            
+            // Draw current position
+            const curr = toCanvasCoords(currentPos.x, currentPos.y);
+            ctx.fillStyle = '#e74c3c';
+            ctx.beginPath();
+            ctx.arc(curr.x, curr.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Hyperbolic distance between two points
+        function hyperbolicDistance(p1, p2) {
+            const x1 = p1.x, y1 = p1.y;
+            const x2 = p2.x, y2 = p2.y;
+            
+            // Using the hyperbolic law of cosines
+            const r1 = Math.sqrt(x1*x1 + y1*y1);
+            const r2 = Math.sqrt(x2*x2 + y2*y2);
+            const theta = Math.atan2(y2, x2) - Math.atan2(y1, x1);
+            
+            // Hyperbolic distance formula
+            const k = curvature;
+            const C = Math.cosh(Math.sqrt(-k) * r1) * Math.cosh(Math.sqrt(-k) * r2) - 
+                      Math.sinh(Math.sqrt(-k) * r1) * Math.sinh(Math.sqrt(-k) * r2) * Math.cos(theta);
+            
+            return Math.acosh(C) / Math.sqrt(-k);
+        }
+        
+        // Move in a random direction using hyperbolic geometry
+        function hyperbolicRandomStep() {
+            const stepSize = 0.1;
+            const angle = Math.random() * Math.PI * 2;
+            
+            // Calculate new position using hyperbolic law of cosines
+            const r = Math.sqrt(currentPos.x * currentPos.x + currentPos.y * currentPos.y);
+            const theta = Math.atan2(currentPos.y, currentPos.x);
+            
+            const newR = Math.acosh(
+                Math.cosh(r) * Math.cosh(stepSize) + 
+                Math.sinh(r) * Math.sinh(stepSize) * Math.cos(angle)
+            );
+            
+            const newTheta = theta + Math.asin(
+                (Math.sin(angle) * Math.sinh(stepSize)) / Math.sinh(newR)
+            );
+            
+            const newX = newR * Math.cos(newTheta);
+            const newY = newR * Math.sin(newTheta);
+            
+            return { x: newX, y: newY };
+        }
+        
+        // Perform the random walk
+        function randomWalk(steps) {
+            if (!isDrawing) return;
+            
+            for (let i = 0; i < steps; i++) {
+                const newPos = hyperbolicRandomStep();
+                path.push({ ...newPos });
+                currentPos = newPos;
+            }
+            
+            // Redraw
+            ctx.clearRect(0, 0, width, height);
+            drawGrid();
+            drawPath();
+            
+            // Continue animation
+            if (isDrawing) {
+                animationId = requestAnimationFrame(() => randomWalk(steps));
+            }
+        }
+        
+        // Event listeners
+        startBtn.addEventListener('click', () => {
+            if (!isDrawing) {
+                isDrawing = true;
+                startBtn.textContent = 'Stop Drawing';
+                const steps = parseInt(stepsInput.value) || 1000;
+                curvature = parseFloat(curvatureInput.value) || -1.0;
+                randomWalk(Math.min(steps, 1000));
+            } else {
+                isDrawing = false;
+                startBtn.textContent = 'Start Drawing';
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+            }
+        });
+        
+        resetBtn.addEventListener('click', () => {
+            isDrawing = false;
+            startBtn.textContent = 'Start Drawing';
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            curvature = parseFloat(curvatureInput.value) || -1.0;
+            init();
+        });
+        
+        // Initialize on load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

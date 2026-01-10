@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Metal Complex Color Estimator Flexible</title>
+<style>
+  body { font-family: sans-serif; padding: 1em; }
+  select, button { margin: 0.3em; }
+  #colorbox { margin-top: 1em; font-weight: bold; font-size: 1.2em; }
+  #swatch { width: 120px; height: 120px; border: 1px solid #000; margin-top: 0.5em; }
+  #ligandControls { margin-bottom: 1em; }
+</style>
+</head>
+<body>
+
+<h2>Metal Complex Color Estimator (Flexible Ligands & Centers)</h2>
+
+<label>Metal center:
+  <select id="metal">
+    <option value="Fe3+">Fe³⁺</option>
+    <option value="Co3+">Co³⁺</option>
+    <option value="Ni2+">Ni²⁺</option>
+    <option value="Cu2+">Cu²⁺</option>
+  </select>
+</label>
+
+<div id="ligandControls">
+  <button onclick="addLigand()">Add Ligand</button>
+  <button onclick="removeLigand()">Remove Ligand</button>
+</div>
+
+<div id="ligands"></div>
+
+<button onclick="estimateColor()">Estimate Color</button>
+
+<div id="colorbox"></div>
+<div id="swatch"></div>
+
+<script>
+// Ligand data
+const ligandStrengths = {
+  H2O: 10000,
+  NH3: 12000,
+  F: 9000,
+  Cl: 8000,
+  OH: 9500,
+  CN: 22000,
+  CO: 24000
+};
+
+const ligandLabels = {
+  H2O: "H₂O",
+  NH3: "NH₃",
+  F: "F⁻",
+  Cl: "Cl⁻",
+  OH: "OH⁻",
+  CN: "CN⁻",
+  CO: "CO"
+};
+
+const knownComplexes = {
+  "Fe3+": { "H2O": 450, "CN": 600, "NH3": 500 },
+  "Co3+": { "NH3": 475, "CN": 620, "H2O": 420 },
+  "Ni2+": { "H2O": 390, "NH3": 420, "CN": 560 },
+  "Cu2+": { "H2O": 750, "NH3": 700, "Cl": 630 }
+};
+
+const ligandContainer = document.getElementById("ligands");
+
+function createLigandSelect(id) {
+  const sel = document.createElement("select");
+  sel.id = id;
+  for (const key in ligandStrengths) {
+    const opt = document.createElement("option");
+    opt.value = key;
+    opt.textContent = ligandLabels[key];
+    sel.appendChild(opt);
+  }
+  return sel;
+}
+
+function addLigand() {
+  const count = ligandContainer.children.length;
+  const sel = createLigandSelect(`lig${count}`);
+  ligandContainer.appendChild(sel);
+}
+
+function removeLigand() {
+  const count = ligandContainer.children.length;
+  if (count > 1) ligandContainer.removeChild(ligandContainer.lastChild);
+}
+
+// Initialize with 6 ligands
+for (let i = 0; i < 6; i++) addLigand();
+
+function interpolateWavelength(metal, ligands) {
+  const known = knownComplexes[metal];
+  if (!known) return 600;
+
+  const sorted = Object.keys(known)
+    .map(lig => ({ ligand: lig, strength: ligandStrengths[lig], wavelength: known[lig] }))
+    .sort((a, b) => a.strength - b.strength);
+
+  const avgStrength = ligands.reduce((a, l) => a + (ligandStrengths[l] || 10000), 0) / ligands.length;
+
+  // Find bracket ligands for interpolation
+  let low = sorted[0], high = sorted[sorted.length - 1];
+  for (let i = 0; i < sorted.length - 1; i++) {
+    if (avgStrength >= sorted[i].strength && avgStrength <= sorted[i + 1].strength) {
+      low = sorted[i];
+      high = sorted[i + 1];
+      break;
+    }
+  }
+
+  if (avgStrength <= low.strength) return low.wavelength;
+  if (avgStrength >= high.strength) return high.wavelength;
+
+  const t = (avgStrength - low.strength) / (high.strength - low.strength);
+  return low.wavelength + t * (high.wavelength - low.wavelength);
+}
+
+function wavelengthToLms(wavelength) {
+  if (wavelength < 380 || wavelength > 780) return [0,0,0];
+  const L = 0.400 * Math.exp(-0.5 * Math.pow((wavelength - 605) / 50, 2));
+  const M = 0.700 * Math.exp(-0.5 * Math.pow((wavelength - 535) / 50, 2));
+  const S = 1.000 * Math.exp(-0.5 * Math.pow((wavelength - 445) / 50, 2));
+  return [L, M, S];
+}
+
+function matrixMult(l, m, s, mat) {
+  return [
+    mat[0][0] * l + mat[0][1] * m + mat[0][2] * s,
+    mat[1][0] * l + mat[1][1] * m + mat[1][2] * s,
+    mat[2][0] * l + mat[2][1] * m + mat[2][2] * s
+  ];
+}
+
+function lmsToRgb(l, m, s) {
+  const mtx = [
+    [2.364, -0.896, -0.468],
+    [-0.515, 1.426, 0.088],
+    [0.005, -0.014, 1.009]
+  ];
+  const mtx2 = [
+    [1.947, -1.14, 0.364],
+    [0.689, 0.348, 0.000],
+    [0.000, 0.000, 1.934]
+  ];
+
+  [l, m, s] = matrixMult(l, m, s, mtx2);
+  [l, m, s] = matrixMult(l, m, s, mtx);
+
+  // Clamp between 0 and 1, keep as float for smooth color (no quantization)
+  const clamp01 = v => Math.min(1, Math.max(0, v));
+
+  return [clamp01(l), clamp01(m), clamp01(s)];
+}
+
+function estimateColor() {
+  const metal = document.getElementById("metal").value;
+  const ligands = [];
+  for (let i = 0; i < ligandContainer.children.length; i++) {
+    ligands.push(ligandContainer.children[i].value);
+  }
+
+  const metalCount = Math.ceil(ligands.length / 6);
+
+  const wl = interpolateWavelength(metal, ligands);
+  const [L, M, S] = wavelengthToLms(wl);
+  const [r, g, b] = lmsToRgb(L, M, S);
+
+  const colorBox = document.getElementById("colorbox");
+  const swatch = document.getElementById("swatch");
+
+  colorBox.innerHTML =
+    `Ligands: ${ligands.length} | Metal centers: ${metalCount}<br>` +
+    `Estimated absorption wavelength: <b>${wl.toFixed(1)} nm</b><br>` +
+    `Estimated color (RGB float): (${r.toFixed(3)}, ${g.toFixed(3)}, ${b.toFixed(3)})`;
+
+  // Use float RGB scaled to 0-255 for CSS but don't round to integer (to keep smooth gradation)
+  const cssColor = `rgb(${(r * 255).toFixed(1)}, ${(g * 255).toFixed(1)}, ${(b * 255).toFixed(1)})`;
+  swatch.style.backgroundColor = cssColor;
+}
+
+// Init
+estimateColor();
+
+</script>
+</body>
+</html>

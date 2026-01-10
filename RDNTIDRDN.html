@@ -9,11 +9,42 @@
     body { font-family: sans-serif; padding: 1em; }
     #controls { margin: 10px 0; }
     label { margin-right: 10px; }
+    .progress-container {
+      width: 100%;
+      background-color: #f1f1f1;
+      margin: 10px 0;
+    }
+    .progress-bar {
+      width: 0%;
+      height: 30px;
+      background-color: #4CAF50;
+      text-align: center;
+      line-height: 30px;
+      color: white;
+    }
+    .canvas-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .canvas-container {
+      display: inline-block;
+      margin-right: 10px;
+      vertical-align: top;
+    }
+    .canvas-container canvas {
+      display: block;
+    }
+    button:disabled {
+      opacity: 0.5;
+    }
   </style>
 </head>
 <body>
   <h2>Inverse Dual Radon Transform - Step by Step</h2>
   <input type="file" id="upload" accept="image/*" />
+  <button id="cancel-btn" disabled>Cancel Processing</button>
 
   <div id="controls">
     <label>Brightness: <input type="range" id="brightness" min="-100" max="100" value="0" /></label>
@@ -29,182 +60,320 @@
   </div>
 
   <div id="steps"></div>
+  <div id="progress-container" class="progress-container" style="display: none;">
+    <div id="progress-bar" class="progress-bar">0%</div>
+  </div>
 
   <script>
     const MAX_SIZE = 256;
     let realResult = null, resultSize = [0, 0];
+    let worker = null;
+    let processing = false;
 
-    document.getElementById("upload").addEventListener("change", e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const img = new Image();
-      img.onload = () => processImage(img);
-      img.src = URL.createObjectURL(file);
+    document.addEventListener('DOMContentLoaded', () => {
+      progressBar = document.getElementById('progress-bar');
+      progressContainer = document.getElementById('progress-container');
+      
+      document.getElementById('cancel-btn').addEventListener('click', () => {
+        if (worker && processing) {
+          worker.terminate();
+          worker = null;
+          processing = false;
+          hideProgress();
+          document.getElementById('upload').disabled = false;
+          document.getElementById('cancel-btn').disabled = true;
+          alert('Processing cancelled');
+        }
+      });
     });
 
-    document.getElementById("brightness").addEventListener("input", updateFinalImage);
-    document.getElementById("contrast").addEventListener("input", updateFinalImage);
-    document.getElementById("negatives").addEventListener("change", updateFinalImage);
+    // ... (keep your existing helper functions) ...
 
-    function createCanvas(title, w, h) {
-      const div = document.createElement("div");
-      const label = document.createElement("div");
-      label.textContent = title;
-      const canvas = document.createElement("canvas");
-      canvas.width = w;
-      canvas.height = h;
-      div.appendChild(label);
-      div.appendChild(canvas);
-      document.getElementById("steps").appendChild(div);
-      return canvas.getContext("2d");
-    }
+    function processImage(img) {
+      document.getElementById("steps").innerHTML = "";
+      updateProgress(5, "Preparing image...");
+      
+      const inputData = resizeCanvasToFit(img);
+      const w = inputData.width;
+      const h = inputData.height;
 
-    function resizeCanvasToFit(img) {
-      const scale = Math.min(1, MAX_SIZE / Math.max(img.width, img.height));
-      const w = Math.floor(img.width * scale);
-      const h = Math.floor(img.height * scale);
-      const canvas = document.createElement("canvas");
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0, w, h);
-      return ctx.getImageData(0, 0, w, h);
-    }
+      const infoDiv = document.createElement("div");
+      infoDiv.textContent = `Processing ${w}×${h} image`;
+      document.getElementById("steps").appendChild(infoDiv);
 
-    function grayscaleMatrix(imageData) {
-      const { width: w, height: h, data } = imageData;
-      const matrix = [];
-      for (let y = 0; y < h; y++) {
-        const row = [];
-        for (let x = 0; x < w; x++) {
-          const i = (y * w + x) * 4;
-          const gray = (data[i] + data[i + 1] + data[i + 2]) / 3;
-          row.push(gray);
-        }
-        matrix.push(row);
-      }
-      return matrix;
-    }
+      updateProgress(10, "Converting to grayscale...");
+      const gray = grayscaleMatrix(inputData);
+      const grayCtx = normalizeToImage(gray);
+      if (!processing) return;
+      createCanvas("Step 1: Input Sinogram", w, h).drawImage(grayCtx.canvas, 0, 0);
 
-    function normalizeToImage(matrix, colorMode = "red", brightness = 0, contrast = 100) {
-      const h = matrix.length;
-      const w = matrix[0].length;
-      const flat = matrix.flat();
-      const min = Math.min(...flat);
-      const max = Math.max(...flat);
-      const maxabs = colorMode === "gray" ? (max - min || 1)
-                    : colorMode === "red" ? Math.max(max, -min) || 1
-                    : Math.max(max, 0) || 1;
+      updateProgress(20, "Creating filter...");
+      const lhalf = gray.map((row, i) => row.map(() => Math.min(i, h - i)));
+      const lhalfCtx = normalizeToImage(lhalf, "gray");
+      if (!processing) return;
+      createCanvas("Step 2: lhalf Filter", w, h).drawImage(lhalfCtx.canvas, 0, 0);
 
-      const canvas = document.createElement("canvas");
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext("2d");
-      const imgData = ctx.createImageData(w, h);
-
-      const b = +brightness;
-      const c = +contrast / 100;
-
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          const i = (y * w + x) * 4;
-          const val = matrix[y][x];
-
-          let gray = 0, r = 0, g = 0, bval = 0, a = 255;
-
-          if (colorMode === "gray") {
-  // Map -maxabs → 0, 0 → 0.5, maxabs → 1
-  let norm = (val + maxabs) / (2 * maxabs);
-  let gray = norm * 255;
-  gray = ((gray - 128) * c + 128 + b);
-  gray = Math.max(0, Math.min(255, gray));
-  r = g = bval = gray;
-} else if (colorMode === "red" && val < 0) {
-            r = ((-val / maxabs) * 255 - 128) * c + 128 + b;
-            r = Math.max(0, Math.min(255, r));
-            g = bval = 0;
-          } else if (colorMode === "hide" && val < 0) {
-            a = 0;
-          } else {
-            gray = ((val / maxabs) * 255 - 128) * c + 128 + b;
-            gray = Math.max(0, Math.min(255, gray));
-            r = g = bval = gray;
+      // Create web worker for FFT processing with proper complex number handling
+      if (window.Worker) {
+        worker = new Worker(URL.createObjectURL(new Blob([`
+          function createComplex(re, im = 0) {
+            return { re, im };
           }
 
-          imgData.data[i + 0] = r;
-          imgData.data[i + 1] = g;
-          imgData.data[i + 2] = bval;
-          imgData.data[i + 3] = a;
-        }
-      }
+          function fft1D(signal, inverse = false) {
+            const N = signal.length;
+            if (N <= 1) return signal;
+            
+            const even = [], odd = [];
+            for (let i = 0; i < N; i += 2) {
+              even.push(signal[i]);
+              if (i + 1 < N) odd.push(signal[i + 1]);
+            }
+            
+            const evenTransformed = fft1D(even, inverse);
+            const oddTransformed = fft1D(odd, inverse);
+            
+            const output = Array(N);
+            const sign = inverse ? 1 : -1;
+            const factor = 2 * Math.PI / N;
+            
+            for (let k = 0; k < N / 2; k++) {
+              const p = evenTransformed[k];
+              const angle = sign * factor * k;
+              const cos = Math.cos(angle);
+              const sin = Math.sin(angle);
+              const qRe = cos * oddTransformed[k].re - sin * oddTransformed[k].im;
+              const qIm = sin * oddTransformed[k].re + cos * oddTransformed[k].im;
+              
+              output[k] = createComplex(p.re + qRe, p.im + qIm);
+              output[k + N / 2] = createComplex(p.re - qRe, p.im - qIm);
+              
+              if (inverse) {
+                output[k].re /= 2;
+                output[k].im /= 2;
+                output[k + N / 2].re /= 2;
+                output[k + N / 2].im /= 2;
+              }
+            }
+            
+            return output;
+          }
+          
+          self.onmessage = function(e) {
+            const { matrix, inverse } = e.data;
+            const h = matrix.length;
+            const w = matrix[0].length;
+            
+            // Convert input to proper complex numbers
+            const complexMatrix = matrix.map(row => 
+              row.map(val => typeof val === 'number' ? 
+                { re: val, im: 0 } : 
+                { re: val.re || 0, im: val.im || 0 }
+              )
+            );
+            
+            // Process rows
+            const rowProcessed = Array(h);
+            for (let y = 0; y < h; y++) {
+              rowProcessed[y] = fft1D(complexMatrix[y], inverse);
+              if (y % 10 === 0) {
+                postMessage({ progress: (y / h) * 50, message: "Processing rows..." });
+              }
+            }
+            
+            // Process columns
+            const result = Array(h).fill().map(() => Array(w));
+            for (let x = 0; x < w; x++) {
+              const col = rowProcessed.map(row => row[x]);
+              const colTrans = fft1D(col, inverse);
+              for (let y = 0; y < h; y++) {
+                result[y][x] = colTrans[y];
+              }
+              if (x % 10 === 0) {
+                postMessage({ progress: 50 + (x / w) * 50, message: "Processing columns..." });
+              }
+            }
+            
+            postMessage({ result, progress: 100 });
+          };
+        `], { type: 'application/javascript' })));
 
-      ctx.putImageData(imgData, 0, 0);
-      return ctx;
+        worker.onmessage = function(e) {
+          if (e.data.progress) {
+            updateProgress(e.data.progress, e.data.message);
+          }
+          
+          if (e.data.result) {
+            const fft = e.data.result;
+            if (!processing) return;
+            
+            updateProgress(70, "Applying filter...");
+            const lhalfComplex = lhalf.map(row => row.map(val => ({ re: val, im: 0 })));
+            const filteredFFT = multiplyComplexMatrix(fft, lhalfComplex);
+            
+            // Process inverse FFT
+            worker.postMessage({ matrix: filteredFFT, inverse: true });
+            worker.onmessage = function(e) {
+              if (e.data.progress) {
+                updateProgress(70 + (e.data.progress * 0.3), e.data.message);
+              }
+              
+              if (e.data.result) {
+                const ifft = e.data.result;
+                realResult = ifft.map(row => row.map(val => val.re || 0));
+                resultSize = [w, h];
+                
+                updateProgress(90, "Finalizing...");
+                updateFinalImage();
+                
+                processing = false;
+                document.getElementById('upload').disabled = false;
+                document.getElementById('cancel-btn').disabled = true;
+                hideProgress();
+                worker.terminate();
+                worker = null;
+              }
+            };
+          }
+        };
+        
+        updateProgress(30, "Computing FFT...");
+        worker.postMessage({ matrix: gray, inverse: false });
+      } else {
+        // Fallback to non-worker processing
+        updateProgress(30, "Computing FFT (no web workers)...");
+        setTimeout(() => {
+          try {
+            // Convert to complex numbers first
+            const complexMatrix = gray.map(row => row.map(val => ({ re: val, im: 0 })));
+            const fft = fft2D(complexMatrix);
+            
+            if (!processing) return;
+            const fftMag = fft.map(row => row.map(c => Math.sqrt(c.re * c.re + c.im * c.im)));
+            const fftMagCtx = normalizeToImage(fftMag, "gray");
+            createCanvas("Step 3: FFT Magnitude", w, h).drawImage(fftMagCtx.canvas, 0, 0);
+
+            updateProgress(70, "Applying filter...");
+            const lhalfComplex = lhalf.map(row => row.map(val => ({ re: val, im: 0 })));
+            const filteredFFT = multiplyComplexMatrix(fft, lhalfComplex);
+            const filteredMag = filteredFFT.map(row => row.map(c => Math.sqrt(c.re * c.re + c.im * c.im)));
+            const filteredCtx = normalizeToImage(filteredMag, "gray");
+            createCanvas("Step 4: FFT × lhalf", w, h).drawImage(filteredCtx.canvas, 0, 0);
+
+            updateProgress(80, "Computing inverse FFT...");
+            const ifft = fft2D(filteredFFT, true);
+            realResult = ifft.map(row => row.map(val => val.re || 0));
+            resultSize = [w, h];
+            
+            updateProgress(90, "Finalizing...");
+            updateFinalImage();
+          } catch (error) {
+            handleError(error);
+          } finally {
+            processing = false;
+            document.getElementById('upload').disabled = false;
+            document.getElementById('cancel-btn').disabled = true;
+            hideProgress();
+          }
+        }, 100);
+      }
     }
 
-    function fft2D(matrix, inverse = false) {
-      const h = matrix.length;
-      const w = matrix[0].length;
-      const temp = Array(h);
-      for (let y = 0; y < h; y++) {
-        temp[y] = inverse ? math.ifft(matrix[y]) : math.fft(matrix[y]);
-      }
-      const result = Array(h).fill().map(() => Array(w));
-      for (let x = 0; x < w; x++) {
-        const col = temp.map(row => row[x]);
-        const colTrans = inverse ? math.ifft(col) : math.fft(col);
-        for (let y = 0; y < h; y++) {
-          result[y][x] = colTrans[y];
-        }
-      }
-      return result;
+    function processImage(img) {
+      // Break processing into chunks
+      setTimeout(() => {
+        processImageInChunks(img);
+      }, 100);
     }
-
-    function multiplyComplexMatrix(matA, matB) {
+ function multiplyComplexMatrix(matA, matB) {
       const h = matA.length;
       const w = matA[0].length;
       const result = [];
       for (let y = 0; y < h; y++) {
         const row = [];
         for (let x = 0; x < w; x++) {
-          row.push(math.multiply(matA[y][x], matB[y][x]));
+          const a = matA[y][x];
+          const b = matB[y][x];
+          row.push({
+            re: a.re * b.re - a.im * b.im,
+            im: a.re * b.im + a.im * b.re
+          });
         }
         result.push(row);
       }
       return result;
     }
 
-    function extractReal(matrix) {
-      return matrix.map(row => row.map(val => val.re || 0));
+    function fft2D(matrix, inverse = false) {
+      const h = matrix.length;
+      const w = matrix[0].length;
+      const totalSteps = h + w;
+      let currentStep = 0;
+      
+      // Process rows first
+      const rowProcessed = Array(h);
+      for (let y = 0; y < h; y++) {
+        rowProcessed[y] = fft1D(matrix[y], inverse);
+        currentStep++;
+        if (currentStep % 10 === 0) {
+          updateProgress((currentStep / totalSteps) * 50, "Processing rows...");
+        }
+      }
+      
+      // Then process columns
+      const result = Array(h).fill().map(() => Array(w));
+      for (let x = 0; x < w; x++) {
+        const col = rowProcessed.map(row => row[x]);
+        const colTrans = fft1D(col, inverse);
+        for (let y = 0; y < h; y++) {
+          result[y][x] = colTrans[y];
+        }
+        currentStep++;
+        if (currentStep % 10 === 0) {
+          updateProgress(50 + (currentStep / totalSteps) * 50, "Processing columns...");
+        }
+      }
+      
+      return result;
     }
 
-    function processImage(img) {
-      document.getElementById("steps").innerHTML = "";
-      const inputData = resizeCanvasToFit(img);
-      const w = inputData.width;
-      const h = inputData.height;
-
-      const gray = grayscaleMatrix(inputData);
-      const grayCtx = normalizeToImage(gray);
-      createCanvas("Step 1: Input Sinogram", w, h).drawImage(grayCtx.canvas, 0, 0);
-
-      const lhalf = gray.map((row, i) => row.map(() => Math.min(i, h - i)));
-      const lhalfCtx = normalizeToImage(lhalf, "gray");
-      createCanvas("Step 2: lhalf Filter", w, h).drawImage(lhalfCtx.canvas, 0, 0);
-
-      const fft = fft2D(gray);
-      const fftMag = normalizeToImage(fft.map(row => row.map(c => math.abs(c))), "gray");
-      createCanvas("Step 3: FFT Magnitude", w, h).drawImage(fftMag.canvas, 0, 0);
-
-      const lhalfComplex = lhalf.map(row => row.map(val => math.complex(val, 0)));
-      const filteredFFT = multiplyComplexMatrix(fft, lhalfComplex);
-      const filteredMag = normalizeToImage(filteredFFT.map(row => row.map(c => math.abs(c))), "gray");
-      createCanvas("Step 4: FFT × lhalf", w, h).drawImage(filteredMag.canvas, 0, 0);
-
-      const ifft = fft2D(filteredFFT, true);
-      realResult = extractReal(ifft);
-      resultSize = [w, h];
-      updateFinalImage();
+    function fft1D(signal, inverse = false) {
+      const N = signal.length;
+      if (N <= 1) return signal;
+      
+      const even = [], odd = [];
+      for (let i = 0; i < N; i += 2) {
+        even.push(signal[i]);
+        if (i + 1 < N) odd.push(signal[i + 1]);
+      }
+      
+      const evenTransformed = fft1D(even, inverse);
+      const oddTransformed = fft1D(odd, inverse);
+      
+      const output = Array(N);
+      const sign = inverse ? 1 : -1;
+      const factor = 2 * Math.PI / N;
+      
+      for (let k = 0; k < N / 2; k++) {
+        const p = evenTransformed[k];
+        const angle = sign * factor * k;
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        const qRe = cos * oddTransformed[k].re - sin * oddTransformed[k].im;
+        const qIm = sin * oddTransformed[k].re + cos * oddTransformed[k].im;
+        
+        output[k] = { re: p.re + qRe, im: p.im + qIm };
+        output[k + N / 2] = { re: p.re - qRe, im: p.im - qIm };
+        
+        if (inverse) {
+          output[k].re /= 2;
+          output[k].im /= 2;
+          output[k + N / 2].re /= 2;
+          output[k + N / 2].im /= 2;
+        }
+      }
+      
+      return output;
     }
 
     function updateFinalImage() {
@@ -215,8 +384,7 @@
       const negMode = document.getElementById("negatives").value;
       const finalCtx = normalizeToImage(realResult, negMode, brightness, contrast);
 
-      // Replace or update final canvas
-      let canvasDiv = [...document.querySelectorAll("#steps div")]
+      let canvasDiv = [...document.querySelectorAll("#steps .canvas-container")]
         .find(div => div.firstChild?.textContent?.includes("Step 5"));
 
       if (!canvasDiv) {

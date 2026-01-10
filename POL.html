@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Particle Force Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        #game-container {
+            margin: 0 auto;
+            width: fit-content;
+        }
+        table {
+            border-collapse: collapse;
+            margin: 20px auto;
+        }
+        td {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #ccc;
+            text-align: center;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        #controls {
+            margin: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #particle-info {
+            margin: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        #message {
+            margin: 10px;
+            font-weight: bold;
+            min-height: 24px;
+            color: #d9534f;
+        }
+    </style>
+</head>
+<body>
+    <h1>Particle Force Game</h1>
+    <div id="game-container">
+        <div id="message"></div>
+        <table id="board"></table>
+        <div id="controls">
+            <div id="particle-info">
+                Next particle: <span id="next-particle">+</span>
+            </div>
+            <button id="place-btn">Place Particle</button>
+            <button id="reset-btn">Reset Game</button>
+        </div>
+    </div>
+
+    <script>
+        const BOARD_SIZE = 8;
+        const PARTICLE_TYPES = ['+', '-', 'con', 'bomb', '0'];
+        const PARTICLE_COLORS = {
+            '+': '#f44336',
+            '-': '#2196F3',
+            'con': '#4CAF50',
+            'bomb': '#FF9800',
+            '0': '#9E9E9E'
+        };
+        
+        let board = [];
+        let gameOver = false;
+        let nextParticle = '';
+        
+        // Initialize the game
+        function initGame() {
+            board = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(null));
+            gameOver = false;
+            document.getElementById('message').textContent = '';
+            updateNextParticle();
+            renderBoard();
+        }
+        
+        // Get a random particle type
+        function getRandomParticle() {
+            return PARTICLE_TYPES[Math.floor(Math.random() * PARTICLE_TYPES.length)];
+        }
+        
+        // Update the next particle to place
+        function updateNextParticle() {
+            nextParticle = getRandomParticle();
+            document.getElementById('next-particle').textContent = nextParticle;
+            document.getElementById('next-particle').style.color = PARTICLE_COLORS[nextParticle];
+        }
+        
+        // Render the game board
+        function renderBoard() {
+            const table = document.getElementById('board');
+            table.innerHTML = '';
+            
+            for (let y = 0; y < BOARD_SIZE; y++) {
+                const row = document.createElement('tr');
+                
+                for (let x = 0; x < BOARD_SIZE; x++) {
+                    const cell = document.createElement('td');
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    
+                    if (board[y][x]) {
+                        cell.textContent = board[y][x].type;
+                        cell.style.color = PARTICLE_COLORS[board[y][x].type];
+                        cell.style.backgroundColor = '#f5f5f5';
+                    }
+                    
+                    cell.addEventListener('click', () => placeParticle(x, y));
+                    row.appendChild(cell);
+                }
+                
+                table.appendChild(row);
+            }
+        }
+        
+        // Place a particle on the board
+        function placeParticle(x, y) {
+            if (gameOver || board[y][x] !== null) return;
+            
+            board[y][x] = { type: nextParticle };
+            renderBoard();
+            
+            // Process forces
+            processForces();
+            
+            if (!gameOver) {
+                updateNextParticle();
+            }
+        }
+        
+        // Calculate and process all forces
+        function processForces() {
+            // First process bombs
+            processBombs();
+            if (gameOver) return;
+            
+            // Then calculate forces for all particles
+            const forces = calculateForces();
+            
+            // Apply forces in the correct order
+            applyForces(forces);
+            
+            renderBoard();
+        }
+        
+        // Process bomb explosions
+        function processBombs() {
+            const bombs = [];
+            
+            // Find all bombs
+            for (let y = 0; y < BOARD_SIZE; y++) {
+                for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (board[y][x] && board[y][x].type === 'bomb') {
+                        bombs.push({ x, y });
+                    }
+                }
+            }
+            
+            // Explode each bomb
+            for (const bomb of bombs) {
+                explodeBomb(bomb.x, bomb.y);
+            }
+        }
+        
+        // Explode a bomb at (x, y)
+        function explodeBomb(x, y) {
+            // Remove the bomb itself
+            board[y][x] = null;
+            
+            // Remove adjacent particles (orthogonal)
+            const directions = [
+                { dx: -1, dy: 0 },
+                { dx: 1, dy: 0 },
+                { dx: 0, dy: -1 },
+                { dx: 0, dy: 1 }
+            ];
+            
+            for (const dir of directions) {
+                const nx = x + dir.dx;
+                const ny = y + dir.dy;
+                
+                if (nx >= 0 && nx < BOARD_SIZE && ny >= 0 && ny < BOARD_SIZE) {
+                    board[ny][nx] = null;
+                }
+            }
+        }
+        
+        // Calculate forces for all particles
+        function calculateForces() {
+            const forces = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill({ dx: 0, dy: 0 }));
+            
+            for (let y = 0; y < BOARD_SIZE; y++) {
+                for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (!board[y][x]) continue;
+                    
+                    const particle = board[y][x].type;
+                    let force = { dx: 0, dy: 0 };
+                    
+                    // Calculate force from all other particles
+                    for (let ny = 0; ny < BOARD_SIZE; ny++) {
+                        for (let nx = 0; nx < BOARD_SIZE; nx++) {
+                            if ((x === nx && y === ny) || !board[ny][nx]) continue;
+                            
+                            const other = board[ny][nx].type;
+                            const direction = getForceDirection(particle, other, x, y, nx, ny);
+                            
+                            force.dx += direction.dx;
+                            force.dy += direction.dy;
+                        }
+                    }
+                    
+                    // Normalize force to -1, 0, or 1 in each direction
+                    force.dx = Math.sign(force.dx);
+                    force.dy = Math.sign(force.dy);
+                    
+                    forces[y][x] = force;
+                }
+            }
+            
+            return forces;
+        }
+        
+        // Get force direction between two particles
+        function getForceDirection(particle, other, x1, y1, x2, y2) {
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const distance = Math.max(Math.abs(dx), Math.abs(dy));
+            
+            // Neutral particle doesn't affect or get affected
+            if (particle === '0' || other === '0') {
+                return { dx: 0, dy: 0 };
+            }
+            
+            // Bomb doesn't move or affect others (except when exploding)
+            if (particle === 'bomb') {
+                return { dx: 0, dy: 0 };
+            }
+            
+            // Connector logic
+            if (particle === 'con') {
+                // Connector is pushed by + and -, pulled by con
+                if (other === '+') {
+                    return { dx: Math.sign(dx), dy: Math.sign(dy) };
+                } else if (other === '-') {
+                    return { dx: Math.sign(dx), dy: Math.sign(dy) };
+                } else if (other === 'con') {
+                    return { dx: -Math.sign(dx), dy: -Math.sign(dy) };
+                }
+                return { dx: 0, dy: 0 };
+            }
+            
+            // + particle logic
+            if (particle === '+') {
+                if (other === '+') {
+                    return { dx: -Math.sign(dx), dy: -Math.sign(dy) }; // Push other +
+                } else if (other === '-') {
+                    return { dx: Math.sign(dx), dy: Math.sign(dy) }; // Pull -
+                } else if (other === 'con') {
+                    return { dx: -Math.sign(dx), dy: -Math.sign(dy) }; // Push con
+                }
+            }
+            
+            // - particle logic
+            if (particle === '-') {
+                if (other === '-') {
+                    return { dx: -Math.sign(dx), dy: -Math.sign(dy) }; // Push other -
+                } else if (other === '+') {
+                    return { dx: Math.sign(dx), dy: Math.sign(dy) }; // Pull +
+                } else if (other === 'con') {
+                    return { dx: -Math.sign(dx), dy: -Math.sign(dy) }; // Push con
+                }
+            }
+            
+            return { dx: 0, dy: 0 };
+        }
+        
+        // Apply all forces to the board
+        function applyForces(forces) {
+            // First mark all particles as not moved
+            for (let y = 0; y < BOARD_SIZE; y++) {
+                for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (board[y][x]) {
+                        board[y][x].moved = false;
+                    }
+                }
+            }
+            
+            // Apply forces in multiple passes to handle pushing chains
+            let movedAny;
+            do {
+                movedAny = false;
+                
+                for (let y = 0; y < BOARD_SIZE; y++) {
+                    for (let x = 0; x < BOARD_SIZE; x++) {
+                        if (!board[y][x] || board[y][x].moved || board[y][x].type === '0' || board[y][x].type === 'bomb') continue;
+                        
+                        const force = forces[y][x];
+                        if (force.dx === 0 && force.dy === 0) continue;
+                        
+                        const newX = x + force.dx;
+                        const newY = y + force.dy;
+                        
+                        // Check if movement would go out of bounds
+                        if (newX < 0 || newX >= BOARD_SIZE || newY < 0 || newY >= BOARD_SIZE) {
+                            gameOver = true;
+                            document.getElementById('message').textContent = 'Game Over! Particle went out of bounds.';
+                            return;
+                        }
+                        
+                        // Check if target cell is empty
+                        if (!board[newY][newX]) {
+                            board[newY][newX] = board[y][x];
+                            board[y][x] = null;
+                            board[newY][newX].moved = true;
+                            movedAny = true;
+                        } else {
+                            // Try to push the particle in the target cell
+                            if (tryPushParticle(newX, newY, force.dx, force.dy)) {
+                                board[newY][newX] = board[y][x];
+                                board[y][x] = null;
+                                board[newY][newX].moved = true;
+                                movedAny = true;
+                            }
+                        }
+                    }
+                }
+            } while (movedAny);
+        }
+        
+        // Try to push a particle in a direction
+        function tryPushParticle(x, y, dx, dy) {
+            // Neutral particles and bombs can't be pushed
+            if (board[y][x].type === '0' || board[y][x].type === 'bomb') {
+                return false;
+            }
+            
+            const newX = x + dx;
+            const newY = y + dy;
+            
+            // Check if push would go out of bounds
+            if (newX < 0 || newX >= BOARD_SIZE || newY < 0 || newY >= BOARD_SIZE) {
+                gameOver = true;
+                document.getElementById('message').textContent = 'Game Over! Particle pushed out of bounds.';
+                return false;
+            }
+            
+            // Check if target cell is empty
+            if (!board[newY][newX]) {
+                board[newY][newX] = board[y][x];
+                board[y][x] = null;
+                return true;
+            } else {
+                // Recursively try to push the next particle
+                if (tryPushParticle(newX, newY, dx, dy)) {
+                    board[newY][newX] = board[y][x];
+                    board[y][x] = null;
+                    return true;
+                }
+                return false;
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('place-btn').addEventListener('click', () => {
+            if (gameOver) return;
+            
+            // Find a random empty cell
+            const emptyCells = [];
+            for (let y = 0; y < BOARD_SIZE; y++) {
+                for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (!board[y][x]) {
+                        emptyCells.push({ x, y });
+                    }
+                }
+            }
+            
+            if (emptyCells.length > 0) {
+                const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                placeParticle(randomCell.x, randomCell.y);
+            } else {
+                gameOver = true;
+                document.getElementById('message').textContent = 'Game Over! Board is full.';
+            }
+        });
+        
+        document.getElementById('reset-btn').addEventListener('click', initGame);
+        
+        // Start the game
+        initGame();
+    </script>
+</body>
+</html>

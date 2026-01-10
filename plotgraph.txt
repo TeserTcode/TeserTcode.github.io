@@ -1,0 +1,432 @@
+function toggleControls() {
+  const controls = document.getElementById('graphControls');
+  controls.style.display = controls.style.display === 'none' ? 'block' : 'none';
+}
+
+function applyScale(value, scaleMode) {
+  if (value === 0) return 0;
+  switch(scaleMode) {
+    case 'log':
+      return Math.sign(value) * Math.log1p(Math.abs(value));
+    case 'sqrt':
+      return Math.sign(value) * Math.sqrt(Math.abs(value));
+    default:
+      return value;
+  }
+}
+
+function plotGraph(point1, point2) {
+  // Get all control values
+  const bmpheight = parseFloat(document.getElementById('bmp-height').value);
+  const bmpwidth = parseFloat(document.getElementById('bmp-width').value);
+  const canvas = document.getElementById('graphCanvas');
+  const ctx = canvas.getContext('2d');
+  const scale = 3;
+  
+  // Styling controls
+  const bgColor = document.getElementById('bgColor').value;
+  const realColor = document.getElementById('realColor').value;
+  const imagColor = document.getElementById('imagColor').value;
+  const axisColor = document.getElementById('axisColor').value;
+  const gridColor = document.getElementById('gridColor').value;
+  const lineWidth = parseFloat(document.getElementById('lineWidth').value);
+  const numSamples = parseInt(document.getElementById('numSamples').value);
+  const xScaleMode = document.getElementById('xScaleMode').value;
+  const yScaleMode = document.getElementById('yScaleMode').value;
+  const gridScale = document.getElementById('gridScale').value;
+  const showGrid = document.getElementById('showGrid').checked;
+  const showAxes = document.getElementById('showAxes').checked;
+  const showLabels = document.getElementById('showLabels').checked;
+  const fillCurve = document.getElementById('fillCurve').checked;
+  
+  //const maximum = parseFloat(document.getElementById('bmp-maxa').value);
+  const parametricMode = document.getElementById('parametricMode').checked;
+
+  // Setup canvas
+  canvas.width = bmpwidth * scale;
+  canvas.height = bmpheight * scale;
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Evaluate function along the path
+  const realPartValues = [], imagPartValues = [];
+  const xDomainValues = [];
+  
+  for (let i = 0; i <= numSamples; i++) {
+    const t = i / numSamples;
+    
+    // Linear interpolation between points
+    const x_real = point1.real + t * (point2.real - point1.real);
+    const x_imag = point1.imag + t * (point2.imag - point1.imag);
+    
+    // Apply scaling to input domain
+    const scaled_x_real = applyScale(x_real, xScaleMode);
+    const scaled_x_imag = applyScale(x_imag, yScaleMode);
+    
+    // Create complex number: l1(x.re) + i*l2(x.im)
+    const z = math.complex(scaled_x_real, scaled_x_imag);
+    
+    try {
+      // Evaluate function f(z)
+      const fn = teth.evaluate(document.getElementById('function').value, { x: z });
+      
+      if (!isFinite(fn.re) || !isFinite(fn.im)) {
+        realPartValues.push(null);
+        imagPartValues.push(null);
+        xDomainValues.push(null);
+        continue;
+      }
+      
+      realPartValues.push(fn.re);
+      imagPartValues.push(fn.im);
+      xDomainValues.push(x_real); // Store original x value for domain
+      
+    } catch (error) {
+      realPartValues.push(null);
+      imagPartValues.push(null);
+      xDomainValues.push(null);
+    }
+  }
+
+  let minX, maxX, minY, maxY;
+
+  if (parametricMode) {
+    // Parametric mode: x(t) = re(f()), y(t) = im(f())
+    minX = Math.min(...realPartValues.filter(v => v !== null));
+    maxX = Math.max(...realPartValues.filter(v => v !== null));
+    minY = Math.min(...imagPartValues.filter(v => v !== null));
+    maxY = Math.max(...imagPartValues.filter(v => v !== null));
+  } else {
+    // Non-parametric mode: x = domain, y = re(f()) and im(f())
+    // Combine both real and imaginary values for Y-axis range
+    const allYValues = [...realPartValues.filter(v => v !== null), ...imagPartValues.filter(v => v !== null)];
+    minY = allYValues.length ? Math.min(...allYValues) : -1;
+    maxY = allYValues.length ? Math.max(...allYValues) : 1;
+    
+    // Calculate domain range (input x values)
+    const validX = xDomainValues.filter(v => v !== null);
+    minX = validX.length ? Math.min(...validX) : -1;
+    maxX = validX.length ? Math.max(...validX) : 1;
+  }
+
+  // Apply maximum limits to ranges
+  if (maximum > 0) {
+    if (parametricMode) {
+      maxX = Math.min(maxX, maximum);
+      minX = Math.max(minX, -maximum);
+      maxY = Math.min(maxY, maximum);
+      minY = Math.max(minY, -maximum);
+    } else {
+      maxY = Math.min(maxY, maximum);
+      minY = Math.max(minY, -maximum);
+    }
+  }
+if (maximum < 0) {
+    if (parametricMode) {
+      maxX = -maximum;
+      minX = maximum;
+      maxY = -maximum;
+      minY = maximum;
+    } else {
+      maxY = -maximum;
+      minY =  maximum;
+    }
+  }
+  // Ensure non-zero range
+  if (maxX === minX) { maxX += 1; minX -= 1; }
+  if (maxY === minY) { maxY += 1; minY -= 1; }
+
+  // Generate grid lines
+  function generateGridLines(min, max) {
+    const lines = [];
+    
+    if (gridScale === 'integer') {
+      const start = Math.ceil(min);
+      const end = Math.floor(max);
+      for (let i = start; i <= end; i++) {
+        lines.push(i);
+      }
+    } 
+    else if (gridScale === 'power2') {
+      const minAbs = Math.max(1e-10, Math.abs(min));
+      const maxAbs = Math.max(1e-10, Math.abs(max));
+      const minPower = Math.ceil(Math.log2(minAbs));
+      const maxPower = Math.floor(Math.log2(maxAbs));
+      
+      for (let p = minPower; p <= maxPower; p++) {
+        const value = Math.pow(2, p);
+        if (value >= min && value <= max) lines.push(value);
+        if (-value >= min && -value <= max) lines.push(-value);
+      }
+      
+      if (0 >= min && 0 <= max) lines.push(0);
+    }
+    else {
+      // Decimal
+      const range = max - min;
+      const step = Math.pow(10, Math.floor(Math.log10(range))) / 2;
+      const start = Math.ceil(min / step) * step;
+      const end = Math.floor(max / step) * step;
+      
+      for (let val = start; val <= end; val += step) {
+        if (val >= min && val <= max) lines.push(val);
+      }
+    }
+    
+    return lines.sort((a, b) => a - b);
+  }
+
+  // Draw grid
+  if (showGrid) {
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = 0.5;
+    
+    // Vertical grid lines (x)
+    const xGridLines = generateGridLines(minX, maxX);
+    xGridLines.forEach(value => {
+      const x = ((value - minX) / (maxX - minX)) * canvas.width;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvas.height);
+      ctx.stroke();
+    });
+
+    // Horizontal grid lines (y)
+    const yGridLines = generateGridLines(minY, maxY);
+    yGridLines.forEach(value => {
+      const y = canvas.height - ((value - minY) / (maxY - minY)) * canvas.height;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvas.width, y);
+      ctx.stroke();
+    });
+  }
+
+  // Draw axes
+  if (showAxes) {
+    ctx.strokeStyle = axisColor;
+    ctx.lineWidth = 1;
+    
+    // X-axis (y=0)
+    if (minY <= 0 && maxY >= 0) {
+      const y = canvas.height - ((0 - minY) / (maxY - minY)) * canvas.height;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvas.width, y);
+      ctx.stroke();
+    }
+    
+    // Y-axis (x=0)
+    if (minX <= 0 && maxX >= 0) {
+      const x = ((0 - minX) / (maxX - minX)) * canvas.width;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvas.height);
+      ctx.stroke();
+    }
+  }
+
+  // Draw curves
+  ctx.lineWidth = lineWidth;
+  
+  if (parametricMode) {
+    // Parametric mode: single curve using real color
+    ctx.strokeStyle = realColor;
+    ctx.beginPath();
+    let firstPoint = true;
+    
+    for (let i = 0; i <= numSamples; i++) {
+      if (realPartValues[i] === null || imagPartValues[i] === null) {
+        firstPoint = true;
+        continue;
+      }
+      
+      const x = ((realPartValues[i] - minX) / (maxX - minX)) * canvas.width;
+      const y = canvas.height - ((imagPartValues[i] - minY) / (maxY - minY)) * canvas.height;
+      
+      if (firstPoint) {
+        ctx.moveTo(x, y);
+        firstPoint = false;
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    ctx.stroke();
+
+    // Fill towards (0,0) in parametric mode
+    if (fillCurve) {
+      ctx.globalAlpha = 0.2;
+      ctx.fillStyle = realColor;
+      ctx.beginPath();
+      
+      let firstValid = true;
+      for (let i = 0; i <= numSamples; i++) {
+        if (realPartValues[i] === null || imagPartValues[i] === null) continue;
+        
+        const x = ((realPartValues[i] - minX) / (maxX - minX)) * canvas.width;
+        const y = canvas.height - ((imagPartValues[i] - minY) / (maxY - minY)) * canvas.height;
+        
+        if (firstValid) {
+          ctx.moveTo(x, y);
+          firstValid = false;
+        } else {
+          ctx.lineTo(x, y);
+        }
+      }
+      
+      // Close path to (0,0)
+      const x0 = ((0 - minX) / (maxX - minX)) * canvas.width;
+      const y0 = canvas.height - ((0 - minY) / (maxY - minY)) * canvas.height;
+      ctx.lineTo(x0, y0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    
+  } else {
+    // Non-parametric mode: two curves (real and imaginary)
+    
+    // Draw real part curve (red)
+    ctx.strokeStyle = realColor;
+    ctx.beginPath();
+    let firstPoint = true;
+    
+    for (let i = 0; i <= numSamples; i++) {
+      if (realPartValues[i] === null) {
+        firstPoint = true;
+        continue;
+      }
+      
+      const x = ((xDomainValues[i] - minX) / (maxX - minX)) * canvas.width;
+      const y = canvas.height - ((realPartValues[i] - minY) / (maxY - minY)) * canvas.height;
+      
+      if (firstPoint) {
+        ctx.moveTo(x, y);
+        firstPoint = false;
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    ctx.stroke();
+
+    // Draw imaginary part curve (blue)
+    ctx.strokeStyle = imagColor;
+    ctx.beginPath();
+    firstPoint = true;
+    
+    for (let i = 0; i <= numSamples; i++) {
+      if (imagPartValues[i] === null) {
+        firstPoint = true;
+        continue;
+      }
+      
+      const x = ((xDomainValues[i] - minX) / (maxX - minX)) * canvas.width;
+      const y = canvas.height - ((imagPartValues[i] - minY) / (maxY - minY)) * canvas.height;
+      
+      if (firstPoint) {
+        ctx.moveTo(x, y);
+        firstPoint = false;
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    ctx.stroke();
+
+    // Fill under curves to y=0 axis in non-parametric mode
+    if (fillCurve) {
+      ctx.globalAlpha = 0.2;
+      
+      // Fill under real curve
+      ctx.fillStyle = realColor;
+      ctx.beginPath();
+      for (let i = 0; i <= numSamples; i++) {
+        if (realPartValues[i] === null) continue;
+        const x = ((xDomainValues[i] - minX) / (maxX - minX)) * canvas.width;
+        const y = canvas.height - ((realPartValues[i] - minY) / (maxY - minY)) * canvas.height;
+        const y0 = canvas.height - ((0 - minY) / (maxY - minY)) * canvas.height;
+        
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      }
+      
+      // Close the path to y=0 axis
+      for (let i = numSamples; i >= 0; i--) {
+        if (realPartValues[i] === null) continue;
+        const x = ((xDomainValues[i] - minX) / (maxX - minX)) * canvas.width;
+        const y0 = canvas.height - ((0 - minY) / (maxY - minY)) * canvas.height;
+        ctx.lineTo(x, y0);
+      }
+      ctx.closePath();
+      ctx.fill();
+
+      // Fill under imaginary curve
+      ctx.fillStyle = imagColor;
+      ctx.beginPath();
+      for (let i = 0; i <= numSamples; i++) {
+        if (imagPartValues[i] === null) continue;
+        const x = ((xDomainValues[i] - minX) / (maxX - minX)) * canvas.width;
+        const y = canvas.height - ((imagPartValues[i] - minY) / (maxY - minY)) * canvas.height;
+        const y0 = canvas.height - ((0 - minY) / (maxY - minY)) * canvas.height;
+        
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      }
+      
+      // Close the path to y=0 axis
+      for (let i = numSamples; i >= 0; i--) {
+        if (imagPartValues[i] === null) continue;
+        const x = ((xDomainValues[i] - minX) / (maxX - minX)) * canvas.width;
+        const y0 = canvas.height - ((0 - minY) / (maxY - minY)) * canvas.height;
+        ctx.lineTo(x, y0);
+      }
+      ctx.closePath();
+      ctx.fill();
+      
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // Labels
+  if (showLabels) {
+    ctx.fillStyle = axisColor;
+    ctx.font = "10px monospace";
+    ctx.textAlign = "center";
+    
+    // X-axis labels
+    ctx.fillText(minX.toFixed(2), 20, canvas.height - 5);
+    ctx.fillText(maxX.toFixed(2), canvas.width - 20, canvas.height - 5);
+    
+    // Y-axis labels
+    ctx.textAlign = "left";
+    ctx.fillText(minY.toFixed(2), 5, canvas.height - 20);
+    ctx.fillText(maxY.toFixed(2), 5, 15);
+    
+    // Origin labels
+    if (minX < 0 && maxX > 0) {
+      const x0 = ((0 - minX) / (maxX - minX)) * canvas.width;
+      ctx.fillText("0", x0 + 8, canvas.height - 5);
+    }
+    if (minY < 0 && maxY > 0) {
+      const y0 = canvas.height - ((0 - minY) / (maxY - minY)) * canvas.height;
+      ctx.fillText("0", 5, y0 - 5);
+    }
+  }
+
+  // Save PNG functionality
+  document.getElementById('savePNG').onclick = () => {
+    const link = document.createElement('a');
+    link.download = 'graph.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  };
+}
+// Initialize controls as hidden
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('graphControls').style.display = 'none';
+});

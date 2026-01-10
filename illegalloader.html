@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>YouTube Audio Player (URL Input)</title>
+  <style>
+    body {
+      font-family: system-ui, Arial;
+      text-align: center;
+      background: #111;
+      color: #eee;
+      padding: 40px;
+    }
+
+    .video-wrap {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+      border-radius: 8px;
+      margin: 24px auto;
+      max-width: 640px;
+      transition: opacity 0.4s;
+    }
+
+    .video-wrap iframe {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border: 0;
+    }
+
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    button {
+      background: #e22;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 16px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover { background: #f33; }
+
+    input {
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #222;
+      color: #fff;
+      width: 320px;
+      font-size: 15px;
+    }
+
+    @media (max-width: 500px) {
+      input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <h2>YouTube Audio Player</h2>
+
+  <input id="urlInput" type="text" placeholder="Enter YouTube URL or ID..." />
+  <br><br>
+
+  2F0trJy4PgI
+  <div class="video-wrap" id="videoBox" style="opacity:0;pointer-events:none;">
+    <div id="player"></div>
+  </div>
+
+  <div class="controls">
+    <button id="loadBtn">Load Player</button>
+    <button id="playBtn">Play</button>
+    <button id="pauseBtn">Pause</button>
+    <button id="showToggle">Show Video: OFF</button>
+  </div>
+
+  <script>
+    let player;
+    let playerLoaded = false;
+    let videoVisible = false;
+    let currentVideoId = "";
+
+    // Parse YouTube video ID from URL or ID
+    function extractVideoId(url) {
+      if (!url) return "";
+      const match = url.match(/(?:v=|\/)([0-9A-Za-z_-]{11})(?:[?&]|$)/);
+      return match ? match[1] : url.trim();
+    }
+
+    // Load player only when user clicks Load
+    document.getElementById("loadBtn").addEventListener("click", () => {
+      const input = document.getElementById("urlInput").value.trim();
+      const vid = extractVideoId(input || "dQw4w9WgXcQ");
+      currentVideoId = vid;
+
+      if (!playerLoaded) {
+        const tag = document.createElement("script");
+        tag.src = "https://www.youtube.com/iframe_api";
+        document.head.appendChild(tag);
+
+        window.onYouTubeIframeAPIReady = () => {
+          player = new YT.Player("player", {
+            videoId: vid,
+            host: "https://www.youtube-nocookie.com",
+            playerVars: {
+              autoplay: 0,
+              controls: 0,
+              rel: 0,
+              modestbranding: 1
+            },
+            events: {
+              onReady: () => {
+                playerLoaded = true;
+                alert("Player ready! Click Play to start audio.");
+              }
+            }
+          });
+        };
+      } else {
+        player.loadVideoById(vid);
+      }
+    });
+
+    // Play / Pause
+    document.getElementById("playBtn").addEventListener("click", () => {
+      if (player) player.playVideo();
+    });
+
+    document.getElementById("pauseBtn").addEventListener("click", () => {
+      if (player) player.pauseVideo();
+    });
+
+    // Toggle show/hide video
+    document.getElementById("showToggle").addEventListener("click", () => {
+      videoVisible = !videoVisible;
+      const box = document.getElementById("videoBox");
+      const btn = document.getElementById("showToggle");
+      if (videoVisible) {
+        box.style.opacity = 1;
+        box.style.pointerEvents = "auto";
+        btn.textContent = "Show Video: ON";
+      } else {
+        box.style.opacity = 0;
+        box.style.pointerEvents = "none";
+        btn.textContent = "Show Video: OFF";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Fourier Transformer</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+        #container {
+            display: flex;
+        }
+        #canvas-container {
+            margin-right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h2>2D Fourier Transformer</h2>
+    <div id="container">
+        <div id="canvas-container">
+            <canvas id="inputCanvas" width="256" height="256"></canvas>
+            <br>
+            <button onclick="loadImage()">Load Image</button>
+            <br>
+            <button onclick="applyFourier()">Apply Fourier Transform</button>
+            <br>
+            <button onclick="applyInverseFourier()">Inverse Fourier Transform</button>
+            <br>
+            <button onclick="applyFourierHorizontal()">Apply Horizontal 1D Fourier Transform</button>
+            <br>
+            <button onclick="applyFourierVertical()">Apply Vertical 1D Fourier Transform</button>
+            <br>
+            <button onclick="saveImage()">Save Image</button>
+            <br>
+<label for="kernel">Custom Kernel (comma-separated):</label>
+<input type="text" id="kernel" placeholder="" value="sin(x*tx)+cos(y*ty)">
+<br>
+<label for="t1">t1 (lower limit for tx):</label>
+<input type="number" id="t1" placeholder="e.g., 0" value="-1">
+<br>
+<label for="t2">t2 (upper limit for tx):</label>
+<input type="number" id="t2" placeholder="e.g., 1" value="1">
+<br>
+<label for="t3">t3 (lower limit for ty):</label>
+<input type="number" id="t3" placeholder="e.g., 0" value="-1">
+<br>
+<label for="t4">t4 (upper limit for ty):</label>
+<input type="number" id="t4" placeholder="e.g., 1" value="1">
+<br>
+<label for="x">x:</label>
+<input type="number" id="x" placeholder="e.g., 1" value="1">
+<br>
+<label for="y">y:</label>
+<input type="number" id="y" placeholder="e.g., 1" value="1">
+<br>
+<button onclick="applyKernel()">Apply Kernel</button>
+        </div>
+        <div>
+            <canvas id="outputCanvas" width="256" height="256"></canvas>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.0/math.js"></script>
+    <script>
+        const inputCanvas = document.getElementById('inputCanvas');
+        const inputCtx = inputCanvas.getContext('2d');
+        const outputCanvas = document.getElementById('outputCanvas');
+        const outputCtx = outputCanvas.getContext('2d');
+
+        let imageData = null;
+        let customKernel = null;
+
+        function loadImage() {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            fileInput.onchange = function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const inputImage = new Image();
+                        inputImage.onload = function() {
+                            inputCtx.clearRect(0, 0, inputCanvas.width, inputCanvas.height);
+                            inputCtx.drawImage(inputImage, 0, 0, inputCanvas.width, inputCanvas.height);
+                            imageData = inputCtx.getImageData(0, 0, inputCanvas.width, inputCanvas.height);
+                        };
+                        inputImage.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            fileInput.click();
+        }
+
+        function applyFourier() {
+            if (!imageData) {
+                alert('Please load an image first.');
+                return;
+            }
+
+            const width = inputCanvas.width;
+            const height = inputCanvas.height;
+            const grayscale = new Array(width * height);
+
+            for (let i = 0; i < imageData.data.length; i += 4) {
+                const r = imageData.data[i];
+                const g = imageData.data[i + 1];
+                const b = imageData.data[i + 2];
+                grayscale[i / 4] = (r + g + b) / 3;
+            }
+
+            const fftData = fft2d(grayscale, width, height);
+
+            const magnitude = new Array(width * height);
+            for (let i = 0; i < fftData.length; i++) {
+                magnitude[i] = Math.sqrt(fftData[i].re * fftData[i].re + fftData[i].im * fftData[i].im);
+            }
+
+            const outputImageData = outputCtx.createImageData(width, height);
+            for (let i = 0; i < magnitude.length; i++) {
+                const value = magnitude[i];
+                outputImageData.data[i * 4] = value;
+                outputImageData.data[i * 4 + 1] = value;
+                outputImageData.data[i * 4 + 2] = value;
+                outputImageData.data[i * 4 + 3] = 255;
+            }
+
+            outputCtx.putImageData(outputImageData, 0, 0);
+        }
+
+        function applyInverseFourier() {
+            if (!imageData) {
+                alert('Please load an image first.');
+                return;
+            }
+
+            const width = inputCanvas.width;
+            const height = inputCanvas.height;
+            const grayscale = new Array(width * height);
+
+            for (let i = 0; i < imageData.data.length; i += 4) {
+                const r = imageData.data[i];
+                const g = imageData.data[i + 1];
+                const b = imageData.data[i + 2];
+                grayscale[i / 4] = (r + g + b) / 3;
+            }
+
+            const ifftData = ifft2d(grayscale, width, height);
+
+            const outputImageData = outputCtx.createImageData(width, height);
+            for (let i = 0; i < ifftData.length; i++) {
+                const value = Math.max(0, Math.min(255, ifftData[i]));
+                outputImageData.data[i * 4] = value;
+                outputImageData.data[i * 4 + 1] = value;
+                outputImageData.data[i * 4 + 2] = value;
+                outputImageData.data[i * 4 + 3] = 255;
+            }
+
+            outputCtx.putImageData(outputImageData, 0, 0);
+        }
+
+        function applyFourierHorizontal() {
+            if (!imageData) {
+                alert('Please load an image first.');
+                return;
+            }
+
+            const width = inputCanvas.width;
+            const height = inputCanvas.height;
+            const grayscale = new Array(width * height);
+
+            for (let i = 0; i < imageData.data.length; i += 4) {
+                const r = imageData.data[i];
+                const g = imageData.data[i + 1];
+                const b = imageData.data[i + 2];
+                grayscale[i / 4] = (r + g + b) / 3;
+            }
+
+            const fftData = fft1dHorizontal(grayscale, width, height);
+
+            const magnitude = new Array(width * height);
+            for (let i = 0; i < fftData.length; i++) {
+                magnitude[i] = Math.sqrt(fftData[i].re * fftData[i].re + fftData[i].im * fftData[i].im);
+            }
+
+            const outputImageData = outputCtx.createImageData(width, height);
+            for (let i = 0; i < magnitude.length; i++) {
+                const value = magnitude[i];
+                outputImageData.data[i * 4] = value;
+                outputImageData.data[i * 4 + 1] = value;
+                outputImageData.data[i * 4 + 2] = value;
+                outputImageData.data[i * 4 + 3] = 255;
+            }
+
+            outputCtx.putImageData(outputImageData, 0, 0);
+        }
+
+        function applyFourierVertical() {
+            if (!imageData) {
+                alert('Please load an image first.');
+                return;
+            }
+
+            const width = inputCanvas.width;
+            const height = inputCanvas.height;
+            const grayscale = new Array(width * height);
+
+            for (let i = 0; i < imageData.data.length; i += 4) {
+                const r = imageData.data[i];
+                const g = imageData.data[i + 1];
+                const b = imageData.data[i + 2];
+                grayscale[i / 4] = (r + g + b) / 3;
+            }
+
+            const fftData = fft1dVertical(grayscale, width, height);
+
+            const magnitude = new Array(width * height);
+            for (let i = 0; i < fftData.length; i++) {
+                magnitude[i] = Math.sqrt(fftData[i].re * fftData[i].re + fftData[i].im * fftData[i].im);
+            }
+
+            const outputImageData = outputCtx.createImageData(width, height);
+            for (let i = 0; i < magnitude.length; i++) {
+                const value = magnitude[i];
+                outputImageData.data[i * 4] = value;
+                outputImageData.data[i * 4 + 1] = value;
+                outputImageData.data[i * 4 + 2] = value;
+                outputImageData.data[i * 4 + 3] = 255;
+            }
+
+            outputCtx.putImageData(outputImageData, 0, 0);
+        }
+
+        function saveImage() {
+            const dataUrl = outputCanvas.toDataURL();
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = 'output.png';
+            a.click();
+        }
+
+function applyKernel() {
+    if (!imageData) {
+        alert('Please load an image first.');
+        return;
+    }
+
+    const kernelInput = document.getElementById('kernel').value;
+    const t1 = parseFloat(document.getElementById('t1').value); // Lower limit for tx
+    const t2 = parseFloat(document.getElementById('t2').value); // Upper limit for tx
+    const t3 = parseFloat(document.getElementById('t3').value); // Lower limit for ty
+    const t4 = parseFloat(document.getElementById('t4').value); // Upper limit for ty
+
+    if (!kernelInput || isNaN(t1) || isNaN(t2) || isNaN(t3) || isNaN(t4)) {
+        alert('Please enter valid kernel and limits.');
+        return;
+    }
+
+    const width = inputCanvas.width;
+    const height = inputCanvas.height;
+    const outputImageData = outputCtx.createImageData(width, height);
+
+    // Define the kernel function using math.evaluate
+    const kernel = (tx, ty, x, y) => math.evaluate(kernelInput, { tx, ty, x, y });
+
+    // Loop through each pixel of the image
+for (let x = 0; x < width; x += 2) {
+    for (let y = 0; y < height; y += 2) {
+        // Compute the double integral for the current 4x4 tile (starting at (x, y))
+        let integralSum = 0;
+        for (let tx = 0; tx < x + 2 && tx < width; tx++) {
+            for (let ty = 0; ty < y + 2 && ty < height; ty++) {
+                // Get the pixel value at (tx, ty) from the input image
+                const pixelIndex = (Math.floor(ty) * width + Math.floor(tx)) * 4;
+                const r = imageData.data[pixelIndex];
+                const g = imageData.data[pixelIndex + 1];
+                const b = imageData.data[pixelIndex + 2];
+                const grayscale = (r + g + b) / 3; // Convert to grayscale
+
+                // Apply the kernel to compute the weighted sum for the tile
+                integralSum += grayscale * kernel(tx, ty, x, y);
+            }
+        }
+
+        // Compute the final integral for the 4x4 tile
+        const integral = integralSum; // You can apply further normalization or adjustments if needed
+
+        // Set the result to the output image (for the entire 4x4 tile)
+        for (let tx = x; tx < x + 2 && tx < width; tx++) {
+            for (let ty = y; ty < y + 2 && ty < height; ty++) {
+                const outputIndex = (ty * width + tx) * 4;
+                outputImageData.data[outputIndex] = integral;       // Red
+                outputImageData.data[outputIndex + 1] = integral;   // Green
+                outputImageData.data[outputIndex + 2] = integral;   // Blue
+                outputImageData.data[outputIndex + 3] = 255;        // Alpha
+            }
+        }
+    }
+}
+
+// Draw the output image
+outputCtx.putImageData(outputImageData, 0, 0);
+
+}
+// Numerical double integration using the trapezoidal rule
+function doubleIntegral(func, tx1, tx2, ty1, ty2, n = 10) {
+    const hx = (tx2 - tx1) / n;
+    const hy = (ty2 - ty1) / n;
+    let sum = 0;
+
+    for (let i = 0; i <= n; i++) {
+        const tx = tx1 + i * hx;
+        for (let j = 0; j <= n; j++) {
+            const ty = ty1 + j * hy;
+            let weight = 1;
+            if (i === 0 || i === n) weight *= 0.5;
+            if (j === 0 || j === n) weight *= 0.5;
+            sum += weight * func(tx, ty);
+        }
+    }
+
+    return sum * hx * hy;
+}
+
+
+        function fft2d(input, width, height) {
+            const data = new Array(width * height);
+            for (let i = 0; i < height; i++) {
+                const row = input.slice(i * width, (i + 1) * width);
+                const rowFft = fft(row);
+                for (let j = 0; j < width; j++) {
+                    data[i * width + j] = rowFft[j];
+                }
+            }
+
+            for (let i = 0; i < width; i++) {
+                const col = new Array(height);
+                for (let j = 0; j < height; j++) {
+                    col[j] = data[j * width + i];
+                }
+                const colFft = fft(col);
+                for (let j = 0; j < height; j++) {
+                    data[j * width + i] = colFft[j];
+                }
+            }
+
+            return data;
+        }
+
+        function ifft2d(input, width, height) {
+            const data = new Array(width * height);
+            for (let i = 0; i < height; i++) {
+                const row = input.slice(i * width, (i + 1) * width);
+                const rowIfft = ifft(row);
+                for (let j = 0; j < width; j++) {
+                    data[i * width + j] = rowIfft[j];
+                }
+            }
+
+            for (let i = 0; i < width; i++) {
+                const col = new Array(height);
+                for (let j = 0; j < height; j++) {
+                    col[j] = data[j * width + i];
+                }
+                const colIfft = ifft(col);
+                for (let j = 0; j < height; j++) {
+                    data[j * width + i] = colIfft[j];
+                }
+            }
+
+            return data;
+        }
+
+        function fft1dHorizontal(input, width, height) {
+            const data = new Array(input.length);
+            for (let i = 0; i < height; i++) {
+                const row = input.slice(i * width, (i + 1) * width);
+                const rowFft = fft(row);
+                for (let j = 0; j < width; j++) {
+                    data[i * width + j] = rowFft[j];
+                }
+            }
+            return data;
+        }
+
+        function fft1dVertical(input, width, height) {
+            const data = new Array(input.length);
+            for (let i = 0; i < width; i++) {
+                const col = new Array(height);
+                for (let j = 0; j < height; j++) {
+                    col[j] = input[j * width + i];
+                }
+                const colFft = fft(col);
+                for (let j = 0; j < height; j++) {
+                    data[j * width + i] = colFft[j];
+                }
+            }
+            return data;
+        }
+
+        function fft(input) {
+            const n = input.length;
+            if (n <= 1) return input;
+
+            const even = fft(input.filter((_, index) => index % 2 === 0));
+            const odd = fft(input.filter((_, index) => index % 2 !== 0));
+
+            const result = new Array(n);
+            for (let i = 0; i < n / 2; i++) {
+                const t = math.multiply(math.exp(math.complex(0, -2 * Math.PI * i / n)), odd[i]);
+                result[i] = math.add(even[i], t);
+                result[i + n / 2] = math.subtract(even[i], t);
+            }
+            return result;
+        }
+
+        function ifft(input) {
+            const n = input.length;
+            const conjugate = input.map(x => math.conj(x));
+            const result = fft(conjugate);
+            return result.map(x => math.divide(x, n));
+        }
+    </script>
+</body>
+</html>

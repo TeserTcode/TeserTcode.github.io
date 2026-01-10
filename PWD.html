@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Powder Engine</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #222;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 1px solid #444;
+            margin-top: 10px;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 10px;
+            color: white;
+        }
+        select, button {
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="color: white;">Powder Engine</h1>
+    <div class="controls">
+        <select id="material">
+            <option value="0">Empty</option>
+            <option value="1" selected>Sand (Powder)</option>
+            <option value="2">Water (Liquid)</option>
+            <option value="3">Stone (Solid)</option>
+            <option value="4">Smoke (Gas)</option>
+            <option value="5">Steam (Light Gas)</option>
+        </select>
+        <button id="clear">Clear</button>
+        <div>
+            Liquid Viscosity: <span id="viscosity-value">5</span>
+            <input type="range" id="viscosity" min="1" max="10" value="5">
+        </div>
+        <div>
+            Gravity: <span id="gravity-value">0.5</span>
+            <input type="range" id="gravity" min="0" max="10" value="5" step="0.1">
+        </div>
+    </div>
+    <canvas id="canvas" width="200" height="100"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const materialSelect = document.getElementById('material');
+        const clearButton = document.getElementById('clear');
+        const viscositySlider = document.getElementById('viscosity');
+        const viscosityValue = document.getElementById('viscosity-value');
+        const gravitySlider = document.getElementById('gravity');
+        const gravityValue = document.getElementById('gravity-value');
+
+        // World dimensions
+        const WIDTH = 200;
+        const HEIGHT = 100;
+        
+        // Material types
+        const EMPTY = 0;
+        const SAND = 1;
+        const WATER = 2;
+        const STONE = 3;
+        const SMOKE = 4;
+        const STEAM = 5;
+        
+        // Material colors
+        const COLORS = [
+            [0, 0, 0],       // Empty
+            [194, 178, 128], // Sand
+            [64, 164, 223],   // Water
+            [128, 128, 128],  // Stone
+            [100, 100, 100],  // Smoke
+            [220, 220, 255]   // Steam
+        ];
+        
+        // Material properties
+        const MATERIAL_PROPERTIES = {
+            [SAND]: {type: 'powder', angle: 0.5, density: 10},
+            [WATER]: {type: 'liquid', viscosity: 5, density: 5},
+            [STONE]: {type: 'solid'},
+            [SMOKE]: {type: 'gas', weight: 0.5},
+            [STEAM]: {type: 'gas', weight: -0.5}
+        };
+        
+        // Initialize world grid
+        let world = new Array(WIDTH);
+        for (let x = 0; x < WIDTH; x++) {
+            world[x] = new Array(HEIGHT).fill(EMPTY);
+        }
+        
+        // Current selected material
+        let currentMaterial = SAND;
+        let brushSize = 3;
+        let isDrawing = false;
+        
+        // Event listeners
+        materialSelect.addEventListener('change', (e) => {
+            currentMaterial = parseInt(e.target.value);
+        });
+        
+        clearButton.addEventListener('click', () => {
+            for (let x = 0; x < WIDTH; x++) {
+                for (let y = 0; y < HEIGHT; y++) {
+                    world[x][y] = EMPTY;
+                }
+            }
+        });
+        
+        viscositySlider.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            viscosityValue.textContent = value;
+            MATERIAL_PROPERTIES[WATER].viscosity = value;
+        });
+        
+        gravitySlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 10;
+            gravityValue.textContent = value.toFixed(1);
+        });
+        
+        canvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            drawAtPosition(e);
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDrawing) {
+                drawAtPosition(e);
+            }
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            isDrawing = false;
+        });
+        
+        canvas.addEventListener('mouseleave', () => {
+            isDrawing = false;
+        });
+        
+        function drawAtPosition(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor((e.clientX - rect.left) * (canvas.width / rect.width));
+            const y = Math.floor((e.clientY - rect.top) * (canvas.height / rect.height));
+            
+            for (let dx = -brushSize; dx <= brushSize; dx++) {
+                for (let dy = -brushSize; dy <= brushSize; dy++) {
+                    const nx = x + dx;
+                    const ny = y + dy;
+                    if (nx >= 0 && nx < WIDTH && ny >= 0 && ny < HEIGHT && (dx*dx + dy*dy) <= brushSize*brushSize) {
+                        world[nx][ny] = currentMaterial;
+                    }
+                }
+            }
+        }
+        
+        function updateWorld() {
+            // Process from bottom to top for powders and liquids
+            for (let y = HEIGHT - 2; y >= 0; y--) {
+                for (let x = 0; x < WIDTH; x++) {
+                    const material = world[x][y];
+                    const props = MATERIAL_PROPERTIES[material];
+                    
+                    if (!props) continue;
+                    
+                    if (props.type === 'powder') {
+                        updatePowder(x, y, props);
+                    } else if (props.type === 'liquid') {
+                        updateLiquid(x, y, props);
+                    }
+                }
+            }
+            
+            // Process from top to bottom for gases
+            for (let y = 1; y < HEIGHT; y++) {
+                for (let x = 0; x < WIDTH; x++) {
+                    const material = world[x][y];
+                    const props = MATERIAL_PROPERTIES[material];
+                    
+                    if (props && props.type === 'gas') {
+                        updateGas(x, y, props);
+                    }
+                }
+            }
+        }
+        
+        function updatePowder(x, y, props) {
+            // Check below
+            if (y < HEIGHT - 1 && isEmptyOrGas(x, y + 1)) {
+                swapCells(x, y, x, y + 1);
+                return;
+            }
+            
+            // Check diagonally down based on angle
+            const angle = props.angle;
+            const dir = Math.random() < angle ? -1 : 1;
+            
+            if (y < HEIGHT - 1) {
+                if (x > 0 && dir === -1 && isEmptyOrGas(x - 1, y + 1)) {
+                    swapCells(x, y, x - 1, y + 1);
+                    return;
+                }
+                if (x < WIDTH - 1 && dir === 1 && isEmptyOrGas(x + 1, y + 1)) {
+                    swapCells(x, y, x + 1, y + 1);
+                    return;
+                }
+            }
+        }
+        
+        function updateLiquid(x, y, props) {
+            // Check below
+            if (y < HEIGHT - 1 && isEmptyOrGas(x, y + 1)) {
+                swapCells(x, y, x, y + 1);
+                return;
+            }
+            
+            // Check sides with viscosity
+            const viscosity = props.viscosity;
+            const shouldMove = Math.random() < (1 / viscosity);
+            
+            if (shouldMove) {
+                const dir = Math.random() < 0.5 ? -1 : 1;
+                
+                if (dir === -1 && x > 0 && isEmptyOrGas(x - 1, y)) {
+                    swapCells(x, y, x - 1, y);
+                    return;
+                }
+                if (dir === 1 && x < WIDTH - 1 && isEmptyOrGas(x + 1, y)) {
+                    swapCells(x, y, x + 1, y);
+                    return;
+                }
+                
+                // Try the other direction if first failed
+                if (dir === -1 && x < WIDTH - 1 && isEmptyOrGas(x + 1, y)) {
+                    swapCells(x, y, x + 1, y);
+                    return;
+                }
+                if (dir === 1 && x > 0 && isEmptyOrGas(x - 1, y)) {
+                    swapCells(x, y, x - 1, y);
+                    return;
+                }
+            }
+            
+            // Check diagonally down
+            if (y < HEIGHT - 1) {
+                if (x > 0 && isEmptyOrGas(x - 1, y + 1)) {
+                    swapCells(x, y, x - 1, y + 1);
+                    return;
+                }
+                if (x < WIDTH - 1 && isEmptyOrGas(x + 1, y + 1)) {
+                    swapCells(x, y, x + 1, y + 1);
+                    return;
+                }
+            }
+        }
+        
+        function updateGas(x, y, props) {
+            // Check above based on weight
+            const weight = props.weight;
+            const moveUpProbability = 0.5 + (weight * -0.5);
+            
+            if (Math.random() < moveUpProbability && y > 0 && world[x][y - 1] === EMPTY) {
+                swapCells(x, y, x, y - 1);
+                return;
+            }
+            
+            // Random horizontal movement
+            if (Math.random() < 0.3) {
+                const dir = Math.random() < 0.5 ? -1 : 1;
+                
+                if (dir === -1 && x > 0 && world[x - 1][y] === EMPTY) {
+                    swapCells(x, y, x - 1, y);
+                    return;
+                }
+                if (dir === 1 && x < WIDTH - 1 && world[x + 1][y] === EMPTY) {
+                    swapCells(x, y, x + 1, y);
+                    return;
+                }
+            }
+            
+            // Sometimes move down (especially for heavy gases)
+            if (Math.random() < (1 - moveUpProbability) && y < HEIGHT - 1 && world[x][y + 1] === EMPTY) {
+                swapCells(x, y, x, y + 1);
+                return;
+            }
+        }
+        
+        function isEmptyOrGas(x, y) {
+            const material = world[x][y];
+            return material === EMPTY || (MATERIAL_PROPERTIES[material] && MATERIAL_PROPERTIES[material].type === 'gas');
+        }
+        
+        function swapCells(x1, y1, x2, y2) {
+            const temp = world[x1][y1];
+            world[x1][y1] = world[x2][y2];
+            world[x2][y2] = temp;
+        }
+        
+        function render() {
+            const imageData = ctx.createImageData(WIDTH, HEIGHT);
+            const data = imageData.data;
+            
+            for (let y = 0; y < HEIGHT; y++) {
+                for (let x = 0; x < WIDTH; x++) {
+                    const material = world[x][y];
+                    const color = COLORS[material] || [0, 0, 0];
+                    const index = (y * WIDTH + x) * 4;
+                    
+                    data[index] = color[0];     // R
+                    data[index + 1] = color[1]; // G
+                    data[index + 2] = color[2]; // B
+                    data[index + 3] = 255;      // A
+                }
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+        }
+        
+        function gameLoop() {
+            updateWorld();
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Start the simulation
+        gameLoop();
+    </script>
+</body>
+</html>

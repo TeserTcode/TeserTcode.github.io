@@ -124,7 +124,16 @@
                 tens: { i0: '', i1: 'D', i2: 'Vg', i3: 'Tg', i4: 'Qg', i5: 'Kg', i6: 'Sg', i7: 'Hg', i8: 'Og', i9: 'Ng' },
                 hundreds: { i0: '', i1: 'Ce', i2: 'De', i3: 'Te', i4: 'Qe', i5: 'Ke', i6: 'Se', i7: 'He', i8: 'Oe', i9: 'Ne' },
                 major: { i0: '', i1: 'Mi', i2: 'Bi', i3: 'Ti', i4: 'Qi', i5: 'Ki', i6: 'Si', i7: 'Hi', i8: 'Oi', i9: 'Ni',
-                    i10: "Vc", i11: "Mc", i12: "Dc", i13: "Tc", i14: "Qc", i15: "Kc", i16: "Sc", i17: "Hc", i18: "Oc", i19: "Nc",
+                    i10: "Vc", i11: "Mmc", i12: "Dmc", i13: "Tmc", i14: "Qmc", i15: "Kmc", i16: "Smc", i17: "Hmc", i18: "Omc", i19: "Nrc",
+                    i20: "Brc", i21: "Mic", i22: "Dic", i23: "Tic", i24: "Qic", i25: "Kic", i26: "Sic", i27: "Hic", i28: "Oic", i29: "Nic",
+                    i30: "Trc", i31: "Mtc", i32: "Dtc", i33: "Ttc", i34: "Qtc", i35: "Ktc", i36: "Stc", i37: "Htc", i38: "Otc", i39: "Ntc",
+                    i40: "Qrc", i41: "Mqc", i42: "Dqc", i43: "Tqc", i44: "Qqc", i45: "Kqc", i46: "Sqc", i47: "Hqc", i48: "Oqc", i49: "Nqc",
+                    i50: "Krc", i51: "Mkc", i52: "Dkc", i53: "Tkc", i54: "Qkc", i55: "Kkc", i56: "Skc", i57: "Hkc", i58: "Okc", i59: "Nkc",
+                    i60: "Src", i61: "Msc", i62: "Dsc", i63: "Tsc", i64: "Qsc", i65: "Ksc", i66: "Ssc", i67: "Hsc", i68: "Osc", i69: "Nsc",
+                    i70: "Hrc", i71: "Mhc", i72: "Dhc", i73: "Thc", i74: "Qhc", i75: "Khc", i76: "Shc", i77: "Hhc", i78: "Ohc", i79: "Nhc",
+                    i80: "Orc", i81: "Moc", i82: "Doc", i83: "Toc", i84: "Qoc", i85: "Koc", i86: "Soc", i87: "Hoc", i88: "Ooc", i89: "Noc",
+                    i90: "Nrc", i91: "Mnc", i92: "Dnc", i93: "Tnc", i94: "Qnc", i95: "Knc", i96: "Snc", i97: "Hnc", i98: "Onc", i99: "Nnc",
+                    i100: "Hc"
                 },
             },
             taco: {
@@ -145,61 +154,107 @@
             }
         };
 
-        function name(x, layer) {
-            const Abbreviations = Abbrevs[document.getElementById('abbreviationSelect').value];
-            let data = [0, 0, 0, 0];
-            let abbrev = '';
-            if (x === 1 && layer === 0) return 'k';
-            if (x === 0) return '';
-            if (layer !== 0) x++;
-            data[0] = Math.floor((x - 1) / 1000);
-            data[1] = Math.floor((x - 1) / 100) % 10;
-            data[2] = Math.floor((x - 1) / 10) % 10;
-            data[3] = (x - 1) % 10;
-            if ((x - 1) % 1000 < 10) {
-                if (data[3] !== 1 || layer < 3) {
-                    abbrev = data[3] !== 0 ? Abbreviations.minor[`i${data[3]}`] + Abbreviations.major[`i${layer}`] : '';
-                } else {
-                    abbrev = Abbreviations.major[`i${layer}`];
-                }
-            } else if (data[2] === 1 && data[1] === 0) {
-                abbrev = Abbreviations.ones[`i${data[3]}`] + "D" + Abbreviations.major[`i${layer}`];
-            } else {
-                abbrev = Abbreviations.ones[`i${data[3]}`] + Abbreviations.tens[`i${data[2]}`] + Abbreviations.hundreds[`i${data[1]}`] + Abbreviations.major[`i${layer}`];
-            }
-            return data[0] === 0 ? abbrev : name(data[0], layer + 1) + abbrev;
+function name(x, layer) {
+    const Abbreviations = Abbrevs[document.getElementById('abbreviationSelect').value];
+    let data = [0, 0, 0, 0];
+    let abbrev = '';
+    if (x === 1 && layer === 0) return 'k';
+    if (x === 0) return '';
+    if (layer !== 0) x++;
+    data[0] = Math.floor((x - 1) / 1000);
+    data[1] = Math.floor((x - 1) / 100) % 10;
+    data[2] = Math.floor((x - 1) / 10) % 10;
+    data[3] = (x - 1) % 10;
+    if ((x - 1) % 1000 < 10) {
+        if (data[3] !== 1 || layer < 3) {
+            abbrev = data[3] !== 0 ? Abbreviations.minor[`i${data[3]}`] + Abbreviations.major[`i${layer}`] : '';
+        } else {
+            abbrev = Abbreviations.major[`i${layer}`];
         }
+    } else if (data[2] === 1 && data[1] === 0) {
+        abbrev = Abbreviations.ones[`i${data[3]}`] + "D" + Abbreviations.major[`i${layer}`];
+    } else {
+        abbrev = Abbreviations.ones[`i${data[3]}`] + Abbreviations.tens[`i${data[2]}`] + Abbreviations.hundreds[`i${data[1]}`] + Abbreviations.major[`i${layer}`];
+    }
+    return data[0] === 0 ? abbrev : name(data[0], layer + 1) + abbrev;
+}
 
-        function power(a, b) {
-            try {
-                let lognumber = b * Math.log10(a);
-                let mod3 = Math.floor((3 - (lognumber % 3)));
-                let illion = Math.floor(lognumber / 3);
-                let number = Math.pow(10, lognumber % 3);
-                number = Math.floor(number * Math.pow(10, mod3)) / Math.pow(10, mod3);
-                if (illion < 0) {
-                    return number + name(-illion, 0) + "th";
-                } else {
-                    return number + name(illion, 0);
-                }
-            } catch (error) {
-                return "err";
-            }
+function power(a, b) {
+    try {
+        // Handle cases where a is 1 or 0
+        if (a === 1) return "1";
+        if (a === 0) return b === 0 ? "undefined" : "0";
+        
+        // Handle negative base with integer exponent
+        if (a < 0 && Number.isInteger(b)) {
+            return Math.pow(a, b) < 0 ? "-" + power(-a, b) : power(-a, b);
         }
+        
+        let lognumber;
+        if (b > 1e308) {
+            // For extremely large b, compute log10(b) first
+            const logb = Math.log10(b);
+            lognumber = logb + Math.log10(Math.log10(a));
+        } else {
+            lognumber = b * Math.log10(a);
+        }
+        
+        let mod3 = Math.floor((3 - (lognumber % 3)));
+        let illion = Math.floor(lognumber / 3);
+        let number = Math.pow(10, lognumber % 3);
+        number = Math.floor(number * Math.pow(10, mod3)) / Math.pow(10, mod3);
+        
+        if (illion < 0) {
+            return number + name(-illion, 0) + "th";
+        } else {
+            return number + name(illion, 0);
+        }
+    } catch (error) {
+        return "err";
+    }
+}
 
-        function calculate() {
-            let base = parseFloat(document.getElementById('headInput').value);
-            let exponent = parseFloat(document.getElementById('exponentInput').value);
-            let expoexponent = parseFloat(document.getElementById('expoexponentInput').value);
-            
-            const result = power(base, Math.pow(exponent, expoexponent));
-            
-            if (document.getElementById('showEquation').checked) {
-                document.getElementById('result').textContent = `${base}^${exponent}^${expoexponent} = ${result}`;
-            } else {
-                document.getElementById('result').textContent = result;
-            }
+function calculate() {
+    try {
+        let base = parseFloat(document.getElementById('headInput').value);
+        let exponent = parseFloat(document.getElementById('exponentInput').value);
+        let expoexponent = parseFloat(document.getElementById('expoexponentInput').value);
+        
+        // Handle cases where exponent is 1 or 0
+        if (exponent === 1) {
+            const result = base;
+            displayResult(base, exponent, expoexponent, result);
+            return;
         }
+        if (exponent === 0) {
+            const result = 1;
+            displayResult(base, exponent, expoexponent, result);
+            return;
+        }
+        
+        // Calculate the exponent in logarithmic form
+        let actualExponent;
+        if (expoexponent === 0) {
+            actualExponent = 1;
+        } else {
+            const logExponent = Math.log10(exponent);
+            actualExponent = Math.pow(10, expoexponent * logExponent);
+        }
+        
+        const result = power(base, actualExponent);
+        displayResult(base, exponent, expoexponent, result);
+    } catch (error) {
+        document.getElementById('result').textContent = "Error in calculation";
+    }
+}
+
+function displayResult(base, exponent, expoexponent, result) {
+    if (document.getElementById('showEquation').checked) {
+        document.getElementById('result').textContent = `${base}^${exponent}^${expoexponent} = ${result}`;
+    } else {
+        document.getElementById('result').textContent = result;
+    }
+}
     </script>
 </body>
 </html>

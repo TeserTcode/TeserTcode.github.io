@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Health Visualization</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: black; }
+        canvas { display: block; width: 100vw; height: 100vh; }
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            color: white;
+            font-family: monospace;
+            z-index: 100;
+        }
+        textarea {
+            width: 300px;
+            height: 150px;
+            background: #222;
+            color: white;
+            border: 1px solid #444;
+        }
+        button {
+            background: #444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        .format-selector {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <p>Enter health array:</p>
+        <div class="format-selector">
+            <button onclick="setFormat('brackets')">Curly Brackets Format</button>
+            <button onclick="setFormat('commas')">Comma-Separated Format</button>
+        </div>
+        <textarea id="healthInput">{
+    110, 0, 110, 0, 110, 0, 110, 0, 110, 0
+},
+{
+    110, 0, 110, 0, 110, 0, 110, 0, 110, 0
+},
+{
+    110, 0, 110, 0, 110, 0, 110, 0, 110, 0
+}</textarea>
+        <button onclick="updateHealth()">Update</button>
+    </div>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        // Global variables
+        let health = [
+            [110,0,110,0,110,0,110,0,110,0],
+            [110,0,110,0,110,0,110,0,110,0],
+            [110,0,110,0,110,0,110,0,110,0]
+        ];
+        const bands = [10.0, 50.0, 150.0, 2550.0, 40950.0, 655350.0, 5000000.0, 10000000.0];
+        let canvas, ctx;
+        let currentFormat = 'brackets';
+
+        function setFormat(format) {
+            currentFormat = format;
+            if (format === 'brackets') {
+                document.getElementById('healthInput').value = `{
+    110, 0, 110, 0, 110, 0, 110, 0, 110, 0
+},
+{
+    110, 0, 110, 0, 110, 0, 110, 0, 110, 0
+},
+{
+    110, 0, 110, 0, 110, 0, 110, 0, 110, 0
+}`;
+            } else {
+                document.getElementById('healthInput').value = `110,0,110,0,110,0,110,0,110,0
+110,0,110,0,110,0,110,0,110,0
+110,0,110,0,110,0,110,0,110,0`;
+            }
+        }
+
+        // Initialize Canvas
+        function initCanvas() {
+            canvas = document.getElementById('canvas');
+            ctx = canvas.getContext('2d');
+            
+            if (!ctx) {
+                alert('Unable to initialize Canvas. Your browser may not support it.');
+                return;
+            }
+            
+            // Set the canvas size
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // Main render loop
+            function render() {
+                drawScene();
+                requestAnimationFrame(render);
+            }
+            render();
+        }
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        // Color palette function
+        function pallet(t, a, b, c, d, indx) {
+            let vector = [
+                6.28318 * (c[0] * t + d[0]),
+                6.28318 * (c[1] * t + d[1]),
+                6.28318 * (c[2] * t + d[2])
+            ];
+            
+            // Apply cosine
+            vector[0] = a[0] + b[0] * Math.cos(vector[0]);
+            vector[1] = a[1] + b[1] * Math.cos(vector[1]);
+            vector[2] = a[2] + b[2] * Math.cos(vector[2]);
+            
+            let out = vector[indx];
+            out = (out + Math.abs(out)) / 2; // Normalize to 0-1 range
+            return out;
+        }
+
+        // Health to color conversion
+        function healthToColor(healthVal, indx) {
+            // Return black for zero health
+            if (healthVal === 0) return 0;
+            
+            let r, g, b;
+            
+            let q = [0.6, 0.6, 0.6];
+            let w = [0.4, 0.4, 0.4];
+            let e = [0.53*5, 0.92*5, 0.27*5];
+            let f = [0.57, 0.53, 0.92];
+            
+            let aq = [0.6, 0.6, 0.6];
+            let aw = [0.4, 0.4, 0.4];
+            let ae = [0.6, 0.6, 0.6];
+            let af = [0, 0.33, 0.67];
+            
+            if (healthVal >= bands[7]) {
+                r = pallet((Math.log(healthVal) - 6.0) / 11.0, q, w, e, f, 0);
+                g = pallet((Math.log(healthVal) - 6.0) / 11.0, q, w, e, f, 1);
+                b = pallet((Math.log(healthVal) - 6.0) / 11.0, q, w, e, f, 2);
+            } else {
+                r = pallet((Math.log(healthVal)) / 11.0 + 1.15, aq, aw, ae, af, 0);
+                g = pallet((Math.log(healthVal)) / 11.0 + 1.15, aq, aw, ae, af, 1);
+                b = pallet((Math.log(healthVal)) / 11.0 + 1.15, aq, aw, ae, af, 2);
+            }
+            
+            switch(indx) {
+                case 0: return r;
+                case 1: return g;
+                case 2: return b;
+                default: return 0;
+            }
+        }
+
+        // Draw a block
+        function drawBlock(healthVal, x, y, rows, cols, type = 0, armor = 0) {
+            let dis = 2.0 / Math.max(cols, rows);
+            
+            let xmin = -1.0 + x * dis;
+            let xmax = -1.0 + (x + 1) * dis;
+            let ymin = -1.0 + y * dis;
+            let ymax = -1.0 + (y + 1) * dis;
+            
+            // Convert from -1 to 1 coordinates to canvas coordinates
+            const canvasX = (ymin + 1) * canvas.width / 2;
+            const canvasY = (xmin + 1) * canvas.height / 2;
+            const width = (ymax - ymin) * canvas.width / 2;
+            const height = (xmax - xmin) * canvas.height / 2;
+            
+            // Draw armor background
+            switch(armor) {
+                case 1: 
+                    ctx.fillStyle = 'rgb(51, 51, 51)';
+                    ctx.fillRect(
+                        canvasX + width * 0.1,
+                        canvasY + height * 0.1,
+                        width * 0.8,
+                        height * 0.8
+                    );
+                    break;
+                case 2: 
+                    ctx.fillStyle = 'rgb(153, 153, 153)';
+                    ctx.fillRect(canvasX, canvasY, width, height);
+                    break;
+                // Add other armor cases as needed
+            }
+            
+            // Draw the health-colored square (smaller than the full block)
+            const innerPadding = dis/15.0;
+            const innerXmin = -1.0 + x * dis + innerPadding;
+            const innerXmax = -1.0 + (x + 1) * dis - innerPadding;
+            const innerYmin = -1.0 + y * dis + innerPadding;
+            const innerYmax = -1.0 + (y + 1) * dis - innerPadding;
+            
+            const innerCanvasX = (innerYmin + 1) * canvas.width / 2;
+            const innerCanvasY = (innerXmin + 1) * canvas.height / 2;
+            const innerWidth = (innerYmax - innerYmin) * canvas.width / 2;
+            const innerHeight = (innerXmax - innerXmin) * canvas.height / 2;
+            
+            // If health is zero, draw black box
+            if (healthVal === 0) {
+                ctx.fillStyle = 'rgb(0, 0, 0)';
+            } else {
+                let r = healthToColor(healthVal, 0);
+                let g = healthToColor(healthVal, 1);
+                let b = healthToColor(healthVal, 2);
+                ctx.fillStyle = `rgb(${Math.floor(r*255)}, ${Math.floor(g*255)}, ${Math.floor(b*255)})`;
+            }
+            ctx.fillRect(innerCanvasX, innerCanvasY, innerWidth, innerHeight);
+        }
+
+        // Main drawing function
+        function drawScene() {
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const rows = health.length;
+            if (rows === 0) return;
+            const cols = health[0].length;
+            
+            for (let x = 0; x < rows; x++) {
+                for (let y = 0; y < cols; y++) {
+                    drawBlock(health[x][cols - y - 1], rows - x - 1, cols - y - 1, rows, cols);
+                }
+            }
+        }
+
+        // Parse curly bracket format
+        function parseBracketFormat(input) {
+            // Remove all whitespace and newlines
+            let cleanInput = input.replace(/\s/g, '');
+            
+            // Extract content between curly braces
+            const rows = [];
+            const rowRegex = /\{([^}]+)\}/g;
+            let match;
+            
+            while ((match = rowRegex.exec(cleanInput)) !== null) {
+                const rowContent = match[1];
+                const values = rowContent.split(',').map(val => {
+                    const num = parseFloat(val);
+                    return isNaN(num) ? 0 : num;
+                }).filter(val => val !== undefined);
+                rows.push(values);
+            }
+            
+            return rows;
+        }
+
+        // Update health array from text input
+        function updateHealth() {
+            const inputText = document.getElementById('healthInput').value;
+            let newHealth;
+            
+            if (currentFormat === 'brackets') {
+                newHealth = parseBracketFormat(inputText);
+            } else {
+                // Comma-separated format
+                const rows = inputText.split('\n');
+                newHealth = [];
+                
+                for (let row of rows) {
+                    if (row.trim() === '') continue;
+                    const values = row.split(',').map(val => {
+                        const num = parseFloat(val.trim());
+                        return isNaN(num) ? 0 : num;
+                    });
+                    newHealth.push(values);
+                }
+            }
+            
+            // Make sure all rows have the same number of columns
+            if (newHealth.length > 0) {
+                const maxCols = Math.max(...newHealth.map(row => row.length));
+                for (let row of newHealth) {
+                    while (row.length < maxCols) {
+                        row.push(0);
+                    }
+                }
+            }
+            
+            health = newHealth;
+        }
+
+        // Initialize when page loads
+        window.onload = function() {
+            initCanvas();
+            updateHealth(); // Initialize with default values
+        };
+    </script>
+</body>
+</html>

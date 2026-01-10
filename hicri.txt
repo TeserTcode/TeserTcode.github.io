@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eternal Calendar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        h1 {
+            margin-bottom: 0;
+        }
+        h2 {
+            margin-top: 5px;
+        }
+        .calendar-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        table {
+            border-collapse: collapse;
+            margin: 20px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            width: 14.28%;
+            text-align: center;
+            vertical-align: top;
+            position: relative;
+        }
+        th {
+            background-color: #f0f0f0;
+        }
+        td {
+            transition: all 0.3s ease;
+        }
+        td.prev-month, td.next-month {
+            color: grey;
+            background-color: #f9f9f9;
+        }
+        td.prev-month span, td.next-month span {
+            color: #666;
+        }
+        td[data-tag] {
+      /*  box-shadow: inset 0 0 8px 2px var(--tag-color); */
+        }
+        .selected-day {
+            box-shadow: inset 0 0 16px 4px #ff9800 !important;
+        }
+        .tag-info {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 5px;
+            width: 200px;
+            font-size: 0.8em;
+            z-index: 10;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        td:hover .tag-info {
+            display: block;
+        }
+        input[type="number"] {
+            width: 50px;
+            margin: 5px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 5px 10px;
+        }
+        select {
+            margin: 10px;
+            padding: 5px;
+        }
+        .nav-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+		
+
+/*
+button[data-nav^="next"] {
+    background-color: #8ff0f8;
+}
+button[data-nav^="prev"] {
+    background-color: #fda0d8;
+}*/
+
+
+button[data-nav]:hover {
+    background-color: #f5f5f5;
+}
+
+.strong-glow {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.8); /* Strong glow */
+    transition: box-shadow 0.3s ease;
+}
+
+.weak-glow {
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.3); /* Weak glow */
+    transition: box-shadow 0.3s ease;
+}
+
+.no-glow {
+    box-shadow: none; /* No glow for non-this-year */
+    transition: box-shadow 0.3s ease;
+}
+		
+		
+.country-turkey {
+    box-shadow: inset 0 0 5px 1px red, inset -1px 1px 7px 2px white, inset 3px 0px 10px 3px red;
+}
+
+/* France */
+.country-france {
+    box-shadow: inset 0 0 5px 1px blue, inset -1px 1px 7px 2px white, inset 3px 0px 10px 3px red, inset 0px 5px 13px 4px blue;
+}
+
+/* Albania */
+.country-albania {
+    box-shadow: inset 0 0 5px 1px black, inset -1px 1px 7px 2px red, inset 3px 0px 10px 3px gold, inset 0px 5px 13px 4px black;
+}
+
+/* Georgia */
+.country-georgia {
+    box-shadow: inset 0 0 5px 1px red, inset -1px 1px 7px 2px white, inset 3px 0px 10px 3px green, inset 0px 5px 13px 4px red;
+}
+
+/* Kazakhstan */
+.country-kazakhstan {
+    box-shadow: inset 0 0 5px 1px #00A1E4, inset -1px 1px 7px 2px gold, inset 3px 0px 10px 3px #00A1E4;
+}
+
+/* United States */
+.country-united-states {
+    box-shadow: inset 0 0 5px 1px red, inset -1px 1px 7px 2px white, inset 3px 0px 10px 3px blue, inset 0px 5px 13px 4px red;
+}
+
+/* United Kingdom */
+.country-united-kingdom {
+    box-shadow: inset 0 0 5px 1px red, inset 0 0 7px 2px white, inset 0 0 10px 3px blue, inset 0 0 13px 4px red;
+}
+    </style>
+</head>
+<body>
+
+    <h1>Eternal Calendar</h1>
+    <h2 id="month-year">April - 2024</h2>
+    <h2 id="hijri-month-year">April - 2024</h2>
+    <div class="calendar-container">
+        <div class="nav-buttons">
+<button data-nav="prev-millenia" onclick="changeYear(-1000)">← Millenia</button>
+            <button data-nav="prev-century" onclick="changeYear(-100)">← Century</button>
+            <button data-nav="prev-decade" onclick="changeYear(-10)">← Decade</button>
+            <button data-nav="prev-year" onclick="changeYear(-1)">← Year</button>
+            <button data-nav="prev-month" onclick="changeMonth(-1)">← Month</button>
+            <button data-nav="prev-day" onclick="changeDay(-1)">← Day</button>
+        </div>
+        <table id="calendar">
+            <thead>
+                <tr>
+                    <th>Mo</th>
+                    <th>Tu</th>
+                    <th>We</th>
+                    <th>Th</th>
+                    <th>Fr</th>
+                    <th>Sa</th>
+                    <th>Su</th>
+                </tr>
+            </thead>
+            <tbody id="calendar-body">
+                <!-- Rows will be generated dynamically -->
+            </tbody>
+             <tbody id="hijri-calendar-body">
+                <!-- Rows will be generated dynamically -->
+            </tbody>
+        </table>
+        <div class="nav-buttons">
+
+            <button data-nav="next-millenia" onclick="changeYear(1000)">Millenia →</button>
+			  <button data-nav="next-century" onclick="changeYear(100)">Century →</button>
+  <button data-nav="next-decade" onclick="changeYear(10)">Decade →</button>
+   <button data-nav="next-year" onclick="changeYear(1)">Year →</button>
+     <button data-nav="next-month" onclick="changeMonth(1)">Month →</button>
+	    <button data-nav="next-day" onclick="changeDay(1)">Day →</button>
+ 
+ </div>
+    </div>
+
+    <div>
+        <input type="number" id="day-input" placeholder="Day" min="1" max="31">
+        <input type="number" id="month-input" placeholder="Month" min="1" max="12">
+        <input type="number" id="year-input" placeholder="Year" min="1900" max="2100">
+                <button onclick="generateGregorianCalendar()">Generate Gregorian Calendar</button>
+        <button onclick="generateHijriCalendar()">Generate Hijri Calendar</button>
+        <button onclick="fillFromUnixTime()">From Unix Time</button>
+        <button onclick="setCurrentTime()">Get Current Time</button>
+     
+    </div>
+
+    <select id="country-select" onchange="generateCalendar()">
+        <option value="all">All</option>
+        <option value="Turkey">Turkey</option>
+        <option value="France">France</option>
+		<option value="Albania">Albania</option>
+		<option value="Georgia">Georgia</option>
+		<option value="Kazakhstan">Kazakhstan</option>
+		<option value="United States">USA</option>
+		<option value="United Kingdom">UK</option>
+    </select>
+
+    <script>
+        let currentDay = new Date().getDate();
+        let currentMonth = new Date().getMonth() + 1;
+        let currentYear = new Date().getFullYear();
+
+        const tags = {
+            
+			    // Turkey Holidays
+    "23-4": { 
+        "name": "National Sovereignty and Children's Day",
+        "info": "23 Nisan - Ulusal Egemenlik ve Çocuk Bayramı: Celebrated in Turkey to commemorate the first gathering of the Grand National Assembly.",
+        "color": "#4CAF50",
+        "country": "Turkey"
+    },
+    "1-5": { 
+        "name": "Labor and Solidarity Day",
+        "info": "1 Mayıs - Emek ve Dayanışma Günü: Celebrated as Labor Day in Turkey.",
+        "color": "#FF9800",
+        "country": "Turkey"
+    },
+    "19-5": { 
+        "name": "Commemoration of Atatürk, Youth and Sports Day",
+        "info": "19 Mayıs - Atatürk’ü Anma, Gençlik ve Spor Bayramı: Celebrated in honor of Atatürk's arrival in Samsun and the start of the Turkish War of Independence.",
+        "color": "#2196F3",
+        "country": "Turkey"
+    },
+    "15-7": { 
+        "name": "National Unity and Democracy Day",
+        "info": "15 Temmuz - Milli Birlik ve Demokrasi Günü: Commemorates the failed coup attempt in Turkey in 2016.",
+        "color": "#E91E63",
+        "country": "Turkey"
+    },
+    "30-8": { 
+        "name": "Victory Day",
+        "info": "30 Ağustos - Zafer Bayramı: Celebrates the Turkish victory in the Battle of Dumlupınar in 1922.",
+        "color": "#9C27B0",
+        "country": "Turkey"
+    },
+    "29-10": { 
+        "name": "Republic Day",
+        "info": "29 Ekim - Cumhuriyet Bayramı: Celebrates the proclamation of the Republic of Turkey in 1923.",
+        "color": "#F44336",
+        "country": "Turkey"
+    },
+
+    // France Holidays
+    "8-5": {
+        "name": "Victory Day",
+        "info": "Victoire 1945 - End of hostilities in Europe in World War II.",
+        "color": "#3F51B5",
+        "country": "France"
+    },
+    "14-7": {
+        "name": "National Day",
+        "info": "Fête Nationale Française - Commemorates the French National Day and the Feast of the Federation.",
+        "color": "#FF5733",
+        "country": "France"
+    },
+    "15-8": {
+        "name": "Assumption Day",
+        "info": "Assomption - A Christian holiday celebrating the assumption of Mary.",
+        "color": "#009688",
+        "country": "France"
+    },
+    "1-11": {
+        "name": "All Saints' Day",
+        "info": "Toussaint - A Christian holiday to honor all saints.",
+        "color": "#795548",
+        "country": "France"
+    },
+    "11-11": {
+        "name": "Armistice Day",
+        "info": "Armistice 1918 - End of World War I.",
+        "color": "#9E9E9E",
+        "country": "France"
+    },
+
+    // Germany Holidays
+
+    "6-1": {
+        "name": "Epiphany",
+        "info": "Heilige Drei Könige - Celebrates the visit of the Three Wise Men.",
+        "color": "#FF9800",
+        "country": "Germany"
+    },
+    "1-5": {
+        "name": "Labor Day",
+        "info": "Tag der Arbeit - Celebration of workers' rights.",
+        "color": "#FF5733",
+        "country": "Germany"
+    },
+    "3-10": {
+        "name": "German Unity Day",
+        "info": "Tag der Deutschen Einheit - Celebrates the reunification of Germany.",
+        "color": "#009688",
+        "country": "Germany"
+    },
+    "31-10": {
+        "name": "Reformation Day",
+        "info": "Reformationstag - Commemorates the Reformation by Martin Luther.",
+        "color": "#795548",
+        "country": "Germany"
+    },
+    "1-11": {
+        "name": "All Saints' Day",
+        "info": "Allerheiligen - Christian holiday honoring all saints.",
+        "color": "#9E9E9E",
+        "country": "Germany"
+    },
+
+
+    // Georgia Holidays
+    "8-3": { 
+        "name": "International Women's Day",
+        "info": "ქალთა საერთაშორისო დღე - Kalta saertashoriso dghe: A day to celebrate the achievements and rights of women.",
+        "color": "#FF4081",
+        "country": "Georgia"
+    },
+    "9-4": { 
+        "name": "Independence Restoration Day",
+        "info": "ეროვნული ერთიანობის დღე - Erovnuli ertianobis dghe: Commemorates the April 9 tragedy of 1989 (Tbilisi Massacre).",
+        "color": "#FF9800",
+        "country": "Georgia"
+    },
+    "9-5": { 
+        "name": "Day of Victory over Fascism, Europe Day",
+        "info": "ფაშიზმზე გამარჯვების დღე, ევროპის დღე - P'ashizmze gamarjvebis dghe, evropis dghe: Victory over Fascism in World War II.",
+        "color": "#00BCD4",
+        "country": "Georgia"
+    },
+    "12-5": { 
+        "name": "Saint Andrew the First-Called Day",
+        "info": "წმინდა მოციქულის ანდრია პირველწოდებულის საქართველოში შემოსვლის დღე - Ts'minda motsikulis andria k'irvelts'odebulis sakartveloshi shemosvlis dghe: Celebration of the Apostle Andrew.",
+        "color": "#8BC34A",
+        "country": "Georgia"
+    },
+    "17-5": { 
+        "name": "Day of Family Purity and Respect for Parents",
+        "info": "ოჯახის სიწმინდისა და მშობლების პატივისცემის დღე - ojakhis sits’mindisa da mshoblebis p’at’ivistsemis dghe: Celebration of family values.",
+        "color": "#3F51B5",
+        "country": "Georgia"
+    },
+    "26-5": { 
+        "name": "Independence Day",
+        "info": "დამოუკიდებლობის დღე - Damouk'ideblobis dghe: Commemorates the declaration of independence of Georgia in 1918.",
+        "color": "#F44336",
+        "country": "Georgia"
+    },
+    "28-8": { 
+        "name": "Saint Mary's Day",
+        "info": "მარიამობა - Mariamoba: Celebration of Saint Mary's Day.",
+        "color": "#009688",
+        "country": "Georgia"
+    },
+    "14-10": { 
+        "name": "Day of Svetitskhoveli Cathedral",
+        "info": "სვეტიცხოვლობა - Mtskhetoba (Svetitskovloba): Celebration of the first Christian church in Georgia.",
+        "color": "#8BC34A",
+        "country": "Georgia"
+    },
+    "23-11": { 
+        "name": "Saint George's Day",
+        "info": "გიორგობა - Giorgoba: Celebration of Saint George's Day.",
+        "color": "#FF5722",
+        "country": "Georgia"
+    },
+		
+    // Albania Holidays
+    "14-3": { 
+        "name": "Summer Day",
+        "info": "Dita e Verës - Celebrated in Albania to mark the start of spring, ratified by the Albanian Parliament in 2004.",
+        "color": "#FF5733",
+        "country": "Albania"
+    },
+    "22-3": { 
+        "name": "Nevruz Day",
+        "info": "Dita e Nevruzit - Bektashi Order Nevruz in Albania, celebrating the Persian New Year.",
+        "color": "#4CAF50",
+        "country": "Albania"
+    },
+    "31-3": { 
+        "name": "Catholic Easter",
+        "info": "Pashkët Katolike - Catholic Easter, date varies.",
+        "color": "#FF9800",
+        "country": "Albania"
+    },
+    "1-4": { 
+        "name": "Eid al-Fitr",
+        "info": "Bajrami i Madh (Fitër Bajrami) - The celebration of the end of Ramadan, date varies.",
+        "color": "#9C27B0",
+        "country": "Albania"
+    },
+    "1-5": { 
+        "name": "International Labor Day",
+        "info": "Dita Ndërkombëtare e Punës - Worker’s Day, a celebration of the rights of workers.",
+        "color": "#2196F3",
+        "country": "Albania"
+    },
+    "5-5": { 
+        "name": "Orthodox Easter",
+        "info": "Pashkët Ortodokse - Orthodox Easter, which may fall 0 to 5 weeks after Catholic Easter.",
+        "color": "#3F51B5",
+        "country": "Albania"
+    },
+    "16-6": { 
+        "name": "Eid al-Adha",
+        "info": "Bajrami i Vogël (Kurban Bajrami) - Celebration of Eid al-Adha, date varies.",
+        "color": "#FF5722",
+        "country": "Albania"
+    },
+    '9-5': { 
+        name: "Mother Teresa Day",
+        info: "Dita e Nënë Terezës - Celebrates Mother Teresa, ratified as an official national holiday in Albania.",
+        color: "#9E9E9E",
+        country: "Albania"
+    },
+    '11-22': { 
+        name: "Alphabet Day",
+        info: "Dita e Alfabetit - Celebrates the Congress of Manastir, which unified the country’s alphabets.",
+        color: "#8BC34A",
+        country: "Albania"
+    },
+    '11-28': { 
+        name: "Independence Day",
+        info: "Dita e Pavarësisë - Marks the Albanian Declaration of Independence.",
+        color: "#FF4081",
+        country: "Albania"
+    },
+    '11-29': { 
+        name: "Liberation Day",
+        info: "Dita e Çlirimit - Marks the liberation of Albania from Nazi occupation during World War II.",
+        color: "#009688",
+        country: "Albania"
+    },
+    '12-8': { 
+        name: "National Youth Day",
+        info: "Dita Kombëtare e Rinisë - National Youth Day, ratified by the Albanian Parliament in 2010.",
+        color: "#FFEB3B",
+        country: "Albania"
+    },
+			
+    // Kazakhstan Holidays
+    '21-3': { 
+        name: "Nauryz Meyramy",
+        info: "Наурыз мейрамы (Naýryz meıramy) - Originally the Persian New Year, traditionally a springtime holiday marking the beginning of a new year.",
+        color: "#FF5733",
+        country: "Kazakhstan"
+    },
+    '1-5': { 
+        name: "Kazakhstan People's Unity Day",
+        info: "Қазақстан халқының бірлігі мерекесі (Qazaqstan xalqynyń birligi merekesi) - A day to celebrate unity among Kazakhstan's various ethnic groups.",
+        color: "#4CAF50",
+        country: "Kazakhstan"
+    },
+    '7-5': { 
+        name: "Defender of the Fatherland Day",
+        info: "Отан Қорғаушы күні (Otan Qorǵaýshy kuni) - An official holiday since 2013 to honor those who serve in the armed forces.",
+        color: "#3F51B5",
+        country: "Kazakhstan"
+    },
+    '9-5': { 
+        name: "Great Patriotic War Against Fascism Victory Day",
+        info: "Жеңіс күні (Jeńis kúni) - День Победы (Den' Pobedy) - A holiday commemorating the victory in the Great Patriotic War, celebrated in Kazakhstan and other former Soviet republics.",
+        color: "#FF9800",
+        country: "Kazakhstan"
+    },
+    '6-7': { 
+        name: "Capital City Day",
+        info: "Астана күні (Astana kúni) - День столицы (Den' stolitsy) - Celebrates the birthday of the first President of Kazakhstan and the founding of the capital, Astana (now Nur-Sultan).",
+        color: "#9C27B0",
+        country: "Kazakhstan"
+    },
+    '30-8': { 
+        name: "Constitution Day",
+        info: "Конституция күні (Konstıtýcıya kúni) - День Конституции (Den' Konstitutsii) - Marks the adoption of Kazakhstan's constitution.",
+        color: "#2196F3",
+        country: "Kazakhstan"
+    },
+    'moveable': { 
+        name: "Kurban Aita",
+        info: "Құрбан айт (Kurban ait) - Курбан айт (Kurban ait) - An official holiday since 2007, observed during Hajj.",
+        color: "#9E9E9E",
+        country: "Kazakhstan"
+    },
+    '25-10': { 
+        name: "Republic Day",
+        info: "Республика күні (Respublika kúni) - День Республики (Den' Respubliki) - Marks the declaration of the Republic of Kazakhstan, an official holiday since 2022.",
+        color: "#FFEB3B",
+        country: "Kazakhstan"
+    },
+    '16-12': { 
+        name: "Independence Day",
+        info: "Тәуелсіздік күні (Táýelsizdik kúni) - День независимости (Den' nezavisimosti) - Commemorates Kazakhstan's independence from the Soviet Union.",
+        color: "#FF5722",
+        country: "Kazakhstan"
+    },
+	
+    // United States Holidays
+    '1-1': { 
+        name: "New Year's Day", 
+        info: "The first day of the year, celebrated with various traditions and events.",
+        color: "#FF5733", 
+        country: "United States"
+    },
+    '3-1': { 
+        name: "Martin Luther King Jr. Day", 
+        info: "A day to honor the civil rights leader Martin Luther King Jr., observed on the third Monday of January.",
+        color: "#4CAF50", 
+        country: "United States"
+    },
+    'last-monday-5': { 
+        name: "Memorial Day", 
+        info: "Observed on the last Monday in May to honor military personnel who have died in service to the country.",
+        color: "#FF9800", 
+        country: "United States"
+    },
+    '7-4': { 
+        name: "Independence Day", 
+        info: "Commemorates the adoption of the Declaration of Independence in 1776, celebrated with fireworks and events.",
+        color: "#2196F3", 
+        country: "United States"
+    },
+    '11-9': { 
+        name: "Twin Towers", 
+        info: "The September 11 attacks, commonly known as 9/11, were four coordinated Islamist terrorist suicide attacks carried out by al-Qaeda against the United States in 2001. On that Tuesday morning, 19 terrorists hijacked four commercial airliners scheduled to travel from the East Coast to California.",
+        color: "#FF0000", 
+        country: "United States"
+    },
+    'first-monday-9': { 
+        name: "Labor Day", 
+        info: "A day to celebrate American workers, observed on the first Monday of September.",
+        color: "#9C27B0", 
+        country: "United States"
+    },
+    '11-11': { 
+        name: "Veterans Day", 
+        info: "A day to honor military veterans who have served in the United States Armed Forces.",
+        color: "#FF5722", 
+        country: "United States"
+    },
+    '4-thursday-11': { 
+        name: "Thanksgiving", 
+        info: "A day of giving thanks, observed on the fourth Thursday of November.",
+        color: "#FFEB3B", 
+        country: "United States"
+    },
+    '25-12': { 
+        name: "Christmas Day", 
+        info: "Commemorates the birth of Jesus Christ, celebrated with gift-giving and festive meals.",
+        color: "#9E9E9E", 
+        country: "United States"
+    },
+	
+    // United Kingdom Holidays
+    'last-monday-5': { 
+        name: "Early May Bank Holiday", 
+        info: "Observed on the first Monday in May, to celebrate workers' contributions and achievements.",
+        color: "#4CAF50", 
+        country: "United Kingdom"
+    },
+    'last-monday-8': { 
+        name: "Spring Bank Holiday", 
+        info: "Celebrated on the last Monday in May, to mark the onset of the summer season.",
+        color: "#FF9800", 
+        country: "United Kingdom"
+    },
+    'first-monday-9': { 
+        name: "Summer Bank Holiday", 
+        info: "Observed on the last Monday in August, it marks the unofficial end of the summer season.",
+        color: "#FF5722", 
+        country: "United Kingdom"
+    },
+    '25-12': { 
+        name: "Christmas Day", 
+        info: "Commemorates the birth of Jesus Christ, celebrated with festive meals, presents, and family gatherings.",
+        color: "#2196F3", 
+        country: "United Kingdom"
+    },
+    '26-12': { 
+        name: "Boxing Day", 
+        info: "The day after Christmas, traditionally a time for charity and gift-giving to service workers.",
+        color: "#9C27B0", 
+        country: "United Kingdom"
+    },
+    'moveable': { 
+        name: "Good Friday", 
+        info: "Observed during the Easter period, commemorating the crucifixion of Jesus Christ.",
+        color: "#9E9E9E", 
+        country: "United Kingdom"
+    },
+    'moveable': { 
+        name: "Easter Monday", 
+        info: "The Monday following Easter Sunday, observed in some parts of the UK.",
+        color: "#FFEB3B", 
+        country: "United Kingdom"
+    },
+
+};
+
+function generateCalendar(){generateGregorianCalendar();}
+      
+        function gregorianToHijri(date) {
+            const gregorianEpoch = new Date(622, 6, 16); // July 16, 622 CE (Hijri epoch)
+            const hijriYearOffset = 579; // Difference in years between Gregorian and Hijri
+            const daysSinceEpoch = Math.floor((date - gregorianEpoch) / (1000 * 60 * 60 * 24));
+            const hijriYear = Math.floor(daysSinceEpoch / 354.367) + hijriYearOffset;
+            const hijriMonth = Math.floor((daysSinceEpoch % 354.367) / 29.53) + 1;
+            const hijriDay = Math.floor((daysSinceEpoch % 29.53) + 1);
+
+            return { year: hijriYear, month: hijriMonth, day: hijriDay };
+        }
+
+        // Generate Gregorian Calendar
+        function generateGregorianCalendar() {
+            displayCalendar(currentMonth, currentYear, currentDay);
+        }
+
+        // Generate Hijri Calendar
+        function generateHijriCalendar() {
+            const hijriDate = gregorianToHijri(new Date(currentYear, currentMonth - 1, currentDay));
+            const hijriYear = hijriDate.year;
+            const hijriMonth = hijriDate.month;
+
+            const hijriCalendarBody = document.getElementById('hijri-calendar-body');
+            hijriCalendarBody.innerHTML = '';
+            const hijriMonthYearHeader = document.getElementById('hijri-month-year');
+            const hijriDaysInMonth = 29 + (hijriMonth % 2 === 0 ? 0 : 1); // Hijri months alternate between 29 and 30 days
+            const firstDay = new Date(hijriYear, hijriMonth - 1, 1).getDay();
+            const offset = (firstDay === 0) ? 6 : firstDay - 1;
+
+            hijriMonthYearHeader.textContent = `${hijriMonth} - ${hijriYear} (Hijri)`;
+            let row = document.createElement('tr');
+            let nextMonthDay = 1;
+
+            for (let i = 0; i < 42; i++) {
+                let cell = document.createElement('td');
+
+                if (i < offset) {
+                    cell.classList.add('prev-month');
+                    cell.innerHTML = `<span>${30 - offset + i + 1}</span>`;
+                } else if (i >= offset && i < hijriDaysInMonth + offset) {
+                    const date = i - offset + 1;
+                    cell.textContent = date;
+
+                    const hijriTagKey = `${date}-${hijriMonth}`;
+                    if (tags[hijriTagKey]) {
+                        const tagData = tags[hijriTagKey];
+                        cell.setAttribute('data-tag', tagData.name);
+                        cell.style.setProperty('--tag-color', tagData.color);
+                        const tagInfo = document.createElement('div');
+                        tagInfo.classList.add('tag-info');
+                        tagInfo.innerHTML = `<strong>${tagData.name}</strong> (Hijri):<br>${tagData.info}`;
+                        cell.appendChild(tagInfo);
+                    }
+                } else {
+                    cell.classList.add('next-month');
+                    cell.innerHTML = `<span>${nextMonthDay++}</span>`;
+                }
+
+                row.appendChild(cell);
+
+                if (row.children.length === 7) {
+                    hijriCalendarBody.appendChild(row);
+                    row = document.createElement('tr');
+                }
+            }
+        }
+        function displayCalendar(month, year, highlightDay = null) {
+                   const countryFilter = document.getElementById('country-select').value;
+            const calendarBody = document.getElementById('calendar-body');
+            calendarBody.innerHTML = '';
+            const monthYearHeader = document.getElementById('month-year');
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const firstDay = new Date(year, month - 1, 1).getDay();
+            const offset = (firstDay === 0) ? 6 : firstDay - 1;
+            const prevDays = new Date(year, month - 1, 0).getDate();
+
+ monthYearHeader.textContent = `${new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date(year, month - 1))} - ${year}`;
+  let row = document.createElement('tr');
+            let nextMonthDay = 1;
+ const currentYear = new Date().getFullYear();
+            for (let i = 0; i < 42; i++) {
+                let cell = document.createElement('td');
+
+                if (i < offset) {
+                    cell.classList.add('prev-month');
+                    cell.innerHTML = `<span>${prevDays - offset + i + 1}</span>`;
+                } else if (i >= offset && i < daysInMonth + offset) {
+                    const date = i - offset + 1;
+                    cell.textContent = date;
+					
+                    const tagKey = `${date}-${month}`;
+                    if (tags[tagKey] && (countryFilter === 'all' || tags[tagKey].country === countryFilter)) {
+                        const tagData = tags[tagKey];
+                        cell.setAttribute('data-tag', tagData.name);
+                        cell.style.setProperty('--tag-color', tagData.color);
+ cell.classList.add(`country-${tagData.country.toLowerCase().replace(/\s+/g, '-')}`);
+
+                        const tagInfo = document.createElement('div');
+                        tagInfo.classList.add('tag-info');
+                        tagInfo.innerHTML = `<strong>${tagData.name}</strong> (${tagData.country}):<br>${tagData.info}`;
+                        cell.appendChild(tagInfo);
+                    }
+
+                    if (highlightDay === date) {
+                        cell.classList.add('selected-day');
+                    }
+                } else {
+                    cell.classList.add('next-month');
+                    cell.innerHTML = `<span>${nextMonthDay++}</span>`;
+                }
+
+                row.appendChild(cell);
+
+                if (row.children.length === 7) {
+                    calendarBody.appendChild(row);
+                    row = document.createElement('tr');
+                }
+            }
+        }
+
+        function changeMonth(delta) {
+            currentMonth += delta;
+            if (currentMonth < 1) {
+                currentMonth = 12;
+                currentYear--;
+            } else if (currentMonth > 12) {
+                currentMonth = 1;
+                currentYear++;
+            }
+            generateCalendar();
+        }
+
+        function changeYear(delta) {
+            currentYear += delta;
+            generateCalendar();
+        }
+
+       function setCurrentTime() {
+    const now = new Date();
+    currentDay = now.getDate();
+    currentMonth = now.getMonth() + 1;
+    currentYear = now.getFullYear();
+    
+    // Update input fields with the current date
+    document.getElementById('day-input').value = currentDay;
+    document.getElementById('month-input').value = currentMonth;
+    document.getElementById('year-input').value = currentYear;
+    
+    generateCalendar();
+}
+
+        function changeDay(delta) {
+            currentDay += delta;
+            const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+            if (currentDay > daysInMonth) {
+                currentDay = 1;
+                changeMonth(1);
+            } else if (currentDay < 1) {
+                changeMonth(-1);
+                currentDay = new Date(currentYear, currentMonth, 0).getDate();
+            }
+            generateCalendar();
+        }
+      function fillFromUnixTime() {
+            const unixTime = prompt("Enter Unix Time:");
+            if (unixTime) {
+                const date = new Date(parseInt(unixTime) * 1000);
+                document.getElementById('day-input').value = date.getDate();
+                document.getElementById('month-input').value = date.getMonth() + 1;
+                document.getElementById('year-input').value = date.getFullYear();
+                generateCalendar();
+            }
+        }
+        setCurrentTime();
+    </script>
+
+</body>
+</html>

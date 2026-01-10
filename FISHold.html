@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Fish Hierarchy</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #f0f0f0;
+      transition: background 0.2s;
+    }
+    button:hover { background: #ddd; }
+    #backBtn { margin-bottom: 10px; display: none; }
+  </style>
+</head>
+<body>
+  <h1>Fish Hierarchy</h1>
+  <button id="backBtn">⬅ Go Back</button>
+  <div id="buttons"></div>
+
+  <script>
+
+//https://lifemap.cnrs.fr/tree?efficiency-mode=true
+const hierarchy = {
+      "fish": 
+      "osteichthyes" : ["actinopterygii", "sarcopterygii"],
+      "actinopterygii" : ["actinopteri", "cladista"],
+      "cladista": ["Polypteriformes", "†Scanilepiformes"],
+      
+    
+    
+    
+  "Polypteriformes": [
+    "Latinopollia",
+    "Dagetella",
+    "Bartschichthys",
+    "Sudania",
+    "Saharichthys",
+    "Sainthilairia",
+    "Inbecetemia",
+    "Nagaia"
+  ],
+  "Latinopollia": [
+    "Latinopollia suarezi"
+  ],
+  "Dagetella": [
+    "Dagetella sudamericana"
+  ],
+  "Bartschichthys": [
+    "Bartschichthys arnoulti",
+    "Bartschichthys napatensis",
+    "Bartschichthys tubularis"
+  ],
+  "Sudania": [
+    "Sudania gracilis",
+    "Sudania oblonga"
+  ],
+  "Saharichthys": [
+    "Saharichthys nigeriensis",
+    "Saharichthys africanus"
+  ],
+  "Sainthilairia": [
+    "Sainthilairia beccussiformis",
+    "Sainthilairia elongata",
+    "Sainthilairia falciformis",
+    "Sainthilairia grandis",
+    "Sainthilairia intermedia"
+  ],
+  "Inbecetemia": [
+    "Inbecetemia torta",
+    "Inbecetemia tortissima"
+  ],
+  "Nagaia": [
+    "Nagaia extrema"
+  ],
+  "†Scanilepiformes": [
+    "Beishanichthys",
+    "Fukangichthys",
+    "Mizhilepis",
+    "Tanaocrossus"
+  ],
+  "Beishanichthys": [
+    "Beishanichthys brevicaudalis"
+  ],
+  "Fukangichthys": [
+    "Fukangichthys longidorsalis"
+  ],
+  "Mizhilepis": [
+    "Mizhilepis zhangyaensis"
+  ],
+  "Tanaocrossus": [
+    "Tanaocrossus kalliokoskii"
+  ],
+  "Family Scanilepididae": [
+    "Scanilepis"
+  ],
+  "Scanilepis": [
+    "Scanilepis dubius",
+    "Scanilepis spitzbergensis"
+  ],
+  "Family Evenkiidae": [
+    "Evenkia",
+    "Oshiaichthys",
+    "Toyemia"
+  ],
+  "Evenkia": [
+    "Evenkia eunotoptera"
+  ],
+  "Oshiaichthys": [
+    "Oshiaichthys ferganica"
+  ],
+  "Toyemia": [
+    "Toyemia blumentalis",
+    "Toyemia tverdochlebovi"
+  ],
+
+  "Polypteridae": [
+    "Bawitius",
+    "Serenoichthys",
+    "Erpetoichthys",
+    "Polypterus"
+  ],
+  "Bawitius": [
+    "Bawitius bartheli"
+  ],
+  "Serenoichthys": [
+    "Serenoichthys kemkemensis"
+  ],
+  "Erpetoichthys": [
+    "Erpetoichthys calabaricus"
+  ],
+  "Polypterus": [
+    "Polypterus dageti",
+    "Polypterus faraou",
+    "Polypterus sudanensis",
+    "Retropinnis group",
+    "Bichir group",
+    "Weeksii group",
+    "Senegalus group",
+    "Polypterus congicus",
+    "Polypterus endlicherii",
+    "Polypterus teugelsi"
+  ],
+  "Retropinnis group": [
+    "Polypterus retropinnis"
+  ],
+  "Bichir group": [
+    "Polypterus ansorgii",
+    "Polypterus bichir"
+  ],
+  "Polypterus bichir": [
+    "Polypterus bichir bichir",
+    "Polypterus bichir lapradei",
+    "Polypterus bichir ornatus"
+  ],
+  "Weeksii group": [
+    "Polypterus mokelembembe",
+    "Polypterus ornatipinnis",
+    "Polypterus weeksii"
+  ],
+  "Senegalus group": [
+    "Polypterus delhezi",
+    "Polypterus polli",
+    "Polypterus palmas",
+    "Polypterus senegalus"
+  ],
+  "Polypterus palmas": [
+    "Polypterus palmas buettikoferi",
+    "Polypterus palmas palmas"
+  ],
+  "Polypterus senegalus": [
+    "Polypterus senegalus meridionalis",
+    "Polypterus senegalus senegalus"
+  ],
+    
+    
+    };
+
+    let currentLevel = ["fish"];
+    const buttonsDiv = document.getElementById("buttons");
+    const backBtn = document.getElementById("backBtn");
+    const pathStack = [];
+
+    function showButtons(levelArray) {
+      buttonsDiv.innerHTML = "";
+      levelArray.forEach(item => {
+        const btn = document.createElement("button");
+        btn.textContent = item;
+        btn.onclick = () => {
+          if (hierarchy[item]) {
+            pathStack.push(currentLevel);
+            currentLevel = hierarchy[item];
+            showButtons(currentLevel);
+            backBtn.style.display = "inline-block";
+          }
+        };
+        buttonsDiv.appendChild(btn);
+      });
+    }
+
+    backBtn.onclick = () => {
+      if (pathStack.length > 0) {
+        currentLevel = pathStack.pop();
+        showButtons(currentLevel);
+        if (pathStack.length === 0) {
+          backBtn.style.display = "none";
+        }
+      }
+    };
+
+    showButtons(currentLevel);
+  </script>
+</body>
+</html>

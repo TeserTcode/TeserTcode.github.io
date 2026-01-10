@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waveform Generator & Piano</title>
+</head>
+<body>
+    <h1>Waveform Generator and Piano</h1>
+    
+    <label for="waveform">Waveform (e.g., sin(2 * pi * t)): </label>
+    <input type="text" id="waveform" value="sin(2 * 3.14 * t)" />
+    <button id="updateWaveform">Change Instrument</button>
+    <br />
+    
+    <label for="presetFunctions">Preset Functions: </label>
+    <select id="presetFunctions">
+     <option value="sin(t)">sin(t)</option>
+            <optgroup label="Some waves">
+            <option value="sin(t)">Sine - sin(t)</option>
+            <option value="sinc(t)">Sinc - sinc(t)</option>
+            <option value="tan(t)">Tangent - tan(t)</option>
+            <option value="sec(t)">Secant - sec(t)</option>
+<option value="trianglewave(t)">Triangle - trianglewave(t)</option>
+<option value="unittrianglewave(t)">Triangle - unittrianglewave(t)</option>
+<option value="sawtooth(t)">Sawthooth - sawtooth(t)</option>
+<option value="squarewave(t)">Square - squarewave(t)</option>
+        </optgroup>
+        <optgroup label="Nowhere Continuous">
+            <option value="darboux(t)">Darboux - darboux(t)</option>
+            <option value="takagi(t)">Takagi - takagi(t)</option>
+            <option value="weierstrass(t,0.5,2)">Weierstrass - weierstrass(t,0.5,2)</option>
+            <option value="faberf1(t)">Faber F1 - faberf1(t)</option>
+            <option value="faberf2(t)">Faber F2 - faberf2(t)</option>
+            <option value="vanderwaerden(t)">Van der Waerden - vanderwaerden(t)</option>
+            <option value="cellerier(t,1)">Cellerier (a=1) - cellerier(t,1)</option>
+            <option value="cellerier(t,2)">Cellerier (a=2) - cellerier(t,2)</option>
+            <option value="cellerier(t,3)">Cellerier (a=3) - cellerier(t,3)</option>
+            <option value="cellerier(t,5)">Cellerier (a=5) - cellerier(t,5)</option>
+            <option value="cellerier(t,10)">Cellerier (a=10) - cellerier(t,10)</option>
+            <option value="mccarthy(t)">McCarthy - mccarthy(t)</option>
+            <option value="petr(t)">Petr - petr(t)</option>
+        </optgroup>
+        <optgroup label="Supermaths">
+            <option value="cex(t,2)">Cex - cex(t,2)</option>
+            <option value="sel(t,2)">Sel - sel(t,2)</option>
+            <option value="sir(t,2)">Sir - sir(t,2)</option>
+            <option value="nip(t,2)">Nip - nip(t,2)</option>
+            <option value="cps(t)">Cps - cps(t)</option>
+            <option value="sq(t)">Sq - sq(t)</option>
+            <option value="csel(t,2)">Csel - csel(t,2)</option>
+            <option value="csex(t,2)">Csex - csex(t,2)</option>
+        </optgroup>
+        <optgroup label="Mathiru">
+            <option value="mathieuce(2,t,2)">Mathieu CE (a=2) - mathieuce(2,t,2)</option>
+            <option value="mathieuce(10,t,2)">Mathieu CE (a=10) - mathieuce(10,t,2)</option>
+            <option value="mathieuse(10,t,2)">Mathieu SE (a=10) - mathieuse(10,t,2)</option>
+            <option value="mathieuce(10,t,3)">Mathieu CE (a=10, q=3) - mathieuce(10,t,3)</option>
+        </optgroup>
+         <optgroup label="Noise">
+        <option value="noise()">White Noise - noise()</option>
+        <option value="pinknoise()">Pink Noise - pinknoise()</option>
+        <option value="brownnoise()">Brown Noise - brownnoise()</option>
+        
+                <option value="violetnoise()">Violet Noise - violetnoise()</option>
+        <option value="bluenoise()">Blue Noise - bluenoise()</option>
+        <option value="greynoise()">Grey Noise - greynoise()</option>
+                <option value="velvetNoise(1000, 1, 44100)">Velvet Noise - velvetNoise(1000, 1, 44100)</option>
+
+    </optgroup>
+    <optgroup label="Complex Waveforms">
+        <option value="fmsynth(t/10, 440, 220, 5)">FM Synthesis - fmynth(t, 440, 220, 5)</option>
+        <option value="amsynth(t/10, 440, 220, 0.5)">AM Synthesis - amynth(t, 440, 220, 0.5)</option>
+        <option value="chirp(t/10, 440, 880)">Chirp - chirp(t, 440, 880)</option>
+        <option value="blit(t/10, 440)">BLIT - blit(t, 440)</option>
+                    <option value="sin(t) + 0.5*sin(3*t) + 0.25*sin(5*t)">Harmonic Series</option>
+            <option value="sin(t) + 0.7*sin(2.3*t) + 0.4*sin(4.1*t)">Inharmonic Series</option>
+            <option value="sin(t) * sin(0.5*t)">Ring Modulation</option>
+            <option value="sin(t) * (1 + 0.5*sin(0.2*t))">Tremolo Effect</option>
+    </optgroup>
+    <optgroup label="Envelopes">
+        <option value="adsr(t, 0.1, 0.2, 0.5, 0.3)">ADSR Envelope - adsr(t, 0.1, 0.2, 0.5, 0.3)</option>
+    <option value="exp(-t*0.1) * sin(t)">Decaying Sine</option>
+            <option value="(t < 0.5 ? 1 : 0) * sin(t)">Gate Envelope</option>
+   </optgroup>
+        <optgroup label="Others">
+        <option value="sinc(t*45)*5*sqrt(t)">Sine/sqrt - sin(t*45)/sqrt(t)</option>
+        <option value="sin(t*t/10)/10*t">I dont even know - sin(t*t/10)/10*t</option>
+                <option value="lncos(t*3)/10">lncos - lncos(t*3)/10</option>
+        
+        
+                        <option value="sin(t) + darboux(t/2)">Sine + Darboux</option>
+            <option value="weierstrass(t,0.5,3) * tan(t)">Weierstrass * Tan</option>
+            <option value="sin(t) * takagi(t*5)">Sine * Takagi</option>
+            <option value="sawtooth(t) * cellerier(t,3)">Sawtooth * Cellerier</option>
+            <option value="sin(t) + noise()*0.2">Noisy Sine</option>
+            <option value="sin(t) * mathieuce(2,t,2)">Sine * Mathieu</option>
+            <option value="fractalNoise(t, 3)">Fractal Noise</option>
+            <option value="chaosggj(t, 3.9)">Chaotic Function</option>
+            <option value="sin(t) + sin(pi*t) + sin(e*t)">Irrational Harmonics</option>
+            <option value="sin(t) * sin(e*t) * sin(pi*t)">Pi * e Modulation</option>
+            <option value="mengerSponge(t, 3)">Menger Sponge</option>
+            <option value="sin(t) + sin(2*t)">Sine + Sine(2t)</option>
+            <option value="sin(t) + sin(2*t) + sin(3*t)">Sine + Sine(2t) + Sine(3t)</option>
+            <option value="sin(t) + sin(3*t)">Sine + Sine(3t)</option>
+            <option value="sin(t) + sin(4*t)">Sine + Sine(4t)</option>
+            <option value="sin(t) + sin(5*t)">Sine + Sine(5t)</option>
+            <option value="sin(t) + sin(6*t)">Sine + Sine(6t)</option>
+            <option value="sin(t) + sin(7*t)">Sine + Sine(7t)</option>
+            <option value="sin(t) + sin(8*t)">Sine + Sine(8t)</option>
+            <option value="sin(t) + sin(9*t)">Sine + Sine(9t)</option>
+            <option value="sin(t) + sin(10*t)">Sine + Sine(10t)</option>
+            <option value="sin(t) + sin(2*t) + sin(4*t)">Sine + Sine(2t) + Sine(4t)</option>
+            <option value="sin(t) + sin(3*t) + sin(5*t)">Sine + Sine(3t) + Sine(5t)</option>
+            <option value="sin(t) + sin(2*t) + sin(3*t) + sin(4*t)">Sine + Sine(2t) + Sine(3t) + Sine(4t)</option>
+            <option value="sin(t) + sin(2*t) + sin(3*t) + sin(5*t)">Sine + Sine(2t) + Sine(3t) + Sine(5t)</option>
+            <option value="sin(t) + sin(2*t) + sin(3*t) + sin(4*t) + sin(5*t)">Sine + Sine(2t) + Sine(3t) + Sine(4t) + Sine(5t)</option>
+            <option value="sin(t) + sin(2*t) + sin(3*t) + sin(4*t) + sin(5*t) + sin(6*t)">Sine + Sine(2t) + Sine(3t) + Sine(4t) + Sine(5t) + Sine(6t)</option>
+            <option value="sin(t) + sin(2*t) + sin(3*t) + sin(4*t) + sin(5*t) + sin(6*t) + sin(7*t)">Sine + Sine(2t) + Sine(3t) + Sine(4t) + Sine(5t) + Sine(6t) + Sine(7t)</option>
+            <option value="sin(t) + sin(2*t) + sin(3*t) + sin(4*t) + sin(5*t) + sin(6*t) + sin(7*t) + sin(8*t)">Sine + Sine(2t) + Sine(3t) + Sine(4t) + Sine(5t) + Sine(6t) + Sine(7t) + Sine(8t)</option>
+            <option value="sin(t) + sin(2*t) + sin(3*t) + sin(4*t) + sin(5*t) + sin(6*t) + sin(7*t) + sin(8*t) + sin(9*t)">Sine + Sine(2t) + Sine(3t) + Sine(4t) + Sine(5t) + Sine(6t) + Sine(7t) + Sine(8t) + Sine(9t)</option>
+        </optgroup>
+    </select>
+    <br />
+    
+    <label for="scale">Scale: </label>
+    <select id="scale">
+          <option value="Major">C Major</option>
+    <option value="Minor">C Minor</option>
+        <option value="HarmonicMinor">C Harmonic Minor</option>
+        <option value="MelodicMinor">C Melodic Minor</option>
+    <option value="Pentatonic">C Pentatonic</option>
+    <option value="Chromatic">Chromatic</option>
+    <option value="Tetrachord">Tetrachord</option>
+    <option value="WholeTone">Whole Tone</option>
+    <option value="Dorian">C Dorian</option>
+    <option value="Phrygian">C Phrygian</option>
+    <option value="Lydian">C Lydian</option>
+    <option value="Mixolydian">C Mixolydian</option>
+    <option value="Locrian">C Locrian</option>
+    <option value="HarmonicMinor">C Harmonic Minor</option>
+    <option value="MelodicMinor">C Melodic Minor</option>
+    <option value="Blues">C Blues</option>
+    <option value="DoubleHarmonic">Double Harmonic (Byzantine)</option>
+    <option value="NeapolitanMajor">C Neapolitan Major</option>
+    <option value="NeapolitanMinor">C Neapolitan Minor</option>
+    <option value="HungarianMinor">C Hungarian Minor</option>
+    <option value="Arabian">C Arabian</option>
+    <option value="Enigmatic">C Enigmatic</option>
+    <option value="Hirajoshi">C Hirajoshi</option>
+    <option value="Kumoi">C Kumoi</option>
+    <option value="Egyptian">C Egyptian</option>
+    <option value="Persian">C Persian</option>
+    <option value="Chinese">C Chinese</option>
+    <option value="JapaneseInSen">C Japanese In Sen</option>
+    <option value="Balinese">C Balinese</option>
+       <option value="Octatonic">C Octatonic (H-W)</option>
+        <option value="Octatonic2">C Octatonic (W-H)</option>
+    </select>
+    
+    <br />
+    
+    <label for="startTone">Start Tone (Hz): </label>
+    <input type="number" id="startTone" value="440" step="1" />
+    
+    <br />
+        
+    <label>
+        <input type="checkbox" id="disableDoubleSound" /> Disable Double Sound
+    </label>
+    <br />
+    <button id="saveButton">Save Waveform as .WAV</button>
+    <br />
+    <canvas id="waveformCanvas" width="800" height="200" style="border:1px solid #000000;"></canvas>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.6.0/math.min.js"></script>
+    <script src="mthfnc.js"></script>
+    <script>
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let activeSources = {}; // Store active audio sources for each key
+        let cachedWaveform = null; // Cache the generated waveform
+
+        const waveformInput = document.getElementById('waveform');
+        const presetFunctions = document.getElementById('presetFunctions');
+        const updateWaveformButton = document.getElementById('updateWaveform');
+        const scaleSelect = document.getElementById('scale');
+        const startToneInput = document.getElementById('startTone');
+        const saveButton = document.getElementById('saveButton');
+        const disableDoubleSoundCheckbox = document.getElementById('disableDoubleSound');
+        const waveformCanvas = document.getElementById('waveformCanvas');
+        const canvasContext = waveformCanvas.getContext('2d');
+        let currentFrequency = parseFloat(startToneInput.value);
+        let waveformExpression = waveformInput.value;
+
+
+        math.import({
+            fractalNoise: function(t, octaves) {
+                let value = 0;
+                let amplitude = 1;
+                for (let i = 0; i < octaves; i++) {
+                    value += amplitude * math.noise(t * math.pow(2, i));
+                    amplitude *= 0.5;
+                }
+                return value;
+            },
+            chaos: function(t, r) {
+                // Logistic map chaotic function
+                let x = 0.5;
+                for (let i = 0; i < 100; i++) {
+                    x = r * x * (1 - x);
+                }
+                let value = 0;
+                for (let i = 0; i < 10; i++) {
+                    x = r * x * (1 - x);
+                    value += (x - 0.5) * math.sin(t * (i + 1));
+                }
+                return value / 5;
+            },
+            mengerSponge: function(t, iterations) {
+                // Approximation of Menger sponge fractal
+                let value = 0;
+                for (let i = 0; i < iterations; i++) {
+                    const freq = math.pow(3, i);
+                    value += math.sin(t * freq * 2 * math.PI) / freq;
+                }
+                return value;
+            },
+            // More complex FM synthesis
+            fmsynth2: function(t, carrier, modulator, index) {
+                const modulation = index * math.sin(2 * math.PI * modulator * t);
+                return math.sin(2 * math.PI * carrier * t + modulation);
+            },
+            // More complex AM synthesis
+            amsynth2: function(t, carrier, modulator, depth) {
+                return (1 + depth * math.sin(2 * math.PI * modulator * t)) * 
+                       math.sin(2 * math.PI * carrier * t);
+            },
+            // Band-limited impulse train (for aliasing-free waveforms)
+            blit2: function(t, freq) {
+                const period = 1 / freq;
+                const phase = t % period;
+                const n = 7; // number of harmonics
+                let sum = 0;
+                for (let k = 1; k <= n; k++) {
+                    sum += math.sin(2 * math.PI * k * freq * t) / k;
+                }
+                return (2 / math.PI) * sum;
+            },
+            // More sophisticated ADSR envelope
+            adsr2: function(t, attack, decay, sustainLevel, release, duration = 1) {
+                if (t < 0) return 0;
+                if (t < attack) {
+                    return t / attack;
+                }
+                if (t < attack + decay) {
+                    return 1 - (1 - sustainLevel) * ((t - attack) / decay);
+                }
+                if (t < duration) {
+                    return sustainLevel;
+                }
+                if (t < duration + release) {
+                    return sustainLevel * (1 - (t - duration) / release);
+                }
+                return 0;
+            }
+        });
+        // Scales
+const scales = {
+     Major: [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25, 587.33, 659.25, 698.46, 783.99, 880.00, 987.77],
+            Minor: [261.63, 293.66, 311.13, 349.23, 392.00, 415.30, 466.16, 523.25, 587.33, 622.25, 698.46, 783.99, 830.61, 932.33],
+            HarmonicMinor: [261.63, 293.66, 311.13, 349.23, 392.00, 415.30, 493.88, 523.25, 587.33, 622.25, 698.46, 783.99, 830.61, 987.77],
+            MelodicMinor: [261.63, 293.66, 311.13, 349.23, 392.00, 440.00, 493.88, 523.25, 587.33, 622.25, 698.46, 783.99, 880.00, 987.77],
+    Pentatonic: [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.26, 784.00],
+    Chromatic: [261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392.00, 415.30],
+    Tetrachord: [261.63, 277.18, 311.13, 329.63, 369.99, 392.00, 440.00, 466.16, 523.25],
+    WholeTone: [261.63, 277.18, 311.13, 329.63, 369.99, 415.30, 466.16, 523.25, 554.37],
+    Dorian: [261.63, 293.66, 311.13, 349.23, 392.00, 415.30, 466.16, 523.25, 587.33],
+    Phrygian: [261.63, 277.18, 311.13, 349.23, 392.00, 415.30, 466.16, 523.25, 587.33],
+    Lydian: [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25, 587.33],
+    Mixolydian: [261.63, 293.66, 329.63, 349.23, 392.00, 415.30, 466.16, 523.25, 587.33],
+    Locrian: [261.63, 277.18, 311.13, 349.23, 392.00, 415.30, 466.16, 523.25, 587.33],
+    HarmonicMinor: [261.63, 293.66, 311.13, 349.23, 392.00, 415.30, 493.88, 523.25, 587.33],
+    MelodicMinor: [261.63, 293.66, 311.13, 349.23, 392.00, 440.00, 493.88, 523.25, 587.33],
+    Blues: [261.63, 293.66, 311.13, 349.23, 392.00, 466.16, 523.25, 587.33, 659.26],
+    Diminished: [261.63, 293.66, 311.13, 349.23, 369.99, 415.30, 440.00, 493.88, 523.25],
+    WholeHalfDiminished: [261.63, 277.18, 311.13, 329.63, 369.99, 392.00, 440.00, 466.16, 523.25],
+    Augmented: [261.63, 293.66, 329.63, 369.99, 415.30, 466.16, 523.25, 554.37, 622.25],
+    NeapolitanMajor: [261.63, 277.18, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25, 587.33],
+    NeapolitanMinor: [261.63, 277.18, 329.63, 349.23, 392.00, 415.30, 493.88, 523.25, 587.33],
+    HungarianMinor: [261.63, 293.66, 311.13, 369.99, 392.00, 415.30, 493.88, 523.25, 587.33],
+    Enigmatic: [261.63, 277.18, 329.63, 369.99, 415.30, 440.00, 493.88, 523.25, 587.33],
+    Arabian: [261.63, 277.18, 311.13, 349.23, 369.99, 415.30, 466.16, 523.25, 587.33],
+    Persian: [261.63, 277.18, 329.63, 349.23, 392.00, 415.30, 493.88, 523.25, 587.33],
+    Bhairav: [261.63, 277.18, 329.63, 349.23, 392.00, 415.30, 493.88, 523.25, 587.33],
+    Todi: [261.63, 277.18, 311.13, 349.23, 369.99, 415.30, 493.88, 523.25, 587.33],
+    BebopMajor: [261.63, 293.66, 329.63, 349.23, 392.00, 415.30, 440.00, 493.88, 523.25],
+    BebopMinor: [261.63, 293.66, 311.13, 349.23, 369.99, 392.00, 415.30, 493.88, 523.25],
+    Altered: [261.63, 277.18, 329.63, 349.23, 392.00, 440.00, 466.16, 523.25, 587.33],
+    JapaneseHirajoshi: [261.63, 277.18, 349.23, 392.00, 440.00, 523.25, 554.37, 622.25, 698.46],
+    JapaneseInSen: [261.63, 277.18, 329.63, 392.00, 466.16, 523.25, 554.37, 622.25, 698.46],
+    Egyptian: [261.63, 293.66, 349.23, 392.00, 466.16, 523.25, 554.37, 622.25, 698.46],
+    Scottish: [261.63, 293.66, 329.63, 369.99, 415.30, 440.00, 493.88, 523.25, 587.33],
+    Flamenco: [261.63, 277.18, 311.13, 349.23, 392.00, 415.30, 466.16, 523.25, 587.33],
+    RomanianMinor: [261.63, 293.66, 311.13, 369.99, 392.00, 415.30, 493.88, 523.25, 587.33],
+            Octatonic: [261.63, 293.66, 311.13, 349.23, 369.99, 415.30, 440.00, 466.16, 523.25, 587.33, 622.25, 698.46, 739.99, 830.61, 880.00, 932.33],
+            Octatonic2: [261.63, 277.18, 329.63, 349.23, 392.00, 415.30, 466.16, 493.88, 523.25, 554.37, 659.25, 698.46, 783.99, 830.61, 932.33, 987.77],
+    
+};
+
+        // Key to frequency mapping
+        const keyMap = {
+            'a':0,'s':1,'d':2,'f':3,'g':4,'h':5,'j':6,'k':7,'l':8
+        };
+      const pressedKeys = new Set();
+
+        function generateWaveform(frequency, duration = 1) {
+            const sampleRate = audioContext.sampleRate;
+            const numSamples = Math.floor(duration * sampleRate);
+            const waveformData = new Float32Array(numSamples);
+
+            for (let i = 0; i < numSamples; i++) {
+                let t = i / sampleRate; // Time in seconds
+                waveformData[i] = math.evaluate(waveformExpression, { t: t * frequency });
+            }
+
+            return waveformData;
+        }
+
+        function updateCachedWaveform() {
+            cachedWaveform = generateWaveform(currentFrequency);
+            drawWaveform(cachedWaveform);
+        }
+
+        function drawWaveform(waveformData) {
+            const width = waveformCanvas.width;
+            const height = waveformCanvas.height;
+            canvasContext.clearRect(0, 0, width, height);
+            canvasContext.beginPath();
+            canvasContext.moveTo(0, height / 2);
+
+            for (let i = 0; i < waveformData.length; i++) {
+                const x = (i / waveformData.length) * width * 100;
+                const y = (1.5 - waveformData[i]) * height / 3;
+                canvasContext.lineTo(x, y);
+            }
+
+            canvasContext.stroke();
+        }
+
+        function playSound(frequency) {
+            if (disableDoubleSoundCheckbox.checked) {
+                // Stop all currently playing notes
+                for (const freq in activeSources) {
+                    stopSound(freq);
+                }
+            }
+
+            if (activeSources[frequency]) {
+                return; // Already playing
+            }
+
+            if (!cachedWaveform) {
+                updateCachedWaveform(); // Generate waveform if not cached
+            }
+
+            const audioBuffer = audioContext.createBuffer(1, cachedWaveform.length, audioContext.sampleRate);
+            audioBuffer.getChannelData(0).set(cachedWaveform);
+
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.playbackRate.value = frequency / currentFrequency; // Adjust pitch
+            source.loop = true; // Loop the sound while the key is pressed
+            source.connect(audioContext.destination);
+            source.start();
+
+            activeSources[frequency] = source; // Store the active source
+        }
+
+        function stopSound(frequency) {
+            if (activeSources[frequency]) {
+                activeSources[frequency].stop();
+                activeSources[frequency].disconnect();
+                delete activeSources[frequency]; // Remove the source
+            }
+        }
+
+        function handleKeyDown(event) {
+            const key = event.key.toLowerCase();
+            if (keyMap.hasOwnProperty(key) && !pressedKeys.has(key)) {
+                pressedKeys.add(key); // Mark the key as pressed
+                const scale = scales[scaleSelect.value];
+                const frequency = scale[keyMap[key]];
+                if (frequency) {
+                    playSound(frequency);
+                }
+            }
+        }
+
+        function handleKeyUp(event) {
+            const key = event.key.toLowerCase();
+            if (keyMap.hasOwnProperty(key)) {
+                pressedKeys.delete(key); // Mark the key as released
+                const scale = scales[scaleSelect.value];
+                const frequency = scale[keyMap[key]];
+                if (frequency) {
+                    stopSound(frequency);
+                }
+            }
+        }
+
+        function saveWaveform() {
+            if (!cachedWaveform) {
+                updateCachedWaveform(); // Generate waveform if not cached
+            }
+
+            const buffer = new ArrayBuffer(cachedWaveform.length * 2);
+            const view = new DataView(buffer);
+            let offset = 0;
+
+            cachedWaveform.forEach(sample => {
+                view.setInt16(offset, sample * 32767, true);
+                offset += 2;
+            });
+
+            const blob = new Blob([buffer], { type: 'audio/wav' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'waveform.wav';
+            link.click();
+        }
+
+        waveformInput.addEventListener('input', () => {
+            waveformExpression = waveformInput.value;
+        });
+
+        presetFunctions.addEventListener('change', () => {
+            waveformInput.value = presetFunctions.value;
+            waveformExpression = presetFunctions.value;
+        });
+
+        updateWaveformButton.addEventListener('click', () => {
+            updateCachedWaveform(); // Update the cached waveform when the button is clicked
+        });
+
+        scaleSelect.addEventListener('change', () => {
+            // Update the scale when changed
+        });
+
+        startToneInput.addEventListener('input', () => {
+            currentFrequency = parseFloat(startToneInput.value);
+        });
+
+        saveButton.addEventListener('click', saveWaveform);
+
+        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('keyup', handleKeyUp);
+
+        // Initialize the cached waveform
+        updateCachedWaveform();
+    </script>
+</body>
+</html>

@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Picker</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .color-box {
+            width: 150px;
+            height: 150px;
+            margin: 20px;
+            border: 1px solid #000;
+        }
+        .gradient-box {
+            width: 500px;
+            height: 50px;
+            margin: 20px;
+            border: 1px solid #000;
+        }
+        .gradient-boxx {
+            margin: 20px;
+            border: 1px solid #000;
+        }
+        .container {
+            border: 1px solid #000;
+            margin: 10px;
+            padding: 10px;
+            width: 220px;
+            display: none;
+            position: relative;
+            background: #f0f0f0;
+        }
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            margin-top: 10px;
+        }
+        .slider-container label {
+            margin-bottom: 5px;
+        }
+        .slider-container input {
+            width: 200px;
+        }
+        .containers {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .lower-bar {
+            position: absolute;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            padding: 10px;
+            background: #f1f1f1;
+            border-top: 1px solid #ccc;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+        .lower-bar button {
+            margin: 0 10px;
+        }
+        .container .close-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+            background: #f17171;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            padding: 3px 5px;
+        }
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: none;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            border-radius: 5px;
+            background: transparent; 
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #111111;
+            cursor: pointer;
+            border-radius: 0%;
+            margin-top: -6px;
+        }
+        #gradientBox {
+            background: #fff;
+        }
+        #colorDisplay {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="color-box" id="colorBox"></div>
+    <p id="hexValue">#FFFFFF</p>
+    <div class="gradient-box" id="gradientBox"></div>
+    <canvas class="gradient-boxx" id="gradientBoxx" width="256" height="256"></canvas>
+
+    <div id="containers" class="containers"></div>
+
+    <div class="lower-bar">
+        <div class="row" id="colorSpaceButtons"></div>
+    </div>
+
+    <script src="clrspc.js"></script>
+    <script>
+        // Define color spaces as an array of objects
+const colorSpaces = [
+    { name: 'rgb', title: 'RGB', channels: ['r', 'g', 'b'], min: [0, 0, 0], max: [255, 255, 255], default: [255, 255, 255] },
+    { name: 'hsv', title: 'HSV', channels: ['h', 's', 'v'], min: [0, 0, 0], max: [360, 100, 100], default: [100, 100, 100] },
+    { name: 'hsl', title: 'HSL', channels: ['h', 's', 'l'], min: [0, 0, 0], max: [360, 100, 100], default: [100, 100, 100] },
+    { name: 'hsi', title: 'HSI', channels: ['h', 's', 'i'], min: [0, 0, 0], max: [360, 100, 100], default: [360, 100, 100] },
+    { name: 'hsm', title: 'HSM', channels: ['h', 's', 'm'], min: [0, 0, 0], max: [360, 100, 100], default: [360, 100, 100] },
+    { name: 'hsg', title: 'HSG', channels: ['h', 's', 'g'], min: [0, 0, 0], max: [360, 100, 100], default: [360, 100, 100] },
+    { name: 'hsh', title: 'HSH', channels: ['h', 's', 'hh'], min: [0, 0, 0], max: [360, 100, 100], default: [360, 100, 100] },
+    { name: 'hwb', title: 'HWB', channels: ['h', 'w', 'b'], min: [0, 0, 0], max: [360, 100, 100], default: [100, 100, 100] },
+    { name: 'cmy', title: 'CMY', channels: ['c', 'm', 'y'], min: [0, 0, 0], max: [255, 255, 255], default: [255, 255, 255] },
+    { name: 'hcl', title: 'HCL', channels: ['h', 'c', 'l'], min: [0, 0, 0], max: [360, 100, 100], default: [100, 100, 100] },
+    { name: 'lch', title: 'LCH', channels: ['l', 'c', 'h'], min: [0, 0, -180], max: [150, 150, 180], default: [100, 100, 0] },
+    { name: 'ycbcr', title: 'YCbCr', channels: ['y', 'cb', 'cr'], min: [-255, -255, -255], max: [255, 255, 255], default: [255, 255, 255] },
+    { name: 'xyz', title: 'XYZ', channels: ['x', 'y', 'z'], min: [0, 0, 0], max: [255, 255, 255], default: [255, 255, 255] },
+    { name: 'yjk', title: 'YJK', channels: ['y', 'j', 'k'], min: [0, 0, 0], max: [255, 255, 255], default: [255, 255, 255] },
+    { name: 'lab', title: 'Lab', channels: ['l', 'a', 'b'], min: [-255, -255, -255], max: [255, 255, 255], default: [255, 255, 255] },
+    { name: 'uvw', title: 'UVW', channels: ['u', 'v', 'w'], min: [0, 0, 0], max: [255, 255, 255], default: [255, 255, 255] },
+    { name: 'lms', title: 'LMS', channels: ['l', 'm', 's'], min: [0, 0, 0], max: [255, 255, 255], default: [255, 255, 255] },
+    { name: 'ydbdr', title: 'YDbDr', channels: ['y', 'db', 'dr'], min: [-255, -255, -255], max: [255, 255, 255], default: [255, 255, 255] },
+    { name: 'yiq', title: 'YIQ', channels: ['y', 'i', 'q'], min: [0, 0, 0], max: [255, 255, 255], default: [255, 255, 255] },
+    { name: 'ycocg', title: 'YCoCg', channels: ['y', 'co', 'cg'], min: [-255, -255, -255], max: [255, 255, 255], default: [255, 255, 255] },
+    { name: 'ycocgr', title: 'YCoCgR', channels: ['y', 'co', 'cg'], min: [-255, -255, -255], max: [255, 255, 255], default: [255, 255, 255] },
+    { name: 'yuv', title: 'YUV', channels: ['y', 'u', 'v'], min: [-255, -255, -255], max: [255, 255, 255], default: [255, 255, 255] },
+    { name: 'ypbpr', title: 'YPbPr', channels: ['y', 'pb', 'pr'], min: [-255, -255, -255], max: [255, 255, 255], default: [255, 255, 255] },
+    { name: 'bt', title: 'BT', channels: ['x', 'y', 'z'], min: [-255, -255, -255], max: [255, 255, 255], default: [255, 255, 255] },
+    { name: 'tsl', title: 'TSL', channels: ['t', 's', 'l'], min: [0, 0, 0], max: [100, 100, 255], default: [100, 100, 255] },
+    { name: 'luv', title: 'Luv', channels: ['l', 'u', 'v'], min: [0, 0, 0], max: [100, 100, 255], default: [100, 100, 255] },
+    { name: 'oklab', title: 'OKLab', channels: ['l', 'a', 'b'], min: [-255, -255, -255], max: [255, 255, 255], default: [255, 255, 255] },
+    { name: 'rxy', title: 'RXY', channels: ['r', 'x', 'y'], min: [-255, -255, -255], max: [255, 255, 360], default: [255, 255, 360] },
+    { name: 'lcw', title: 'LCW', channels: ['l', 'c', 'w'], min: [0, 0, 380], max: [255, 255, 780], default: [255, 255, 1000] },
+    { name: 'lct', title: 'LCT', channels: ['l', 'c', 't'], min: [0, 0, 4000], max: [255, 255, 7000], default: [255, 255, 5000] },
+    { name: 'ypo', title: 'YPO', channels: ['y', 'p', 'o'], min: [-160, -165, 0], max: [100, 361, 155], default: [0, 1, 1] },
+    { name: 'yrl', title: 'YRL', channels: ['y', 'r', 'l'], min: [-255, -255, -255], max: [255, 255, 255], default: [255, 255, 255] }
+];
+
+        // DOM elements
+        const colorBox = document.getElementById('colorBox');
+        const gradientBox = document.getElementById('gradientBox');
+        const gradientBoxx = document.getElementById('gradientBoxx');
+        const hexValue = document.getElementById('hexValue');
+        const containersDiv = document.getElementById('containers');
+        const colorSpaceButtons = document.getElementById('colorSpaceButtons');
+
+        // Current color state
+        let currentColor = {
+            rgb: { r: 255, g: 255, b: 255 },
+            hex: '#FFFFFF'
+        };
+
+        // Sliders storage
+        const sliders = {};
+
+        colorSpaces.forEach(space => {
+            sliders[space.name] = {
+                channels: {},  // Object to store by channel name
+                array: []      // Array to store in order
+            };
+        });
+        // Create conversion functions mapping
+   const conversionFunctions = Object.fromEntries(
+            colorSpaces.map(space => {
+                const funcName = `${space.name}ToRgb`;
+                return [funcName, window[funcName] || null];
+            })
+        );
+
+
+        // Initialize the app
+        function init() {
+            createColorSpaceButtons();
+            createColorSpaceContainers();
+            updateColor(currentColor.rgb.r, currentColor.rgb.g, currentColor.rgb.b, 'rgb');
+        }
+
+        // Create buttons for each color space
+        function createColorSpaceButtons() {
+            colorSpaces.forEach(space => {
+                const button = document.createElement('button');
+                button.textContent = space.title;
+                button.onclick = () => showContainer(space.name);
+                colorSpaceButtons.appendChild(button);
+            });
+        }
+
+        // Create containers with sliders for each color space
+        function createColorSpaceContainers() {
+            colorSpaces.forEach(space => {
+                // Create slider HTML
+                let sliderHtml = '';
+                space.channels.forEach((channel, i) => {
+                    sliderHtml += `
+                        <label for="${space.name}_${channel}_slider">${channel.toUpperCase()}</label>
+                        <input type="range" class="color-slider" id="${space.name}_${channel}_slider" 
+                               min="${space.min[i]}" max="${space.max[i]}" 
+                               value="${space.default[i]}" step="${getStep(space.min[i], space.max[i])}">
+                    `;
+                });
+
+                // Add dropdown for conversion options
+                sliderHtml += `
+                   <select style="margin-top: 10px;">
+    <option value="normal">normal</option>
+    <option value="SPH">SPH</option>
+    <option value="iSPH">iSPH</option>
+    <option value="CYL">CYL</option>
+    <option value="iCYL">iCYL</option>
+    <option value="TRP">TRP</option>
+    <option value="TPH">TPH</option>
+    <option value="TOR">TOR</option>
+    <option value="PCC">PCC</option>
+    <option value="OSC">OSC</option>
+    <option value="OSCzxp">OSCzxp</option>
+    <option value="OSCstp">OSCstp</option>
+    <option value="PSC">PSC</option>
+    <option value="PC">PC</option>
+    <option value="ECC">ECC</option>
+    <option value="CC">CC</option>
+    <option value="BCC">BCC</option>
+    <option value="BC">BC</option>
+    <option value="rgG">rgG</option>
+    <option value="ROT1">ROT1</option>
+    <option value="ROT2">ROT2</option>
+    <option value="HSV">HSV</option>
+    <option value="HSL">HSL</option>
+    <option value="CMY">CMY</option>
+    <option value="iCMY">iCMY</option>
+</select>
+                `;
+
+                // Create container
+                const container = document.createElement('div');
+                container.id = space.name;
+                container.className = 'container';
+
+                const header = document.createElement('div');
+                header.className = 'header';
+
+                const titleElement = document.createElement('span');
+                titleElement.textContent = space.title;
+                header.appendChild(titleElement);
+
+                const closeButton = document.createElement('span');
+                closeButton.textContent = 'X';
+                closeButton.className = 'close-btn';
+                closeButton.addEventListener('click', () => {
+                    container.style.display = 'none';
+                });
+                header.appendChild(closeButton);
+
+                const content = document.createElement('div');
+                content.className = 'slider-container';
+                content.innerHTML = sliderHtml;
+
+                container.appendChild(header);
+                container.appendChild(content);
+                containersDiv.appendChild(container);
+
+                // Initialize sliders storage for this space
+                space.channels.forEach((channel, i) => {
+                    const slider = document.getElementById(`${space.name}_${channel}_slider`);
+                    if (slider) {
+                        // Store by channel name
+                        sliders[space.name].channels[channel] = slider;
+                        // Also store in array for ordered access
+                        sliders[space.name].array[i] = slider;
+                        
+                        slider.addEventListener('input', () => {
+                            const values = {};
+                            space.channels.forEach(c => {
+                                values[c] = parseFloat(document.getElementById(`${space.name}_${c}_slider`).value);
+                            });
+                            updateColorFromSpace(space.name, values);
+                        });
+                    }
+                });
+            });
+        }
+        // Helper function to determine step size
+        function getStep(min, max) {
+            return Number.isInteger(min) && Number.isInteger(max) ? 1 : 0.01;
+        }
+
+        // Convert RGB to hex
+        function rgbToHex(rr, gg,bb) {
+        let r=Math.round(rr);
+         let g=Math.round(gg);
+          let b=Math.round(bb);
+            return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`;
+        }
+        function updateSliders(r, g, b, name, conversionFunction, conversions, r1, g1, b1) {
+            // Convert RGB to other color spaces
+            const conversionss = Object.fromEntries(
+                colorSpaces.map(space => [space.name, window[`rgbTo${space.name.charAt(0).toUpperCase() + space.name.slice(1)}`]?.(r, g, b)])
+            );
+
+            // Update RGB sliders if we're not coming from RGB space
+            if (name !== 'rgb' && sliders.rgb) {
+                if (sliders.rgb.channels.r) sliders.rgb.channels.r.value = r;
+                if (sliders.rgb.channels.g) sliders.rgb.channels.g.value = g;
+                if (sliders.rgb.channels.b) sliders.rgb.channels.b.value = b;
+            }
+
+            let [aa, bb, cc] = [0, 0, 0];
+            
+            // Update other sliders based on color space
+            Object.keys(conversionss).forEach(space => {
+                const container = document.getElementById(space);
+                if (name !== space && container && sliders[space]) {
+                    const values = {};
+                    
+                    try {
+                        [aa, bb, cc] = conversionss[space];
+                    } catch (error) {
+                        [aa, bb, cc] = [0, 0, 0];
+                    }
+                    
+                    // Update slider values
+                    if (sliders[space].array[0]) sliders[space].array[0].value = aa;
+                    if (sliders[space].array[1]) sliders[space].array[1].value = bb;
+                    if (sliders[space].array[2]) sliders[space].array[2].value = cc;
+                    
+                    values.r = aa;
+                    values.g = bb;
+                    values.b = cc;
+                    
+                    updateSlidersWithSampledGradient(values, conversionFunctions[`${space}ToRgb`], conversionFunctions[`${space}ToRgb`], space);
+                }
+            });
+            
+            // Update gradients for current color space
+            const values = {};
+            try {
+                [aa, bb, cc] = conversionss[name];
+            } catch (error) {
+                [aa, bb, cc] = [0, 0, 0];
+            }
+            
+            values.r = r1;
+            values.g = g1;
+            values.b = b1;
+            
+            updateSlidersWithSampledGradient(values, conversionFunctions[`${name}ToRgb`], conversionFunctions[`${name}ToRgb`], name);
+        }
+
+        // Update sliders with gradient backgrounds
+        function updateSlidersWithSampledGradient(values, conversionFunction, conversions, name) {
+            function convertColor(ra, ga, ba) {
+                try {
+                    let [r1, g1, b1] = conversionFunction ? conversionFunction(ra, ga, ba) : [ra, ga, ba];
+                    let [r2, g2, b2] = conversions ? conversions(r1, g1, b1) : [r1, g1, b1];
+                    return [
+                        Math.min(255, Math.max(0, Math.floor(r2))),
+                        Math.min(255, Math.max(0, Math.floor(g2))),
+                        Math.min(255, Math.max(0, Math.floor(b2)))
+                    ];
+                } catch (error) {
+                    return [0, 0, 0];
+                }
+            }
+
+            function generateGradientSamples(channel, min, max, step, fixedValue1, fixedValue2) {
+                let gradient = [];
+                for (let i = min; i <= max; i += step) {
+                    let r, g, b;
+                    if (channel === 'r') {
+                        [r, g, b] = convertColor(i, fixedValue1, fixedValue2);
+                    } else if (channel === 'g') {
+                        [r, g, b] = convertColor(fixedValue1, i, fixedValue2);
+                    } else if (channel === 'b') {
+                        [r, g, b] = convertColor(fixedValue1, fixedValue2, i);
+                    }
+                    gradient.push(`rgb(${r}, ${g}, ${b})`);
+                }
+                return gradient.join(',');
+            }
+
+            // Sample size for gradient steps
+            const stepSize = 4;
+            
+            // Get the color space definition
+            const space = colorSpaces.find(s => s.name === name);
+            if (!space) return;
+            
+            // Update gradients for each channel
+            space.channels.forEach((channel, i) => {
+                const slider = sliders[name].array[i];
+                if (!slider) return;
+                
+                const min = space.min[i];
+                const max = space.max[i];
+                
+                let gradient;
+                if (channel === space.channels[0]) { // First channel
+                    gradient = generateGradientSamples('r', min, max, stepSize, values.g, values.b);
+                } else if (channel === space.channels[1]) { // Second channel
+                    gradient = generateGradientSamples('g', min, max, stepSize, values.r, values.b);
+                } else if (channel === space.channels[2]) { // Third channel
+                    gradient = generateGradientSamples('b', min, max, stepSize, values.r, values.g);
+                }
+                
+                if (gradient) {
+                    slider.style.background = `linear-gradient(to right, ${gradient})`;
+                }
+            });
+        }
+        // Update color from a color space
+        function updateColorFromSpace(spaceName, values) {
+            const dropdown = document.querySelector(`#${spaceName} select`);
+            const selectedConversion = dropdown ? dropdown.value : 'normal';
+            const conversionFunction = window[selectedConversion] || null;
+
+            // Convert to RGB
+            let [r, g, b] = [0, 0, 0];
+            try {
+                // First apply any selected conversion
+                let convertedValues = conversionFunction ? 
+                    conversionFunction(...Object.values(values)) : 
+                    Object.values(values);
+                
+                // Then convert from color space to RGB
+                const spaceToRgb = window[`${spaceName}ToRgb`];
+                if (spaceToRgb) {
+                    [r, g, b] = spaceToRgb(...convertedValues);
+                } else {
+                    [r, g, b] = convertedValues;
+                }
+            } catch (e) {
+                console.error("Conversion error:", e);
+            }
+
+            updateColor(r, g, b, spaceName);
+        }
+
+        // Update color display and all sliders
+          function updateColor(r, g, b, sourceSpace) {
+            // Update current color
+            currentColor.rgb = { r, g, b };
+            currentColor.hex = rgbToHex(r, g, b);
+            
+            // Update display
+            colorBox.style.backgroundColor = currentColor.hex;
+            hexValue.textContent = currentColor.hex;
+            
+            // Get the dropdown conversion function if it exists
+            const dropdown = document.querySelector(`#${sourceSpace} select`);
+            const selectedConversion = dropdown ? dropdown.value : 'normal';
+            const conversionFunction = window[selectedConversion] || null;
+            
+            // Get the current values from the source space
+            const values = {};
+            const sourceSliders = sliders[sourceSpace];
+            if (sourceSliders) {
+                colorSpaces.find(s => s.name === sourceSpace).channels.forEach(channel => {
+                    if (sourceSliders.channels[channel]) {
+                        values[channel] = parseFloat(sourceSliders.channels[channel].value);
+                    }
+                });
+            }
+            
+            // Get converted values (r1, g1, b1)
+            let [r1, g1, b1] = [0, 0, 0];
+            try {
+                [r1, g1, b1] = conversionFunction ? 
+                    conversionFunction(...Object.values(values)) : 
+                    Object.values(values);
+            } catch (e) {
+                console.error("Conversion error:", e);
+            }
+            
+            // Update all sliders
+            updateSliders(r, g, b, sourceSpace, conversionFunction, 
+                         conversionFunctions[`${sourceSpace}ToRgb`], r1, g1, b1);
+            
+            // Update gradients
+            updateGradients(sourceSpace);
+        }
+
+
+        // Update gradient displays
+     function updateGradients(sourceSpace) {
+            // Get current values from source space
+            const values = {};
+            const space = colorSpaces.find(s => s.name === sourceSpace);
+            space.channels.forEach(channel => {
+                const slider = sliders[sourceSpace].channels[channel];
+                if (slider) {
+                    values[channel] = parseFloat(slider.value);
+                }
+            });
+
+            // Generate 1D gradient
+            const rgbValues = window[`rgbTo${sourceSpace.charAt(0).toUpperCase() + sourceSpace.slice(1)}`](255, 255, 255);
+            const qGradient = generateGradientSamples2(rgbValues[0], rgbValues[1], rgbValues[2], 
+                ...Object.values(values), sourceSpace);
+            gradientBox.style.background = `linear-gradient(to right, ${qGradient})`;
+
+            // Generate 2D gradient - use the space's min/max values directly
+            const qqGradient = generate2DGradientSamples(
+                space.min[0],  // First channel min
+                space.max[0],  // First channel max
+                space.min[1],  // Second channel min
+                space.max[1],  // Second channel max
+                ...Object.values(values),
+                sourceSpace
+            );
+            draw2DGradient(qqGradient, 'gradientBoxx');
+        }
+
+
+        // Generate 1D gradient samples
+        function generateGradientSamples2(fixedValue1, fixedValue2, fixedValue3, alt1, alt2, alt3, sourceSpace) {
+            let gradient = [];
+            let min = 0, max = 100;
+            
+            for (let i = min; i <= max; i += 1) {
+                let r, g, b;
+                [r, g, b] = convertColor(
+                    ((max-i)*fixedValue1+(i*alt1))/max, 
+                    ((max-i)*fixedValue2+(i*alt2))/max, 
+                    ((max-i)*fixedValue3+(i*alt3))/max,
+                    sourceSpace
+                );
+                gradient.push(`rgb(${r}, ${g}, ${b})`);
+            }
+            return gradient.join(',');
+        }
+
+        // Generate 2D gradient samples
+      function generate2DGradientSamples(alt1Min, alt1Max, alt2Min, alt2Max, alt1, alt2, alt3, sourceSpace) {
+            let gradient2D = [];
+            let step = 5;
+
+            for (let val1 = alt1Min; val1 <= alt1Max; val1 += step) {
+                let row = [];
+                for (let val2 = alt2Min; val2 <= alt2Max; val2 += step) {
+                    let [r, g, b] = convertColor(val1, val2, alt3, sourceSpace);
+                    row.push([r, g, b]);
+                }
+                gradient2D.push(row);
+            }
+            return gradient2D;
+        }
+
+        // Convert color through the current space's conversion pipeline
+        function convertColor(val1, val2, val3, sourceSpace) {
+            try {
+                const dropdown = document.querySelector(`#${sourceSpace} select`);
+                const selectedConversion = dropdown ? dropdown.value : 'normal';
+                const conversionFunction = window[selectedConversion] || null;
+
+                // Apply conversion if specified
+                let [r1, g1, b1] = conversionFunction ? 
+                    conversionFunction(val1, val2, val3) : 
+                    [val1, val2, val3];
+
+                // Convert from source space to RGB
+                const spaceToRgb = window[`${sourceSpace}ToRgb`];
+                if (spaceToRgb) {
+                    return spaceToRgb(r1, g1, b1);
+                }
+                return [r1, g1, b1];
+            } catch (e) {
+                console.error("Color conversion error:", e);
+                return [0, 0, 0];
+            }
+        }
+
+        // Draw 2D gradient on canvas
+        function draw2DGradient(gradient, canvasId) {
+            let canvas = document.getElementById(canvasId);
+            let ctx = canvas.getContext('2d');
+            
+            let gradientWidth = gradient[0].length;
+            let gradientHeight = gradient.length;
+            
+            let cellWidth = canvas.width / gradientWidth;
+            let cellHeight = canvas.height / gradientHeight;
+
+            // Create an image data object to fill
+            let imgData = ctx.createImageData(canvas.width, canvas.height);
+
+            // Fill the canvas with the gradient colors
+            for (let y = 0; y < gradientHeight; y++) {
+                for (let x = 0; x < gradientWidth; x++) {
+                    let [r, g, b] = gradient[y][x];
+
+                    // Calculate the starting pixel position on the canvas for each gradient cell
+                    let startX = Math.floor(x * cellWidth);
+                    let startY = Math.floor(y * cellHeight);
+
+                    // Fill the corresponding pixels in the canvas for each gradient cell
+                    for (let dy = 0; dy < cellHeight; dy++) {
+                        for (let dx = 0; dx < cellWidth; dx++) {
+                            let pixelIndex = ((startY + dy) * canvas.width + (startX + dx)) * 4;
+                            imgData.data[pixelIndex] = r;
+                            imgData.data[pixelIndex + 1] = Math.min(255, Math.max(0, g));
+                            imgData.data[pixelIndex + 2] = Math.min(255, Math.max(0, b));
+                            imgData.data[pixelIndex + 3] = 255;
+                        }
+                    }
+                }
+            }
+
+            ctx.putImageData(imgData, 0, 0);
+        }
+
+        // Show a color space container
+        function showContainer(id) {
+            const container = document.getElementById(id);
+            if (container) {
+                container.style.display = 'block';
+            }
+        }
+
+        // Initialize the app
+        init();
+    </script>
+</body>
+</html>

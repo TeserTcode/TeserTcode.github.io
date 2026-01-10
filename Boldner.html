@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Sketch Styler V2</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            gap: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px;
+            background-color: #2c2c2c;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        canvas {
+            border: 1px solid #555;
+            background-color: #fff;
+            border-radius: 4px;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px 20px;
+            padding: 15px;
+            background-color: #333;
+            border-radius: 8px;
+        }
+        .control-group { display: flex; flex-direction: column; }
+        label { margin-bottom: 5px; font-size: 0.9em; font-weight: bold; }
+        input[type="range"] { width: 100%; }
+        input, button {
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #555;
+            background-color: #444;
+            color: #fff;
+            cursor: pointer;
+        }
+        button {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            font-weight: bold;
+            grid-column: 1 / -1; /* Span full width */
+            padding: 12px;
+        }
+        button:hover { background-color: #0b5ed7; }
+        h2 { text-align: center; margin: 0; padding-bottom: 10px; border-bottom: 1px solid #444;}
+        .canvas-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .canvas-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .canvas-container label {
+             background-color: #383838;
+             padding: 4px 8px;
+             border-radius: 4px;
+             margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Advanced Sketch Styler V2</h2>
+    <div class="canvas-grid">
+        <div class="canvas-container">
+            <label>1. Your Sketch</label>
+            <canvas id="inputCanvas" width="400" height="400"></canvas>
+        </div>
+        <div class="canvas-container">
+            <label>4. Stylized Output</label>
+            <canvas id="outputCanvas" width="400" height="400"></canvas>
+        </div>
+        <div class="canvas-container">
+            <label>Analysis: Speed Map (Slow→Fast)</label>
+            <canvas id="speedCanvas" width="400" height="400"></canvas>
+        </div>
+        <div class="canvas-container">
+            <label>Analysis: Corner Map</label>
+            <canvas id="cornerCanvas" width="400" height="400"></canvas>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <div class="control-group" style="grid-column: 1 / -1;">
+             <label for="imageLoader">2. Upload Sketch (Black on White)</label>
+             <input type="file" id="imageLoader" accept="image/*">
+        </div>
+        
+        <div class="control-group">
+            <label>Base Thickness</label>
+            <input type="range" id="baseThickness" min="1" max="50" value="6">
+        </div>
+        <div class="control-group">
+            <label>Speed Influence</label>
+            <input type="range" id="speedInfluence" min="0" max="3" value="0.8" step="0.1">
+        </div>
+        <div class="control-group">
+            <label>Corner Boost</label>
+            <input type="range" id="cornerBoost" min="0" max="8" value="3.5" step="0.1">
+        </div>
+         <div class="control-group">
+            <label>Pointy Tips</label>
+            <input type="range" id="pointyFactor" min="0" max="10" value="3" step="0.1">
+        </div>
+        <div class="control-group">
+            <label>Proximity Check (px)</label>
+            <input type="range" id="proximityCheck" min="1" max="10" value="2" step="1">
+        </div>
+        <div class="control-group">
+            <label>Refinement Passes</label>
+            <input type="range" id="refinementPasses" min="0" max="20" value="10">
+        </div>
+        
+        <button id="processButton">3. Process and Stylize Image</button>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Canvas setup
+    const canvases = {
+        input: document.getElementById('inputCanvas'),
+        output: document.getElementById('outputCanvas'),
+        speed: document.getElementById('speedCanvas'),
+        corner: document.getElementById('cornerCanvas')
+    };
+    const contexts = {
+        input: canvases.input.getContext('2d'),
+        output: canvases.output.getContext('2d'),
+        speed: canvases.speed.getContext('2d'),
+        corner: canvases.corner.getContext('2d')
+    };
+
+    const imageLoader = document.getElementById('imageLoader');
+    const processButton = document.getElementById('processButton');
+    let originalImageData = null;
+
+    imageLoader.addEventListener('change', (e) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                for (const key in canvases) {
+                    canvases[key].width = img.width;
+                    canvases[key].height = img.height;
+                }
+                contexts.input.drawImage(img, 0, 0);
+                originalImageData = contexts.input.getImageData(0, 0, canvases.input.width, canvases.input.height);
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    });
+
+    processButton.addEventListener('click', () => {
+        if (!originalImageData) {
+            alert('Please upload an image first!');
+            return;
+        }
+        stylizeImage();
+    });
+
+    function getParams() {
+        return {
+            baseThickness: parseFloat(document.getElementById('baseThickness').value),
+            speedInfluence: parseFloat(document.getElementById('speedInfluence').value),
+            cornerBoost: parseFloat(document.getElementById('cornerBoost').value),
+            pointyFactor: parseFloat(document.getElementById('pointyFactor').value),
+            proximityCheck: parseInt(document.getElementById('proximityCheck').value, 10),
+            refinementPasses: parseInt(document.getElementById('refinementPasses').value, 10),
+            cornerAngleThreshold: 2.8, // Radians. A straight line is PI (3.14), a 90deg turn is PI/2 (1.57). 2.8 is a gentle turn.
+            speedSmoothingWindow: 5,
+            cornerLookAhead: 8
+        };
+    }
+
+    function stylizeImage() {
+        console.time('Styling');
+        const params = getParams();
+
+        // Clear canvases
+        for (const key in contexts) {
+            contexts[key].fillStyle = 'white';
+            contexts[key].fillRect(0, 0, canvases[key].width, canvases[key].height);
+        }
+        
+        const paths = tracePaths(originalImageData);
+        const analyzedPaths = analyzeAndRefinePaths(paths, params);
+        
+        visualizeAnalysis(analyzedPaths, params);
+        renderStylizedOutput(analyzedPaths, params);
+        console.timeEnd('Styling');
+    }
+
+    // --- Core Processing Pipeline ---
+
+    function analyzeAndRefinePaths(paths, params) {
+        // --- Pass 1: Initial Analysis (Speed, Curvature) ---
+        let analyzedPaths = paths.map(path => {
+            if (path.length < 3) return [];
+            const analyzedPoints = [];
+            const speedWindow = params.speedSmoothingWindow;
+
+            for (let i = 0; i < path.length; i++) {
+                // Smoothed Speed
+                let totalDist = 0;
+                const start = Math.max(0, i - speedWindow);
+                for (let j = start; j < i; j++) {
+                    totalDist += Math.hypot(path[j+1].x - path[j].x, path[j+1].y - path[j].y);
+                }
+                const speed = totalDist / speedWindow || 0;
+
+                // Curvature
+                const p1 = path[Math.max(0, i - params.cornerLookAhead)];
+                const pMid = path[i];
+                const p2 = path[Math.min(path.length - 1, i + params.cornerLookAhead)];
+                const angle = Math.abs(Math.atan2(p2.y - pMid.y, p2.x - pMid.x) - Math.atan2(p1.y - pMid.y, p1.x - pMid.x));
+                const curvature = Math.PI - Math.min(angle, Math.PI); // 0 for straight, PI for hairpin
+                
+                analyzedPoints.push({ ...path[i], speed, curvature, isCorner: curvature > params.cornerAngleThreshold });
+            }
+            return analyzedPoints;
+        }).filter(p => p.length > 0);
+
+        // --- Calculate initial thickness ---
+        const maxSpeed = Math.max(...analyzedPaths.flat().map(p => p.speed), 1);
+        analyzedPaths.forEach(path => {
+            path.forEach(p => {
+                const speedFactor = 1 - (p.speed / maxSpeed); // High speed -> low factor
+                const cornerFactor = p.isCorner ? 1 : 0;
+                p.thickness = params.baseThickness * (1 + speedFactor * params.speedInfluence) * (1 + cornerFactor * params.cornerBoost);
+            });
+        });
+
+        // --- Pass 2 to N: Iterative Refinement ---
+        for (let pass = 0; pass < params.refinementPasses; pass++) {
+            analyzedPaths.forEach(path => {
+                const newThicknesses = path.map(p => p.thickness);
+                for (let i = 1; i < path.length - 1; i++) {
+                    const prevThickness = path[i-1].thickness;
+                    const nextThickness = path[i+1].thickness;
+                    // Average the thickness with neighbors to smooth it out
+                    newThicknesses[i] = (prevThickness + newThicknesses[i] * 2 + nextThickness) / 4;
+                }
+                path.forEach((p, i) => p.thickness = newThicknesses[i]);
+            });
+        }
+        return analyzedPaths;
+    }
+
+    function visualizeAnalysis(analyzedPaths, params) {
+        const speedCtx = contexts.speed;
+        const cornerCtx = contexts.corner;
+        const maxSpeed = Math.max(...analyzedPaths.flat().map(p => p.speed), 1);
+
+        analyzedPaths.forEach(path => {
+            // Speed Map
+            for (let i = 0; i < path.length - 1; i++) {
+                const p1 = path[i];
+                const speedRatio = p1.speed / maxSpeed;
+                const hue = 240 * (1 - speedRatio); // 240 is blue, 0 is red
+                speedCtx.strokeStyle = `hsl(${hue}, 90%, 50%)`;
+                speedCtx.beginPath();
+                speedCtx.moveTo(p1.x, p1.y);
+                speedCtx.lineTo(path[i+1].x, path[i+1].y);
+                speedCtx.stroke();
+            }
+            // Corner Map
+            cornerCtx.strokeStyle = '#cccccc';
+            cornerCtx.beginPath();
+            cornerCtx.moveTo(path[0].x, path[0].y);
+            path.forEach(p => cornerCtx.lineTo(p.x, p.y));
+            cornerCtx.stroke();
+
+            path.forEach(p => {
+                if (p.isCorner) {
+                    cornerCtx.fillStyle = 'rgba(255, 0, 100, 0.8)';
+                    cornerCtx.beginPath();
+                    cornerCtx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                    cornerCtx.fill();
+                }
+            });
+        });
+    }
+
+    function renderStylizedOutput(analyzedPaths, params) {
+        const { width, height } = canvases.output;
+        const outputImageData = contexts.output.createImageData(width, height);
+        // A map to store which path ID owns a pixel, to prevent merging
+        const pathIdMap = new Int16Array(width * height); 
+
+        analyzedPaths.forEach((path, pathIndex) => {
+            const pathId = pathIndex + 1; // Use 1-based index
+            if (path.length < 2) return;
+
+            // Generate the polygon for the variable-width stroke
+            const polygon = createStrokePolygon(path, params);
+            
+            // Get bounding box of the polygon for efficient iteration
+            let minX = width, minY = height, maxX = 0, maxY = 0;
+            polygon.forEach(p => {
+                minX = Math.min(minX, p.x);
+                minY = Math.min(minY, p.y);
+                maxX = Math.max(maxX, p.x);
+                maxY = Math.max(maxY, p.y);
+            });
+            
+            // Pixel-by-pixel rendering with proximity check
+            for (let y = Math.floor(minY); y <= Math.ceil(maxY); y++) {
+                for (let x = Math.floor(minX); x <= Math.ceil(maxX); x++) {
+                    if (x < 0 || x >= width || y < 0 || y >= height) continue;
+
+                    if (isPointInPolygon({x, y}, polygon)) {
+                        // Proximity check
+                        let isTooClose = false;
+                        const checkDist = params.proximityCheck;
+                        for (let dy = -checkDist; dy <= checkDist; dy++) {
+                            for (let dx = -checkDist; dx <= checkDist; dx++) {
+                                if (dx === 0 && dy === 0) continue;
+                                const nx = x + dx, ny = y + dy;
+                                if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                                    const neighborId = pathIdMap[ny * width + nx];
+                                    if (neighborId !== 0 && neighborId !== pathId) {
+                                        isTooClose = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (isTooClose) break;
+                        }
+                        
+                        if (!isTooClose) {
+                            const i = (y * width + x);
+                            outputImageData.data[i * 4] = 0;     // R
+                            outputImageData.data[i * 4 + 1] = 0; // G
+                            outputImageData.data[i * 4 + 2] = 0; // B
+                            outputImageData.data[i * 4 + 3] = 255; // A
+                            pathIdMap[i] = pathId;
+                        }
+                    }
+                }
+            }
+        });
+        contexts.output.putImageData(outputImageData, 0, 0);
+    }
+    
+    function createStrokePolygon(points, params) {
+        const polygonPoints = [];
+        // Forward pass for one side
+        for (let i = 0; i < points.length; i++) {
+            const p = points[i];
+            const tangent = i < points.length - 1 ? 
+                { x: points[i+1].x - p.x, y: points[i+1].y - p.y } : 
+                { x: p.x - points[i-1].x, y: p.y - points[i-1].y };
+            const normal = { x: -tangent.y, y: tangent.x };
+            const mag = Math.hypot(normal.x, normal.y) || 1;
+            polygonPoints.push({
+                x: p.x + (normal.x / mag) * p.thickness / 2,
+                y: p.y + (normal.y / mag) * p.thickness / 2,
+            });
+        }
+        // End tip
+        const end = points[points.length - 1], prevEnd = points[points.length - 2];
+        const endTangent = {x: end.x - prevEnd.x, y: end.y - prevEnd.y};
+        const endMag = Math.hypot(endTangent.x, endTangent.y) || 1;
+        polygonPoints.push({
+             x: end.x + (endTangent.x / endMag) * params.pointyFactor * params.baseThickness / 2,
+             y: end.y + (endTangent.y / endMag) * params.pointyFactor * params.baseThickness / 2
+        });
+        // Backward pass for the other side
+        for (let i = points.length - 1; i >= 0; i--) {
+            const p = points[i];
+            const tangent = i < points.length - 1 ? 
+                { x: points[i+1].x - p.x, y: points[i+1].y - p.y } : 
+                { x: p.x - points[i-1].x, y: p.y - points[i-1].y };
+            const normal = { x: -tangent.y, y: tangent.x };
+            const mag = Math.hypot(normal.x, normal.y) || 1;
+            polygonPoints.push({
+                x: p.x - (normal.x / mag) * p.thickness / 2,
+                y: p.y - (normal.y / mag) * p.thickness / 2,
+            });
+        }
+        // Start tip
+        const start = points[0], nextStart = points[1];
+        const startTangent = {x: start.x - nextStart.x, y: start.y - nextStart.y};
+        const startMag = Math.hypot(startTangent.x, startTangent.y) || 1;
+        polygonPoints.push({
+             x: start.x + (startTangent.x / startMag) * params.pointyFactor * params.baseThickness / 2,
+             y: start.y + (startTangent.y / startMag) * params.pointyFactor * params.baseThickness / 2
+        });
+        return polygonPoints;
+    }
+
+    // --- Utility Functions ---
+
+    function isPointInPolygon(point, polygon) {
+        let isInside = false;
+        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+            const xi = polygon[i].x, yi = polygon[i].y;
+            const xj = polygon[j].x, yj = polygon[j].y;
+            const intersect = ((yi > point.y) !== (yj > point.y)) && (point.x < (xj - xi) * (point.y - yi) / (yj - yi) + xi);
+            if (intersect) isInside = !isInside;
+        }
+        return isInside;
+    }
+    
+    function tracePaths(imageData) { /* ... (This function is unchanged from the previous version, so it's omitted for brevity. You can copy it from the first answer if needed.) ... */ const { data, width, height } = imageData; const visited = new Uint8Array(width * height); const paths = []; const threshold = 128; for (let y = 0; y < height; y++) { for (let x = 0; x < width; x++) { const i = (y * width + x); if (data[i * 4] < threshold && visited[i] === 0) { const newPath = []; let currentX = x, currentY = y; while(currentX !== -1) { const currentIdx = currentY * width + currentX; if (visited[currentIdx] === 1 || data[currentIdx * 4] >= threshold) break; visited[currentIdx] = 1; newPath.push({ x: currentX, y: currentY }); let nextPixel = findNextPixel(currentX, currentY, data, visited, width, height, threshold); currentX = nextPixel.x; currentY = nextPixel.y; } if (newPath.length > 10) paths.push(newPath); } } } return paths; }
+    function findNextPixel(x, y, data, visited, width, height, threshold) { for (let dy = -1; dy <= 1; dy++) { for (let dx = -1; dx <= 1; dx++) { if (dx === 0 && dy === 0) continue; const nx = x + dx, ny = y + dy; if (nx >= 0 && nx < width && ny >= 0 && ny < height) { const i = ny * width + nx; if (visited[i] === 0 && data[i * 4] < threshold) return { x: nx, y: ny }; } } } return { x: -1, y: -1 }; }
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Data Extrapolator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .input-area {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+        }
+        button {
+            padding: 8px 15px;
+            cursor: pointer;
+        }
+        canvas {
+            max-width: 100%;
+        }
+        .method-options {
+            display: none;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .rigged-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .rigged-control {
+            display: flex;
+            flex-direction: column;
+            min-width: 100px;
+        }
+        .examples {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .example-btn {
+            padding: 5px 10px;
+            font-size: 0.8em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Advanced Data Extrapolator</h1>
+        
+        <div class="input-area">
+            <label for="dataInput">Enter data points as [[x,y],[x1,y1],...]:</label>
+            <textarea id="dataInput">[[1,2],[2,3],[3,5],[4,4],[5,6]]</textarea>
+            <div class="examples">
+                <button class="example-btn" data-example="[[1,2],[2,3],[3,5],[4,4],[5,6]]">Short Linear</button>
+                <button class="example-btn" data-example="[[0,1],[1,2],[2,4],[3,8],[4,16],[5,32],[6,64]]">Exponential</button>
+                <button class="example-btn" data-example="[[0,0],[1,1],[2,4],[3,9],[4,16],[5,25],[6,36]]">Quadratic</button>
+                <button class="example-btn" data-example="[[0,10],[1,8],[2,6],[3,4],[4,2],[5,0],[6,-2]]">Linear Descending</button>
+                <button class="example-btn" data-example="[[0,1],[1,0],[2,1],[3,0],[4,1],[5,0],[6,1],[7,0],[8,1]]">Oscillating</button>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div>
+                <label for="extrapolationType">Extrapolation Method:</label>
+                <select id="extrapolationType">
+                    <option value="linear">Linear</option>
+                    <option value="polynomial">Polynomial</option>
+                    <option value="lagrange">Lagrange</option>
+                    <option value="spline">Spline</option>
+                    <option value="cubic_spline">Cubic Spline</option>
+                    <option value="exponential">Exponential</option>
+                    <option value="logarithmic">Logarithmic</option>
+                    <option value="sigmoidal">Sigmoidal</option>
+                    <option value="rigged_sigmoid">Rigged Sigmoid</option>
+                    <option value="custom_formula">Custom Formula</option>
+                    <option value="pade">Padé</option>
+                    <option value="continued_fraction">Continued Fraction</option>
+                    <option value="fourier">Fourier</option>
+                    <option value="bayesian">Bayesian</option>
+                    <option value="aitken">Aitken's Δ²</option>
+                </select>
+                
+                <!-- Method-specific options -->
+                <div id="polynomial-options" class="method-options">
+                    <label for="polyDegree">Polynomial Degree:</label>
+                    <input type="number" id="polyDegree" min="1" max="10" value="2">
+                </div>
+                
+                <div id="spline-options" class="method-options">
+                    <label for="splineDegree">Spline Degree:</label>
+                    <input type="number" id="splineDegree" min="1" max="3" value="2">
+                </div>
+                
+                <div id="fourier-options" class="method-options">
+                    <label for="fourierTerms">Number of Terms:</label>
+                    <input type="number" id="fourierTerms" min="1" max="20" value="3">
+                </div>
+                
+                <div id="rigged-sigmoid-options" class="method-options">
+                    <div class="rigged-controls">
+                        <div class="rigged-control">
+                            <label for="riggedMin">Min Value:</label>
+                            <input type="number" id="riggedMin" step="0.1" value="1">
+                        </div>
+                        <div class="rigged-control">
+                            <label for="riggedMax">Max Value:</label>
+                            <input type="number" id="riggedMax" step="0.1" value="10">
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="custom-formula-options" class="method-options">
+                    <label for="customFormula">Formula (e.g., "[a,b,c] a+b*x+exp(c)"):</label>
+                    <input type="text" id="customFormula" value="[a,b] a+b*x" style="width: 100%;">
+                </div>
+            </div>
+            
+            <div>
+                <label for="extendLeft">Extend Left by:</label>
+                <input type="number" id="extendLeft" min="0" value="2" style="width: 50px;">
+                <label for="leftStep">Step Size:</label>
+                <input type="number" id="leftStep" step="0.1" value="0.5" style="width: 50px;">
+            </div>
+            
+            <div>
+                <label for="extendRight">Extend Right by:</label>
+                <input type="number" id="extendRight" min="0" value="2" style="width: 50px;">
+                <label for="rightStep">Step Size:</label>
+                <input type="number" id="rightStep" step="0.1" value="0.5" style="width: 50px;">
+            </div>
+            
+            <button id="updateBtn">Update Graph</button>
+        </div>
+        
+        <canvas id="chart"></canvas>
+    </div>
+
+    <script>
+        // Initialize chart
+        const ctx = document.getElementById('chart').getContext('2d');
+        let chart = new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Original Data',
+                    data: [],
+                    backgroundColor: 'rgba(75, 192, 192, 1)',
+                    pointRadius: 6
+                }, {
+                    label: 'Extrapolated Data',
+                    data: [],
+                    backgroundColor: 'rgba(255, 99, 132, 1)',
+                    pointRadius: 6
+                }, {
+                    label: 'Regression Line',
+                    data: [],
+                    type: 'line',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 2,
+                    fill: false,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'center'
+                    },
+                    y: {
+                        type: 'linear',
+                        position: 'center'
+                    }
+                }
+            }
+        });
+
+        // Show/hide method options
+        document.getElementById('extrapolationType').addEventListener('change', function() {
+            // Hide all options first
+            document.querySelectorAll('.method-options').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            // Show relevant options
+            const method = this.value;
+            if (method === 'polynomial') {
+                document.getElementById('polynomial-options').style.display = 'block';
+            } else if (method === 'spline') {
+                document.getElementById('spline-options').style.display = 'block';
+            } else if (method === 'fourier') {
+                document.getElementById('fourier-options').style.display = 'block';
+            } else if (method === 'rigged_sigmoid') {
+                document.getElementById('rigged-sigmoid-options').style.display = 'block';
+            } else if (method === 'custom_formula') {
+                document.getElementById('custom-formula-options').style.display = 'block';
+            }
+        });
+
+        // Example data buttons
+        document.querySelectorAll('.example-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.getElementById('dataInput').value = this.getAttribute('data-example');
+                updateChart();
+            });
+        });
+
+        // Extrapolation methods
+        const extrapolationMethods = {
+            linear: (data, x) => {
+                if (data.length < 2) return null;
+                
+                // For left extrapolation
+                if (x < data[0][0]) {
+                    const [x0, y0] = data[0];
+                    const [x1, y1] = data[1];
+                    const slope = (y1 - y0) / (x1 - x0);
+                    return y0 + slope * (x - x0);
+                }
+                // For right extrapolation
+                else if (x > data[data.length - 1][0]) {
+                    const [x0, y0] = data[data.length - 2];
+                    const [x1, y1] = data[data.length - 1];
+                    const slope = (y1 - y0) / (x1 - x0);
+                    return y1 + slope * (x - x1);
+                }
+                return null;
+            },
+            
+            polynomial: (data, x, degree = 2) => {
+                if (data.length < degree + 1) {
+                    return extrapolationMethods.linear(data, x);
+                }
+                
+                // Extract x and y values
+                const xVals = data.map(point => point[0]);
+                const yVals = data.map(point => point[1]);
+                
+                // Perform polynomial regression
+                const X = [];
+                for (let i = 0; i < xVals.length; i++) {
+                    const row = [];
+                    for (let j = 0; j <= degree; j++) {
+                        row.push(Math.pow(xVals[i], j));
+                    }
+                    X.push(row);
+                }
+                
+                // Solve using least squares
+                const XT = math.transpose(X);
+                const XTX = math.multiply(XT, X);
+                const XTy = math.multiply(XT, yVals);
+                
+                try {
+                    const coefficients = math.lusolve(XTX, XTy);
+                    
+                    // Calculate y value
+                    let y = 0;
+                    for (let j = 0; j <= degree; j++) {
+                        y += coefficients[j][0] * Math.pow(x, j);
+                    }
+                    return y;
+                } catch (e) {
+                    console.error("Polynomial regression failed:", e);
+                    return extrapolationMethods.linear(data, x);
+                }
+            },
+            
+            lagrange: (data, x) => {
+                if (data.length < 2) return null;
+                
+                const n = data.length;
+                let result = 0;
+                
+                for (let i = 0; i < n; i++) {
+                    let term = data[i][1];
+                    for (let j = 0; j < n; j++) {
+                        if (j !== i) {
+                            term *= (x - data[j][0]) / (data[i][0] - data[j][0]);
+                        }
+                    }
+                    result += term;
+                }
+                
+                return result;
+            },
+            
+            spline: (data, x, degree = 2) => {
+                if (data.length < degree + 1) {
+                    return extrapolationMethods.linear(data, x);
+                }
+                
+                // Sort data by x
+                const sorted = [...data].sort((a, b) => a[0] - b[0]);
+                const xVals = sorted.map(p => p[0]);
+                const yVals = sorted.map(p => p[1]);
+                
+                // Find the appropriate segment
+                let segment = 0;
+                if (x < xVals[0]) {
+                    segment = 0;
+                } else if (x > xVals[xVals.length - 1]) {
+                    segment = xVals.length - 2;
+                } else {
+                    for (let i = 0; i < xVals.length - 1; i++) {
+                        if (x >= xVals[i] && x <= xVals[i + 1]) {
+                            segment = i;
+                            break;
+                        }
+                    }
+                }
+                
+                // Get points for the segment (plus neighbors for higher degrees)
+                const start = Math.max(0, segment - Math.floor(degree / 2));
+                const end = Math.min(xVals.length - 1, start + degree + 1);
+                const segmentPoints = sorted.slice(start, end + 1);
+                
+                // Use polynomial interpolation on the segment
+                return extrapolationMethods.polynomial(segmentPoints, x, degree);
+            },
+            
+            cubic_spline: (data, x) => {
+                if (data.length < 4) {
+                    return extrapolationMethods.polynomial(data, x, Math.min(3, data.length - 1));
+                }
+                
+                // Sort data by x
+                const sorted = [...data].sort((a, b) => a[0] - b[0]);
+                const xVals = sorted.map(p => p[0]);
+                const yVals = sorted.map(p => p[1]);
+                
+                // Natural cubic spline implementation
+                const n = xVals.length;
+                const h = [];
+                const alpha = new Array(n).fill(0);
+                const l = new Array(n).fill(0);
+                const mu = new Array(n).fill(0);
+                const z = new Array(n).fill(0);
+                const c = new Array(n).fill(0);
+                const b = new Array(n).fill(0);
+                const d = new Array(n).fill(0);
+                
+                // Step 1
+                for (let i = 0; i < n - 1; i++) {
+                    h[i] = xVals[i + 1] - xVals[i];
+                }
+                
+                // Step 2
+                for (let i = 1; i < n - 1; i++) {
+                    alpha[i] = (3 / h[i]) * (yVals[i + 1] - yVals[i]) - (3 / h[i - 1]) * (yVals[i] - yVals[i - 1]);
+                }
+                
+                // Step 3
+                l[0] = 1;
+                mu[0] = 0;
+                z[0] = 0;
+                
+                // Step 4
+                for (let i = 1; i < n - 1; i++) {
+                    l[i] = 2 * (xVals[i + 1] - xVals[i - 1]) - h[i - 1] * mu[i - 1];
+                    mu[i] = h[i] / l[i];
+                    z[i] = (alpha[i] - h[i - 1] * z[i - 1]) / l[i];
+                }
+                
+                // Step 5
+                l[n - 1] = 1;
+                z[n - 1] = 0;
+                c[n - 1] = 0;
+                
+                // Step 6
+                for (let j = n - 2; j >= 0; j--) {
+                    c[j] = z[j] - mu[j] * c[j + 1];
+                    b[j] = (yVals[j + 1] - yVals[j]) / h[j] - h[j] * (c[j + 1] + 2 * c[j]) / 3;
+                    d[j] = (c[j + 1] - c[j]) / (3 * h[j]);
+                }
+                
+                // Find the right segment
+                let segment = 0;
+                if (x < xVals[0]) {
+                    segment = 0;
+                } else if (x > xVals[n - 1]) {
+                    segment = n - 2;
+                } else {
+                    for (let i = 0; i < n - 1; i++) {
+                        if (x >= xVals[i] && x <= xVals[i + 1]) {
+                            segment = i;
+                            break;
+                        }
+                    }
+                }
+                
+                // Evaluate the spline
+                const dx = x - xVals[segment];
+                return yVals[segment] + b[segment] * dx + c[segment] * dx * dx + d[segment] * dx * dx * dx;
+            },
+            
+            exponential: (data, x) => {
+                if (data.length < 2) return null;
+                
+                // Take log of y values
+                const logY = data.map(p => Math.log(p[1]));
+                const modifiedData = data.map((p, i) => [p[0], logY[i]]);
+                
+                // Perform linear regression on log(y) = a*x + b
+                const linearEstimate = extrapolationMethods.linear(modifiedData, x);
+                return linearEstimate !== null ? Math.exp(linearEstimate) : null;
+            },
+            
+            logarithmic: (data, x) => {
+                if (data.length < 2) return null;
+                
+                // Take log of x values
+                const logX = data.map(p => Math.log(p[0]));
+                const modifiedData = data.map((p, i) => [logX[i], p[1]]);
+                
+                // Perform linear regression on y = a*log(x) + b
+                const xLog = Math.log(x);
+                const linearEstimate = extrapolationMethods.linear(modifiedData, xLog);
+                return linearEstimate;
+            },
+            
+            sigmoidal: (data, x) => {
+                if (data.length < 4) return extrapolationMethods.polynomial(data, x, Math.min(3, data.length - 1));
+                
+                // Logistic regression approximation
+                const sorted = [...data].sort((a, b) => a[0] - b[0]);
+                const xVals = sorted.map(p => p[0]);
+                const yVals = sorted.map(p => p[1]);
+                
+                // Find min and max y values for scaling
+                const yMin = Math.min(...yVals);
+                const yMax = Math.max(...yVals);
+                const scaledY = yVals.map(y => (y - yMin) / (yMax - yMin));
+                
+                // Initial parameter guesses
+                let L = 1, k = 1, x0 = xVals[Math.floor(xVals.length / 2)];
+                
+                // Simple approximation (in practice would use optimization)
+                for (let i = 0; i < 10; i++) {
+                    let sumError = 0;
+                    let sumErrorL = 0, sumErrork = 0, sumErrorx0 = 0;
+                    
+                    for (let j = 0; j < xVals.length; j++) {
+                        const expTerm = Math.exp(-k * (xVals[j] - x0));
+                        const yPred = L / (1 + expTerm);
+                        const error = yPred - scaledY[j];
+                        
+                        sumError += error * error;
+                        
+                        // Partial derivatives
+                        const dL = 1 / (1 + expTerm);
+                        const dk = L * (xVals[j] - x0) * expTerm / Math.pow(1 + expTerm, 2);
+                        const dx0 = -L * k * expTerm / Math.pow(1 + expTerm, 2);
+                        
+                        sumErrorL += 2 * error * dL;
+                        sumErrork += 2 * error * dk;
+                        sumErrorx0 += 2 * error * dx0;
+                    }
+                    
+                    // Simple gradient descent
+                    const learningRate = 0.1;
+                    L -= learningRate * sumErrorL / xVals.length;
+                    k -= learningRate * sumErrork / xVals.length;
+                    x0 -= learningRate * sumErrorx0 / xVals.length;
+                }
+                
+                // Evaluate sigmoid
+                const expTerm = Math.exp(-k * (x - x0));
+                const scaledYPred = L / (1 + expTerm);
+                return scaledYPred * (yMax - yMin) + yMin;
+            },
+            
+            rigged_sigmoid: (data, x, minVal, maxVal) => {
+                // Fixed sigmoid with controlled min and max, optimizing center and width
+                const sorted = [...data].sort((a, b) => a[0] - b[0]);
+                const xVals = sorted.map(p => p[0]);
+                const yVals = sorted.map(p => p[1]);
+                
+                // Scale y values to [0,1] range
+                const scaledY = yVals.map(y => (y - minVal) / (maxVal - minVal));
+                
+                // Initial guesses for center and width
+                let center = (Math.max(...xVals) + Math.min(...xVals)) / 2;
+                let width = (Math.max(...xVals) - Math.min(...xVals)) / 4;
+                
+                // Simple optimization
+                for (let iter = 0; iter < 20; iter++) {
+                    let sumError = 0;
+                    let sumErrorCenter = 0;
+                    let sumErrorWidth = 0;
+                    
+                    for (let i = 0; i < xVals.length; i++) {
+                        const scaledX = (xVals[i] - center) / width;
+                        const expTerm = Math.exp(-scaledX);
+                        const yPred = 1 / (1 + expTerm);
+                        const error = yPred - scaledY[i];
+                        
+                        sumError += error * error;
+                        
+                        // Partial derivatives
+                        const dPred = yPred * (1 - yPred);
+                        sumErrorCenter += 2 * error * dPred * (-1/width);
+                        sumErrorWidth += 2 * error * dPred * (-(xVals[i]-center)/(width*width));
+                    }
+                    
+                    // Update parameters
+                    const learningRate = 0.1;
+                    center -= learningRate * sumErrorCenter / xVals.length;
+                    width -= learningRate * sumErrorWidth / xVals.length;
+                    
+                    // Prevent width from becoming too small
+                    width = Math.max(width, 0.1);
+                }
+                
+                // Evaluate sigmoid with optimized parameters
+                const scaledX = (x - center) / width;
+                const expTerm = Math.exp(-scaledX);
+                return minVal + (maxVal - minVal) / (1 + expTerm);
+            },
+            
+            custom_formula: (data, x, formulaStr) => {
+                if (data.length < 2) return null;
+                
+                try {
+                    // Parse formula string
+                    const match = formulaStr.match(/^\[([^\]]+)\]\s*(.+)$/);
+                    if (!match) throw new Error("Invalid formula format");
+                    
+                    const params = match[1].split(',').map(p => p.trim());
+                    const expr = match[2].trim();
+                    
+                    // Prepare data for optimization
+                    const xVals = data.map(p => p[0]);
+                    const yVals = data.map(p => p[1]);
+                    
+                    // Initial parameter guesses
+                    const initialParams = {};
+                    params.forEach(p => { initialParams[p] = 1; });
+                    
+                    // Optimization function
+                    const optimize = (params) => {
+                        let sumSqError = 0;
+                        const scope = {x: 0, ...params};
+                        
+                        for (let i = 0; i < xVals.length; i++) {
+                            scope.x = xVals[i];
+                            const yPred = math.evaluate(expr, scope);
+                            const error = yPred - yVals[i];
+                            sumSqError += error * error;
+                        }
+                        
+                        return sumSqError;
+                    };
+                    
+                    // Simple gradient descent optimization
+                    let currentParams = {...initialParams};
+                    const learningRate = 0.01;
+                    const iterations = 100;
+                    
+                    for (let iter = 0; iter < iterations; iter++) {
+                        const grad = {};
+                        const currentError = optimize(currentParams);
+                        
+                        // Calculate numerical gradient for each parameter
+                        for (const param of params) {
+                            const perturbedParams = {...currentParams};
+                            perturbedParams[param] += 0.001;
+                            const perturbedError = optimize(perturbedParams);
+                            grad[param] = (perturbedError - currentError) / 0.001;
+                        }
+                        
+                        // Update parameters
+                        for (const param of params) {
+                            currentParams[param] -= learningRate * grad[param];
+                        }
+                    }
+                    
+                    // Evaluate with optimized parameters
+                    const scope = {x, ...currentParams};
+                    return math.evaluate(expr, scope);
+                    
+                } catch (e) {
+                    console.error("Custom formula evaluation failed:", e);
+                    return extrapolationMethods.linear(data, x);
+                }
+            },
+            
+            pade: (data, x, m = 2, n = 2) => {
+                if (data.length < m + n + 1) {
+                    return extrapolationMethods.polynomial(data, x, Math.min(m + n, data.length - 1));
+                }
+                
+                // Sort data by x
+                const sorted = [...data].sort((a, b) => a[0] - b[0]);
+                const xVals = sorted.map(p => p[0]);
+                const yVals = sorted.map(p => p[1]);
+                
+                // Create coefficient matrix for Pade approximation
+                const A = [];
+                const b = [];
+                
+                for (let i = 0; i < m + n + 1; i++) {
+                    const row = [];
+                    for (let j = 0; j <= m; j++) {
+                        row.push(Math.pow(xVals[i], j));
+                    }
+                    for (let j = 1; j <= n; j++) {
+                        row.push(-yVals[i] * Math.pow(xVals[i], j));
+                    }
+                    A.push(row);
+                    b.push(yVals[i]);
+                }
+                
+                // Solve the system
+                try {
+                    const coefficients = math.lusolve(A, b);
+                    
+                    // Extract numerator and denominator coefficients
+                    const aCoeffs = coefficients.slice(0, m + 1).map(c => c[0]);
+                    const bCoeffs = [1, ...coefficients.slice(m + 1).map(c => c[0])];
+                    
+                    // Compute numerator and denominator
+                    let numerator = 0;
+                    for (let j = 0; j <= m; j++) {
+                        numerator += aCoeffs[j] * Math.pow(x, j);
+                    }
+                    
+                    let denominator = 0;
+                    for (let j = 0; j <= n; j++) {
+                        denominator += bCoeffs[j] * Math.pow(x, j);
+                    }
+                    
+                    return numerator / denominator;
+                } catch (e) {
+                    console.error("Padé approximation failed:", e);
+                    return extrapolationMethods.polynomial(data, x, m + n);
+                }
+            },
+            
+            continued_fraction: (data, x) => {
+                if (data.length < 3) return extrapolationMethods.polynomial(data, x, Math.min(2, data.length - 1));
+                
+                // Sort data by x
+                const sorted = [...data].sort((a, b) => a[0] - b[0]);
+                const xVals = sorted.map(p => p[0]);
+                const yVals = sorted.map(p => p[1]);
+                
+                // Compute coefficients for continued fraction a0/(1 + a1(x-x0)/(1 + a2(x-x1)/(...)))
+                const a = [yVals[0]];
+                const xPoints = [xVals[0]];
+                
+                for (let i = 1; i < Math.min(5, yVals.length); i++) {
+                    // Compute partial denominator
+                    let denom = 1;
+                    for (let j = 1; j < i; j++) {
+                        denom += a[j] * (xVals[i] - xPoints[j - 1]) / 
+                                (1 + (j < i - 1 ? a[j + 1] * (xVals[i] - xPoints[j]) : 0));
+                    }
+                    
+                    a[i] = (yVals[i] / yVals[i - 1] - 1) * denom / (xVals[i] - xPoints[i - 1]);
+                    xPoints.push(xVals[i]);
+                }
+                
+                // Evaluate continued fraction
+                let result = a[0];
+                if (a.length > 1) {
+                    result /= (1 + a[1] * (x - xPoints[0]));
+                    
+                    for (let i = 2; i < a.length; i++) {
+                        result /= (1 + a[i] * (x - xPoints[i - 1]) / 
+                                 (1 + (i < a.length - 1 ? a[i + 1] * (x - xPoints[i]) : 1)));
+                    }
+                }
+                
+                return result;
+            },
+            
+            fourier: (data, x, terms = 3) => {
+                if (data.length < 2 * terms) {
+                    return extrapolationMethods.polynomial(data, x, Math.min(2 * terms - 1, data.length - 1));
+                }
+                
+                // Sort data by x
+                const sorted = [...data].sort((a, b) => a[0] - b[0]);
+                const xVals = sorted.map(p => p[0]);
+                const yVals = sorted.map(p => p[1]);
+                
+                // Perform Fourier series approximation
+                const n = xVals.length;
+                const L = (xVals[n - 1] - xVals[0]) / 2;
+                const a0 = yVals.reduce((sum, y) => sum + y, 0) / n;
+                
+                let result = a0 / 2;
+                for (let k = 1; k <= terms; k++) {
+                    const ak = yVals.reduce((sum, y, i) => {
+                        return sum + y * Math.cos(k * Math.PI * xVals[i] / L);
+                    }, 0) * 2 / n;
+                    
+                    const bk = yVals.reduce((sum, y, i) => {
+                        return sum + y * Math.sin(k * Math.PI * xVals[i] / L);
+                    }, 0) * 2 / n;
+                    
+                    result += ak * Math.cos(k * Math.PI * x / L) + 
+                              bk * Math.sin(k * Math.PI * x / L);
+                }
+                
+                return result;
+            },
+            
+            bayesian: (data, x) => {
+                if (data.length < 3) return extrapolationMethods.linear(data, x);
+                
+                // Bayesian linear regression with proper priors
+                const sorted = [...data].sort((a, b) => a[0] - b[0]);
+                const xVals = sorted.map(p => p[0]);
+                const yVals = sorted.map(p => p[1]);
+                
+                // Center the data
+                const xMean = math.mean(xVals);
+                const yMean = math.mean(yVals);
+                const centeredX = xVals.map(xi => xi - xMean);
+                const centeredY = yVals.map(yi => yi - yMean);
+                
+                // Prior parameters (vague priors)
+                const priorPrecision = 1e-6;
+                const noisePrecision = 1;
+                
+                // Compute posterior parameters
+                const X = math.matrix(centeredX.map(xi => [1, xi]));
+                const XT = math.transpose(X);
+                const Y = math.matrix(centeredY.map(yi => [yi]));
+                
+                // Prior precision matrix
+                const Lambda0 = math.diag([priorPrecision, priorPrecision]);
+                
+                // Posterior covariance
+                const LambdaN = math.add(
+                    Lambda0,
+                    math.multiply(noisePrecision, math.multiply(XT, X))
+                );
+                
+                // Posterior mean
+                const muN = math.multiply(
+                    math.inv(LambdaN),
+                    math.multiply(noisePrecision, math.multiply(XT, Y))
+                );
+                
+                // Extract coefficients
+                const intercept = muN.get([0, 0]);
+                const slope = muN.get([1, 0]);
+                
+                // Make prediction (add back the means)
+                return yMean + intercept + slope * (x - xMean);
+            },
+            
+            aitken: (data, x) => {
+                if (data.length < 3) return extrapolationMethods.linear(data, x);
+                
+                // Create three estimates using different methods
+                const x0 = extrapolationMethods.linear(data, x);
+                const x1 = extrapolationMethods.polynomial(data, x, 2);
+                const x2 = extrapolationMethods.lagrange(data, x);
+                
+                // Apply Aitken's Δ² process: x'_n = x_n - (x_{n+1}-x_n)^2/(x_{n+2}-2x_{n+1}+x_n)
+                const delta1 = x1 - x0;
+                const delta2 = x2 - x1;
+                const denominator = delta2 - delta1;
+                
+                if (Math.abs(denominator) < 1e-10) return x0;
+                
+                return x0 - (delta1 * delta1) / denominator;
+            }
+        };
+
+        // Update chart function
+        function updateChart() {
+            try {
+                const inputData = JSON.parse(document.getElementById('dataInput').value);
+                if (!Array.isArray(inputData) || inputData.some(p => !Array.isArray(p) || p.length !== 2)) {
+                    throw new Error('Invalid input format');
+                }
+                
+                const method = document.getElementById('extrapolationType').value;
+                const extendLeft = parseInt(document.getElementById('extendLeft').value);
+                const leftStep = parseFloat(document.getElementById('leftStep').value);
+                const extendRight = parseInt(document.getElementById('extendRight').value);
+                const rightStep = parseFloat(document.getElementById('rightStep').value);
+                
+                // Get method-specific parameters
+                let methodParams = [];
+                if (method === 'polynomial') {
+                    methodParams.push(parseInt(document.getElementById('polyDegree').value));
+                } else if (method === 'spline') {
+                    methodParams.push(parseInt(document.getElementById('splineDegree').value));
+                } else if (method === 'fourier') {
+                    methodParams.push(parseInt(document.getElementById('fourierTerms').value));
+                } else if (method === 'rigged_sigmoid') {
+                    const minVal = parseFloat(document.getElementById('riggedMin').value);
+                    const maxVal = parseFloat(document.getElementById('riggedMax').value);
+                    methodParams.push(minVal, maxVal);
+                } else if (method === 'custom_formula') {
+                    methodParams.push(document.getElementById('customFormula').value);
+                } else if (method === 'pade') {
+                    methodParams.push(2, 2); // m=2, n=2
+                }
+                
+                // Sort data by x value
+                const sortedData = [...inputData].sort((a, b) => a[0] - b[0]);
+                const xVals = sortedData.map(p => p[0]);
+                const yVals = sortedData.map(p => p[1]);
+                
+                // Generate extrapolated points
+                const extrapolatedPoints = [];
+                const regressionPoints = [];
+                
+                // Left extrapolation
+                if (extendLeft > 0 && sortedData.length > 1) {
+                    const minX = xVals[0];
+                    
+                    for (let x = minX - extendLeft * leftStep; x < minX; x += leftStep) {
+                        const y = extrapolationMethods[method](sortedData, x, ...methodParams);
+                        if (y !== null && isFinite(y)) {
+                            extrapolatedPoints.push({x, y});
+                        }
+                    }
+                }
+                
+                // Right extrapolation
+                if (extendRight > 0 && sortedData.length > 1) {
+                    const maxX = xVals[xVals.length - 1];
+                    
+                    for (let x = maxX + rightStep; x <= maxX + extendRight * rightStep; x += rightStep) {
+                        const y = extrapolationMethods[method](sortedData, x, ...methodParams);
+                        if (y !== null && isFinite(y)) {
+                            extrapolatedPoints.push({x, y});
+                        }
+                    }
+                }
+                
+                // Generate regression line for visualization
+                if (sortedData.length > 1) {
+                    const minX = Math.min(...xVals, ...extrapolatedPoints.map(p => p.x));
+                    const maxX = Math.max(...xVals, ...extrapolatedPoints.map(p => p.x));
+                    const step = (maxX - minX) / 100;
+                    
+                    for (let x = minX; x <= maxX; x += step) {
+                        let y;
+                        if (x < xVals[0]) {
+                            y = extrapolationMethods[method](sortedData, x, ...methodParams);
+                        } else if (x > xVals[xVals.length - 1]) {
+                            y = extrapolationMethods[method](sortedData, x, ...methodParams);
+                        } else {
+                            // For points within range, use the selected method to interpolate
+                            y = extrapolationMethods[method](sortedData, x, ...methodParams);
+                        }
+                        
+                        if (y !== null && isFinite(y)) {
+                            regressionPoints.push({x, y});
+                        }
+                    }
+                }
+                
+                // Update chart data
+                chart.data.datasets[0].data = sortedData.map(p => ({x: p[0], y: p[1]}));
+                chart.data.datasets[1].data = extrapolatedPoints;
+                chart.data.datasets[2].data = regressionPoints;
+                chart.update();
+                
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('updateBtn').addEventListener('click', updateChart);
+        
+        // Initial chart update
+        updateChart();
+    </script>
+</body>
+</html>

@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Morse Code — Encoder / Decoder</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;line-height:1.4;padding:18px;max-width:980px;margin:0 auto}
+    h1{font-size:1.6rem}
+    .panel{border:1px solid #ddd;border-radius:8px;padding:12px;margin:10px 0}
+    .big-btn{display:inline-block;padding:10px 16px;border-radius:8px;border:0;background:#111;color:#fff;cursor:pointer;margin-right:8px}
+    .rec-indicator{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;vertical-align:middle}
+    .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+    .morse-visual{font-family:monospace;padding:8px;background:#f6f6f6;border-radius:6px}
+    label{display:block;margin-top:8px}
+    input[type=range]{width:100%}
+    .controls{display:flex;gap:8px;flex-wrap:wrap}
+    .small{font-size:0.9rem}
+  </style>
+</head>
+<body>
+  <h1>Morse Code — Encoder / Decoder</h1>
+  <p>Hold <strong>Space</strong> (or click & hold the button) to send a signal. When you stop recording, the captured press/release timings are translated into dots (short) and dashes (long) and then decoded into text. You can also type text to encode into Morse.</p>
+
+  <div class="panel">
+    <div class="controls">
+      <button id="pressBtn" class="big-btn">Hold (or press Space)</button>
+      <div>
+        <span id="recDot" class="rec-indicator" style="background:#999"></span>
+        <span class="small">Recording: <strong id="recState">idle</strong></span>
+      </div>
+      <div style="margin-left:auto">
+        <label class="small">Unit time (ms) — threshold for dot vs dash and gaps</label>
+        <input id="unitRange" type="range" min="60" max="500" value="200">
+        <div class="small"><span id="unitLabel">200</span> ms</div>
+      </div>
+    </div>
+
+    <label class="small">Live timeline (press/release events)</label>
+    <div id="timeline" class="morse-visual"></div>
+
+    <label class="small">Interpreted Morse (dots = •, dashes = —, / = word gap)</label>
+    <div id="morseText" class="morse-visual"></div>
+
+    <label class="small">Decoded text</label>
+    <div id="decoded" class="morse-visual"></div>
+	
+    <div style="margin-top:8px">
+      <button id="clearBtn" class="big-btn">Clear</button>
+      <button id="playAudioBtn" class="big-btn">Play beeps</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <label>Type text to encode</label>
+    <input id="textToEncode" style="width:100%;padding:8px;font-size:1rem" placeholder="Type: SOS or Hello 123" />
+    <div style="margin-top:8px">
+      <button id="encodeBtn" class="big-btn">Encode to Morse</button>
+      <button id="copyMorseBtn" class="big-btn">Copy Morse</button>
+    </div>
+    <label class="small">Morse output</label>
+    <div id="encodedOutput" class="morse-visual"></div>
+  </div>
+
+  <script>
+    // Morse table
+    const CHAR_TO_MORSE = {
+      'A':'.-','B':'-...','C':'-.-.','D':'-..','E':'.','F':'..-.','G':'--.','H':'....','I':'..','J':'.---','K':'-.-','L':'.-..','M':'--','N':'-.','O':'---','P':'.--.','Q':'--.-','R':'.-.','S':'...','T':'-','U':'..-','V':'...-','W':'.--','X':'-..-','Y':'-.--','Z':'--..',
+      '0':'-----','1':'.----','2':'..---','3':'...--','4':'....-','5':'.....','6':'-....','7':'--...','8':'---..','9':'----.',
+      '.':'.-.-.-',',':'--..--','?':'..--..','!':'-.-.--','/':'-..-.','(':'-.--.',')':'-.--.-','&':'.-...',':':'---...',';':'-.-.-.','=':'-...-','+':'.-.-.','-':'-....-','_':'..--.-','"':'.-..-.','@':'.--.-.'
+    };
+    const MORSE_TO_CHAR = Object.fromEntries(Object.entries(CHAR_TO_MORSE).map(([k,v])=>[v,k]));
+
+    // UI
+    const pressBtn = document.getElementById('pressBtn');
+    const recDot = document.getElementById('recDot');
+    const recState = document.getElementById('recState');
+    const timeline = document.getElementById('timeline');
+    const morseText = document.getElementById('morseText');
+    const decoded = document.getElementById('decoded');
+    const unitRange = document.getElementById('unitRange');
+    const unitLabel = document.getElementById('unitLabel');
+    const clearBtn = document.getElementById('clearBtn');
+    const playAudioBtn = document.getElementById('playAudioBtn');
+    const textToEncode = document.getElementById('textToEncode');
+    const encodeBtn = document.getElementById('encodeBtn');
+    const encodedOutput = document.getElementById('encodedOutput');
+    const copyMorseBtn = document.getElementById('copyMorseBtn');
+
+    let recording = false;
+    let events = []; // {type: 'down'|'up', t: timestamp}
+    let lastEventTime = null;
+
+    function now(){return performance.now();}
+
+    unitRange.addEventListener('input', ()=>{unitLabel.textContent = unitRange.value});
+
+    function startRecording(){
+      events = [];
+      recording = true;
+      recDot.style.background = 'red';
+      recState.textContent = 'recording';
+      timeline.textContent = '';
+      morseText.textContent = '';
+      decoded.textContent = '';
+      lastEventTime = now();
+    }
+    function stopRecording(){
+      recording = false;
+      recDot.style.background = '#999';
+      recState.textContent = 'idle';
+      // translate
+      if(events.length === 0){ timeline.textContent = '(no events)'; return }
+      const unit = Number(unitRange.value);
+      // build array of signals (press durations) and gaps
+      const signals = []; // alternating pressDur, gapDur, pressDur, ... starting with pressDur
+      // events should start with 'down' and alternate; tolerate starting with up
+      // build pairs
+      let i = 0;
+      // ensure first event is down; if not, drop initial ups
+      while(i < events.length && events[i].type !== 'down') i++;
+      for(; i < events.length;){
+        const down = events[i];
+        const up = events[i+1];
+        if(!down || down.type !== 'down') break;
+        if(!up){ // if no up, assume ended now
+          signals.push({press: now() - down.t});
+          break;
+        }
+        if(up.type !== 'up') break;
+        const pressDur = up.t - down.t;
+        signals.push({press: pressDur});
+        const nextDown = events[i+2];
+        if(nextDown){
+          const gapDur = nextDown.t - up.t;
+          signals.push({gap: gapDur});
+        }
+        i += 2;
+      }
+
+      // Build morse: dot/dash and separators
+      const parts = [];
+      for(let j=0;j<signals.length;j++){
+        const s = signals[j];
+        if(s.press !== undefined){
+          parts.push(s.press <= unit ? '•' : '—');
+        } else if(s.gap !== undefined){
+          if(s.gap < unit) {
+            // element gap (between dots/dashes inside same letter) — do nothing
+          } else if(s.gap < 3*unit){
+            // letter gap
+            parts.push(' ');
+          } else if(s.gap < 7*unit){
+            // word gap
+            parts.push(' / ');
+          } else {
+            parts.push(' / ');
+          }
+        }
+      }
+
+      // collapse multiple spaces
+      let morse = parts.join('');
+      morse = morse.replace(/\s{2,}/g,' ');
+      morseText.textContent = morse || '(no morse)';
+
+      // decode morse -> text
+      const decodedText = decodeMorseVisual(morse);
+      decoded.textContent = decodedText || '(no decode)';
+    }
+
+    function decodeMorseVisual(vis){
+      // vis uses • for dot, — for dash, spaces between letters, / between words
+      // normalize to '.' '-' and ' / '
+      if(!vis) return '';
+      const s = vis.replace(/•/g,'.').replace(/—/g,'-');
+      const words = s.split('/').map(w=>w.trim());
+      const outWords = words.map(word => {
+        const letters = word.split(' ').map(l=>l.trim()).filter(Boolean);
+        return letters.map(letter => MORSE_TO_CHAR[letter] || '?').join('');
+      });
+      return outWords.join(' ');
+    }
+
+    // mouse support: press and hold the big button
+    pressBtn.addEventListener('mousedown', (e)=>{ if(e.button!==0) return; simulateKeyDown(); });
+    document.addEventListener('mouseup', (e)=>{ simulateKeyUp(); });
+    pressBtn.addEventListener('touchstart',(e)=>{ e.preventDefault(); simulateKeyDown(); });
+    pressBtn.addEventListener('touchend',(e)=>{ e.preventDefault(); simulateKeyUp(); });
+
+    // space key support
+    window.addEventListener('keydown', (e)=>{
+      if(e.code === 'Space'){
+        if(!e.repeat){ simulateKeyDown(); e.preventDefault(); }
+      }
+    });
+    window.addEventListener('keyup', (e)=>{
+      if(e.code === 'Space'){
+        simulateKeyUp(); e.preventDefault();
+      }
+    });
+
+    function simulateKeyDown(){
+      if(!recording) startRecording();
+      const t = now();
+      events.push({type:'down', t});
+      updateTimeline();
+    }
+    function simulateKeyUp(){
+      if(!recording) return;
+      const t = now();
+      events.push({type:'up', t});
+      updateTimeline();
+      // we don't auto-stop recording — user stops by pressing the clear button or clicking stop region
+    }
+
+    // Provide a stop/finish when user double-clicks the button or presses Escape
+    // Single press of Stop is implemented by Clear button which also stops and decodes.
+
+    function updateTimeline(){
+      timeline.textContent = events.map(ev => `${ev.type}@${Math.round(ev.t)}ms`).join(' | ');
+    }
+
+    clearBtn.addEventListener('click', ()=>{
+      // stop & decode
+      stopRecording();
+    });
+
+    // Also allow explicit "finish" by pressing Enter while recording
+    window.addEventListener('keydown',(e)=>{
+      if(e.key === 'Enter'){
+        if(recording){ stopRecording(); }
+      }
+      if(e.key === 'Escape'){
+        // cancel
+        recording = false; events = []; recDot.style.background = '#999'; recState.textContent='idle'; timeline.textContent='(cancelled)'; morseText.textContent=''; decoded.textContent='';
+      }
+    });
+
+    // Encoder
+    encodeBtn.addEventListener('click', ()=>{
+      const txt = textToEncode.value || '';
+      const morse = encodeTextToMorse(txt);
+      encodedOutput.textContent = morse || '(empty)';
+    });
+    copyMorseBtn.addEventListener('click', ()=>{
+      navigator.clipboard.writeText(encodedOutput.textContent || '').then(()=>alert('Copied')); }).catch(()=>{});
+
+    function encodeTextToMorse(text){
+      const words = text.toUpperCase().split(/\s+/).filter(Boolean);
+      return words.map(w => w.split('').map(c => CHAR_TO_MORSE[c] || '?').join(' ')).join(' / ');
+    }
+
+    // Play beeps of the last morseText
+    playAudioBtn.addEventListener('click', ()=>{
+      const vis = morseText.textContent;
+      if(!vis) return alert('No morse to play — record or encode first');
+      playMorseVisual(vis);
+    });
+
+    // Tiny audio player using WebAudio
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = AudioCtx ? new AudioCtx() : null;
+    function beep(durationMs, freq=600){
+      if(!audioCtx) return new Promise(r=>setTimeout(r,durationMs));
+      return new Promise(resolve=>{
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        o.type = 'sine'; o.frequency.value = freq;
+        g.gain.setValueAtTime(0.0001,audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.3, audioCtx.currentTime + 0.01);
+        o.start();
+        setTimeout(()=>{
+          g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.02);
+          setTimeout(()=>{ o.stop(); resolve(); }, 30);
+        }, durationMs);
+      });
+    }
+
+    async function playMorseVisual(vis){
+      const unit = Number(unitRange.value);
+      // convert vis to '.' and '-' with separators
+      const s = vis.replace(/•/g,'.').replace(/—/g,'-');
+      // we'll play each letter: dot duration = unit, dash=3*unit, intra-element gap = unit, between letters=3*unit, between words=7*unit.
+      const words = s.split('/').map(w=>w.trim());
+      for(let wi=0;wi<words.length;wi++){
+        const word = words[wi];
+        const letters = word.split(' ').map(l=>l.trim()).filter(Boolean);
+        for(let li=0;li<letters.length;li++){
+          const letter = letters[li];
+          for(let ci=0;ci<letter.length;ci++){
+            const ch = letter[ci];
+            if(ch === '.') await beep(unit);
+            else if(ch === '-') await beep(unit*3);
+            // intra-element gap
+            if(ci < letter.length-1) await new Promise(r=>setTimeout(r, unit));
+          }
+          // between letters
+          if(li < letters.length-1) await new Promise(r=>setTimeout(r, unit*3));
+        }
+        // between words
+        if(wi < words.length-1) await new Promise(r=>setTimeout(r, unit*7));
+      }
+    }
+
+    // decode helper for encoded strings too
+    function decodeMorseString(morse){
+      if(!morse) return '';
+      const s = morse.replace(/•/g,'.').replace(/—/g,'-');
+      return decodeMorseVisual(s);
+    }
+
+    // Initialize: fill unit label
+    unitLabel.textContent = unitRange.value;
+
+    // Small usage hints
+    console.log('Usage: Hold Space or click+hold the button to record. Press Enter to finish/interpret, Esc to cancel. Click Clear to decode the captured signal. Use Unit time to adjust sensitivity.');
+  </script>
+</body>
+</html>

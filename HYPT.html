@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Hyperbolic Tiling Drawer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.1/math.min.js"></script>
+  <style>
+    body { text-align: center; background: #111; color: white; font-family: sans-serif; }
+    canvas { background: white; margin-top: 10px; border-radius: 50%; }
+    input { margin: 10px; }
+  </style>
+</head>
+<body>
+
+  <h2>Hyperbolic Tiling Drawer: {p, q}</h2>
+  <label>p (sides): <input type="number" id="p" value="7"></label>
+  <label>q (meet at vertex): <input type="number" id="q" value="3"></label>
+  <button onclick="draw()">Draw</button>
+  <br>
+  <canvas id="canvas" width="600" height="600"></canvas>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const WIDTH = canvas.width;
+    const HEIGHT = canvas.height;
+
+    function draw() {
+      const p = parseInt(document.getElementById("p").value);
+      const q = parseInt(document.getElementById("q").value);
+
+      if ((p - 2) * (q - 2) <= 4) {
+        alert("This is not a hyperbolic tiling! Must satisfy (p-2)(q-2) > 4");
+        return;
+      }
+
+      ctx.clearRect(0, 0, WIDTH, HEIGHT);
+      ctx.save();
+      ctx.translate(WIDTH / 2, HEIGHT / 2);
+
+      const polygons = [];
+      const visited = new Set();
+
+      const R = Math.acos(Math.cos(Math.PI / q) / Math.sin(Math.PI / p)); // Hyperbolic center angle
+
+      const base = generatePolygon(p, 0, 0, 0.5); // center polygon
+      polygons.push(base);
+
+      function reflect(polygon, depth) {
+        if (depth > 4) return;
+        for (let i = 0; i < p; i++) {
+          const a = polygon[i];
+          const b = polygon[(i + 1) % p];
+          const mid = midpoint(a, b);
+          const key = a.re.toFixed(3) + "," + a.im.toFixed(3) + "," + b.re.toFixed(3) + "," + b.im.toFixed(3);
+
+          if (visited.has(key)) continue;
+          visited.add(key);
+
+          const refl = polygon.map(z => reflectAcrossGeodesic(a, b, z));
+          polygons.push(refl);
+          reflect(refl, depth + 1);
+        }
+      }
+
+      reflect(base, 0);
+
+      // Draw all
+      for (const poly of polygons) drawPolygon(poly);
+      ctx.restore();
+    }
+
+    function generatePolygon(sides, cx, cy, radius) {
+      const result = [];
+      for (let i = 0; i < sides; i++) {
+        const angle = 2 * Math.PI * i / sides;
+        const x = radius * Math.cos(angle);
+        const y = radius * Math.sin(angle);
+        result.push(math.complex(x, y));
+      }
+      return result;
+    }
+
+    function drawPolygon(points) {
+      ctx.beginPath();
+      for (let i = 0; i < points.length; i++) {
+        const a = points[i];
+        const b = points[(i + 1) % points.length];
+        drawHyperbolicArc(a, b);
+      }
+      ctx.strokeStyle = "hsl(" + (Math.random() * 360) + ", 100%, 50%)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    function drawHyperbolicArc(z1, z2) {
+      const x1 = z1.re, y1 = z1.im;
+      const x2 = z2.re, y2 = z2.im;
+
+      const dx = x2 - x1, dy = y2 - y1;
+      const det = x1 * y2 - x2 * y1;
+      const d = Math.hypot(dx, dy);
+      const r2 = (Math.pow(x1 * x1 + y1 * y1 - 1, 2) + Math.pow(x2 * x2 + y2 * y2 - 1, 2)) / (2 * d * d);
+
+      // Find center and radius of the circle orthogonal to unit circle
+      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+      const nx = -dy, ny = dx;
+      const t = (1 - (x1 * x1 + y1 * y1)) / (2 * (x1 * nx + y1 * ny));
+      const cx = x1 + t * nx;
+      const cy = y1 + t * ny;
+
+      const rad = Math.hypot(cx - x1, cy - y1);
+      const angle1 = Math.atan2(y1 - cy, x1 - cx);
+      const angle2 = Math.atan2(y2 - cy, x2 - cx);
+
+      ctx.beginPath();
+      ctx.arc(cx * 300, -cy * 300, rad * 300, -angle1, -angle2, false);
+      ctx.stroke();
+    }
+
+    function midpoint(a, b) {
+      return math.divide(math.add(a, b), 2);
+    }
+
+    function reflectAcrossGeodesic(a, b, z) {
+      // Reflect point z across the geodesic defined by a, b
+      // Convert geodesic to Euclidean circle orthogonal to unit circle
+      const circle = getCircleOrthogonalToUnit(a, b);
+      const c = math.complex(circle.cx, circle.cy);
+      const r2 = circle.r * circle.r;
+
+      const v = math.subtract(z, c);
+      const v_conj = math.conj(v);
+      return math.add(c, math.divide(math.multiply(r2, v_conj), math.multiply(v, v_conj)));
+    }
+
+    function getCircleOrthogonalToUnit(z1, z2) {
+      // Compute circle orthogonal to unit disk passing through z1 and z2
+      const a = z1.re, b = z1.im;
+      const c = z2.re, d = z2.im;
+      const A = 2 * (c - a);
+      const B = 2 * (d - b);
+      const C = a * a + b * b - c * c - d * d;
+
+      const D = A * A + B * B;
+      const cx = -A * C / D;
+      const cy = -B * C / D;
+      const r = Math.sqrt((a - cx) ** 2 + (b - cy) ** 2);
+      return { cx, cy, r };
+    }
+
+    // Initial draw
+    draw();
+  </script>
+
+</body>
+</html>

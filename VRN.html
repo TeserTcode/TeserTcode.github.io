@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Voronoi Diagram with WebGL</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        #controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        #canvas-container {
+            position: relative;
+        }
+        canvas {
+            border: 1px solid #000;
+            background-color: #f0f0f0;
+            touch-action: none;
+        }
+        button, select, input {
+            padding: 5px 10px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .point-info {
+            position: absolute;
+            background: white;
+            padding: 5px;
+            border: 1px solid #000;
+            display: none;
+        }
+        #metric-params {
+            display: none;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Advanced Voronoi Diagram with WebGL</h1>
+    <div id="container">
+        <div id="controls">
+            <div class="control-group">
+                <label for="metric">Distance Metric:</label>
+                <select id="metric">
+                    <option value="euclidean">Euclidean (L2)</option>
+                    <option value="manhattan">Manhattan (L1)</option>
+                    <option value="chebyshev">Chebyshev (L∞)</option>
+                    <option value="angular">Angular</option>
+                    <option value="canberra">Canberra</option>
+                    <option value="braycurtis">Bray-Curtis</option>
+                    <option value="minkowski">Minkowski</option>
+                    <option value="mahalanobis">Mahalanobis</option>
+                    <option value="hyperbolic">Hyperbolic</option>
+                    <option value="hexagonal-lp">Hexagonal-Lp</option>
+                    <option value="trigonal-lp">Trigonal-Lp</option>
+                    <option value="poincare-disc">Poincaré Disc</option>
+                    <option value="klein-disc">Klein Disc</option>
+                    <option value="poincare-half-plane">Poincaré Half Plane</option>
+                </select>
+                <div id="metric-params">
+                    <label for="minkowski-p">Minkowski p: <span id="p-value">3.0</span></label>
+                    <input type="range" id="minkowski-p" min="0.1" max="10" step="0.1" value="3">
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label>Points:</label>
+                <button id="add-point">Add Point (Click on canvas)</button>
+                <button id="clear">Clear All Points</button>
+                <div>
+                    <button id="random">Add Random Points</button>
+                    <input type="number" id="random-n" min="1" max="1000" value="10">
+                </div>
+                <button id="delete-point">Delete Selected Point</button>
+            </div>
+            
+            <div class="control-group">
+                <label>Selected Point:</label>
+                <div id="point-info">No point selected</div>
+                <input type="color" id="point-color" value="#ff0000">
+                <label>Weight (w): <input type="number" id="point-weight" min="0.1" max="10" step="0.1" value="1"></label>
+                <label>Superweight (s): <input type="number" id="point-superweight" min="0.1" max="10" step="0.1" value="1"></label>
+                <label>Subweight (a): <input type="number" id="point-subweight" min="0" max="10" step="0.1" value="0"></label>
+            </div>
+            
+            <div class="control-group">
+                <label>Animation:</label>
+                <button id="brownian-toggle">Start Brownian Motion</button>
+                <label>Speed: <input type="range" id="brownian-speed" min="0.1" max="2" step="0.1" value="0.5"></label>
+            </div>
+            
+            <div class="control-group">
+                <label>Actions:</label>
+                <button id="download">Download Image</button>
+            </div>
+        </div>
+        
+        <div id="canvas-container">
+            <canvas id="voronoi" width="800" height="600"></canvas>
+            <div class="point-info" id="hover-info"></div>
+        </div>
+    </div>
+
+    <script>
+        // WebGL setup
+        const canvas = document.getElementById('voronoi');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        
+        if (!gl) {
+            alert('WebGL not supported in your browser');
+            throw new Error('WebGL not supported');
+        }
+
+        // Vertex shader source
+        const vsSource = `
+            attribute vec2 aPosition;
+            void main() {
+                gl_Position = vec4(aPosition, 0.0, 1.0);
+                gl_PointSize = 10.0;
+            }
+        `;
+
+        // Fragment shader source for points
+        const fsPointSource = `
+            precision mediump float;
+            uniform vec3 uColor;
+            void main() {
+                float r = distance(gl_PointCoord, vec2(0.5, 0.5));
+                if (r > 0.5) discard;
+                gl_FragColor = vec4(uColor, 1.0);
+            }
+        `;
+
+        // Compile shader function
+        function compileShader(gl, source, type) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error('Shader compilation error:', gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            
+            return shader;
+        }
+
+        // Create shader program
+        function createProgram(gl, vsSource, fsSource) {
+            const vertexShader = compileShader(gl, vsSource, gl.VERTEX_SHADER);
+            const fragmentShader = compileShader(gl, fsSource, gl.FRAGMENT_SHADER);
+            
+            const program = gl.createProgram();
+            gl.attachShader(program, vertexShader);
+            gl.attachShader(program, fragmentShader);
+            gl.linkProgram(program);
+            
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                console.error('Program linking error:', gl.getProgramInfoLog(program));
+                return null;
+            }
+            
+            return program;
+        }
+
+        // Create point rendering program
+        const pointProgram = createProgram(gl, vsSource, fsPointSource);
+        const pointProgramAttribs = {
+            aPosition: gl.getAttribLocation(pointProgram, 'aPosition'),
+            uColor: gl.getUniformLocation(pointProgram, 'uColor')
+        };
+
+        // Voronoi shader program
+        const voronoiProgram = createProgram(gl, vsSource, `
+            precision highp float;
+            
+            uniform vec2 uResolution;
+            uniform int uPointCount;
+            uniform vec2 uPoints[100];
+            uniform vec3 uColors[100];
+            uniform float uWeights[100];
+            uniform float uSuperweights[100];
+            uniform float uSubweights[100];
+            uniform int uMetric;
+            uniform float uMinkowskiP;
+            
+            float distanceMetric(vec2 p1, vec2 p2, int metric) {
+                float dx = p1.x - p2.x;
+                float dy = p1.y - p2.y;
+                
+                if (metric == 0) { // euclidean
+                    return sqrt(dx*dx + dy*dy);
+                } else if (metric == 1) { // manhattan
+                    return abs(dx) + abs(dy);
+                } else if (metric == 2) { // chebyshev
+                    return max(abs(dx), abs(dy));
+                } else if (metric == 3) { // angular
+                    return atan(abs(dy), abs(dx));
+                } else if (metric == 4) { // canberra
+                    return (abs(dx)/(abs(p1.x)+abs(p2.x))) + (abs(dy)/(abs(p1.y)+abs(p2.y)));
+                } else if (metric == 5) { // braycurtis
+                    return (abs(dx) + abs(dy)) / (abs(p1.x + p2.x) + abs(p1.y + p2.y));
+                } else if (metric == 6) { // minkowski
+                    float p = uMinkowskiP;
+                    return pow(pow(abs(dx), p) + pow(abs(dy), p), 1.0/p);
+                } else if (metric == 7) { // mahalanobis (simplified)
+                    float avgX = (p1.x + p2.x) / 2.0;
+                    float avgY = (p1.y + p2.y) / 2.0;
+                    float stdX = sqrt((pow(p1.x - avgX, 2.0) + pow(p2.x - avgX, 2.0)) / 2.0;
+                    float stdY = sqrt((pow(p1.y - avgY, 2.0) + pow(p2.y - avgY, 2.0)) / 2.0;
+                    return sqrt(pow(dx/stdX, 2.0) + pow(dy/stdY, 2.0));
+                } else if (metric == 8) { // hyperbolic
+                    float dEucl = sqrt(dx*dx + dy*dy);
+                    return acosh(1.0 + (2.0 * dEucl * dEucl) / ((1.0 - p1.x*p1.x - p1.y*p1.y) * (1.0 - p2.x*p2.x - p2.y*p2.y)));
+                } else if (metric == 9) { // hexagonal-lp
+                    float sqrt3 = sqrt(3.0);
+                    return max(abs(dx), abs((dx + sqrt3*dy)/2.0), abs((dx - sqrt3*dy)/2.0));
+                } else if (metric == 10) { // trigonal-lp
+                    return abs(dx) + abs(dy) - min(abs(dx), abs(dy));
+                } else if (metric == 11) { // poincare-disc
+                    float euclideanDist = sqrt(dx*dx + dy*dy);
+                    return acosh(1.0 + 2.0 * (euclideanDist * euclideanDist) / ((1.0 - p1.x*p1.x - p1.y*p1.y) * (1.0 - p2.x*p2.x - p2.y*p2.y)));
+                } else if (metric == 12) { // klein-disc
+                    float numerator = sqrt((1.0 - p1.x*p1.x - p1.y*p1.y) * (1.0 - p2.x*p2.x - p2.y*p2.y));
+                    return acosh((1.0 - p1.x*p2.x - p1.y*p2.y) / numerator);
+                } else if (metric == 13) { // poincare-half-plane
+                    if (p1.y <= 0.0 || p2.y <= 0.0) return 1.0/0.0; // Infinity
+                    return acosh(1.0 + ((dx*dx + dy*dy) / (2.0 * p1.y * p2.y)));
+                }
+                
+                return sqrt(dx*dx + dy*dy); // default
+            }
+            
+            void main() {
+                vec2 fragCoord = gl_FragCoord.xy / uResolution;
+                vec2 pixelPos = vec2(fragCoord.x, 1.0 - fragCoord.y) * uResolution;
+                
+                int closestIdx = 0;
+                float closestVal = 1.0/0.0; // Infinity
+                
+                for (int i = 0; i < 100; i++) {
+                    if (i >= uPointCount) break;
+                    
+                    vec2 point = uPoints[i];
+                    float dist = distanceMetric(pixelPos, point, uMetric);
+                    float weight = uWeights[i];
+                    float superweight = uSuperweights[i];
+                    float subweight = uSubweights[i];
+                    
+                    float val = weight * pow(dist, superweight) + subweight;
+                    
+                    if (val < closestVal) {
+                        closestVal = val;
+                        closestIdx = i;
+                    }
+                }
+                
+                gl_FragColor = vec4(uColors[closestIdx], 1.0);
+            }
+        `);
+
+        const voronoiProgramAttribs = {
+            aPosition: gl.getAttribLocation(voronoiProgram, 'aPosition'),
+            uResolution: gl.getUniformLocation(voronoiProgram, 'uResolution'),
+            uPointCount: gl.getUniformLocation(voronoiProgram, 'uPointCount'),
+            uPoints: gl.getUniformLocation(voronoiProgram, 'uPoints'),
+            uColors: gl.getUniformLocation(voronoiProgram, 'uColors'),
+            uWeights: gl.getUniformLocation(voronoiProgram, 'uWeights'),
+            uSuperweights: gl.getUniformLocation(voronoiProgram, 'uSuperweights'),
+            uSubweights: gl.getUniformLocation(voronoiProgram, 'uSubweights'),
+            uMetric: gl.getUniformLocation(voronoiProgram, 'uMetric'),
+            uMinkowskiP: gl.getUniformLocation(voronoiProgram, 'uMinkowskiP')
+        };
+
+        // Fullscreen quad vertices
+        const vertices = new Float32Array([
+            -1.0, -1.0,
+            1.0, -1.0,
+            -1.0, 1.0,
+            1.0, 1.0
+        ]);
+
+        const vertexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+        // State
+        let points = [];
+        let selectedPoint = null;
+        let isAddingPoint = false;
+        let isDragging = false;
+        let currentMetric = 'euclidean';
+        let minkowskiP = 3.0;
+        let brownianMotion = false;
+        let brownianSpeed = 0.5;
+        let animationId = null;
+        const metricMap = {
+            'euclidean': 0,
+            'manhattan': 1,
+            'chebyshev': 2,
+            'angular': 3,
+            'canberra': 4,
+            'braycurtis': 5,
+            'minkowski': 6,
+            'mahalanobis': 7,
+            'hyperbolic': 8,
+            'hexagonal-lp': 9,
+            'trigonal-lp': 10,
+            'poincare-disc': 11,
+            'klein-disc': 12,
+            'poincare-half-plane': 13
+        };
+
+        // Initialize
+        function init() {
+            // Event listeners
+            canvas.addEventListener('mousedown', handleCanvasMouseDown);
+            canvas.addEventListener('mousemove', handleCanvasMouseMove);
+            canvas.addEventListener('mouseup', handleCanvasMouseUp);
+            canvas.addEventListener('mouseleave', handleCanvasMouseUp);
+            canvas.addEventListener('touchstart', handleCanvasTouch, { passive: false });
+            canvas.addEventListener('touchmove', handleCanvasTouch, { passive: false });
+            canvas.addEventListener('touchend', handleCanvasTouchEnd);
+            
+            document.getElementById('add-point').addEventListener('click', () => {
+                isAddingPoint = true;
+                selectedPoint = null;
+                updatePointInfo();
+            });
+            
+            document.getElementById('clear').addEventListener('click', clearPoints);
+            document.getElementById('random').addEventListener('click', addRandomPoints);
+            document.getElementById('delete-point').addEventListener('click', deleteSelectedPoint);
+            document.getElementById('brownian-toggle').addEventListener('click', toggleBrownianMotion);
+            document.getElementById('brownian-speed').addEventListener('input', (e) => {
+                brownianSpeed = parseFloat(e.target.value);
+            });
+            document.getElementById('download').addEventListener('click', downloadImage);
+            
+            document.getElementById('metric').addEventListener('change', (e) => {
+                currentMetric = e.target.value;
+                const paramsDiv = document.getElementById('metric-params');
+                paramsDiv.style.display = currentMetric === 'minkowski' ? 'block' : 'none';
+                drawVoronoi();
+            });
+            
+            document.getElementById('minkowski-p').addEventListener('input', (e) => {
+                minkowskiP = parseFloat(e.target.value);
+                document.getElementById('p-value').textContent = minkowskiP.toFixed(1);
+                if (currentMetric === 'minkowski') {
+                    drawVoronoi();
+                }
+            });
+            
+            // Point property controls
+            document.getElementById('point-color').addEventListener('change', (e) => {
+                if (selectedPoint) {
+                    selectedPoint.color = hexToRgb(e.target.value);
+                    drawVoronoi();
+                }
+            });
+            
+            document.getElementById('point-weight').addEventListener('input', (e) => {
+                if (selectedPoint) {
+                    selectedPoint.weight = parseFloat(e.target.value);
+                    drawVoronoi();
+                }
+            });
+            
+            document.getElementById('point-superweight').addEventListener('input', (e) => {
+                if (selectedPoint) {
+                    selectedPoint.superweight = parseFloat(e.target.value);
+                    drawVoronoi();
+                }
+            });
+            
+            document.getElementById('point-subweight').addEventListener('input', (e) => {
+                if (selectedPoint) {
+                    selectedPoint.subweight = parseFloat(e.target.value);
+                    drawVoronoi();
+                }
+            });
+            
+            // Add a few initial points
+            addRandomPoints(5);
+            
+            // Start animation loop
+            animate();
+        }
+        
+        // Animation loop
+        function animate() {
+            if (brownianMotion && points.length > 0) {
+                movePointsBrownian();
+            }
+            
+            drawVoronoi();
+            animationId = requestAnimationFrame(animate);
+        }
+        
+        // Point handling
+        function addPoint(x, y, color = getRandomColor(), weight = 1, superweight = 1, subweight = 0) {
+            points.push({
+                x, y, 
+                color: hexToRgb(color), 
+                weight, superweight, subweight,
+                originalX: x, 
+                originalY: y
+            });
+            drawVoronoi();
+        }
+        
+        function deleteSelectedPoint() {
+            if (selectedPoint) {
+                const index = points.indexOf(selectedPoint);
+                if (index !== -1) {
+                    points.splice(index, 1);
+                    selectedPoint = null;
+                    drawVoronoi();
+                }
+            }
+        }
+        
+        function clearPoints() {
+            points = [];
+            selectedPoint = null;
+            drawVoronoi();
+        }
+        
+        function addRandomPoints(count = null) {
+            if (count === null) {
+                count = parseInt(document.getElementById('random-n').value);
+            }
+            
+            for (let i = 0; i < count; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                addPoint(x, y);
+            }
+        }
+        
+        // Brownian motion
+        function toggleBrownianMotion() {
+            brownianMotion = !brownianMotion;
+            const button = document.getElementById('brownian-toggle');
+            button.textContent = brownianMotion ? 'Stop Brownian Motion' : 'Start Brownian Motion';
+        }
+        
+        function movePointsBrownian() {
+            const speed = brownianSpeed * 2;
+            for (const point of points) {
+                point.x += (Math.random() - 0.5) * speed;
+                point.y += (Math.random() - 0.5) * speed;
+                
+                // Keep points within canvas
+                point.x = Math.max(0, Math.min(canvas.width, point.x));
+                point.y = Math.max(0, Math.min(canvas.height, point.y));
+            }
+        }
+        
+        // Drawing functions
+        function drawVoronoi() {
+            // Clear canvas
+            gl.clearColor(0.9, 0.9, 0.9, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            
+            // Draw Voronoi diagram
+            gl.useProgram(voronoiProgram);
+            
+            // Set attributes for fullscreen quad
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+            gl.vertexAttribPointer(voronoiProgramAttribs.aPosition, 2, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(voronoiProgramAttribs.aPosition);
+            
+            // Set uniforms
+            gl.uniform2f(voronoiProgramAttribs.uResolution, canvas.width, canvas.height);
+            gl.uniform1i(voronoiProgramAttribs.uPointCount, points.length);
+            gl.uniform1i(voronoiProgramAttribs.uMetric, metricMap[currentMetric]);
+            gl.uniform1f(voronoiProgramAttribs.uMinkowskiP, minkowskiP);
+            
+            // Prepare point data arrays
+            const pointPositions = new Float32Array(points.length * 2);
+            const pointColors = new Float32Array(points.length * 3);
+            const pointWeights = new Float32Array(points.length);
+            const pointSuperweights = new Float32Array(points.length);
+            const pointSubweights = new Float32Array(points.length);
+            
+            for (let i = 0; i < points.length; i++) {
+                const point = points[i];
+                pointPositions[i * 2] = point.x;
+                pointPositions[i * 2 + 1] = point.y;
+                
+                pointColors[i * 3] = point.color.r / 255;
+                pointColors[i * 3 + 1] = point.color.g / 255;
+                pointColors[i * 3 + 2] = point.color.b / 255;
+                
+                pointWeights[i] = point.weight;
+                pointSuperweights[i] = point.superweight;
+                pointSubweights[i] = point.subweight;
+            }
+            
+            // Set point data uniforms
+            gl.uniform2fv(voronoiProgramAttribs.uPoints, pointPositions);
+            gl.uniform3fv(voronoiProgramAttribs.uColors, pointColors);
+            gl.uniform1fv(voronoiProgramAttribs.uWeights, pointWeights);
+            gl.uniform1fv(voronoiProgramAttribs.uSuperweights, pointSuperweights);
+            gl.uniform1fv(voronoiProgramAttribs.uSubweights, pointSubweights);
+            
+            // Draw
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+            
+            // Draw points
+            drawPoints();
+        }
+        
+        function drawPoints() {
+            gl.useProgram(pointProgram);
+            
+            // Set attributes for point positions
+            const pointPositions = new Float32Array(points.length * 2);
+            for (let i = 0; i < points.length; i++) {
+                const point = points[i];
+                // Convert to normalized device coordinates
+                pointPositions[i * 2] = (point.x / canvas.width) * 2 - 1;
+                pointPositions[i * 2 + 1] = 1 - (point.y / canvas.height) * 2;
+            }
+            
+            const pointBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, pointBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, pointPositions, gl.DYNAMIC_DRAW);
+            gl.vertexAttribPointer(pointProgramAttribs.aPosition, 2, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(pointProgramAttribs.aPosition);
+            
+            // Draw each point
+            for (let i = 0; i < points.length; i++) {
+                const point = points[i];
+                
+                // Draw black outline for selected point
+                if (point === selectedPoint) {
+                    gl.uniform3f(pointProgramAttribs.uColor, 0, 0, 0);
+                    gl.drawArrays(gl.POINTS, i, 1);
+                }
+                
+                // Draw colored point
+                gl.uniform3f(pointProgramAttribs.uColor, point.color.r / 255, point.color.g / 255, point.color.b / 255);
+                gl.drawArrays(gl.POINTS, i, 1);
+            }
+            
+            gl.deleteBuffer(pointBuffer);
+        }
+        
+        // Event handlers
+        function handleCanvasMouseDown(e) {
+            const pos = getCanvasPosition(e);
+            
+            // Check if clicked on a point
+            for (let i = points.length - 1; i >= 0; i--) {
+                const point = points[i];
+                const dist = Math.sqrt((pos.x - point.x) ** 2 + (pos.y - point.y) ** 2);
+                if (dist <= 10) {
+                    selectedPoint = point;
+                    isDragging = true;
+                    updatePointControls();
+                    e.preventDefault();
+                    return;
+                }
+            }
+            
+            // If adding mode, add new point
+            if (isAddingPoint) {
+                addPoint(pos.x, pos.y);
+                isAddingPoint = false;
+                return;
+            }
+            
+            // Otherwise deselect
+            selectedPoint = null;
+            updatePointInfo();
+        }
+        
+        function handleCanvasMouseMove(e) {
+            if (isDragging && selectedPoint) {
+                const pos = getCanvasPosition(e);
+                selectedPoint.x = pos.x;
+                selectedPoint.y = pos.y;
+                e.preventDefault();
+            }
+        }
+        
+        function handleCanvasMouseUp() {
+            isDragging = false;
+        }
+        
+        function handleCanvasTouch(e) {
+            if (e.touches.length === 1) {
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent('mousedown', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                handleCanvasMouseDown(mouseEvent);
+                e.preventDefault();
+            }
+        }
+        
+        function handleCanvasTouchEnd() {
+            handleCanvasMouseUp();
+        }
+        
+        function getCanvasPosition(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: (e.clientX - rect.left) * (canvas.width / rect.width),
+                y: (e.clientY - rect.top) * (canvas.height / rect.height)
+            };
+        }
+        
+        // UI updates
+        function updatePointInfo() {
+            const infoDiv = document.getElementById('point-info');
+            if (selectedPoint) {
+                infoDiv.textContent = `Point at (${Math.round(selectedPoint.x)}, ${Math.round(selectedPoint.y)})`;
+            } else if (isAddingPoint) {
+                infoDiv.textContent = "Click on canvas to add a point";
+            } else {
+                infoDiv.textContent = "No point selected";
+            }
+        }
+        
+        function updatePointControls() {
+            if (selectedPoint) {
+                document.getElementById('point-color').value = rgbToHex(selectedPoint.color);
+                document.getElementById('point-weight').value = selectedPoint.weight;
+                document.getElementById('point-superweight').value = selectedPoint.superweight;
+                document.getElementById('point-subweight').value = selectedPoint.subweight;
+            }
+        }
+        
+        // Utility functions
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+        
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : {r: 0, g: 0, b: 0};
+        }
+        
+        function rgbToHex(rgb) {
+            return `#${((1 << 24) + (rgb.r << 16) + (rgb.g << 8) + rgb.b).toString(16).slice(1)}`;
+        }
+        
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = 'voronoi.png';
+            
+            // Create a temporary canvas to draw the WebGL content
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Read the WebGL pixels and draw to 2D canvas
+            const pixels = new Uint8Array(canvas.width * canvas.height * 4);
+            gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+            
+            const imageData = tempCtx.createImageData(canvas.width, canvas.height);
+            for (let y = 0; y < canvas.height; y++) {
+                for (let x = 0; x < canvas.width; x++) {
+                    const i = (y * canvas.width + x) * 4;
+                    const j = ((canvas.height - y - 1) * canvas.width + x) * 4;
+                    
+                    imageData.data[j] = pixels[i];
+                    imageData.data[j + 1] = pixels[i + 1];
+                    imageData.data[j + 2] = pixels[i + 2];
+                    imageData.data[j + 3] = pixels[i + 3];
+                }
+            }
+            
+            tempCtx.putImageData(imageData, 0, 0);
+            
+            // Draw points on top
+            tempCtx.fillStyle = 'black';
+            for (const point of points) {
+                tempCtx.beginPath();
+                tempCtx.arc(point.x, point.y, 5, 0, Math.PI * 2);
+                
+                if (point === selectedPoint) {
+                    tempCtx.fillStyle = 'black';
+                    tempCtx.fill();
+                    tempCtx.strokeStyle = rgbToHex(point.color);
+                    tempCtx.lineWidth = 2;
+                    tempCtx.stroke();
+                } else {
+                    tempCtx.fillStyle = rgbToHex(point.color);
+                    tempCtx.fill();
+                }
+            }
+            
+            link.href = tempCanvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        // Initialize
+        init();
+    </script>
+</body>
+</html>

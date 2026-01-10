@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generative Tessellation System v3</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            background-color: #f0f2f5;
+            margin: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #111;
+        }
+        #main-container {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        #controls-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 420px;
+        }
+        fieldset {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px 15px;
+        }
+        legend {
+            font-weight: bold;
+            padding: 0 5px;
+            color: #0056b3;
+        }
+        .control-group {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 10px 12px;
+            align-items: center;
+        }
+        label {
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        select, input[type="number"] {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 6px;
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #fcfcfc;
+        }
+        input[type="range"] {
+            width: 100%;
+            margin: 0;
+        }
+        .slider-group {
+            grid-template-columns: auto 1fr 40px;
+        }
+        .slider-group span {
+            text-align: right;
+            font-family: monospace;
+            color: #555;
+            font-size: 0.9em;
+        }
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        #generateBtn, #randomizeBtn {
+            padding: 12px 20px;
+            border: none;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.2s;
+        }
+        #generateBtn { background-color: #007bff; }
+        #generateBtn:hover { background-color: #0056b3; }
+        #randomizeBtn { background-color: #6c757d; }
+        #randomizeBtn:hover { background-color: #5a6268; }
+        canvas {
+            border: 2px solid #333;
+            background-color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Generative Tessellation System</h1>
+    <div id="main-container">
+        <canvas id="tessellationCanvas" width="700" height="700"></canvas>
+        <div id="controls-container">
+            <fieldset>
+                <legend>General</legend>
+                <div class="control-group">
+                    <label for="startShape">Initial Shape:</label>
+                    <select id="startShape">
+                        <option value="square">Square</option>
+                        <option value="diamond">Diamond</option>
+                        <option value="rectangle">Rectangle</option>
+                        <option value="triangle">Triangle</option>
+                        <option value="pentagon">Pentagon</option>
+                        <option value="hexagon">Hexagon</option>
+                        <option value="octagon">Octagon</option>
+                        <option value="circle">Circle (12-gon)</option>
+                    </select>
+                    <label for="evolutionType">Evolution Method:</label>
+                    <select id="evolutionType">
+                        <option value="organic" selected>Organic (Step-by-Step)</option>
+                        <option value="uniform">Uniform (All Polygons)</option>
+                    </select>
+                    <label for="generations" id="generationsLabel">Number of Splits:</label>
+                    <input type="number" id="generations" value="150" min="0" max="5000">
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Selection Strategy (Organic)</legend>
+                <div class="control-group">
+                    <label for="polygonChoice">Polygon Choice:</label>
+                    <select id="polygonChoice">
+                        <option value="random">Random</option>
+                        <option value="largestArea">Largest Area</option>
+                        <option value="smallestArea">Smallest Area</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="mostVertices">Most Vertices</option>
+                        <option value="fewestVertices">Fewest Vertices</option>
+                    </select>
+                    <label for="edgeChoice">Edge Choice:</label>
+                    <select id="edgeChoice">
+                        <option value="random">Random Edge</option>
+                        <option value="longest">Longest Edge</option>
+                        <option value="shortest">Shortest Edge</option>
+                    </select>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Operation Weights</legend>
+                <div class="control-group slider-group">
+                    <label for="weightCrack">Crack:</label>
+                    <input type="range" id="weightCrack" value="70" min="0" max="100"><span id="valCrack">70</span>
+                    <label for="weightVertexToVertex">V-to-V:</label>
+                    <input type="range" id="weightVertexToVertex" value="5" min="0" max="100"><span id="valVertexToVertex">5</span>
+                    <label for="weightKis">Kis:</label>
+                    <input type="range" id="weightKis" value="5" min="0" max="100"><span id="valKis">5</span>
+                    <label for="weightSierpinski">Sierpinski:</label>
+                    <input type="range" id="weightSierpinski" value="0" min="0" max="100"><span id="valSierpinski">0</span>
+                    <label for="weightOrtho">Ortho SubD:</label>
+                    <input type="range" id="weightOrtho" value="0" min="0" max="100"><span id="valOrtho">0</span>
+                    <label for="weightTriangulate">Triangulate:</label>
+                    <input type="range" id="weightTriangulate" value="0" min="0" max="100"><span id="valTriangulate">0</span>
+                    <label for="weightStellate">Stellate:</label>
+                    <input type="range" id="weightStellate" value="0" min="0" max="100"><span id="valStellate">0</span>
+                </div>
+            </fieldset>
+            
+            <fieldset>
+                <legend>Crack Details</legend>
+                <div class="control-group">
+                     <label for="axisRestriction">Crack Direction:</label>
+                     <select id="axisRestriction">
+                        <option value="none">Random</option>
+                        <option value="cartesian">Cartesian</option>
+                        <option value="hexagonal">Hexagonal</option>
+                        <option value="pentagonal">Pentagonal</option>
+                        <option value="radial">Radial</option>
+                        <option value="tangential">Tangential</option>
+                    </select>
+                     <label for="midpointType">Start Point:</label>
+                    <select id="midpointType">
+                        <option value="random">Random</option>
+                        <option value="center">Center (50%)</option>
+                    </select>
+                </div>
+            </fieldset>
+
+             <fieldset>
+                <legend>Post-Processing</legend>
+                <div class="control-group slider-group">
+                    <label for="warpAmount">Warp Amount:</label>
+                    <input type="range" id="warpAmount" value="0" min="0" max="50" step="1"><span id="valWarpAmount">0</span>
+                </div>
+            </fieldset>
+            
+            <fieldset>
+                <legend>Appearance</legend>
+                <div class="control-group">
+                    <label for="faceColorPalette">Face Colors:</label>
+                    <select id="faceColorPalette">
+                        <option value="gray">Random Gray</option>
+                        <option value="pastel">Pastel Tones</option>
+                        <option value="oceanic">Oceanic</option>
+                        <option value="forest">Forest</option>
+                        <option value="inferno">Inferno</option>
+                        <option value="age">Age Gradient</option>
+                        <option value="area">Area</option>
+                        <option value="longestEdge">Longest Edge</option>
+                        <option value="shortestEdge">Shortest Edge</option>
+                        <option value="triangleOrientation">Triangle Orientation</option>
+                    </select>
+                    <label for="lineColorPalette">Line Colors:</label>
+                    <select id="lineColorPalette">
+                        <option value="black">Black</option>
+                        <option value="white">White</option>
+                        <option value="darkerFill">Darker Fill</option>
+                        <option value="complementary">Complementary</option>
+                    </select>
+                </div>
+                 <div class="control-group slider-group">
+                    <label for="lineWidth">Line Width:</label>
+                    <input type="range" id="lineWidth" value="1" min="0" max="10"><span id="valLineWidth">1</span>
+                    <label for="opacity">Fill Opacity:</label>
+                    <input type="range" id="opacity" value="1.0" min="0" max="1" step="0.05"><span id="valOpacity">1.0</span>
+                </div>
+            </fieldset>
+            <div class="button-group">
+                <button id="generateBtn">Generate</button>
+                <button id="randomizeBtn">Randomize All</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const canvas = document.getElementById('tessellationCanvas');
+        const ctx = canvas.getContext('2d');
+        const allControls = {
+            startShape: document.getElementById('startShape'),
+            evolutionType: document.getElementById('evolutionType'),
+            generations: document.getElementById('generations'),
+            generationsLabel: document.getElementById('generationsLabel'),
+            polygonChoice: document.getElementById('polygonChoice'),
+            edgeChoice: document.getElementById('edgeChoice'),
+            midpointType: document.getElementById('midpointType'),
+            axisRestriction: document.getElementById('axisRestriction'),
+            warpAmount: document.getElementById('warpAmount'),
+            faceColorPalette: document.getElementById('faceColorPalette'),
+            lineColorPalette: document.getElementById('lineColorPalette'),
+            lineWidth: document.getElementById('lineWidth'),
+            opacity: document.getElementById('opacity'),
+            weights: {
+                crack: document.getElementById('weightCrack'),
+                vertexToVertex: document.getElementById('weightVertexToVertex'),
+                kis: document.getElementById('weightKis'),
+                sierpinski: document.getElementById('weightSierpinski'),
+                ortho: document.getElementById('weightOrtho'),
+                triangulate: document.getElementById('weightTriangulate'),
+                stellate: document.getElementById('weightStellate'),
+            },
+            vals: { // Spans for slider values
+                crack: document.getElementById('valCrack'),
+                vertexToVertex: document.getElementById('valVertexToVertex'),
+                kis: document.getElementById('valKis'),
+                sierpinski: document.getElementById('valSierpinski'),
+                ortho: document.getElementById('valOrtho'),
+                triangulate: document.getElementById('valTriangulate'),
+                stellate: document.getElementById('valStellate'),
+                warpAmount: document.getElementById('valWarpAmount'),
+                lineWidth: document.getElementById('valLineWidth'),
+                opacity: document.getElementById('valOpacity'),
+            }
+        };
+        const generateBtn = document.getElementById('generateBtn');
+        const randomizeBtn = document.getElementById('randomizeBtn');
+
+        // --- Global Data Structures ---
+        let baseVertices = [];
+        let renderVertices = [];
+        let polygons = []; // { indices: [...], age: 0, metrics: {...} }
+        let maxAge = 0;
+        let metricRanges = {};
+
+        // --- Constants for Axis Restrictions ---
+        const AXES = {
+            cartesian: [ {x: 1, y: 0}, {x: 0, y: 1} ],
+            hexagonal: Array.from({length: 3}, (_, i) => ({ x: Math.cos(i * Math.PI / 3), y: Math.sin(i * Math.PI / 3) })),
+            pentagonal: Array.from({length: 5}, (_, i) => ({ x: Math.cos(i * 2 * Math.PI / 5), y: Math.sin(i * 2 * Math.PI / 5) }))
+        };
+        
+        // --- Core Logic ---
+        function initialize() {
+            baseVertices = [];
+            polygons = [];
+            maxAge = 0;
+            const margin = 50;
+            const w = canvas.width;
+            const h = canvas.height;
+            const cx = w / 2;
+            const cy = h / 2;
+            const radius = (Math.min(w, h) / 2) - margin;
+            
+            const shape = allControls.startShape.value;
+            let sides, rotation = 0;
+            const initialIndices = [];
+
+            if (shape === 'rectangle') {
+                const radiusY = radius / 2;
+                baseVertices.push({ x: cx - radius, y: cy - radiusY });
+                baseVertices.push({ x: cx + radius, y: cy - radiusY });
+                baseVertices.push({ x: cx + radius, y: cy + radiusY });
+                baseVertices.push({ x: cx - radius, y: cy + radiusY });
+                initialIndices.push(0, 1, 2, 3);
+            } else {
+                 switch(shape) {
+                    case 'square': sides = 4; break;
+                    case 'diamond': sides = 4; rotation = Math.PI / 4; break;
+                    case 'triangle': sides = 3; break;
+                    case 'pentagon': sides = 5; break;
+                    case 'hexagon': sides = 6; break;
+                    case 'octagon': sides = 8; break;
+                    case 'circle': sides = 12; break;
+                }
+                for (let i = 0; i < sides; i++) {
+                    const angle = i * 2 * Math.PI / sides - Math.PI / 2 + rotation;
+                    baseVertices.push({ x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) });
+                    initialIndices.push(i);
+                }
+            }
+            polygons.push({ indices: initialIndices, age: 0, metrics: {} });
+        }
+
+        function getWeightedOperationType() {
+            const weights = Object.fromEntries(
+                Object.entries(allControls.weights).map(([key, slider]) => [key, parseInt(slider.value, 10)])
+            );
+            const totalWeight = Object.values(weights).reduce((sum, w) => sum + w, 0);
+            if (totalWeight === 0) return 'crack';
+            
+            let random = Math.random() * totalWeight;
+            for (const type in weights) {
+                if (random < weights[type]) return type;
+                random -= weights[type];
+            }
+            return 'crack';
+        }
+
+        function splitPolygon(poly, age) {
+            const opType = getWeightedOperationType();
+            maxAge = Math.max(maxAge, age);
+            let result;
+            switch (opType) {
+                case 'vertexToVertex': result = splitVertexToVertex(poly.indices); break;
+                case 'kis': result = splitKis(poly.indices); break;
+                case 'sierpinski': result = splitSierpinski(poly.indices); break;
+                case 'ortho': result = splitOrtho(poly.indices); break;
+                case 'triangulate': result = splitTriangulate(poly.indices); break;
+                case 'stellate': result = splitStellate(poly.indices); break;
+                case 'crack':
+                default:
+                    result = splitByCrack(poly.indices); break;
+            }
+            return result.map(indices => ({ indices, age, metrics: {} }));
+        }
+
+        // --- Accurate Gilbert "Crack" Splitting ---
+        function splitByCrack(polyIndices) {
+            if (polyIndices.length < 3) return [polyIndices];
+            
+            const startEdgeIdx = findEdge(polyIndices);
+            const v1_idx = polyIndices[startEdgeIdx];
+            const v2_idx = polyIndices[(startEdgeIdx + 1) % polyIndices.length];
+            const v1 = baseVertices[v1_idx];
+            const v2 = baseVertices[v2_idx];
+            
+            const t = allControls.midpointType.value === 'center' ? 0.5 : 0.2 + Math.random() * 0.6;
+            const startPoint = { x: v1.x * (1 - t) + v2.x * t, y: v1.y * (1 - t) + v2.y * t };
+
+            let dir;
+            const restriction = allControls.axisRestriction.value;
+            const cx = canvas.width / 2, cy = canvas.height / 2;
+
+            if (restriction === 'none') {
+                const angle = Math.random() * 2 * Math.PI;
+                dir = { x: Math.cos(angle), y: Math.sin(angle) };
+            } else if (restriction === 'radial') {
+                dir = { x: startPoint.x - cx, y: startPoint.y - cy };
+            } else if (restriction === 'tangential') {
+                dir = { x: -(startPoint.y - cy), y: startPoint.x - cx };
+            } else { 
+                const axes = AXES[restriction];
+                dir = axes[Math.floor(Math.random() * axes.length)];
+            }
+            
+            const mag = Math.hypot(dir.x, dir.y);
+            if (mag > 0) { dir.x /= mag; dir.y /= mag; }
+
+            const intersections = [];
+            for (const d of [dir, {x: -dir.x, y: -dir.y}]) {
+                let closest_t = Infinity, endPoint = null, endEdgeIdx = -1;
+                for (let i = 0; i < polyIndices.length; i++) {
+                    if (i === startEdgeIdx) continue;
+                    
+                    const p3_idx = polyIndices[i], p4_idx = polyIndices[(i + 1) % polyIndices.length];
+                    const p3 = baseVertices[p3_idx], p4 = baseVertices[p4_idx];
+
+                    const den = (startPoint.x - (startPoint.x+d.x)) * (p3.y - p4.y) - (startPoint.y - (startPoint.y+d.y)) * (p3.x - p4.x);
+                    if (den === 0) continue;
+                    const t_num = (startPoint.x - p3.x) * (p3.y - p4.y) - (startPoint.y - p3.y) * (p3.x - p4.x);
+                    const u_num = -((startPoint.x - (startPoint.x+d.x)) * (startPoint.y - p3.y) - (startPoint.y - (startPoint.y+d.y)) * (startPoint.x - p3.x));
+                    
+                    const _t = t_num / den, u = u_num / den;
+
+                    if (_t > 1e-5 && _t < closest_t && u > 1e-5 && u < 1-1e-5) {
+                        closest_t = _t;
+                        endPoint = { x: startPoint.x + _t * d.x, y: startPoint.y + _t * d.y };
+                        endEdgeIdx = i;
+                    }
+                }
+                if (endPoint) intersections.push({dist: closest_t, endPoint, endEdgeIdx});
+            }
+
+            if (intersections.length === 0) return [polyIndices];
+            
+            const bestHit = intersections.sort((a,b) => a.dist - b.dist)[0];
+            const { endPoint, endEdgeIdx } = bestHit;
+
+            baseVertices.push(startPoint, endPoint);
+            const startPoint_idx = baseVertices.length - 2, endPoint_idx = baseVertices.length - 1;
+            
+            const p1_indices = [startPoint_idx];
+            let current = (startEdgeIdx + 1) % polyIndices.length;
+            while(current !== (endEdgeIdx + 1) % polyIndices.length) { p1_indices.push(polyIndices[current]); current = (current + 1) % polyIndices.length; }
+            p1_indices.push(endPoint_idx);
+
+            const p2_indices = [endPoint_idx];
+            current = (endEdgeIdx + 1) % polyIndices.length;
+             while(current !== (startEdgeIdx + 1) % polyIndices.length) { p2_indices.push(polyIndices[current]); current = (current + 1) % polyIndices.length; }
+            p2_indices.push(startPoint_idx);
+
+            return [p1_indices, p2_indices];
+        }
+
+        // --- Other Splitting Operations ---
+        function splitVertexToVertex(p) { if(p.length < 4) return [p]; let i1=Math.floor(Math.random()*p.length); let i2=(i1 + Math.floor(Math.random()*(p.length-3))+2)%p.length; if(i1>i2) [i1,i2]=[i2,i1]; return [p.slice(i1,i2+1), [p[i2],...p.slice(i2+1),...p.slice(0,i1+1)]]; }
+        function splitKis(p) { if(p.length < 3) return [p]; let c={x:0,y:0}; p.forEach(i => {c.x+=baseVertices[i].x; c.y+=baseVertices[i].y}); c.x/=p.length; c.y/=p.length; baseVertices.push(c); let ci=baseVertices.length-1; return Array.from({length: p.length}, (_,i) => [ci, p[i], p[(i+1)%p.length]]); }
+        function splitTriangulate(p) { if (p.length < 4) return [p]; const root = p[0]; return Array.from({length: p.length - 2}, (_, i) => [root, p[i + 1], p[i + 2]]);}
+        function splitOrtho(p) { if(p.length<3) return [p]; const c={x:0,y:0}; p.forEach(i=>{c.x+=baseVertices[i].x;c.y+=baseVertices[i].y}); c.x/=p.length; c.y/=p.length; baseVertices.push(c); const ci=baseVertices.length-1; const midpoints = p.map((v,i)=>{const v2=p[(i+1)%p.length]; const m={x:(baseVertices[v].x+baseVertices[v2].x)/2, y:(baseVertices[v].y+baseVertices[v2].y)/2}; baseVertices.push(m); return baseVertices.length-1}); const centerPoly = [...midpoints]; const newPolys = p.map((v,i)=>{const m_prev = midpoints[(i+p.length-1)%p.length]; const m_curr = midpoints[i]; return [v, m_curr, ci, m_prev]}); return [centerPoly, ...newPolys];}
+        function splitStellate(p) { if(p.length < 3) return [p]; const newPoints = p.map((v_idx, i) => { const v1_idx=p[(i+p.length-1)%p.length]; const v2_idx=p[(i+1)%p.length]; const v=baseVertices[v_idx], v1=baseVertices[v1_idx], v2=baseVertices[v2_idx]; const d1={x:v1.x-v.x,y:v1.y-v.y}, d2={x:v2.x-v.x,y:v2.y-v.y}; const bisector={x:d1.x+d2.x, y:d1.y+d2.y}; const mag=Math.hypot(bisector.x,bisector.y); const dist=Math.hypot(v1.x-v2.x, v1.y-v2.y)*0.3; baseVertices.push({x:v.x-bisector.x/mag*dist, y:v.y-bisector.y/mag*dist}); return baseVertices.length-1;}); return newPoints.map((p_idx,i)=>[p[i], newPoints[(i+1)%p.length], p[(i+1)%p.length], p_idx]); }
+        function splitSierpinski(p) { if (p.length !== 3) return [p]; const [vA,vB,vC] = p.map(i => baseVertices[i]); const mAB = {x:(vA.x+vB.x)/2, y:(vA.y+vB.y)/2}; const mBC = {x:(vB.x+vC.x)/2, y:(vB.y+vC.y)/2}; const mCA = {x:(vC.x+vA.x)/2, y:(vC.y+vA.y)/2}; baseVertices.push(mAB, mBC, mCA); const [iA,iB,iC]=p; const [iAB, iBC, iCA]=[baseVertices.length-3, baseVertices.length-2, baseVertices.length-1]; return [[iA, iAB, iCA], [iAB, iB, iBC], [iCA, iBC, iC], [iAB, iBC, iCA]]; }
+        
+        // --- Drawing and Color ---
+        function render() {
+            const warp = parseFloat(allControls.warpAmount.value);
+            renderVertices = (warp > 0) ? baseVertices.map(v => ({x: v.x + Math.sin(v.y/50)*warp, y: v.y + Math.cos(v.x/50)*warp})) : baseVertices;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.globalAlpha = parseFloat(allControls.opacity.value);
+            
+            polygons.forEach(poly => {
+                const polyIndices = poly.indices;
+                if (polyIndices.length < 2) return;
+                
+                let fill, hue;
+                const palette = allControls.faceColorPalette.value;
+                if (palette.match(/area|longestEdge|shortestEdge/)) {
+                    const metric = palette.replace('Edge','');
+                    const range = metricRanges[metric].max - metricRanges[metric].min;
+                    const norm = range > 0 ? (poly.metrics[metric] - metricRanges[metric].min) / range : 0;
+                    hue = 240 - norm * 240; // Blue to Red
+                } else if (palette === 'triangleOrientation' && poly.metrics.orientation) {
+                    hue = poly.metrics.orientation * 180 / Math.PI;
+                } else if (palette === 'age' && maxAge > 0) {
+                     hue = 200 + (poly.age / maxAge) * 120; // Blue to Magenta
+                }
+
+                if (hue !== undefined) { fill = `hsl(${hue}, 80%, 65%)`; } 
+                else { switch(palette) {
+                        case 'oceanic': fill = `hsl(${180 + Math.random()*60}, 65%, ${60 + Math.random()*25}%)`; break;
+                        case 'forest': fill = `hsl(${80 + Math.random()*60}, 50%, ${40 + Math.random()*25}%)`; break;
+                        case 'inferno': fill = `hsl(${Math.random()*60}, 90%, ${55 + Math.random()*20}%)`; break;
+                        case 'pastel': fill = `hsl(${Math.random()*360}, 70%, 85%)`; break;
+                        default: const g = Math.random() * 150 + 50; fill = `rgb(${g},${g},${g})`; break;
+                }}
+                
+                const linePalette = allControls.lineColorPalette.value;
+                let stroke = 'black';
+                if(linePalette !== 'black') {
+                    if (linePalette === 'white') stroke = 'white';
+                    else { const [h,s,l] = hslFromFill(fill); if (linePalette === 'darkerFill') stroke = `hsl(${h},${s}%,${Math.max(0,l-20)}%)`; else if (linePalette === 'complementary') stroke = `hsl(${(h+180)%360},${s}%,${l}%)`;}
+                }
+                
+                ctx.fillStyle = fill; ctx.strokeStyle = stroke; ctx.lineWidth = allControls.lineWidth.value;
+                
+                ctx.beginPath();
+                ctx.moveTo(renderVertices[polyIndices[0]].x, renderVertices[polyIndices[0]].y);
+                for (let i = 1; i < polyIndices.length; i++) { ctx.lineTo(renderVertices[polyIndices[i]].x, renderVertices[polyIndices[i]].y); }
+                ctx.closePath();
+                ctx.fill();
+                if (ctx.lineWidth > 0) ctx.stroke();
+            });
+        }
+        
+        // --- Geometry & Metric Helpers ---
+        function findEdge(p) { let s=allControls.edgeChoice.value, bestIdx=-1; if(s==='longest'||s==='shortest'){let bestLen=s==='longest'?-1:Infinity; for(let i=0;i<p.length;i++){const v1=baseVertices[p[i]], v2=baseVertices[p[(i+1)%p.length]]; const l=Math.hypot(v2.x-v1.x,v2.y-v1.y); if((s==='longest'&&l>bestLen)||(s==='shortest'&&l<bestLen)){bestLen=l;bestIdx=i;}}} return bestIdx!==-1?bestIdx:Math.floor(Math.random()*p.length); }
+        function hslFromFill(f) { try { let [r,g,b]=f.match(/\d+/g).map(Number); r/=255;g/=255;b/=255; const max=Math.max(r,g,b),min=Math.min(r,g,b); let h,s,l=(max+min)/2; if(max===min){h=s=0}else{const d=max-min;s=l>0.5?d/(2-max-min):d/(max+min); switch(max){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;break;} h/=6;} return [h*360,s*100,l*100]; } catch(e){ return [0,0,50]}}
+
+        function precomputeMetrics() {
+            metricRanges = { area: {min: Infinity, max: -1}, longest: {min: Infinity, max: -1}, shortest: {min: Infinity, max: -1}};
+            polygons.forEach(poly => {
+                if (!poly.metrics) poly.metrics = {}; // FIX: Ensure metrics object exists
+                const p = poly.indices;
+                let area=0; for(let i=0;i<p.length;i++){const v1=baseVertices[p[i]],v2=baseVertices[p[(i+1)%p.length]];area+=v1.x*v2.y-v2.x*v1.y;} poly.metrics.area=Math.abs(area/2);
+                let longest=0, shortest=Infinity; for(let i=0;i<p.length;i++){const v1=baseVertices[p[i]],v2=baseVertices[p[(i+1)%p.length]];const l=Math.hypot(v2.x-v1.x,v2.y-v1.y); longest=Math.max(longest,l); shortest=Math.min(shortest,l);} poly.metrics.longest=longest; poly.metrics.shortest=shortest;
+                if(p.length===3){const lens=[Math.hypot(baseVertices[p[1]].x-baseVertices[p[2]].x,baseVertices[p[1]].y-baseVertices[p[2]].y), Math.hypot(baseVertices[p[0]].x-baseVertices[p[2]].x,baseVertices[p[0]].y-baseVertices[p[2]].y),Math.hypot(baseVertices[p[0]].x-baseVertices[p[1]].x,baseVertices[p[0]].y-baseVertices[p[1]].y)]; const angles = lens.map((l,i)=>{const [a,b,c]=[lens[i],lens[(i+1)%3],lens[(i+2)%3]]; return Math.acos((b*b+c*c-a*a)/(2*b*c))}); const maxAngleIdx = angles.indexOf(Math.max(...angles)); const V=baseVertices[p[maxAngleIdx]]; const C={x:(baseVertices[p[0]].x+baseVertices[p[1]].x+baseVertices[p[2]].x)/3,y:(baseVertices[p[0]].y+baseVertices[p[1]].y+baseVertices[p[2]].y)/3}; poly.metrics.orientation = Math.atan2(V.y-C.y,V.x-C.x);}
+            });
+            polygons.forEach(p => { for (const m in metricRanges) { metricRanges[m].min = Math.min(metricRanges[m].min, p.metrics[m]); metricRanges[m].max = Math.max(metricRanges[m].max, p.metrics[m]); }});
+        }
+
+        // --- Main Controller ---
+        function generate() {
+            initialize();
+            const numSteps = parseInt(allControls.generations.value, 10);
+            const evolution = allControls.evolutionType.value;
+            
+            if (evolution === 'uniform') {
+                for (var i = 0; i < numSteps; i++) {
+                    if(polygons.length > 2500) break;
+                    let newPolys=[]; for(const p of polygons){newPolys.push(...splitPolygon(p,i+1));} polygons = newPolys;
+                }
+            } else { // Organic
+                for (let i = 0; i < numSteps; i++) {
+                    if (polygons.length === 0) break;
+                    precomputeMetrics();
+                    let choiceIndex = -1, choice = allControls.polygonChoice.value;
+                    if(choice==='random'){choiceIndex=Math.floor(Math.random()*polygons.length);}
+                    else{
+                        let bestVal = choice.match(/largest|most/)?-Infinity:Infinity;
+                        let isMin = bestVal === Infinity;
+                        polygons.forEach((p,idx)=>{
+                            let val; 
+                            if(choice.includes('Area')) val=p.metrics.area; 
+                            else if(choice.includes('Vertices')) val=p.indices.length; 
+                            else if(choice==='oldest') val=p.age;
+                            if((isMin && val<bestVal)||(!isMin && val>bestVal)){ bestVal=val; choiceIndex=idx; }
+                        });
+                    }
+                    if (choiceIndex > -1) {
+                         const newPolys = splitPolygon(polygons[choiceIndex], i + 1);
+                         polygons.splice(choiceIndex, 1, ...newPolys);
+                    }
+                }
+            }
+            precomputeMetrics();
+            render();
+        }
+
+        function randomizeAll() {
+            document.querySelectorAll('select').forEach(s => s.selectedIndex = Math.floor(Math.random() * s.options.length));
+            allControls.generations.value = 15;
+            Object.values(allControls.weights).forEach(s => s.value = Math.floor(Math.random() * 101));
+            ['lineWidth','opacity','warpAmount'].forEach(k => {const s=allControls[k]; s.value = s.min + Math.random()*(s.max-s.min);});
+            updateSliderDisplays();
+            allControls.evolutionType.dispatchEvent(new Event('change'));
+            generate();
+        }
+
+        function updateSliderDisplays() { for(const k in allControls.vals){const s = allControls[k] || allControls.weights[k]; if(s) allControls.vals[k].textContent = parseFloat(s.value).toFixed(s.step==='0.05'?2:0);} }
+        
+        generateBtn.addEventListener('click', generate);
+        randomizeBtn.addEventListener('click', randomizeAll);
+        allControls.evolutionType.addEventListener('change', (e) => { allControls.generationsLabel.textContent = e.target.value==='uniform'?'Generations:':'Number of Splits:';});
+        document.querySelectorAll('input[type="range"]').forEach(s => { s.addEventListener('input', updateSliderDisplays); if(s.id !== 'warpAmount') s.addEventListener('change', generate); });
+        allControls.warpAmount.addEventListener('input', render);
+        document.querySelectorAll('select').forEach(s => s.addEventListener('change', generate));
+        document.getElementById('generations').addEventListener('change', generate);
+        
+        updateSliderDisplays();
+        generate();
+    </script>
+</body>
+</html>

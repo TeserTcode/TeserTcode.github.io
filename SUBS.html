@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Substitution Fractals Editor</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+body{
+  margin:0;
+  font-family:sans-serif;
+  display:grid;
+  grid-template-columns:260px 1fr;
+  grid-template-rows:1fr 360px;
+  height:100vh;
+}
+#left{grid-row:1/span 2;border-right:1px solid #ccc;padding:6px;overflow-y:auto}
+#center{border-bottom:1px solid #ccc;padding:4px}
+#bottom{display:flex;gap:8px;padding:6px}
+canvas{background:#eee}
+.object{border:1px solid #888;padding:4px;margin:4px 0;cursor:pointer}
+.object.active{background:#eef}
+.ruleBox{border:1px solid #666;padding:4px;margin:4px 0;font-size:12px}
+input[type=number]{width:52px}
+</style>
+</head>
+<body>
+
+<div id="left">
+<h3>Objects</h3>
+<button onclick="addObject()">+ Add Object</button>
+<button onclick="saveSubs()">Save .subs</button>
+<input type="file" onchange="loadSubs(this.files[0])"><br>
+<div id="objectList"></div>
+<div id="ruleEditor"></div>
+</div>
+
+<div id="center">
+<h3>Rule Preview</h3>
+<label>Opacity
+<input type="range" id="previewOpacity" min="0" max="1" step="0.05" value="0.5" oninput="drawPreview()">
+</label>
+<label>Zoom
+<input type="range" id="previewZoom" min="0.2" max="4" step="0.1" value="1" oninput="drawPreview()">
+</label>
+<label>Mode
+<select id="previewMode">
+  <option value="translate">Translate</option>
+  <option value="rotate">Rotate</option>
+  <option value="scale">Scale</option>
+</select>
+</label>
+<canvas id="preview" width="600" height="400"></canvas>
+</div>
+
+<div id="bottom">
+<div>
+<h4>Painter</h4>
+<canvas id="paint" width="200" height="200"></canvas><br>
+<button onclick="setColor('black')">B</button>
+<button onclick="setColor('white')">W</button>
+<button onclick="setColor('red')">R</button>
+<button onclick="setColor('green')">G</button>
+<button onclick="setColor('blue')">B</button>
+<button onclick="setColor('cyan')">C</button>
+<button onclick="setColor('magenta')">M</button>
+<button onclick="setColor('yellow')">Y</button>
+<button onclick="setColor('transparent')">T</button><br>
+<input type="file" accept="image/*" onchange="loadImageToPainter(this.files[0])">
+</div>
+
+<div style="flex:1">
+<h4>Final Render</h4>
+Start <select id="startObj"></select>
+N <input type="number" id="iterN" value="3">
+Quality <input type="number" id="quality" value="1024"><br>
+Zoom
+<input type="range" id="zoom" min="0.1" max="5" step="0.1" value="1" oninput="renderFinal()">
+Background
+<select id="bgColor" onchange="renderFinal()">
+<option value="#fff">White</option>
+<option value="#000">Black</option>
+</select>
+<button onclick="renderFinal()">Render</button><br>
+<canvas id="final" width="400" height="400"></canvas>
+</div>
+</div>
+
+<script>
+/* ================= DATA ================= */
+let objects=[], active=null;
+
+/* ================= OBJECTS ================= */
+function addObject(){
+  const id=objects.length;
+  const c=document.createElement("canvas");
+  c.width=c.height=64;
+  objects.push({id,canvas:c,rules:[]});
+  setActive(id);
+}
+function setActive(id){
+  active=id;
+  refreshUI();
+  renderRuleEditor();
+  drawPreview();
+  clearPainter();
+}
+function refreshUI(){
+  const list=objectList;
+  const sel=startObj;
+  list.innerHTML=""; sel.innerHTML="";
+  objects.forEach(o=>{
+    const d=document.createElement("div");
+    d.className="object"+(o.id===active?" active":"");
+    d.textContent="Object "+o.id;
+    d.onclick=()=>setActive(o.id);
+    list.appendChild(d);
+    const opt=document.createElement("option");
+    opt.value=o.id; opt.textContent="Object "+o.id;
+    sel.appendChild(opt);
+  });
+  if(active!==null) paintCtx.drawImage(objects[active].canvas,0,0,200,200);
+}
+
+/* ================= PAINT ================= */
+const paint=document.getElementById("paint");
+const paintCtx=paint.getContext("2d");
+let brush="black";
+function setColor(c){brush=c;}
+paint.onmousedown=e=>paint.onmousemove=ev=>drawPaint(ev);
+paint.onmouseup=()=>paint.onmousemove=null;
+function drawPaint(e){
+  if(active===null)return;
+  const r=paint.getBoundingClientRect();
+  const x=((e.clientX-r.left)*64/200)|0;
+  const y=((e.clientY-r.top)*64/200)|0;
+  const ctx=objects[active].canvas.getContext("2d");
+  if(brush==="transparent")ctx.clearRect(x,y,1,1);
+  else{ctx.fillStyle=brush;ctx.fillRect(x,y,1,1);}
+  paintCtx.drawImage(objects[active].canvas,0,0,200,200);
+  drawPreview();
+}
+function loadImageToPainter(file){
+  if(!file||active===null)return;
+  const img=new Image();
+  img.onload=()=>{
+    const ctx=objects[active].canvas.getContext("2d");
+    ctx.clearRect(0,0,64,64);
+    ctx.drawImage(img,0,0,64,64);
+    paintCtx.drawImage(objects[active].canvas,0,0,200,200);
+    drawPreview();
+  };
+  img.src=URL.createObjectURL(file);
+}
+function clearPainter(){paintCtx.clearRect(0,0,200,200);}
+
+/* ================= RULE EDITOR ================= */
+function renderRuleEditor(){
+  ruleEditor.innerHTML="<h4>Rules</h4>";
+  if(active===null)return;
+  const add=document.createElement("button");
+  add.textContent="+ Add Rule";
+  add.onclick=()=>{
+    objects[active].rules.push({
+      target:0,type:"transform",
+      scaleX:1,scaleY:1,rotate:0,skewX:0,skewY:0,tx:0,ty:0
+    });
+    renderRuleEditor(); drawPreview();
+  };
+  ruleEditor.appendChild(add);
+
+  objects[active].rules.forEach((r,i)=>{
+    const d=document.createElement("div"); d.className="ruleBox";
+    const sel=document.createElement("select");
+    objects.forEach(o=>{
+      const opt=document.createElement("option");
+      opt.value=o.id; opt.textContent="Object "+o.id;
+      if(o.id===r.target)opt.selected=true;
+      sel.appendChild(opt);
+    });
+    sel.onchange=()=>{r.target=+sel.value;drawPreview();};
+
+    const mk=(k)=>{const x=document.createElement("input");x.type="number";x.step="0.01";x.value=r[k];x.oninput=()=>{r[k]=+x.value;drawPreview();};return x;};
+
+    const del=document.createElement("button");
+    del.textContent="✕";
+    del.onclick=()=>{objects[active].rules.splice(i,1);renderRuleEditor();drawPreview();};
+
+    d.append("→ ",sel,"<br>",
+      "sx ",mk("scaleX")," sy ",mk("scaleY"),
+      " r ",mk("rotate"),"<br>",
+      "kx ",mk("skewX")," ky ",mk("skewY"),
+      " tx ",mk("tx")," ty ",mk("ty"),"<br>",del);
+    ruleEditor.appendChild(d);
+  });
+}
+
+/* ================= MATRIX ================= */
+function getMatrix(r){
+  const rad=r.rotate*Math.PI/180;
+  const cos=Math.cos(rad), sin=Math.sin(rad);
+  return [
+    r.scaleX*cos + r.skewY*sin,
+    r.scaleX*sin - r.skewY*cos,
+    r.skewX*cos + r.scaleY*sin,
+    r.skewX*sin - r.scaleY*cos,
+    r.tx,r.ty
+  ];
+}
+
+/* ================= PREVIEW ================= */
+const pcanvas=preview;
+const pctx=pcanvas.getContext("2d");
+let drag=null,lastX=0,lastY=0;
+
+pcanvas.onmousedown=e=>{
+  const r=pcanvas.getBoundingClientRect();
+  const x=e.clientX-r.left;
+  const y=e.clientY-r.top;
+  const zoom=+previewZoom.value;
+  const cx=pcanvas.width/2, cy=pcanvas.height/2;
+  objects[active]?.rules.forEach(rule=>{
+    const m=getMatrix(rule);
+    const px=cx+zoom*m[4];
+    const py=cy+zoom*m[5];
+    if(Math.abs(x-px)<32&&Math.abs(y-py)<32) drag=rule;
+  });
+  lastX=x; lastY=y;
+};
+pcanvas.onmouseup=()=>drag=null;
+pcanvas.onmousemove=e=>{
+  if(!drag)return;
+  const r=pcanvas.getBoundingClientRect();
+  const x=e.clientX-r.left, y=e.clientY-r.top;
+  const dx=x-lastX, dy=y-lastY;
+  const mode=previewMode.value;
+  if(mode==="translate"){drag.tx+=dx/previewZoom.value;drag.ty+=dy/previewZoom.value;}
+  if(mode==="rotate"){drag.rotate+=dx;}
+  if(mode==="scale"){drag.scaleX*=1+dx*0.01;drag.scaleY*=1+dx*0.01;}
+  lastX=x; lastY=y;
+  drawPreview();
+};
+
+function drawPreview(){
+  pctx.clearRect(0,0,pcanvas.width,pcanvas.height);
+  if(active===null)return;
+  const zoom=+previewZoom.value;
+  const cx=pcanvas.width/2, cy=pcanvas.height/2;
+  pctx.save();
+  pctx.translate(cx,cy);
+  pctx.scale(zoom,zoom);
+  pctx.globalAlpha=+previewOpacity.value;
+  pctx.drawImage(objects[active].canvas,-32,-32,64,64);
+  pctx.globalAlpha=1;
+  objects[active].rules.forEach(r=>{
+    pctx.save();
+    pctx.transform(...getMatrix(r));
+    pctx.drawImage(objects[r.target].canvas,-32,-32,64,64);
+    pctx.restore();
+  });
+  pctx.restore();
+}
+
+/* ================= FINAL ================= */
+function compose(m,r){
+  const n=getMatrix(r);
+  const[a,b,c,d,tx,ty]=m,[e,f,g,h,x,y]=n;
+  return[a*e+c*f,b*e+d*f,a*g+c*h,b*g+d*h,a*x+c*y+tx,b*x+d*y+ty];
+}
+function expand(list){
+  let out=[];
+  list.forEach(e=>{
+    const o=objects[e.obj];
+    if(!o.rules.length)out.push(e);
+    o.rules.forEach(r=>out.push({obj:r.target,m:compose(e.m,r)}));
+  });
+  return out;
+}
+function renderFinal(){
+  let items=[{obj:+startObj.value,m:[1,0,0,1,0,0]}];
+  let n=+iterN.value;
+  while(n--)items=expand(items);
+  final.width=final.height=+quality.value;
+  const ctx=final.getContext("2d");
+  ctx.fillStyle=bgColor.value;
+  ctx.fillRect(0,0,final.width,final.height);
+  ctx.setTransform(+zoom.value,0,0,+zoom.value,final.width/2,final.height/2);
+  items.forEach(it=>{
+    ctx.save();
+    ctx.transform(...it.m);
+    ctx.drawImage(objects[it.obj].canvas,-32,-32,64,64);
+    ctx.restore();
+  });
+}
+
+/* ================= SAVE / LOAD ================= */
+async function saveSubs(){
+  const zip=new JSZip();
+  zip.file("rules.txt",JSON.stringify(objects));
+  for(const o of objects){
+    const b=await new Promise(res=>o.canvas.toBlob(res));
+    zip.file(`obj_${o.id}.png`,b);
+  }
+  const blob=await zip.generateAsync({type:"blob"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);a.download="project.subs";a.click();
+}
+async function loadSubs(file){
+  const zip=await JSZip.loadAsync(file);
+  objects=JSON.parse(await zip.file("rules.txt").async("string"));
+  for(const o of objects){
+    const img=new Image();
+    img.src=URL.createObjectURL(await zip.file(`obj_${o.id}.png`).async("blob"));
+    await img.decode();
+    o.canvas=document.createElement("canvas");
+    o.canvas.width=o.canvas.height=64;
+    o.canvas.getContext("2d").drawImage(img,0,0,64,64);
+  }
+  setActive(0);
+}
+
+/* ================= INIT ================= */
+addObject();
+</script>
+</body>
+</html>

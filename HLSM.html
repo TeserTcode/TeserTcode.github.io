@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Particle Simulator with Trails and Force Laws</title>
+  <style>
+    body { background: #111; color: #eee; font-family: sans-serif; padding: 10px; }
+    canvas { border: 1px solid #555; background: black; display: block; margin-top: 10px; }
+    label, button { margin-right: 10px; margin-bottom: 5px; display: inline-block; }
+    #controls, #typeControls, #particleControls { margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h2>Advanced Particle Simulator</h2>
+  <div id="typeControls">
+    <label>lh: <input type="number" id="count_lh" min="0" value="10"></label>
+    <label>ll: <input type="number" id="count_ll" min="0" value="10"></label>
+    <label>hl: <input type="number" id="count_hl" min="0" value="10"></label>
+    <label>hh: <input type="number" id="count_hh" min="0" value="10"></label>
+    <button onclick="resetParticles()">Reset Particles</button>
+  </div>
+
+  <div id="controls">
+    <label>Force Law:
+      <select id="law">
+        <option value="1">1/r</option>
+        <option value="2" selected>1/r²</option>
+        <option value="3">1/r³</option>
+        <option value="log">log(r)</option>
+        <option value="linear">r</option>
+        <option value="exp">exp(-r)</option>
+        <option value="sin">sin(r)</option>
+        <option value="step">step(r&lt;50)</option>
+      </select>
+    </label>
+    <label>Pre-Mult:
+      <input type="range" id="preMult" min="0" max="10" value="1" step="0.1">
+      <span id="preMultVal">1.0</span>
+    </label>
+    <label>Post-Mult:
+      <input type="range" id="postMult" min="0" max="10" value="1" step="0.1">
+      <span id="postMultVal">1.0</span>
+    </label>
+    <label>Canvas Size:
+      <select id="canvasSize">
+        <option value="800x600">800x600</option>
+        <option value="1024x768">1024x768</option>
+        <option value="1280x800">1280x800</option>
+      </select>
+    </label>
+    <label><input type="checkbox" id="showTrails" checked> Show Trails</label>
+  </div>
+
+  <div>
+    <button onclick="saveConfig()">Save</button>
+    <input type="file" id="loadInput" accept=".json" onchange="loadConfig(event)">
+  </div>
+
+  <canvas id="canvas" width="800" height="600"></canvas>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    const types = ["lh", "ll", "hl", "hh"];
+    const colors = { lh: "cyan", ll: "lime", hl: "orange", hh: "red" };
+    let particles = [];
+    let selected = null;
+    let dragging = false;
+
+    function resetParticles() {
+      particles = [];
+      const counts = {
+        lh: parseInt(document.getElementById("count_lh").value),
+        ll: parseInt(document.getElementById("count_ll").value),
+        hl: parseInt(document.getElementById("count_hl").value),
+        hh: parseInt(document.getElementById("count_hh").value)
+      };
+      for (let t of types) {
+        for (let i = 0; i < counts[t]; i++) {
+          particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            vx: 0, vy: 0,
+            type: t,
+            size: 5,
+            friction: 0.95,
+            trail: []
+          });
+        }
+      }
+    }
+
+    function getForceMag(r) {
+      const law = document.getElementById("law").value;
+      const pre = parseFloat(document.getElementById("preMult").value);
+      const post = parseFloat(document.getElementById("postMult").value);
+      let f = 0;
+      switch (law) {
+        case "1": f = r === 0 ? 0 : 1 / r; break;
+        case "2": f = r === 0 ? 0 : 1 / (r * r); break;
+        case "3": f = r === 0 ? 0 : 1 / (r * r * r); break;
+        case "log": f = Math.log(1 + r); break;
+        case "linear": f = r; break;
+        case "exp": f = Math.exp(-r); break;
+        case "sin": f = Math.sin(r); break;
+        case "step": f = r < 50 ? 1 : 0; break;
+      }
+      return pre * f * post;
+    }
+
+    function wantsToMoveTowards(a, b) {
+      return {
+        lh: t => !(t === "hl" || t === "ll"),
+        ll: t => (t === "hl" || t === "ll"),
+        hl: t => (t === "hh" || t === "lh"),
+        hh: t => !(t === "hh" || t === "lh")
+      }[a](b);
+    }
+
+    function update() {
+      document.getElementById("preMultVal").textContent = preMult.value;
+      document.getElementById("postMultVal").textContent = postMult.value;
+
+      for (let p of particles) { p.ax = 0; p.ay = 0; }
+
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = 0; j < particles.length; j++) {
+          if (i === j) continue;
+          const a = particles[i], b = particles[j];
+          const dx = b.x - a.x, dy = b.y - a.y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < 1 || d > 200) continue;
+          const toward = wantsToMoveTowards(a.type, b.type) ? 1 : -1;
+          const f = toward * getForceMag(d);
+          const nx = dx / d, ny = dy / d;
+          a.ax += f * nx;
+          a.ay += f * ny;
+        }
+      }
+
+      for (let p of particles) {
+        p.vx += p.ax;
+        p.vy += p.ay;
+        p.vx *= p.friction;
+        p.vy *= p.friction;
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+        p.x = Math.max(0, Math.min(canvas.width, p.x));
+        p.y = Math.max(0, Math.min(canvas.height, p.y));
+        p.trail.push([p.x, p.y]);
+        if (p.trail.length > 20) p.trail.shift();
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const trailsOn = document.getElementById("showTrails").checked;
+      for (let p of particles) {
+        if (trailsOn) {
+          ctx.beginPath();
+          for (let i = 1; i < p.trail.length; i++) {
+            const [x0, y0] = p.trail[i - 1];
+            const [x1, y1] = p.trail[i];
+            ctx.strokeStyle = colors[p.type];
+            ctx.globalAlpha = i / p.trail.length;
+            ctx.moveTo(x0, y0);
+            ctx.lineTo(x1, y1);
+          }
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+        ctx.beginPath();
+        ctx.fillStyle = colors[p.type];
+        ctx.arc(p.x, p.y, p.size, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+    }
+
+    canvas.addEventListener("mousedown", e => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+      for (let p of particles) {
+        if ((p.x - mx) ** 2 + (p.y - my) ** 2 < p.size ** 2 * 4) {
+          selected = p;
+          dragging = true;
+          return;
+        }
+      }
+    });
+    canvas.addEventListener("mousemove", e => {
+      if (dragging && selected) {
+        const rect = canvas.getBoundingClientRect();
+        selected.x = e.clientX - rect.left;
+        selected.y = e.clientY - rect.top;
+        selected.vx = 0; selected.vy = 0;
+      }
+    });
+    canvas.addEventListener("mouseup", () => dragging = false);
+
+    function saveConfig() {
+      const blob = new Blob([JSON.stringify(particles)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "particles.json";
+      a.click();
+    }
+
+    function loadConfig(event) {
+      const reader = new FileReader();
+      reader.onload = e => { particles = JSON.parse(e.target.result); };
+      reader.readAsText(event.target.files[0]);
+    }
+
+    document.getElementById("canvasSize").onchange = e => {
+      const [w, h] = e.target.value.split("x").map(Number);
+      canvas.width = w;
+      canvas.height = h;
+      resetParticles();
+    };
+
+    resetParticles();
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+    loop();
+  </script>
+</body>
+</html>

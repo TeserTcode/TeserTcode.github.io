@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chaos Games</title>
+	
+</head>
+<body>
+    <div id="page1">
+        <h1>Chaos Game</h1>
+        <div id="controls">
+            <label>Colour:
+                <select id="color">
+                    <option value="red">Red</option>
+                    <option value="green">Green</option>
+                    <option value="blue">Blue</option>
+                    <option value="cyan">Cyan</option>
+                    <option value="yellow">Yellow</option>
+                    <option value="magenta">Magenta</option>
+                    <option value="black">Black</option>
+                    <option value="white">White</option>
+                    <option value="grey">Grey</option>
+                    <option value="pink">Pink</option>
+                    <option value="purple">Purple</option>
+                    <option value="orange">Orange</option>
+                    <option value="rainbow">Rainbow</option>
+                    <option value="dynamic">Dynamic</option>
+                </select>
+            </label>
+            <label>BG Colour:
+                <select id="bgcolor">
+                    <option value="black">Black</option>
+                    <option value="white">White</option>
+                    <option value="red">Red</option>
+                    <option value="green">Green</option>
+                    <option value="blue">Blue</option>
+                    <option value="cyan">Cyan</option>
+                    <option value="yellow">Yellow</option>
+                    <option value="magenta">Magenta</option>
+                    <option value="grey">Grey</option>
+                    <option value="pink">Pink</option>
+                    <option value="purple">Purple</option>
+                    <option value="orange">Orange</option>
+                </select>
+            </label>
+            <label>Screen Min:
+                <input type="number" id="screenMin" value="-1.2">
+            </label>
+            <label>Screen Max:
+                <input type="number" id="screenMax" value="1.2">
+            </label>
+            <label>Distance (p):
+                <input type="number" id="distance" value="0.5" step="0.05" min="-2" max="2">
+            </label>
+            <label>Brush Size:
+                <input type="number" id="brushSize" value="2" min="1">
+            </label>
+            <label>Delay (ms):
+                <input type="number" id="delay" value="1" min="1">
+            </label>
+            <label>Do N Calculations:
+                <input type="number" id="iterations" value="100" min="1">
+            </label>
+            <button id="start">Start</button>
+            <button id="stop">Stop</button>
+        </div>
+
+        <div id="rules">
+            <label><input type="checkbox" id="rule1"> Can't choose same</label>
+            <label><input type="checkbox" id="rule2"> Can't choose previous</label>
+            <label><input type="checkbox" id="rule3"> Can't choose nth previous</label>
+            <label>N: <input type="number" id="ruleN" value="3" min="1"></label>
+            <label><input type="checkbox" id="rule33"><-- 1st to nth</label>
+        </div>
+
+        <div id="prules">
+            <label><input type="checkbox" id="rule4"> Can't choose period</label>
+            <label><input type="checkbox" id="rule5"> Only choose period</label>
+            <label>Period P: <input type="number" id="ruleP" value="2" min="1"></label>
+            <label><input type="checkbox" id="ruleOpposite"> Can't Choose Opposite</label>
+            <label><input type="checkbox" id="ruleNextTo"> Can't Choose Adjacent</label>
+        </div>
+
+        <div id="corners">
+            <label>Shape:
+                <select id="shape">
+                    <option value="triangle">Triangle</option>
+                    <option value="square">Square</option>
+                    <option value="pentagon">Pentagon</option>
+                    <option value="hexagon">Hexagon</option>
+                    <option value="septagon">Septagon</option>
+                    <option value="octagon">Octagon</option>
+                    <option value="3x3square">3×3 Square</option>
+                    <option value="4cornertriangle">4-Corner Triangle</option>
+                    <option value="7cornerhexagon">7-Corner Hexagon</option>
+                    <option value="5cornersquare">5-Corner Square</option>
+                    <option value="middless3x3">Middle-less 3x3 Square</option>
+                    <option value="cross">Cross</option>
+                    <option value="figure8">Figure8</option>
+                    <option value="rightTriangle">Right Triangle</option>
+                    <option value="spiral">Spiral</option>
+                    <option value="custom">Custom</option>
+                </select>
+            </label>
+            <label>Custom Corners:
+                <textarea id="customCorners" placeholder="Enter coordinates as [[x1,y1],[x2,y2],...]"></textarea>
+            </label>
+        </div>
+
+        <label><input type="checkbox" id="trail"> Enable Trail</label>
+        <label>Trail Width: <input type="number" id="trailWidth" value="5" min="1"></label>
+
+        <canvas id="chaosCanvas" width="800" height="800"></canvas>
+        <br>
+        <button id="save">Save Image</button>
+        <button id="fullscreen">Fullscreen</button>
+        <button id="switchToPage2">Go to Matrix Transformations</button>
+    </div>
+
+    <div id="page2" style="display:none;">
+        <h1>Matrix Transformation Chaos</h1>
+<div id="matrixControls">
+        <label>Colour:
+          
+                <select id="matrixColor">
+                    <option value="red">Red</option>
+                    <option value="green">Green</option>
+                    <option value="blue">Blue</option>
+                    <option value="cyan">Cyan</option>
+                    <option value="yellow">Yellow</option>
+                    <option value="magenta">Magenta</option>
+                    <option value="black">Black</option>
+                    <option value="white">White</option>
+                    <option value="grey">Grey</option>
+                    <option value="pink">Pink</option>
+                    <option value="purple">Purple</option>
+                    <option value="orange">Orange</option>
+                    <option value="rainbow">Rainbow</option>
+                    <option value="dynamic">Dynamic</option>
+                </select>
+            </label>
+            <label>BG Colour:
+                <select id="matrixBgcolor">
+                    <option value="black">Black</option>
+                    <option value="white">White</option>
+                    <option value="red">Red</option>
+                    <option value="green">Green</option>
+                    <option value="blue">Blue</option>
+                    <option value="cyan">Cyan</option>
+                    <option value="yellow">Yellow</option>
+                    <option value="magenta">Magenta</option>
+                    <option value="grey">Grey</option>
+                    <option value="pink">Pink</option>
+                    <option value="purple">Purple</option>
+                    <option value="orange">Orange</option>
+                </select>
+            </label>
+        <label>Screen Min:
+            <input type="number" id="matrixScreenMin" value="-2">
+        </label>
+        <label>Screen Max:
+            <input type="number" id="matrixScreenMax" value="2">
+        </label>
+        <label>Brush Size:
+            <input type="number" id="matrixBrushSize" value="2" min="1">
+        </label>
+        <label>Number of Matrices:
+            <input type="number" id="numMatrices" value="3" min="1">
+        </label>
+        <label>Batch Size (speed):
+            <input type="number" id="batchSize" value="100" min="1">
+        </label>
+        <button id="matrixStart">Start</button>
+        <button id="matrixStop">Stop</button>
+        <button id="randomizeMatrices">Randomize Matrices</button>
+        <select id="randomizeStyle">
+            <option value="all">Random (All)</option>
+            <option value="noSkew">No Skew</option>
+            <option value="noRotation">No Rotation</option>
+            <option value="translationOnly">Translation Only</option>
+        </select>
+    </div>
+
+        <div id="matrixRules">
+            <label><input type="checkbox" id="matrixRule1"> Can't choose same</label>
+            <label><input type="checkbox" id="matrixRule2"> Can't choose previous</label>
+            <label><input type="checkbox" id="matrixRule3"> Can't choose nth previous</label>
+            <label>N: <input type="number" id="matrixRuleN" value="3" min="1"></label>
+            <label><input type="checkbox" id="matrixRule33"><-- 1st to nth</label>
+            <label><input type="checkbox" id="matrixRule4"> Can't choose period</label>
+            <label><input type="checkbox" id="matrixRule5"> Only choose period</label>
+            <label>Period P: <input type="number" id="matrixRuleP" value="2" min="1"></label>
+        </div>
+
+        <div id="matrixInputs">
+            <!-- Matrix inputs will be generated here -->
+        </div>
+
+        <canvas id="matrixCanvas" width="800" height="800"></canvas>
+        <br>
+        <button id="matrixSave">Save Image</button>
+        <button id="matrixFullscreen">Fullscreen</button>
+        <button id="switchToPage1">Go to Classic Chaos Game</button>
+    </div>
+
+<script>
+// Page switching logic
+document.getElementById("switchToPage2").addEventListener("click", function() {
+    document.getElementById("page1").style.display = "none";
+    document.getElementById("page2").style.display = "block";
+    initMatrixPage();
+});
+
+document.getElementById("switchToPage1").addEventListener("click", function() {
+    document.getElementById("page2").style.display = "none";
+    document.getElementById("page1").style.display = "block";
+});
+
+// Page 1: Original Chaos Game
+const canvas = document.getElementById("chaosCanvas");
+const ctx = canvas.getContext("2d");
+let running = false;
+let corners = [];
+let currentPos = [0, 0];
+let prevCorners = [];
+let time = 0;
+
+const shapePresets = {
+    triangle: [[-1, -0.86602540378], [1, -0.86602540378], [0, 0.86602540378]],
+    square: [[-1, -1], [1, -1], [1, 1], [-1, 1]],
+    pentagon: Array.from({length: 5}, (_, i) => [Math.cos(2 * Math.PI * i / 5), Math.sin(2 * Math.PI * i / 5)]),
+    hexagon: Array.from({length: 6}, (_, i) => [Math.cos(2 * Math.PI * i / 6), Math.sin(2 * Math.PI * i / 6)]),
+    septagon: Array.from({length: 7}, (_, i) => [Math.cos(2 * Math.PI * i / 7), Math.sin(2 * Math.PI * i / 7)]),
+    octagon: Array.from({length: 8}, (_, i) => [Math.cos(2 * Math.PI * i / 8), Math.sin(2 * Math.PI * i / 8)]),
+    "3x3square": [[-1,-1], [0,-1], [1,-1], [-1,0], [0,0], [1,0], [-1,1], [0,1], [1,1]],
+    "4cornertriangle": [[-1, -0.86602540378], [1, -0.86602540378], [0, 0.86602540378],[0,-0.28867513459]],
+    "7cornerhexagon": Array.from({length: 7}, (_, i) => [Math.cos(2 * Math.PI * i / 7), Math.sin(2 * Math.PI * i / 7)]).concat([[0, 0]]), 
+    "5cornersquare": [[-1, -1], [1, -1], [1, 1], [-1, 1], [0, 0]],
+    "middless3x3": [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]], 
+    figure8: [[-2,0], [-1,1], [-1,-1], [0,0], [1,-1], [1,1], [2,0]],
+    cross: [[-1, 0], [1, 0], [0, -1], [0, 1], [0,0]],
+    rightTriangle: [[-1, -1], [-1, 1], [1, -1]],
+    spiral: Array.from({length: 100}, (_, i) => {
+        let a = 0.1, b = 0.02;
+        return [a * i * Math.cos(b * i), a * i * Math.sin(b * i)];
+    })
+};
+
+function getColorMethod(name, x, y) {
+    return name === "rainbow" 
+        ? `hsl(${(x + 1) * 180}, 100%, 50%)` 
+        : (name === "dynamic" 
+            ? `hsl(${time / 100}, 100%, 50%)` 
+            : name);
+}
+
+function resetCanvas() {
+    ctx.fillStyle = document.getElementById("bgcolor").value;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function transformToCanvas(x, y) {
+    const min = Number(document.getElementById("screenMin").value);
+    const max = Number(document.getElementById("screenMax").value);
+    const px = ((x - min) / (max - min)) * canvas.width;
+    const py = ((1 - (y - min) / (max - min))) * canvas.height;
+    return [px, py];
+}
+
+function drawDot(x, y) {
+    time++;
+    const brushSize = Number(document.getElementById("brushSize").value);
+    ctx.fillStyle = getColorMethod(document.getElementById("color").value, x, y);
+    const [px, py] = transformToCanvas(x, y);
+    ctx.beginPath();
+    ctx.arc(px, py, brushSize, 0, 2 * Math.PI);
+    ctx.fill();
+}
+
+function getRandomCorner() {
+    let available = corners.map((_, i) => i);
+    const rule1 = document.getElementById("rule1").checked;
+    const rule2 = document.getElementById("rule2").checked;
+    const rule3 = document.getElementById("rule3").checked;
+    const rule33 = document.getElementById("rule33").checked;
+    const rule4 = document.getElementById("rule4").checked;
+    const rule5 = document.getElementById("rule5").checked;
+    const n = Number(document.getElementById("ruleN").value);
+    const pn = Number(document.getElementById("ruleP").value);
+    const ruleNextTo = document.getElementById("ruleNextTo").checked;
+    const ruleOpposite = document.getElementById("ruleOpposite").checked;
+
+    if (rule1 && prevCorners.length > 0) available = available.filter(i => i !== prevCorners[0]);
+    if (rule2 && prevCorners.length > 1) available = available.filter(i => i !== prevCorners[1]);
+    if (rule3 && prevCorners.length >= n) available = available.filter(i => i !== prevCorners[n - 1]);
+    if (rule33 && prevCorners.length >= n) {
+        for(let d = 0; d < n; d++) available = available.filter(i => i !== prevCorners[d]);
+    }
+    if (prevCorners.length >= n && rule4) {
+        available = available.filter(i => i % pn === time % pn);
+    } else if (prevCorners.length >= n && rule5) {
+        available = available.filter(i => i % pn !== time % pn);
+    }
+    if (ruleNextTo && prevCorners.length > 0) {
+        let last = prevCorners[0];
+        let left = (last - 1 + corners.length) % corners.length;
+        let right = (last + 1) % corners.length;
+        available = available.filter(i => i !== left && i !== right);
+    }
+    if (ruleOpposite && prevCorners.length > 0) {
+        let last = prevCorners[0];
+        let opposite = (last + Math.floor(corners.length / 2)) % corners.length;
+        available = available.filter(i => i !== opposite);
+    }
+
+    if (available.length === 0) available = corners.map((_, i) => i);
+    const index = available[Math.floor(Math.random() * available.length)];
+    prevCorners.unshift(index);
+    if (prevCorners.length > n) prevCorners.pop();
+    return corners[index];
+}
+
+function startGame() {
+    const shape = document.getElementById("shape").value;
+    if (shape === "custom") {
+        try {
+            corners = JSON.parse(document.getElementById("customCorners").value);
+        } catch (e) {
+            alert("Invalid custom corners format");
+            return;
+        }
+    } else {
+        corners = shapePresets[shape];
+    }
+    running = true;
+    resetCanvas();
+    requestAnimationFrame(gameLoop);
+}
+
+function gameLoop() {
+    if (!running) return;
+    let iterations = Number(document.getElementById("iterations").value);
+    for (let i = 0; i < iterations; i++) {
+        const [cx, cy] = getRandomCorner();
+        const p = Number(document.getElementById("distance").value);
+        currentPos = [(1 - p) * currentPos[0] + p * cx, (1 - p) * currentPos[1] + p * cy];
+        drawDot(currentPos[0], currentPos[1]);
+    }
+    requestAnimationFrame(gameLoop);
+}
+
+document.getElementById("start").addEventListener("click", startGame);
+document.getElementById("stop").addEventListener("click", () => running = false);
+document.getElementById("fullscreen").addEventListener("click", () => {
+    if (canvas.requestFullscreen) canvas.requestFullscreen();
+    else if (canvas.mozRequestFullScreen) canvas.mozRequestFullScreen();
+    else if (canvas.webkitRequestFullscreen) canvas.webkitRequestFullscreen();
+    else if (canvas.msRequestFullscreen) canvas.msRequestFullscreen();
+});
+document.getElementById("save").addEventListener("click", () => {
+    const link = document.createElement('a');
+    link.download = 'chaos-game.png';
+    link.href = canvas.toDataURL();
+    link.click();
+});
+resetCanvas();
+
+// Page 2: Matrix Transformations
+let matrixRunning = false;
+let matrices = [];
+let matrixCurrentPos = [0, 0];
+let matrixPrevIndices = [];
+let matrixTime = 0;
+const matrixCanvas = document.getElementById("matrixCanvas");
+const matrixCtx = matrixCanvas.getContext("2d");
+
+function initMatrixPage() {
+    const numMatrices = Number(document.getElementById("numMatrices").value);
+    const container = document.getElementById("matrixInputs");
+    container.innerHTML = "";
+    
+    for (let i = 0; i < numMatrices; i++) {
+        const matrixDiv = document.createElement("div");
+        matrixDiv.innerHTML = `
+            <h3>Matrix ${i+1}</h3>
+            <label>a: <input type="number" class="matrixA" value="${(i+1)/numMatrices}"></label>
+            <label>b: <input type="number" class="matrixB" value="0"></label>
+            <label>c: <input type="number" class="matrixC" value="0"></label>
+            <label>d: <input type="number" class="matrixD" value="${(i+1)/numMatrices}"></label>
+            <label>e: <input type="number" class="matrixE" value="${Math.cos(2*Math.PI*i/numMatrices)/2}"></label>
+            <label>f: <input type="number" class="matrixF" value="${Math.sin(2*Math.PI*i/numMatrices)/2}"></label>
+        `;
+        container.appendChild(matrixDiv);
+    }
+}
+function randomizeMatrices() {
+    const style = document.getElementById("randomizeStyle").value;
+    const numMatrices = Number(document.getElementById("numMatrices").value);
+    const matrixDivs = document.querySelectorAll("#matrixInputs div");
+    
+    for (let i = 0; i < numMatrices; i++) {
+        const inputs = matrixDivs[i].querySelectorAll("input");
+        
+        let a, b, c, d, e, f;
+        
+        switch(style) {
+            case "noSkew":
+                // No skew (b and c are zero)
+                a = (Math.random() * 2 - 0.5) * 0.5;
+                b = 0;
+                c = 0;
+                d = (Math.random() * 2 - 0.5) * 0.5;
+                e = Math.random() * 2 - 1;
+                f = Math.random() * 2 - 1;
+                break;
+                
+            case "noRotation":
+                // No rotation (a = d, b = -c)
+                const scale = (Math.random() * 0.8) + 0.2;
+                const angle = Math.random() * Math.PI * 2;
+                a = scale * Math.cos(angle);
+                b = scale * Math.sin(angle);
+                c = -b;
+                d = a;
+                e = Math.random() * 2 - 1;
+                f = Math.random() * 2 - 1;
+                break;
+                
+            case "translationOnly":
+                // Translation only (identity matrix with random e,f)
+                a = 1;
+                b = 0;
+                c = 0;
+                d = 1;
+                e = Math.random() * 2 - 1;
+                f = Math.random() * 2 - 1;
+                break;
+                
+            default: // "all"
+                // Completely random
+                a = Math.random() * 2 - 1;
+                b = Math.random() * 2 - 1;
+                c = Math.random() * 2 - 1;
+                d = Math.random() * 2 - 1;
+                e = Math.random() * 2 - 1;
+                f = Math.random() * 2 - 1;
+        }
+        
+        inputs[0].value = a.toFixed(3);
+        inputs[1].value = b.toFixed(3);
+        inputs[2].value = c.toFixed(3);
+        inputs[3].value = d.toFixed(3);
+        inputs[4].value = e.toFixed(3);
+        inputs[5].value = f.toFixed(3);
+    }
+}
+function getMatrixColorMethod(name, x, y) {
+    return name === "rainbow" 
+        ? `hsl(${(x + 2) * 90}, 100%, 50%)` 
+        : (name === "dynamic" 
+            ? `hsl(${matrixTime / 100}, 100%, 50%)` 
+            : name);
+}
+
+function resetMatrixCanvas() {
+    matrixCtx.fillStyle = document.getElementById("matrixBgcolor").value;
+    matrixCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+}
+
+function matrixTransformToCanvas(x, y) {
+    const min = Number(document.getElementById("matrixScreenMin").value);
+    const max = Number(document.getElementById("matrixScreenMax").value);
+    const px = ((x - min) / (max - min)) * matrixCanvas.width;
+    const py = ((1 - (y - min) / (max - min))) * matrixCanvas.height;
+    return [px, py];
+}
+
+function drawMatrixDot(x, y) {
+    matrixTime++;
+    const brushSize = Number(document.getElementById("matrixBrushSize").value);
+    matrixCtx.fillStyle = getMatrixColorMethod(document.getElementById("matrixColor").value, x, y);
+    const [px, py] = matrixTransformToCanvas(x, y);
+    matrixCtx.beginPath();
+    matrixCtx.arc(px, py, brushSize, 0, 2 * Math.PI);
+    matrixCtx.fill();
+}
+
+function getRandomMatrixIndex() {
+    let available = matrices.map((_, i) => i);
+    const rule1 = document.getElementById("matrixRule1").checked;
+    const rule2 = document.getElementById("matrixRule2").checked;
+    const rule3 = document.getElementById("matrixRule3").checked;
+    const rule33 = document.getElementById("matrixRule33").checked;
+    const rule4 = document.getElementById("matrixRule4").checked;
+    const rule5 = document.getElementById("matrixRule5").checked;
+    const n = Number(document.getElementById("matrixRuleN").value);
+    const pn = Number(document.getElementById("matrixRuleP").value);
+
+    if (rule1 && matrixPrevIndices.length > 0) available = available.filter(i => i !== matrixPrevIndices[0]);
+    if (rule2 && matrixPrevIndices.length > 1) available = available.filter(i => i !== matrixPrevIndices[1]);
+    if (rule3 && matrixPrevIndices.length >= n) available = available.filter(i => i !== matrixPrevIndices[n - 1]);
+    if (rule33 && matrixPrevIndices.length >= n) {
+        for(let d = 0; d < n; d++) available = available.filter(i => i !== matrixPrevIndices[d]);
+    }
+    if (matrixPrevIndices.length >= n && rule4) {
+        available = available.filter(i => i % pn === matrixTime % pn);
+    } else if (matrixPrevIndices.length >= n && rule5) {
+        available = available.filter(i => i % pn !== matrixTime % pn);
+    }
+
+    if (available.length === 0) available = matrices.map((_, i) => i);
+    const index = available[Math.floor(Math.random() * available.length)];
+    matrixPrevIndices.unshift(index);
+    if (matrixPrevIndices.length > n) matrixPrevIndices.pop();
+    return index;
+}
+
+function startMatrixGame() {
+    matrices = [];
+    const numMatrices = Number(document.getElementById("numMatrices").value);
+    const matrixDivs = document.querySelectorAll("#matrixInputs div");
+    
+    for (let i = 0; i < numMatrices; i++) {
+        const inputs = matrixDivs[i].querySelectorAll("input");
+        matrices.push({
+            a: Number(inputs[0].value),
+            b: Number(inputs[1].value),
+            c: Number(inputs[2].value),
+            d: Number(inputs[3].value),
+            e: Number(inputs[4].value),
+            f: Number(inputs[5].value)
+        });
+    }
+    
+    matrixRunning = true;
+    resetMatrixCanvas();
+    requestAnimationFrame(matrixGameLoop);
+}
+
+function applyMatrixTransformation(matrix, x, y) {
+    return [
+        matrix.a * x + matrix.b * y + matrix.e,
+        matrix.c * x + matrix.d * y + matrix.f
+    ];
+}
+
+function matrixGameLoop() {
+    if (!matrixRunning) return;
+    
+    const batchSize = Number(document.getElementById("batchSize").value);
+    
+    // Process multiple iterations without drawing
+    for (let i = 0; i < batchSize; i++) {
+        const index = getRandomMatrixIndex();
+        const matrix = matrices[index];
+        matrixCurrentPos = applyMatrixTransformation(matrix, matrixCurrentPos[0], matrixCurrentPos[1]);
+	drawMatrixDot(matrixCurrentPos[0], matrixCurrentPos[1]);
+   }
+    
+    // Draw only once per batch
+    
+    
+    requestAnimationFrame(matrixGameLoop);
+}
+document.getElementById("randomizeMatrices").addEventListener("click", randomizeMatrices);
+document.getElementById("numMatrices").addEventListener("change", initMatrixPage);
+document.getElementById("matrixStart").addEventListener("click", startMatrixGame);
+document.getElementById("matrixStop").addEventListener("click", () => matrixRunning = false);
+document.getElementById("matrixFullscreen").addEventListener("click", () => {
+    if (matrixCanvas.requestFullscreen) matrixCanvas.requestFullscreen();
+    else if (matrixCanvas.mozRequestFullScreen) matrixCanvas.mozRequestFullScreen();
+    else if (matrixCanvas.webkitRequestFullscreen) matrixCanvas.webkitRequestFullscreen();
+    else if (matrixCanvas.msRequestFullscreen) matrixCanvas.msRequestFullscreen();
+});
+document.getElementById("matrixSave").addEventListener("click", () => {
+    const link = document.createElement('a');
+    link.download = 'matrix-chaos.png';
+    link.href = matrixCanvas.toDataURL();
+    link.click();
+});
+
+// Initialize matrix page on first load
+initMatrixPage();
+</script>
+</body>
+</html>

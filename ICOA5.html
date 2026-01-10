@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated Icosahedron and A5 Group Explorer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+        .glow {
+            box-shadow: 0 0 10px 2px #fff, 0 0 20px 5px #0ff, 0 0 30px 10px #00f;
+            border-color: #0ff;
+        }
+        .action-button {
+            transition: all 0.2s ease-in-out;
+        }
+        .action-button:hover {
+            transform: scale(1.05);
+            filter: brightness(1.2);
+        }
+        .bead-preview {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2px;
+            margin-top: 4px;
+        }
+        .bead-preview-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+        .scene-container {
+            position: relative;
+            cursor: grab;
+        }
+        .scene-container:active {
+            cursor: grabbing;
+        }
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+
+    <div class="flex h-screen w-screen">
+        <!-- Left Column -->
+        <div class="w-1/3 h-full flex flex-col p-4 border-r border-gray-700 space-y-4">
+            <!-- Icosahedron Canvas -->
+            <div class="flex-grow bg-gray-800 rounded-lg shadow-lg relative" style="flex-basis: 50%;">
+                <div id="icosahedron-container" class="w-full h-full scene-container">
+                    <div class="loading-overlay" id="ico-loading">
+                        <div class="animate-pulse">Loading Icosahedron...</div>
+                    </div>
+                </div>
+                <div class="absolute top-2 left-2 text-sm font-bold">Icosahedron</div>
+            </div>
+             <!-- Icosahedron Controls -->
+            <div class="flex-shrink-0 flex justify-center space-x-2 p-2 bg-gray-800 rounded-lg">
+                <button id="rotX" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded-md text-sm action-button">Rotate X</button>
+                <button id="rotY" class="px-3 py-1 bg-green-600 hover:bg-green-700 rounded-md text-sm action-button">Rotate Y</button>
+                <button id="rotZ" class="px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded-md text-sm action-button">Rotate Z</button>
+                <button id="resetRot" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-md text-sm action-button">Reset</button>
+            </div>
+            <!-- Cubes Canvas -->
+            <div class="flex-grow bg-gray-800 rounded-lg shadow-lg relative" style="flex-basis: 35%;">
+                <div id="cubes-container" class="w-full h-full scene-container">
+                    <div class="loading-overlay" id="cubes-loading">
+                        <div class="animate-pulse">Loading Cubes...</div>
+                    </div>
+                </div>
+                <div class="absolute top-2 left-2 text-sm font-bold">Compound of 5 Cubes</div>
+            </div>
+            <!-- Beads Display -->
+            <div class="flex-shrink-0 flex flex-col items-center justify-center p-2 bg-gray-800 rounded-lg">
+                <div class="text-sm mb-2">Current State</div>
+                <div id="beads-display" class="flex space-x-3"></div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="w-2/3 h-full flex flex-col p-4">
+            <div class="flex-shrink-0 flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold">A5 Group Actions (Even Permutations)</h2>
+                <div class="flex items-center space-x-3 bg-gray-800 p-1 rounded-lg">
+                    <span id="set-label" class="px-3 py-1 text-sm font-bold text-black bg-cyan-400 rounded-md">Set</span>
+                    <label for="mode-toggle" class="flex items-center cursor-pointer">
+                        <div class="relative">
+                            <input type="checkbox" id="mode-toggle" class="sr-only">
+                            <div class="block bg-gray-600 w-14 h-8 rounded-full"></div>
+                            <div id="toggle-dot" class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform"></div>
+                        </div>
+                    </label>
+                    <span id="apply-label" class="px-3 py-1 text-sm font-bold text-gray-500 rounded-md">Apply</span>
+                </div>
+            </div>
+            <div id="a5-buttons-container" class="flex-grow overflow-y-auto grid grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 pr-2">
+                <!-- A5 buttons will be generated here -->
+            </div>
+             <div class="flex-shrink-0 text-xs text-gray-400 mt-2 flex space-x-4">
+                <span>Color Key (Fixed Points):</span>
+                <span class="flex items-center"><div class="w-3 h-3 rounded-full mr-1" style="background-color: #10B981;"></div> 5 (Identity)</span>
+                <span class="flex items-center"><div class="w-3 h-3 rounded-full mr-1" style="background-color: #3B82F6;"></div> 2 (3-Cycle)</span>
+                <span class="flex items-center"><div class="w-3 h-3 rounded-full mr-1" style="background-color: #F59E0B;"></div> 1 (2,2-Cycle)</span>
+                <span class="flex items-center"><div class="w-3 h-3 rounded-full mr-1" style="background-color: #EF4444;"></div> 0 (5-Cycle)</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- UTILITY AND SETUP ---
+        const CUBE_COLORS = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff];
+        const CUBE_HEX_COLORS = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff'];
+
+        let currentState = [0, 1, 2, 3, 4];
+        let mode = 'set'; // 'set' or 'apply'
+        let isAnimating = false;
+        let activeTweens = [];
+
+        // Golden ratio
+        const PHI = (1 + Math.sqrt(5)) / 2;
+
+        // --- A5 GROUP DEFINITIONS ---
+        // A5 has 60 elements: 1 identity, 20 3-cycles, 24 5-cycles, 15 (2,2)-cycles.
+        const A5_PERMUTATIONS = [
+            // Identity (1) - 5 fixed points
+            { name: '()', p: [0, 1, 2, 3, 4], fixed: 5, type: 'identity' },
+            // 3-cycles (20) - 2 fixed points
+            { name: '(0 1 2)', p: [1, 2, 0, 3, 4], fixed: 2, type: '3-cycle' }, { name: '(0 2 1)', p: [2, 0, 1, 3, 4], fixed: 2, type: '3-cycle' },
+            { name: '(0 1 3)', p: [1, 3, 2, 0, 4], fixed: 2, type: '3-cycle' }, { name: '(0 3 1)', p: [3, 0, 2, 1, 4], fixed: 2, type: '3-cycle' },
+            { name: '(0 1 4)', p: [1, 4, 2, 3, 0], fixed: 2, type: '3-cycle' }, { name: '(0 4 1)', p: [4, 0, 2, 3, 1], fixed: 2, type: '3-cycle' },
+            { name: '(0 2 3)', p: [2, 1, 3, 0, 4], fixed: 2, type: '3-cycle' }, { name: '(0 3 2)', p: [3, 1, 0, 2, 4], fixed: 2, type: '3-cycle' },
+            { name: '(0 2 4)', p: [2, 1, 4, 3, 0], fixed: 2, type: '3-cycle' }, { name: '(0 4 2)', p: [4, 1, 0, 3, 2], fixed: 2, type: '3-cycle' },
+            { name: '(0 3 4)', p: [3, 1, 2, 4, 0], fixed: 2, type: '3-cycle' }, { name: '(0 4 3)', p: [4, 1, 2, 0, 3], fixed: 2, type: '3-cycle' },
+            { name: '(1 2 3)', p: [0, 2, 3, 1, 4], fixed: 2, type: '3-cycle' }, { name: '(1 3 2)', p: [0, 3, 1, 2, 4], fixed: 2, type: '3-cycle' },
+            { name: '(1 2 4)', p: [0, 2, 4, 3, 1], fixed: 2, type: '3-cycle' }, { name: '(1 4 2)', p: [0, 4, 1, 3, 2], fixed: 2, type: '3-cycle' },
+            { name: '(1 3 4)', p: [0, 3, 2, 4, 1], fixed: 2, type: '3-cycle' }, { name: '(1 4 3)', p: [0, 4, 2, 1, 3], fixed: 2, type: '3-cycle' },
+            { name: '(2 3 4)', p: [0, 1, 3, 4, 2], fixed: 2, type: '3-cycle' }, { name: '(2 4 3)', p: [0, 1, 4, 2, 3], fixed: 2, type: '3-cycle' },
+            // (2,2)-cycles (15) - 1 fixed point
+            { name: '(0 1)(2 3)', p: [1, 0, 3, 2, 4], fixed: 1, type: '2,2-cycle' }, { name: '(0 1)(2 4)', p: [1, 0, 4, 3, 2], fixed: 1, type: '2,2-cycle' },
+            { name: '(0 1)(3 4)', p: [1, 0, 2, 4, 3], fixed: 1, type: '2,2-cycle' }, { name: '(0 2)(1 3)', p: [2, 3, 0, 1, 4], fixed: 1, type: '2,2-cycle' },
+            { name: '(0 2)(1 4)', p: [2, 4, 0, 3, 1], fixed: 1, type: '2,2-cycle' }, { name: '(0 2)(3 4)', p: [2, 1, 4, 0, 3], fixed: 1, type: '2,2-cycle' },
+            { name: '(0 3)(1 2)', p: [3, 2, 1, 0, 4], fixed: 1, type: '2,2-cycle' }, { name: '(0 3)(1 4)', p: [3, 4, 2, 0, 1], fixed: 1, type: '2,2-cycle' },
+            { name: '(0 3)(2 4)', p: [3, 1, 4, 0, 2], fixed: 1, type: '2,2-cycle' }, { name: '(0 4)(1 2)', p: [4, 2, 1, 3, 0], fixed: 1, type: '2,2-cycle' },
+            { name: '(0 4)(1 3)', p: [4, 3, 2, 1, 0], fixed: 1, type: '2,2-cycle' }, { name: '(0 4)(2 3)', p: [4, 1, 3, 2, 0], fixed: 1, type: '2,2-cycle' },
+            { name: '(1 2)(3 4)', p: [0, 2, 1, 4, 3], fixed: 1, type: '2,2-cycle' }, { name: '(1 3)(2 4)', p: [0, 3, 4, 1, 2], fixed: 1, type: '2,2-cycle' },
+            { name: '(1 4)(2 3)', p: [0, 4, 3, 2, 1], fixed: 1, type: '2,2-cycle' },
+            // 5-cycles (24) - 0 fixed points
+            { name: '(0 1 2 3 4)', p: [1, 2, 3, 4, 0], fixed: 0, type: '5-cycle' }, { name: '(0 4 3 2 1)', p: [4, 0, 1, 2, 3], fixed: 0, type: '5-cycle' },
+            { name: '(0 1 2 4 3)', p: [1, 2, 4, 0, 3], fixed: 0, type: '5-cycle' }, { name: '(0 3 4 2 1)', p: [3, 0, 1, 4, 2], fixed: 0, type: '5-cycle' },
+            { name: '(0 1 3 2 4)', p: [1, 3, 0, 2, 4], fixed: 0, type: '5-cycle' }, { name: '(0 4 2 3 1)', p: [4, 0, 3, 1, 2], fixed: 0, type: '5-cycle' },
+            { name: '(0 1 3 4 2)', p: [1, 3, 4, 0, 2], fixed: 0, type: '5-cycle' }, { name: '(0 2 4 3 1)', p: [2, 0, 4, 1, 3], fixed: 0, type: '5-cycle' },
+            { name: '(0 1 4 2 3)', p: [1, 4, 0, 2, 3], fixed: 0, type: '5-cycle' }, { name: '(0 3 2 4 1)', p: [3, 0, 4, 2, 1], fixed: 0, type: '5-cycle' },
+            { name: '(0 1 4 3 2)', p: [1, 4, 3, 0, 2], fixed: 0, type: '5-cycle' }, { name: '(0 2 3 4 1)', p: [2, 0, 3, 4, 1], fixed: 0, type: '5-cycle' },
+            { name: '(0 2 1 3 4)', p: [2, 3, 1, 4, 0], fixed: 0, type: '5-cycle' }, { name: '(0 4 3 1 2)', p: [4, 3, 0, 2, 1], fixed: 0, type: '5-cycle' },
+            { name: '(0 2 1 4 3)', p: [2, 4, 1, 0, 3], fixed: 0, type: '5-cycle' }, { name: '(0 3 4 1 2)', p: [3, 4, 0, 1, 2], fixed: 0, type: '5-cycle' },
+            { name: '(0 2 3 1 4)', p: [2, 3, 4, 1, 0], fixed: 0, type: '5-cycle' }, { name: '(0 4 1 3 2)', p: [4, 1, 0, 3, 2], fixed: 0, type: '5-cycle' },
+            { name: '(0 2 4 1 3)', p: [2, 4, 3, 0, 1], fixed: 0, type: '5-cycle' }, { name: '(0 3 1 4 2)', p: [3, 1, 4, 0, 2], fixed: 0, type: '5-cycle' },
+            { name: '(0 3 1 2 4)', p: [3, 2, 4, 1, 0], fixed: 0, type: '5-cycle' }, { name: '(0 4 2 1 3)', p: [4, 2, 0, 3, 1], fixed: 0, type: '5-cycle' },
+            { name: '(0 3 2 1 4)', p: [3, 2, 0, 1, 4], fixed: 0, type: '5-cycle' }, { name: '(0 4 1 2 3)', p: [4, 1, 3, 0, 2], fixed: 0, type: '5-cycle' },
+        ];
+
+        // --- THREE.JS SCENE 1: ICOSAHEDRON ---
+        const icosahedronContainer = document.getElementById('icosahedron-container');
+        const icoScene = new THREE.Scene();
+        const icoCamera = new THREE.PerspectiveCamera(75, icosahedronContainer.clientWidth / icosahedronContainer.clientHeight, 0.1, 1000);
+        const icoRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        icoRenderer.setSize(icosahedronContainer.clientWidth, icosahedronContainer.clientHeight);
+        icosahedronContainer.appendChild(icoRenderer.domElement);
+
+        // Create icosahedron with individually colored faces
+        const icoGeometry = new THREE.IcosahedronGeometry(2, 0);
+        
+        // Create a unique material for each of the 20 faces
+        const faceMaterials = [];
+        for (let i = 0; i < 20; i++) {
+            faceMaterials.push(new THREE.MeshStandardMaterial({ 
+                color: new THREE.Color().setHSL(i / 20, 0.8, 0.6), // Use HSL for distinct colors
+                roughness: 0.5,
+                metalness: 0.1,
+                flatShading: true
+            }));
+        }
+
+        // Assign materials to each face
+        icoGeometry.clearGroups();
+        for (let i = 0; i < 20; i++) { // An icosahedron always has 20 faces
+            icoGeometry.addGroup(i * 3, 3, i); // Assign material `i` to face `i`
+        }
+
+        const icosahedron = new THREE.Mesh(icoGeometry, faceMaterials);
+        icoScene.add(icosahedron);
+        
+        // Add wireframe
+        const wireframe = new THREE.LineSegments(
+            new THREE.WireframeGeometry(icoGeometry),
+            new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2, transparent: true, opacity: 0.3 })
+        );
+        icosahedron.add(wireframe);
+
+        // Lighting
+        const icoLight = new THREE.AmbientLight(0xcccccc, 2);
+        icoScene.add(icoLight);
+        const icoDirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+        icoDirLight.position.set(5, 5, 5);
+        icoScene.add(icoDirLight);
+
+        icoCamera.position.z = 5;
+
+        // --- THREE.JS SCENE 2: CUBES ---
+        const cubesContainer = document.getElementById('cubes-container');
+        const cubesScene = new THREE.Scene();
+        const cubesCamera = new THREE.PerspectiveCamera(75, cubesContainer.clientWidth / cubesContainer.clientHeight, 0.1, 1000);
+        const cubesRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        cubesRenderer.setSize(cubesContainer.clientWidth, cubesContainer.clientHeight);
+        cubesContainer.appendChild(cubesRenderer.domElement);
+
+        // The main group that will hold all 5 cubes and be rotated
+        const cubeGroup = new THREE.Group();
+        cubesScene.add(cubeGroup);
+
+        // The 5 individual cube meshes
+        const cubes = [];
+        
+        // This function creates the 5 cubes based on their rotational symmetries
+        function createCompoundOf5Cubes() {
+             const scale = 1.2;
+             for (let i = 0; i < 5; i++) {
+                const geometry = new THREE.BoxGeometry(scale * 2, scale * 2, scale * 2);
+                const material = new THREE.MeshStandardMaterial({
+                    color: CUBE_COLORS[i],
+                    transparent: true,
+                    opacity: 0.85,
+                    roughness: 0.3,
+                    metalness: 0.2
+                });
+                const cube = new THREE.Mesh(geometry, material);
+                
+                // We create the compound by rotating copies of one cube around a common axis
+                const baseRotation = new THREE.Euler(0, i * Math.PI * 2 / 5, 0);
+                const tiltRotation = new THREE.Euler(Math.atan(PHI-1), 0, 0);
+                
+                // Apply the rotations
+                cube.rotation.copy(baseRotation);
+                cube.rotation.x += tiltRotation.x; // Tilt each cube
+
+                // Store its original rotation for permutation animations
+                cube.userData.originalRotation = cube.rotation.clone();
+                cubeGroup.add(cube);
+                cubes.push(cube);
+            }
+        }
+        
+        createCompoundOf5Cubes();
+
+        // Lighting for cubes scene
+        const cubesLight = new THREE.AmbientLight(0xcccccc, 2);
+        cubesScene.add(cubesLight);
+        const cubesDirLight = new THREE.DirectionalLight(0xffffff, 1);
+        cubesDirLight.position.set(2, 5, 5);
+        cubesScene.add(cubesDirLight);
+
+        cubesCamera.position.z = 8;
+
+        // --- MAIN ANIMATION LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // The rotation is now handled by GSAP, but we still need to render each frame.
+            // We also ensure the cube group's rotation always matches the icosahedron's.
+            cubeGroup.rotation.copy(icosahedron.rotation);
+
+            icoRenderer.render(icoScene, icoCamera);
+            cubesRenderer.render(cubesScene, cubesCamera);
+        }
+        animate();
+
+        // --- DOM MANIPULATION & EVENT LISTENERS ---
+        const beadsDisplay = document.getElementById('beads-display');
+        const a5ButtonsContainer = document.getElementById('a5-buttons-container');
+
+        function updateBeads() {
+            beadsDisplay.innerHTML = '';
+            currentState.forEach(index => {
+                const bead = document.createElement('div');
+                bead.style.width = '2rem';
+                bead.style.height = '2rem';
+                bead.style.borderRadius = '50%';
+                bead.style.backgroundColor = CUBE_HEX_COLORS[index];
+                bead.style.border = '2px solid white';
+                beadsDisplay.appendChild(bead);
+            });
+        }
+        
+        function arraysEqual(a, b) {
+            if (!a || !b || a.length !== b.length) return false;
+            for (let i = 0; i < a.length; i++) {
+                if (a[i] !== b[i]) return false;
+            }
+            return true;
+        }
+
+        function updateGlow() {
+            const buttons = document.querySelectorAll('.action-button');
+            buttons.forEach(button => {
+                button.classList.remove('glow');
+                if (button.dataset.p) {
+                    const p = JSON.parse(button.dataset.p);
+                    if (arraysEqual(p, currentState)) {
+                        button.classList.add('glow');
+                    }
+                }
+            });
+        }
+        
+        // This function animates the cubes to new orientations based on the permutation.
+        function animateCubesToState(newState, duration = 1) {
+            if (isAnimating) return;
+            isAnimating = true;
+
+            activeTweens.forEach(tween => tween.kill());
+            activeTweens = [];
+
+            // Animate each cube to the rotation of its new target position
+            cubes.forEach((cube, i) => {
+                const targetIndex = newState.indexOf(currentState[i]);
+                const targetCube = cubes[targetIndex];
+                
+                const tween = gsap.to(cube.rotation, {
+                    x: targetCube.userData.originalRotation.x,
+                    y: targetCube.userData.originalRotation.y,
+                    z: targetCube.userData.originalRotation.z,
+                    duration: duration,
+                    ease: "power3.inOut",
+                    onComplete: () => {
+                        // After animation, snap colors and internal state
+                        if (i === cubes.length - 1) {
+                             isAnimating = false;
+                             currentState = newState;
+                             updateBeads();
+                             updateGlow();
+                             // Reset rotations to original and apply colors for the new state
+                             cubes.forEach((c, j) => {
+                                c.rotation.copy(c.userData.originalRotation);
+                                c.material.color.setHex(CUBE_COLORS[currentState[j]]);
+                             });
+                        }
+                    }
+                });
+                activeTweens.push(tween);
+            });
+        }
+
+        function setSystemState(newState) {
+            if (isAnimating) return;
+            animateCubesToState(newState);
+        }
+
+        function applyPermutation(permutation) {
+            if (isAnimating) return;
+            
+            const newState = [0, 1, 2, 3, 4];
+            for (let i = 0; i < 5; i++) {
+                newState[i] = currentState[permutation[i]];
+            }
+            
+            setSystemState(newState);
+        }
+
+        function createA5Buttons() {
+            A5_PERMUTATIONS.forEach((action, index) => {
+                const button = document.createElement('button');
+                button.classList.add('action-button', 'p-2', 'border-2', 'rounded-lg', 'text-xs', 'font-mono');
+                button.dataset.p = JSON.stringify(action.p);
+                button.dataset.index = index;
+
+                let bgColor;
+                switch(action.fixed) {
+                    case 5: bgColor = 'bg-green-500/50 border-green-400'; break;
+                    case 2: bgColor = 'bg-blue-500/50 border-blue-400'; break;
+                    case 1: bgColor = 'bg-yellow-500/50 border-yellow-400'; break;
+                    case 0: bgColor = 'bg-red-500/50 border-red-400'; break;
+                }
+                button.classList.add(...bgColor.split(' '));
+
+                const title = document.createElement('div');
+                title.textContent = action.name;
+                button.appendChild(title);
+
+                const beadPreview = document.createElement('div');
+                beadPreview.className = 'bead-preview';
+                
+                action.p.forEach(colorIndex => {
+                    const dot = document.createElement('div');
+                    dot.className = 'bead-preview-dot';
+                    dot.style.backgroundColor = CUBE_HEX_COLORS[colorIndex];
+                    beadPreview.appendChild(dot);
+                });
+                button.appendChild(beadPreview);
+
+                button.addEventListener('click', () => {
+                    if (isAnimating) return;
+                    
+                    const actionPermutation = action.p;
+                    if (mode === 'set') {
+                        setSystemState(actionPermutation);
+                    } else {
+                        applyPermutation(actionPermutation);
+                    }
+                });
+
+                a5ButtonsContainer.appendChild(button);
+            });
+        }
+        
+        // --- Event Listeners Setup ---
+        // A 5-fold symmetry axis of the icosahedron
+        const rotationAngle = 2 * Math.PI / 5; 
+
+        document.getElementById('rotX').addEventListener('click', () => { 
+            gsap.to(icosahedron.rotation, { x: `+=${rotationAngle}`, duration: 1.2, ease: 'power2.inOut' });
+        });
+        document.getElementById('rotY').addEventListener('click', () => { 
+            gsap.to(icosahedron.rotation, { y: `+=${rotationAngle}`, duration: 1.2, ease: 'power2.inOut' });
+        });
+        document.getElementById('rotZ').addEventListener('click', () => { 
+            gsap.to(icosahedron.rotation, { z: `+=${rotationAngle}`, duration: 1.2, ease: 'power2.inOut' });
+        });
+        document.getElementById('resetRot').addEventListener('click', () => { 
+            gsap.to(icosahedron.rotation, { x: 0, y: 0, z: 0, duration: 1.5, ease: 'power3.inOut' });
+        });
+
+        const toggle = document.getElementById('mode-toggle');
+        const dot = document.getElementById('toggle-dot');
+        const setLabel = document.getElementById('set-label');
+        const applyLabel = document.getElementById('apply-label');
+        toggle.addEventListener('change', () => {
+            if (toggle.checked) {
+                mode = 'apply';
+                dot.style.transform = 'translateX(1.5rem)';
+                applyLabel.classList.remove('text-gray-500');
+                applyLabel.classList.add('text-black', 'bg-cyan-400');
+                setLabel.classList.add('text-gray-500');
+                setLabel.classList.remove('text-black', 'bg-cyan-400');
+            } else {
+                mode = 'set';
+                dot.style.transform = 'translateX(0)';
+                setLabel.classList.remove('text-gray-500');
+                setLabel.classList.add('text-black', 'bg-cyan-400');
+                applyLabel.classList.add('text-gray-500');
+                applyLabel.classList.remove('text-black', 'bg-cyan-400');
+            }
+        });
+        
+        window.addEventListener('resize', () => {
+            // Icosahedron
+            icoCamera.aspect = icosahedronContainer.clientWidth / icosahedronContainer.clientHeight;
+            icoCamera.updateProjectionMatrix();
+            icoRenderer.setSize(icosahedronContainer.clientWidth, icosahedronContainer.clientHeight);
+            // Cubes
+            cubesCamera.aspect = cubesContainer.clientWidth / cubesContainer.clientHeight;
+            cubesCamera.updateProjectionMatrix();
+            cubesRenderer.setSize(cubesContainer.clientWidth, cubesContainer.clientHeight);
+        }, false);
+
+        // Hide loading overlays when scenes are ready
+        setTimeout(() => {
+            document.getElementById('ico-loading').style.display = 'none';
+            document.getElementById('cubes-loading').style.display = 'none';
+        }, 500);
+
+        // --- INITIALIZATION ---
+        createA5Buttons();
+        // Initialize with identity state without animation
+        currentState = [0, 1, 2, 3, 4];
+        cubes.forEach((c, j) => {
+            c.rotation.copy(c.userData.originalRotation);
+            c.material.color.setHex(CUBE_COLORS[currentState[j]]);
+        });
+        updateBeads();
+        updateGlow();
+    </script>
+</body>
+</html>

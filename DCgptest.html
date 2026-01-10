@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Fast Domain Coloring</title>
+  <style>
+    html, body {
+      margin: 0; overflow: hidden;
+    }
+    #controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: white;
+      padding: 5px;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <input id="funcStr" value="x" style="width: 300px;">
+    <button onclick="loadFunction()">Load</button>
+  </div>
+  <canvas id="canvas"></canvas>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.7.0/math.min.js"></script>
+  <script src="clrspc.js"></script>
+  <script src="mthfnc.js"></script>
+  <script src="polyhedra.js"></script>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+
+    let scale = 5.0;
+    let offset = { x: 0, y: 0 };
+    let dragging = false;
+    let lastMouse = { x: 0, y: 0 };
+    let funcStr = document.getElementById('funcStr').value;
+
+    // Cache using world coordinates rounded to avoid float problems
+    let cache = new Map();
+
+    function screenToWorld(x, y) {
+      return [
+        ((x - canvas.width / 2) / (canvas.width / 2)) * scale + offset.x,
+        ((y - canvas.height / 2) / (canvas.height / 2)) * scale + offset.y
+      ];
+    }
+
+    function worldToScreen(xw, yw) {
+      return [
+        ((xw - offset.x) / scale) * canvas.width / 2 + canvas.width / 2,
+        ((yw - offset.y) / scale) * canvas.height / 2 + canvas.height / 2
+      ];
+    }
+
+    function getKey(xw, yw) {
+      const rx = Math.round(xw * 1000) / 1000;
+      const ry = Math.round(yw * 1000) / 1000;
+      return `${rx},${ry}`;
+    }
+
+    function complexToColor(c) {
+      const re = math.re(c);
+      const im = math.im(c);
+      const mag = math.sqrt(re * re + im * im);
+      const hue = (Math.atan2(im, re) / (2 * Math.PI) + 1) % 1;
+      const light = mag / (1 + mag);
+      return `hsl(${hue * 360}, 100%, ${light * 100}%)`;
+    }
+
+    function drawPoint(xw, yw, color) {
+      const [x, y] = worldToScreen(xw, yw);
+      ctx.fillStyle = color;
+      ctx.fillRect(Math.round(x), Math.round(y), 1, 1);
+    }
+
+    function evaluateAndDraw(xw, yw) {
+      const key = getKey(xw, yw);
+      if (cache.has(key)) return;
+
+      try {
+        const z = math.complex(xw, yw);
+        const val = teth.evaluate(funcStr, { x: z });
+        const color = complexToColor(val);
+        cache.set(key, color);
+        drawPoint(xw, yw, color);
+      } catch {
+        cache.set(key, "black");
+      }
+    }
+
+    function drawVoronoiFill() {
+      const sampled = [...cache.entries()].slice(0, 500);
+      if (sampled.length === 0) return;
+
+      for (let i = 0; i < 1000; i++) {
+        const x = Math.floor(Math.random() * canvas.width);
+        const y = Math.floor(Math.random() * canvas.height);
+        const [xw, yw] = screenToWorld(x, y);
+
+        let minDist = Infinity;
+        let bestColor = "black";
+
+        for (let [key, color] of sampled) {
+          const [kx, ky] = key.split(',').map(Number);
+          const dx = xw - kx;
+          const dy = yw - ky;
+          const dist = dx * dx + dy * dy;
+          if (dist < minDist) {
+            minDist = dist;
+            bestColor = color;
+          }
+        }
+
+        ctx.fillStyle = bestColor;
+        ctx.fillRect(x, y, 3, 3);
+      }
+    }
+
+    function updateLoop() {
+      for (let i = 0; i < 100; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const [xw, yw] = screenToWorld(x, y);
+        evaluateAndDraw(xw, yw);
+      }
+
+      drawVoronoiFill();
+      requestAnimationFrame(updateLoop);
+    }
+
+    function loadFunction() {
+      funcStr = document.getElementById('funcStr').value;
+      // Keep cache, just repaint with new function
+      cache.clear();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+      dragging = true;
+      lastMouse = { x: e.clientX, y: e.clientY };
+    });
+
+    canvas.addEventListener('mouseup', () => dragging = false);
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (dragging) {
+        const dx = e.clientX - lastMouse.x;
+        const dy = e.clientY - lastMouse.y;
+        offset.x -= dx / (canvas.width / 2) * scale;
+        offset.y += dy / (canvas.height / 2) * scale;
+        lastMouse = { x: e.clientX, y: e.clientY };
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Redraw cached points
+        for (let [key, color] of cache.entries()) {
+          const [xw, yw] = key.split(',').map(Number);
+          drawPoint(xw, yw, color);
+        }
+      }
+    });
+
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const zoom = Math.exp(-e.deltaY * 0.001);
+      scale *= zoom;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let [key, color] of cache.entries()) {
+        const [xw, yw] = key.split(',').map(Number);
+        drawPoint(xw, yw, color);
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      canvas.width = innerWidth;
+      canvas.height = innerHeight;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let [key, color] of cache.entries()) {
+        const [xw, yw] = key.split(',').map(Number);
+        drawPoint(xw, yw, color);
+      }
+    });
+
+    loadFunction();
+    updateLoop();
+  </script>
+</body>
+</html>

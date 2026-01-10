@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Coffee Vector Explorer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f5f0;
+            color: #333;
+        }
+        h1 {
+            color: #5c3a21;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #d4a76a;
+            padding-bottom: 10px;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        .controls {
+            flex: 1;
+            min-width: 400px;
+            background: #fff9f0;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+        .visualization {
+            flex: 1;
+            min-width: 400px;
+            background: #fff9f0;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+        .slider-container {
+            margin: 20px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #5c3a21;
+        }
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #e0d5c8;
+            -webkit-appearance: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #8b5a2b;
+            cursor: pointer;
+        }
+        .value-display {
+            text-align: right;
+            font-size: 0.95em;
+            color: #8b5a2b;
+            margin-top: 5px;
+        }
+        .coffee-cup {
+            width: 200px;
+            height: 250px;
+            margin: 30px auto;
+            position: relative;
+            border: 4px solid #5c3a21;
+            border-radius: 0 0 20px 20px;
+            overflow: hidden;
+            background: linear-gradient(to right, #f5f5f5, #e0e0e0);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .coffee-liquid {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            transition: height 0.5s ease;
+        }
+        .espresso-layer {
+            background: linear-gradient(to bottom, #3a1f04, #4b2c0e);
+        }
+        .milk-layer {
+            background: linear-gradient(to bottom, #fff8f0, #f0e6d2);
+        }
+        .water-layer {
+            background: linear-gradient(to bottom, #e0f7ff, #b3e0ff);
+            opacity: 0.85;
+        }
+        .chocolate-layer {
+            background: linear-gradient(to bottom, #4b2c0e, #5d3a21);
+        }
+        .foam-layer {
+            background: linear-gradient(to bottom, #fffaf0, #fff5e6);
+            opacity: 0.95;
+        }
+        .caramel-layer {
+            background: linear-gradient(to bottom, #d27d46, #b3663a);
+        }
+        .cherry-layer {
+            background: linear-gradient(to bottom, #d14d6a, #b83b58);
+        }
+        .mint-layer {
+            background: linear-gradient(to bottom, #a2f0d0, #80d8b0);
+        }
+        .result {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: #f0e6d2;
+            border-radius: 10px;
+            border-left: 5px solid #d4a76a;
+        }
+        select {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #d4a76a;
+            margin-bottom: 20px;
+            width: 100%;
+            background: white;
+            font-size: 1em;
+            color: #5c3a21;
+        }
+        h2 {
+            color: #5c3a21;
+            border-bottom: 2px solid #e0d5c8;
+            padding-bottom: 12px;
+            margin-top: 0;
+        }
+        .temperature-indicator {
+            width: 100%;
+            height: 12px;
+            background: linear-gradient(to right, #3498db, #e74c3c);
+            margin: 20px 0;
+            border-radius: 6px;
+            position: relative;
+        }
+        .temperature-marker {
+            position: absolute;
+            width: 3px;
+            height: 18px;
+            background: black;
+            top: -3px;
+            transform: translateX(-50%);
+        }
+        .match-list {
+            max-height: 250px;
+            overflow-y: auto;
+            margin-top: 15px;
+            border: 1px solid #d4a76a;
+            padding: 15px;
+            border-radius: 8px;
+            background: white;
+        }
+        .match-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #e0d5c8;
+            transition: background 0.2s;
+        }
+        .match-item:hover {
+            background: #f5f0e6;
+        }
+        .match-item:last-child {
+            border-bottom: none;
+        }
+        .match-distance {
+            float: right;
+            color: #8b5a2b;
+            font-weight: 600;
+        }
+        .vector-display {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0d5c8;
+        }
+        .vector-display p {
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .vector-display span {
+            font-weight: 600;
+            color: #5c3a21;
+        }
+        .cup-handle {
+            position: absolute;
+            right: -30px;
+            top: 50px;
+            width: 30px;
+            height: 60px;
+            border: 4px solid #5c3a21;
+            border-left: none;
+            border-radius: 0 15px 15px 0;
+            background: linear-gradient(to right, #f5f5f5, #e0e0e0);
+        }
+        .cup-saucer {
+            width: 240px;
+            height: 20px;
+            margin: -10px auto 0;
+            background: #f0e6d2;
+            border: 3px solid #5c3a21;
+            border-radius: 50%;
+        }
+        .strength-meter {
+            width: 100%;
+            height: 10px;
+            background: #e0d5c8;
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        .strength-fill {
+            height: 100%;
+            background: linear-gradient(to right, #f5f0e6, #4b2c0e);
+            width: 0%;
+        }
+        .sweetness-meter {
+            width: 100%;
+            height: 10px;
+            background: #e0d5c8;
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        .sweetness-fill {
+            height: 100%;
+            background: linear-gradient(to right, #f5f0e6, #d27d46);
+            width: 0%;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 15px;
+            background: #e0d5c8;
+            border: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #5c3a21;
+        }
+        .tab.active {
+            background: #d4a76a;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .fun-fact {
+            font-style: italic;
+            color: #8b5a2b;
+            margin-top: 20px;
+            padding: 10px;
+            background: #f0e6d2;
+            border-radius: 5px;
+            border-left: 3px solid #d4a76a;
+        }
+    </style>
+</head>
+<body>
+    <h1>Ultimate Coffee Vector Space Explorer</h1>
+    
+    <div class="container">
+        <div class="controls">
+            <div class="tabs">
+                <button class="tab active" onclick="openTab(event, 'ingredients')">Ingredients</button>
+                <button class="tab" onclick="openTab(event, 'flavors')">Flavors</button>
+                <button class="tab" onclick="openTab(event, 'settings')">Settings</button>
+            </div>
+            
+            <div id="ingredients" class="tab-content active">
+                <h2>Coffee Composition</h2>
+                
+                <div class="slider-container">
+                    <label for="espresso">Espresso Shots (30ml each)</label>
+                    <input type="range" id="espresso" min="0" max="4" value="1" step="0.1">
+                    <div class="value-display"><span id="espresso-value">1</span> shots (<span id="espresso-ml">30</span> ml)</div>
+                    <div class="strength-meter"><div class="strength-fill" id="strength-fill"></div></div>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="brewed-coffee">Brewed Coffee (ml)</label>
+                    <input type="range" id="brewed-coffee" min="0" max="300" value="0">
+                    <div class="value-display"><span id="brewed-coffee-value">0</span> ml</div>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="milk-type">Milk Type</label>
+                    <select id="milk-type">
+                        <option value="whole">Whole Milk</option>
+                        <option value="skim">Skim Milk</option>
+                        <option value="oat">Oat Milk</option>
+                        <option value="almond">Almond Milk</option>
+                        <option value="soy">Soy Milk</option>
+                        <option value="half-half">Half & Half</option>
+                        <option value="condensed">Condensed Milk</option>
+                    </select>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="milk">Milk (ml)</label>
+                    <input type="range" id="milk" min="0" max="300" value="0">
+                    <div class="value-display"><span id="milk-value">0</span> ml</div>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="water">Water (ml)</label>
+                    <input type="range" id="water" min="0" max="300" value="0">
+                    <div class="value-display"><span id="water-value">0</span> ml</div>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="foam">Foam (ml)</label>
+                    <input type="range" id="foam" min="0" max="100" value="0">
+                    <div class="value-display"><span id="foam-value">0</span> ml</div>
+                </div>
+            </div>
+            
+            <div id="flavors" class="tab-content">
+                <h2>Flavors & Additives</h2>
+                
+                <div class="slider-container">
+                    <label for="chocolate">Chocolate (ml)</label>
+                    <input type="range" id="chocolate" min="0" max="100" value="0">
+                    <div class="value-display"><span id="chocolate-value">0</span> ml</div>
+                    <div class="sweetness-meter"><div class="sweetness-fill" id="sweetness-fill"></div></div>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="caramel">Caramel (ml)</label>
+                    <input type="range" id="caramel" min="0" max="50" value="0">
+                    <div class="value-display"><span id="caramel-value">0</span> ml</div>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="cherry">Cherry Syrup (ml)</label>
+                    <input type="range" id="cherry" min="0" max="30" value="0">
+                    <div class="value-display"><span id="cherry-value">0</span> ml</div>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="mint">Mint Syrup (ml)</label>
+                    <input type="range" id="mint" min="0" max="30" value="0">
+                    <div class="value-display"><span id="mint-value">0</span> ml</div>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="vanilla">Vanilla (ml)</label>
+                    <input type="range" id="vanilla" min="0" max="20" value="0">
+                    <div class="value-display"><span id="vanilla-value">0</span> ml</div>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="whipped-cream">Whipped Cream</label>
+                    <select id="whipped-cream">
+                        <option value="0">None</option>
+                        <option value="1">Light</option>
+                        <option value="2">Normal</option>
+                        <option value="3">Extra</option>
+                        <option value="4">Mount Everest</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="settings" class="tab-content">
+                <h2>Preparation Settings</h2>
+                
+                <div class="slider-container">
+                    <label for="temperature">Temperature (°C)</label>
+                    <input type="range" id="temperature" min="0" max="100" value="70">
+                    <div class="value-display"><span id="temperature-value">70</span> °C</div>
+                    <div class="temperature-indicator">
+                        <div class="temperature-marker" id="temp-marker" style="left: 70%"></div>
+                    </div>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="ice">Ice Amount</label>
+                    <input type="range" id="ice" min="0" max="100" value="0">
+                    <div class="value-display"><span id="ice-value">0</span>%</div>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="sweetness">Sweetness Level</label>
+                    <input type="range" id="sweetness" min="0" max="10" value="0">
+                    <div class="value-display"><span id="sweetness-value">0</span>/10</div>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="strength">Brew Strength</label>
+                    <input type="range" id="strength" min="1" max="10" value="5">
+                    <div class="value-display"><span id="strength-value">5</span>/10</div>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="distance-metric">Distance Metric</label>
+                    <select id="distance-metric">
+                        <option value="euclidean">Euclidean (Standard)</option>
+                        <option value="manhattan">Manhattan (Taxicab)</option>
+                        <option value="chebyshev">Chebyshev (Maximum)</option>
+                        <option value="cosine">Cosine Similarity</option>
+                        <option value="weighted">Weighted (Espresso-focused)</option>
+                        <option value="flavor-focused">Flavor-focused</option>
+                    </select>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="search-radius">Search Radius</label>
+                    <input type="range" id="search-radius" min="1" max="100" value="50">
+                    <div class="value-display"><span id="search-radius-value">50</span>%</div>
+                </div>
+            </div>
+            
+            <div class="result">
+                <h3>Closest Coffee Match</h3>
+                <p id="result-text">Adjust the sliders to find your coffee match</p>
+                <p id="distance-text"></p>
+                
+                <div class="match-list" id="match-list">
+                    <!-- Top matches will appear here -->
+                </div>
+                
+                <div class="fun-fact" id="fun-fact">
+                    <!-- Fun fact will appear here -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="visualization">
+            <h2>Beverage Visualization</h2>
+            <div class="coffee-cup">
+                <div class="cup-handle"></div>
+                <div class="coffee-liquid water-layer" id="water-visual" style="height: 0%"></div>
+                <div class="coffee-liquid brewed-layer" id="brewed-visual" style="height: 0%"></div>
+                <div class="coffee-liquid chocolate-layer" id="chocolate-visual" style="height: 0%"></div>
+                <div class="coffee-liquid caramel-layer" id="caramel-visual" style="height: 0%"></div>
+                <div class="coffee-liquid cherry-layer" id="cherry-visual" style="height: 0%"></div>
+                <div class="coffee-liquid mint-layer" id="mint-visual" style="height: 0%"></div>
+                <div class="coffee-liquid milk-layer" id="milk-visual" style="height: 0%"></div>
+                <div class="coffee-liquid espresso-layer" id="espresso-visual" style="height: 0%"></div>
+                <div class="coffee-liquid foam-layer" id="foam-visual" style="height: 0%"></div>
+                <div class="coffee-liquid vanilla-layer" id="vanilla-visual" style="height: 0%"></div>
+            </div>
+            <div class="cup-saucer"></div>
+            
+            <div class="vector-display">
+                <h3>Vector Space Coordinates</h3>
+                <p>Espresso: <span id="vector-espresso">0</span> ml</p>
+                <p>Brewed Coffee: <span id="vector-brewed">0</span> ml</p>
+                <p>Milk (<span id="vector-milk-type">whole</span>): <span id="vector-milk">0</span> ml</p>
+                <p>Water: <span id="vector-water">0</span> ml</p>
+                <p>Foam: <span id="vector-foam">0</span> ml</p>
+                <p>Chocolate: <span id="vector-chocolate">0</span> ml</p>
+                <p>Caramel: <span id="vector-caramel">0</span> ml</p>
+                <p>Cherry: <span id="vector-cherry">0</span> ml</p>
+                <p>Mint: <span id="vector-mint">0</span> ml</p>
+                <p>Vanilla: <span id="vector-vanilla">0</span> ml</p>
+                <p>Whipped Cream: <span id="vector-cream">None</span></p>
+                <p>Temperature: <span id="vector-temp">70</span> °C</p>
+                <p>Ice: <span id="vector-ice">0</span>%</p>
+                <p>Sweetness: <span id="vector-sweetness">0</span>/10</p>
+                <p>Brew Strength: <span id="vector-strength">5</span>/10</p>
+                <p>Total Volume: <span id="total-volume">0</span> ml</p>
+                <p>Coffee Strength: <span id="coffee-strength">0</span>%</p>
+                <p>Sweetness Level: <span id="sweetness-level">0</span>%</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced coffee database with more parameters
+        const coffeeTypes = {
+            // Pure basics
+            "Hot Water": [0, 0, 0, 300, 0, 0, 0, 0, 0, 0, 0, 0, 90, 0, 0, 5],
+            "Cold Water": [0, 0, 0, 300, 0, 0, 0, 0, 0, 0, 0, 0, 10, 50, 0, 5],
+            "Pure Milk": [0, 0, 300, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0, 5],
+            "Hot Milk": [0, 0, 300, 0, 0, 0, 0, 0, 0, 0, 0, 0, 80, 0, 0, 5],
+            "Steamed Milk": [0, 0, 250, 0, 50, 0, 0, 0, 0, 0, 0, 0, 70, 0, 0, 5],
+            "Diluted Milk (50/50)": [0, 0, 150, 150, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0, 5],
+            "Hot Chocolate": [0, 0, 200, 0, 0, 50, 0, 0, 0, 0, 0, 2, 70, 0, 6, 5],
+            "Chocolate Milk": [0, 0, 250, 0, 0, 30, 0, 0, 0, 0, 0, 1, 10, 0, 5, 5],
+            "Coffee Milk": [10, 0, 290, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0, 5],
+            
+            // Espresso basics
+            "Espresso (Single)": [30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 90, 0, 0, 8],
+            "Double Espresso": [60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 90, 0, 0, 8],
+            "Ristretto": [20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 90, 0, 0, 9],
+            "Lungo": [30, 0, 0, 60, 0, 0, 0, 0, 0, 0, 0, 0, 90, 0, 0, 6],
+            "Espresso Macchiato": [30, 0, 10, 0, 5, 0, 0, 0, 0, 0, 0, 0, 80, 0, 0, 7],
+            
+            // Milk + espresso drinks
+            "Cappuccino": [30, 0, 60, 0, 30, 0, 0, 0, 0, 0, 0, 0, 70, 0, 0, 6],
+            "Latte": [30, 0, 150, 0, 10, 0, 0, 0, 0, 0, 0, 0, 70, 0, 0, 5],
+            "Flat White": [30, 0, 90, 0, 15, 0, 0, 0, 0, 0, 0, 0, 70, 0, 0, 6],
+            "Cortado": [30, 0, 30, 0, 2, 0, 0, 0, 0, 0, 0, 0, 75, 0, 0, 7],
+            "Café con Leche": [30, 0, 120, 0, 5, 0, 0, 0, 0, 0, 0, 0, 70, 0, 0, 6],
+            "Breve": [30, 0, 60, 0, 10, 0, 0, 0, 0, 0, 0, 1, 70, 0, 0, 7],
+            
+            // Americanos
+            "Americano": [30, 0, 0, 120, 0, 0, 0, 0, 0, 0, 0, 0, 85, 0, 0, 5],
+            "Long Black": [30, 0, 0, 90, 0, 0, 0, 0, 0, 0, 0, 0, 85, 0, 0, 6],
+            "Red Eye": [30, 120, 0, 120, 0, 0, 0, 0, 0, 0, 0, 0, 85, 0, 0, 7],
+            "Black Eye": [60, 120, 0, 120, 0, 0, 0, 0, 0, 0, 0, 0, 85, 0, 0, 8],
+            "Dead Eye": [90, 120, 0, 120, 0, 0, 0, 0, 0, 0, 0, 0, 85, 0, 0, 9],
+            
+            // Chocolate drinks
+            "Mocha": [30, 0, 60, 0, 10, 30, 0, 0, 0, 0, 0, 1, 70, 0, 5, 6],
+            "White Mocha": [30, 0, 60, 0, 15, 30, 0, 0, 0, 0, 0, 2, 70, 0, 6, 6],
+            "Dark Mocha": [30, 0, 40, 0, 5, 40, 0, 0, 0, 0, 0, 1, 70, 0, 4, 7],
+            "Mocha Latte": [30, 0, 150, 0, 5, 20, 0, 0, 0, 0, 0, 1, 70, 0, 4, 5],
+            
+            // Flavored lattes
+            "Vanilla Latte": [30, 0, 150, 0, 10, 0, 0, 0, 0, 10, 0, 0, 70, 0, 5, 5],
+            "Caramel Latte": [30, 0, 150, 0, 10, 0, 15, 0, 0, 0, 0, 0, 70, 0, 6, 5],
+            "Hazelnut Latte": [30, 0, 150, 0, 10, 0, 0, 0, 0, 0, 10, 0, 70, 0, 5, 5],
+            "Pumpkin Spice Latte": [30, 0, 150, 0, 15, 0, 0, 0, 0, 15, 0, 3, 70, 0, 7, 5],
+            "Cherry Latte": [30, 0, 150, 0, 10, 0, 0, 15, 0, 0, 0, 1, 70, 0, 6, 5],
+            "Mint Latte": [30, 0, 150, 0, 10, 0, 0, 0, 15, 0, 0, 0, 70, 0, 5, 5],
+            
+            // Specialty
+            "Vienna Coffee": [30, 0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 2, 80, 0, 3, 6],
+            "Affogato": [30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 10, 0, 8, 7],
+            "Irish Coffee": [30, 0, 0, 120, 0, 0, 0, 0, 0, 0, 0, 3, 80, 0, 3, 6],
+            "Bulletproof Coffee": [30, 0, 0, 120, 0, 0, 0, 0, 0, 0, 0, 4, 80, 0, 0, 7],
+            
+            // Iced drinks
+            "Iced Coffee": [0, 150, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 50, 0, 5],
+            "Iced Latte": [30, 0, 150, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 50, 0, 5],
+            "Iced Mocha": [30, 0, 60, 0, 0, 30, 0, 0, 0, 0, 0, 2, 5, 50, 5, 5],
+            "Iced Caramel Latte": [30, 0, 150, 0, 0, 0, 15, 0, 0, 0, 0, 2, 5, 50, 6, 5],
+            "Frappuccino": [30, 0, 100, 0, 0, 20, 15, 0, 0, 10, 0, 4, 5, 70, 8, 4],
+            
+            // Tea and others
+            "Chai Latte": [0, 0, 150, 0, 10, 0, 0, 0, 0, 10, 0, 0, 70, 0, 6, 1],
+            "Matcha Latte": [0, 0, 150, 0, 10, 0, 0, 0, 0, 0, 0, 0, 70, 0, 5, 1],
+            "London Fog": [0, 0, 150, 0, 10, 0, 0, 0, 0, 15, 0, 0, 70, 0, 5, 1],
+            
+            // Funny/weird concoctions
+            "The Abomination": [60, 120, 60, 60, 30, 30, 15, 15, 15, 15, 15, 4, 95, 20, 10, 9],
+            "Coffee Soup": [30, 0, 200, 0, 0, 0, 0, 0, 0, 0, 0, 0, 85, 0, 0, 3],
+            "Almost Tea": [5, 0, 0, 295, 0, 0, 0, 0, 0, 0, 0, 0, 85, 0, 0, 2],
+            "Milk with Coffee Personality": [10, 0, 290, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0, 1],
+            "Hot Brown Water": [5, 0, 0, 295, 0, 0, 0, 0, 0, 0, 0, 0, 90, 0, 0, 1],
+            "The Sleep Stealer": [90, 120, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 90, 0, 0, 10],
+            "Dessert in a Cup": [30, 0, 60, 0, 20, 30, 20, 0, 0, 20, 0, 4, 70, 0, 10, 5],
+            "Mint Chocolate Dream": [30, 0, 60, 0, 15, 30, 0, 0, 20, 0, 0, 3, 70, 0, 7, 6],
+            "Cherry Chocolate Bliss": [30, 0, 60, 0, 10, 30, 0, 20, 0, 0, 0, 2, 70, 0, 8, 6],
+            "Vanilla Caramel Cloud": [30, 0, 100, 0, 30, 0, 20, 0, 0, 15, 0, 4, 70, 0, 9, 5]
+        };
+
+        // Fun facts about coffee
+        const funFacts = [
+            "The world consumes about 2.25 billion cups of coffee every day!",
+            "Coffee was discovered by a goat herder in Ethiopia who noticed his goats 'dancing' after eating coffee berries.",
+            "Brazil produces about 40% of the world's coffee supply.",
+            "The most expensive coffee in the world is made from beans eaten and excreted by civet cats.",
+            "In Italy, espresso is regulated by the government because it's considered essential to daily life.",
+            "The word 'coffee' comes from the Arabic word 'qahwa' which means 'wine of the bean'.",
+            "Coffee was banned in Mecca in 1511 because it was believed to stimulate radical thinking.",
+            "Beethoven was a coffee lover and insisted on exactly 60 beans per cup.",
+            "The first webcam was created to monitor a coffee pot at Cambridge University.",
+            "Coffee doesn't actually dehydrate you - the water in coffee makes up for the diuretic effect.",
+            "Finland consumes the most coffee per capita in the world.",
+            "Coffee can help reduce the risk of several diseases, including Parkinson's and Alzheimer's.",
+            "The original definition of coffee 'break' was a 10-minute timeout for workers to put their coffee down.",
+            "Coffee beans are actually seeds from the coffee cherry fruit.",
+            "The largest cup of coffee ever made was over 22,000 liters!"
+        ];
+
+        // Distance metrics
+        const distanceMetrics = {
+            euclidean: (a, b) => {
+                return Math.sqrt(a.reduce((sum, val, i) => sum + Math.pow(val - b[i], 2), 0));
+            },
+            manhattan: (a, b) => {
+                return a.reduce((sum, val, i) => sum + Math.abs(val - b[i]), 0);
+            },
+            chebyshev: (a, b) => {
+                return Math.max(...a.map((val, i) => Math.abs(val - b[i])));
+            },
+            cosine: (a, b) => {
+                const dotProduct = a.reduce((sum, val, i) => sum + val * b[i], 0);
+                const magnitudeA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
+                const magnitudeB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));
+                return 1 - (dotProduct / (magnitudeA * magnitudeB));
+            },
+            weighted: (a, b) => {
+                // Give more weight to espresso presence and coffee strength
+                const weights = [2, 1.5, 1, 0.5, 0.5, 0.8, 0.8, 0.8, 0.8, 0.8, 0.5, 0.3, 0.5, 0.3, 0.5, 1.5];
+                return Math.sqrt(a.reduce((sum, val, i) => sum + weights[i] * Math.pow(val - b[i], 2), 0));
+            },
+            "flavor-focused": (a, b) => {
+                // Focus on flavors and sweetness
+                const weights = [0.5, 0.5, 0.5, 0.5, 0.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1, 0.5, 0.5, 2, 0.5];
+                return Math.sqrt(a.reduce((sum, val, i) => sum + weights[i] * Math.pow(val - b[i], 2), 0));
+            }
+        };
+
+        // DOM elements
+        const espressoSlider = document.getElementById('espresso');
+        const brewedCoffeeSlider = document.getElementById('brewed-coffee');
+        const milkTypeSelect = document.getElementById('milk-type');
+        const milkSlider = document.getElementById('milk');
+        const waterSlider = document.getElementById('water');
+        const foamSlider = document.getElementById('foam');
+        const chocolateSlider = document.getElementById('chocolate');
+        const caramelSlider = document.getElementById('caramel');
+        const cherrySlider = document.getElementById('cherry');
+        const mintSlider = document.getElementById('mint');
+        const vanillaSlider = document.getElementById('vanilla');
+        const whippedCreamSelect = document.getElementById('whipped-cream');
+        const temperatureSlider = document.getElementById('temperature');
+        const iceSlider = document.getElementById('ice');
+        const sweetnessSlider = document.getElementById('sweetness');
+        const strengthSlider = document.getElementById('strength');
+        const distanceMetricSelect = document.getElementById('distance-metric');
+        const searchRadiusSlider = document.getElementById('search-radius');
+        const resultText = document.getElementById('result-text');
+        const distanceText = document.getElementById('distance-text');
+        const matchList = document.getElementById('match-list');
+        const tempMarker = document.getElementById('temp-marker');
+        const funFactElement = document.getElementById('fun-fact');
+
+        // Visualization elements
+        const espressoVisual = document.getElementById('espresso-visual');
+        const brewedVisual = document.getElementById('brewed-visual');
+        const milkVisual = document.getElementById('milk-visual');
+        const waterVisual = document.getElementById('water-visual');
+        const chocolateVisual = document.getElementById('chocolate-visual');
+        const caramelVisual = document.getElementById('caramel-visual');
+        const cherryVisual = document.getElementById('cherry-visual');
+        const mintVisual = document.getElementById('mint-visual');
+        const foamVisual = document.getElementById('foam-visual');
+        const vanillaVisual = document.getElementById('vanilla-visual');
+        const strengthFill = document.getElementById('strength-fill');
+        const sweetnessFill = document.getElementById('sweetness-fill');
+
+        // Update functions
+        function updateValues() {
+            const espressoShots = parseFloat(espressoSlider.value);
+            const espresso = espressoShots * 30; // Convert shots to ml
+            const brewedCoffee = parseInt(brewedCoffeeSlider.value);
+            const milkType = milkTypeSelect.value;
+            const milk = parseInt(milkSlider.value);
+            const water = parseInt(waterSlider.value);
+            const foam = parseInt(foamSlider.value);
+            const chocolate = parseInt(chocolateSlider.value);
+            const caramel = parseInt(caramelSlider.value);
+            const cherry = parseInt(cherrySlider.value);
+            const mint = parseInt(mintSlider.value);
+            const vanilla = parseInt(vanillaSlider.value);
+            const whippedCream = parseInt(whippedCreamSelect.value);
+            const temperature = parseInt(temperatureSlider.value);
+            const ice = parseInt(iceSlider.value);
+            const sweetness = parseInt(sweetnessSlider.value);
+            const strength = parseInt(strengthSlider.value);
+            const searchRadius = parseInt(searchRadiusSlider.value);
+            
+            // Update displayed values
+            document.getElementById('espresso-value').textContent = espressoShots.toFixed(1);
+            document.getElementById('espresso-ml').textContent = espresso;
+            document.getElementById('brewed-coffee-value').textContent = brewedCoffee;
+            document.getElementById('milk-value').textContent = milk;
+            document.getElementById('water-value').textContent = water;
+            document.getElementById('foam-value').textContent = foam;
+            document.getElementById('chocolate-value').textContent = chocolate;
+            document.getElementById('caramel-value').textContent = caramel;
+            document.getElementById('cherry-value').textContent = cherry;
+            document.getElementById('mint-value').textContent = mint;
+            document.getElementById('vanilla-value').textContent = vanilla;
+            document.getElementById('temperature-value').textContent = temperature;
+            document.getElementById('ice-value').textContent = ice;
+            document.getElementById('sweetness-value').textContent = sweetness;
+            document.getElementById('strength-value').textContent = strength;
+            document.getElementById('search-radius-value').textContent = searchRadius;
+            
+            // Position temperature marker
+            tempMarker.style.left = `${temperature}%`;
+            
+            // Update strength and sweetness meters
+            strengthFill.style.width = `${strength * 10}%`;
+            sweetnessFill.style.width = `${sweetness * 10}%`;
+            
+            // Update vector display
+            document.getElementById('vector-espresso').textContent = espresso;
+            document.getElementById('vector-brewed').textContent = brewedCoffee;
+            document.getElementById('vector-milk-type').textContent = milkType;
+            document.getElementById('vector-milk').textContent = milk;
+            document.getElementById('vector-water').textContent = water;
+            document.getElementById('vector-foam').textContent = foam;
+            document.getElementById('vector-chocolate').textContent = chocolate;
+            document.getElementById('vector-caramel').textContent = caramel;
+            document.getElementById('vector-cherry').textContent = cherry;
+            document.getElementById('vector-mint').textContent = mint;
+            document.getElementById('vector-vanilla').textContent = vanilla;
+            
+            let creamText = "None";
+            if (whippedCream === 1) creamText = "Light";
+            else if (whippedCream === 2) creamText = "Normal";
+            else if (whippedCream === 3) creamText = "Extra";
+            else if (whippedCream === 4) creamText = "Mount Everest";
+            document.getElementById('vector-cream').textContent = creamText;
+            
+            document.getElementById('vector-temp').textContent = temperature;
+            document.getElementById('vector-ice').textContent = ice;
+            document.getElementById('vector-sweetness').textContent = sweetness;
+            document.getElementById('vector-strength').textContent = strength;
+            
+            const totalVolume = espresso + brewedCoffee + milk + water + foam + chocolate + caramel + cherry + mint + vanilla;
+            document.getElementById('total-volume').textContent = totalVolume;
+            
+            // Calculate coffee strength percentage (espresso + brewed coffee as % of total liquid)
+            const coffeeLiquid = espresso + brewedCoffee;
+            const coffeeStrength = totalVolume > 0 ? Math.round((coffeeLiquid / totalVolume) * 100) : 0;
+            document.getElementById('coffee-strength').textContent = coffeeStrength;
+            
+            // Calculate sweetness level (sum of all sweet components)
+            const sweetnessLevel = Math.min(100, Math.round((chocolate + caramel + cherry + mint + vanilla + (sweetness * 5)) / 2));
+            document.getElementById('sweetness-level').textContent = sweetnessLevel;
+            
+            // Update visualization
+            updateVisualization(espresso, brewedCoffee, milk, water, foam, chocolate, caramel, cherry, mint, vanilla, totalVolume);
+            
+            // Find closest coffee
+            const currentVector = [
+                espresso, 
+                brewedCoffee, 
+                milk, 
+                water, 
+                foam, 
+                chocolate, 
+                caramel, 
+                cherry, 
+                mint, 
+                vanilla, 
+                0, // Placeholder for other flavors
+                whippedCream, 
+                temperature, 
+                ice, 
+                sweetness, 
+                strength
+            ];
+            findClosestCoffee(currentVector, searchRadius);
+            
+            // Show random fun fact
+            showFunFact();
+        }
+
+        function updateVisualization(espresso, brewedCoffee, milk, water, foam, chocolate, caramel, cherry, mint, vanilla, totalVolume) {
+            if (totalVolume === 0) {
+                espressoVisual.style.height = '0%';
+                brewedVisual.style.height = '0%';
+                milkVisual.style.height = '0%';
+                waterVisual.style.height = '0%';
+                chocolateVisual.style.height = '0%';
+                caramelVisual.style.height = '0%';
+                cherryVisual.style.height = '0%';
+                mintVisual.style.height = '0%';
+                foamVisual.style.height = '0%';
+                vanillaVisual.style.height = '0%';
+                return;
+            }
+            
+            // Calculate layer heights (foam goes on top)
+            const foamPercent = (foam / totalVolume) * 100;
+            const remainingPercent = 100 - foamPercent;
+            
+            const espressoPercent = (espresso / totalVolume) * remainingPercent;
+            const brewedPercent = (brewedCoffee / totalVolume) * remainingPercent;
+            const milkPercent = (milk / totalVolume) * remainingPercent;
+            const waterPercent = (water / totalVolume) * remainingPercent;
+            const chocolatePercent = (chocolate / totalVolume) * remainingPercent;
+            const caramelPercent = (caramel / totalVolume) * remainingPercent;
+            const cherryPercent = (cherry / totalVolume) * remainingPercent;
+            const mintPercent = (mint / totalVolume) * remainingPercent;
+            const vanillaPercent = (vanilla / totalVolume) * remainingPercent;
+            
+            // Apply heights
+            waterVisual.style.height = `${waterPercent}%`;
+            brewedVisual.style.height = `${brewedPercent}%`;
+            chocolateVisual.style.height = `${chocolatePercent}%`;
+            caramelVisual.style.height = `${caramelPercent}%`;
+            cherryVisual.style.height = `${cherryPercent}%`;
+            mintVisual.style.height = `${mintPercent}%`;
+            milkVisual.style.height = `${milkPercent}%`;
+            espressoVisual.style.height = `${espressoPercent}%`;
+            vanillaVisual.style.height = `${vanillaPercent}%`;
+            foamVisual.style.height = `${foamPercent}%`;
+            
+            // Stacking order - from bottom to top
+            waterVisual.style.zIndex = 1;
+            brewedVisual.style.zIndex = 2;
+            milkVisual.style.zIndex = 3;
+            chocolateVisual.style.zIndex = 4;
+            caramelVisual.style.zIndex = 5;
+            cherryVisual.style.zIndex = 6;
+            mintVisual.style.zIndex = 7;
+            vanillaVisual.style.zIndex = 8;
+            espressoVisual.style.zIndex = 9;
+            foamVisual.style.zIndex = 10;
+        }
+
+        function findClosestCoffee(vector, searchRadius) {
+            const metric = distanceMetricSelect.value;
+            const distances = [];
+            
+            // Calculate distances to all coffee types
+            for (const [name, coffeeVector] of Object.entries(coffeeTypes)) {
+                const distance = distanceMetrics[metric](vector, coffeeVector);
+                // Apply search radius filter (distance threshold)
+                const maxDistance = 500 * (searchRadius / 100);
+                if (distance <= maxDistance) {
+                    distances.push({
+                        name: name,
+                        distance: distance,
+                        vector: coffeeVector
+                    });
+                }
+            }
+            
+            // Sort by distance
+            distances.sort((a, b) => a.distance - b.distance);
+            
+            // Display top 5 results
+            matchList.innerHTML = '';
+            
+            if (distances.length === 0) {
+                const noMatchItem = document.createElement('div');
+                noMatchItem.className = 'match-item';
+                noMatchItem.textContent = "No close matches found. Try increasing search radius or adjusting your recipe.";
+                matchList.appendChild(noMatchItem);
+            } else {
+                distances.slice(0, 5).forEach(item => {
+                    const matchItem = document.createElement('div');
+                    matchItem.className = 'match-item';
+                    
+                    // Format distance based on metric
+                    let distanceStr;
+                    if (metric === 'cosine') {
+                        distanceStr = `Similarity: ${(1 - item.distance).toFixed(3)}`;
+                    } else {
+                        distanceStr = `Distance: ${item.distance.toFixed(2)}`;
+                    }
+                    
+                    matchItem.innerHTML = `
+                        <strong>${item.name}</strong>
+                        <span class="match-distance">${distanceStr}</span>
+                        <div style="font-size: 0.8em; color: #666;">
+                            Esp: ${item.vector[0]}ml, Brewed: ${item.vector[1]}ml, Milk: ${item.vector[2]}ml
+                            ${item.vector[5] > 0 ? `, Choc: ${item.vector[5]}ml` : ''}
+                            ${item.vector[6] > 0 ? `, Caramel: ${item.vector[6]}ml` : ''}
+                            ${item.vector[7] > 0 ? `, Cherry: ${item.vector[7]}ml` : ''}
+                            ${item.vector[8] > 0 ? `, Mint: ${item.vector[8]}ml` : ''}
+                            ${item.vector[9] > 0 ? `, Vanilla: ${item.vector[9]}ml` : ''}
+                        </div>
+                    `;
+                    
+                    matchList.appendChild(matchItem);
+                });
+            }
+            
+            // Display the closest one prominently
+            if (distances.length > 0) {
+                const closest = distances[0];
+                resultText.textContent = closest.name;
+                
+                // Format distance based on metric
+                let distanceStr;
+                if (metric === 'cosine') {
+                    distanceStr = `Similarity: ${(1 - closest.distance).toFixed(3)}`;
+                } else {
+                    distanceStr = `Distance: ${closest.distance.toFixed(2)}`;
+                }
+                
+                distanceText.textContent = distanceStr;
+            } else {
+                resultText.textContent = "No close match found";
+                distanceText.textContent = "Try adjusting your recipe or increasing search radius";
+            }
+        }
+
+        function showFunFact() {
+            // Show a random fun fact about coffee
+            const randomFact = funFacts[Math.floor(Math.random() * funFacts.length)];
+            funFactElement.textContent = `Did you know? ${randomFact}`;
+        }
+
+        function openTab(evt, tabName) {
+            // Get all tab content elements
+            const tabContents = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove("active");
+            }
+            
+            // Get all tab buttons
+            const tabs = document.getElementsByClassName("tab");
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove("active");
+            }
+            
+            // Show the current tab and add active class
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+
+        // Event listeners
+        espressoSlider.addEventListener('input', updateValues);
+        brewedCoffeeSlider.addEventListener('input', updateValues);
+        milkTypeSelect.addEventListener('change', updateValues);
+        milkSlider.addEventListener('input', updateValues);
+        waterSlider.addEventListener('input', updateValues);
+        foamSlider.addEventListener('input', updateValues);
+        chocolateSlider.addEventListener('input', updateValues);
+        caramelSlider.addEventListener('input', updateValues);
+        cherrySlider.addEventListener('input', updateValues);
+        mintSlider.addEventListener('input', updateValues);
+        vanillaSlider.addEventListener('input', updateValues);
+        whippedCreamSelect.addEventListener('change', updateValues);
+        temperatureSlider.addEventListener('input', updateValues);
+        iceSlider.addEventListener('input', updateValues);
+        sweetnessSlider.addEventListener('input', updateValues);
+        strengthSlider.addEventListener('input', updateValues);
+        distanceMetricSelect.addEventListener('change', updateValues);
+        searchRadiusSlider.addEventListener('input', updateValues);
+
+        // Initialize
+        updateValues();
+    </script>
+</body>
+</html>

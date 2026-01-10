@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Moiré Pattern Generator</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.7.0/math.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+        }
+        .controls {
+            width: 320px;
+            background: white;
+            padding: 10px;
+            border: 1px solid #ccc;
+            overflow-y: auto;
+            height: 100%;
+        }
+        .canvas-container {
+            flex: 1;
+            padding-left: 10px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        canvas {
+            background: white;
+            border: 1px solid #ccc;
+            max-width: 100%;
+            max-height: calc(100% - 100px);
+        }
+        .control-group {
+            margin-bottom: 10px;
+        }
+        label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
+        input, select {
+            width: 100%;
+            padding: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .formula-container {
+            background: white;
+            padding: 8px;
+            border: 1px solid #ccc;
+            margin-top: 5px;
+            font-size: 12px;
+            height: 80px;
+            overflow: auto;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 5px;
+        }
+        .tab {
+            padding: 5px 10px;
+            background: #ddd;
+            cursor: pointer;
+            font-size: 12px;
+            margin-right: 2px;
+        }
+        .tab.active {
+            background: #4CAF50;
+            color: white;
+        }
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <div class="tabs">
+            <div class="tab active" onclick="switchPage(0)">Basic</div>
+            <div class="tab" onclick="switchPage(1)">Advanced</div>
+            <div class="tab" onclick="switchPage(2)">Grid & Colors</div>
+        </div>
+        
+        <div class="page active" id="page1">
+            <div class="control-group">
+                <label for="rx">X Frequency (rx): <span id="rx-value">5</span></label>
+                <input type="range" id="rx" min="0.1" max="20" step="0.1" value="5">
+            </div>
+            <div class="control-group">
+                <label for="bx">X Power (bx): <span id="bx-value">1</span></label>
+                <input type="range" id="bx" min="0.1" max="5" step="0.1" value="1">
+            </div>
+            <div class="control-group">
+                <label for="ry">Y Frequency (ry): <span id="ry-value">5</span></label>
+                <input type="range" id="ry" min="0.1" max="20" step="0.1" value="5">
+            </div>
+            <div class="control-group">
+                <label for="by">Y Power (by): <span id="by-value">1</span></label>
+                <input type="range" id="by" min="0.1" max="5" step="0.1" value="1">
+            </div>
+            <div class="control-group">
+                <label for="m">Modulus (m): <span id="m-value">10</span></label>
+                <input type="range" id="m" min="1" max="50" step="1" value="10">
+            </div>
+            <div class="control-group">
+                <label for="n">Threshold (n): <span id="n-value">5</span></label>
+                <input type="range" id="n" min="1" max="50" step="1" value="5">
+            </div>
+            <button onclick="saveCanvas()">Save Image</button>
+            <button onclick="randomizeParams()">Randomize</button>
+        </div>
+        
+        <div class="page" id="page2">
+            <div class="control-group">
+                <label for="modType">Modulus Type:</label>
+                <select id="modType">
+                    <option value="normal">Normal</option>
+                    <option value="floor">Floor</option>
+                    <option value="sine">Sine</option>
+                    <option value="cosine">Cosine</option>
+                    <option value="square">Square Wave</option>
+                    <option value="sawtooth">Sawtooth</option>
+                    <option value="triangle">Triangle Wave</option>
+                    <option value="gcd12">GCD 12</option>
+                    <option value="gcd24">GCD 24</option>
+                    <option value="gcd36">GCD 36</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="combineOp">Combine Operation:</label>
+                <select id="combineOp">
+                    <option value="add">Add (x+y)</option>
+                    <option value="multiply">Multiply (x*y)</option>
+                    <option value="expLog">e^(ln(x)*ln(y))</option>
+                    <option value="logExp">ln(e^x + e^y)</option>
+                    <option value="hypot">Hypotenuse (√(x²+y²))</option>
+                    <option value="max">Maximum (max(x,y))</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="factorialType">Factorial Type:</label>
+                <select id="factorialType">
+                    <option value="none">None</option>
+                    <option value="rising">Rising Factorial (x⁽ᵐ⁾)</option>
+                    <option value="falling">Falling Factorial (x₍ₘ₎)</option>
+                    <option value="nCr">Combination (C(x,m))</option>
+                    <option value="nPr">Permutation (P(x,m))</option>
+                    <option value="nCrRev">C(m,x)</option>
+                    <option value="nPrRev">P(m,x)</option>
+                    <option value="power">Power (mˣ)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="param1">Phase Shift: <span id="param1-value">0</span></label>
+                <input type="range" id="param1" min="0" max="10" step="0.1" value="0">
+            </div>
+            <div class="control-group">
+                <label for="param2">Amplitude: <span id="param2-value">1</span></label>
+                <input type="range" id="param2" min="0.1" max="2" step="0.1" value="1">
+            </div>
+            <div class="control-group">
+                <label for="param3">Frequency: <span id="param3-value">1</span></label>
+                <input type="range" id="param3" min="0.1" max="5" step="0.1" value="1">
+            </div>
+            <div class="control-group">
+                <label for="param4">Offset: <span id="param4-value">0</span></label>
+                <input type="range" id="param4" min="0" max="10" step="0.1" value="0">
+            </div>
+            <div class="control-group">
+                <label for="param5">Skew: <span id="param5-value">0</span></label>
+                <input type="range" id="param5" min="-1" max="1" step="0.1" value="0">
+            </div>
+        </div>
+        
+        <div class="page" id="page3">
+            <div class="control-group">
+                <label for="pixelType">Grid Type:</label>
+                <select id="pixelType">
+                    <option value="square">Square</option>
+                    <option value="hexagon">Hexagon</option>
+                    <option value="triangle">Triangle</option>
+                    <option value="rectangle">Rectangle</option>
+                    <option value="rhombus">Rhombus</option>
+                    <option value="circle">Circle</option>
+                    <option value="voronoi">Voronoi</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="colorScheme">Color Scheme:</label>
+                <select id="colorScheme">
+                    <option value="corruption">Corruption</option>
+                    <option value="radiation">Radiation</option>
+                    <option value="luminescence">Luminescence</option>
+                    <option value="flamefulness">Flamefulness</option>
+                    <option value="exagration">Exagration</option>
+                    <option value="pastel">Pastel</option>
+                    <option value="rainbow">Rainbow</option>
+                    <option value="neon">Neon</option>
+                    <option value="ocean">Ocean</option>
+                    <option value="forest">Forest</option>
+                    <option value="sunset">Sunset</option>
+                    <option value="grayscale">Grayscale</option>
+                    <option value="thermal">Thermal</option>
+                    <option value="zebra">Zebra</option>
+                    <option value="fire">Fire</option>
+                    <option value="ice">Ice</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="width">Width: <span id="width-value">500</span></label>
+                <input type="range" id="width" min="100" max="1000" step="10" value="500">
+            </div>
+            <div class="control-group">
+                <label for="height">Height: <span id="height-value">500</span></label>
+                <input type="range" id="height" min="100" max="1000" step="10" value="500">
+            </div>
+            <div class="control-group">
+                <label for="pixelSize">Cell Size: <span id="pixelSize-value">10</span></label>
+                <input type="range" id="pixelSize" min="1" max="50" step="1" value="10">
+            </div>
+        </div>
+    </div>
+    
+    <div class="canvas-container">
+        <canvas id="patternCanvas"></canvas>
+        <div class="formula-container">
+            <div id="formula"></div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('patternCanvas');
+        const ctx = canvas.getContext('2d');
+      //  const math = mathjs;
+        
+        // Get all control elements
+        const controls = {
+            rx: document.getElementById('rx'),
+            bx: document.getElementById('bx'),
+            ry: document.getElementById('ry'),
+            by: document.getElementById('by'),
+            m: document.getElementById('m'),
+            n: document.getElementById('n'),
+            param1: document.getElementById('param1'),
+            param2: document.getElementById('param2'),
+            param3: document.getElementById('param3'),
+            param4: document.getElementById('param4'),
+            param5: document.getElementById('param5'),
+            modType: document.getElementById('modType'),
+            pixelType: document.getElementById('pixelType'),
+            colorScheme: document.getElementById('colorScheme'),
+            combineOp: document.getElementById('combineOp'),
+            factorialType: document.getElementById('factorialType'),
+            width: document.getElementById('width'),
+            height: document.getElementById('height'),
+            pixelSize: document.getElementById('pixelSize')
+        };
+        
+        // Display values for range inputs
+        Object.keys(controls).forEach(key => {
+            if (controls[key].type === 'range') {
+                const valueSpan = document.getElementById(`${key}-value`);
+                valueSpan.textContent = controls[key].value;
+                
+                controls[key].addEventListener('input', () => {
+                    valueSpan.textContent = controls[key].value;
+                    updateCanvas();
+                });
+            } else if (controls[key].tagName === 'SELECT') {
+                controls[key].addEventListener('change', updateCanvas);
+            }
+        });
+        
+        // Initialize canvas
+        function initCanvas() {
+            canvas.width = parseInt(controls.width.value);
+            canvas.height = parseInt(controls.height.value);
+            updateCanvas();
+        }
+        
+        // Enhanced color schemes
+        const colorSchemes = {
+            corruption: (t) => {
+                const r = Math.floor(150 + 200 * Math.sin(t * 0.3));
+                const g = Math.floor(10 + 100 * Math.sin(t * 0.5 + 2));
+                const b = Math.floor(100 + 350 * Math.sin(t * 0.7 + 2));
+                return `rgb(${r},${g},${b})`;
+            },
+            radiation: (t) => {
+                const r = Math.floor(255 * Math.pow(t, 0.7));
+                const g = Math.floor(255 * Math.pow(t, 2));
+                const b = Math.floor(255 * Math.pow(t, 0.3));
+                return `rgb(${r},${g},${b})`;
+            },
+            luminescence: (t) => {
+                const r = Math.floor(100 + 155 * Math.abs(Math.sin(t * Math.PI * 2)));
+                const g = Math.floor(100 + 155 * Math.abs(Math.sin(t * Math.PI * 2 + Math.PI/3)));
+                const b = Math.floor(100 + 155 * Math.abs(Math.sin(t * Math.PI * 2 + 2*Math.PI/3)));
+                return `rgb(${r},${g},${b})`;
+            },
+            flamefulness: (t) => {
+                const r = Math.floor(255 * Math.sqrt(t));
+                const g = Math.floor(150 * t);
+                const b = Math.floor(50 * t * t);
+                return `rgb(${r},${g},${b})`;
+            },
+            exagration: (t) => {
+                const r = Math.floor(255 * (1 - Math.abs(2 * t - 0.5)));
+                const g = Math.floor(255 * (1 - Math.abs(2 * t - 1)));
+                const b = Math.floor(255 * (1 - Math.abs(2 * t - 1.5)));
+                return `rgb(${r},${g},${b})`;
+            },
+            pastel: (t) => {
+                const r = Math.floor(150 + 105 * Math.sin(t * Math.PI * 2));
+                const g = Math.floor(150 + 105 * Math.sin(t * Math.PI * 2 + Math.PI/2));
+                const b = Math.floor(150 + 105 * Math.sin(t * Math.PI * 2 + Math.PI));
+                return `rgb(${r},${g},${b})`;
+            },
+            rainbow: (t) => {
+                const r = Math.floor(255 * Math.abs(Math.sin(t * Math.PI)));
+                const g = Math.floor(255 * Math.abs(Math.sin(t * Math.PI + Math.PI/3)));
+                const b = Math.floor(255 * Math.abs(Math.sin(t * Math.PI + 2*Math.PI/3)));
+                return `rgb(${r},${g},${b})`;
+            },
+            neon: (t) => {
+                const r = Math.floor(50 + 205 * Math.abs(Math.sin(t * Math.PI * 10)));
+                const g = Math.floor(50 + 205 * Math.abs(Math.sin(t * Math.PI * 10 + Math.PI/5)));
+                const b = Math.floor(50 + 205 * Math.abs(Math.sin(t * Math.PI * 10 + 2*Math.PI/5)));
+                return `rgb(${r},${g},${b})`;
+            },
+            ocean: (t) => {
+                const r = Math.floor(20 + 50 * Math.sin(t * Math.PI * 2));
+                const g = Math.floor(100 + 100 * t);
+                const b = Math.floor(150 + 100 * Math.sin(t * Math.PI));
+                return `rgb(${r},${g},${b})`;
+            },
+            forest: (t) => {
+                const r = Math.floor(50 * t);
+                const g = Math.floor(100 + 100 * t);
+                const b = Math.floor(50 * t);
+                return `rgb(${r},${g},${b})`;
+            },
+            sunset: (t) => {
+                const r = Math.floor(255 * Math.sqrt(t));
+                const g = Math.floor(100 * t);
+                const b = Math.floor(50 * (1 - t));
+                return `rgb(${r},${g},${b})`;
+            },
+            grayscale: (t) => {
+                const v = Math.floor(255 * t);
+                return `rgb(${v},${v},${v})`;
+            },
+            thermal: (t) => {
+                const r = Math.floor(255 * t);
+                const g = Math.floor(255 * (1 - Math.abs(2 * t - 0.5)));
+                const b = Math.floor(255 * (1 - t));
+                return `rgb(${r},${g},${b})`;
+            },
+            zebra: (t) => {
+                const v = Math.floor(255 * (Math.floor(t * 10) % 2));
+                return `rgb(${v},${v},${v})`;
+            },
+            fire: (t) => {
+                const r = Math.floor(255 * t);
+                const g = Math.floor(100 * t);
+                const b = Math.floor(50 * (1 - t));
+                return `rgb(${r},${g},${b})`;
+            },
+            ice: (t) => {
+                const r = Math.floor(100 + 100 * (1 - t));
+                const g = Math.floor(200 + 55 * t);
+                const b = Math.floor(255 * t);
+                return `rgb(${r},${g},${b})`;
+            }
+        };
+        
+        // Combine operations
+        function combineValues(x, y, op) {
+            switch(op) {
+                case 'multiply':
+                    return x * y;
+                case 'expLog':
+                    return Math.exp(Math.log(x + 1e-10) * Math.log(y + 1e-10));
+                case 'logExp':
+                    return Math.log(Math.exp(x) + Math.exp(y));
+                case 'hypot':
+                    return Math.sqrt(x*x + y*y);
+                case 'max':
+                    return Math.max(x, y);
+                default: // 'add'
+                    return x + y;
+            }
+        }
+        
+        // Factorial operations
+        function applyFactorial(value, m, type) {
+            try {
+                switch(type) {
+                    case 'rising':
+                        return math.gamma(value + m) / math.gamma(value);
+                    case 'falling':
+                        return math.gamma(value + 1) / math.gamma(value - m + 1);
+                    case 'nCr':
+                        return math.combinations(value, m);
+                    case 'nPr':
+                        return math.permutations(value, m);
+                    case 'nCrRev':
+                        return math.combinations(m, value);
+                    case 'nPrRev':
+                        return math.permutations(m, value);
+                    case 'power':
+                        return Math.pow(m, value);
+                    default:
+                        return value;
+                }
+            } catch (e) {
+                return value;
+            }
+        }
+        
+        // Modulus functions
+        function applyMod(value, m, modType, params) {
+            switch(modType) {
+                case 'normal':
+                    return value % m;
+                case 'floor':
+                    return Math.floor(value) % m;
+                case 'sine':
+                    return m * Math.abs(Math.sin((value + params.param1) * params.param3 * Math.PI / m)) * params.param2;
+                case 'cosine':
+                    return m * Math.abs(Math.cos((value + params.param1) * params.param3 * Math.PI / m)) * params.param2;
+                case 'square':
+                    return Math.sin((value + params.param1) * params.param3 * Math.PI / m) > 0 ? m * params.param2 : 0;
+                case 'sawtooth':
+                    return ((value + params.param1) * params.param3 / m % 1) * m * params.param2;
+                case 'triangle':
+                    return m * params.param2 * Math.abs(2 * ((value + params.param1) * params.param3 / m - Math.floor((value + params.param1) * params.param3 / m + 0.5))) * 2;
+                case 'gcd12':
+                    return gcdMod(value, 12, m, params);
+                case 'gcd24':
+                    return gcdMod(value, 24, m, params);
+                case 'gcd36':
+                    return gcdMod(value, 36, m, params);
+                default:
+                    return value % m;
+            }
+        }
+        
+        function gcdMod(value, base, m, params) {
+            const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+            const scaledValue = (value + params.param1) * params.param3 + params.param4;
+            return (gcd(Math.floor(scaledValue), base) % m) * params.param2;
+        }
+        
+        // Calculate pattern value at (x,y) with n threshold
+        function calculateValue(x, y, params) {
+            const xTerm = Math.pow(x * params.rx, params.bx);
+            const yTerm = Math.pow(y * params.ry, params.by);
+            
+            // Apply factorial operation if selected
+            const xFact = applyFactorial(xTerm, params.m, params.factorialType);
+            const yFact = applyFactorial(yTerm, params.m, params.factorialType);
+            
+            // Combine terms according to operation
+            let combined = combineValues(xFact, yFact, params.combineOp);
+            
+            // Apply skew if any
+            combined += params.param5 * xTerm * yTerm;
+            
+            // Apply modulus
+            const modValue = applyMod(combined, params.m, params.modType, params);
+            
+            // Apply n threshold - create bands based on n value
+            if (params.n < params.m) {
+                const bandSize = params.m / params.n;
+                return Math.floor(modValue / bandSize) * bandSize;
+            }
+            return modValue;
+        }
+        
+        // Draw pattern based on current parameters
+        function drawPattern() {
+            const params = {
+                rx: parseFloat(controls.rx.value),
+                bx: parseFloat(controls.bx.value),
+                ry: parseFloat(controls.ry.value),
+                by: parseFloat(controls.by.value),
+                m: parseFloat(controls.m.value),
+                n: parseFloat(controls.n.value),
+                modType: controls.modType.value,
+                pixelType: controls.pixelType.value,
+                colorScheme: controls.colorScheme.value,
+                combineOp: controls.combineOp.value,
+                factorialType: controls.factorialType.value,
+                param1: parseFloat(controls.param1.value),
+                param2: parseFloat(controls.param2.value),
+                param3: parseFloat(controls.param3.value),
+                param4: parseFloat(controls.param4.value),
+                param5: parseFloat(controls.param5.value),
+                width: parseInt(controls.width.value),
+                height: parseInt(controls.height.value),
+                pixelSize: parseInt(controls.pixelSize.value)
+            };
+            
+            const pixelSize = params.pixelSize;
+            const colorFn = colorSchemes[params.colorScheme];
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (params.pixelType === 'square') {
+                drawSquarePixels(params, pixelSize, colorFn);
+            } else if (params.pixelType === 'hexagon') {
+                drawHexagonalPixels(params, pixelSize, colorFn);
+            } else if (params.pixelType === 'triangle') {
+                drawTriangularPixels(params, pixelSize, colorFn);
+            } else if (params.pixelType === 'rectangle') {
+                drawRectangularPixels(params, pixelSize, colorFn);
+            } else if (params.pixelType === 'rhombus') {
+                drawRhombusPixels(params, pixelSize, colorFn);
+            } else if (params.pixelType === 'circle') {
+                drawCirclePixels(params, pixelSize, colorFn);
+            } else if (params.pixelType === 'voronoi') {
+                drawVoronoiPixels(params, pixelSize, colorFn);
+            }
+            
+            updateFormula(params);
+        }
+        
+        function drawSquarePixels(params, size, colorFn) {
+            const cols = Math.ceil(params.width / size);
+            const rows = Math.ceil(params.height / size);
+            
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    const x = i / cols;
+                    const y = j / rows;
+                    
+                    const value = calculateValue(x, y, params);
+                    const t = value / params.m;
+                    const color = colorFn(t);
+                    
+                    ctx.fillStyle = color;
+                    ctx.fillRect(i * size, j * size, size, size);
+                }
+            }
+        }
+        
+        function drawHexagonalPixels(params, size, colorFn) {
+            const hexHeight = size * Math.sqrt(3);
+            const hexWidth = size * 2;
+            const cols = Math.ceil(params.width / (hexWidth * 0.75)) + 1;
+            const rows = Math.ceil(params.height / (hexHeight * 0.5)) + 1;
+            
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const xOffset = col * hexWidth * 0.75;
+                    let yOffset = row * hexHeight;
+                    
+                    // Offset every other column
+                    if (col % 2 === 1) {
+                        yOffset += hexHeight * 0.5;
+                    }
+                    
+                    // Center coordinates for calculation
+                    const centerX = xOffset + hexWidth * 0.5;
+                    const centerY = yOffset + hexHeight * 0.5;
+                    
+                    // Use actual center coordinates for calculation
+                    const x = centerX / params.width;
+                    const y = centerY / params.height;
+                    
+                    const value = calculateValue(x, y, params);
+                    const t = value / params.m;
+                    const color = colorFn(t);
+                    
+                    drawHexagon(centerX, centerY, size, color);
+                }
+            }
+        }
+        
+        function drawHexagon(x, y, size, color) {
+            ctx.beginPath();
+            for (let i = 0; i < 6; i++) {
+                const angle = Math.PI / 3 * i;
+                const px = x + size * Math.cos(angle);
+                const py = y + size * Math.sin(angle);
+                if (i === 0) {
+                    ctx.moveTo(px, py);
+                } else {
+                    ctx.lineTo(px, py);
+                }
+            }
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+        
+        function drawTriangularPixels(params, size, colorFn) {
+            const triangleHeight = size * Math.sqrt(3) / 2;
+            const cols = Math.ceil(params.width / size) + 1;
+            const rows = Math.ceil(params.height / triangleHeight) + 1;
+            
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    // Upward and downward triangles
+                    for (let dir = 0; dir < 2; dir++) {
+                        const xOffset = col * size;
+                        const yOffset = row * triangleHeight;
+                        
+                        // Center coordinates for calculation
+                        let centerX, centerY;
+                        if (dir === 0) { // Upward triangle
+                            centerX = xOffset + size * 0.5;
+                            centerY = yOffset + triangleHeight / 3;
+                        } else { // Downward triangle
+                            centerX = xOffset + size * 0.5;
+                            centerY = yOffset + triangleHeight * 2/3;
+                        }
+                        
+                        // Use actual center coordinates for calculation
+                        const x = centerX / params.width;
+                        const y = centerY / params.height;
+                        
+                        const value = calculateValue(x, y, params);
+                        const t = value / params.m;
+                        const color = colorFn(t);
+                        
+                        if (dir === 0) {
+                            drawUpTriangle(xOffset, yOffset, size, triangleHeight, color);
+                        } else {
+                            drawDownTriangle(xOffset, yOffset, size, triangleHeight, color);
+                        }
+                    }
+                }
+            }
+        }
+        
+        function drawUpTriangle(x, y, width, height, color) {
+            ctx.beginPath();
+            ctx.moveTo(x, y + height);
+            ctx.lineTo(x + width / 2, y);
+            ctx.lineTo(x + width, y + height);
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+        
+        function drawDownTriangle(x, y, width, height, color) {
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + width / 2, y + height);
+            ctx.lineTo(x + width, y);
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+        
+        function drawRectangularPixels(params, size, colorFn) {
+            const rectWidth = size;
+            const rectHeight = size * 0.6;
+            const cols = Math.ceil(params.width / rectWidth);
+            const rows = Math.ceil(params.height / rectHeight);
+            
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    const centerX = i * rectWidth + rectWidth / 2;
+                    const centerY = j * rectHeight + rectHeight / 2;
+                    
+                    const x = centerX / params.width;
+                    const y = centerY / params.height;
+                    
+                    const value = calculateValue(x, y, params);
+                    const t = value / params.m;
+                    const color = colorFn(t);
+                    
+                    ctx.fillStyle = color;
+                    ctx.fillRect(i * rectWidth, j * rectHeight, rectWidth, rectHeight);
+                }
+            }
+        }
+        
+        function drawRhombusPixels(params, size, colorFn) {
+            const rhombusWidth = size;
+            const rhombusHeight = size;
+            const cols = Math.ceil(params.width / rhombusWidth) + 1;
+            const rows = Math.ceil(params.height / rhombusHeight) + 1;
+            
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    const centerX = i * rhombusWidth + rhombusWidth / 2;
+                    const centerY = j * rhombusHeight + rhombusHeight / 2;
+                    
+                    const x = centerX / params.width;
+                    const y = centerY / params.height;
+                    
+                    const value = calculateValue(x, y, params);
+                    const t = value / params.m;
+                    const color = colorFn(t);
+                    
+                    drawRhombus(centerX, centerY, rhombusWidth, rhombusHeight, color);
+                }
+            }
+        }
+        
+        function drawRhombus(x, y, width, height, color) {
+            ctx.beginPath();
+            ctx.moveTo(x, y - height/2);
+            ctx.lineTo(x + width/2, y);
+            ctx.lineTo(x, y + height/2);
+            ctx.lineTo(x - width/2, y);
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+        
+        function drawCirclePixels(params, size, colorFn) {
+            const radius = size / 2;
+            const cols = Math.ceil(params.width / size);
+            const rows = Math.ceil(params.height / size);
+            
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    const centerX = i * size + radius;
+                    const centerY = j * size + radius;
+                    
+                    const x = centerX / params.width;
+                    const y = centerY / params.height;
+                    
+                    const value = calculateValue(x, y, params);
+                    const t = value / params.m;
+                    const color = colorFn(t);
+                    
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                    ctx.fillStyle = color;
+                    ctx.fill();
+                }
+            }
+        }
+        
+        function drawVoronoiPixels(params, size, colorFn) {
+            // Simplified Voronoi-like pattern
+            const points = [];
+            const cols = Math.ceil(params.width / size);
+            const rows = Math.ceil(params.height / size);
+            
+            // Generate random points
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    points.push({
+                        x: (i + Math.random()) * size,
+                        y: (j + Math.random()) * size
+                    });
+                }
+            }
+            
+            // For each pixel, find closest point and color accordingly
+            for (let x = 0; x < params.width; x += 2) {
+                for (let y = 0; y < params.height; y += 2) {
+                    let minDist = Infinity;
+                    let closestPoint = null;
+                    
+                    for (const point of points) {
+                        const dx = x - point.x;
+                        const dy = y - point.y;
+                        const dist = dx*dx + dy*dy;
+                        
+                        if (dist < minDist) {
+                            minDist = dist;
+                            closestPoint = point;
+                        }
+                    }
+                    
+                    if (closestPoint) {
+                        const nx = closestPoint.x / params.width;
+                        const ny = closestPoint.y / params.height;
+                        const value = calculateValue(nx, ny, params);
+                        const t = value / params.m;
+                        const color = colorFn(t);
+                        
+                        ctx.fillStyle = color;
+                        ctx.fillRect(x, y, 2, 2);
+                    }
+                }
+            }
+        }
+        
+   function updateFormula(params) {
+            let formulaParts = [];
+            
+            // Add factorial operation if selected
+            if (params.factorialType !== 'none') {
+                let factOp = '';
+                switch(params.factorialType) {
+                    case 'rising': factOp = `x^{(m)}`; break;
+                    case 'falling': factOp = `x_{(m)}`; break;
+                    case 'nCr': factOp = `C(x,m)`; break;
+                    case 'nPr': factOp = `P(x,m)`; break;
+                    case 'nCrRev': factOp = `C(m,x)`; break;
+                    case 'nPrRev': factOp = `P(m,x)`; break;
+                    case 'power': factOp = `m^x`; break;
+                }
+                formulaParts.push(`\\text{Factorial: } ${factOp}`);
+            }
+            
+            // Add combine operation
+            let combineOp = '';
+            switch(params.combineOp) {
+                case 'add': combineOp = 'x + y'; break;
+                case 'multiply': combineOp = 'x \\times y'; break;
+                case 'expLog': combineOp = 'e^{\\ln x \\cdot \\ln y}'; break;
+                case 'logExp': combineOp = '\\ln(e^x + e^y)'; break;
+                case 'hypot': combineOp = '\\sqrt{x^2 + y^2}'; break;
+                case 'max': combineOp = '\\max(x,y)'; break;
+            }
+            formulaParts.push(`\\text{Combine: } ${combineOp}`);
+ 
+            // Add modulus operation
+            let modOp = '';
+            if (params.modType === 'floor') {
+                modOp = `\\left\\lfloor f(x,y) \\bmod ${params.m} \\right\\rfloor`;
+            } else if (params.modType === 'normal') {
+                modOp = `f(x,y) \\bmod ${params.m}`;
+            } else {
+                modOp = `\\text{${params.modType}}(f(x,y) \\bmod ${params.m})`;
+            }
+            
+            if (params.n < params.m) {
+             modOp = `\\left\\lfloor \\frac{${modOp}}{${params.m}/${params.n}} \\right\\rfloor`;
+
+            }
+            
+            formulaParts.push(`\\text{Modulus: } ${modOp}`);
+            
+            if (params.param5 !== 0) {
+                formulaParts.push(`\\text{Skew: } ${params.param5.toFixed(1)}`);
+            }
+            
+            // Format the final formula with line breaks
+            const formula = formulaParts.join("\\\\");
+            
+            // Update the formula display
+            const formulaElement = document.getElementById('formula');
+            formulaElement.innerHTML = `\\begin{array}{l}${formula}\\end{array}`;
+            
+            // Typeset with MathJax
+            if (window.MathJax) {
+                MathJax.typesetPromise([formulaElement]).catch(err => console.log('Typeset failed: ' + err.message));
+            }
+	}
+        
+        function updateCanvas() {
+            canvas.width = parseInt(controls.width.value);
+            canvas.height = parseInt(controls.height.value);
+            drawPattern();
+        }
+        
+        function saveCanvas() {
+            const link = document.createElement('a');
+            link.download = 'moire-pattern.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        function randomizeParams() {
+            controls.rx.value = (Math.random() * 19.9 + 0.1).toFixed(1);
+            controls.bx.value = (Math.random() * 4.9 + 0.1).toFixed(1);
+            controls.ry.value = (Math.random() * 19.9 + 0.1).toFixed(1);
+            controls.by.value = (Math.random() * 4.9 + 0.1).toFixed(1);
+            controls.m.value = Math.floor(Math.random() * 49 + 1);
+            controls.n.value = Math.floor(Math.random() * 49 + 1);
+            controls.param1.value = (Math.random() * 10).toFixed(1);
+            controls.param2.value = (Math.random() * 1.9 + 0.1).toFixed(1);
+            controls.param3.value = (Math.random() * 4.9 + 0.1).toFixed(1);
+            controls.param4.value = (Math.random() * 10).toFixed(1);
+            controls.param5.value = (Math.random() * 2 - 1).toFixed(1);
+            
+            // Update displayed values
+            document.getElementById('rx-value').textContent = controls.rx.value;
+            document.getElementById('bx-value').textContent = controls.bx.value;
+            document.getElementById('ry-value').textContent = controls.ry.value;
+            document.getElementById('by-value').textContent = controls.by.value;
+            document.getElementById('m-value').textContent = controls.m.value;
+            document.getElementById('n-value').textContent = controls.n.value;
+            document.getElementById('param1-value').textContent = controls.param1.value;
+            document.getElementById('param2-value').textContent = controls.param2.value;
+            document.getElementById('param3-value').textContent = controls.param3.value;
+            document.getElementById('param4-value').textContent = controls.param4.value;
+            document.getElementById('param5-value').textContent = controls.param5.value;
+            
+            // Random mod type
+            const modTypes = ['normal', 'floor', 'sine', 'cosine', 'square', 'sawtooth', 'triangle', 'gcd12', 'gcd24', 'gcd36'];
+            controls.modType.value = modTypes[Math.floor(Math.random() * modTypes.length)];
+            
+            // Random combine operation
+            const combineOps = ['add', 'multiply', 'expLog', 'logExp', 'hypot', 'max'];
+            controls.combineOp.value = combineOps[Math.floor(Math.random() * combineOps.length)];
+            
+            // Random factorial type
+            const factorialTypes = ['none', 'rising', 'falling', 'nCr', 'nPr', 'nCrRev', 'nPrRev', 'power'];
+            controls.factorialType.value = factorialTypes[Math.floor(Math.random() * factorialTypes.length)];
+            
+            // Random pixel type
+            const pixelTypes = ['square', 'hexagon', 'triangle', 'rectangle', 'rhombus', 'circle', 'voronoi'];
+            controls.pixelType.value = pixelTypes[Math.floor(Math.random() * pixelTypes.length)];
+            
+            // Random color scheme
+            const colorSchemes = Object.keys(colorSchemes);
+            controls.colorScheme.value = colorSchemes[Math.floor(Math.random() * colorSchemes.length)];
+            
+            updateCanvas();
+        }
+        
+        function switchPage(index) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Show selected page
+            document.getElementById(`page${index + 1}`).classList.add('active');
+            
+            // Update tab styling
+            document.querySelectorAll('.tab').forEach((tab, i) => {
+                if (i === index) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+        }
+        
+        // Initialize
+        window.addEventListener('load', initCanvas);
+    </script>
+</body>
+</html>

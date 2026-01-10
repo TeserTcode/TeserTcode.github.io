@@ -1,0 +1,27 @@
+func F
+
+int count = 1
+
+for i 2 number-- { count *= ( number mod i) }
+if (count != 0) { ++ counter }
+
+exitfx
+
+start
+
+tin n
+
+int counter = 0
+int number = 0
+
+while (counter < n) { 
+++ number
+fx F
+/* out counter out str ... outl number */
+}
+outl null
+out n <- str th <- str /space <- str prime <- str /space  <- str is <- str /space <- number
+end
+	
+	
+	

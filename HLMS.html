@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Blackbody Radiation Visualizer</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #222;
+    color: black;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px 25px;
+    margin-bottom: 20px;
+    justify-content: center;
+    max-width: 800px;
+    align-items: center;
+    background: #ccc;
+    padding: 15px;
+    border-radius: 5px;
+  }
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 350px;
+  }
+  .control-group-select {
+    display: flex;
+    flex-direction: column;
+  }
+  label {
+    margin-bottom: 5px;
+    font-size: 14px;
+    display: block;
+  }
+  input[type="range"] {
+    width: 100%;
+    cursor: pointer;
+  }
+  select {
+    padding: 5px;
+    background: #444;
+    color: white;
+    border: 1px solid #666;
+    cursor: pointer;
+  }
+  canvas {
+    border: 1px solid #444;
+    background: #000;
+    max-width: 100%;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    cursor: crosshair;
+  }
+  .value-display {
+    font-weight: bold;
+    color: #00008b; /* Dark Blue */
+    margin-left: 5px;
+  }
+  #color-info {
+    margin-top: 20px;
+    padding: 15px;
+    background: #ccc;
+    border-radius: 5px;
+    max-width: 800px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  #note {
+      font-size: 0.8em;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #888;
+  }
+</style>
+</head>
+<body>
+
+<h1>Blackbody Radiation Visualizer</h1>
+
+<div id="controls">
+  <div class="control-group">
+    <label for="temperature">Temperature: <span id="temperatureVal" class="value-display">6500 K</span></label>
+    <input type="range" id="temperature" min="0" max="1000" value="500" />
+  </div>
+    <div class="control-group-select">
+    <label for="radiationModel">Radiation Model:</label>
+    <select id="radiationModel">
+      <option value="planck" selected>Planck's Law</option>
+      <option value="wien">Wien's Approximation</option>
+      <option value="rayleigh">Rayleigh-Jeans Law</option>
+    </select>
+  </div>
+   <div class="control-group-select">
+    <label for="colorMethod">Color Calculation Method:</label>
+    <select id="colorMethod">
+      <option value="sum" selected>Weighted Sum (Standard)</option>
+      <option value="peak">Peak Wavelength (Smoothed)</option>
+      <option value="median">Median Wavelength</option>
+    </select>
+  </div>
+</div>
+
+<canvas id="canvas" width="800" height="700"></canvas>
+
+<div id="color-info">
+  <p>Temperature: <span id="color-description">6500 K</span></p>
+  <p>Chromaticity: <span id="xy-coords">x: 0.00, y: 0.00</span></p>
+  <p>sRGB Values: <span id="rgb-values">rgb(0, 0, 0)</span></p>
+  <p>Peak Wavelength (Wien's Law): <span id="actual-peak">555 nm</span></p>
+  <p id="note"><b>Note:</b> The Sakuma–Hattori equation was not added as it models a thermal detector's integrated signal, not a spectral distribution required for color visualization.</p>
+</div>
+
+<script>
+// --- Constants and Globals ---
+const MIN_TEMP = 1000;
+const MAX_TEMP = 30000;
+const sRGB = {
+  red:   { x: 0.64, y: 0.33 }, green: { x: 0.30, y: 0.60 }, blue:  { x: 0.15, y: 0.06 }, white: { x: 0.3127, y: 0.3290 }
+};
+const spectralLocus = [
+    [380, 0.1741, 0.0050], [400, 0.1733, 0.0049], [410, 0.1731, 0.0048], [420, 0.1720, 0.0048], [430, 0.1687, 0.0057], [440, 0.1594, 0.0088],
+    [450, 0.1460, 0.0160], [460, 0.1289, 0.0465], [470, 0.1042, 0.1042], [480, 0.0722, 0.2081], [490, 0.0321, 0.3805], [500, 0.0082, 0.5870],
+    [510, 0.0093, 0.7716], [520, 0.0633, 0.8621], [530, 0.1526, 0.8406], [540, 0.2541, 0.7836], [550, 0.3541, 0.7102], [560, 0.4564, 0.6289],
+    [570, 0.5521, 0.5422], [580, 0.6270, 0.4683], [590, 0.6852, 0.4101], [600, 0.7230, 0.3533], [610, 0.7347, 0.3115], [620, 0.7347, 0.2653],
+    [630, 0.7266, 0.2222], [640, 0.7118, 0.1818], [650, 0.6915, 0.1464], [660, 0.6681, 0.1171], [670, 0.6421, 0.0931], [680, 0.6152, 0.0737],
+    [690, 0.5882, 0.0582], [700, 0.5616, 0.0461], [780, 0.1741, 0.0050]
+];
+
+// --- Temperature Scale Conversion ---
+const logMin = Math.log(MIN_TEMP);
+const logMax = Math.log(MAX_TEMP);
+const logScale = (logMax - logMin) / 1000;
+
+function tempToSlider(T) {
+    return (Math.log(T) - logMin) / logScale;
+}
+
+function sliderToTemp(val) {
+    return Math.exp(logMin + val * logScale);
+}
+
+// --- Color Science Functions ---
+function cmf(wl) {
+  const x = (wl < 440) ? (wl - 380)/(440-380)*0.2 : (wl < 490) ? 0.2 + (wl-440)/(490-440)*0.6 : (wl < 580) ? 0.8 - (wl-490)/(580-490)*0.8 : (wl < 645) ? (wl-580)/(645-580)*0.2 : 0.2 - (wl-645)/(780-645)*0.2;
+  const y = (wl < 440) ? 0.02 + (wl-380)/(440-380)*0.3 : (wl < 510) ? 0.32 + (wl-440)/(510-440)*0.67 : (wl < 580) ? 0.99 - (wl-510)/(580-510)*0.6 : (wl < 700) ? 0.39 - (wl-580)/(700-580)*0.39 : 0.0;
+  const z = (wl < 440) ? 1.0 - (wl-380)/(440-380)*0.6 : (wl < 490) ? 0.4 + (wl-440)/(490-440)*0.6 : (wl < 510) ? 1.0 - (wl-490)/(510-490)*0.6 : (wl < 580) ? 0.4 - (wl-510)/(580-510)*0.4 : 0.0;
+  return { x, y, z };
+}
+
+function xyYtoXYZ(x, y, Y=1) { if (y === 0) return [0, 0, 0]; return [(Y * x) / y, Y, (Y * (1 - x - y)) / y]; }
+function XYZtosRGB(X, Y, Z) { return [3.2404542*X - 1.5371385*Y - 0.4985314*Z, -0.9692660*X + 1.8760108*Y + 0.0415560*Z, 0.0556434*X - 0.2040259*Y + 1.0572252*Z]; }
+function gammaCorrect(c) { return c <= 0.0031308 ? 12.92*c : 1.055*Math.pow(c, 1/2.4) - 0.055; }
+function clamp01(x) { return Math.min(1, Math.max(0, x)); }
+function toCanvasRGB(rgb) { return `rgb(${rgb.map(c => Math.round(clamp01(c)*255)).join(',')})`; }
+
+// --- Radiation Laws ---
+function planckRadiance(wl_nm, T) {
+  const wl = wl_nm * 1e-9; const h = 6.62607015e-34; const c = 299792458; const k = 1.380649e-23;
+  return (2 * h * c * c) / (Math.pow(wl, 5) * (Math.exp((h * c) / (wl * k * T)) - 1));
+}
+function rayleighJeansRadiance(wl_nm, T) {
+    const wl = wl_nm * 1e-9; const c = 299792458; const k = 1.380649e-23;
+    return (2 * c * k * T) / Math.pow(wl, 4);
+}
+function wienRadiance(wl_nm, T) {
+    const wl = wl_nm * 1e-9; const h = 6.62607015e-34; const c = 299792458; const k = 1.380649e-23;
+    return ((2 * h * c * c) / Math.pow(wl, 5)) * Math.exp(-(h * c) / (wl * k * T));
+}
+
+// --- Spectrum to XYZ conversion methods ---
+function spectrumToXYZ_sum(SPD) {
+  let X = 0, Y = 0, Z = 0, norm = 0;
+  for (let wl = 380; wl <= 780; wl += 5) {
+    const rad = SPD(wl); const {x, y, z} = cmf(wl);
+    X += rad * x; Y += rad * y; Z += rad * z; norm += rad * y;
+  }
+  return norm === 0 ? [0, 0, 0] : [X/norm, Y/norm, Z/norm];
+}
+
+function spectrumToXYZ_peak(SPD) {
+    let maxRad = -1, peakWl = 0;
+    for (let wl = 380; wl <= 780; wl += 1) {
+        const rad = SPD(wl); if (rad > maxRad) { maxRad = rad; peakWl = wl; }
+    }
+    if (peakWl === 0) return [0, 0, 0];
+    const {x, y, z} = cmf(peakWl); return [x, y, z];
+}
+
+function spectrumToXYZ_median(SPD) {
+    let totalPower = 0;
+    const step = 2;
+    for (let wl = 380; wl <= 780; wl += step) { totalPower += SPD(wl); }
+    if (totalPower === 0) return [0, 0, 0];
+    
+    let cumulativePower = 0;
+    let medianWl = 380;
+    for (let wl = 380; wl <= 780; wl += step) {
+        cumulativePower += SPD(wl);
+        if (cumulativePower >= totalPower / 2) { medianWl = wl; break; }
+    }
+    const {x, y, z} = cmf(medianWl); return [x, y, z];
+}
+
+function XYZtoxy(X, Y, Z) {
+  const sum = X + Y + Z;
+  return sum === 0 ? [sRGB.white.x, sRGB.white.y] : [X/sum, Y/sum];
+}
+
+// --- Canvas and Drawing ---
+const margin = 50;
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const offscreenCanvas = document.createElement('canvas');
+const offscreenCtx = offscreenCanvas.getContext('2d');
+let width, height, pR, pG, pB, pW, gamutPath2D = new Path2D();
+let isDragging = false;
+let locusPoints = [];
+
+function updateCanvasDimensions() {
+    width = canvas.width - 2 * margin; height = canvas.height - 2 * margin;
+    offscreenCanvas.width = canvas.width; offscreenCanvas.height = canvas.height;
+    pR = xyToCanvas(sRGB.red.x, sRGB.red.y); pG = xyToCanvas(sRGB.green.x, sRGB.green.y);
+    pB = xyToCanvas(sRGB.blue.x, sRGB.blue.y); pW = xyToCanvas(sRGB.white.x, sRGB.white.y);
+    createGamutPath();
+    drawFullGamutColored(); // Pre-render gamut
+}
+function xyToCanvas(x, y) { return [margin + (x / 0.8) * width, margin + height - (y / 0.9) * height]; }
+function canvasToXy(cx, cy) { return [((cx - margin) / width) * 0.8, 0.9 - ((cy - margin) / height) * 0.9]; }
+
+function createGamutPath() {
+    gamutPath2D = new Path2D();
+    const gamutCanvasPoints = spectralLocus.map(p => xyToCanvas(p[1], p[2]));
+    gamutPath2D.moveTo(gamutCanvasPoints[0][0], gamutCanvasPoints[0][1]);
+    for(let i = 1; i < gamutCanvasPoints.length; i++) gamutPath2D.lineTo(gamutCanvasPoints[i][0], gamutCanvasPoints[i][1]);
+    gamutPath2D.closePath();
+}
+
+function drawFullGamutColored() {
+    const imageData = offscreenCtx.createImageData(canvas.width, canvas.height);
+    const data = imageData.data;
+    for (let cy = 0; cy < canvas.height; cy++) {
+        for (let cx = 0; cx < canvas.width; cx++) {
+            if (ctx.isPointInPath(gamutPath2D, cx, cy)) {
+                const [x, y] = canvasToXy(cx, cy);
+                const [X, Y, Z] = xyYtoXYZ(x, y, 1.0);
+                let [r, g, b] = XYZtosRGB(X, Y, Z);
+                r = gammaCorrect(clamp01(r)); g = gammaCorrect(clamp01(g)); b = gammaCorrect(clamp01(b));
+                const index = (cy * canvas.width + cx) * 4;
+                data[index] = r * 255; data[index+1] = g * 255; data[index+2] = b * 255; data[index+3] = 255;
+            }
+        }
+    }
+    offscreenCtx.putImageData(imageData, 0, 0);
+}
+
+function calculateLocus() {
+    const model = document.getElementById("radiationModel").value;
+    const colorMethod = document.getElementById("colorMethod").value;
+    let radianceFunction;
+    switch(model) {
+        case 'wien': radianceFunction = wienRadiance; break;
+        case 'rayleigh': radianceFunction = rayleighJeansRadiance; break;
+        default: radianceFunction = planckRadiance;
+    }
+    const xyzFunction = colorMethod === 'peak' ? spectrumToXYZ_peak : colorMethod === 'median' ? spectrumToXYZ_median : spectrumToXYZ_sum;
+
+    let points = [];
+    for (let i = 0; i <= 1000; i+=2) {
+        const T = sliderToTemp(i);
+        const SPD = wl => radianceFunction(wl, T);
+        const [X, Y, Z] = xyzFunction(SPD);
+        const [x, y] = XYZtoxy(X, Y, Z);
+        points.push({T, x, y, cx:0, cy:0});
+    }
+    
+    if (colorMethod === 'peak') { // Smoothing for peak method
+        const smoothedPoints = [];
+        const window = 5;
+        for(let i = 0; i < points.length; i++) {
+            let avgX = 0, avgY = 0, count = 0;
+            for(let j = Math.max(0, i - window); j <= Math.min(points.length - 1, i + window); j++) {
+                avgX += points[j].x; avgY += points[j].y; count++;
+            }
+            smoothedPoints.push({ T: points[i].T, x: avgX / count, y: avgY / count, cx:0, cy:0 });
+        }
+        points = smoothedPoints;
+    }
+    
+    locusPoints = points.map(p => {
+       const [cx, cy] = xyToCanvas(p.x, p.y);
+       return {...p, cx, cy};
+    });
+}
+
+function drawLocus() {
+    ctx.strokeStyle = "black"; ctx.lineWidth = 3;
+    ctx.beginPath();
+    locusPoints.forEach((p, i) => {
+        if (i === 0) ctx.moveTo(p.cx, p.cy);
+        else ctx.lineTo(p.cx, p.cy);
+    });
+    ctx.stroke();
+
+    locusPoints.forEach(p => {
+        if ([1000, 2000, 2856, 4000, 6500, 10000, 20000, 30000].some(t => Math.abs(p.T - t) < 100)) {
+            ctx.fillStyle = "black"; ctx.font = "12px sans-serif";
+            ctx.fillText(`${Math.round(p.T)}K`, p.cx + 5, p.cy - 10);
+        }
+    });
+}
+
+function drawSelectedColor(temperature) {
+    const T = clamp(temperature, MIN_TEMP, MAX_TEMP);
+    let closestPoint = locusPoints[0];
+    let minTDiff = Infinity;
+    locusPoints.forEach(p => {
+        const diff = Math.abs(p.T - T);
+        if (diff < minTDiff) {
+            minTDiff = diff;
+            closestPoint = p;
+        }
+    });
+
+    const {x, y, cx, cy} = closestPoint;
+    const [X, Y, Z] = xyYtoXYZ(x, y, 1.0);
+    let [r, g, b] = XYZtosRGB(X, Y, Z);
+    r = gammaCorrect(clamp01(r)); g = gammaCorrect(clamp01(g)); b = gammaCorrect(clamp01(b));
+    const markerColor = toCanvasRGB([r, g, b]);
+
+    document.getElementById("color-description").textContent = `${Math.round(T)} K`;
+    document.getElementById("xy-coords").textContent = `x: ${x.toFixed(4)}, y: ${y.toFixed(4)}`;
+    document.getElementById("rgb-values").textContent = markerColor;
+    const peakWl = 2.897771955e6 / T;
+    document.getElementById("actual-peak").textContent = `${Math.round(peakWl)} nm`;
+
+    ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+    ctx.fillStyle = markerColor; ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 6; ctx.fill();
+    ctx.shadowBlur = 0; ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.stroke();
+}
+
+// --- Main Control and Event Listeners ---
+const tempSlider = document.getElementById("temperature");
+const tempValLabel = document.getElementById("temperatureVal");
+const uiElements = [tempSlider, document.getElementById("radiationModel"), document.getElementById("colorMethod")];
+
+function clamp(val, min, max) { return Math.min(max, Math.max(min, val)); }
+
+function redraw(T) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(offscreenCanvas, 0, 0); // Blit pre-rendered gamut
+    
+    // Draw sRGB triangle
+    ctx.strokeStyle = "black"; ctx.lineWidth = 1; ctx.beginPath();
+    ctx.moveTo(...pR); ctx.lineTo(...pG); ctx.lineTo(...pB); ctx.closePath(); ctx.stroke();
+    
+    drawLocus();
+    drawSelectedColor(T);
+}
+
+function update(T_val) {
+    const T = clamp(T_val, MIN_TEMP, MAX_TEMP);
+    tempValLabel.textContent = `${Math.round(T)} K`;
+    if (document.activeElement !== tempSlider) { // Avoid feedback loop while dragging slider
+        tempSlider.value = tempToSlider(T);
+    }
+    redraw(T);
+}
+
+uiElements.forEach(el => el.addEventListener("input", () => {
+    calculateLocus();
+    const T = sliderToTemp(+tempSlider.value);
+    update(T);
+}));
+
+canvas.addEventListener('mousedown', e => {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    let minDistSq = Infinity;
+    locusPoints.forEach(p => {
+        const distSq = (p.cx - mouseX)**2 + (p.cy - mouseY)**2;
+        if (distSq < minDistSq) minDistSq = distSq;
+    });
+    if (minDistSq < 400) { // Clicked near the line
+        isDragging = true;
+        handleMouseMove(e); // Handle first click
+    }
+});
+
+canvas.addEventListener('mouseup', () => { isDragging = false; });
+canvas.addEventListener('mouseleave', () => { isDragging = false; });
+
+function handleMouseMove(e) {
+    if (!isDragging) return;
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    let closestPoint = locusPoints[0];
+    let minD = Infinity;
+
+    locusPoints.forEach(p => {
+       const d = Math.sqrt((p.cx - mouseX)**2 + (p.cy - mouseY)**2);
+       if (d < minD) {
+           minD = d;
+           closestPoint = p;
+       }
+    });
+    update(closestPoint.T);
+}
+canvas.addEventListener('mousemove', handleMouseMove);
+
+window.addEventListener("resize", () => {
+  const size = Math.min(800, window.innerWidth - 40);
+  canvas.width = size;
+  canvas.height = Math.round(size * 700/800);
+  updateCanvasDimensions();
+  calculateLocus();
+  update(sliderToTemp(+tempSlider.value));
+});
+
+// Initial Load
+updateCanvasDimensions();
+calculateLocus();
+update(sliderToTemp(+tempSlider.value));
+
+</script>
+</body>
+</html>

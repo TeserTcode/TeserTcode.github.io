@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Hologram Disk with Image Mapping</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #222;
+            color: #eee;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        canvas {
+            background-color: #000;
+            border: 1px solid #444;
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            width: 800px;
+            margin-bottom: 20px;
+        }
+        .control-group {
+            background-color: #333;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select, button {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .slider-value {
+            font-size: 0.8em;
+            color: #aaa;
+            text-align: right;
+        }
+        h1 {
+            color: #4af;
+            margin-bottom: 10px;
+        }
+        .instructions {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #888;
+            text-align: center;
+            max-width: 800px;
+        }
+        .file-input {
+            display: none;
+        }
+        .file-input-label {
+            display: block;
+            padding: 8px;
+            background-color: #444;
+            color: white;
+            text-align: center;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        .file-input-label:hover {
+            background-color: #555;
+        }
+        .brush-type {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .brush-type label {
+            flex: 1;
+            text-align: center;
+            padding: 5px;
+            background-color: #444;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .brush-type input[type="radio"] {
+            display: none;
+        }
+        .brush-type input[type="radio"]:checked + label {
+            background-color: #4af;
+        }
+    </style>
+</head>
+<body>
+    <h1>Advanced Hologram Disk with Image Mapping</h1>
+    <canvas id="hologramCanvas" width="800" height="800"></canvas>
+    
+    <div class="controls">
+        <div class="control-group">
+            <label for="vertexCount">Number of Vertices (N):</label>
+            <input type="range" id="vertexCount" min="3" max="200" value="12">
+            <div class="slider-value" id="vertexCountValue">12</div>
+            
+            <label for="laserCount">Lasers per Vertex (M):</label>
+            <input type="range" id="laserCount" min="1" max="100" value="5">
+            <div class="slider-value" id="laserCountValue">5</div>
+            
+            <label for="spacingType">Laser Spacing:</label>
+            <select id="spacingType">
+                <option value="equidistant">Equidistant</option>
+                <option value="equalangle">Equal Angle</option>
+                <option value="random">Random Angle</option>
+                <option value="middle" selected>Point to Middle</option>
+            </select>
+            
+            <label for="initialCondition">Initial Condition:</label>
+            <select id="initialCondition">
+                <option value="random">Random Low Brightness</option>
+                <option value="zero">All Lasers Off</option>
+                <option value="image">From Image (if loaded)</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label for="brightness">Brightness:</label>
+            <input type="range" id="brightness" min="-100" max="100" value="50">
+            <div class="slider-value" id="brightnessValue">50</div>
+            
+            <label for="contrast">Contrast:</label>
+            <input type="range" id="contrast" min="-100" max="100" value="50">
+            <div class="slider-value" id="contrastValue">50</div>
+            
+            <label for="fadeDistance">Fade Distance (%):</label>
+            <input type="range" id="fadeDistance" min="0" max="100" value="30">
+            <div class="slider-value" id="fadeDistanceValue">30</div>
+            
+            <div class="brush-type">
+                <input type="radio" id="brushNormal" name="brushType" value="normal" checked>
+                <label for="brushNormal">Normal Brush</label>
+                <input type="radio" id="brushSpecial" name="brushType" value="special">
+                <label for="brushSpecial">Special Brush</label>
+            </div>
+            
+            <label for="brightnessStep">Brush Power:</label>
+            <input type="range" id="brightnessStep" min="1" max="100" value="20">
+            <div class="slider-value" id="brightnessStepValue">20</div>
+            
+            <label for="brushSize">Brush Size (%):</label>
+            <input type="range" id="brushSize" min="5" max="200" value="30">
+            <div class="slider-value" id="brushSizeValue">30</div>
+        </div>
+        
+        <div class="control-group">
+            <label for="laserColor">Laser Color:</label>
+            <select id="laserColor">
+                <option value="red">Red</option>
+                <option value="green">Green</option>
+                <option value="blue">Blue</option>
+                <option value="cyan">Cyan</option>
+                <option value="magenta">Magenta</option>
+                <option value="yellow">Yellow</option>
+                <option value="white">White</option>
+                <option value="rainbow">Rainbow</option>
+                <option value="normal" selected>Normal (Direction-based)</option>
+                <option value="location">Location-based</option>
+            </select>
+            
+            <label for="circleRadius">Circle Radius:</label>
+            <input type="range" id="circleRadius" min="100" max="350" value="300">
+            <div class="slider-value" id="circleRadiusValue">300</div>
+            
+            <label for="laserLength">Laser Length:</label>
+            <input type="range" id="laserLength" min="50" max="500" value="200">
+            <div class="slider-value" id="laserLengthValue">200</div>
+            
+            <label for="imageInput" class="file-input-label">Load Image for Brightness Mapping</label>
+            <input type="file" id="imageInput" class="file-input" accept="image/*">
+            <button id="updateFromImage">Update Lasers from Image</button>
+            <button id="clearImage">Clear Image</button>
+        </div>
+    </div>
+    
+    <div class="instructions">
+        <p>Click and drag on the canvas to affect laser brightness (left mouse button increases, right decreases).</p>
+        <p>Special Brush: Inner radius (r) increases brightness (2x power), outer ring (r to 2r) decreases brightness.</p>
+        <p>Load an image to automatically set laser brightness based on image brightness along each laser path.</p>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('hologramCanvas');
+        const ctx = canvas.getContext('2d');
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        
+        // State variables
+        let lasers = [];
+        let isMouseDown = false;
+        let isRightClick = false;
+        let mouseX = 0;
+        let mouseY = 0;
+        let loadedImage = null;
+        let imageBrightnessData = null;
+        let imageDataDirty = false;
+        
+        // Parameters with defaults
+        let params = {
+            vertexCount: 12,
+            laserCount: 5,
+            spacingType: 'middle',
+            brightness: 50,
+            contrast: 50,
+            fadeDistance: 30,
+            brightnessStep: 20,
+            laserColor: 'normal',
+            circleRadius: 300,
+            laserLength: 200,
+            initialCondition: 'random',
+            brushSize: 30,
+            brushType: 'normal'
+        };
+        
+        // Initialize the simulation
+        function init() {
+            // Set up event listeners for controls
+            document.getElementById('vertexCount').addEventListener('input', updateParams);
+            document.getElementById('laserCount').addEventListener('input', updateParams);
+            document.getElementById('spacingType').addEventListener('change', updateParams);
+            document.getElementById('brightness').addEventListener('input', updateParams);
+            document.getElementById('contrast').addEventListener('input', updateParams);
+            document.getElementById('fadeDistance').addEventListener('input', updateParams);
+            document.getElementById('brightnessStep').addEventListener('input', updateParams);
+            document.getElementById('laserColor').addEventListener('change', updateParams);
+            document.getElementById('circleRadius').addEventListener('input', updateParams);
+            document.getElementById('laserLength').addEventListener('input', updateParams);
+            document.getElementById('initialCondition').addEventListener('change', updateParams);
+            document.getElementById('brushSize').addEventListener('input', updateParams);
+            
+            // Brush type radio buttons
+            document.querySelectorAll('input[name="brushType"]').forEach(radio => {
+                radio.addEventListener('change', updateParams);
+            });
+            
+            // Set up mouse event listeners
+            canvas.addEventListener('mousedown', handleMouseDown);
+            canvas.addEventListener('mouseup', handleMouseUp);
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+            
+            // Set up image loading
+            document.getElementById('imageInput').addEventListener('change', handleImageUpload);
+            document.getElementById('updateFromImage').addEventListener('click', updateLasersFromImage);
+            document.getElementById('clearImage').addEventListener('click', clearImage);
+            
+            // Initialize lasers
+            updateParams();
+            animate();
+        }
+        
+        // Update parameters from controls
+        function updateParams() {
+            params.vertexCount = parseInt(document.getElementById('vertexCount').value);
+            params.laserCount = parseInt(document.getElementById('laserCount').value);
+            params.spacingType = document.getElementById('spacingType').value;
+            params.brightness = parseInt(document.getElementById('brightness').value);
+            params.contrast = parseInt(document.getElementById('contrast').value);
+            params.fadeDistance = parseInt(document.getElementById('fadeDistance').value);
+            params.brightnessStep = parseInt(document.getElementById('brightnessStep').value);
+            params.laserColor = document.getElementById('laserColor').value;
+            params.circleRadius = parseInt(document.getElementById('circleRadius').value);
+            params.laserLength = parseInt(document.getElementById('laserLength').value);
+            params.initialCondition = document.getElementById('initialCondition').value;
+            params.brushSize = parseInt(document.getElementById('brushSize').value);
+            params.brushType = document.querySelector('input[name="brushType"]:checked').value;
+            
+            // Update displayed values
+            document.getElementById('vertexCountValue').textContent = params.vertexCount;
+            document.getElementById('laserCountValue').textContent = params.laserCount;
+            document.getElementById('brightnessValue').textContent = params.brightness;
+            document.getElementById('contrastValue').textContent = params.contrast;
+            document.getElementById('fadeDistanceValue').textContent = params.fadeDistance;
+            document.getElementById('brightnessStepValue').textContent = params.brightnessStep;
+            document.getElementById('circleRadiusValue').textContent = params.circleRadius;
+            document.getElementById('laserLengthValue').textContent = params.laserLength;
+            document.getElementById('brushSizeValue').textContent = params.brushSize;
+            
+            // Reinitialize lasers
+            initLasers();
+        }
+        
+        // Initialize lasers based on current parameters
+        function initLasers() {
+            lasers = [];
+            
+            const angleStep = (2 * Math.PI) / params.vertexCount;
+            
+            for (let i = 0; i < params.vertexCount; i++) {
+                const vertexAngle = i * angleStep;
+                const vertexX = centerX + params.circleRadius * Math.cos(vertexAngle);
+                const vertexY = centerY + params.circleRadius * Math.sin(vertexAngle);
+                
+                const vertexLasers = [];
+                
+                for (let j = 0; j < params.laserCount; j++) {
+                    let laserAngle;
+                    
+                    if (params.spacingType === 'equidistant') {
+                        // Equidistant spacing (evenly distributed around full circle)
+                        const t = (j + 1) / (params.laserCount + 1);
+                        laserAngle = vertexAngle + Math.PI * (2 * t - 1);
+                    } 
+                    else if (params.spacingType === 'equalangle') {
+                        // Equal angle spacing (evenly distributed within a 180 degree arc)
+                        const t = params.laserCount > 1 ? j / (params.laserCount - 1) : 0.5;
+                        laserAngle = vertexAngle + Math.PI * (t - 0.5);
+                    }
+                    else if (params.spacingType === 'random') {
+                        // Random angle within 180 degree arc
+                        laserAngle = vertexAngle + Math.PI * (Math.random() - 0.5);
+                    }
+                    else if (params.spacingType === 'middle') {
+                        // Point to middle of circle
+                        laserAngle = Math.atan2(centerY - vertexY, centerX - vertexX);
+                    }
+                    
+                    // Set initial brightness
+                    let initialBrightness = 0;
+                    if (params.initialCondition === 'random') {
+                        initialBrightness = Math.random() * 20;
+                    } else if (params.initialCondition === 'image' && loadedImage && imageBrightnessData) {
+                        // Will be set in updateLasersFromImage
+                    }
+                    laserAngle+=Math.PI
+                    vertexLasers.push({
+                        x1: vertexX,
+                        y1: vertexY,
+                        angle: laserAngle,
+                        brightness: initialBrightness,
+                        maxBrightness: initialBrightness
+                    });
+                }
+                
+                lasers.push(vertexLasers);
+            }
+            
+            // If we have an image loaded and initial condition is set to image, update lasers
+            if (loadedImage && imageBrightnessData && params.initialCondition === 'image') {
+                updateLasersFromImage();
+            }
+        }
+        
+        // Handle image upload
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                loadedImage = new Image();
+                loadedImage.onload = function() {
+                    processImageData();
+                    if (params.initialCondition === 'image') {
+                        updateLasersFromImage();
+                    }
+                };
+                loadedImage.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Process image data for brightness sampling
+        function processImageData() {
+            // Draw image to temporary canvas to get pixel data
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Clear and draw image centered
+            tempCtx.fillStyle = 'black';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            
+            // Calculate dimensions to maintain aspect ratio
+            const ratio = Math.min(
+                canvas.width / loadedImage.width,
+                canvas.height / loadedImage.height
+            );
+            const newWidth = loadedImage.width * ratio;
+            const newHeight = loadedImage.height * ratio;
+            const x = (canvas.width - newWidth) / 2;
+            const y = (canvas.height - newHeight) / 2;
+            
+            tempCtx.drawImage(loadedImage, x, y, newWidth, newHeight);
+            
+            // Get image data for brightness calculation
+            const imageData = tempCtx.getImageData(0, 0, canvas.width, canvas.height);
+            imageBrightnessData = new Float32Array(canvas.width * canvas.height);
+            
+            // Calculate brightness for each pixel (store as 0-1)
+            for (let i = 0; i < imageData.data.length; i += 4) {
+                const r = imageData.data[i];
+                const g = imageData.data[i + 1];
+                const b = imageData.data[i + 2];
+                const brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                imageBrightnessData[i / 4] = brightness;
+            }
+        }
+        
+        // Clear loaded image
+        function clearImage() {
+            loadedImage = null;
+            imageBrightnessData = null;
+            initLasers(); // Reset lasers to initial condition
+        }
+        
+        // Update laser brightness based on image brightness along their paths
+        function updateLasersFromImage() {
+            if (!imageBrightnessData) {
+                if (loadedImage) processImageData();
+                else return;
+            }
+            
+            for (const vertexLasers of lasers) {
+                for (const laser of vertexLasers) {
+                    const x1 = laser.x1;
+                    const y1 = laser.y1;
+                    const x2 = x1 + Math.cos(laser.angle) * params.laserLength;
+                    const y2 = y1 + Math.sin(laser.angle) * params.laserLength;
+                    
+                    // Sample points along the laser path
+                    const steps = Math.max(10, Math.floor(params.laserLength / 2));
+                    let totalBrightness = 0;
+                    let samples = 0;
+                    
+                    for (let t = 0; t <= 1; t += 1/steps) {
+                        const x = x1 + (x2 - x1) * t;
+                        const y = y1 + (y2 - y1) * t;
+                        
+                        // Only sample points within canvas bounds
+                        if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
+                            const pixelX = Math.floor(x);
+                            const pixelY = Math.floor(y);
+                            const index = pixelY * canvas.width + pixelX;
+                            totalBrightness += imageBrightnessData[index];
+                            samples++;
+                        }
+                    }
+                    
+                    // Set brightness based on average along path
+                    if (samples > 0) {
+                        const avgBrightness = totalBrightness / samples;
+                        laser.maxBrightness = avgBrightness * 100;
+                        laser.brightness = laser.maxBrightness;
+                    } else {
+                        laser.maxBrightness = 0;
+                        laser.brightness = 0;
+                    }
+                }
+            }
+        }
+        
+        // Handle mouse down events
+        function handleMouseDown(e) {
+            isMouseDown = true;
+            isRightClick = e.button === 2;
+            mouseX = e.offsetX;
+            mouseY = e.offsetY;
+            updateLasersNearMouse();
+        }
+        
+        // Handle mouse up events
+        function handleMouseUp() {
+            isMouseDown = false;
+        }
+        
+        // Handle mouse move events
+        function handleMouseMove(e) {
+            mouseX = e.offsetX;
+            mouseY = e.offsetY;
+            if (isMouseDown) {
+                updateLasersNearMouse();
+            }
+        }
+        
+        // Update lasers near mouse position
+        function updateLasersNearMouse() {
+            const baseRadius = params.circleRadius * (params.brushSize / 100);
+            const basePower = params.brightnessStep;
+            
+            for (const vertexLasers of lasers) {
+                for (const laser of vertexLasers) {
+                    // Calculate distance from mouse to laser line
+                    const distance = distanceToLine(
+                        mouseX, mouseY,
+                        laser.x1, laser.y1,
+                        laser.x1 + Math.cos(laser.angle) * params.laserLength,
+                        laser.y1 + Math.sin(laser.angle) * params.laserLength
+                    );
+                    
+                    let brightnessChange = 0;
+                    
+                    if (params.brushType === 'special') {
+                        // Special brush: inner radius (r) increases, outer ring (r to 2r) decreases
+                        if (distance < baseRadius) {
+                            // Inner circle - positive influence (2x power)
+                            const influence = 1 - distance / baseRadius;
+                            brightnessChange = basePower * 2 * influence;
+                        } else if (distance < baseRadius * 2) {
+                            // Outer ring - negative influence
+                            const influence = 1 - (distance - baseRadius) / baseRadius;
+                            brightnessChange = -basePower * influence;
+                        }
+                    } else {
+                        // Normal brush
+                        if (distance < baseRadius) {
+                            const influence = 1 - distance / baseRadius;
+                            brightnessChange = isRightClick ? -basePower * influence : basePower * influence;
+                        }
+                    }
+                    
+                    if (brightnessChange !== 0) {
+                        // Apply brightness change (doesn't affect the underlying image)
+                        laser.maxBrightness = Math.max(0, Math.min(100, 
+                            laser.maxBrightness + brightnessChange));
+                    }
+                }
+            }
+        }
+        
+        // Calculate distance from point (x,y) to line segment (x1,y1)-(x2,y2)
+        function distanceToLine(x, y, x1, y1, x2, y2) {
+            const A = x - x1;
+            const B = y - y1;
+            const C = x2 - x1;
+            const D = y2 - y1;
+            
+            const dot = A * C + B * D;
+            const len_sq = C * C + D * D;
+            let param = -1;
+            
+            if (len_sq !== 0) {
+                param = dot / len_sq;
+            }
+            
+            let xx, yy;
+            
+            if (param < 0) {
+                xx = x1;
+                yy = y1;
+            } else if (param > 1) {
+                xx = x2;
+                yy = y2;
+            } else {
+                xx = x1 + param * C;
+                yy = y1 + param * D;
+            }
+            
+            const dx = x - xx;
+            const dy = y - yy;
+            
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+        
+        // Get laser color based on parameters
+        function getLaserColor(laser, index, total) {
+            // Apply brightness and contrast formula
+            let adjustedBrightness = (laser.brightness + params.brightness) * (params.contrast / 50);
+            adjustedBrightness = Math.max(0, Math.min(100, adjustedBrightness));
+            const normBrightness = adjustedBrightness / 100;
+            
+            if (normBrightness <= 0) return null; // Don't draw if brightness is zero or below
+            
+            switch (params.laserColor) {
+                case 'red':
+                    return `rgba(255, 0, 0, ${normBrightness})`;
+                case 'green':
+                    return `rgba(0, 255, 0, ${normBrightness})`;
+                case 'blue':
+                    return `rgba(0, 0, 255, ${normBrightness})`;
+                case 'cyan':
+                    return `rgba(0, 255, 255, ${normBrightness})`;
+                case 'magenta':
+                    return `rgba(255, 0, 255, ${normBrightness})`;
+                case 'yellow':
+                    return `rgba(255, 255, 0, ${normBrightness})`;
+                case 'white':
+                    return `rgba(255, 255, 255, ${normBrightness})`;
+                case 'rainbow':
+                    const hue = (index / total) * 360;
+                    return `hsla(${hue}, 100%, 50%, ${normBrightness})`;
+                case 'normal':
+                    // Color based on direction
+                    const hueDir = ((laser.angle + Math.PI) / (2 * Math.PI)) * 360;
+                    return `hsla(${hueDir}, 100%, 50%, ${normBrightness})`;
+                case 'location':
+                    // Color based on position
+                    const xNorm = (laser.x1 - centerX) / params.circleRadius;
+                    const yNorm = (laser.y1 - centerY) / params.circleRadius;
+                    const r = Math.min(255, Math.max(0, (xNorm + 1) * 127.5));
+                    const g = Math.min(255, Math.max(0, (yNorm + 1) * 127.5));
+                    const b = Math.min(255, Math.max(0, (1 - Math.abs(xNorm + yNorm) / 2) * 255));
+                    return `rgba(${r}, ${g}, ${b}, ${normBrightness})`;
+                default:
+                    return `rgba(255, 255, 255, ${normBrightness})`;
+            }
+        }
+        
+        // Draw the hologram
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw loaded image if available
+            if (loadedImage) {
+                // Calculate dimensions to maintain aspect ratio
+                const ratio = Math.min(
+                    canvas.width / loadedImage.width,
+                    canvas.height / loadedImage.height
+                );
+                const newWidth = loadedImage.width * ratio;
+                const newHeight = loadedImage.height * ratio;
+                const x = (canvas.width - newWidth) / 2;
+                const y = (canvas.height - newHeight) / 2;
+                
+                ctx.globalAlpha = 0.3;
+                ctx.drawImage(loadedImage, x, y, newWidth, newHeight);
+                ctx.globalAlpha = 1.0;
+            }
+            
+            // Draw circle
+            ctx.strokeStyle = `rgba(100, 100, 100, ${params.brightness / 200})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, params.circleRadius, 0, 2 * Math.PI);
+            ctx.stroke();
+            
+            // Draw vertices
+            for (const vertexLasers of lasers) {
+                if (vertexLasers.length > 0) {
+                    ctx.fillStyle = `rgba(200, 200, 200, ${params.brightness / 100})`;
+                    ctx.beginPath();
+                    ctx.arc(vertexLasers[0].x1, vertexLasers[0].y1, 3, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+            }
+            
+            // Draw lasers with fading effect
+            let laserIndex = 0;
+            const totalLasers = lasers.reduce((sum, vertex) => sum + vertex.length, 0);
+            
+            for (const vertexLasers of lasers) {
+                for (const laser of vertexLasers) {
+                    // Update brightness (smooth transition to maxBrightness)
+                    laser.brightness += (laser.maxBrightness - laser.brightness) * 0.1;
+                    
+                    // Calculate points
+                    const x2 = laser.x1 + Math.cos(laser.angle) * params.laserLength;
+                    const y2 = laser.y1 + Math.sin(laser.angle) * params.laserLength;
+                    
+                    // Get color based on settings
+                    const color = getLaserColor(laser, laserIndex, totalLasers);
+                    laserIndex++;
+                    
+                    if (!color) continue; // Skip if brightness is zero or below
+                    
+                    // Apply fade effect
+                    if (params.fadeDistance > 0) {
+                        const gradient = ctx.createLinearGradient(laser.x1, laser.y1, x2, y2);
+                        const fadePoint = params.fadeDistance / 100;
+                        gradient.addColorStop(0, color);
+                        gradient.addColorStop(fadePoint, color);
+                        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                        ctx.strokeStyle = gradient;
+                    } else {
+                        ctx.strokeStyle = color;
+                    }
+                    
+                    // Draw laser
+                    ctx.lineWidth = 1 + (laser.brightness / 20);
+                    ctx.beginPath();
+                    ctx.moveTo(laser.x1, laser.y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                }
+            }
+            
+            // Draw mouse influence indicator if mouse is down
+            if (isMouseDown) {
+                const brushSize = params.circleRadius * (params.brushSize / 100);
+                
+                if (params.brushType === 'special') {
+                    // Draw special brush (inner positive, outer negative)
+                    ctx.strokeStyle = 'rgba(0, 255, 0, 0.3)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(mouseX, mouseY, brushSize, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    
+                    ctx.strokeStyle = 'rgba(255, 0, 0, 0.3)';
+                    ctx.beginPath();
+                    ctx.arc(mouseX, mouseY, brushSize * 2, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    
+                    // Draw center point
+                    ctx.fillStyle = 'rgba(0, 255, 0, 0.7)';
+                    ctx.beginPath();
+                    ctx.arc(mouseX, mouseY, 3, 0, 2 * Math.PI);
+                    ctx.fill();
+                } else {
+                    // Draw normal brush
+                    ctx.strokeStyle = isRightClick ? 'rgba(255, 0, 0, 0.3)' : 'rgba(0, 255, 0, 0.3)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(mouseX, mouseY, brushSize, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    
+                    // Draw center point
+                    ctx.fillStyle = isRightClick ? 'rgba(255, 0, 0, 0.7)' : 'rgba(0, 255, 0, 0.7)';
+                    ctx.beginPath();
+                    ctx.arc(mouseX, mouseY, 3, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+            }
+        }
+        
+        // Animation loop
+        function animate() {
+            draw();
+            requestAnimationFrame(animate);
+        }
+        
+        // Start the simulation
+        init();
+    </script>
+</body>
+</html>

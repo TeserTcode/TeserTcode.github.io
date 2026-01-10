@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>6th Order Motion Simulation</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            display: block;
+            margin: auto;
+        }
+        .controls {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <label>Initial x: <input type="number" id="x0" value="200" step="1"></label>
+        <label>Initial v: <input type="number" id="v0" value="0" step="1"></label>
+        <label>ω: <input type="number" id="omega" value="1" step="0.1"></label>
+        <label>F(x): <input type="text" id="forceFunc" value="-omega*omega*x"></label>
+        <button onclick="startSimulation()">Start</button>
+    </div>
+    <canvas id="canvas" width="600" height="600"></canvas>
+
+    <script>
+        class Vector {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+            }
+            add(v) { return new Vector(this.x + v.x, this.y + v.y); }
+            scale(s) { return new Vector(this.x * s, this.y * s); }
+        }
+
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const center = new Vector(canvas.width / 2, canvas.height / 2);
+        let path = [], time = 0, running = false;
+        const dt = 0.02; 
+
+        let state = [0, 0, 0, 0, 0, 0];  // [x, v, a, jerk, snap, crackle]
+        let omega, forceFunc;
+
+        function getParams() {
+            let x0 = parseFloat(document.getElementById("x0").value);
+            let v0 = parseFloat(document.getElementById("v0").value);
+            omega = parseFloat(document.getElementById("omega").value);
+            forceFunc = document.getElementById("forceFunc").value;
+
+            state = [x0, v0, 0, 0, 0, 0]; // Reset initial conditions
+        }
+
+        function computeForces(x) {
+            return eval(forceFunc.replace(/x/g, x).replace(/omega/g, omega));
+        }
+
+        function rkStep(state, dt) {
+            function derivs(state) {
+                return [state[1], state[2], state[3], state[4], state[5], computeForces(state[0])];
+            }
+
+            let k1 = derivs(state).map(v => v * dt);
+            let k2 = derivs(state.map((s, i) => s + k1[i] / 2)).map(v => v * dt);
+            let k3 = derivs(state.map((s, i) => s + k2[i] / 2)).map(v => v * dt);
+            let k4 = derivs(state.map((s, i) => s + k3[i])).map(v => v * dt);
+
+            return state.map((s, i) => s + (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]) / 6);
+        }
+
+        function startSimulation() {
+            getParams();
+            path = [];
+            time = 0;
+            running = true;
+            requestAnimationFrame(update);
+        }
+
+        function update() {
+            if (!running) return;
+
+            state = rkStep(state, dt);
+            let pos = new Vector(center.x + state[0], center.y);
+
+            path.push(pos);
+            time += dt;
+
+            draw();
+            requestAnimationFrame(update);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw trajectory
+            ctx.strokeStyle = "gray";
+            ctx.beginPath();
+            for (let i = 0; i < path.length; i++) {
+                ctx.lineTo(path[i].x, path[i].y);
+            }
+            ctx.stroke();
+
+            // Draw mass
+            ctx.beginPath();
+            ctx.arc(path[path.length - 1].x, path[path.length - 1].y, 8, 0, Math.PI * 2);
+            ctx.fillStyle = "blue";
+            ctx.fill();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+int kys(int x){
+	if(x<10){return 3}
+	return 4;
+	
+}

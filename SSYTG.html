@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Portal Tableau Game</title>
+  <style>
+    body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
+    table { border-collapse: collapse; }
+    td {
+      width: 40px; height: 40px;
+      border: 1px solid #999;
+      text-align: center;
+      font-size: 20px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .portal-1 { border-right: 5px solid blue; border-left: 5px solid blue; }
+    .portal-2 { border-top: 5px solid green; border-bottom: 5px solid green; }
+    .portal-3 { border-top: 5px solid orange; border-bottom: 5px solid orange; }
+    .portal-4 { border-right: 5px solid pink; border-left: 5px solid pink; }
+    .portal-5 { border-top: 5px solid teal; border-bottom: 5px solid teal; }
+    .fixed { color: purple; cursor: default; }
+    .invalid { background-color: #f88; }
+    .empty { background-color: #eee; cursor: default; }
+    .controls { margin: 10px; }
+    .controls label { margin: 0 10px; }
+  </style>
+</head>
+<body>
+  <h2>Portal Tableau Game (9x9)</h2>
+  <p>Right to left: weakly increasing. Bottom to top: strictly increasing. Portals must match.</p>
+
+  <div class="controls">
+    <label>#Empty: <input type="range" id="emptySlider" min="0" max="100" value="20"> <span id="emptyVal">20</span>%</label>
+    <label>#Fixed: <input type="range" id="fixedSlider" min="0" max="100" value="20"> <span id="fixedVal">20</span>%</label>
+    <label>#Portals: <input type="range" id="portalSlider" min="0" max="10" value="3"> <span id="portalVal">3</span></label>
+    <button onclick="generateGrid()">Generate</button>
+  </div>
+
+  <table id="grid"></table>
+
+  <script>
+    const SIZE = 9;
+    const grid = document.getElementById('grid');
+    const emptySlider = document.getElementById('emptySlider');
+    const fixedSlider = document.getElementById('fixedSlider');
+    const portalSlider = document.getElementById('portalSlider');
+    const emptyVal = document.getElementById('emptyVal');
+    const fixedVal = document.getElementById('fixedVal');
+    const portalVal = document.getElementById('portalVal');
+
+    emptySlider.oninput = () => emptyVal.textContent = emptySlider.value;
+    fixedSlider.oninput = () => fixedVal.textContent = fixedSlider.value;
+    portalSlider.oninput = () => portalVal.textContent = portalSlider.value;
+
+    let cells = [], portalPairs = [];
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function generateGrid() {
+      grid.innerHTML = '';
+      cells = [];
+      portalPairs = [];
+
+      const total = SIZE * SIZE;
+      const emptyCount = Math.floor((+emptySlider.value / 100) * total);
+      const fixedCount = Math.floor((+fixedSlider.value / 100) * total);
+
+      let emptySet = new Set();
+      while (emptySet.size < emptyCount) {
+        emptySet.add(randomInt(0, total - 1));
+      }
+
+      let fixedSet = new Set();
+      while (fixedSet.size < fixedCount) {
+        const idx = randomInt(0, total - 1);
+        if (!emptySet.has(idx)) fixedSet.add(idx);
+      }
+
+      for (let r = 0; r < SIZE; r++) {
+        const row = document.createElement('tr');
+        const rowCells = [];
+        for (let c = 0; c < SIZE; c++) {
+          const cell = document.createElement('td');
+          const idx = r * SIZE + c;
+          if (emptySet.has(idx)) {
+            cell.textContent = '';
+            cell.classList.add('empty');
+          } else if (fixedSet.has(idx)) {
+            const value = randomInt(1, 9);
+            cell.textContent = value;
+            cell.classList.add('fixed');
+          } else {
+            cell.textContent = '1';
+            cell.addEventListener('click', () => {
+              let v = parseInt(cell.textContent) || 0;
+              v = v % 9 + 1;
+              cell.textContent = v;
+              validate();
+            });
+          }
+          row.appendChild(cell);
+          rowCells.push(cell);
+        }
+        grid.appendChild(row);
+        cells.push(rowCells);
+      }
+
+      generatePortals(+portalSlider.value);
+      validate();
+    }
+
+    function generatePortals(count) {
+      for (let i = 0; i < count; i++) {
+        let r1, c1, r2, c2;
+        do {
+          r1 = randomInt(0, SIZE - 1);
+          c1 = randomInt(0, SIZE - 1);
+        } while (cells[r1][c1].classList.contains('empty'));
+
+        do {
+          r2 = randomInt(0, SIZE - 1);
+          c2 = randomInt(0, SIZE - 1);
+        } while ((r1 === r2 && c1 === c2) || cells[r2][c2].classList.contains('empty'));
+
+        const portalClass = `portal-${(i % 5) + 1}`;
+        cells[r1][c1].classList.add(portalClass);
+        cells[r2][c2].classList.add(portalClass);
+        portalPairs.push([[r1, c1], [r2, c2]]);
+      }
+    }
+
+    function getGridValues() {
+      return cells.map(row => row.map(cell => {
+        const v = cell.textContent.trim();
+        return v === '' ? null : parseInt(v);
+      }));
+    }
+
+    function validateGrid(gridVals) {
+      let valid = true;
+      for (let r = 0; r < SIZE; r++) {
+        for (let c = 0; c < SIZE; c++) {
+          cells[r][c].classList.remove('invalid');
+        }
+      }
+      // Rows: right to left weakly increasing
+      for (let r = 0; r < SIZE; r++) {
+        for (let c = SIZE - 2; c >= 0; c--) {
+          const curr = gridVals[r][c];
+          const right = gridVals[r][c + 1];
+          if (curr !== null && right !== null && curr < right) {
+            cells[r][c].classList.add('invalid');
+            valid = false;
+          }
+        }
+      }
+      // Columns: bottom to top strictly increasing
+      for (let c = 0; c < SIZE; c++) {
+        for (let r = SIZE - 2; r >= 0; r--) {
+          const curr = gridVals[r][c];
+          const below = gridVals[r + 1][c];
+          if (curr !== null && below !== null && curr <= below) {
+            cells[r][c].classList.add('invalid');
+            valid = false;
+          }
+        }
+      }
+      // Portal constraints
+      for (const [[r1, c1], [r2, c2]] of portalPairs) {
+        const v1 = gridVals[r1][c1];
+        const v2 = gridVals[r2][c2];
+        if (v1 !== null && v2 !== null && v1 !== v2) {
+          cells[r1][c1].classList.add('invalid');
+          cells[r2][c2].classList.add('invalid');
+          valid = false;
+        }
+      }
+      return valid;
+    }
+
+    function validate() {
+      const gridVals = getGridValues();
+      const result = validateGrid(gridVals);
+      console.log(`Validation result: ${result ? '✅ Valid' : '❌ Invalid'}`);
+      return result;
+    }
+
+    function solve() {
+      const gridVals = getGridValues();
+      const changeable = [];
+      for (let r = 0; r < SIZE; r++) {
+        for (let c = 0; c < SIZE; c++) {
+          if (!cells[r][c].classList.contains('fixed') && !cells[r][c].classList.contains('empty')) {
+            changeable.push([r, c]);
+          }
+        }
+      }
+
+      function backtrack(index) {
+        if (index === changeable.length) return validateGrid(gridVals);
+        const [r, c] = changeable[index];
+        for (let v = 1; v <= 9; v++) {
+          gridVals[r][c] = v;
+          if (validateGrid(gridVals)) {
+            if (backtrack(index + 1)) return true;
+          }
+        }
+        gridVals[r][c] = null;
+        return false;
+      }
+
+      if (backtrack(0)) {
+        for (let [r, c] of changeable) {
+          cells[r][c].textContent = gridVals[r][c];
+        }
+        validate();
+        alert('Solved!');
+      } else {
+        alert('No solution found.');
+      }
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'v') validate();
+      else if (e.key === 'r') generateGrid();
+      else if (e.key === 's') solve();
+    });
+
+    generateGrid();
+  </script>
+</body>
+</html>

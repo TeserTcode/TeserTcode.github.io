@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RLC Circuit Simulator - Current & Voltage</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+      max-width: 1100px;
+    }
+    .graph-wrapper {
+      margin: 20px auto;
+      padding: 10px;
+      max-width: 1100px;
+      width: calc(100% - 90px);
+      box-sizing: border-box;
+    }
+    canvas {
+      width: 100% !important;
+      height: 600px !important;
+    }
+    label { display: flex; align-items: center; gap: 5px; }
+  </style>
+</head>
+<body>
+<h1>RLC Circuit Simulator - Current & Voltage</h1>
+<div class="controls">
+  <label>Resistance R (Ω):
+    <input type="range" id="R" min="0" max="100" step="1" value="10" />
+    <span id="Rval">10</span>
+  </label>
+  <label>Inductance L (H):
+    <input type="range" id="L" min="0.01" max="5" step="0.01" value="1" />
+    <span id="Lval">1</span>
+  </label>
+  <label>Capacitance C (F):
+    <input type="range" id="C" min="0.00001" max="0.1" step="0.001" value="0.26781
+" />
+    <span id="Cval">0.5</span>
+  </label>
+  <label>Amplitude (V):
+    <input type="number" id="amplitude" min="0" max="50" step="0.1" value="10" />
+  </label>
+
+  <label>Frequency (Hz):
+    <input type="number" id="frequency" min="0" max="100" step="0.1" value="1" />
+  </label>
+  <label>Waveform:
+    <select id="waveform">
+      <option value="sin">Sinus</option>
+      <option value="triangle">Triangle</option>
+      <option value="square">Square</option>
+      <option value="sawtooth">Sawtooth</option>
+      <option value="sin3">Sin³</option>
+      <option value="off">Off (manual V)</option>
+    </select>
+  </label>
+  <label>Manual V (V):
+    <input type="range" id="manualV" min="-50" max="50" step="0.1" value="0" />
+    <span id="manualVval">0</span>
+  </label>
+
+  <label>Accuracy (dt in s):
+    <input type="number" id="dt" value="0.01" step="0.001" />
+  </label>
+  <label>Window Length (s):
+    <input type="number" id="length" value="10" step="1" />
+  </label>
+
+  <label>Current Graph Scale:
+    <input type="range" id="graphScaleCurrent" min="0.1" max="5" step="0.1" value="1" />
+    <span id="graphScaleCurrentVal">1</span>
+  </label>
+  <label>Voltage Graph Scale:
+    <input type="range" id="graphScaleVoltage" min="0.1" max="5" step="0.1" value="1" />
+    <span id="graphScaleVoltageVal">1</span>
+  </label>
+</div>
+
+<div class="graph-wrapper">
+  <canvas id="chart"></canvas>
+</div>
+
+<script>
+const Rslider = document.getElementById("R");
+const Lslider = document.getElementById("L");
+const Cslider = document.getElementById("C");
+const amplitudeInput = document.getElementById("amplitude");
+const frequencyInput = document.getElementById("frequency");
+const waveformSelect = document.getElementById("waveform");
+const manualVSlider = document.getElementById("manualV");
+const dtInput = document.getElementById("dt");
+const lengthInput = document.getElementById("length");
+const graphScaleCurrent = document.getElementById("graphScaleCurrent");
+const graphScaleVoltage = document.getElementById("graphScaleVoltage");
+
+function updateLabels() {
+  document.getElementById("Rval").textContent = Rslider.value;
+  document.getElementById("Lval").textContent = Lslider.value;
+  document.getElementById("Cval").textContent = Cslider.value;
+  document.getElementById("manualVval").textContent = manualVSlider.value;
+  document.getElementById("graphScaleCurrentVal").textContent = graphScaleCurrent.value;
+  document.getElementById("graphScaleVoltageVal").textContent = graphScaleVoltage.value;
+}
+[
+  Rslider, Lslider, Cslider, amplitudeInput, frequencyInput, waveformSelect,
+  manualVSlider, dtInput, lengthInput, graphScaleCurrent, graphScaleVoltage
+].forEach(el => el.addEventListener("input", updateLabels));
+updateLabels();
+
+const ctx = document.getElementById("chart").getContext("2d");
+let chart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [
+      {
+        label: 'Current i(t) [A]',
+        data: [],
+        borderColor: 'blue',
+        fill: false,
+        yAxisID: 'yCurrent'
+      },
+      {
+        label: 'Voltage V(t) [V]',
+        data: [],
+        borderColor: 'red',
+        fill: false,
+        yAxisID: 'yVoltage'
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    animation: false,
+    scales: {
+      x: { title: { display: true, text: 'Time (s)' } },
+      yCurrent: {
+        type: 'linear',
+        position: 'left',
+        min: -1,
+        max: 1,
+        title: { display: true, text: 'Current i(t) [A]' },
+        ticks: { color: 'blue' }
+      },
+      yVoltage: {
+        type: 'linear',
+        position: 'right',
+        min: -10,
+        max: 10,
+        title: { display: true, text: 'Voltage V(t) [V]' },
+        grid: { drawOnChartArea: false },
+        ticks: { color: 'red' }
+      }
+    }
+  }
+});
+
+let t = 0, Q = 0, i = 0;
+let data = [];
+
+function waveformVoltage(t, amplitude, freq, type) {
+  const omega = 2 * Math.PI * freq;
+  switch(type) {
+    case "sin":      return amplitude * Math.sin(omega * t);
+    case "triangle": return amplitude * (2 / Math.PI) * Math.asin(Math.sin(omega * t));
+    case "square":   return amplitude * (Math.sin(omega * t) >= 0 ? 1 : -1);
+    case "sawtooth": return amplitude * (2 * (t * freq - Math.floor(t * freq + 0.5)));
+    case "sin3": {
+      const sinx = Math.sin(omega * t);
+      return amplitude * (3*sinx - Math.sin(3*omega*t))/4;
+    }
+    case "off":      return 0;
+    default:         return 0;
+  }
+}
+
+function simulate() {
+  const R = parseFloat(Rslider.value);
+  const L = parseFloat(Lslider.value);
+  const C = parseFloat(Cslider.value);
+  const amplitude = parseFloat(amplitudeInput.value);
+  const frequency = parseFloat(frequencyInput.value);
+  const waveform = waveformSelect.value;
+  const dt = parseFloat(dtInput.value);
+  const maxTime = parseFloat(lengthInput.value);
+  const scaleCurrent = parseFloat(graphScaleCurrent.value);
+  const scaleVoltage = parseFloat(graphScaleVoltage.value);
+  const manualV = parseFloat(manualVSlider.value);
+
+  // Voltage at this time:
+  let Vt;
+  if (waveform === "off" || amplitude === 0 || frequency === 0) {
+    Vt = manualV;
+  } else {
+    Vt = waveformVoltage(t, amplitude, frequency, waveform);
+  }
+
+  // Equation: L d²Q/dt² + R dQ/dt + Q/C = V(t)
+  // Variables: i = dQ/dt
+  // We solve di/dt = (V(t) - R*i - Q/C) / L
+
+  const di = (Vt - R * i - Q / C) / L * dt;
+  i += di;
+  Q += i * dt;
+
+  data.push({ time: t, current: i, voltage: Vt });
+  t += dt;
+
+  // Trim data older than maxTime window
+  while (data.length > 0 && t - data[0].time > maxTime) {
+    data.shift();
+  }
+
+  // Update chart
+  chart.data.labels = data.map(d => d.time.toFixed(2));
+  chart.data.datasets[0].data = data.map(d => d.current * scaleCurrent);
+  chart.data.datasets[1].data = data.map(d => d.voltage * scaleVoltage);
+
+  // Adjust y-axis scales dynamically based on data and scaling
+  const currentValues = chart.data.datasets[0].data;
+  const voltageValues = chart.data.datasets[1].data;
+  let currMax = Math.max(...currentValues.map(Math.abs), 1);
+  let voltMax = Math.max(...voltageValues.map(Math.abs), 1);
+
+  chart.options.scales.yCurrent.min = -currMax * 1.1;
+  chart.options.scales.yCurrent.max = currMax * 1.1;
+  chart.options.scales.yVoltage.min = -voltMax * 1.1;
+  chart.options.scales.yVoltage.max = voltMax * 1.1;
+
+  chart.update();
+
+  requestAnimationFrame(simulate);
+}
+
+// Start simulation loop
+simulate();
+</script>
+</body>
+</html>

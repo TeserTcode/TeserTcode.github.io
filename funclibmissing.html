@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Missing Functions</title>
+    <script>
+        async function fetchText(url) {
+            const response = await fetch(url);
+            return response.text();
+        }
+
+        function extractFunctionNames(jsCode) {
+            const regex = /function\s+(\w+)\s*\(/g;
+            let match, functions = [];
+            while ((match = regex.exec(jsCode)) !== null) {
+                functions.push(match[1]);
+            }
+            return functions;
+        }
+
+        function extractListedFunctions(htmlCode) {
+            const regex = /'([a-zA-Z0-9_]+)\('/g;
+            let match, listedFunctions = new Set();
+            while ((match = regex.exec(htmlCode)) !== null) {
+                listedFunctions.add(match[1]);
+            }
+            return listedFunctions;
+        }
+
+        async function compareFunctions() {
+            const [jsCode, htmlCode] = await Promise.all([
+                fetchText('mthfnc.js'),
+                fetchText('funclib.html')
+            ]);
+            
+            const allFunctions = extractFunctionNames(jsCode);
+            const listedFunctions = extractListedFunctions(htmlCode);
+            const missingFunctions = allFunctions.filter(fn => !listedFunctions.has(fn));
+            
+            const functionDefinitions = {};
+            missingFunctions.forEach(fn => {
+                const regex = new RegExp(`function\\s+${fn}\\s*\\(([^)]*)\\)\\s*{([^}]*)}`, 's');
+                const match = jsCode.match(regex);
+                if (match) {
+                    functionDefinitions[fn] = match[0];
+                }
+            });
+            
+            displayResults(missingFunctions, functionDefinitions);
+        }
+
+        function displayResults(missingFunctions, functionDefinitions) {
+            const sortedFunctions = missingFunctions.sort((a, b) => a.length - b.length);
+            const output = document.getElementById('output');
+            output.innerHTML = '<h2>Missing Functions</h2><ul>' +
+                sortedFunctions.map(fn => `<li><strong>${fn}</strong>: <pre>${functionDefinitions[fn] || 'Definition not found'}</pre></li>`).join('') +
+                '</ul>';
+        }
+    </script>
+</head>
+<body onload="compareFunctions()">
+    <h1>Missing Functions Report</h1>
+    <div id="output">Loading...</div>
+</body>
+</html>

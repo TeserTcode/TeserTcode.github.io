@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lambda Calculus Evaluator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.5.1/math.js"></script>
+    <script defer>
+        class LambdaTerm {
+            constructor(type, value, body = null) {
+                this.type = type; // 'var', 'lambda', 'app'
+                this.value = value;
+                this.body = body;
+            }
+        }
+
+        function parseLambda(expr) {
+            // TODO: Implement a proper parser to build a LambdaTerm tree
+            return new LambdaTerm('var', expr.trim());
+        }
+
+        function renameVariables(term, bound = new Set(), mapping = {}) {
+            if (term.type === 'var') {
+                return new LambdaTerm('var', mapping[term.value] || term.value);
+            } else if (term.type === 'lambda') {
+                let newVar = term.value + "'";
+                while (bound.has(newVar)) newVar += "'";
+                mapping[term.value] = newVar;
+                bound.add(newVar);
+                return new LambdaTerm('lambda', newVar, renameVariables(term.body, bound, mapping));
+            } else if (term.type === 'app') {
+                return new LambdaTerm('app', renameVariables(term.value, bound, mapping), renameVariables(term.body, bound, mapping));
+            }
+        }
+
+        function betaReduce(term) {
+            if (term.type === 'app' && term.value.type === 'lambda') {
+                return substitute(term.value.body, term.value.value, term.body);
+            } else if (term.type === 'app') {
+                return new LambdaTerm('app', betaReduce(term.value), betaReduce(term.body));
+            } else if (term.type === 'lambda') {
+                return new LambdaTerm('lambda', term.value, betaReduce(term.body));
+            }
+            return term;
+        }
+
+        function substitute(term, oldVar, newTerm) {
+            if (term.type === 'var') {
+                return term.value === oldVar ? newTerm : term;
+            } else if (term.type === 'lambda') {
+                if (term.value === oldVar) return term;
+                return new LambdaTerm('lambda', term.value, substitute(term.body, oldVar, newTerm));
+            } else if (term.type === 'app') {
+                return new LambdaTerm('app', substitute(term.value, oldVar, newTerm), substitute(term.body, oldVar, newTerm));
+            }
+        }
+
+        function evaluateLambda() {
+            let input = document.getElementById("lambda-input").value;
+            let parsed = parseLambda(input);
+            let renamed = renameVariables(parsed);
+            let result = betaReduce(renamed);
+            document.getElementById("output").value = JSON.stringify(result, null, 2);
+        }
+
+    </script>
+</head>
+<body>
+    <h1>Lambda Calculus Evaluator</h1>
+    <input type="text" id="lambda-input" placeholder="Enter lambda expression">
+    <button onclick="evaluateLambda()">Quick Evaluate</button>
+    <button onclick="">Beta Reduce (Step)</button>
+    <button onclick="">Animate to Normal Form</button>
+    <textarea id="output" rows="10" cols="50" readonly></textarea>
+</body>
+</html>
