@@ -6540,6 +6540,27 @@ function sawtoothwave(b,a=1) {
     return mul(a, mul(2.0 / math.pi, sub(math.pi, modc(b, 2 * math.pi))));
 }
 function sawtooth(x){return sub(x,floor(x),0.5)}
+
+
+function incompletesawtooth(x,t=5){
+    return mul(-0.5,I,add(mul(pow(exp(mul(I,x,-1)),add(t,1)),lerchtranscendent(exp(mul(I,x,-1)),1,add(t,1))),mul(-1,pow(exp(mul(I,x)),add(t,1)),lerchtranscendent(exp(mul(I,x)),1,add(t,1))),log(sub(1,exp(mul(-1,I,x)))),mul(-1,log(sub(1,exp(mul(I,x)))))))
+}
+
+function incompletesquare(x,t=5){
+    return mul(0.25,I,exp(mul(-3,I,x)),add(mul(pow(exp(mul(I,x,-2)),add(t,0)),lerchtranscendent(exp(mul(I,x,-2)),1,add(t,3/2))),mul(-1,exp(mul(6,I,x)),pow(exp(mul(I,x,2)),add(t,0)),lerchtranscendent(exp(mul(I,x,2)),1,add(t,1.5))),mul(2,exp(mul(3,I,x)),atanh(exp(mul(I,x,-1)))),mul(-2,exp(mul(3,I,x)),atanh(exp(mul(I,x))))))
+}
+
+function incompletetriangle(x,t=5){
+    return add(mul(-0.125,exp(mul(-3,I,x)),pow(exp(mul(-2,I,x)),t),lerchtranscendent(exp(mul(-2,I,x)),2,add(t,1.5))) ,mul(-0.125,exp(mul(I,x)),pow(exp(mul(2,I,x)),add(t,1)),lerchtranscendent(exp(mul(2,I,x)),2,add(t,1.5))) ,mul(0.125,exp(mul(-1,I,x)),lerchtranscendent(exp(mul(-2,I,x)),2,add(0,0.5))) ,mul(0.125,exp(mul(1,I,x)),lerchtranscendent(exp(mul(2,I,x)),2,add(0,0.5))) )
+}
+
+
+
+
+
+
+
+
 function polydedekindsumd(A,c){
 let fi=math.complex(0,0);
 for(let n=1;n<=sub(c,1);n++){
@@ -13182,10 +13203,22 @@ function mallowsseq(n){
 }
 
 
-function weierstrass(x,a,b){
+function weierstrass(x,a=0.5,b=3){
     let fi=math.complex(0,0);
     for(let n=0;n<bign;n++)
         fi=add(fi,mul(pow(a,n),cos(mul(pow(b,n),pi(),x))))
+    return fi;
+}
+function weierstrasscl(x,a=0.5,b=3){
+    let fi=math.complex(0,0);
+    for(let n=0;n<bign;n++)
+        fi=add(fi,mul(pow(a,n),cl(mul(pow(b,n),pi(),x))))
+    return fi;
+}
+function weierstrasscm(x,a=0.5,b=3){
+    let fi=math.complex(0,0);
+    for(let n=0;n<bign;n++)
+        fi=add(fi,mul(pow(a,n),cm(mul(pow(b,n),pi(),x))))
     return fi;
 }
 function weierstrassalt(x,a=2){
@@ -18307,30 +18340,29 @@ function besseljzero(v, m) {
 }
 
 const mathieuZeroCache = new Map();
-function mathieuZeroGuess(m, n, mu0) {
-    const jmn = besseljzero(n, m);
-    return div(pow(jmn, 2), mul(4, pow(sinh(mu0), 2)),100);
-}
-function mathieuradial(q, m, mu0, parity=0) {
-    // parity = 0 → even (cm1)
-    // parity = 1 → odd  (cm2)
-    if (parity === 1) return mathieucm1(q, mu0, m);
-    return mathieucm2(q, mu0, m);
-}
 
-function mathieuzero(m, n, mu0, parity=0) {
-    const key = `${m},${n},${mu0},${parity}`;
+function mathieuradial(q, m, n,parity=0) {
+    if(parity)return mathieucce(q,m,n)
+    return mathieucse(q,m,n)
+}
+function mathieuangular(q, m, n,parity=0) {
+    if(parity)return mathieuce(q,m,n)
+    return mathieuse(q,m,n)
+}
+function mathieuzero(q,n,m,parity=0) {
+    //matheuradial(q,z,n) 
+    const key = `${m},${n},${q},${parity}`;
     if (mathieuZeroCache.has(key)) {
         return mathieuZeroCache.get(key);
     }
 
-    const q0 = mathieuZeroGuess(m, n, mu0);
+    const m0 = div(besseljzero(n,m),sqrt(q));
 //return q0;
-    const f = (q) => mathieuradial(q, m, mu0, parity);
+    const f = (m) => mathieuradial(q, m, n,parity);
 
     const result = newtoninvfp(
         f,          // function
-        q0,         // initial guess
+        m0,         // initial guess
         1e-6,       // step for derivative
         1e-8,       // tolerance
         5          // max iterations
@@ -20100,6 +20132,12 @@ for(let i=1;i<N;i++)fi=add(fi,mul(penttayl[i],pow(add(x,1),i)))
 for(let i=1;i<N;i++)fi=add(fi,mul(pent10tayl[i],pow(add(x,1),i)))     
     return fi;
     }
+    /*
+tetr2 tetrs2 tetr10
+pent pent2 pents2 pent10
+sexts2
+nixonphi*/
+    
    function slogts(x) {
 
     // Constants
@@ -20405,6 +20443,7 @@ function septs2(x){//septation
     }
     function pent(x){return pentu2(add(x,2.2))}
     */
+
  function pentu(x){
         const L=  -1.8503545;
        const Lp= 6.4606712;
@@ -20421,7 +20460,7 @@ function septs2(x){//septation
         if(re(x)<0) return pentc(x)
          //   return pentold(x)
         let fi=pentc(add(0,modc(x,1)))
-        for(let i=0;i<minc(10,re(floor((x))));i++)
+        for(let i=0;i<minc(20,re(floor((x))));i++)
         fi=tetr(fi);
         return fi;
     }
@@ -20455,7 +20494,7 @@ function septs2(x){//septation
     function pent10(x){
         if(re(x)<0) return pent10c(x)
         let fi=pent10c(add(0,modc(x,1)))
-        for(let i=0;i<minc(5,re(floor(re(x))));i++)
+        for(let i=0;i<minc(20,re(floor(re(x))));i++)
         fi=tetr10(fi);
         return fi;
     }
@@ -20491,6 +20530,57 @@ function septs2(x){//septation
            fi=etatetr(fi);
        return fi;
     }
+    
+    ///////////////////////////////
+    //derv("iabs(sin(x))",x,0.001)-hderv("iabs(sin(x))",x,0.001*i)
+    //supertra(x,0,10) 
+    //L=1
+    //Lp=1.3602840942539274
+    //hypertrau(x) newtonzero("hypertra(x)-1",x)
+    
+     function hypertrau(x){
+        const L=  1;
+       const Lp= 1.3602840942539274;
+
+       let fi=sub(L,pow(Lp,add(x,1,sub(0,9),div(log(L),log(Lp)))));
+       ;
+       for(let i=0;i<8;i++)
+           fi=supertra(fi,0,i);
+       return fi;
+    }
+    function hypertrac(x){return hypertrau(add(x,2))}
+    
+        function hypertra(x){
+        if(re(x)<0) return hypertrac(add(-2,x))
+         //   return pentold(x)
+        let fi=hypertrac(add(-2,modc(x,1)))
+        for(let i=0;i<minc(20,re(floor((x))));i++)
+        fi=supertra(fi,0,5);
+        return fi;
+    }
+    
+    
+    
+    
+    
+    //bennetthyperoperation(xx,yy,2)
+    //bennetthyperoperation(xx,2,2)
+    //bennetthyperoperation(x,x,-1)
+    //bennetthyperoperation(3,3,-1)
+    
+    function bennetthyperoperation(x,y,n){
+       // return halfexp(mul(halfexp(x,sub(0,n)),halfexp(y,sub(0,n))),n)
+     //  return superexp(sub(0,n),x)
+     if(Number.isInteger(n) && re(n)>=0)
+         return powertower(eulerc(),n,mul(logtower(eulerc(),n,y),logtower(eulerc(),n,x)))
+   //  console.log(3)
+      if(Number.isInteger(n))
+           return logtower(eulerc(),sub(0,n),mul(powertower(eulerc(),sub(0,n),y),powertower(eulerc(),sub(0,n),x)))
+      return halfexp(mul(halfexp(x,sub(0,n)),halfexp(y,sub(0,n))),n)
+      return superexp(n,mul(superexp(sub(0,n),x),superexp(sub(0,n),y)))
+    }
+    
+    
     
     
     
@@ -27645,9 +27735,6 @@ function mathieua1n(a,q,nn){
     const term2 = mul(q, mathieua1n(a, q, sub(nn, 4)));
     return div(sub(term1, term2), q);
 }
-function mathieuan(a,q,nn){
-   // if(re(q)<0)return (nn%2==0) ? mathieuan(a,sub(0,q),nn) : mathieubn(a,sub(0,q),nn) 
-if(nn%2==0)return mathieua2n(a,q,nn);return mathieua1n(a,q,nn);}
 
 function mathieub2n(a,q,nn){
     if(nn<0 || nn%2!=0)return 0;
@@ -27663,12 +27750,56 @@ function mathieub1n(a,q,nn){
     const term1 = mul(sub(a, pow(add(sub(nn, 2), 0), 2)), mathieub1n(a, q, sub(nn, 2)));
     const term2 = mul(q, mathieub1n(a, q, sub(nn, 4)));
     return div(sub(term1, term2), q);
-}
+}/*
 function mathieubn(a,q,nn){
 if(nn%2==0)return mathieub2n(a,q,nn);return mathieub1n(a,q,nn);}
 
+function mathieuan(a,q,nn){
+   // if(re(q)<0)return (nn%2==0) ? mathieuan(a,sub(0,q),nn) : mathieubn(a,sub(0,q),nn) 
+if(nn%2==0)return mathieua2n(a,q,nn);return mathieua1n(a,q,nn);}
+*/
+function mathieubn(a, q, nn) {
+    const key = `${a},${q},${nn}`;
+    if (cacheMathieuB[key] !== undefined) return cacheMathieuB[key];
+    let result;
+    if (nn % 2 === 0) result = mathieub2n(a, q, nn);
+    else result = mathieub1n(a, q, nn);
+    cacheMathieuB[key] = result;
+    return result;
+}
+
+function mathieuan(a, q, nn) {
+    const key = `${a},${q},${nn}`;
+    if (cacheMathieuA[key] !== undefined) return cacheMathieuA[key];
+    let result;
+    if (nn % 2 === 0) result = mathieua2n(a, q, nn);
+    else result = mathieua1n(a, q, nn);
+    cacheMathieuA[key] = result;
+    return result;
+}
+
+const cacheMathieuB = {};
+const cacheMathieuA = {};
 
 
+//mathieucce1(10,x,1)
+/*
+function mathieucce1(q,z,n=0){
+    const  a=mathieul(q,n);
+    let fi=0;
+    for(let i=-bign+1;i<bign;i++)
+        fi=add(fi,mul(mathieua2n2m,cos(mul(2,m,z))))
+   //     fi=add(fi,mul(1,cos(mul(z,add(n,i,i))),mathieuc2n(a,q,mul(i,2),n)))
+    return fi;
+}
+*/
+
+
+const cacheC2n = {};
+function mathieuc2n(a,q,nn,v){let k=`${a},${q},${nn},${v}`;if(cacheC2n[k]!==undefined)return cacheC2n[k];let r=nn===0?1:nn===2||nn===-2?div(sub(a,sqr(add(v,2))),2,q):nn>2?sub(div(mul(sub(a,mul(4,sqr(add(v,nn,-2)))),mathieuc2n(a,q,nn-2,v)),q),mathieuc2n(a,q,nn-4,v)):nn<-2?mathieuc2n(a,q,-nn,v):sub(div(mul(sub(a,mul(4,sqr(add(v,nn,-2)))),mathieuc2n(a,q,nn+2,v)),q),mathieuc2n(a,q,nn+4,v));return cacheC2n[k]=r;}
+
+
+/*
 function mathieuc2n(a,q,nn,v){
     if(nn==0)return 1;
     if(nn==2 || nn==-2)
@@ -27681,14 +27812,14 @@ return sub(div(mul(sub(a,mul(4,sqr(add(v,nn,-2)))),mathieuc2n(a,q,add(nn,2),v)),
 
 return 0;
 }
-
+*/
 
 
 function mathieufracce(q,z,nn){
     let fi=0;
     const a = mathieul(q,nn);
     for(let r=-ceil(bign/4);r<=ceil(bign/4);r++)
-fi=add(fi,mul(mathieuc2n(a,q,mul(r,2),nn),cos(mul(z,add(nn,r,r)))))
+fi=add(fi,mul(mathieuc2nn(a,q,mul(r,2),nn),cos(mul(z,add(nn,r,r)))))
     return fi;
 }
 function mathieufracse(q,z,nn){
@@ -27705,6 +27836,8 @@ function mathieufracme(q,z,nn){
 fi=add(fi,mul(mathieuc2n(a,q,mul(r,2),nn),exp(mul(I,z,add(nn,r,r)))))
     return fi;
 }
+
+
 
 
 
@@ -27777,6 +27910,8 @@ return  mathieuc(mathieul(q,rr),q,z,nn)
 function mathieusefourier(q,z,nn=1,rr=nn){
 return  mathieus(mathieul(q,sub(0,rr)),q,z,nn)
 }
+
+
 function mathieuccefourier(q,z,nn=0,rr=nn){
 return  mathieuce(q,mul(I,z),nn,rr)
 }
@@ -27961,14 +28096,50 @@ function mathieumv3guess(h,z,v){return hankel1(v,mul(2,h,cosh(z)))}
 function mathieumv4guess(h,z,v){return hankel2(v,mul(2,h,cosh(z)))}
 
 
+const mathieuceCache = new Map();
+const mathieuseCache = new Map();
+
+function mathieucenormalizer(q, n) {
+    const key = `${q},${n}`; 
+    if (mathieuceCache.has(key)) {
+        return mathieuceCache.get(key);
+    }
+    const result = div(
+        sqrt(pi()),
+        sqrt(integral(mathieuceunnormalizesqr, 0, mul(2, pi()), [q, n],30))
+    );
+    mathieuceCache.set(key, result);
+    return result;
+}
+
+function mathieusenormalizer(q, n) {
+    const key = `${q},${n}`;
+    if (mathieuseCache.has(key)) {
+        return mathieuseCache.get(key);
+    }
+    const result = div(
+        sqrt(pi()),
+        sqrt(integral(mathieuseunnormalizesqr, 0, mul(2, pi()), [q, n],30))
+    );
+    mathieuseCache.set(key, result);
+    return result;
+}
 
 function mathieuce(q, z, n=0) {
-if(re(n)<=2&&(Number.isInteger(n)))return mathieucefourier(q,z,n);
-return mathieucesmall(q,z,n);
+if(re(n)<=2&&(Number.isInteger(n)))return mul(mathieucefourier(q,z,n),mathieucenormalizer(q,n));
+return mul(mathieucesmall(q,z,n),mathieucenormalizer(q,n));
 }
 function mathieuse(q, z, n=0) {
-if(re(n)<=2&&(Number.isInteger(n)))return mathieusefourier(q,z,n);
-return mathieusesmall(q,z,n);
+if(re(n)<=2&&(Number.isInteger(n)))return mul(mathieusenormalizer(q,n),mathieusefourier(q,z,n));
+return mul(mathieusesmall(q,z,n),mathieusenormalizer(q,n));
+}
+function mathieuceunnormalizesqr(z,Q) {const [q,n]=Q;
+if(re(n)<=2&&(Number.isInteger(n)))return sqr(mathieucefourier(q,z,n));
+return sqr(mathieucesmall(q,z,n));
+}
+function mathieuseunnormalizesqr(z,Q) {const [q,n]=Q;
+if(re(n)<=2&&(Number.isInteger(n)))return sqr(mathieusefourier(q,z,n));
+return sqr(mathieusesmall(q,z,n));
 }
 function mathieufe(q, z, n=0) {
 //if(re(n)<=2&&(Number.isInteger(n)))
