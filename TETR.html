@@ -10,8 +10,22 @@
     </style>
 </head>
 <body>
+<select id="pentSelect">
+    <option value="0">pent</option>
+    <option value="1">tetr</option>
+    <option selected value="2">nixonphi</option>
+    <option value="3">tetr2</option>
+    <option value="4">pent2</option>
+    <option value="5">tetr10</option>
+    <option value="6">pent10</option>
+    <option value="7">tetrs2</option>
+    <option value="8">petrs2</option>
+    <option value="9">sexts2</option>
+
+</select>
+
     <canvas id="glCanvas"></canvas>
-    <script id="fragmentShader" type="x-shader/x-fragment">
+    <script id="fragmentTemplate" type="x-shader/x-fragment">
 
     precision highp float;
 
@@ -20,8 +34,71 @@
         uniform float u_zoom;
 
 
- vec2 knthetaa[59];
+
  
+vec2 complexExp(vec2 z) {
+    float ex = exp(z.x);
+    return vec2(ex * cos(z.y), ex * sin(z.y));
+}
+
+vec2 complexLog(vec2 z) {
+    float r = length(z);
+    float theta = atan(z.y, z.x);
+    return vec2(log(r), theta);
+}
+const float LN2  = 0.69314718055994530942;
+const float LN10 = 2.30258509299404568402;
+vec2 complexLog2(vec2 z) {
+    vec2 lz = complexLog(z);
+    return lz / LN2;
+}
+vec2 complexLog10(vec2 z) {
+    vec2 lz = complexLog(z);
+    return lz / LN10;
+}
+vec2 complexExp2(vec2 z) {
+    return complexExp(z * LN2);
+}
+vec2 complexExp10(vec2 z) {
+    return complexExp(z * LN10);
+}
+
+vec2 complexMul(vec2 a, vec2 b) {
+    return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
+}
+
+vec2 complexAdd(vec2 a, vec2 b) {
+    return vec2(a.x + b.x, a.y + b.y);
+}
+
+vec2 complexSub(vec2 a, vec2 b) {
+    return vec2(a.x - b.x, a.y - b.y);
+}
+
+vec2 complexPow(vec2 base, vec2 exponent) {
+    return complexExp(complexMul(exponent, complexLog(base)));
+}
+vec2 complexDiv(vec2 a, vec2 b) {
+    float denom = b.x * b.x + b.y * b.y;
+    return vec2(
+        (a.x * b.x + a.y * b.y) / denom,  // real part
+        (a.y * b.x - a.x * b.y) / denom   // imaginary part
+    );
+}
+	
+    // Helper: mod for vec2 (just real part)
+float modc(vec2 z, float m) { return mod(z.x, m); }
+
+// Helper: min for float and vec2
+float minc(float a, float b) { return a < b ? a : b; }
+
+// pentu(x) -> vec2
+    
+    
+    
+    #if (MODE == 1 || MODE == 0)
+     vec2 knthetaa[59];
+  vec2 tetrtaylor[59];
  void initKnthetaa() {
     knthetaa[0] = vec2(-0.4884150884437966, -0.9223068629260569);
     knthetaa[1] = vec2(0.003851578735411204420399364109394585843185019100299557939634370175, -0.09056477795411682044547667460610562297963243478659090786228987894);
@@ -84,49 +161,132 @@
     knthetaa[57] = vec2(7.739354265175272528970095315565445449395583976404287782752869924e-5, -0.0006104471450905416745750599567035079243225218491958892623830844473);
     knthetaa[58] = vec2(7.605260705023662591683674215491958711194575443441659148758242520e-5, -0.0005981647999801659300901133780805430707771024544719758191290647784);
 }
+
+vec2 tetrts(vec2 z) {
+
+    // Coefficients (real-only, imag = 0)
+    const vec2 c1  = vec2(1.0000000000000000, 0.0);
+    const vec2 c2  = vec2(1.0917673512583210, 0.0);
+    const vec2 c3  = vec2(0.2714832129016946, 0.0);
+    const vec2 c4  = vec2(0.2124532481762563, 0.0);
+    const vec2 c5  = vec2(0.06954037613998737, 0.0);
+    const vec2 c6  = vec2(0.04429195209047330, 0.0);
+    const vec2 c7  = vec2(0.01473674209638939, 0.0);
+    const vec2 c8  = vec2(0.00866878181722526, 0.0);
+    const vec2 c9  = vec2(0.00279647939838546, 0.0);
+    const vec2 c10 = vec2(0.00161063129058427, 0.0);
+    const vec2 c11 = vec2(4.89927231484377e-4, 0.0);
+    const vec2 c12 = vec2(2.88181071154046e-4, 0.0);
+    const vec2 c13 = vec2(8.00946125385433e-5, 0.0);
+    const vec2 c14 = vec2(5.02911417938054e-5, 0.0);
+    const vec2 c15 = vec2(1.21837903449001e-5, 0.0);
+    const vec2 c16 = vec2(8.66553366738157e-6, 0.0);
+    const vec2 c17 = vec2(1.68778231931754e-6, 0.0);
+    const vec2 c18 = vec2(1.49325324857349e-6, 0.0);
+    const vec2 c19 = vec2(1.98760764204927e-7, 0.0);
+    const vec2 c20 = vec2(2.60867356004326e-7, 0.0);
+    const vec2 c21 = vec2(1.47099541425419e-8, 0.0);
+    const vec2 c22 = vec2(4.68344973274135e-8, 0.0);
+    const vec2 c23 = vec2(-1.54924166554677e-9, 0.0);
+    const vec2 c24 = vec2(8.74151078135094e-9, 0.0);
+    const vec2 c25 = vec2(-1.12578731010306e-9, 0.0);
+    const vec2 c26 = vec2(1.70795926727073e-9, 0.0);
+    const vec2 c27 = vec2(-3.77858315492299e-10, 0.0);
+    const vec2 c28 = vec2(3.49577876511022e-10, 0.0);
+    const vec2 c29 = vec2(-1.05377012344500e-10, 0.0);
+    const vec2 c30 = vec2(7.45909714760751e-11, 0.0);
+    const vec2 c31 = vec2(-2.71759820657773e-11, 0.0);
+    const vec2 c32 = vec2(1.64607661066145e-11, 0.0);
+    const vec2 c33 = vec2(-6.74187315240505e-12, 0.0);
+    const vec2 c34 = vec2(3.72532872331947e-12, 0.0);
+    const vec2 c35 = vec2(-1.63908732679359e-12, 0.0);
+    const vec2 c36 = vec2(8.58363831135857e-13, 0.0);
+    const vec2 c37 = vec2(-3.94373873910538e-13, 0.0);
+    const vec2 c38 = vec2(2.00252312802189e-13, 0.0);
+    const vec2 c39 = vec2(-9.44196224292407e-14, 0.0);
+    const vec2 c40 = vec2(4.71205474584937e-14, 0.0);
+    const vec2 c41 = vec2(-2.25629188203560e-14, 0.0);
+    const vec2 c42 = vec2(1.11546885061654e-14, 0.0);
+    const vec2 c43 = vec2(-5.39074555701635e-15, 0.0);
+    const vec2 c44 = vec2(2.65215849151668e-15, 0.0);
+    const vec2 c45 = vec2(-1.28891076554455e-15, 0.0);
+    const vec2 c46 = vec2(6.32667850195666e-16, 0.0);
+    const vec2 c47 = vec2(-3.08545715049234e-16, 0.0);
+    const vec2 c48 = vec2(1.51317677178274e-16, 0.0);
+    const vec2 c49 = vec2(-7.39653413709475e-17, 0.0);
+    const vec2 c50 = vec2(3.62698767105419e-17, 0.0);
+
+    // Horner evaluation (degree 49)
+    vec2 r = c50;
+    r = complexAdd(complexMul(r, z), c49);
+    r = complexAdd(complexMul(r, z), c48);
+    r = complexAdd(complexMul(r, z), c47);
+    r = complexAdd(complexMul(r, z), c46);
+    r = complexAdd(complexMul(r, z), c45);
+    r = complexAdd(complexMul(r, z), c44);
+    r = complexAdd(complexMul(r, z), c43);
+    r = complexAdd(complexMul(r, z), c42);
+    r = complexAdd(complexMul(r, z), c41);
+    r = complexAdd(complexMul(r, z), c40);
+    r = complexAdd(complexMul(r, z), c39);
+    r = complexAdd(complexMul(r, z), c38);
+    r = complexAdd(complexMul(r, z), c37);
+    r = complexAdd(complexMul(r, z), c36);
+    r = complexAdd(complexMul(r, z), c35);
+    r = complexAdd(complexMul(r, z), c34);
+    r = complexAdd(complexMul(r, z), c33);
+    r = complexAdd(complexMul(r, z), c32);
+    r = complexAdd(complexMul(r, z), c31);
+    r = complexAdd(complexMul(r, z), c30);
+    r = complexAdd(complexMul(r, z), c29);
+    r = complexAdd(complexMul(r, z), c28);
+    r = complexAdd(complexMul(r, z), c27);
+    r = complexAdd(complexMul(r, z), c26);
+    r = complexAdd(complexMul(r, z), c25);
+    r = complexAdd(complexMul(r, z), c24);
+    r = complexAdd(complexMul(r, z), c23);
+    r = complexAdd(complexMul(r, z), c22);
+    r = complexAdd(complexMul(r, z), c21);
+    r = complexAdd(complexMul(r, z), c20);
+    r = complexAdd(complexMul(r, z), c19);
+    r = complexAdd(complexMul(r, z), c18);
+    r = complexAdd(complexMul(r, z), c17);
+    r = complexAdd(complexMul(r, z), c16);
+    r = complexAdd(complexMul(r, z), c15);
+    r = complexAdd(complexMul(r, z), c14);
+    r = complexAdd(complexMul(r, z), c13);
+    r = complexAdd(complexMul(r, z), c12);
+    r = complexAdd(complexMul(r, z), c11);
+    r = complexAdd(complexMul(r, z), c10);
+    r = complexAdd(complexMul(r, z), c9);
+    r = complexAdd(complexMul(r, z), c8);
+    r = complexAdd(complexMul(r, z), c7);
+    r = complexAdd(complexMul(r, z), c6);
+    r = complexAdd(complexMul(r, z), c5);
+    r = complexAdd(complexMul(r, z), c4);
+    r = complexAdd(complexMul(r, z), c3);
+    r = complexAdd(complexMul(r, z), c2);
+    r = complexAdd(complexMul(r, z), c1);
+
+    return r;
+}
+
        uniform vec2 b; // Complex input
 const int bign = 30; // Equivalent to N in your function
 //0.318131505204764135312654251587664517203517614 - 1.33723570143068940890116214319371061253950214 i
 const vec2 constant = vec2(0.318131505204764135312654251587664517203517614, 1.33723570143068940890116214319371061253950214);
 
-vec2 complexExp(vec2 z) {
-    float ex = exp(z.x);
-    return vec2(ex * cos(z.y), ex * sin(z.y));
-}
-
-vec2 complexLog(vec2 z) {
-    float r = length(z);
-    float theta = atan(z.y, z.x);
-    return vec2(log(r), theta);
-}
-
-vec2 complexMul(vec2 a, vec2 b) {
-    return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
-}
-
-vec2 complexAdd(vec2 a, vec2 b) {
-    return vec2(a.x + b.x, a.y + b.y);
-}
-
-vec2 complexSub(vec2 a, vec2 b) {
-    return vec2(a.x - b.x, a.y - b.y);
-}
-
-vec2 complexPow(vec2 base, vec2 exponent) {
-    return complexExp(complexMul(exponent, complexLog(base)));
-}
-
-vec2 tetr(vec2 b) {
+vec2 tetrp(vec2 b) {
 	 initKnthetaa();
     vec2 fi = vec2(b.x, abs(b.y));
     vec2 bi = vec2(mod(b.x, 1.0), fi.y);
-
-    for (int i = 0; i < 50; i++) {
+    
+    for (int i = 0; i < 30; i++) {
         vec2 term = complexMul(vec2(0.0, 1.0), vec2(6.28318530718 * float(i), 0.0));
         term = complexMul(term, bi);
         fi = complexAdd(fi, complexMul(knthetaa[i], complexExp(term)));
     }
-
+    
     fi = complexAdd(constant, complexPow(complexLog(constant), complexSub(fi, vec2(float(bign), 0.0))));
 
     for (int i = 0; i < bign; i++) {
@@ -139,7 +299,835 @@ vec2 tetr(vec2 b) {
 
     return fi;
 }
-		
+
+
+vec2 tetr(vec2 x) {
+
+    // If Im(x) large or Re(x) large -> use tetrp
+    if (abs(x.y) > 0.5 || abs(x.x) > 5.0) {
+        return tetrp(x);
+    }
+
+    // Base evaluation using fractional part
+    vec2 fi = tetrts(vec2(mod(x.x, 1.0), x.y));
+
+    // Re(x) < -1  → iterate log
+    if (x.x < -1.0) {
+        int n = int(min(abs(x.x), 5.0));
+        for (int i = 0; i < 5; i++) {
+            if (i > n) break;
+            fi = complexLog(fi);
+        }
+    }
+    // Re(x) > 1 → iterate exp
+    else if (x.x > 1.0) {
+        int n = int(min(abs(x.x - 1.0), 5.0));
+        for (int i = 0; i < 5; i++) {
+            if (i >= n+1) break;
+            fi = complexExp(fi);
+        }
+    }
+    // -1 ≤ Re(x) ≤ 1 → direct series
+    else {
+        return tetrts(x);
+    }
+
+    return fi;
+}
+
+
+
+
+const vec2 pL  = vec2(-1.8503545, 0.0);
+const vec2 pLp = vec2(6.4606712, 0.0);
+
+
+vec2 pentu(vec2 x) {
+    // Compute pow(Lp, x+1-6 + log(L)/log(Lp))
+    vec2 expTerm = complexAdd(x, vec2(-5.0, 0.0));
+    vec2 logRatio = complexDiv(complexLog(pL), complexLog(pLp));
+    expTerm = complexPow(pLp, complexAdd(expTerm, logRatio));
+    
+    vec2 fi = complexSub(pL, expTerm);
+    
+    // Apply tetration 6 times
+    for(int i = 0; i < 6; i++) {
+        fi = tetr(fi);
+    }
+    return fi;
+}
+
+// pentc(x) = pentu(x + 0.9181855419230064)
+vec2 pentc(vec2 x) {
+    return pentu(complexAdd(x, vec2(0.9181855419230064, 0.0)));
+}
+
+// pent(x) main
+vec2 pent(vec2 x) {
+    if(x.x < 0.0) return pentc(x); // If Re(x) < 0
+    
+    // Fractional part
+    vec2 fi = pentc(complexAdd(vec2(0.0, 0.0), vec2(modc(x, 1.0), x.y)));
+    
+    // Integer part
+
+    for(int i = 0; i < 20; i++) {
+        if(float(i)<floor(x.x))
+        fi = tetr(fi);
+    }
+    return fi;
+}
+	
+
+
+
+
+
+
+
+
+
+
+
+ 
+    
+    #elif (MODE == 5 || MODE == 6)
+    
+     vec2 knthetaa10[59];
+  vec2 tetrtaylor10[59];
+    
+ void initKnthetaa10() {
+knthetaa10[0] = vec2(
+    0.17799316199455913031946620533448468256237809176356558648,
+   -0.42824054091004017448062454919411317796186476606201135895
+);
+
+knthetaa10[1] = vec2(
+    0.00593749112447128122510204103427646056786190944681144017,
+   -0.09176334001008019563090867214482854212167499908919118338
+);
+
+knthetaa10[2] = vec2(
+    0.00308121630633651465509560498569969359392973108093542898,
+   -0.03846155851094691064712005762290158924386389675677014956
+);
+
+knthetaa10[3] = vec2(
+    0.00206853201498188485911547589423647690857410044671060283,
+   -0.02312209360226542373053477657528160542402040679145316669
+);
+
+knthetaa10[4] = vec2(
+    0.00155196578198029035025888093032518949072619637629283377,
+   -0.01613316718526100835809070293721436486886018804816848431
+);
+
+knthetaa10[5] = vec2(
+    0.00123933559770777876011608432616740703106153277284223001,
+   -0.01221493333806934600494243068817670044599340986445802437
+);
+
+knthetaa10[6] = vec2(
+    0.00103007920019430831393267676049513629488106886242245249,
+   -0.00973821026718033427634202387289332483806322937598178369
+);
+
+knthetaa10[7] = vec2(
+    0.00088035310875513405176008621533817564817716876124259137,
+   -0.00804470513924932826503887993382600002714217680449912815
+);
+
+knthetaa10[8] = vec2(
+    0.00076800610104860938597838201430137181313359654240490902,
+   -0.00682060659229615285598386608787708908116207263171478927
+);
+
+knthetaa10[9] = vec2(
+    0.00068064847205171133725324150970718334352547014469343404,
+   -0.00589842788149353214657466172563267963109693233038513651
+);
+
+}
+
+vec2 tetr10ts(vec2 z) {
+
+    // Coefficients (real-only, imag = 0)
+const vec2 c1  = vec2(0.9999999999999999999999999999999999999866228657880119, 0.0);
+const vec2 c2  = vec2(1.6842890279560137367774155245158099305131244726875793, 0.0);
+const vec2 c3  = vec2(1.4130640092891582715296161109120169048724816332090563, 0.0);
+const vec2 c4  = vec2(1.3295945894329746325041134668399846336364751921542207, 0.0);
+const vec2 c5  = vec2(1.1104423521312896991989380232644313635475360226542076, 0.0);
+const vec2 c6  = vec2(0.9079147595254765561330149419978783900042263625049612, 0.0);
+const vec2 c7  = vec2(0.7059081217368497895459872577644019753887049232366281, 0.0);
+const vec2 c8  = vec2(0.5359695709642346632376741216094806373296459327812963, 0.0);
+const vec2 c9  = vec2(0.3951488214482659692287227925525374564547618359020950, 0.0);
+const vec2 c10 = vec2(0.2856802496872404000481968519698700374537654840257326, 0.0);
+const vec2 c11 = vec2(0.2023713127620107209690295812895021317602419693236154, 0.0);
+const vec2 c12 = vec2(0.1411016826785323980507369748595736979302292269998524, 0.0);
+const vec2 c13 = vec2(0.09687019689417578587216995403834035331339199226876885, 0.0);
+const vec2 c14 = vec2(0.06564268380703325789644305667626865190704158121773687, 0.0);
+const vec2 c15 = vec2(0.04393255991875632226155425740105723368174965197458748, 0.0);
+const vec2 c16 = vec2(0.02908304553606800712238021869508826651556571901784900, 0.0);
+const vec2 c17 = vec2(0.01905494770854568762310741706929882665395420899150187, 0.0);
+const vec2 c18 = vec2(0.01236868466034926812181175814380757272898095584644716, 0.0);
+const vec2 c19 = vec2(0.007958230673346761165482926405209971234477015397196395, 0.0);
+const vec2 c20 = vec2(0.005079207483473838380854633307970473392572347925495502, 0.0);
+const vec2 c21 = vec2(0.003217038862714119045555091663067252986717616204290533, 0.0);
+const vec2 c22 = vec2(0.002023155948812091326495291977340173602916283582201835, 0.0);
+const vec2 c23 = vec2(0.001263800709304238629211966982820504394321906844688563, 0.0);
+const vec2 c24 = vec2(0.0007844845626987202477885391939598263188248637694201055, 0.0);
+const vec2 c25 = vec2(0.0004840434824049581369501520973824745118704002787125279, 0.0);
+const vec2 c26 = vec2(0.0002969771453226312853795307542367629480019154727188051, 0.0);
+const vec2 c27 = vec2(0.0001812244573519259185932799478593544654807289961002317, 0.0);
+const vec2 c28 = vec2(0.0001100231651996232008750206367367725543250214965843894, 0.0);
+const vec2 c29 = vec2(6.646978565051945224901545836508294806974623181392843e-5, 0.0);
+const vec2 c30 = vec2(3.997017589156513072858768032947441510893586788281179e-5, 0.0);
+const vec2 c31 = vec2(2.392790931279353847574317566828459405965092750139507e-5, 0.0);
+const vec2 c32 = vec2(1.426310455060612156363535166878163340610342129402030e-5, 0.0);
+const vec2 c33 = vec2(8.467160825016309857000103734606498632368437670445808e-6, 0.0);
+const vec2 c34 = vec2(5.006656173697179525217413196584671670603224465699477e-6, 0.0);
+const vec2 c35 = vec2(2.949227690199391850627459284438512904754944242966740e-6, 0.0);
+const vec2 c36 = vec2(1.730938458287398554836638993854642371917024655514221e-6, 0.0);
+const vec2 c37 = vec2(1.012334978268030633929273237856624313011659112491369e-6, 0.0);
+const vec2 c38 = vec2(5.900523682589271353312254331712960957459998917661464e-7, 0.0);
+const vec2 c39 = vec2(3.427918524413957457417242583913417002552429449568364e-7, 0.0);
+const vec2 c40 = vec2(1.985143932231196383622416948694355878851552413253349e-7, 0.0);
+const vec2 c41 = vec2(1.146091917462226466519063402465305854330893686601313e-7, 0.0);
+const vec2 c42 = vec2(6.597135516452738068457578958306862519787059333750592e-8, 0.0);
+const vec2 c43 = vec2(3.786513479499734537444315859297689675894242442523857e-8, 0.0);
+const vec2 c44 = vec2(2.167253785298977820607429786259733406205207814089080e-8, 0.0);
+const vec2 c45 = vec2(1.237091411351600424468936397514729897970174875060983e-8, 0.0);
+const vec2 c46 = vec2(7.042870598835764725522721880098196923097675780146565e-9, 0.0);
+const vec2 c47 = vec2(3.999315234007133229711769798640126043461038678774564e-9, 0.0);
+const vec2 c48 = vec2(2.265376465806172295931738717018753967065522754474045e-9, 0.0);
+const vec2 c49 = vec2(1.280097496659428983265103270261575287372306868798360e-9, 0.0);
+const vec2 c50 = vec2(7.216415939327799343728975485164929246839293334782012e-10, 0.0);
+const vec2 c51 = vec2(4.058844186925890783364213045824994540118140342388349e-10, 0.0);
+const vec2 c52 = vec2(2.277775611113895509630126308486186486759079755555155e-10, 0.0);
+const vec2 c53 = vec2(1.275473379865889700457236278197308085829065356697614e-10, 0.0);
+const vec2 c54 = vec2(7.127003791551402779737068638574777654367372316723045e-11, 0.0);
+const vec2 c55 = vec2(3.974109681289197860775152195644935028496115586847536e-11, 0.0);
+const vec2 c56 = vec2(2.211522053759534316822135022134944322493203294903645e-11, 0.0);
+const vec2 c57 = vec2(1.228235403039974776775632834221342037100463192125024e-11, 0.0);
+const vec2 c58 = vec2(6.808170919722754629294260039641082069322832846300366e-12, 0.0);
+const vec2 c59 = vec2(3.766661068302930610982451261518982394991169372487037e-12, 0.0);
+const vec2 c60 = vec2(2.080070066371844385974081672257286667145886876881946e-12, 0.0);
+
+    // Horner evaluation (degree 49)
+    vec2 r = c50;
+    r = complexAdd(complexMul(r, z), c49);
+    r = complexAdd(complexMul(r, z), c48);
+    r = complexAdd(complexMul(r, z), c47);
+    r = complexAdd(complexMul(r, z), c46);
+    r = complexAdd(complexMul(r, z), c45);
+    r = complexAdd(complexMul(r, z), c44);
+    r = complexAdd(complexMul(r, z), c43);
+    r = complexAdd(complexMul(r, z), c42);
+    r = complexAdd(complexMul(r, z), c41);
+    r = complexAdd(complexMul(r, z), c40);
+    r = complexAdd(complexMul(r, z), c39);
+    r = complexAdd(complexMul(r, z), c38);
+    r = complexAdd(complexMul(r, z), c37);
+    r = complexAdd(complexMul(r, z), c36);
+    r = complexAdd(complexMul(r, z), c35);
+    r = complexAdd(complexMul(r, z), c34);
+    r = complexAdd(complexMul(r, z), c33);
+    r = complexAdd(complexMul(r, z), c32);
+    r = complexAdd(complexMul(r, z), c31);
+    r = complexAdd(complexMul(r, z), c30);
+    r = complexAdd(complexMul(r, z), c29);
+    r = complexAdd(complexMul(r, z), c28);
+    r = complexAdd(complexMul(r, z), c27);
+    r = complexAdd(complexMul(r, z), c26);
+    r = complexAdd(complexMul(r, z), c25);
+    r = complexAdd(complexMul(r, z), c24);
+    r = complexAdd(complexMul(r, z), c23);
+    r = complexAdd(complexMul(r, z), c22);
+    r = complexAdd(complexMul(r, z), c21);
+    r = complexAdd(complexMul(r, z), c20);
+    r = complexAdd(complexMul(r, z), c19);
+    r = complexAdd(complexMul(r, z), c18);
+    r = complexAdd(complexMul(r, z), c17);
+    r = complexAdd(complexMul(r, z), c16);
+    r = complexAdd(complexMul(r, z), c15);
+    r = complexAdd(complexMul(r, z), c14);
+    r = complexAdd(complexMul(r, z), c13);
+    r = complexAdd(complexMul(r, z), c12);
+    r = complexAdd(complexMul(r, z), c11);
+    r = complexAdd(complexMul(r, z), c10);
+    r = complexAdd(complexMul(r, z), c9);
+    r = complexAdd(complexMul(r, z), c8);
+    r = complexAdd(complexMul(r, z), c7);
+    r = complexAdd(complexMul(r, z), c6);
+    r = complexAdd(complexMul(r, z), c5);
+    r = complexAdd(complexMul(r, z), c4);
+    r = complexAdd(complexMul(r, z), c3);
+    r = complexAdd(complexMul(r, z), c2);
+    r = complexAdd(complexMul(r, z), c1);
+
+    return r;
+}
+
+       uniform vec2 b; // Complex input
+const int bign = 20; // Equivalent to N in your function
+//0.318131505204764135312654251587664517203517614 - 1.33723570143068940890116214319371061253950214 i
+const vec2 constant3 = vec2(-0.11919307341454845 , 0.7505832939324395);
+
+vec2 tetr10p(vec2 b) {
+	 initKnthetaa10();
+    vec2 fi = vec2(b.x, abs(b.y));
+    vec2 bi = vec2(mod(b.x, 1.0), fi.y);
+    
+    for (int i = 0; i < 9; i++) {
+        vec2 term = complexMul(vec2(0.0, 1.0), vec2(6.28318530718 * float(i), 0.0));
+        term = complexMul(term, bi);
+        fi = complexAdd(fi, complexMul(knthetaa10[i], complexExp(term)));
+    }
+    
+    fi = complexAdd(constant3, complexPow(complexLog(constant3), complexSub(fi, vec2(float(bign), 0.0))));
+
+    for (int i = 0; i < bign; i++) {
+        fi = complexExp10(fi);
+    }
+
+    if (b.y < 0.0) {
+        fi.y = -fi.y; // Complex conjugate
+    }
+
+    return fi;
+}
+
+
+vec2 tetr10(vec2 x) {
+
+    // If Im(x) large or Re(x) large -> use tetrp
+    if (abs(x.y) > 0.5 || abs(x.x) > 5.0) {
+        return tetr10p(x);
+    }
+
+    // Base evaluation using fractional part
+    vec2 fi = tetr10ts(vec2(mod(x.x, 1.0), x.y));
+
+    // Re(x) < -1  → iterate log
+    if (x.x < -1.0) {
+        int n = int(min(abs(x.x), 5.0));
+        for (int i = 0; i < 5; i++) {
+            if (i > n) break;
+            fi = complexLog10(fi);
+        }
+    }
+    // Re(x) > 1 → iterate exp
+    else if (x.x > 1.0) {
+        int n = int(min(abs(x.x - 1.0), 5.0));
+        for (int i = 0; i < 5; i++) {
+            if (i >= n+1) break;
+            fi = complexExp10(fi);
+        }
+    }
+    // -1 ≤ Re(x) ≤ 1 → direct series
+    else {
+        return tetr10ts(x);
+    }
+
+    return fi;
+}
+
+
+
+
+const vec2 pL10  = vec2(-1.9858774, 0.0);
+const vec2 pLp10 = vec2(30.75438234, 0.0);
+
+// pentu(x) -> vec2
+vec2 pent10u(vec2 x) {
+    // Compute pow(Lp, x+1-6 + log(L)/log(Lp))
+    vec2 expTerm = complexAdd(x, vec2(-5.0, 0.0));
+    vec2 logRatio = complexDiv(complexLog(pL10), complexLog(pLp10));
+    expTerm = complexPow(pLp10, complexAdd(expTerm, logRatio));
+    
+    vec2 fi = complexSub(pL10, expTerm);
+    
+    // Apply tetration 6 times
+    for(int i = 0; i < 3; i++) {
+        fi = tetr10(fi);
+    }
+    return fi;
+}
+
+// pentc(x) = pentu(x + 0.9181855419230064)
+vec2 pent10c(vec2 x) {
+    return pent10u(complexAdd(x, vec2(1.7289, 0.0)));
+}
+
+// pent(x) main
+vec2 pent10(vec2 x) {
+    if(x.x < 0.0) return pent10c(x); // If Re(x) < 0
+    
+    // Fractional part
+    vec2 fi = pent10c(complexAdd(vec2(0.0, 0.0), vec2(modc(x, 1.0), x.y)));
+    
+    // Integer part
+
+    for(int i = 0; i < 20; i++) {
+        if(float(i)<floor(x.x))
+        fi = tetr10(fi);
+    }
+    return fi;
+}
+
+
+    #elif (MODE == 3 || MODE == 4)
+    
+     vec2 knthetaa2[59];
+  vec2 tetrtaylor2[59];
+    
+ void initKnthetaa2() {
+knthetaa2[0]  = vec2(-1.23806941407137489416696874207372877940282413967812,
+                   -1.24816132484492036599940507052693933891294094844458);
+
+knthetaa2[1]  = vec2(0.00286464164572986547819494250908485879369009932928379,
+                   -0.0900141625608632015465976446514131547262005109925508);
+
+knthetaa2[2]  = vec2(0.00163613443662158961033829265952002845920088128086185,
+                   -0.0377296175124871990130286454854120664446842741252035);
+
+knthetaa2[3]  = vec2(0.00115187868327318893374980524840794988192970271486470,
+                   -0.0226830705742219568620802678432781046714404214406987);
+
+knthetaa2[4]  = vec2(0.00089051359032509874097991792557370273146880521612196,
+                   -0.0158274927227646180050070966045916286920415713166428);
+
+knthetaa2[5]  = vec2(0.00072641184418945426262557165104553688889418309895893,
+                   -0.0119839693435439392441936569031231034299835917611745);
+
+knthetaa2[6]  = vec2(0.00061361699374658900522240253368139387511199520777104,
+                   -0.00955444221638394767673446234447727025369633884278480);
+
+knthetaa2[7]  = vec2(0.00053124481440017257004170827072703519042504771005601,
+                   -0.00789318831567343533815510120432517130816167579116108);
+
+knthetaa2[8]  = vec2(0.00046841411358094767043891747745617273561842662543494,
+                   -0.00669238659280844335600842687846233516304743927872163);
+
+knthetaa2[9]  = vec2(0.00041889008993252157872921168016525699674859702607922,
+                   -0.00578774681352633634793845208207431022587579045279806);
+
+knthetaa2[10] = vec2(0.00037884018492064160464803660581739266982269437791357,
+                   -0.00508404319264214551021810481271853095880026231323982);
+
+knthetaa2[11] = vec2(0.00034577727412248292963541624844966826409853879397876,
+                   -0.00452248826645217115565741072893374065936797894357745);
+
+knthetaa2[12] = vec2(0.00031801616594524867579188222308963319399626837969438,
+                   -0.00406493483043877224203676445374476468583335652966840);
+
+knthetaa2[13] = vec2(0.00029437411114053810902411216513347038891969593726774,
+                   -0.00368560787759817546458081031417456310375454653478682);
+
+knthetaa2[14] = vec2(0.00027399632180160222374331201576168491913135834314700,
+                   -0.00336649917698557604472221167283619154003475791185625);
+
+knthetaa2[15] = vec2(0.00025624954114338737162902958372877801667094124594196,
+                   -0.00309466733718288484295757748728298923130433769044788);
+
+knthetaa2[16] = vec2(0.00024065456863299812172606760604920708660284702552516,
+                   -0.00286058575121187726507088320664770035439612071389605);
+
+knthetaa2[17] = vec2(0.00022684205123455283122483876161082846881218211060352,
+                   -0.00265709429592356423261431642024549755764617844208215);
+
+knthetaa2[18] = vec2(0.00021452268393272455547595710172116288858916080175102,
+                   -0.00247871299804317445969414996624104393315257706909314);
+
+knthetaa2[19] = vec2(0.00020346661916643947598339717243495806852657293174978,
+                   -0.00232118028423683544485015972209466629340698230445756);}
+
+vec2 tetr2ts(vec2 z) {
+
+    // Coefficients (real-only, imag = 0)
+    const vec2 c1  = vec2(0.9999999999999999999999999999999999999782775822585868, 0.0);
+const vec2 c2  = vec2(0.8893649546209763727897435228311256660098802572503312, 0.0);
+const vec2 c3  = vec2(0.00867654896536993398021314555341693955726856591257032, 0.0);
+const vec2 c4  = vec2(0.0952388000751817899204384850301548266871011836369511, 0.0);
+const vec2 c5  = vec2(-0.00575234854012612265921659771675990506243553414634925, 0.0);
+const vec2 c6  = vec2(0.0129665820200371739763107376059440661745718093255177, 0.0);
+const vec2 c7  = vec2(-0.00219604962303099464215851948058561013879474465235542, 0.0);
+const vec2 c8  = vec2(0.00199674684791144277954258704211613256814043691501651, 0.0);
+const vec2 c9  = vec2(-0.000563354814878522072832132276454163664890160894074145, 0.0);
+const vec2 c10 = vec2(0.000348242328188164208125993671758635058833768461686122, 0.0);
+const vec2 c11 = vec2(-0.000128532441264720003890776726500531088127236774146464, 0.0);
+const vec2 c12 = vec2(6.70819244205308089278200369393401147138174418004873e-5, 0.0);
+const vec2 c13 = vec2(-2.8298752822797952938724246262432183893272326491562e-5, 0.0);
+const vec2 c14 = vec2(1.38001319906329287662612446894453661986745287744914e-5, 0.0);
+const vec2 c15 = vec2(-6.2019093983745227580318590511154193809687189479121e-6, 0.0);
+const vec2 c16 = vec2(2.95556146480966397507180597477637503300948216752895e-6, 0.0);
+const vec2 c17 = vec2(-1.36867922453469799692662269613819691929739561671587e-6, 0.0);
+const vec2 c18 = vec2(6.49057075651895655685779465629567065442033827827904e-7, 0.0);
+const vec2 c19 = vec2(-3.05166939328926486669251773473968122767512736646732e-7, 0.0);
+const vec2 c20 = vec2(1.4494820615122971623989185184414129279840619227288e-7, 0.0);
+const vec2 c21 = vec2(-6.87466431137917657544860700918218220509898461422362e-8, 0.0);
+const vec2 c22 = vec2(3.27674451778933998879828305305912195696029618894458e-8, 0.0);
+const vec2 c23 = vec2(-1.56310874679969503779141029110858051393285529782077e-8, 0.0);
+const vec2 c24 = vec2(7.47812838918081154207009364720826262743606935890665e-9, 0.0);
+const vec2 c25 = vec2(-3.58267681323948167911806668189766082855773825312684e-9, 0.0);
+const vec2 c26 = vec2(1.71986774579520893372333243452043449546871081706934e-9, 0.0);
+const vec2 c27 = vec2(-8.26815962468010276210266899401445103686021382238279e-10, 0.0);
+const vec2 c28 = vec2(3.98110468382689612825972213854232181103847254532031e-10, 0.0);
+const vec2 c29 = vec2(-1.91942992587732304798414967148083375040662341925636e-10, 0.0);
+const vec2 c30 = vec2(9.2663186786298027956350135673902481510795756435213e-11, 0.0);
+const vec2 c31 = vec2(-4.47869882913349162588052701841352705232771707014571e-11, 0.0);
+const vec2 c32 = vec2(2.16712032119156704355726296182599249007776914120881e-11, 0.0);
+const vec2 c33 = vec2(-1.04969742914240096374693486584968504715639962235505e-11, 0.0);
+const vec2 c34 = vec2(5.08944818189222250595103537390191402022351145232775e-12, 0.0);
+const vec2 c35 = vec2(-2.46987831946184648244559763236795227475309040135117e-12, 0.0);
+const vec2 c36 = vec2(1.19965565647417085401413200593802513120988416970266e-12, 0.0);
+const vec2 c37 = vec2(-5.83165889022053184453614314512609222928510746818754e-13, 0.0);
+const vec2 c38 = vec2(2.83702361814325392583221021019516014359537011282986e-13, 0.0);
+const vec2 c39 = vec2(-1.38118252499282039474145581944382950551749525173581e-13, 0.0);
+const vec2 c40 = vec2(6.72883824735071882890959349438986119295775902390694e-14, 0.0);
+const vec2 c41 = vec2(-3.28030864119802778595861869546702830151921846404737e-14, 0.0);
+const vec2 c42 = vec2(1.60015058245703231246057631929983148337058147635299e-14, 0.0);
+const vec2 c43 = vec2(-7.81025880698437811851715857426888287455757155348353e-15, 0.0);
+const vec2 c44 = vec2(3.81431246327820126701471037967963694511396954520128e-15, 0.0);
+const vec2 c45 = vec2(-1.86381177420545698458372657972943819682009818193911e-15, 0.0);
+const vec2 c46 = vec2(9.11196869462328502002657191838452245439291234709838e-16, 0.0);
+const vec2 c47 = vec2(-4.45694121263769444601954348376846291513837489291607e-16, 0.0);
+const vec2 c48 = vec2(2.18105634006696866884657567521033152336879142319949e-16, 0.0);
+const vec2 c49 = vec2(-1.06780883356354420178956587031951372699261112182863e-16, 0.0);
+const vec2 c50 = vec2(5.23008408468721816393245017508553795336237425072273e-17, 0.0);
+const vec2 c51 = vec2(-2.56274120196473720996140839938029278699583353241882e-17, 0.0);
+const vec2 c52 = vec2(1.25624568743108414927037981913139686445369018795738e-17, 0.0);
+const vec2 c53 = vec2(-6.16043558311726195940222536447848938212222983418767e-18, 0.0);
+const vec2 c54 = vec2(3.0221004749346955997511023518689338517403767670965e-18, 0.0);
+const vec2 c55 = vec2(-1.48306782571967045294084229495166722780782874267504e-18, 0.0);
+const vec2 c56 = vec2(7.28051478101094182322115155914838491303162930226115e-19, 0.0);
+const vec2 c57 = vec2(-3.57525279430855776863345601533463308165846801668531e-19, 0.0);
+const vec2 c58 = vec2(1.75626453055903985842811684586120187233350568044107e-19, 0.0);
+const vec2 c59 = vec2(-8.62992053815878857823691909548956000075577170758406e-20, 0.0);
+const vec2 c60 = vec2(4.24182534928717047750574882594274774641425366606805e-20, 0.0);
+
+
+    // Horner evaluation (degree 49)
+    vec2 r = c50;
+    r = complexAdd(complexMul(r, z), c49);
+    r = complexAdd(complexMul(r, z), c48);
+    r = complexAdd(complexMul(r, z), c47);
+    r = complexAdd(complexMul(r, z), c46);
+    r = complexAdd(complexMul(r, z), c45);
+    r = complexAdd(complexMul(r, z), c44);
+    r = complexAdd(complexMul(r, z), c43);
+    r = complexAdd(complexMul(r, z), c42);
+    r = complexAdd(complexMul(r, z), c41);
+    r = complexAdd(complexMul(r, z), c40);
+    r = complexAdd(complexMul(r, z), c39);
+    r = complexAdd(complexMul(r, z), c38);
+    r = complexAdd(complexMul(r, z), c37);
+    r = complexAdd(complexMul(r, z), c36);
+    r = complexAdd(complexMul(r, z), c35);
+    r = complexAdd(complexMul(r, z), c34);
+    r = complexAdd(complexMul(r, z), c33);
+    r = complexAdd(complexMul(r, z), c32);
+    r = complexAdd(complexMul(r, z), c31);
+    r = complexAdd(complexMul(r, z), c30);
+    r = complexAdd(complexMul(r, z), c29);
+    r = complexAdd(complexMul(r, z), c28);
+    r = complexAdd(complexMul(r, z), c27);
+    r = complexAdd(complexMul(r, z), c26);
+    r = complexAdd(complexMul(r, z), c25);
+    r = complexAdd(complexMul(r, z), c24);
+    r = complexAdd(complexMul(r, z), c23);
+    r = complexAdd(complexMul(r, z), c22);
+    r = complexAdd(complexMul(r, z), c21);
+    r = complexAdd(complexMul(r, z), c20);
+    r = complexAdd(complexMul(r, z), c19);
+    r = complexAdd(complexMul(r, z), c18);
+    r = complexAdd(complexMul(r, z), c17);
+    r = complexAdd(complexMul(r, z), c16);
+    r = complexAdd(complexMul(r, z), c15);
+    r = complexAdd(complexMul(r, z), c14);
+    r = complexAdd(complexMul(r, z), c13);
+    r = complexAdd(complexMul(r, z), c12);
+    r = complexAdd(complexMul(r, z), c11);
+    r = complexAdd(complexMul(r, z), c10);
+    r = complexAdd(complexMul(r, z), c9);
+    r = complexAdd(complexMul(r, z), c8);
+    r = complexAdd(complexMul(r, z), c7);
+    r = complexAdd(complexMul(r, z), c6);
+    r = complexAdd(complexMul(r, z), c5);
+    r = complexAdd(complexMul(r, z), c4);
+    r = complexAdd(complexMul(r, z), c3);
+    r = complexAdd(complexMul(r, z), c2);
+    r = complexAdd(complexMul(r, z), c1);
+
+    return r;
+}
+
+       uniform vec2 b; // Complex input
+const int bign = 30; // Equivalent to N in your function
+//0.318131505204764135312654251587664517203517614 - 1.33723570143068940890116214319371061253950214 i
+const vec2 constant2 = vec2(00.8246785461420744 , 1.5674321238496478);
+
+vec2 tetr2p(vec2 b) {
+	 initKnthetaa2();
+    vec2 fi = vec2(b.x, abs(b.y));
+    vec2 bi = vec2(mod(b.x, 1.0), fi.y);
+    
+    for (int i = 0; i < 16; i++) {
+        vec2 term = complexMul(vec2(0.0, 1.0), vec2(6.28318530718 * float(i), 0.0));
+        term = complexMul(term, bi);
+        fi = complexAdd(fi, complexMul(knthetaa2[i], complexExp(term)));
+    }
+    
+    fi = complexAdd(constant2, complexPow(complexLog(constant2), complexSub(fi, vec2(float(bign), 0.0))));
+
+    for (int i = 0; i < bign; i++) {
+        fi = complexExp2(fi);
+    }
+
+    if (b.y < 0.0) {
+        fi.y = -fi.y; // Complex conjugate
+    }
+
+    return fi;
+}
+
+
+vec2 tetr2(vec2 x) {
+
+    // If Im(x) large or Re(x) large -> use tetrp
+    if (abs(x.y) > 0.5 || abs(x.x) > 5.0) {
+        return tetr2p(x);
+    }
+
+    // Base evaluation using fractional part
+    vec2 fi = tetr2ts(vec2(mod(x.x, 1.0), x.y));
+
+    // Re(x) < -1  → iterate log
+    if (x.x < -1.0) {
+        int n = int(min(abs(x.x), 5.0));
+        for (int i = 0; i < 5; i++) {
+            if (i > n) break;
+            fi = complexLog2(fi);
+        }
+    }
+    // Re(x) > 1 → iterate exp
+    else if (x.x > 1.0) {
+        int n = int(min(abs(x.x - 1.0), 5.0));
+        for (int i = 0; i < 5; i++) {
+            if (i >= n+1) break;
+            fi = complexExp2(fi);
+        }
+    }
+    // -1 ≤ Re(x) ≤ 1 → direct series
+    else {
+        return tetr2ts(x);
+    }
+
+    return fi;
+}
+
+
+
+
+const vec2 pL2  = vec2(-1.7439, 0.0);
+const vec2 pLp2 = vec2(5.171797, 0.0);
+
+// pentu(x) -> vec2
+vec2 pent2u(vec2 x) {
+    // Compute pow(Lp, x+1-6 + log(L)/log(Lp))
+    vec2 expTerm = complexAdd(x, vec2(-5.0, 0.0));
+    vec2 logRatio = complexDiv(complexLog(pL2), complexLog(pLp2));
+    expTerm = complexPow(pLp2, complexAdd(expTerm, logRatio));
+    
+    vec2 fi = complexSub(pL2, expTerm);
+    
+    // Apply tetration 6 times
+    for(int i = 0; i < 6; i++) {
+        fi = tetr2(fi);
+    }
+    return fi;
+}
+
+// pentc(x) = pentu(x + 0.9181855419230064)
+vec2 pent2c(vec2 x) {
+    return pent2u(complexAdd(x, vec2(0.9181855419230064, 0.0)));
+}
+
+// pent(x) main
+vec2 pent2(vec2 x) {
+    if(x.x < 0.0) return pent2c(x); // If Re(x) < 0
+    
+    // Fractional part
+    vec2 fi = pent2c(complexAdd(vec2(0.0, 0.0), vec2(modc(x, 1.0), x.y)));
+    
+    // Integer part
+
+    for(int i = 0; i < 20; i++) {
+        if(float(i)<floor(x.x))
+        fi = tetr2(fi);
+    }
+    return fi;
+}
+
+
+
+
+
+
+
+
+
+
+#elif MODE == 2
+
+vec2 nixonphi(vec2 x){
+vec2 base=complexExp(vec2(1,0));
+vec2 fi=vec2(0,0);
+for(int i = 30; i>0; i--) {
+fi=complexPow(base,complexSub(complexAdd(fi,x),vec2(i,0)));}
+return fi;
+}
+
+#elif (MODE == 7 || MODE == 8 || MODE == 9)
+
+const vec2 L_SQRT2 = vec2(2, 0);
+const vec2 SQRT2   = vec2(1.41421356, 0.0);
+const int  BIGN    = 10;
+vec2 powertower(vec2 x, int n, vec2 a) {
+    vec2 xx = a;
+    for (int i = 0; i < 60; i++) {   // hard cap for GLSL
+        if (i >= n) break;
+        xx = complexPow(x, xx);
+    }
+    return xx;
+}
+
+
+vec2 tetrs2(vec2 b) {
+
+    const int N = BIGN;
+
+    vec2 fi = b;
+
+    vec2 L = (L_SQRT2);
+
+    vec2 pt = powertower(SQRT2, N - 1, SQRT2);
+
+    vec2 logTerm = complexLog(
+        complexSub(L, pt)
+    );
+
+    vec2 loglogL = complexLog(
+        complexLog(L)
+    );
+
+    vec2 frac = complexDiv(logTerm, loglogL);
+
+    vec2 expo = complexAdd(
+        complexAdd(fi, vec2(1.0, 0.0)),
+        frac
+    );
+
+    fi = complexSub(
+        L,
+        complexPow(complexLog(L), expo)
+    );
+
+    for (int i = 0; i < N; i++) {
+        fi = complexDiv(
+            complexLog(fi),
+            complexLog(SQRT2)
+        );
+    }
+    return fi; 
+}
+
+
+//vec2 pents2(){return vec2(0,0)}
+//vec2 sexts2(){return vec2(0,0)}
+
+vec2 pents2(vec2 x) {
+
+    const vec2 L  = vec2(-2.7527612196203917, 0.0);
+    const vec2 Lp = vec2( 8.845904160281748,  0.0);
+
+    // exponent = x + 1 - 6 + log(L)/log(Lp)
+    vec2 exponent = complexAdd(
+        complexAdd(
+            complexAdd(x, vec2(1.0, 0.0)),
+            vec2(-3.0, 0.0)
+        ),
+        complexDiv(
+            complexLog(L),
+            complexLog(Lp)
+        )
+    );
+
+    // fi = L - Lp^exponent
+    vec2 fi = complexSub(
+        L,
+        complexPow(Lp, exponent)
+    );
+
+    // iterate tetrs2
+    for (int i = 0; i < 3; i++) {
+        fi = tetrs2(fi);
+    }
+
+    return fi;
+}
+
+vec2 sexts2(vec2 x) {
+
+    const vec2 L  = vec2(-0.8947936102828048, 0.0);
+    const vec2 Lp = vec2( 2.229351532267998,  0.0);
+
+    // exponent = x + 1 - 3 + log(L)/log(Lp)
+    vec2 exponent = complexAdd(
+        complexAdd(
+            complexAdd(x, vec2(1.0, 0.0)),
+            vec2(-3.0, 0.0)
+        ),
+        complexDiv(
+            complexLog(L),
+            complexLog(Lp)
+        )
+    );
+
+    // fi = L - Lp^exponent
+    vec2 fi = complexSub(
+        L,
+        complexPow(Lp, exponent)
+    );
+
+    // iterate pents2
+    for (int i = 0; i < 3; i++) {
+        fi = pents2(fi);
+    }
+
+    return fi;
+}
+
+
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		float tanh(float x){
 		return (exp(2.0 * x) - 1.0) / (exp(2.0 * x) + 1.0);
 		}
@@ -149,103 +1137,155 @@ vec2 tetr(vec2 b) {
             vec3 rgb = clamp(abs(mod(c.x * 6.0 + vec3(0.0, 4.0, 2.0), 6.0) - 3.0) - 1.0, 0.0, 1.0);
             return c.z * mix(vec3(1.0), rgb, c.y);
         }
-        
+        uniform int u_pentMode; // 0 = pent, 1 = pentc, 2 = pentu, etc.
+
+
+
+
+
+///////////////////////////////////////////////////////7
+
+#if MODE == 0
+vec2 F(vec2 x){ return pent(x); }
+#elif MODE == 1
+vec2 F(vec2 x){ return tetr(x); }
+#elif MODE == 2
+vec2 F(vec2 x){ return nixonphi(x); }
+#elif MODE == 3
+vec2 F(vec2 x){ return tetr2(x); }
+#elif MODE == 4
+vec2 F(vec2 x){ return pent2(x); }
+#elif MODE == 5
+vec2 F(vec2 x){ return tetr10(x); }
+#elif MODE == 6
+vec2 F(vec2 x){ return pent10(x); }
+#elif MODE == 7
+vec2 F(vec2 x){ return tetrs2(x); }
+#elif MODE == 8
+vec2 F(vec2 x){ return pents2(x); }
+#elif MODE == 9
+vec2 F(vec2 x){ return sexts2(x); }
+#endif
+
+
+
+
+
               void main() {
             vec2 uv = (gl_FragCoord.xy - u_resolution * 0.5) / u_resolution.y;
             vec2 c = uv / u_zoom + u_offset;
             
-            vec2 z = tetr(c);
+             vec2 z = F(c);
             
-            float magnitude = length(z);
+            
             float hue = atan(z.y, z.x) / 6.28318;
-            float value = tanh(magnitude) * 0.9 + 0.1;
-            
-            gl_FragColor = vec4(hsvToRgb(hue, 1.0, value), 1.0);
+            float magnitude = length(z);
+float value;
+
+if (magnitude > 10.0) {
+    value = 1.0;
+} else {
+    value = tanh(magnitude ) * 0.9 + 0.1;
+}
+ gl_FragColor = vec4(hsvToRgb(hue, 1.0, value), 1.0);
+            if (z.x != z.x || z.y != z.y) {
+         gl_FragColor = vec4(1.0); // white
+    }
+
+    // Detect Inf / overflow
+    if (abs(z.x) > 1e35 || abs(z.y) > 1e30) {
+        gl_FragColor = vec4(1.0); // white
+    }
+           
         }
     </script>
     <script>
-        const canvas = document.getElementById("glCanvas");
-        const gl = canvas.getContext("webgl");
-        
-        let zoom = 0.02;
-        let offset = { x: 0.0, y: 0.0 };
-        let isDragging = false;
-        let lastMouse = { x: 0, y: 0 };
-        
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            gl.viewport(0, 0, canvas.width, canvas.height);
-        }
-        
-        window.addEventListener("resize", resizeCanvas);
-        resizeCanvas();
-        
-        window.addEventListener("wheel", (event) => {
-            zoom *= event.deltaY > 0 ? 0.9 : 1.1;
-        });
-        
-        canvas.addEventListener("mousedown", (event) => {
-            isDragging = true;
-            lastMouse.x = event.clientX;
-            lastMouse.y = event.clientY;
-        });
-        
-        window.addEventListener("mouseup", () => { isDragging = false; });
-        
-        window.addEventListener("mousemove", (event) => {
-            if (isDragging) {
-                offset.x -= (event.clientX - lastMouse.x) * 0.002 / zoom;
-                offset.y += (event.clientY - lastMouse.y) * 0.002 / zoom;
-                lastMouse.x = event.clientX;
-                lastMouse.y = event.clientY;
-            }
-        });
-        
-        function compileShader(gl, source, type) {
-            let shader = gl.createShader(type);
-            gl.shaderSource(shader, source);
-            gl.compileShader(shader);
-            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-                console.error("Shader compile error:", gl.getShaderInfoLog(shader));
-                return null;
-            }
-            return shader;
-        }
-        
-        let vertexShader = compileShader(gl, `
-            attribute vec4 position;
-            void main() { gl_Position = position; }
-        `, gl.VERTEX_SHADER);
-        
-        let fragmentShader = compileShader(gl, document.getElementById("fragmentShader").textContent, gl.FRAGMENT_SHADER);
-        
-        let program = gl.createProgram();
-        gl.attachShader(program, vertexShader);
-        gl.attachShader(program, fragmentShader);
-        gl.linkProgram(program);
-        gl.useProgram(program);
-        
-        let positionBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
-        
-        let positionLocation = gl.getAttribLocation(program, "position");
-        gl.enableVertexAttribArray(positionLocation);
-        gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
-        
-        let resolutionLocation = gl.getUniformLocation(program, "u_resolution");
-        let offsetLocation = gl.getUniformLocation(program, "u_offset");
-        let zoomLocation = gl.getUniformLocation(program, "u_zoom");
-        
-        function render() {
-            gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
-            gl.uniform2f(offsetLocation, offset.x, offset.y);
-            gl.uniform1f(zoomLocation, zoom);
-            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-            requestAnimationFrame(render);
-        }
-        render();
+       const canvas = document.getElementById("glCanvas");
+const gl = canvas.getContext("webgl");
+const select = document.getElementById("pentSelect");
+
+function resize(){
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+  gl.viewport(0,0,canvas.width,canvas.height);
+}
+addEventListener("resize",resize);
+resize();
+
+const vertexSrc = `
+attribute vec2 position;
+void main(){ gl_Position = vec4(position,0,1); }
+`;
+
+const quad = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+
+let program;
+let u_res,u_off,u_zoom;
+
+function compile(mode){
+    if(program) gl.deleteProgram(program);
+
+    const fragSrc =
+`#define MODE ${mode}
+${document.getElementById("fragmentTemplate").textContent}`;
+
+    const vs = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vs,vertexSrc);
+    gl.compileShader(vs);
+
+    const fs = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fs,fragSrc);
+    gl.compileShader(fs);
+
+    if(!gl.getShaderParameter(fs,gl.COMPILE_STATUS)){
+        console.error(gl.getShaderInfoLog(fs));
+        return;
+    }
+
+    program = gl.createProgram();
+    gl.attachShader(program,vs);
+    gl.attachShader(program,fs);
+    gl.linkProgram(program);
+    gl.useProgram(program);
+
+    const loc = gl.getAttribLocation(program,"position");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+
+    u_res = gl.getUniformLocation(program,"u_resolution");
+    u_off = gl.getUniformLocation(program,"u_offset");
+    u_zoom = gl.getUniformLocation(program,"u_zoom");
+}
+
+compile(2);
+
+let zoom = 0.02;
+let offset = {x:0,y:0};
+let drag=false,last={x:0,y:0};
+
+addEventListener("wheel",e=>zoom*=e.deltaY>0?0.9:1.1);
+canvas.addEventListener("mousedown",e=>{drag=true;last={x:e.x,y:e.y}});
+addEventListener("mouseup",()=>drag=false);
+addEventListener("mousemove",e=>{
+    if(drag){
+        offset.x -= (e.x-last.x)*0.002/zoom;
+        offset.y += (e.y-last.y)*0.002/zoom;
+        last={x:e.x,y:e.y};
+    }
+});
+
+select.onchange=()=>compile(+select.value);
+
+function render(){
+    gl.uniform2f(u_res,canvas.width,canvas.height);
+    gl.uniform2f(u_off,offset.x,offset.y);
+    gl.uniform1f(u_zoom,zoom);
+    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+    requestAnimationFrame(render);
+}
+render();
     </script>
 </body>
 </html>
