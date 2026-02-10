@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Fraunhofer Diffraction - Numerical Integration</title>
+<style>
+body { margin:0; display:flex; flex-direction:row; background:#111; color:#fff; font-family:sans-serif; }
+#controls { width: 220px; padding:10px; background:#222; box-sizing:border-box; }
+canvas { border:1px solid #444; margin:5px; cursor:crosshair; }
+label { display:block; margin-top:10px; }
+</style>
+</head>
+<body>
+
+<div id="controls">
+<label>Brush Size: <input type="range" id="brushSize" min="1" max="20" value="5"></label>
+<label>Aperture On/Off: <input type="checkbox" id="apOn" checked></label>
+<label>AKTCZ (k*z): <input type="range" id="aktcz" min="100" max="2000" value="500"></label>
+<label>Integration Steps: <input type="range" id="steps" min="2" max="200" value="50"></label>
+<label>Color Scale: 
+  <select id="colorMode">
+    <option value="linear">Linear</option>
+    <option value="logsigm">Log+Sigmoid</option>
+  </select>
+</label>
+<label>Load Aperture Image: <input type="file" id="apImage"></label>
+</div>
+
+<canvas id="apertureCanvas" width="400" height="400"></canvas>
+<canvas id="diffractionCanvas" width="400" height="400"></canvas>
+
+<script>
+const apCanvas = document.getElementById('apertureCanvas');
+const diffCanvas = document.getElementById('diffractionCanvas');
+const apCtx = apCanvas.getContext('2d');
+const diffCtx = diffCanvas.getContext('2d');
+
+let width = apCanvas.width;
+let height = apCanvas.height;
+
+let brushSize = 5;
+let apertureOn = true;
+let aktcz = 500;
+let steps = 50;
+let colorMode = 'linear';
+
+let aperture = new Float32Array(width*height);
+
+function drawBrush(x,y){
+  for(let dx=-brushSize; dx<=brushSize; dx++){
+    for(let dy=-brushSize; dy<=brushSize; dy++){
+      const xx=x+dx, yy=y+dy;
+      if(xx<0||xx>=width||yy<0||yy>=height) continue;
+      if(Math.sqrt(dx*dx+dy*dy)<=brushSize) aperture[yy*width+xx] = apertureOn?1:0;
+    }
+  }
+}
+
+apCanvas.addEventListener('mousedown', e=>drawing=true);
+apCanvas.addEventListener('mouseup', e=>drawing=false);
+apCanvas.addEventListener('mousemove', e=>{
+  if(!drawing) return;
+  const rect = apCanvas.getBoundingClientRect();
+  const x = Math.floor(e.clientX - rect.left);
+  const y = Math.floor(e.clientY - rect.top);
+  drawBrush(x,y);
+  renderAperture();
+});
+
+let drawing=false;
+
+function renderAperture(){
+  const img = apCtx.createImageData(width,height);
+  for(let i=0;i<width*height;i++){
+    let v = aperture[i]*255;
+    img.data[i*4]=v; img.data[i*4+1]=v; img.data[i*4+2]=v; img.data[i*4+3]=255;
+  }
+  apCtx.putImageData(img,0,0);
+}
+
+// Load image
+document.getElementById('apImage').addEventListener('change', e=>{
+  const file=e.target.files[0];
+  if(!file) return;
+  const img = new Image();
+  img.onload = function(){
+    apCtx.drawImage(img,0,0,width,height);
+    const imgData = apCtx.getImageData(0,0,width,height);
+    for(let i=0;i<width*height;i++){
+      aperture[i]=imgData.data[i*4]/255;
+    }
+  }
+  img.src = URL.createObjectURL(file);
+});
+
+// Sliders
+document.getElementById('brushSize').addEventListener('input', e=>brushSize=parseInt(e.target.value));
+document.getElementById('apOn').addEventListener('change', e=>apertureOn=e.target.checked);
+document.getElementById('aktcz').addEventListener('input', e=>aktcz=parseFloat(e.target.value));
+document.getElementById('steps').addEventListener('input', e=>steps=parseInt(e.target.value));
+document.getElementById('colorMode').addEventListener('change', e=>colorMode=e.target.value);
+
+// Gaussian Quadrature points and weights (n points)
+function gaussLegendre(n){
+  let x=[],w=[];
+  // simple approximation for small n (could use precalc table)
+  for(let i=0;i<n;i++){
+    const xi = -Math.cos(Math.PI*(i+0.75)/(n+0.5));
+    x.push(xi);
+    w.push(Math.PI/n); // rough
+  }
+  return {x:x,w:w};
+}
+
+// Compute diffraction
+function computeDiffraction(){
+  const img = diffCtx.createImageData(width,height);
+  const {x:gx, w:gw} = gaussLegendre(steps);
+  const {y:gy, w:gw_y} = gaussLegendre(steps); // same
+  for(let j=0;j<height;j++){
+    for(let i=0;i<width;i++){
+      let sumRe=0, sumIm=0;
+      for(let sx=0;sx<steps;sx++){
+        for(let sy=0;sy<steps;sy++){
+          const u = (i + gx[sx])/width - 0.5;
+          const v = (j + gx[sy])/height - 0.5;
+          const xx = Math.floor((u+0.5)*width);
+          const yy = Math.floor((v+0.5)*height);
+          if(xx<0||xx>=width||yy<0||yy>=height) continue;
+          const amp = aperture[yy*width+xx];
+          const phase = 2*Math.PI*aktcz*(u*u+v*v);
+          sumRe += amp*Math.cos(phase)*gw[sx]*gw[sy];
+          sumIm += amp*Math.sin(phase)*gw[sx]*gw[sy];
+        }
+      }
+      let mag = Math.sqrt(sumRe*sumRe+sumIm*sumIm);
+      if(colorMode==='logsigm') mag = 1/(1+Math.exp(-Math.log(1+mag)));
+      mag = Math.min(1,mag);
+      const c = Math.floor(mag*255);
+      const idx = (j*width+i)*4;
+      img.data[idx]=c; img.data[idx+1]=c; img.data[idx+2]=c; img.data[idx+3]=255;
+    }
+  }
+  diffCtx.putImageData(img,0,0);
+}
+
+function animate(){
+  computeDiffraction();
+  requestAnimationFrame(animate);
+}
+
+animate();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Lyapunov Fractal (GLSL)</title>
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #111;
+    color: #ddd;
+    font-family: monospace;
+}
+#ui {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.75);
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 12px;
+}
+#ui input, #ui select {
+    width: 120px;
+}
+canvas { display: block; }
+.legend {
+    margin-top: 6px;
+    font-size: 11px;
+    line-height: 1.3em;
+}
+</style>
+</head>
+<body>
+
+<div id="ui">
+    <div>
+        Sequence: <input id="seq" value="ABAABB"><br>
+        Iterations N: <input id="iter" type="number" value="10"><br>
+        Start index n₀: <input id="n0" type="number" value="0"><br>
+        Map group:
+        <select id="map">
+            <option value="0">Logistic (default)</option>
+            <option value="1">Circle map</option>
+            <option value="2">Tent map</option>
+            <option value="3">Zaslavskii map</option>
+            <option value="4">Hénon map</option>
+            <option value="5">Exponential map</option>
+            <option value="6">Gauss map</option>
+        </select><br>
+        Coloring:
+        <select id="color">
+            <option value="0">Grayscale atan(exp)</option>
+            <option value="1">Rainbow</option>
+            <option value="2">Blue / Yellow / Black</option>
+        </select>
+    </div>
+
+    <div class="legend">
+        <b>Letter legend</b><br>
+       <b>A B Logistic map</b><br>
+	   <b>C D Circle map</b><br>
+	   <b>E F Tent map</b><br>
+	   <b>G H Zaslavskii map</b><br>
+	   <b>I J Hénon map</b><br>
+	   <b>K L Exponential map</b><br>
+	   <b>M N Gauss map</b><br>
+	 
+    </div>
+</div>
+
+<canvas id="gl"></canvas>
+
+<script>
+const canvas = document.getElementById("gl");
+const gl = canvas.getContext("webgl");
+if (!gl) alert("WebGL not supported");
+
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+
+const vertSrc = `
+attribute vec2 p;
+void main(){
+    gl_Position = vec4(p,0.0,1.0);
+}
+`;
+
+const fragSrc = `
+precision highp float;
+
+uniform vec2 res;
+uniform vec2 center;
+uniform float zoom;
+
+uniform int N;
+uniform int n0;
+
+uniform int colorMode;
+
+uniform int seqLen;
+uniform int seq[64];
+
+float logistic(float x, float r){
+    return r * x * (1.0 - x);
+}
+
+float circle(float x, float k){
+    return mod(x + k - (1.0/(2.0*3.141592))*sin(2.0*3.141592*x), 1.0);
+}
+
+float tent(float x, float r){
+    return x < 0.5 ? r*x : r*(1.0-x);
+}
+
+float exponential(float x, float r){
+    return exp(-r * x);
+}
+
+float gauss(float x, float r){
+    return exp(-r*x*x);
+}
+
+vec2 henon(vec2 v, float a){
+    return vec2(1.0 - a*v.x*v.x + v.y, 0.3*v.x);
+}
+
+vec2 zaslav(vec2 v, float k){
+    float xp = v.x + v.y;
+    float yp = v.y + k*sin(v.x);
+    return vec2(xp, yp);
+}
+int mod_i32( int i32_bas , int i32_div ){
+
+    float   flt_res =  mod( float(i32_bas), float(i32_div));
+    int    i32_res = int( flt_res );
+    return( i32_res );
+}
+float lyap(vec2 uv){
+    float x = 0.5;
+    vec2 v = vec2(0.1, 0.1);
+    float sum = 0.0;
+
+    for(int i = 0; i < 100; i++){
+        if(i >= N) break;
+
+        // compute the sequence index safely
+        int k = mod_i32(i + n0, seqLen);
+
+        // manual safe lookup
+        int s = 0;
+        // GLSL ES 1.0 allows only constant loop bounds
+        // we loop over all 64 slots and pick the one that matches k
+        for(int j = 0; j < 64; j++){
+            if(j == k){
+                s = seq[j];
+            }
+        }
+
+        bool useY = (mod_i32(s , 2) == 0);
+        float r = useY ? uv.y : uv.x;
+
+        float dx = 0.0;
+int mapIndex = int(floor(float(s) * 0.5));
+
+        if(mapIndex == 0){
+            dx = abs(r * (1.0 - 2.0*x));
+            x = r * x * (1.0 - x);
+        }
+        else if(mapIndex == 1){
+            dx = 1.0;
+            x = mod(x + r - (1.0/6.283185)*sin(6.283185*x), 1.0);
+        }
+        else if(mapIndex == 2){
+            dx = r;
+            x = (x < 0.5) ? r*x : r*(1.0-x);
+        }
+        else if(mapIndex == 3){
+            vec2 nv = vec2(v.x + v.y, v.y + r*sin(v.x));
+            dx = length(nv - v);
+            v = nv;
+        }
+        else if(mapIndex == 4){
+            vec2 nv = vec2(1.0 - r*v.x*v.x + v.y, 0.3*v.x);
+            dx = length(nv - v);
+            v = nv;
+        }
+        else if(mapIndex == 5){
+            dx = abs(-r * exp(-r*x));
+            x = exp(-r*x);
+        }
+        else if(mapIndex == 6){
+            dx = abs(-2.0*r*x*exp(-r*x*x));
+            x = exp(-r*x*x);
+        }
+
+        sum += log(max(dx, 1e-6));
+    }
+    return sum / float(N);
+}
+
+vec3 rainbow(float t){
+    return 0.5 + 0.5*cos(6.28318*(t + vec3(0.0,0.33,0.67)));
+}
+
+void main(){
+    vec2 uv = (gl_FragCoord.xy - 0.5*res)/res.y;
+    uv = uv*zoom + center;
+
+    float L = lyap(uv);
+    float e = exp(L);
+
+    vec3 col;
+
+    if(colorMode == 0){
+        float g = atan(e) / 1.57;
+        col = vec3(g);
+    }
+    else if(colorMode == 1){
+        col = rainbow(0.5 + 0.2*L);
+    }
+    else{
+        if(abs(L) < 0.01) col = vec3(0.0);
+        else if(L > 0.0) col = mix(vec3(0.0,0.0,0.5), vec3(0.2,0.4,1.0), clamp(L,0.0,1.0));
+        else col = mix(vec3(0.6,0.4,0.0), vec3(1.0,1.0,0.2), clamp(-L,0.0,1.0));
+    }
+
+    gl_FragColor = vec4(col,1.0);
+}
+`;
+
+function compile(type, src){
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if(!gl.getShaderParameter(s, gl.COMPILE_STATUS))
+        throw gl.getShaderInfoLog(s);
+    return s;
+}
+
+const prog = gl.createProgram();
+gl.attachShader(prog, compile(gl.VERTEX_SHADER, vertSrc));
+gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fragSrc));
+gl.linkProgram(prog);
+gl.useProgram(prog);
+
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+
+const loc = gl.getAttribLocation(prog, "p");
+gl.enableVertexAttribArray(loc);
+gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+const U = n => gl.getUniformLocation(prog,n);
+
+let center = [0,0];
+let zoom = 2.5;
+
+function render(){
+    gl.uniform2f(U("res"), canvas.width, canvas.height);
+    gl.uniform2f(U("center"), center[0], center[1]);
+    gl.uniform1f(U("zoom"), zoom);
+
+    gl.uniform1i(U("N"), +iter.value);
+    gl.uniform1i(U("n0"), +n0.value);
+  
+    gl.uniform1i(U("colorMode"), +color.value);
+
+    const s = seq.value.toUpperCase();
+    const arr = s.split("").map(c => c.charCodeAt(0)-65);
+    gl.uniform1i(U("seqLen"), arr.length);
+    gl.uniform1iv(U("seq"), new Int32Array(arr));
+
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+
+render();
+document.querySelectorAll("#ui input,#ui select").forEach(e=>e.oninput=render);
+
+let drag=false, px=0, py=0;
+canvas.onmousedown=e=>{drag=true;px=e.clientX;py=e.clientY};
+canvas.onmouseup=()=>drag=false;
+canvas.onmousemove=e=>{
+    if(!drag) return;
+    center[0] -= (e.clientX-px)/canvas.height*zoom;
+    center[1] += (e.clientY-py)/canvas.height*zoom;
+    px=e.clientX;py=e.clientY;
+    render();
+};
+
+canvas.onwheel=e=>{
+    zoom *= Math.exp(e.deltaY*0.001);
+    render();
+};
+
+window.onresize=()=>{
+    canvas.width=innerWidth;
+    canvas.height=innerHeight;
+    gl.viewport(0,0,canvas.width,canvas.height);
+    render();
+};
+</script>
+</body>
+</html>

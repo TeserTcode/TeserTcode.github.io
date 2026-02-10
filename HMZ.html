@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>3D Maze</title>
+<style>
+body { margin:0; overflow:hidden; background:black; }
+#ui {
+  position:fixed; top:10px; left:10px; color:white;
+  font-family:monospace; font-size:14px;
+}
+#skill {
+  position:fixed; top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  color:red; font-size:40px;
+  display:none;
+}
+#slider { width:150px; }
+</style>
+</head>
+<body>
+
+<div id="ui">
+Mouse sensitivity <input id="slider" type="range" min="0.1" max="2" step="0.05" value="0.6"><br><br>
+Legend:<br>
+Red N – W<br>
+Blue S – S<br>
+Green E – D<br>
+Yellow W – A<br>
+Cyan U – E<br>
+Magenta D – Q<br>
+Click: move forward
+</div>
+
+<div id="skill">skill issue</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+<script>
+const size=2;
+const gridSize=size*2+1;
+const voxels=[...Array(gridSize)].map(()=>[...Array(gridSize)].map(()=>Array(gridSize).fill(1)));
+
+function cell(x,y,z){return x>=0&&y>=0&&z>=0&&x<size&&y<size&&z<size}
+function carve(x,y,z){voxels[x*2+1][y*2+1][z*2+1]=0;}
+
+function generateMaze(){
+  let visited=[...Array(size)].map(()=>[...Array(size)].map(()=>Array(size).fill(false)));
+  let walls=[];
+  function addWalls(x,y,z){
+    [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]].forEach(d=>{
+      let nx=x+d[0], ny=y+d[1], nz=z+d[2];
+      if(cell(nx,ny,nz) && !visited[nx][ny][nz])
+        walls.push({x,y,z,nx,ny,nz});
+    });
+  }
+  visited[0][0][0]=true;
+  carve(0,0,0);
+  addWalls(0,0,0);
+
+  while(walls.length){
+    let i=Math.floor(Math.random()*walls.length);
+    let w=walls.splice(i,1)[0];
+    if(!visited[w.nx][w.ny][w.nz]){
+      visited[w.nx][w.ny][w.nz]=true;
+      carve(w.nx,w.ny,w.nz);
+      voxels[w.x*2+1+(w.nx-w.x)][w.y*2+1+(w.ny-w.y)][w.z*2+1+(w.nz-w.z)]=0;
+      addWalls(w.nx,w.ny,w.nz);
+    }
+  }
+}
+generateMaze();
+
+const scene=new THREE.Scene();
+scene.fog=new THREE.Fog(0x000000,5,25);
+
+const cam=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,100);
+const renderer=new THREE.WebGLRenderer();
+renderer.setSize(innerWidth,innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const light=new THREE.DirectionalLight(0xffffff,1);
+light.position.set(1,2,3);
+scene.add(light);
+
+const cubeGeo=new THREE.BoxGeometry(1,1,1);
+const wallMat=new THREE.MeshStandardMaterial({color:0x888888});
+const finishMat=new THREE.MeshStandardMaterial({color:0x00ff00});
+
+for(let x=0;x<gridSize;x++)
+for(let y=0;y<gridSize;y++)
+for(let z=0;z<gridSize;z++)
+if(voxels[x][y][z]){
+  let m=new THREE.Mesh(cubeGeo,wallMat);
+  m.position.set(x,y,z);
+  scene.add(m);
+}
+
+let finish=new THREE.Mesh(cubeGeo,finishMat);
+finish.position.set(gridSize-2,gridSize-2,gridSize-2);
+scene.add(finish);
+
+let player={x:1,y:1,z:1};
+cam.position.set(1,1,1);
+
+let yaw=0,pitch=0,sens=0.6;
+document.getElementById("slider").oninput=e=>sens=e.target.value;
+
+document.body.onclick=()=>document.body.requestPointerLock();
+document.addEventListener("mousemove",e=>{
+  if(document.pointerLockElement){
+    yaw-=e.movementX*0.002*sens;
+    pitch-=e.movementY*0.002*sens;
+    pitch=Math.max(-1.5,Math.min(1.5,pitch));
+  }
+});
+
+function showSkill(){
+  const s=document.getElementById("skill");
+  s.style.display="block";
+  setTimeout(()=>s.style.display="none",300);
+}
+
+let moving=false, t=0, from={}, to={};
+
+function tryMove(dx,dy,dz){
+  if(moving) return;
+  let nx=player.x+dx, ny=player.y+dy, nz=player.z+dz;
+  if(voxels[nx]?.[ny]?.[nz]===0){
+    from={...player};
+    to={x:nx,y:ny,z:nz};
+    moving=true; t=0;
+  } else showSkill();
+}
+
+document.addEventListener("keydown",e=>{
+  const map={
+    w:[1,0,0], s:[-1,0,0],
+    d:[0,0,1], a:[0,0,-1],
+    e:[0,1,0], q:[0,-1,0]
+  };
+  if(map[e.key]) tryMove(...map[e.key]);
+});
+
+document.addEventListener("mousedown",()=>{
+  let v=new THREE.Vector3(0,0,-1).applyEuler(cam.rotation);
+  let d=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+  let best=d.sort((a,b)=>
+    v.dot(new THREE.Vector3(...b))-v.dot(new THREE.Vector3(...a))
+  )[0];
+  tryMove(...best);
+});
+
+function label(text,color){
+  const c=document.createElement("canvas");
+  c.width=64;c.height=64;
+  const g=c.getContext("2d");
+  g.fillStyle=color; g.beginPath(); g.arc(32,32,10,0,Math.PI*2); g.fill();
+  g.fillStyle="white"; g.fillText(text,26,38);
+  const t=new THREE.CanvasTexture(c);
+  return new THREE.Sprite(new THREE.SpriteMaterial({map:t}));
+}
+
+const dirs=[
+  [1,0,0,"N","red"],[-1,0,0,"S","blue"],
+  [0,0,1,"E","green"],[0,0,-1,"W","yellow"],
+  [0,1,0,"U","cyan"],[0,-1,0,"D","magenta"]
+];
+const sprites=dirs.map(d=>{
+  let s=label(d[3],d[4]);
+  scene.add(s); return {s,dx:d[0],dy:d[1],dz:d[2]};
+});
+
+function animate(){
+  requestAnimationFrame(animate);
+  if(moving){
+    t+=0.1;
+    player.x=THREE.MathUtils.lerp(from.x,to.x,t);
+    player.y=THREE.MathUtils.lerp(from.y,to.y,t);
+    player.z=THREE.MathUtils.lerp(from.z,to.z,t);
+    if(t>=1){player={...to}; moving=false;}
+  }
+  cam.position.set(player.x,player.y,player.z);
+  cam.rotation.set(pitch,yaw,0);
+
+  sprites.forEach(o=>{
+    o.s.position.set(player.x+o.dx,player.y+o.dy,player.z+o.dz);
+  });
+
+  renderer.render(scene,cam);
+}
+animate();
+</script>
+</body>
+</html>

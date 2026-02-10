@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Wigner 6j Geometry Viewer</title>
+
+<style>
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #0b0b0e;
+    color: #ddd;
+    font-family: monospace;
+}
+#ui {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.65);
+    padding: 10px;
+    border-radius: 8px;
+}
+#readout {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.75);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+label {
+    display: block;
+    font-size: 12px;
+}
+input[type=range] {
+    width: 160px;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+<script src="clrspc.js"></script>
+<script src="polyhedra.js"></script>
+<script src="mthfnc.js"></script>
+</head>
+
+<body>
+<div id="ui"></div>
+<div id="readout"></div>
+
+<script>
+/* ================= SCENE ================= */
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x0b0b0e, 5, 18);
+
+const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 100);
+camera.position.set(3.5, 3.2, 3.5);
+
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(devicePixelRatio);
+document.body.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+/* ================= LIGHTING (BRIGHT + EVEN) ================= */
+
+// strong ambient so interior never dies
+scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+
+// hemispheric fill (top / bottom balance)
+const hemi = new THREE.HemisphereLight(0xffffff, 0x404060, 0.9);
+scene.add(hemi);
+
+// key lights from multiple directions
+[
+    [ 6, 6, 6 ],
+    [ -6, 4, 3 ],
+    [ 3, -6, 4 ],
+    [ -4, -3, -6 ]
+].forEach(p=>{
+    const l = new THREE.DirectionalLight(0xffffff, 0.7);
+    l.position.set(...p);
+    scene.add(l);
+});
+
+/* ================= UI ================= */
+
+const spins = [10,10,10,10,10,10];
+const names = ["j1","j2","j3","j4","j5","j6"];
+const ui = document.getElementById("ui");
+
+names.forEach((n,i)=>{
+    const lab = document.createElement("label");
+    lab.textContent = `${n} = 10`;
+    const s = document.createElement("input");
+    s.type = "range";
+    s.min = 0;
+    s.max = 10;
+    s.step = 0.5;
+    s.value = 10;
+    s.oninput = ()=>{
+        spins[i] = parseFloat(s.value);
+        lab.textContent = `${n} = ${spins[i]}`;
+        updateGeometry();
+    };
+    ui.appendChild(lab);
+    ui.appendChild(s);
+});
+
+/* ================= SHADER ================= */
+
+const material = new THREE.ShaderMaterial({
+    transparent: true,
+    side: THREE.DoubleSide,
+    uniforms: {
+        amp:   { value: 1.0 },
+        phase: { value: 0.0 }
+    },
+    vertexShader: `
+        varying vec3 vN;
+        void main(){
+            vN = normalize(normalMatrix * normal);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+        }
+    `,
+    fragmentShader: `
+        varying vec3 vN;
+        uniform float amp;
+        uniform float phase;
+
+        vec3 hsv2rgb(vec3 c){
+            vec3 p = abs(fract(c.xxx + vec3(0,2.0/3.0,1.0/3.0))*6.0 - 3.0);
+            return c.z * mix(vec3(1.0), clamp(p-1.0,0.0,1.0), c.y);
+        }
+
+        void main(){
+            vec3 n = gl_FrontFacing ? vN : -vN;
+
+            float light =
+                0.6 +
+                0.4 * abs(dot(n, normalize(vec3(0.2,0.6,1.0))));
+
+            vec3 base = vec3(0.95, 0.7, 0.35);
+            vec3 phaseCol = hsv2rgb(vec3(mod(phase,6.28318)/6.28318, 0.9, 1.0));
+            vec3 col = mix(base, phaseCol, 0.65);
+
+            gl_FragColor = vec4(col * light, 0.35 + 0.65*amp);
+        }
+    `
+});
+
+/* ================= GEOMETRY ================= */
+
+const geom = new THREE.BufferGeometry();
+const mesh = new THREE.Mesh(geom, material);
+scene.add(mesh);
+
+function L(j){ return Math.sqrt(j*(j+1)); }
+
+const readout = document.getElementById("readout");
+
+function sci(x){
+    if (x === 0) return "0.0e+0";
+    const e = Math.floor(Math.log10(Math.abs(x)));
+    const m = x / Math.pow(10, e);
+    return `${m.toFixed(4)}e${e>=0?"+":""}${e}`;
+}
+
+function updateGeometry(){
+    const [a,b,c,d,e,f] = spins.map(L);
+
+    const v0 = new THREE.Vector3(0,0,0);
+    const v1 = new THREE.Vector3(a,0,0);
+
+    const x2 = (b*b + a*a - c*c)/(2*a);
+    const y2 = Math.sqrt(Math.max(0,b*b - x2*x2));
+    const v2 = new THREE.Vector3(x2,y2,0);
+
+    const ex = new THREE.Vector3().subVectors(v1,v0).normalize();
+    const ey = new THREE.Vector3().subVectors(v2,v0);
+    ey.sub(ex.clone().multiplyScalar(ey.dot(ex))).normalize();
+    const ez = new THREE.Vector3().crossVectors(ex,ey);
+
+    const i = ex.dot(v2);
+    const j = ey.dot(v2);
+
+    const x = (d*d - e*e + a*a)/(2*a);
+    const y = (d*d - f*f + i*i + j*j - 2*i*x)/(2*j);
+    const z2 = d*d - x*x - y*y;
+    const z = Math.sqrt(Math.max(0,z2));
+
+    const v3 = v0.clone()
+        .add(ex.clone().multiplyScalar(x))
+        .add(ey.clone().multiplyScalar(y))
+        .add(ez.clone().multiplyScalar(z));
+
+    const verts = new Float32Array([
+        ...v0.toArray(), ...v1.toArray(), ...v2.toArray(),
+        ...v0.toArray(), ...v1.toArray(), ...v3.toArray(),
+        ...v0.toArray(), ...v2.toArray(), ...v3.toArray(),
+        ...v1.toArray(), ...v2.toArray(), ...v3.toArray()
+    ]);
+
+    geom.setAttribute("position", new THREE.BufferAttribute(verts,3));
+    geom.computeVertexNormals();
+
+    const val = wigner6j(
+        spins[0], spins[1], spins[2],
+        spins[3], spins[4], spins[5]
+    );
+
+    let re = val, im = 0;
+    if (typeof val === "object") {
+        re = val.re ?? val.real ?? 0;
+        im = val.im ?? val.imag ?? 0;
+    }
+
+    material.uniforms.amp.value   = Math.min(1, Math.hypot(re,im));
+    material.uniforms.phase.value = Math.atan2(im,re);
+
+    readout.textContent =
+        `6j = ${sci(re)} ${im>=0?"+":"-"} ${sci(Math.abs(im))} i`;
+}
+
+updateGeometry();
+
+/* ================= LOOP ================= */
+
+function animate(){
+    requestAnimationFrame(animate);
+    mesh.rotation.y += 0.003;
+    controls.update();
+    renderer.render(scene,camera);
+}
+animate();
+
+window.addEventListener("resize",()=>{
+    camera.aspect = innerWidth/innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth,innerHeight);
+});
+</script>
+</body>
+</html>

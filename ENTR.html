@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Entringer / Pouper Function Table & Calculator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+<script src="clrspc.js"></script>
+<script src="polyhedra.js"></script>
+<script src="mthfnc.js"></script>
+</head>
+<body>
+
+<h2>Function Table / Calculator</h2>
+
+<div>
+    Function:
+    <select id="fnSelect" onchange="updateVisibility()">
+        <option value="entringerzag">entringerzag(x,y)</option>
+        <option value="entringertan">entringertan(x,y)</option>
+        <option value="entringersec">entringersec(x,y)</option>
+        <option value="poupertan">poupertan(x,y)</option>
+        <option value="poupersec">poupersec(x,y)</option>
+        <option value="entringerpouperdg">entringerpouperdg(l,a,x,y)</option>
+        <option value="ncr">ncr(x,y)</option>
+        <option value="npr">npr(x,y)</option>
+        <option value="poch">poch(x,y)</option>
+        <option value="stirling2">stirling2(x,y)</option>
+        <option value="stirling">stirling(x,y)</option>
+        <option value="euleriannum2">euleriannum2(x,y)</option>
+        <option value="numberofdebrujin">numberofdebrujin(x,y)</option>
+        <option value="necklaceb">necklaceb(x,y)</option>
+        <option value="necklacelb">necklacelb(x,y)</option>
+        <option value="necklace">necklace(x,y)</option>
+        <option value="euleriannum">euleriannum(x,y)</option>
+        <option value="delannoy">delannoy(x,y)</option>
+        <option value="dedekindsum">dedekindsum(x,y)</option>
+        <option value="fallingfactorial">fallingfactorial(x,y)</option>
+        <option value="jacobisymbol">jacobisymbol(x,y)</option>
+        <option value="kroneckersymbol">kroneckersymbol(x,y)</option>
+        <option value="quarticresidue">quarticresidue(x,y)</option>
+        <option value="hankelsymbol">hankelsymbol(x,y)</option>
+        <option value="multifacti">multifacti(x,y)</option>
+    </select>
+</div>
+
+<div id="laControls" style="display:none">
+    l: <input type="number" id="lVal" value="1" step="1">
+    a: <input type="number" id="aVal" value="0" step="1">
+</div>
+
+<div>
+    xmin: <input type="number" id="xmin" value="0" step="0.5">
+    xmax: <input type="number" id="xmax" value="4" step="0.5">
+    ymin: <input type="number" id="ymin" value="0" step="0.5">
+    ymax: <input type="number" id="ymax" value="4" step="0.5">
+    N: <input type="number" id="N" value="1" step="0.1">
+</div>
+
+<div>
+    accuracy acc(n): <input type="number" id="accVal" value="50" min="1">
+</div>
+
+<button onclick="buildTable()">Generate Table</button>
+
+<div id="tableContainer"></div>
+
+<h3>Complex Calculator</h3>
+<div>
+    Expression: <input type="text" id="calcExpr" value="ncr(1+3i,2+2i)">
+    <button onclick="calcComplex()">Evaluate</button>
+</div>
+<div>Result: <span id="calcResult"></span></div>
+
+<script>
+function updateVisibility() {
+    const fn = document.getElementById("fnSelect").value;
+    document.getElementById("laControls").style.display = (fn === "entringerpouperdg") ? "block" : "none";
+}
+
+function evaluateFn(fn, x, y) {
+    if (fn === "entringerpouperdg") {
+        const l = Number(document.getElementById("lVal").value);
+        const a = Number(document.getElementById("aVal").value);
+        return entringerpouperdg(l, a, x, y);
+    }
+    if (typeof window[fn] === "function") {
+        return window[fn](x, y);
+    }
+    return NaN;
+}
+
+function buildTable() {
+    const xmin = Number(document.getElementById("xmin").value);
+    const xmax = Number(document.getElementById("xmax").value);
+    const ymin = Number(document.getElementById("ymin").value);
+    const ymax = Number(document.getElementById("ymax").value);
+    const N = Number(document.getElementById("N").value);
+    const fn = document.getElementById("fnSelect").value;
+    const accuracy = Number(document.getElementById("accVal").value);
+
+    if (typeof acc === "function") acc(accuracy);
+
+    let html = "<table border='1'><tr><th>x \\ y</th>";
+    for (let y = ymin; y <= ymax + 1e-9; y += N) html += `<th>${y}</th>`;
+    html += "</tr>";
+
+    for (let x = xmin; x <= xmax + 1e-9; x += N) {
+        html += `<tr><th>${x}</th>`;
+        for (let y = ymin; y <= ymax + 1e-9; y += N) {
+            let val;
+            try {
+                val = evaluateFn(fn, x, y);
+                val = (typeof val === "number") ? Math.round(val * 1000)/1000 : val.toString();
+            } catch (e) { val = "NaN"; }
+            html += `<td>${val}</td>`;
+        }
+        html += "</tr>";
+    }
+    html += "</table>";
+    document.getElementById("tableContainer").innerHTML = html;
+}
+
+function calcComplex() {
+    const expr = document.getElementById("calcExpr").value;
+    try {
+        const res = math.evaluate(expr);
+        document.getElementById("calcResult").textContent = res.toString();
+    } catch(e) {
+        document.getElementById("calcResult").textContent = "Error";
+    }
+}
+
+// initial render
+updateVisibility();
+buildTable();
+</script>
+
+</body>
+</html>

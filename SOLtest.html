@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Polyhedra Viewer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/math/ConvexHull.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/ConvexGeometry.js"></script>
+<style>
+body { font-family: Arial, sans-serif; text-align: center; }
+#buttonContainer { margin: 20px; }
+button { margin: 5px; padding: 5px 10px; }
+#renderContainer { display: flex; flex-direction: column; align-items: center; }
+canvas { border: 1px solid black; }
+.info-box { margin-top: 10px; padding: 10px; border: 1px solid black; width: 600px; text-align: left; }
+select { margin-top: 10px; }
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+th { background-color: #f2f2f2; }
+.section-title { margin-top: 20px; font-weight: bold; }
+</style>
+</head>
+<body>
+<h1>Polyhedra Viewer</h1>
+
+<div id="buttonContainer"></div>
+<div id="renderContainer">
+  <div id="threeCanvas" style="width:400px; height:400px;"></div>
+  <select id="materialSelect">
+    <option value="normal">Normal Material</option>
+    <option value="wireframe">Wireframe</option>
+    <option value="basic">Basic Material</option>
+    <option value="standard">Standard Material</option>
+  </select>
+  <div id="infoBox" class="info-box"></div>
+</div>
+       <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+
+<script src="clrspc.js"></script>
+
+<script src="mthfnc.js"></script>
+<script src="polyhedra.js"></script>
+<script>
+
+
+// -----------------------------
+// Helpers
+// -----------------------------
+function computeEdges(vertices, vertexDegree, edgemap){
+  if(vertexDegree) return vertexDegree.reduce((a,b)=>a+b,0)/2;
+  if(edgemap) return Object.keys(edgemap).length/2;
+  return Math.floor(vertices.length*1.5);
+}
+
+function getFaceCount(geometry){
+  return geometry.index ? geometry.index.count/3 : geometry.attributes.position.count/3;
+}
+
+function computeMeshProperties(mesh){
+  mesh.geometry.computeVertexNormals();
+  const pos = mesh.geometry.attributes.position.array;
+  const indices = mesh.geometry.index ? mesh.geometry.index.array : null;
+  const vertices = [];
+  for(let i=0;i<pos.length;i+=3) vertices.push(new THREE.Vector3(pos[i],pos[i+1],pos[i+2]));
+
+  let area=0, volume=0;
+  function triangleArea(a,b,c){
+    const ab=b.clone().sub(a);
+    const ac=c.clone().sub(a);
+    return ab.cross(ac).length()/2;
+  }
+
+  if(indices){
+    for(let i=0;i<indices.length;i+=3){
+      const a=vertices[indices[i]], b=vertices[indices[i+1]], c=vertices[indices[i+2]];
+      area += triangleArea(a,b,c);
+      volume += a.dot(b.clone().cross(c))/6;
+    }
+  } else {
+    for(let i=0;i<vertices.length;i+=3){
+      const a=vertices[i], b=vertices[i+1], c=vertices[i+2];
+      area += triangleArea(a,b,c);
+      volume += a.dot(b.clone().cross(c))/6;
+    }
+  }
+  return {area, volume: Math.abs(volume)};
+}
+
+function normalizeVertices(vertices){
+  let maxCoord=0;
+  for(const v of vertices) for(const x of v) maxCoord=Math.max(maxCoord,Math.abs(x));
+  if(maxCoord===0) return vertices;
+  return vertices.map(v=>v.map(x=>x/(2*maxCoord)));
+}
+
+// -----------------------------
+// Viewer setup
+// -----------------------------
+const container = document.getElementById('buttonContainer');
+const renderDiv = document.getElementById('threeCanvas');
+const infoBox = document.getElementById('infoBox');
+const materialSelect = document.getElementById('materialSelect');
+
+let scene, camera, renderer, meshHull, edgeLines;
+
+// Create buttons
+dualsMap.forEach((data,name)=>{
+  const btn = document.createElement('button');
+  btn.textContent = name;
+  btn.addEventListener('click',()=>renderPolyhedron(name));
+  container.appendChild(btn);
+});
+
+// Render a single polyhedron
+function renderPolyhedron(name){
+  const data = dualsMap.get(name);
+  if(!data) return;
+
+  // Clear previous scene
+  if(renderer){
+    while(renderDiv.firstChild) renderDiv.removeChild(renderDiv.firstChild);
+  }
+
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(50,1,0.1,1000);
+  camera.position.z = 2;
+  renderer = new THREE.WebGLRenderer({antialias:true});
+  renderer.setSize(renderDiv.clientWidth,renderDiv.clientHeight);
+  renderDiv.appendChild(renderer.domElement);
+
+  // Normalize vertices
+  const vertices = normalizeVertices(data.vertices);
+  const points = vertices.map(v=>new THREE.Vector3(...v));
+
+  // Mesh
+  const hull = new THREE.ConvexGeometry(points);
+  meshHull = new THREE.Mesh(hull,new THREE.MeshNormalMaterial({opacity:0.6,transparent:true}));
+
+  // Edges
+  edgeLines = new THREE.LineSegments(new THREE.EdgesGeometry(hull),new THREE.LineBasicMaterial({color:0x000000}));
+
+  scene.add(meshHull);
+  scene.add(edgeLines);
+
+  // Compute properties
+  const edges = computeEdges(data.vertices,data.vertexDegree,data.edgemap);
+  const faces = getFaceCount(hull);
+  const props = computeMeshProperties(meshHull);
+
+  infoBox.innerHTML=`
+    <div class="section-title">Properties</div>
+    <table>
+      <tr><th>Vertices</th><td>${data.vertices.length}</td></tr>
+      <tr><th>Edges</th><td>${edges}</td></tr>
+      <tr><th>Faces</th><td>${faces}</td></tr>
+      <tr><th>Surface Area</th><td>${props.area.toFixed(3)}</td></tr>
+      <tr><th>Volume</th><td>${props.volume.toFixed(3)}</td></tr>
+      <tr><th>Dual</th><td>${data.dual}</td></tr>
+    </table>
+    <div class="section-title">Vertex Coordinates</div>
+    <div>${vertices.map(v=>'('+v.map(x=>x.toFixed(3)).join(', ')+')').join('<br>')}</div>
+  `;
+
+  // Material selector
+  materialSelect.onchange = (e)=>{
+    const type = e.target.value;
+    if(type==='wireframe') meshHull.material=new THREE.MeshBasicMaterial({color:0x00ff00,wireframe:true});
+    else if(type==='basic') meshHull.material=new THREE.MeshBasicMaterial({color:0x0077ff});
+    else if(type==='standard') meshHull.material=new THREE.MeshStandardMaterial({color:0xff8800,metalness:0.5,roughness:0.5});
+    else meshHull.material=new THREE.MeshNormalMaterial({opacity:0.6,transparent:true});
+  }
+
+  animate();
+}
+
+// Animate
+function animate(){
+  requestAnimationFrame(animate);
+  if(meshHull){
+    meshHull.rotation.x+=0.01;
+    meshHull.rotation.y+=0.01;
+    edgeLines.rotation.x+=0.01;
+    edgeLines.rotation.y+=0.01;
+    renderer.render(scene,camera);
+  }
+}
+</script>
+</body>
+</html>

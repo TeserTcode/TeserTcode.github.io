@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Motor Parçaları</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 40px;
+    background: url('MOT.png');
+    background-size: auto;
+    background-attachment: scroll;
+}
+
+h1 {
+    text-align: center;
+    color: #2c3e50;
+}
+
+h2 {
+    color: #34495e;
+    margin-top: 30px;
+}
+
+h3 {
+    color: #3d566e;
+    margin-top: 15px;
+}
+
+p, li, th, td {
+    color: #333333;
+    text-shadow: 2px 2px 2px #FFFFFF, 1px 1px 0px rgba(0,0,0,0.15);
+    padding: 8px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+table, th, td {
+    border: 1px solid #ccc;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+.note {
+    background-color: #f9f9f9;
+    border: 1px dashed #aaa;
+    padding: 10px;
+    margin-top: 15px;
+}
+.section-title {
+    font-size: 1.5em;
+    color: #34495e;
+}
+
+.sub-section {
+    margin-left: 10px;
+    font-size: 1.1em;
+}
+
+/* İçindekiler Menüsü */
+#table-of-contents {
+    position: fixed;
+    left: -560px;
+    top: 50px;
+    width: 550px;
+    height: 80vh;
+    background: #333;
+    color: white;
+    padding: 10px;
+    border-radius: 0 8px 8px 0;
+    transition: left 0.3s ease;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+}
+
+#table-of-contents:hover {
+    left: 0;
+}
+
+#table-of-contents h2 {
+    font-size: 16px;
+    text-align: center;
+    margin: 0;
+    padding: 5px 0;
+}
+#table-of-contents h3 {
+    font-size: 16px;
+    text-align: center;
+    margin: 0;
+    padding: 5px 0;
+}
+#table-of-contents large {
+    font-size: 26px;
+    text-align: center;
+    margin: 0;
+    padding: 5px 0;
+}
+
+.toc-content {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 1px;
+}
+
+#table-of-contents ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#table-of-contents li {
+    margin: 0;
+    padding: 0;
+}
+
+/* İç İçe Listeler */
+#table-of-contents li ul {
+    margin-left: 10px;
+    padding-left: 5px;
+margin-right: 5px;
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    overflow: hidden;
+}
+
+#table-of-contents a {
+    text-decoration: none !important;
+    color: #fff;
+    font-size: 12px;
+    display: block;
+    padding: 3px 5px;
+    transition: background 0.2s;
+}
+
+#table-of-contents a:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+}
+
+/* Scrollbar Özelleştirme */
+.toc-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.toc-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 4px;
+}
+
+.toc-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+    </style>
+  
+  
+</style>
+</head>
+
+<body>
+
+<h1>Ehliyet Sınavı İçin Motor Parçaları</h1>
+
+
+<h2>Motorun Ana (Mekanik) Parçaları</h2>
+<img src="./motor/motor1.png">
+
+
+<h3>Silindir</h3>
+<p>
+<strong>Silindir</strong>, pistonun yukarı-aşağı hareket ettiği bölümdür. 
+Yanma işlemi burada gerçekleşir. Motorun temel yapısını oluşturur.
+</p>
+
+<h3>Piston</h3>
+<p>
+<strong>Piston</strong>, yanma sonucu oluşan basınçla aşağı itilir ve hareket üretir.
+Bu hareket daha sonra dönme hareketine çevrilir.
+</p>
+
+<h3>Segman</h3>
+<p>
+<strong>Segmanlar</strong>, pistonun etrafında bulunan halkalardır. 
+Sıkıştırmayı sağlar, motor yağının yanma odasına kaçmasını önler.
+</p>
+
+<h3>Biyel Kolu</h3>
+<p>
+<strong>Biyel kolu</strong>, piston ile krank mili arasında bağlantı kurar.
+Piston hareketini krank miline iletir.
+</p>
+
+<h3>Krank Mili</h3>
+<p>
+<strong>Krank mili</strong>, pistonlardan gelen doğrusal hareketi 
+<strong>dönme hareketine</strong> çevirir.
+</p>
+
+<h3>Karter</h3>
+<p>
+<strong>Karter</strong>, motorun alt kısmıdır. Motor yağı burada toplanır ve depolanır.
+</p>
+
+<h2>Supap ve Zamanlama Sistemi</h2>
+<img src="./motor/motor2.png">
+<h3>Supaplar (Emme – Egzoz)</h3>
+<p>
+<strong>Emme supabı</strong>, hava-yakıt karışımının silindire girmesini sağlar.  
+<strong>Egzoz supabı</strong>, yanmış gazların dışarı atılmasını sağlar.
+</p>
+
+<h3>Eksantrik Mili</h3>
+<p>
+<strong>Eksantrik mili</strong>, supapların doğru zamanda açılıp kapanmasını kontrol eder.
+</p>
+
+<h3>Triger Kayışı / Zinciri</h3>
+<p>
+<strong>Triger</strong>, krank mili ile eksantrik mili arasında senkronizasyon sağlar.
+Zamanlama hatası ciddi motor hasarına yol açabilir.
+</p>
+
+<h2>Yakıt ve Hava Sistemi</h2>
+
+<h3>Hava Filtresi</h3>
+<p>
+<strong>Hava filtresi</strong>, motora giren havayı toz ve kirden arındırır.
+</p>
+<img src="./motor/motor4.png">
+<h3>Karbüratör / Enjektör</h3>
+<p>
+<strong>Karbüratör</strong> veya <strong>enjektör</strong>, yakıtı hava ile karıştırarak
+yanmaya hazır hale getirir.
+</p>
+
+<h3>Emme Manifoldu</h3>
+<p>
+<strong>Emme manifoldu</strong>, hava-yakıt karışımını silindirlere iletir.
+</p>
+
+<h3>Yakıt Pompası</h3>
+<p>
+<strong>Yakıt pompası</strong>, yakıtı depodan motora gönderir.
+</p>
+
+<h2>Ateşleme Sistemi (Benzinli Motorlar)</h2>
+<img src="./motor/atesh.png">
+<h3>Buji</h3>
+<p>
+<strong>Buji</strong>, hava-yakıt karışımını kıvılcım ile ateşler.
+</p>
+
+<h3>Bobin</h3>
+<p>
+<strong>Bobin</strong>, buji için gerekli olan yüksek voltajı üretir.
+</p>
+
+<h3>Distribütör</h3>
+<p>
+<strong>Distribütör</strong>, eski sistemlerde ateşleme akımını bujilere dağıtır.
+</p>
+
+<h2>Yağlama Sistemi</h2>
+<img src="./motor/yag.png">
+<h3>Motor Yağı</h3>
+<p>
+<strong>Motor yağı</strong>, sürtünmeyi azaltır, aşınmayı önler ve motoru korur.
+</p>
+
+<h3>Yağ Pompası</h3>
+<p>
+<strong>Yağ pompası</strong>, motor yağını tüm parçalara iletir.
+</p>
+
+<h3>Yağ Filtresi</h3>
+<p>
+<strong>Yağ filtresi</strong>, motor yağını temizler.
+</p>
+
+<h2>Soğutma Sistemi</h2>
+
+<h3>Radyatör</h3>
+<img src="./motor/rad.png">
+<p>
+<strong>Radyatör</strong>, motorun aşırı ısınmasını önler.
+</p>
+
+<h3>Su Pompası</h3>
+<p>
+<strong>Su pompası</strong>, soğutma suyunun motor içinde dolaşmasını sağlar.
+</p>
+
+<h3>Termostat</h3>
+<p>
+<strong>Termostat</strong>, motorun ideal sıcaklıkta çalışmasını sağlar.
+</p>
+
+<h3>Fan</h3>
+<p>
+<strong>Fan</strong>, radyatörün soğutma verimini artırır.
+</p>
+
+<h2>Egzoz Sistemi</h2>
+<img src="./motor/egzoz.png">
+<h3>Egzoz Manifoldu</h3>
+<p>
+<strong>Egzoz manifoldu</strong>, yanmış gazları toplar.
+</p>
+
+<h3>Katalitik Konvertör</h3>
+<img src="./motor/katalitik.png">
+<p>
+<strong>Katalitik konvertör</strong>, zararlı gazları daha az zararlı hale getirir.
+</p>
+
+<h3>Susturucu (Egzoz)</h3>
+<p>
+<strong>Susturucu</strong>, egzoz sesini azaltır.
+</p>
+
+
+
+    <div class="menu" id="menu">
+        <table id="menu-table"></table>
+    </div>
+
+</body>
+<script>
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const headings = document.querySelectorAll("large, h1, h2, h3, h4");
+    if (headings.length === 0) return;
+
+    const tocContainer = document.createElement("div");
+    tocContainer.id = "table-of-contents";
+    tocContainer.innerHTML = `
+        <div class="toc-header">İçindekiler</div>
+        <div class="toc-content"><ul></ul></div>
+    `;
+
+    const list = tocContainer.querySelector("ul");
+    let lastLevels = { large: list, h1: null, h2: null, h3: null, h4: null };
+
+    headings.forEach((heading, index) => {
+        const anchorId = `heading-${index}`;
+        heading.id = anchorId;
+
+        const listItem = document.createElement("li");
+        const link = document.createElement("a");
+        link.href = `#${anchorId}`;
+        link.innerText = heading.innerText;
+        listItem.appendChild(link);
+
+        let currentList;
+        switch (heading.tagName.toLowerCase()) {
+            case "large":
+                listItem.classList.add("main-item");
+                list.appendChild(listItem);
+                lastLevels.large = document.createElement("ul");
+                listItem.appendChild(lastLevels.large);
+                lastLevels.h1 = lastLevels.h2 = lastLevels.h3 = lastLevels.h4 = null;
+                break;
+            case "h1":
+                listItem.classList.add("sub-item");
+                currentList = lastLevels.large || list;
+                currentList.appendChild(listItem);
+                lastLevels.h1 = document.createElement("ul");
+                listItem.appendChild(lastLevels.h1);
+                lastLevels.h2 = lastLevels.h3 = lastLevels.h4 = null;
+                break;
+            case "h2":
+                listItem.classList.add("sub-sub-item");
+                currentList = lastLevels.h1 || lastLevels.large || list;
+                currentList.appendChild(listItem);
+                lastLevels.h2 = document.createElement("ul");
+                listItem.appendChild(lastLevels.h2);
+                lastLevels.h3 = lastLevels.h4 = null;
+                break;
+            case "h3":
+                listItem.classList.add("sub-sub-sub-item");
+                currentList = lastLevels.h2 || lastLevels.h1 || lastLevels.large || list;
+                currentList.appendChild(listItem);
+                lastLevels.h3 = document.createElement("ul");
+                listItem.appendChild(lastLevels.h3);
+                lastLevels.h4 = null;
+                break;
+            case "h4":
+                listItem.classList.add("sub-sub-sub-sub-item");
+                currentList = lastLevels.h3 || lastLevels.h2 || lastLevels.h1 || lastLevels.large || list;
+                currentList.appendChild(listItem);
+                lastLevels.h4 = document.createElement("ul");
+                listItem.appendChild(lastLevels.h4);
+                break;
+        }
+    });
+
+    document.body.appendChild(tocContainer);
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    const headers = document.querySelectorAll("h1, h2, h3, large, h4, strong");
+    const paragraphs = document.querySelectorAll("p, li, th, td");
+    const menu = document.getElementById("menu");
+    const menuTable = document.getElementById("menu-table");
+    let selectedLinks = [];
+
+    let headerWords = new Map();
+
+    headers.forEach(header => {
+        if (!header.id) header.id = "header-" + Math.random().toString(36).substr(2, 9); // Ensure ID exists
+        header.textContent.split(/\s+/).forEach(word => {
+            let key = word.toLowerCase();
+            if (!headerWords.has(key)) {
+                headerWords.set(key, []);
+            }
+            headerWords.get(key).push({ id: header.id, text: header.textContent, element: header });
+        });
+    });
+
+    paragraphs.forEach(element => {
+    // Only process text nodes, don't touch attributes
+    Array.from(element.childNodes).forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+            const span = document.createElement('span');
+            span.innerHTML = node.textContent.replace(/\b(\w+)\b/g, function(match) {
+                let lowerMatch = match.toLowerCase();
+                if (headerWords.has(lowerMatch) && lowerMatch !== "ve") {
+                    return `<u data-word="${lowerMatch}">${match}</u>`;
+                }
+                return match;
+            });
+            node.replaceWith(span);
+        }
+    });
+});
+
+    document.body.addEventListener("mouseover", function (event) {
+        if (event.target.tagName === "U") {
+            let word = event.target.getAttribute("data-word");
+            selectedLinks = headerWords.get(word);
+
+            if (selectedLinks.length > 0) {
+                selectedLinks.sort((a, b) => a.element.getBoundingClientRect().top - b.element.getBoundingClientRect().top);
+                menuTable.innerHTML = "";
+
+                selectedLinks.forEach(item => {
+                    let row = document.createElement("tr");
+                    let cell = document.createElement("td");
+                    cell.textContent = item.text;
+                    cell.onclick = () => {
+                        location.href = `#${selectedLinks[0].id}`;
+                        menu.style.display = "none";
+                    };
+                    row.appendChild(cell);
+                    menuTable.appendChild(row);
+                });
+
+                menu.style.display = "block";
+                menu.style.left = event.pageX + "px";
+                menu.style.top = (event.pageY+15) + "px";
+            }
+        }
+    });
+
+    // Hide menu when the mouse leaves the highlight
+    document.body.addEventListener("mouseout", function (event) {
+        if (event.target.tagName === "U") {
+            setTimeout(() => {
+                if (!menu.matches(":hover")) {
+                    menu.style.display = "none";
+                }
+            }, 100);
+        }
+    });
+
+    // Hide menu on click anywhere else
+    document.body.addEventListener("click", function (event) {
+        if (!menu.contains(event.target) && event.target.tagName !== "U") {
+            menu.style.display = "none";
+        }
+    });
+});
+
+
+
+
+</script>
+</html>

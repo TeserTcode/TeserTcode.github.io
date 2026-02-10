@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Universal Membrane Vibration</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #111; overflow: hidden; }
+    #controls { 
+      position: absolute; top: 10px; left: 10px; 
+      background: rgba(255, 255, 255, 0.95); padding: 15px; 
+      border-radius: 10px; z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      max-width: 280px; max-height: 90vh; overflow-y: auto;
+    }
+    .control-group { margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+    .control-group h4 { margin: 5px 0; color: #4a6fa5; }
+    label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 2px; }
+    input, select { width: 100%; padding: 4px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 4px; }
+    #info-panel {
+      position: absolute; top: 10px; right: 10px;
+      background: rgba(0, 0, 0, 0.8); color: white;
+      padding: 15px; border-radius: 10px; font-family: monospace; z-index: 100;
+    }
+    button {
+      background: #4a6fa5; color: white; border: none; padding: 8px;
+      border-radius: 4px; cursor: pointer; width: 100%; margin: 4px 0;
+    }
+    button.active { background: #2ecc71; }
+  </style>
+</head>
+<body>
+
+  <div id="controls">
+    <h3>Membrane Solver</h3>
+    
+    <div class="control-group">
+      <h4>Geometry</h4>
+      <label>Shape Type</label>
+      <select id="shape-type">
+        <option value="rectangle">Rectangle</option>
+        <option value="circle">Circle</option>
+        <option value="ellipse">Ellipse</option>
+      </select>
+      
+      <label id="dim1-label">Width (Lx):</label>
+      <input type="number" id="dim1" value="2.0" step="0.1">
+      
+      <label id="dim2-label">Height (Ly):</label>
+      <input type="number" id="dim2" value="1.5" step="0.1">
+    </div>
+
+    <div class="control-group">
+      <h4>Mode (m, n)</h4>
+      <input type="number" id="m-mode" value="2" min="1">
+      <input type="number" id="n-mode" value="2" min="1">
+    </div>
+
+    <div class="control-group">
+      <h4>Physics</h4>
+      <label>Amplitude</label>
+      <input type="range" id="amplitude" min="0" max="1" step="0.01" value="0.4">
+      <label>Speed</label>
+      <input type="range" id="speed" min="0.1" max="5" step="0.1" value="1.0">
+    </div>
+
+    <button id="animate-btn" class="active">Pause</button>
+    <button id="reset-btn">Reset View</button>
+  </div>
+
+  <div id="info-panel">
+    <div>Shape: <span id="info-shape">Rectangle</span></div>
+    <div>Freq: <span id="info-freq">0.00</span> Hz</div>
+    <div>FPS: <span id="info-fps">0</span></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+
+  <script>
+    /**
+     * UNIVERSAL MEMBRANE ENGINE
+     * Handles Rectangular (Fourier), Circular (Bessel), and Elliptical (Mathieu)
+     */
+    class UniversalMembrane {
+      constructor() {
+        this.type = 'rectangle';
+        this.dim1 = 2.0; // Lx or Radius or Major Axis
+        this.dim2 = 1.5; // Ly or Minor Axis
+        this.m = 2;
+        this.n = 2;
+        this.amplitude = 0.4;
+        this.tension = 10;
+        this.density = 0.1;
+        this.v = Math.sqrt(this.tension / this.density);
+        this.frequency = 0;
+      }
+
+      getDisplacement(x, y, t) {
+        const omega = 2 * Math.PI * this.frequency;
+        const timePart = Math.cos(omega * t);
+        let spatialPart = 0;
+
+        if (this.type === 'rectangle') {
+          // u(x,y) = sin(m*pi*x/L) * sin(n*pi*y/W)
+          if (Math.abs(x) > this.dim1/2 || Math.abs(y) > this.dim2/2) return 0;
+          spatialPart = Math.sin((this.m * Math.PI * (x + this.dim1/2)) / this.dim1) *
+                        Math.sin((this.n * Math.PI * (y + this.dim2/2)) / this.dim2);
+          
+          this.frequency = (this.v / 2) * Math.sqrt(Math.pow(this.m/this.dim1, 2) + Math.pow(this.n/this.dim2, 2));
+
+        } else if (this.type === 'circle') {
+          // u(r,theta) = J_m(k*r) * cos(m*theta)
+          const r = Math.sqrt(x*x + y*y);
+          const theta = Math.atan2(y, x);
+          if (r > this.dim1) return 0;
+
+          // Approximate zeros of Bessel J_m(x)
+          const jmn_zero = Math.PI * (this.n + (this.m / 2) - 0.25);
+          spatialPart = math.besselJ(this.m, (jmn_zero * r) / this.dim1) * Math.cos(this.m * theta);
+          
+          this.frequency = (jmn_zero * this.v) / (2 * Math.PI * this.dim1);
+
+        } else if (this.type === 'ellipse') {
+          // Simplified Elliptical (Hybrid approach for visualization)
+          const ecc = Math.sqrt(1 - Math.pow(this.dim2/this.dim1, 2));
+          const r_normalized = Math.sqrt(Math.pow(x/this.dim1, 2) + Math.pow(y/this.dim2, 2));
+          if (r_normalized > 1) return 0;
+          
+          spatialPart = Math.sin(this.n * Math.PI * (1 - r_normalized)) * Math.cos(this.m * Math.atan2(y, x));
+          this.frequency = (this.v * this.m) / (this.dim1 + this.dim2);
+        }
+
+        return spatialPart * this.amplitude * timePart;
+      }
+    }
+
+    // --- THREE.JS SETUP ---
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    const light = new THREE.PointLight(0xffffff, 1, 100);
+    light.position.set(5, 5, 5);
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0x404040));
+
+    // Membrane Mesh
+    const segments = 80;
+    const geometry = new THREE.PlaneBufferGeometry(4, 4, segments, segments);
+    const material = new THREE.MeshPhongMaterial({ 
+      color: 0x3498db, 
+      side: THREE.DoubleSide, 
+      wireframe: false,
+      flatShading: false 
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.rotation.x = -Math.PI / 2;
+    scene.add(mesh);
+
+    camera.position.set(0, 3, 5);
+    camera.lookAt(0,0,0);
+
+    const membrane = new UniversalMembrane();
+    let isAnimating = true;
+    let time = 0;
+
+    function updateGeometry() {
+      const pos = geometry.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        let x = pos.getX(i);
+        let y = pos.getY(i); // Note: Plane is on XY, then rotated
+        
+        const z = membrane.getDisplacement(x, y, time);
+        pos.setZ(i, z);
+      }
+      pos.needsUpdate = true;
+      geometry.computeVertexNormals();
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (isAnimating) {
+        time += 0.016 * parseFloat(document.getElementById('speed').value);
+        updateGeometry();
+      }
+      
+      document.getElementById('info-freq').textContent = membrane.frequency.toFixed(2);
+      renderer.render(scene, camera);
+    }
+
+    // --- UI EVENTS ---
+    document.getElementById('shape-type').addEventListener('change', (e) => {
+      membrane.type = e.target.value;
+      const d2 = document.getElementById('dim2');
+      const l2 = document.getElementById('dim2-label');
+      
+      if(membrane.type === 'circle') {
+        d2.style.display = 'none';
+        l2.style.display = 'none';
+        document.getElementById('dim1-label').textContent = "Radius (R):";
+      } else {
+        d2.style.display = 'block';
+        l2.style.display = 'block';
+        document.getElementById('dim1-label').textContent = membrane.type === 'rectangle' ? "Width (Lx):" : "Major Axis (a):";
+      }
+      document.getElementById('info-shape').textContent = membrane.type.toUpperCase();
+    });
+
+    document.getElementById('m-mode').addEventListener('input', (e) => membrane.m = parseInt(e.target.value));
+    document.getElementById('n-mode').addEventListener('input', (e) => membrane.n = parseInt(e.target.value));
+    document.getElementById('dim1').addEventListener('input', (e) => membrane.dim1 = parseFloat(e.target.value));
+    document.getElementById('dim2').addEventListener('input', (e) => membrane.dim2 = parseFloat(e.target.value));
+    document.getElementById('amplitude').addEventListener('input', (e) => membrane.amplitude = parseFloat(e.target.value));
+    
+    document.getElementById('animate-btn').addEventListener('click', function() {
+      isAnimating = !isAnimating;
+      this.textContent = isAnimating ? "Pause" : "Resume";
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      camera.position.set(0, 3, 5);
+      camera.lookAt(0,0,0);
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate();
+  </script>
+</body>
+</html>

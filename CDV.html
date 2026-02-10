@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>R3 → R3 Transform Explorer</title>
+
+<style>
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: serif;
+  background: white;
+}
+#ui {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 280px;
+  background: #fff;
+  border: 1px solid #000;
+  padding: 8px;
+}
+label {
+  display: block;
+  margin-top: 6px;
+}
+select, input {
+  width: 100%;
+}
+</style>
+</head>
+<body>
+
+<div id="ui">
+  <label>Transform (R³ → R³)
+    <select id="transformSelect"></select>
+  </label>
+
+  <label>Morph
+    <input type="range" id="morph" min="0" max="1" step="0.01" value="1">
+  </label>
+
+  <label>Density
+    <input type="range" id="density" min="4" max="255" value="12">
+  </label>
+
+  <label>Dot Size
+    <input type="range" id="dotsize" min="1" max="6" value="3">
+  </label>
+
+  <label>Background
+    <input type="color" id="bg" value="#ffffff">
+  </label>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+<script src="clrspc.js"></script>
+<script src="mthfnc.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+/* =====================================================
+   COORDINATE SYSTEM DEFINITIONS (NOT UI)
+   ===================================================== */
+
+const sliderConfigs = [
+  ['rgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['hsv', 'h', 's', 'v', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['hsl', 'h', 's', 'l', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['hsi', 'h', 's', 'i', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['hsm', 'h', 's', 'm', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['hsg', 'h', 's', 'g', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['hsh', 'h', 's', 'hh', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['hwb', 'h', 'w', 'b', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['cmy', 'c', 'm', 'y', 0, 0, 0, 100, 100, 100, 0, 0, 0],
+  ['hcl', 'h', 'c', 'l', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['srgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['scrgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['ecirgb', 'r', 'g', 'b', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['lch', 'l', 'c', 'h', 0, 0, -180, 150, 150, 180, 100, 100, 0],
+['ycbcr', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255],
+  ['xyz', 'x', 'y', 'z', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['yjk', 'y', 'j', 'k', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['lab', 'l', 'a', 'b', 0, -127, -127, 150, 127, 127, 100, 127, 127],
+  ['uvw', 'u', 'v', 'w', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['lms', 'l', 'm', 's', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['ydbdr', 'y', 'db', 'dr', 0, -255, -255, 255, 255, 255, 255, 255, 255],
+  ['yiq', 'y', 'i', 'q', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+  ['ycocg', 'y', 'co', 'cg', 0, -255, -255, 255, 255, 255, 255, 255, 255],
+  ['ycocgr', 'y', 'co', 'cg', 0, -255, -255, 255, 255, 255, 255, 255, 255],
+  ['yuv', 'y', 'u', 'v', 0, -255, -255, 255, 255, 255, 255, 255, 255],
+  ['ypbpr', 'y', 'pb', 'pr', 0, -255, -255, 255, 255, 255, 255, 255, 255],
+  ['bt', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255],  // BT.709 (Rec. 709)
+  ['bt2020', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255], // BT.2020
+  ['bt470', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255],  // BT.470-6
+  ['smpte240m', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255], // SMPTE 240M
+  ['jpegycbcr', 'y', 'cb', 'cr', 0, 0, 0, 255, 255, 255, 255, 255],    // JPEG full range (no offset)
+  ['bt4706', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255],  // BT.470-6 System B,G (rarely used)
+  ['itut871', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255], // ITU-T T.871 (ideal)
+  ['ycbcrturbo', 'y', 'cb', 'cr', 0, -128, -128, 255, 127, 127, 255, 255], // yCbCrTurbo 8-bit approx
+  ['tsl', 't', 's', 'l', 0, 0, 0, 100, 100, 255, 100, 100, 255],
+  ['luv', 'l', 'u', 'v', 0, 0, 0, 100, 100, 255, 100, 100, 255],
+  ['oklab', 'l', 'a', 'b', 0, -255, -255, 255, 255, 255, 255, 255, 255],
+  //['rxy', 'r', 'x', 'y', 0, -255, -255, 255, 255, 255, 255, 255, 360],
+  ['lcw', 'l', 'c', 'w', 0, 0, 380, 255, 255, 780, 255, 255, 1000],
+  ['lct', 'l', 'c', 't', 0, 0, 4000, 255, 255, 7000, 255, 255, 5000],
+  ['ypo', 'y', 'p', 'o', 0, -160, -165, 100, 361, 155, 0, 1, 1],
+  ['yrl', 'y', 'r', 'l', -255, -255, -255, 255, 255, 255, 255, 255, 255],
+  
+  
+  ['jzazbz', 'jz', 'az', 'bz', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+   ['jzczhz', 'jz', 'cz', 'hz', 0, 0, 0, 255, 255, 360, 255, 255, 255],
+   
+   ['pqlms', 'l', 'm', 's', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+   ['hlglms', 'l', 'm', 's', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+    ['pqxyz', 'x', 'y', 'z', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+     ['hlgxyz', 'x', 'y', 'z', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+     ['ictcp', 'i', 'ct', 'cp', 0, -128, -128, 255, 127, 127, 255, 127, 127],
+      ['hlgictcp', 'i', 'ct', 'cp', 0, -128, -128, 255, 127, 127, 255, 127, 127],
+    ['ictcpqc2', 'i', 'ct', 'cp', 0, -128, -128, 255, 127, 127, 255, 127, 127],
+    ['osaucs', 'l', 'g', 'j', 0, -128, -128, 255, 127, 127, 255, 127, 127],
+   
+ //   ['okhsv', 'h', 's', 'v', 0, 0, 0, 255, 255, 255, 255, 255, 255],
+   
+    ['hunterlab', 'l', 'a', 'b', 0, -175, -70, 100, 175, 70, 100, 175, 70],
+    ['rlab', 'l', 'a', 'b', -100, -100, -100, 100, 100, 100, 10, 0, 0],//might be wrong idc
+    ['ipt', 'i', 'p', 't', -200, -200, -200, 200, 200, 200, 10, 0, 0],
+      ['igpgtg', 'ig', 'pg', 'tg', -200, -200, -200, 200, 200, 200, 10, 0, 0],
+       ['qhsv', 'h', 's', 'v', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+  ['qhsl', 'h', 's', 'l', 0, 0, 0, 360, 100, 100, 360, 100, 100],
+         ['hqv', 'h', 'q', 'v', 0, 0, 0, 255, 360, 100, 255, 360, 100],
+
+];
+/* =====================================================
+   AUTO-GENERATED R3 → R3 TRANSFORMS FROM clrspc.js
+   ===================================================== */
+function capitalizeFirstLetter(string) {
+  if (!string) return ""; // Handle empty strings
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+const generatedTransforms = {};
+
+sliderConfigs.forEach(cfg => {
+  const name = cfg[0];
+
+  if (name === 'rgb') {
+    generatedTransforms.rgb  = (x,y,z)=>[x,y,z];
+    generatedTransforms.irgb = (x,y,z)=>[x,y,z];
+    return;
+  }
+
+  const toFn   = window['rgbTo' + capitalizeFirstLetter(name)];
+  const fromFn = window[name.toLowerCase() + 'ToRgb'];
+
+  if (typeof toFn === 'function')
+    generatedTransforms[name] = (x,y,z)=>toFn(x,y,z);
+
+  if (typeof fromFn === 'function')
+    generatedTransforms['inverse' + name] = (x,y,z)=>fromFn(x,y,z);
+});
+
+/* =====================================================
+   MANUAL + GENERATED TRANSFORM REGISTRY
+   ===================================================== */
+
+const transformRegistry = {
+  normal,
+  SPH, iSPH,
+  CYL, iCYL,
+  TRP, TPH,
+  TOR, PCC, OSC, OSCzxp, OSCstp,
+  PSC, PC, ECC, CC, BCC, BC,
+  rgG, ROT1, ROT2,
+  CMY, iCMY,
+  ...generatedTransforms
+};
+
+/* =====================================================
+   UI: TRANSFORM SELECTOR
+   ===================================================== */
+
+const transformSelect = document.getElementById('transformSelect');
+
+Object.keys(transformRegistry).sort().forEach(name => {
+  const o = document.createElement('option');
+  o.value = name;
+  o.textContent = name;
+  transformSelect.appendChild(o);
+});
+
+/* =====================================================
+   THREE.JS SCENE
+   ===================================================== */
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xffffff);
+
+const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 5000);
+camera.position.set(350,350,350);
+
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+scene.add(new THREE.AmbientLight(0xffffff,0.9));
+
+let points;
+
+/* =====================================================
+   CORE GRID + MORPH LOGIC
+   ===================================================== */
+
+function applyTransform(name, x, y, z) {
+  return transformRegistry[name]
+    ? transformRegistry[name](x,y,z)
+    : [x,y,z];
+}
+
+function rebuild() {
+  if (points) scene.remove(points);
+
+  const N = +density.value;
+  const m = +morph.value;
+  const size = +dotsize.value;
+
+  const pos = [];
+  const col = [];
+
+  for (let k=0;k<N;k++)
+  for (let j=0;j<N;j++)
+  for (let i=0;i<N;i++) {
+
+    const r = i/(N-1)*255;
+    const g = j/(N-1)*255;
+    const b = k/(N-1)*255;
+
+    const [tx,ty,tz] = applyTransform(
+      transformSelect.value, r,g,b
+    );
+
+    pos.push(
+      r*(1-m) + tx*m,
+      g*(1-m) + ty*m,
+      b*(1-m) + tz*m
+    );
+
+    // color = original cube position
+    col.push(r/255, g/255, b/255);
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos,3));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col,3));
+
+  points = new THREE.Points(
+    geo,
+    new THREE.PointsMaterial({
+      size: size,
+      vertexColors: true
+    })
+  );
+
+  scene.add(points);
+}
+
+/* =====================================================
+   UI EVENTS
+   ===================================================== */
+
+[density,dotsize,morph,transformSelect].forEach(
+  e => e.oninput = rebuild
+);
+
+bg.oninput = () => scene.background.set(bg.value);
+
+rebuild();
+
+/* =====================================================
+   RENDER LOOP
+   ===================================================== */
+
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene,camera);
+}
+animate();
+
+window.onresize = () => {
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+};
+</script>
+</body>
+</html>

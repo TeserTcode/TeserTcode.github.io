@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Lotka–Volterra Attractor + GLSL Mod Scan</title>
+<style>
+body { margin:0; background:#111; color:#ddd; font-family:sans-serif; }
+canvas { background:#222; border:1px solid #444; margin:10px; }
+.controls { padding:10px; }
+label { margin-right:12px; }
+</style>
+</head>
+<body>
+
+<div class="controls">
+<b>Parameters</b><br>
+a <input id="a" type="range" min="0.1" max="3" step="0.01" value="1.1">
+b <input id="b" type="range" min="0.01" max="1" step="0.01" value="0.4">
+c <input id="c" type="range" min="0.01" max="1" step="0.01" value="0.1">
+d <input id="d" type="range" min="0.01" max="1" step="0.01" value="0.4">
+<br><br>
+
+Density <input id="density" type="range" min="0.3" max="3" step="0.1" value="1">
+Speed <input id="speed" type="range" min="1" max="20" step="1" value="5">
+<label><input id="static" type="checkbox" checked> static trails</label>
+<button id="reset">reset points</button>
+
+<hr>
+
+<b>GLSL mod scan</b><br>
+X:
+<select id="varX">
+<option>a</option><option>b</option><option>c</option>
+<option>d</option><option>x0</option><option>y0</option>
+</select>
+Y:
+<select id="varY">
+<option>b</option><option>a</option><option>c</option>
+<option>d</option><option>x0</option><option>y0</option>
+</select>
+<button id="scan">run scan</button>
+</div>
+
+<canvas id="phase" width="600" height="600"></canvas>
+<canvas id="glscan" width="600" height="600"></canvas>
+
+<script>
+/* ================= CPU PHASE SIM ================= */
+
+const phase = document.getElementById("phase");
+const ctx = phase.getContext("2d");
+const W = phase.width, H = phase.height;
+
+let a=1.1,b=0.4,c=0.1,d=0.4;
+let speed=5;
+let staticTrails=true;
+
+document.getElementById("a").oninput = e => a = +e.target.value;
+document.getElementById("b").oninput = e => b = +e.target.value;
+document.getElementById("c").oninput = e => c = +e.target.value;
+document.getElementById("d").oninput = e => d = +e.target.value;
+
+document.getElementById("speed").oninput=e=>speed=+e.target.value;
+document.getElementById("static").onchange=e=>staticTrails=e.target.checked;
+
+const xmin=0,xmax=30,ymin=0,ymax=30;
+const dt=0.01;
+
+function fx(x,y){ return a*x-b*x*y; }
+function fy(x,y){ return c*x*y-d*y; }
+
+function rk4(x,y){
+  let k1x=fx(x,y),k1y=fy(x,y);
+  let k2x=fx(x+k1x*dt/2,y+k1y*dt/2);
+  let k2y=fy(x+k1x*dt/2,y+k1y*dt/2);
+  let k3x=fx(x+k2x*dt/2,y+k2y*dt/2);
+  let k3y=fy(x+k2x*dt/2,y+k2y*dt/2);
+  let k4x=fx(x+k3x*dt,y+k3y*dt);
+  let k4y=fy(x+k3x*dt,y+k3y*dt);
+  return [
+    x+dt*(k1x+2*k2x+2*k3x+k4x)/6,
+    y+dt*(k1y+2*k2y+2*k3y+k4y)/6
+  ];
+}
+
+function tx(x){ return (x-xmin)/(xmax-xmin)*W; }
+function ty(y){ return H-(y-ymin)/(ymax-ymin)*H; }
+
+let points=[];
+function spawn(){
+  points=[];
+  let dens=+document.getElementById("density").value;
+  let n=Math.floor(200*dens);
+  for(let i=0;i<n;i++){
+    points.push({
+      x:xmin+Math.random()*(xmax-xmin),
+      y:ymin+Math.random()*(ymax-ymin),
+      trail:[]
+    });
+  }
+}
+document.getElementById("reset").onclick=spawn;
+spawn();
+
+function animate(){
+  if(!staticTrails){
+    ctx.fillStyle="rgba(0,0,0,0.1)";
+    ctx.fillRect(0,0,W,H);
+  }
+  for(let p of points){
+    for(let i=0;i<speed;i++){
+      [p.x,p.y]=rk4(p.x,p.y);
+      p.trail.push([p.x,p.y]);
+      if(p.trail.length>300) p.trail.shift();
+    }
+    ctx.beginPath();
+    p.trail.forEach((q,i)=>{
+      let X=tx(q[0]),Y=ty(q[1]);
+      if(i===0) ctx.moveTo(X,Y); else ctx.lineTo(X,Y);
+    });
+    ctx.strokeStyle=`hsl(${(p.x+p.y)*10%360},100%,60%)`;
+    ctx.stroke();
+  }
+  requestAnimationFrame(animate);
+}
+animate();
+
+/* ================= GLSL MOD SCAN ================= */
+
+const glcanvas=document.getElementById("glscan");
+const gl=glcanvas.getContext("webgl2");
+
+const vs=`#version 300 es
+in vec2 p;
+void main(){gl_Position=vec4(p,0,1);}
+`;
+
+const fs=`#version 300 es
+precision highp float;
+out vec4 o;
+
+uniform vec2 R;
+uniform int vx,vy;
+uniform float a0,b0,c0,d0,x00,y00;
+uniform vec2 rx,ry;
+
+float fx(float x,float y,float a,float b){return a*x-b*x*y;}
+float fy(float x,float y,float c,float d){return c*x*y-d*y;}
+
+void main(){
+  vec2 uv=gl_FragCoord.xy/R;
+  float px=mix(rx.x,rx.y,uv.x);
+  float py=mix(ry.x,ry.y,uv.y);
+
+  float a=a0,b=b0,c=c0,d=d0,x=x00,y=y00;
+
+  if(vx==0) a=px; if(vx==1) b=px; if(vx==2) c=px;
+  if(vx==3) d=px; if(vx==4) x=px; if(vx==5) y=px;
+  if(vy==0) a=py; if(vy==1) b=py; if(vy==2) c=py;
+  if(vy==3) d=py; if(vy==4) x=py; if(vy==5) y=py;
+
+  float dt=0.02,h=0.0;
+
+  for(int i=0;i<200;i++){
+    float k1x=fx(x,y,a,b),k1y=fy(x,y,c,d);
+    float k2x=fx(x+k1x*dt*.5,y+k1y*dt*.5,a,b);
+    float k2y=fy(x+k1x*dt*.5,y+k1y*dt*.5,c,d);
+    float k3x=fx(x+k2x*dt*.5,y+k2y*dt*.5,a,b);
+    float k3y=fy(x+k2x*dt*.5,y+k2y*dt*.5,c,d);
+    float k4x=fx(x+k3x*dt,y+k3y*dt,a,b);
+    float k4y=fy(x+k3x*dt,y+k3y*dt,c,d);
+    x+=dt*(k1x+2.*k2x+2.*k3x+k4x)/6.;
+    y+=dt*(k1y+2.*k2y+2.*k3y+k4y)/6.;
+  }
+
+  for(int i=0;i<300;i++){
+    h+=log(max(1e-6,x*y));
+    float k1x=fx(x,y,a,b),k1y=fy(x,y,c,d);
+    float k2x=fx(x+k1x*dt*.5,y+k1y*dt*.5,a,b);
+    float k2y=fy(x+k1x*dt*.5,y+k1y*dt*.5,c,d);
+    float k3x=fx(x+k2x*dt*.5,y+k2y*dt*.5,a,b);
+    float k3y=fy(x+k2x*dt*.5,y+k2y*dt*.5,c,d);
+    float k4x=fx(x+k3x*dt,y+k3y*dt,a,b);
+    float k4y=fy(x+k3x*dt,y+k3y*dt,c,d);
+    x+=dt*(k1x+2.*k2x+2.*k3x+k4x)/6.;
+    y+=dt*(k1y+2.*k2y+2.*k3y+k4y)/6.;
+  }
+
+  float v=abs(h)/300.;
+  o=vec4(
+    0.5+0.5*sin(6.28*v),
+    0.5+0.5*sin(6.28*v+2.1),
+    0.5+0.5*sin(6.28*v+4.2),
+    1.0
+  );
+}
+`;
+
+function compile(type,src){
+  let s=gl.createShader(type);
+  gl.shaderSource(s,src);
+  gl.compileShader(s);
+  return s;
+}
+
+let prog=gl.createProgram();
+gl.attachShader(prog,compile(gl.VERTEX_SHADER,vs));
+gl.attachShader(prog,compile(gl.FRAGMENT_SHADER,fs));
+gl.linkProgram(prog);
+gl.useProgram(prog);
+
+let buf=gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+let loc=gl.getAttribLocation(prog,"p");
+gl.enableVertexAttribArray(loc);
+gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+
+document.getElementById("scan").onclick=()=>{
+  gl.useProgram(prog);
+  gl.uniform2f(gl.getUniformLocation(prog,"R"),glcanvas.width,glcanvas.height);
+  gl.uniform1i(gl.getUniformLocation(prog,"vx"),document.getElementById("varX").selectedIndex);
+  gl.uniform1i(gl.getUniformLocation(prog,"vy"),document.getElementById("varY").selectedIndex);
+  gl.uniform1f(gl.getUniformLocation(prog,"a0"),a);
+  gl.uniform1f(gl.getUniformLocation(prog,"b0"),b);
+  gl.uniform1f(gl.getUniformLocation(prog,"c0"),c);
+  gl.uniform1f(gl.getUniformLocation(prog,"d0"),d);
+  gl.uniform1f(gl.getUniformLocation(prog,"x00"),10);
+  gl.uniform1f(gl.getUniformLocation(prog,"y00"),5);
+  gl.uniform2f(gl.getUniformLocation(prog,"rx"),0.1,3.0);
+  gl.uniform2f(gl.getUniformLocation(prog,"ry"),0.01,1.0);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dodecahedron 60 Rotations with Cubes</title>
+  <style>
+    body { margin:0; font-family:system-ui,sans-serif; display:flex; height:100vh; background:#111; color:#eee }
+    #left { flex:1; border-right:2px solid #333 }
+    #right { width:360px; padding:8px; overflow:auto; display:grid; grid-template-columns:repeat(3,1fr); gap:6px }
+    button { background:#222; color:#eee; border:1px solid #444; border-radius:6px; padding:6px; cursor:pointer; font-size:12px }
+    button:hover { background:#333 }
+    canvas { width:100%; height:100%; background:#000 }
+  </style>
+</head>
+<body>
+<div id="left"><canvas id="cv"></canvas></div>
+<div id="right"></div>
+
+<script>
+// ================= Math utils =================
+const TAU = 2*Math.PI
+function matMul(A,B){return A.map((r,i)=>B[0].map((_,j)=>r.reduce((s,_,k)=>s+A[i][k]*B[k][j],0)))}
+function matVec(M,v){return [M[0][0]*v[0]+M[0][1]*v[1]+M[0][2]*v[2],M[1][0]*v[0]+M[1][1]*v[1]+M[1][2]*v[2],M[2][0]*v[0]+M[2][1]*v[1]+M[2][2]*v[2]]}
+function norm(v){const n=Math.hypot(...v); return v.map(x=>x/n)}
+function cross(a,b){return [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}
+function dot(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]}
+function rotAxis(axis,ang){
+  const [x,y,z]=norm(axis); const c=Math.cos(ang), s=Math.sin(ang), t=1-c
+  return [
+    [t*x*x+c,   t*x*y-s*z, t*x*z+s*y],
+    [t*x*y+s*z, t*y*y+c,   t*y*z-s*x],
+    [t*x*z-s*y, t*y*z+s*x, t*z*z+c]
+  ]
+}
+function matKey(M){return M.flat().map(x=>(x+20).toFixed(2)).join(',')}
+
+// ================= Dodecahedron =================
+const phi = (1 + Math.sqrt(5)) / 2
+const a = 1/phi, b = 1, c = phi
+let V = [
+  [-b,-b,-b], [-b,-b,b], [-b,b,-b], [-b,b,b],
+  [b,-b,-b], [b,-b,b], [b,b,-b], [b,b,b],
+  [0, -a, -c], [0, -a, c], [0, a, -c], [0, a, c],
+  [-a, -c, 0], [-a, c, 0], [a, -c, 0], [a, c, 0],
+  [-c, 0, -a], [c, 0, -a], [-c, 0, a], [c, 0, a]
+].map(norm)
+
+// edges
+let edges=[]
+for(let i=0;i<V.length;i++)for(let j=i+1;j<V.length;j++){
+  const d=Math.hypot(V[i][0]-V[j][0], V[i][1]-V[j][1], V[i][2]-V[j][2])
+  if(d<1.2) edges.push([i,j])
+}
+
+// ================= Cube groups =================
+const cubeGroups = {
+  red:   [3,7,1,5,0,2,6,4],
+  blue:  [10,14,0,18,17,14,7,9],
+  green: [15,3,10,16,19,9,12,4],
+  purple:[13,6,11,19,16,8,1,14],
+  orange:[4,12,16,10,9,19,15,3]
+}
+let cubeActive = {red:true, blue:true, green:true, purple:true, orange:true}
+
+// ================= True 60 rotations =================
+let rotations=[]
+for(let i=0;i<V.length;i++){
+  const axis=V[i]
+  for(let k=0;k<3;k++){
+    const angle=TAU/3*k
+    rotations.push(rotAxis(axis,angle))
+  }
+}
+function det3(M){return M[0][0]*(M[1][1]*M[2][2]-M[1][2]*M[2][1])-M[0][1]*(M[1][0]*M[2][2]-M[1][2]*M[2][0])+M[0][2]*(M[1][0]*M[2][1]-M[1][1]*M[2][0])}
+function isProperRotation(M,eps=1e-2){return Math.abs(det3(M)-1)<eps}
+function filterRotations(rotations){
+  const seen=new Set(), filtered=[]
+  for(let R of rotations){
+    if(!isProperRotation(R)) continue
+    const key=matKey(R)
+    if(!seen.has(key)){seen.add(key); filtered.push(R)}
+  }
+  return filtered
+}
+function composeRot(A,B){return matMul(A,B)}
+function generateFullRotations(basic){
+  let rotations=[], seen=new Set()
+  function addIfNew(R){
+    const key=matKey(R)
+    if(!seen.has(key)){rotations.push(R); seen.add(key); return true}
+    return false
+  }
+  for(let R of basic) addIfNew(R)
+  let i=0
+  while(i<rotations.length){
+    const R1=rotations[i]
+    for(let R2 of rotations){
+      addIfNew(composeRot(R1,R2))
+      addIfNew(composeRot(R2,R1))
+    }
+    i++
+  }
+  return rotations
+}
+rotations = generateFullRotations(rotations)
+rotations = filterRotations(rotations)
+
+// ================= UI =================
+const right = document.getElementById('right')
+
+// Cube toggle buttons
+Object.keys(cubeGroups).forEach(name=>{
+  const b=document.createElement('button')
+  b.textContent=name
+  b.onclick=()=>{ cubeActive[name]=!cubeActive[name] }
+  right.appendChild(b)
+})
+
+// Rotation buttons
+function addRotationButtons(){
+  // remove previous
+  right.querySelectorAll('.rotBtn')?.forEach(b=>b.remove())
+  rotations.forEach((R,i)=>{
+    const permKey = Object.entries(cubeGroups).map(([name,arr])=>{
+      if(!cubeActive[name]) return ''
+      const mapped = arr.map(v=>{
+        const P=matVec(R,V[v])
+        let closest=0, bestD=Infinity
+        V.forEach((vv,j)=>{
+          const d=Math.hypot(P[0]-vv[0],P[1]-vv[1],P[2]-vv[2])
+          if(d<bestD){bestD=d; closest=j}
+        })
+        return closest
+      })
+      return name+':'+mapped.join('-')
+    }).filter(s=>s).join('|')
+    const b=document.createElement('button')
+    b.className='rotBtn'
+    b.textContent=permKey || 'R'+i
+    b.onclick=()=>animateTo(R)
+    right.appendChild(b)
+  })
+}
+addRotationButtons()
+
+// ================= Rendering =================
+const canvas=document.getElementById('cv')
+const ctx=canvas.getContext('2d')
+function resize(){canvas.width=canvas.clientWidth; canvas.height=canvas.clientHeight}
+window.onresize=resize; resize()
+
+let current=[[1,0,0],[0,1,0],[0,0,1]]
+let target=null, t0=0
+
+function project(v){const s=220; return [canvas.width/2+s*v[0]/(v[2]+3), canvas.height/2-s*v[1]/(v[2]+3)]}
+
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height)
+  const P=V.map(v=>matVec(current,v))
+
+  // draw edges
+  edges.forEach(([i,j])=>{
+    const edgeColors = Object.entries(cubeGroups).filter(([name,arr])=>cubeActive[name] && arr.includes(i) && arr.includes(j))
+    if(edgeColors.length===0) return
+    const colorMap = {red:'red', blue:'blue', green:'green', purple:'purple', orange:'orange'}
+    ctx.strokeStyle=colorMap[edgeColors[0][0]]
+    ctx.beginPath()
+    const a=project(P[i]), b=project(P[j])
+    ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1])
+    ctx.stroke()
+  })
+
+  // draw vertices
+  P.forEach((p,i)=>{
+    let vColor = null
+    for(let [name,arr] of Object.entries(cubeGroups)){
+      if(cubeActive[name] && arr.includes(i)){ vColor=name; break }
+    }
+    ctx.fillStyle=vColor || '#888'
+    const [x,y]=project(p)
+    ctx.beginPath(); ctx.arc(x,y,5,0,TAU); ctx.fill()
+  })
+}
+
+function animateTo(R){ target=R; t0=performance.now() }
+
+function tick(t){
+  if(target){
+    const u=Math.min((t-t0)/600,1)
+    const a=u*u*(3-2*u)
+    current=current.map((r,i)=>r.map((_,j)=>current[i][j]*(1-a)+target[i][j]*a))
+    if(u>=1){ current=target; target=null }
+  }
+  draw()
+  requestAnimationFrame(tick)
+}
+requestAnimationFrame(tick)
+</script>
+</body>
+</html>

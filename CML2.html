@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>2D GPU CML – Extended Safe</title>
+<style>
+body { margin:0;}
+#ui {
+  position:fixed; top:0; left:0;
+  background:#000c; color:#fff;
+  font-family:monospace; padding:8px;
+  z-index:10;
+}
+canvas { display:block; }
+select,input,button {
+  background:#000; color:#fff;
+  border:1px solid #444;
+}
+</style>
+</head>
+<body>
+
+<div id="ui">
+ε <input id="eps" value="0.3" step="0.01"><br>
+a <input id="a" value="3" step="0.01"><br>
+radius <input id="rad" value="5"><br>
+speed <input id="speed" value="2"><br>
+
+map
+<select id="map">
+<option>logistic</option>
+<option selected>quadratic</option>
+<option>cubic</option>
+<option>quartic</option>
+<option>tent</option>
+<option>sin</option>
+<option>cos</option>
+<option>tan</option>
+<option>gauss</option>
+<option>circle</option>
+</select><br>
+
+color
+<select id="color">
+<option>gradient</option>
+<option>gray</option>
+<option>binary</option>
+<option>phase</option>
+<option>fire</option>
+<option>ice</option>
+<option>rainbow</option>
+</select><br>
+
+init
+<select id="init">
+<option>random</option>
+<option>noise</option>
+<option>sin</option>
+<option>step</option>
+<option>linear</option>
+<option>const</option>
+</select><br>
+
+<button onclick="reset()">reset</button>
+<button onclick="paused=!paused">pause</button>
+</div>
+
+<canvas id="gl"></canvas>
+
+<script>
+//cos e10 a3 r8
+//gauss e20 a3 r8 s3
+const canvas = document.getElementById("gl");
+const gl = canvas.getContext("webgl");
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+
+const N = 512;
+let paused = false;
+
+/* ---------- SHADER UTILS ---------- */
+function compile(type, src){
+  const s = gl.createShader(type);
+  gl.shaderSource(s,src);
+  gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))
+    throw gl.getShaderInfoLog(s);
+  return s;
+}
+
+/* ---------- SHADERS ---------- */
+const vs = compile(gl.VERTEX_SHADER,`
+attribute vec2 p;
+varying vec2 v;
+void main(){
+  v = p*0.5+0.5;
+  gl_Position = vec4(p,0,1);
+}
+`);
+
+const fsStep = compile(gl.FRAGMENT_SHADER,`
+precision highp float;
+varying vec2 v;
+uniform sampler2D tex;
+uniform float eps,a;
+uniform int rad,map;
+
+float abst(float x){ return x>0.0?x:-x; }
+int   abst(int x){ return x>0?x:-x; }
+
+float f(float x){
+  if(map==0) return a*x*(1.0-x);
+  if(map==1) return 1.0-a*x*x;
+  if(map==2) return a*x-x*x+x*x*x;
+  if(map==3) return 1.0-a*pow(x,4.0);
+  if(map==4) return 1.0-2.0*abst(x);
+  if(map==5) return sin(a*x);
+  if(map==6) return cos(a*x);
+  if(map==7) return tan(a*x);
+  if(map==8) return exp(-a*x*x);
+  return mod(x+a/(6.28318)*sin(6.28318*x),1.0);
+}
+
+void main(){
+  vec2 px = 1.0/vec2(${N}.0);
+  float c = texture2D(tex,v).r*2.0-1.0;
+
+  float sum=0.0, w=0.0;
+
+  for(int i=-10;i<=10;i++)
+  for(int j=-10;j<=10;j++){
+    if(abst(i)>rad||abst(j)>rad) continue;
+    vec2 uv = mod(v+vec2(float(i),float(j))*px,1.0);
+    float u = texture2D(tex,uv).r*2.0-1.0;
+    sum += f(u);
+    w += 1.0;
+  }
+
+  float outv = (1.0-eps)*f(c)+eps*sum/w;
+  outv = clamp(outv,-1.0,1.0);
+  gl_FragColor = vec4(outv*0.5+0.5,0,0,1);
+}
+`);
+
+const fsDraw = compile(gl.FRAGMENT_SHADER,`
+precision highp float;
+varying vec2 v;
+uniform sampler2D tex;
+uniform int color;
+
+void main(){
+  float x = texture2D(tex,v).r*2.0-1.0;
+
+  if(color==1){
+    float g = 0.5*(x+1.0);
+    gl_FragColor = vec4(g,g,g,1); return;
+  }
+  if(color==2){
+    gl_FragColor = x>0.0?vec4(1):vec4(0,0,0,1); return;
+  }
+  if(color==3){
+    float h = atan(sin(x),cos(x))/6.28318+0.5;
+    gl_FragColor = vec4(
+      abs(h*6.0-3.0)-1.0,
+      2.0-abs(h*6.0-2.0),
+      2.0-abs(h*6.0-4.0),
+      1
+    ); return;
+  }
+  if(color==4){
+    gl_FragColor = vec4(min(1.0,x+1.0),0.3*x,0,1); return;
+  }
+  if(color==5){
+    gl_FragColor = vec4(0,0.6*(x+1.0),(x+1.0),1); return;
+  }
+  if(color==6){
+    float h = fract(x);
+    gl_FragColor = vec4(
+      abs(h*6.0-3.0)-1.0,
+      2.0-abs(h*6.0-2.0),
+      2.0-abs(h*6.0-4.0),
+      1
+    ); return;
+  }
+
+  float g = 0.5*(x+1.0);
+  gl_FragColor = vec4(g,0,1.0-g,1);
+}
+`);
+
+function program(fs){
+  const p=gl.createProgram();
+  gl.attachShader(p,vs);
+  gl.attachShader(p,fs);
+  gl.linkProgram(p);
+  return p;
+}
+
+const stepP = program(fsStep);
+const drawP = program(fsDraw);
+
+/* ---------- GEOMETRY ---------- */
+const quad = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+
+function bind(p){
+  const loc = gl.getAttribLocation(p,"p");
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+}
+
+/* ---------- TEXTURES ---------- */
+function tex(){
+  const t=gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D,t);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,N,N,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);
+  return t;
+}
+
+let A=tex(),B=tex();
+const fb = gl.createFramebuffer();
+
+/* ---------- INIT ---------- */
+function reset(){
+  const data = new Uint8Array(N*N*4);
+  const mode = init.value;
+  for(let y=0;y<N;y++)
+  for(let x=0;x<N;x++){
+    let v=0;
+    if(mode==="random") v=Math.random();
+    if(mode==="noise") v=0.5+0.02*(Math.random()-0.5);
+    if(mode==="sin") v=0.5+0.5*Math.sin(2*Math.PI*x)*Math.cos(2*Math.PI*y);
+    if(mode==="step") v=x<N/2?0.2:0.8;
+    if(mode==="linear") v=x/N+y/N;
+    if(mode==="const") v=0.5;
+    data[4*(y*N+x)] = v*255;
+  }
+  gl.bindTexture(gl.TEXTURE_2D,A);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,N,N,0,gl.RGBA,gl.UNSIGNED_BYTE,data);
+}
+reset();
+
+/* ---------- LOOP ---------- */
+function step(){
+  gl.useProgram(stepP);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,fb);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,B,0);
+  gl.viewport(0,0,N,N);
+  bind(stepP);
+
+  gl.uniform1f(gl.getUniformLocation(stepP,"eps"),+eps.value);
+  gl.uniform1f(gl.getUniformLocation(stepP,"a"),+a.value);
+  gl.uniform1i(gl.getUniformLocation(stepP,"rad"),+rad.value);
+  gl.uniform1i(gl.getUniformLocation(stepP,"map"),map.selectedIndex);
+
+  gl.bindTexture(gl.TEXTURE_2D,A);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+  [A,B]=[B,A];
+}
+
+function draw(){
+  gl.useProgram(drawP);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  gl.viewport(0,0,canvas.width,canvas.height);
+  bind(drawP);
+  gl.uniform1i(gl.getUniformLocation(drawP,"color"),color.selectedIndex);
+  gl.bindTexture(gl.TEXTURE_2D,A);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+}
+
+function loop(){
+  if(!paused) for(let i=0;i<+speed.value;i++) step();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>

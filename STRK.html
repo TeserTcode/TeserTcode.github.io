@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Stark Effect Canvas Generator</title>
+<script src="https://cdn.jsdelivr.net/npm/mathjs@11/lib/browser/math.js"></script>
+<style>
+body { font-family: serif; background: #fff; color: #000; }
+label { display: inline-block; width: 200px; }
+input { width: 140px; }
+canvas { border: 1px solid #000; display: block; margin-top: 10px; }
+.controls { margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<h2>Hydrogen Stark Effect (m = 0)</h2>
+
+<div class="controls">
+  <div><label>Canvas width (px)</label><input id="cw" type="number" value="900"></div>
+  <div><label>Canvas height (px)</label><input id="ch" type="number" value="550"></div>
+  <div><label>E min (V/cm)</label><input id="emin" type="number" value="0"></div>
+  <div><label>E max (V/cm)</label><input id="emax" type="number" value="5000"></div>
+  <div><label>Energy min (cm⁻¹)</label><input id="ymin" type="number" value="-700"></div>
+  <div><label>Energy max (cm⁻¹)</label><input id="ymax" type="number" value="-400"></div>
+  <div><label>n min</label><input id="nmin" type="number" value="10"></div>
+  <div><label>n max</label><input id="nmax" type="number" value="20"></div>
+
+  <button onclick="generate()">Generate</button>
+</div>
+
+<canvas id="cv"></canvas>
+
+<script>
+function rainbow(t) {
+  const r = Math.floor(255 * Math.max(0, Math.sin(Math.PI * t)));
+  const g = Math.floor(255 * Math.max(0, Math.sin(Math.PI * (t + 1/3))));
+  const b = Math.floor(255 * Math.max(0, Math.sin(Math.PI * (t + 2/3))));
+  return `rgb(${r},${g},${b})`;
+}
+
+function generate() {
+  const cw = +document.getElementById('cw').value;
+  const ch = +document.getElementById('ch').value;
+  const emin = +document.getElementById('emin').value;
+  const emax = +document.getElementById('emax').value;
+  const ymin = +document.getElementById('ymin').value;
+  const ymax = +document.getElementById('ymax').value;
+  const nmin = +document.getElementById('nmin').value;
+  const nmax = +document.getElementById('nmax').value;
+
+  const canvas = document.getElementById('cv');
+  canvas.width = cw;
+  canvas.height = ch;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, cw, ch);
+
+  function xmap(E) {
+    return (E - emin) / (emax - emin) * cw;
+  }
+  function ymap(Y) {
+    return ch - (Y - ymin) / (ymax - ymin) * ch;
+  }
+
+  // axes
+  ctx.strokeStyle = '#000';
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, ch);
+  ctx.lineTo(cw, ch);
+  ctx.stroke();
+
+  const steps = 250;
+  const Ry = 109737.315685; // cm^-1
+
+  for (let n = nmin; n <= nmax; n++) {
+    const color = rainbow((n - nmin) / (nmax - nmin + 1));
+    ctx.strokeStyle = color;
+
+    // correct hydrogen energy in cm^-1
+    const E0 = -Ry / (n * n);
+
+    // parabolic quantum number k = n1 - n2
+    const kmax = n - 1;
+
+    for (let k = -kmax; k <= kmax; k += 2) {
+      ctx.beginPath();
+      for (let i = 0; i <= steps; i++) {
+        const Efield = emin + (emax - emin) * i / steps;
+        const E_atomic = Efield / 5.1422067e9;
+        const dE_linear = 1.5 * n * k * E_atomic * 219474.63;
+
+
+        const energy = E0 + dE_linear;
+
+        const x = xmap(Efield);
+        const y = ymap(energy);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+  }
+}
+</script>
+
+
+
+</body>
+</html>

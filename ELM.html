@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Elliptic Membrane Dots</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+<script src="clrspc.js"></script>
+<script src="polyhedra.js"></script>
+<script src="mthfnc.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+
+<style>
+body { margin:0; overflow:hidden; background:#000; color:#ccc; font-family:sans-serif; }
+#ui { position:fixed; top:10px; left:10px; background:#111; padding:10px; border-radius:6px; font-size:12px; }
+#ui input { width:60px; }
+</style>
+</head>
+<body>
+
+<div id="ui">
+e <input id="eInput" type="number" step="0.01" value="0.7"><br>
+m <input id="mInput" type="number" step="1" value="2"><br>
+n <input id="nInput" type="number" step="1" value="1"><br>
+<button id="genBtn">Generate</button><br><br>
+
+Amplitude <input id="amp" type="range" min="0" max="2" step="0.01" value="0.5"><br>
+c <input id="cval" type="range" min="0.2" max="3" step="0.01" value="1"><br>
+a <input id="aval" type="range" min="0.5" max="3" step="0.01" value="1">
+</div>
+
+<script>
+let e = 0.7, m = 2, n = 1;
+const MU_STEPS = 160, NU_STEPS = 220;
+let amp = 0.5, c = 1, a = 1, mu0;
+let omega = 1;
+
+let pointsMesh, baseZ = [], positions = [];
+
+function atanh(x){ return 0.5*Math.log((1+x)/(1-x)); }
+function focal(a,e){ return a*Math.sqrt(1-e*e); }
+function safe(x){ return re(inftozero(x)) }
+function insideEllipse(x,y){ return (x*x)/(a*a) + (y*y)/(a*a*(1-e*e)) <= 1.000001; }
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x004000);
+const camera = new THREE.PerspectiveCamera(45,innerWidth/innerHeight,0.1,100);
+camera.position.set(0,0,5);
+
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera,renderer.domElement);
+scene.add(new THREE.AmbientLight(0xffffff,0.4));
+const dl = new THREE.DirectionalLight(0xffffff,1); dl.position.set(3,4,5); scene.add(dl);
+
+function computeOmega(){
+    const f = focal(a,e);
+    const q = mathieucczero(mu0,m,n);
+    return 2*c*Math.sqrt(q)/f;
+}
+function rebuildMembrane() {
+    if(pointsMesh) scene.remove(pointsMesh);
+
+    
+  
+
+	e = +document.getElementById("eInput").value;
+    m = +document.getElementById("mInput").value;
+    n = +document.getElementById("nInput").value;
+	e = sub(1,e)
+    mu0 = atanh(e);
+
+    const f = focal(a,e);
+    const q = mathieucczero(mu0,m,n);
+
+    // Precompute separable mode shapes
+    const Cmu = []; const Cnu = [];
+    for(let i=0;i<=MU_STEPS;i++) Cmu[i] = safe(mathieucce(q, mu0*i/MU_STEPS, n));
+    for(let j=0;j<=NU_STEPS;j++) Cnu[j] = safe(mathieuce(q, 2*Math.PI*j/NU_STEPS, n));
+
+
+     positions = []; baseZ = [];
+    for(let i=0;i<=MU_STEPS;i++){
+        const mu = mu0*i/MU_STEPS;
+        for(let j=0;j<=NU_STEPS;j++){
+            const nu = 2*Math.PI*j/NU_STEPS;
+            const x = f*Math.cosh(mu)*Math.cos(nu);
+            const y = f*Math.sinh(mu)*Math.sin(nu);
+            const z = 1 ? Cmu[i]*Cnu[j]/(Cmu[5]*Cnu[5]*5) : 0;
+            positions.push({x:x,y:y,z:0}); // initial z=0
+            baseZ.push(z);
+        }
+    }
+
+    // Remove old mesh if exists
+    if(pointsMesh) scene.remove(pointsMesh);
+
+    // Build flat Float32Array for positions (safe for computeBoundingSphere)
+    const flat = new Float32Array(positions.length*3);
+    for(let i=0;i<positions.length;i++){
+        flat[3*i] = positions[i].x;
+        flat[3*i+1] = positions[i].y;
+        flat[3*i+2] = positions[i].z;
+    }
+
+   const geo = new THREE.BufferGeometry();
+geo.setAttribute('position', new THREE.BufferAttribute(flat,3));
+geo.computeBoundingSphere();
+
+// add vertex colors based on baseZ for depth perception
+const colors = new Float32Array(positions.length*3);
+for(let i=0;i<positions.length;i++){
+    const depth = (baseZ[i]+1)/2; // normalize [-1,1] to [0,1]
+    colors[3*i] = 0.2 + 0.8*depth*2;     // R
+    colors[3*i+1] = 0.1 + 0.7*(depth-1)*2;   // G
+    colors[3*i+2] = 0.3 + 0.7*(1-depth)*2; // B
+}
+geo.setAttribute('color', new THREE.BufferAttribute(colors,3));
+
+// Points material with vertex colors and size attenuation for depth
+const mat = new THREE.PointsMaterial({
+    size: 0.12,
+    vertexColors: true,
+    sizeAttenuation: true,
+});
+
+// remove old mesh if any
+if(pointsMesh) scene.remove(pointsMesh);
+pointsMesh = new THREE.Points(geo, mat);
+scene.add(pointsMesh);
+
+// ensure camera sees everything
+camera.position.set(0,0,5);
+controls.update()
+}
+
+// Animation
+const t0 = performance.now();
+function animate(){
+    requestAnimationFrame(animate);
+    const t = (performance.now()-t0)/1000;
+    const osc = Math.cos(omega*t);
+
+    const posAttr = pointsMesh.geometry.attributes.position;
+    for(let i=0;i<positions.length;i++){
+        posAttr.array[3*i+2] = amp*baseZ[i]*osc;
+    }
+    posAttr.needsUpdate = true;
+    renderer.render(scene,camera);
+}
+
+// UI
+document.getElementById("amp").oninput = e=>amp=+e.target.value;
+document.getElementById("cval").oninput = e=>{c=+e.target.value; omega=computeOmega();}
+document.getElementById("aval").oninput = e=>{a=+e.target.value; omega=computeOmega();}
+document.getElementById("genBtn").onclick = rebuildMembrane;
+
+rebuildMembrane();
+animate();
+
+window.addEventListener('resize',()=>{
+    camera.aspect=innerWidth/innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth,innerHeight);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Laver Table (q ★ 1 = q + 1)</title>
+
+<style>
+body {
+    background: #ffffff;
+    color: #000000;
+    font-family: serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.controls {
+    margin: 12px;
+}
+
+label {
+    display: inline-block;
+    width: 230px;
+}
+
+canvas {
+    border: 1px solid black;
+    image-rendering: pixelated;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Laver Table Visualization</h2>
+
+<div class="controls">
+    <label>n (size = 2ⁿ):</label>
+    <input type="number" id="nInput" value="5" min="1" max="9"><br><br>
+    <label>h (h = 0):</label>
+    <input type="number" id="hInput" value="0" min="-50" max="90"><br><br>
+
+    <label>Coloring method:</label>
+    <select id="colorMode">
+	<option value="grad">Gradient</option>
+	<option value="grad2">Gradient2</option>
+	<option value="gradd">Bit</option>
+        <option value="rainbow">Gradient rainbow</option>
+        <option value="rainbow2">Rainbow + gradient</option>
+        <option value="pow2">Color powers of 2</option>
+        <option value="odd">odd</option>
+		<option value="ltp1">p ★ q &lt; p − 1</option>
+        <option value="ltp">p ★ q &lt; p</option>
+		<option value="ltp1s">p ★ q &lt &lt; p − 1</option>
+        <option value="ltps">p ★ q &lt &lt; p</option>
+        <option value="diff">(p ★ q) − p</option>
+    </select><br><br>
+
+    <label>Invert binary result:</label>
+    <input type="checkbox" id="invertBits"><br><br>
+
+    <button onclick="draw()">Draw</button>
+</div>
+
+<canvas id="display" width="200" height="200"></canvas>
+
+<script>
+function bit(n) {
+    let c = 0;
+    while (n) {
+        n &= n - 1;
+        c++;
+    }
+    return c;
+}
+
+function issmaller(p, q) {
+    // p < q iff every 1-bit of p is also a 1-bit of q
+    return bit(p+1)<bit(q+1);
+}
+function issmallera(xx, yy) {
+
+}
+
+function invertBits(xx, n) {
+let x=xx
+    let result = 0;
+    for (let i = 0; i < n; i++) {
+        // Shift result left and add the least significant bit of x
+        result = (result << 1) | (x & 1);
+        x >>= 1;
+    }
+    return result;
+}
+
+function isPowerOfTwo(x) {
+    return x > 0 && (x & (x - 1)) === 0;
+}
+
+/* --------------------------------------------------
+   Compute Laver table with:
+   q ★ 1 = q + 1 (mod 2^n)
+   p ★ (q+1) = (p ★ q) ★ (p ★ 1)
+-------------------------------------------------- */
+function computeLaver(N) {
+h=parseInt(document.getElementById("hInput").value);
+
+    // Initialize table with null (unknown)
+    const T = Array.from({ length: N }, () =>
+        Array(N).fill(null)
+    );
+
+    // --- Base rules ---
+
+    // q * 0 = (q + 1) mod 2^n
+    for (let q = 0; q < N; q++) {
+        T[q][0] = (q + 1 + 2*h) % N;
+    }
+
+    // (2^n - 1) * p = p
+    for (let p = 0; p < N; p++) {
+        T[N - 1][p] = p;
+    }
+
+    // --- Recursive evaluator ---
+    function star(p, q) {
+        // If already computed, return
+        if (T[p][q] !== null) {
+            return T[p][q];
+        }
+
+        // If q = 0, base rule already handled
+        if (q === 0) {
+            return T[p][0];
+        }
+
+        // Find a decomposition q = a * b
+        // We always can use: q = (q-1) * 0
+        // because (x * 0) = x+1
+        //
+        // So (q-1)*0 = q   (mod N)
+        const a = (q - 1 + N) % N ;
+        const b = 0;
+
+        // Apply self-distributivity:
+        // p * (a * b) = (p * a) * (p * b)
+        const left  = star(p, a);
+        const right = star(p, b);
+        const value = star(left, right);
+
+        T[p][q] = value;
+        return value;
+    }
+
+    // --- Fill entire table ---
+    for (let p = 0; p < N; p++) {
+        for (let q = 0; q < N; q++) {
+            star(p, q);
+        }
+    }
+
+    return T;
+}
+
+function hsvToRgb(h, s, v) {
+    let c = v * s;
+    let x = c * (1 - Math.abs((h / 60) % 2 - 1));
+    let m = v - c;
+    let r=0,g=0,b=0;
+
+    if (h < 60)      [r,g,b] = [c,x,0];
+    else if (h <120) [r,g,b] = [x,c,0];
+    else if (h <180) [r,g,b] = [0,c,x];
+    else if (h <240) [r,g,b] = [0,x,c];
+    else if (h <300) [r,g,b] = [x,0,c];
+    else             [r,g,b] = [c,0,x];
+
+    return [
+        Math.floor((r+m)*255),
+        Math.floor((g+m)*255),
+        Math.floor((b+m)*255)
+    ];
+}
+
+function colorValue(p, q, r, mode, N) {
+    if (mode === "rainbow") {
+        return hsvToRgb(360 * r / (N ), 1, 1);
+    }
+	if (mode === "grad") {
+        return [255*r*1.0/N,Math.min(255*(r*2)/N,255),Math.max(255*(r*2)/N-256,0)];
+    }
+	if (mode === "gradd") {
+	let t= bit(r)/bit(N-1)
+        return [255*1.0*t,Math.min(255*(2)*t,255),Math.max(255*(2)-256*t,0)];
+    }
+	if (mode === "grad2") {
+        return [Math.max(Math.min(255*(r*3)/N-512,255),0),Math.max(Math.min(255*(r*3)/N-256,255),0),Math.max(Math.min(255*(r*3)/N-0,255),0)];
+    }
+    if (mode === "rainbow2") {
+        if (r === 0) return [0,0,0];
+        let k = Math.floor(Math.log2(r));
+        let rem = r - (1 << k);
+        return [
+            Math.min(255, k * 45),
+            Math.min(255, rem * 255 / (1 << k)),
+            200
+        ];
+    }
+
+    if (mode === "pow2") {
+        return isPowerOfTwo(r+1)
+            ? [255,0,0]
+            : [r * 255 / (N-1), r * 255 / (N-1), r * 255 / (N-1)];
+    }
+
+    if (mode === "ltp1") {
+        return r < p - 1 ? [0,0,0] : [255,255,255];
+    }
+
+    if (mode === "ltp") {
+        return r < p ? [0,0,255] : [255,255,255];
+    }
+	if (mode === "ltp1s") {
+      return issmaller(r,p- 1)  ? [0,0,0] : [255,255,255];
+    }
+	if (mode === "ltps") {
+        return issmaller(r,p) ? [0,0,255] : [255,255,255];
+    }
+	if (mode === "odd") {
+	return [(r-p)*5,(p-r)*5,((N-p)-r)*5];
+        //return [r^p,r^q,r];
+    }
+    if (mode === "diff") {
+        let d = (r - p + N) % N;
+        return hsvToRgb(360 * d / (N - 1), 1, 1);
+    }
+
+    return [0,0,0];
+}
+
+function draw() {
+    const n = parseInt(document.getElementById("nInput").value);
+    const mode = document.getElementById("colorMode").value;
+    const invert = document.getElementById("invertBits").checked;
+
+    const N = n;
+    const T = computeLaver(N);
+
+    // Offscreen full-resolution canvas
+    const off = document.createElement("canvas");
+    off.width = N;
+    off.height = N;
+    const octx = off.getContext("2d");
+    const img = octx.createImageData(N, N);
+
+    for (let p = 0; p < N; p++) {
+        for (let q = 0; q < N; q++) {
+            let r = T[q][p];
+            if (invert) r = invertBits(r, n);
+
+            const [R,G,B] = colorValue(p, q, r, mode, N);
+            const idx = 4 * (q * N + p);
+            img.data[idx]   = R;
+            img.data[idx+1] = G;
+            img.data[idx+2] = B;
+            img.data[idx+3] = 255;
+        }
+    }
+
+    octx.putImageData(img, 0, 0);
+
+    // Display canvas
+    const disp = document.getElementById("display");
+    const ctx = disp.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0,0,200,200);
+    ctx.drawImage(off, 0, 0, 200, 200);
+}
+</script>
+
+</body>
+</html>

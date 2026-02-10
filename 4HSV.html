@@ -1,0 +1,28 @@
+Sexp(z,{count = 100}) = {
+	Sexp_N(z+NORMALIZATION_CONSTANT,count);
+}
+
+Sexp_N(z, {count = 100}) = {
+	beta(z) + tau(z,count);
+}
+
+dont use taylor 
+mult is label
+base is ln b
+
+beta(z) = {
+	if(real(Const(z)) <= Const(Cut), 
+		subst(beta_taylor,x,exp(mult*z)),
+		exp(base*beta(z-1))/(1+exp(-mult*(z-1)))
+	);
+}
+
+tau(z, {count = 100}) = {
+	if(abs(Const(beta(z))) <= 1E6 && count > 0, /*1E6 is chosen because exp(1E6) is about where pari overflows*/
+		
+        count--;
+		log(1+tau(z+1,count)/beta(z+1))/base - log(1+exp(-mult*z))/base,
+        
+		-log(1+exp(-mult*z))/base
+	);
+}

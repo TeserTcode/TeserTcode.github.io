@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Atomic Energy Levels vs Z</title>
+
+<style>
+body { background:#0b0b0b; color:#ddd; font-family:monospace; }
+canvas { border:1px solid #444; }
+input, select { width:75px; }
+.controls { margin-bottom:10px; }
+.formulas { max-width:900px; font-size:14px; color:#bbb; }
+</style>
+</head>
+
+<body>
+
+<h2>Energy Eigenvalues vs Atomic Number Z</h2>
+
+<div class="controls">
+Emin: <input id="Emina" type="number" step="0.1" value="-1.2">
+Emax: <input id="Emaxa" type="number" step="0.1" value="0.05">
+Zmin: <input id="Zmina" type="number" value="1">
+Zmax: <input id="Zmaxa" type="number" value="140">
+n max: <input id="nmax" type="number" value="5">
+
+<select id="model">
+<option value="bohr">Bohr</option>
+<option value="relbohr">Relativistic Bohr</option>
+<option value="sommerfeld">Sommerfeld</option>
+<option value="dirac" selected>Dirac</option>
+</select>
+
+<button onclick="draw()">Draw</button>
+</div>
+
+<div class="formulas">
+<b>Bohr</b><br>
+Eₙ = −½ mc² α² Z² / n²<br><br>
+
+<b>Relativistic Bohr</b><br>
+Eₙ = mc² ( √(1 − Z²α² / n² ) − 1 )<br><br>
+
+<b>Sommerfeld (fine structure)</b><br>
+Eₙⱼ = −½ mc² α² Z² / n² · [ 1 + (Z²α²/n²)( n/(j+½) − ¾ ) ]<br><br>
+
+<b>Dirac (exact)</b><br>
+Eₙⱼ = mc² [ 1 + (Zα)² / ( n − (j+½) + √((j+½)² − (Zα)²) )² ]⁻½ − mc²
+</div>
+
+<canvas id="cv" width="900" height="600"></canvas>
+
+<script>
+const ctx = document.getElementById("cv").getContext("2d");
+const alpha = 1/137.04;
+const mc2 = 1.0;
+
+function gammaZ(Z){
+    let x = Z*alpha;
+    if(x>=1) return Infinity;
+    return 1/Math.sqrt(1-x*x);
+}
+
+function E_bohr(Z,n){
+    return -0.5*mc2*alpha*alpha*Z*Z/(n*n);
+}
+
+function E_relbohr(Z,n){
+    let x = Z*alpha/n;
+    if(x>=1) return NaN;
+    return mc2*(Math.sqrt(1-x*x)-1);
+}
+
+function E_sommerfeld(Z,n,j){
+    let a2 = alpha*alpha*Z*Z;
+    return -0.5*mc2*a2/(n*n) *
+        (1 + a2/(n*n)*(n/(j+0.5)-0.75));
+}
+
+function E_dirac(Z,n,j){
+    let za = Z*alpha;
+    let jp = j+0.5;
+    if(jp*jp<=za*za) return NaN;
+    let d = n-jp+Math.sqrt(jp*jp-za*za);
+    return mc2/Math.sqrt(1+(za*za)/(d*d)) - mc2;
+}
+
+function map(x,a,b,A,B){
+    return A+(x-a)*(B-A)/(b-a);
+}
+
+function draw(){
+    ctx.clearRect(0,0,900,600);
+
+    let Emin = +Emina.value;
+    let Emax = +Emaxa.value;
+    let Zmin = +Zmina.value;
+    let Zmax = +Zmaxa.value;
+    let nmax = +document.getElementById("nmax").value;
+    let model = document.getElementById("model").value;
+
+    ctx.strokeStyle="#555";
+    ctx.beginPath();
+    ctx.moveTo(60,20);
+    ctx.lineTo(60,580);
+    ctx.lineTo(880,580);
+    ctx.stroke();
+
+    for(let n=1;n<=nmax;n++){
+        for(let j=0.5;j<=n-0.5;j++){
+            for(let Z=Zmin;Z<=Zmax;Z+=0.25){
+
+                let E;
+                if(model==="bohr") E = E_bohr(Z,n);
+                else if(model==="relbohr") E = E_relbohr(Z,n);
+                else if(model==="sommerfeld") E = E_sommerfeld(Z,n,j);
+                else E = E_dirac(Z,n,j);
+
+                if(!isFinite(E) || E<Emin || E>Emax) continue;
+
+                let R = n/nmax;
+                let G = (j+0.5)/n;
+                let B = Math.min(1,(gammaZ(Z)-1)/2);
+
+                ctx.fillStyle =
+                    `rgb(${255*R|0},${255*G|0},${255*B|0})`;
+
+                let x = map(Z,Zmin,Zmax,60,880);
+                let y = map(E,Emin,Emax,580,20);
+                ctx.fillRect(x,y,2,2);
+            }
+        }
+    }
+
+    ctx.fillStyle="#aaa";
+    ctx.fillText("Z",865,595);
+    ctx.fillText("E / mc²",5,25);
+}
+
+draw();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title></title>
+<style>
+
+.controls {
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:10px;
+}
+label { font-size:13px; }
+canvas {
+    border:1px solid #000;
+
+}
+input, select, button {
+    background:#fff;
+    color:#000;
+    border:1px solid #000;
+}
+</style>
+</head>
+<body>
+
+<div class="controls">
+<label>Size <input id="size" type="number" value="400"></label>
+<label>Sites <input id="sites" type="number" value="400"></label>
+<label>ε <input id="eps" type="number" value="0.5" step="0.01"></label>
+<label>a <input id="a" type="number" value="1.5" step="0.01"></label>
+<label>Coupling n <input id="radius" type="number" value="1"></label>
+
+<label>Map
+<select id="map">
+<option value="logistic">logistic</option>
+<option value="quadratic">quadratic</option>
+<option value="cubic">cubic</option>
+<option value="quartic">quartic</option>
+<option value="tent">tent</option>
+<option value="sin">sin</option>
+<option value="cos">cos</option>
+<option value="tanh">tanh</option>
+<option value="gauss">gauss</option>
+<option value="circle">circle</option>
+<option value="custom">custom</option>
+</select>
+</label>
+
+<label>f(x)=
+<input id="customMap" value="1-a*x*x" size="12">
+</label>
+
+<label>Init
+<select id="init">
+<option value="random">random</option>
+<option value="noise">small noise</option>
+<option value="sin">sinusoidal</option>
+<option value="step">step</option>
+<option value="linear">linear</option>
+<option value="const">constant</option>
+</select>
+</label>
+
+<label>Color
+<select id="color">
+<option value="gradient">gradient</option>
+<option value="rainbow">rainbow</option>
+<option value="fire">fire</option>
+<option value="ice">ice</option>
+<option value="gray">gray</option>
+<option value="phase">phase</option>
+<option value="binary">binary</option>
+</select>
+</label>
+
+<label>Animate <input id="animate" type="checkbox" checked></label>
+
+<button onclick="start()">Start</button>
+</div>
+
+<canvas id="state"></canvas>
+<canvas id="lya"></canvas>
+
+<script>
+let W,H,S,eps,a,radius,animate;
+let u=[],un=[],delta=[];
+let t=0;
+let ctx,ctxL;
+
+function f(x){
+    const m=document.getElementById("map").value;
+    switch(m){
+        case"logistic":return a*x*(1-x);
+        case"quadratic":return 1-a*x*x;
+        case"cubic":return a*x-x*x*x;
+        case"quartic":return 1-a*Math.pow(x,4);
+        case"tent":return 1-2*Math.abs(x);
+        case"sin":return Math.sin(a*x);
+        case"cos":return Math.cos(a*x);
+        case"tanh":return Math.tanh(a*x);
+        case"gauss":return Math.exp(-a*x*x);
+        case"circle":return (x+a/(2*Math.PI)*Math.sin(2*Math.PI*x))%1;
+        case"custom":
+            return Function("x","a","return "+custom.value)(x,a);
+    }
+}
+
+function df(x){
+    const h=1e-6;
+    return (f(x+h)-f(x-h))/(2*h);
+}
+
+function col(v){
+    const c=document.getElementById("color").value;
+    if(c==="gray"){
+        let g=Math.floor(128*(v+1));
+        return `rgb(${g},${g},${g})`;
+    }
+    if(c==="binary"){
+        return v>0?"#fff":"#000";
+    }
+    if(c==="phase"){
+        return `hsl(${(Math.atan2(Math.sin(v),Math.cos(v))*180/Math.PI+360)%360},100%,50%)`;
+    }
+    if(c==="fire"){
+        return `rgb(${255*Math.min(1,v+1)},${80*v},0)`;
+    }
+    if(c==="ice"){
+        return `rgb(0,${150*(v+1)},${255*(v+1)})`;
+    }
+    if(c==="rainbow"){
+        return `hsl(${(v*360)%360},100%,50%)`;
+    }
+    let g=Math.floor(255*(v+1)/2);
+    return `rgb(${g},0,${255-g})`;
+}
+
+function step(){
+    for(let s=0;s<S;s++){
+        let sum=0;
+        for(let k=1;k<=radius;k++){
+            sum+=f(u[(s+k)%S])+f(u[(s-k+S)%S]);
+        }
+        un[s]=(1-eps)*f(u[s])+eps*sum/(2*radius);
+
+        let jac=(1-eps)*df(u[s]);
+        for(let k=1;k<=radius;k++){
+            jac+=eps*(df(u[(s+k)%S])+df(u[(s-k+S)%S]))/(2*radius);
+        }
+        delta[s]=Math.abs(jac)*delta[s]+1e-12;
+    }
+
+    if(t<H){
+        for(let s=0;s<S;s++){
+            ctx.fillStyle=col(un[s]);
+            ctx.fillRect(s*W/S,t,W/S,1);
+
+            let ly=Math.log(delta[s]);
+            ctxL.fillStyle=col(ly/5);
+            ctxL.fillRect(s*W/S,t,W/S,1);
+        }
+    }
+
+    [u,un]=[un,u];
+    t++;
+    a+=0.0005;
+
+    if(animate && t<H) requestAnimationFrame(step);
+}
+
+function init(){
+    const mode=document.getElementById("init").value;
+    for(let i=0;i<S;i++){
+        if(mode==="random")u[i]=Math.random();
+        if(mode==="noise")u[i]=0.5+0.01*(Math.random()-0.5);
+        if(mode==="sin")u[i]=0.5+0.5*Math.sin(2*Math.PI*i/S);
+        if(mode==="step")u[i]=i<S/2?0.2:0.8;
+        if(mode==="linear")u[i]=i/S;
+        if(mode==="const")u[i]=0.5;
+        delta[i]=1e-8;
+    }
+}
+
+function start(){
+    W=H=+size.value;
+    S=+sites.value;
+    eps=+document.getElementById("eps").value;
+    a=+document.getElementById("a").value;
+    radius=+document.getElementById("radius").value;
+    animate=document.getElementById("animate").checked;
+
+    state.width=state.height=lya.width=lya.height=W;
+    ctx=state.getContext("2d");
+    ctxL=lya.getContext("2d");
+
+    u=new Array(S); un=new Array(S); delta=new Array(S);
+    init(); t=0;
+
+    ctx.clearRect(0,0,W,H);
+    ctxL.clearRect(0,0,W,H);
+
+    if(animate) requestAnimationFrame(step);
+    else while(t<H) step();
+}
+</script>
+
+</body>
+</html>
