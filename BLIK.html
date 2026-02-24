@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<style>
+    body{
+        margin:0;
+        background:black;
+        overflow:hidden;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        height:100vh;
+    }
+
+    #stage{
+        position:relative;
+        width:500px;
+        height:500px;
+        isolation:isolate;
+    }
+
+    .fish{
+        position:absolute;
+        width:500px;
+        height:500px;
+        object-fit:cover;
+        border:10px solid white;
+        box-sizing:border-box;
+        pointer-events:none;
+        opacity:0;
+    }
+</style>
+</head>
+<body>
+
+<div id="stage"></div>
+
+<script>
+const stage = document.getElementById("stage");
+const fishCount = 22;
+const maxOpacity = 0.5;
+
+const blendModes = [
+    "normal",
+
+    "multiply",
+    "darken",
+
+    "exclusion"
+];
+
+function rand(a,b){ return a + Math.random()*(b-a); }
+function randi(n){ return Math.floor(Math.random()*n); }
+
+function shuffle(array){
+    for(let i=array.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [array[i],array[j]] = [array[j],array[i]];
+    }
+}
+
+class Fish{
+    constructor(src){
+        this.img = document.createElement("img");
+        this.img.src = src;
+        this.img.className = "fish";
+
+        this.period = rand(3000,9000);
+        this.phase = rand(0,Math.PI*2);
+        this.lastOpacity = 0;
+
+        this.img.style.mixBlendMode =
+            blendModes[randi(blendModes.length)];
+
+        stage.appendChild(this.img);
+    }
+
+    update(time){
+
+        let raw = (Math.sin((time/this.period)*2*Math.PI + this.phase) + 1)/2;
+        let opacity = raw * maxOpacity;
+
+        this.img.style.opacity = opacity;
+
+        if(opacity < 0.01 && this.lastOpacity >= 0.01){
+
+            // full random stacking reorder
+            shuffle(fishes);
+            fishes.forEach(f => stage.appendChild(f.img));
+
+            // also change this fish blend mode
+            this.img.style.mixBlendMode =
+                blendModes[randi(blendModes.length)];
+        }
+
+        this.lastOpacity = opacity;
+
+        let b = 0.8 + 0.4*Math.sin(time/2000 + this.phase);
+        let c = 0.8 + 0.4*Math.cos(time/2500 + this.phase*1.3);
+
+        this.img.style.filter =
+            `brightness(${b}) contrast(${c})`;
+    }
+}
+
+let fishes = [];
+for(let i=1;i<=fishCount;i++){
+    fishes.push(
+        new Fish(`./fish/fish${((i-1)%22)+1}.png`)
+    );
+}
+
+function animate(time){
+    fishes.forEach(f => f.update(time));
+    requestAnimationFrame(animate);
+}
+
+requestAnimationFrame(animate);
+</script>
+
+</body>
+</html>
