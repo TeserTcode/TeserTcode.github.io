@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Animated Braid Simplifier</title>
+    <style>
+        body { background: #000; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .ui { margin-bottom: 15px; background: #111; padding: 15px; border-radius: 10px; border: 1px solid #333; display: flex; gap: 10px; align-items: center; }
+        input { background: #222; border: 1px solid #555; color: #0f0; padding: 8px; border-radius: 4px; width: 300px; font-family: monospace; }
+        button { background: #0078d4; color: white; border: none; padding: 8px 16px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        button:disabled { background: #333; color: #777; cursor: not-allowed; }
+        #simplifyBtn { background: #28a745; }
+        canvas { background: #000; border: 1px solid #333; box-shadow: 0 0 30px rgba(0,120,212,0.1); }
+        .status { color: #aaa; font-size: 0.9em; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="ui">
+    <label>Braid:</label>
+    <input type="text" id="braidInput" value="1, 2, -2, -1, 1, 2, 1">
+    <button onclick="updateFromInput()">Set</button>
+    <button id="simplifyBtn" onclick="startSimplification()">Simplify Step-by-Step</button>
+</div>
+<div id="status" class="status">Ready</div>
+
+<canvas id="braidCanvas" width="1000" height="600"></canvas>
+
+<script>
+    const canvas = document.getElementById('braidCanvas');
+    const ctx = canvas.getContext('2d');
+    let currentBraid = [];
+    let isAnimating = false;
+
+    // --- YOUR LOGIC ADAPTED FOR STEPPING ---
+
+    function r1_step(bw) {
+        for(let i=0; i<bw.length-1; i++) {
+            if(bw[i] === -bw[i+1]) {
+                const next = [...bw];
+                next.splice(i, 2);
+                return { changed: true, word: next, msg: "R2 Move: Cancelling adjacent inverses" };
+            }
+        }
+        return { changed: false, word: bw };
+    }
+
+    function r3_step(bw) {
+        const out = [...bw];
+        for(let i=0; i<out.length-2; i++) {
+            const x = out[i], y = out[i+1], z = out[i+2];
+            if(Math.abs(x) === Math.abs(z) && Math.abs(Math.abs(x) - Math.abs(y)) === 1 && Math.sign(x) === Math.sign(y) && Math.sign(y) === Math.sign(z)) {
+                out[i] = y; out[i+1] = x; out[i+2] = y;
+                return { changed: true, word: out, msg: "R3 Move: Sliding crossing" };
+            }
+        }
+        return { changed: false, word: bw };
+    }
+
+    function cyclic_step(bw) {
+        if(bw.length <= 1) return { changed: false, word: bw };
+        const next = [...bw];
+        const first = next.shift();
+        next.push(first);
+        return { changed: true, word: next, msg: "Cyclic Shift" };
+    }
+
+    // --- VISUALIZATION ENGINE ---
+
+    function draw(word) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let n = Math.max(...word.map(Math.abs), 0) + 1;
+        if (n < 2) n = 2;
+
+        const Y_TOP = 150, Y_BOT = 450, X_LEFT = 250, X_RIGHT = 750;
+        const STEP_X = (X_RIGHT - X_LEFT) / (n - 1);
+        const STEP_Y = (Y_BOT - Y_TOP) / (word.length || 1);
+
+        let currentPos = Array.from({length: n}, (_, i) => i);
+        let parent = Array.from({length: n}, (_, i) => i);
+        const find = (i) => parent[i] === i ? i : parent[i] = find(parent[i]);
+        const unite = (i, j) => { let rI = find(i), rJ = find(j); if(rI !== rJ) parent[rI] = rJ; };
+
+        // Pre-pass for colors
+        let tempPos = [...currentPos];
+        word.forEach(sig => {
+            const i = Math.abs(sig)-1;
+            [tempPos[i], tempPos[i+1]] = [tempPos[i+1], tempPos[i]];
+        });
+        for(let i=0; i<n; i++) unite(tempPos[i], i);
+
+        const getCol = (id, l) => `hsl(${(find(id) * 137.5) % 360}, 80%, ${l}%)`;
+
+        let layers = { under: [], straight: [], over: [] };
+        let tracePos = [...currentPos];
+
+        word.forEach((sig, idx) => {
+            const i = Math.abs(sig)-1, y0 = Y_TOP + idx*STEP_Y, y1 = y0 + STEP_Y;
+            const idL = tracePos[i], idR = tracePos[i+1];
+            const sL = { x0: X_LEFT+i*STEP_X, x1: X_LEFT+(i+1)*STEP_X, y0, y1, id: idL };
+            const sR = { x0: X_LEFT+(i+1)*STEP_X, x1: X_LEFT+i*STEP_X, y0, y1, id: idR };
+            if(sig > 0) { layers.over.push(sL); layers.under.push(sR); }
+            else { layers.under.push(sL); layers.over.push(sR); }
+            for(let k=0; k<n; k++) if(k!==i && k!==i+1) layers.straight.push({x: X_LEFT+k*STEP_X, y0, y1, id: tracePos[k]});
+            [tracePos[i], tracePos[i+1]] = [tracePos[i+1], tracePos[i]];
+        });
+
+        const renderSeg = (s, isOver) => {
+            ctx.beginPath(); ctx.moveTo(s.x0, s.y0);
+            ctx.bezierCurveTo(s.x0, (s.y0+s.y1)/2, s.x1, (s.y0+s.y1)/2, s.x1, s.y1);
+            let g = ctx.createLinearGradient(s.x0, s.y0, s.x1, s.y1);
+            g.addColorStop(0, getCol(s.id, 45));
+            g.addColorStop(0.5, isOver ? getCol(s.id, 80) : getCol(s.id, 15));
+            g.addColorStop(1, getCol(s.id, 45));
+            ctx.strokeStyle = g; ctx.lineWidth = 10; ctx.stroke();
+        };
+
+        layers.under.forEach(s => renderSeg(s, false));
+        layers.straight.forEach(s => {
+            ctx.strokeStyle = getCol(s.id, 45); ctx.lineWidth = 10;
+            ctx.beginPath(); ctx.moveTo(s.x, s.y0); ctx.lineTo(s.x, s.y1); ctx.stroke();
+        });
+        layers.over.forEach(s => renderSeg(s, true));
+
+        // Completants
+        for (let i = 0; i < n; i++) {
+            const tx = X_LEFT + i*STEP_X, id = tracePos[i], off = (i+1)*(120/(n+1));
+            ctx.strokeStyle = getCol(id, 45); ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(tx, Y_BOT); ctx.lineTo(tx, Y_BOT+off);
+            ctx.lineTo(X_LEFT-off, Y_BOT+off); ctx.lineTo(X_LEFT-off, Y_TOP-off);
+            ctx.lineTo(tx, Y_TOP-off); ctx.lineTo(tx, Y_TOP); ctx.stroke();
+        }
+    }
+
+    // --- ANIMATION CONTROLLER ---
+
+    async function startSimplification() {
+        if(isAnimating) return;
+        isAnimating = true;
+        document.getElementById('simplifyBtn').disabled = true;
+        let k = 0;
+        
+        while(k < 5) { // Safety limit
+            let res = r1_step(currentBraid);
+            if(!res.changed) res = r3_step(currentBraid);
+            
+            // If no moves left, try a cyclic shift to unlock new moves
+            if(!res.changed) {
+                res = cyclic_step(currentBraid);
+                // If cyclic shift doesn't eventually lead to a R1/R3, we stop
+                // (Simplified logic: stop if we've shifted N times without a move)
+            }
+
+            if(res.changed) {
+                currentBraid = res.word;
+                document.getElementById('braidInput').value = currentBraid.join(', ');
+                document.getElementById('status').innerText = res.msg || "Simplifying...";
+                draw(currentBraid);
+                await new Promise(r => setTimeout(r, 600)); // Animation delay
+            } else {
+                break; 
+            }
+            k++;
+        }
+        
+        document.getElementById('status').innerText = "Simplification Complete";
+        document.getElementById('simplifyBtn').disabled = false;
+        isAnimating = false;
+    }
+
+    function updateFromInput() {
+        const val = document.getElementById('braidInput').value;
+        currentBraid = val.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+        draw(currentBraid);
+    }
+
+    updateFromInput();
+</script>
+</body>
+</html>

@@ -3106,6 +3106,49 @@ return [
 }
 
 
+if (colorMode === 'shiny') {
+
+    const x = complexInput.re, y = complexInput.im;
+    const u = complexOutput.re, v = complexOutput.im;
+    const fr = deriv.re, fi = deriv.im;
+
+    const r = Math.hypot(u,v);
+    if (r < 1e-8) return [0,0,0];
+
+    // gradient of |f|
+    let Nx = -(u*fr + v*fi)/r;
+    let Ny = -(u*(-fi) + v*fr)/r;
+    let Nz = 1;
+
+    let n = 1/Math.hypot(Nx,Ny,Nz);
+    Nx*=n; Ny*=n; Nz*=n;
+
+    // light at (0,0,1)
+    let Lx = -x, Ly = 0-y, Lz = 2-r;
+    n = 1/Math.hypot(Lx,Ly,Lz);
+    Lx*=n; Ly*=n; Lz*=n;
+
+    const diff = Math.max(0, Nx*Lx + Ny*Ly + Nz*Lz);
+
+    // specular (viewer at z=2)
+    let Vx = -x, Vy = -y, Vz = -r;
+    n = 1/Math.hypot(Vx,Vy,Vz);
+    Vx*=n; Vy*=n; Vz*=n;
+
+    const dotNL = Nx*Lx + Ny*Ly + Nz*Lz;
+    let Rx = 2*dotNL*Nx - Lx;
+    let Ry = 2*dotNL*Ny - Ly;
+    let Rz = 2*dotNL*Nz - Lz;
+
+    n = 1/Math.hypot(Rx,Ry,Rz);
+    Rx*=n; Ry*=n; Rz*=n;
+
+    const spec = Math.pow(( -Rx*Vx + Ry*Vy + -Rz*Vz), 1);
+
+    const I = (1, (0.2 + 1.5*diff + 0.7*0)*55);
+//console.log((0.2 + 0.8*diff + 0.7*spec)*255)
+    return hsvToRgb(phase * 180 / Math.PI, saturationChroma, I);
+}
 
 
 
@@ -3193,13 +3236,27 @@ return [
     return [255, 255, 255]; 
 }
 
-
+    if (colorMode === 'rgb'){
+   //     console.log(phase)
+        let q=lightnessValue*4
+        if(q<1)return [0,q*255,255];
+        if(q<2)return [0,255,(2-q)*255]
+        if(q<3)return [(q-2)*255,255,0]
+        return [255,(4-q)*255,0]
+    }
 
 
     if (colorMode === 'hsv' || colorMode === 'hsl') {
         return colorMode === 'hsv'
             ? hsvToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted)
             : hslToRgb(phase * 180 / Math.PI, chroma, lightnessAdjusted);
+    }
+    if (colorMode === 'hsv4' || colorMode === 'hsl4') {
+        let q=div(phase,2,pi(),0.25)
+        let hue=(q<1)?q:(q<2)?add(q,q,-1):(q<3)?add(q,1):add(q,q,-2)
+        return colorMode === 'hsv4'
+            ? hsvToRgb(hue * 180 / 3, chroma, lightnessAdjusted)
+            : hslToRgb(hue * 180 / 3, lightnessAdjusted);
     }
     if (colorMode === 'qhsv' || colorMode === 'qhsl') {
         return colorMode === 'qhsv'

@@ -554,6 +554,7 @@ Colors based on imag^2/real and real^2/imag.
         <option value="superfactorial(x)">Superfactorial: superfactorial(x)</option>
         <option value="tetr(x)">Tetration: tetr(x)</option>
         <option value="pent(x)">Pentation: pent(x)</option>
+        <option value="hepts2(x)">Sqrt2 Heptation: hepts2(x)</option>
        <option value=" meijerg([0.5],[0.25],[2],[5/3,7/3],x)+accuracy(40)">MeijerG: G[0.5;0.25;2;5/3,7/3|x]</option>
      <option value=" foxh([[0.5,0.8],[1,2]],[[0.33],[0.76]],[[-1.23],[0.12]],[[0.1],[0.64]],x))"> FoxH example</option>
         <option value="schwarztriangle(1/3,1/3,1/3,x)">Schwarz Triangle 1/3</option>
@@ -565,7 +566,7 @@ Colors based on imag^2/real and real^2/imag.
         <option value="re(sphericalharmonic(3,2,re(x),im(x)))))">Spherical harmonic</option>
         
         <option value="stereopicosahedron(x)">Stereographic projection of icosahedron: stereopicosahedron(x)</option>
-        <option value="polynomial([polynomial([log(intge(cos,x)+intge("sin(x)",x)*i)^2],pow(2,pow(1.5,2))),derv('sin(x)',x^2)],sinc(x))^2">Very long test function</option>
+        <option value="polynomial([polynomial([log(intg(cos,x)+intge("sin(x)",x)*i)^2],pow(2,pow(1.5,2))),derv('sin(x)',x^2)],sinc(x))^2">Very long test function</option>
    
    <option value="5*x^5+4*x^4-3*x^2+x-8">Real Coeff Polynomial</option>
 <option value="5*i*x^5+(2*i+1)*x^3-(-i+3)*x^2+(i-5)*x+2*i">Complex Coeff Polynomial</option>
@@ -754,7 +755,10 @@ Colors based on imag^2/real and real^2/imag.
         <label for="color-mode">Color Mode:</label>
         <select id="color-mode" name="color-mode">
             <option value="hsv">HSV</option>
-            <option value="hsl">HSL</option>
+            <option value="hsl">HSL</option>,
+            <option value="hsv4">HSV4</option>
+            <option value="hsl4">HSL4</option>
+            <option value="rgb">RGB</option>
             <option value="hcl">HCL</option>
 			 <option value="ycbcr">YCbCr</option>
 			  <option value="ydbdr">YDbDr</option>
@@ -764,6 +768,7 @@ Colors based on imag^2/real and real^2/imag.
 	      <option value="qhsv">qHSV</option>
             <option value="qhsl">qHSL</option>
             <option value="phsv">pHSV</option>
+            <option value="phsl">pHSL</option>
             <option value="phsl">pHSL</option>
             <option value="hqv">HQV</option>
               <option value="hsm">HSM</option>
@@ -775,6 +780,7 @@ Colors based on imag^2/real and real^2/imag.
 		 <!-- <option value="acontour">Antialias Contour</option> -->
 		   <option value="isolines">Isolines</option> 
 		   <option value="neon">Neon</option>
+            <option value="shiny">Shine</option>
 		   <option value="differ">Differ</option>
 		   <option value="purify">Purify</option>
 		   <option value="real">Real</option>
@@ -878,6 +884,7 @@ Colors based on imag^2/real and real^2/imag.
 	</div>
     
     <button onclick="renderBMP()">Generate</button>
+    <button onclick="renderBMPadaptive()">Generate Adaptive</button>
 	 <button onclick="renderBMPinv()">Generate Inverse</button>
 <button onclick="renderBMPmap()">Generate Mapping</button>
 
@@ -940,8 +947,9 @@ Colors based on imag^2/real and real^2/imag.
         <input type="numericalxim" id="numericalxim" name="numericalxim" step="1" value="0" required>
 	
 	</div>
-	<button onclick="numerate()">Calculate</button>
-    <button onclick="numerate2()">Calculate Alt</button>
+     <button onclick="numerate2()">Calculate</button>
+	<button onclick="numerate()">Calculate Math.js</button>
+   
 	</div>
 </div>
     <div id="graphContainer">
@@ -1082,6 +1090,10 @@ Colors based on imag^2/real and real^2/imag.
 "X.X...X.....X.....X.........X....X.....X.X...X.X..."
 "X.X...XXX...XXX...XXX.......X....XXX...X.X...X.X..."
 	*/
+    
+    
+    Error.stackTraceLimit = 100;
+    
         let paletteImageData = null;
 	const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
@@ -2320,7 +2332,7 @@ const xxx = math.complex(xre,xim);
 
 
 
-function renderBMP() {
+async function renderBMP() {
     const width = parseInt(document.getElementById('bmp-width').value);
     const height = parseInt(document.getElementById('bmp-height').value);
     const minReal = parseFloat(document.getElementById('min-real').value);
@@ -2353,7 +2365,7 @@ function renderBMP() {
     const memoValues = new Array(width).fill(0);
  const funcTree = teth.parse(teth.tokenize(funcStr));
     // Draw in blocks of lines to avoid blocking UI but stay fast
-    const blockSize = 32; // can tweak for performance
+    const blockSize = 10; // can tweak for performance
     for (let yStart = 0; yStart < height; yStart += blockSize) {
         const yEnd = Math.min(yStart + blockSize, height);
         for (let x = 0; x < width; x++) {
@@ -2363,9 +2375,9 @@ function renderBMP() {
             for (let y = yStart; y < yEnd; y++) {
                 const im = imValues[y];
                 const complexValue = math.complex(re, im);
-                const q = math.exp(math.multiply(math.complex(0, Math.PI), complexValue));
+                //const q = math.exp(math.multiply(math.complex(0, Math.PI), complexValue));
 
-                const funcValue = teth.evaluateTree(funcTree, { x: complexValue, q,xx:re,yy:im });
+                const funcValue = teth.evaluateTree(funcTree, { x: complexValue ,xx:re,yy:im });
                 const color = complexToColor(
                     complexValue,
                     funcValue,
@@ -2389,6 +2401,9 @@ function renderBMP() {
 
             memoValues[x] = memo; // save for next block
         }
+     //       ctx.putImageData(imageData, 0, 0);
+   // ctx.putImageData(imageData, 0, 0);
+   // await new Promise(requestAnimationFrame);
     }
 
     ctx.putImageData(imageData, 0, 0);
@@ -2396,6 +2411,117 @@ function renderBMP() {
 }
 
 
+async function renderBMPadaptive() {
+
+    const minReal = parseFloat(document.getElementById('min-real').value);
+    const maxReal = parseFloat(document.getElementById('max-real').value);
+    const minImag = parseFloat(document.getElementById('min-imag').value);
+    const maxImag = parseFloat(document.getElementById('max-imag').value);
+    const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+    const lightness = parseInt(document.getElementById('lightness').value);
+    const funcStr = document.getElementById('function').value.trim();
+    const thick = parseFloat(document.getElementById('thick').value);
+
+    const canvas = document.getElementById('bmpCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const funcTree = teth.parse(teth.tokenize(funcStr));
+
+    /* ---------- 1. BENCHMARK 9 PIXELS ---------- */
+
+    const testW = 100, testH = 100;
+    const reStepT = (maxReal - minReal) / testW;
+    const imStepT = (maxImag - minImag) / testH;
+
+    const pts = [
+        [0,0],[99,0],[0,99],[99,99],
+        [50,0],[50,99],[0,50],[99,50],
+        [50,50]
+    ];
+
+    const t0 = performance.now();
+
+    for (const [x,y] of pts) {
+        const re = minReal + x * reStepT;
+        const im = maxImag - y * imStepT;
+        const z = math.complex(re,im);
+        const q = math.exp(math.multiply(math.complex(0,Math.PI),z));
+        const f = teth.evaluateTree(funcTree,{x:z,q,xx:re,yy:im});
+        complexToColor(z,f,magnitudeToLightnessExpr,colorMode,saturationChroma,lightness,paletteImageData,thick,f);
+    }
+
+    const ms = performance.now() - t0;
+    const timePerPixel = ms / 9;
+    const maxPixels = Math.floor(1000 / timePerPixel);
+
+    let h = Math.floor(Math.sqrt(maxPixels))*2;
+    let w = h;
+
+    /* ---------- 2. RENDER LOW RES ---------- */
+
+    canvas.width = w;
+    canvas.height = h;
+
+    const img = ctx.createImageData(w,h);
+    const d = img.data;
+
+    const reStep = (maxReal - minReal) / w;
+    const imStep = (maxImag - minImag) / h;
+
+    for (let y=0;y<h;y++){
+        const im = maxImag - y * imStep;
+        for (let x=0;x<w;x++){
+            const re = minReal + x * reStep;
+            const z = math.complex(re,im);
+            const q = math.exp(math.multiply(math.complex(0,Math.PI),z));
+            const f = teth.evaluateTree(funcTree,{x:z,q,xx:re,yy:im});
+            const c = complexToColor(z,f,magnitudeToLightnessExpr,colorMode,saturationChroma,lightness,paletteImageData,thick,f);
+            const i = (y*w+x)*4;
+            d[i]=c[0]; d[i+1]=c[1]; d[i+2]=c[2]; d[i+3]=255;
+        }
+    }
+
+    ctx.putImageData(img,0,0);
+
+    /* ---------- 3. DOUBLE SIZE + INTERPOLATE ---------- */
+
+    const w2 = w*2, h2 = h*2;
+    const img2 = ctx.createImageData(w2,h2);
+    const d2 = img2.data;
+
+    for (let y=0;y<h2;y++){
+        const y0 = Math.floor(y/2);
+        const y1 = Math.min(y0+1,h-1);
+        const fy = (y%2)*0.5;
+
+        for (let x=0;x<w2;x++){
+            const x0 = Math.floor(x/2);
+            const x1 = Math.min(x0+1,w-1);
+            const fx = (x%2)*0.5;
+
+            for (let c=0;c<3;c++){
+                const p00 = d[(y0*w+x0)*4+c];
+                const p10 = d[(y0*w+x1)*4+c];
+                const p01 = d[(y1*w+x0)*4+c];
+                const p11 = d[(y1*w+x1)*4+c];
+
+                d2[(y*w2+x)*4+c] =
+                    p00*(1-fx)*(1-fy) +
+                    p10*fx*(1-fy) +
+                    p01*(1-fx)*fy +
+                    p11*fx*fy;
+            }
+            d2[(y*w2+x)*4+3]=255;
+        }
+    }
+
+    canvas.width = w2;
+    canvas.height = h2;
+    ctx.putImageData(img2,0,0);
+    scaleCanvas();
+}
 
 
 
@@ -2786,8 +2912,8 @@ function renderBMPt(t) {
  scaleCanvas();
         }
 async function renderBMPmap() {
-    const width = parseInt(document.getElementById('bmp-width').value);
-    const height = parseInt(document.getElementById('bmp-height').value);
+    const width = parseInt(document.getElementById('bmp-width').value)*10;
+    const height = parseInt(document.getElementById('bmp-height').value)*10;
     const minReal = parseFloat(document.getElementById('min-real').value);
     const maxReal = parseFloat(document.getElementById('max-real').value);
     const minImag = parseFloat(document.getElementById('min-imag').value);
@@ -3324,6 +3450,12 @@ function hideFunctionCode() {
   }
 }
 
+document.addEventListener("click", (e) => {
+  // optional: ignore clicks inside the bubble itself
+  if (!e.target.closest(".code-bubble")) {
+    hideFunctionCode();
+  }
+});
 
     textarea.addEventListener("blur", () => {
       setTimeout(() => (autocompleteList.style.display = "none"), 200);

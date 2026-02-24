@@ -3,21 +3,25 @@
 
 //sin(iabs(pi*e^(squaremodc(x,1)*(squaremodc(x,1)-1)*(squaremodc(x,1)-i)*(squaremodc(x,1)-1-i))^6))
 //FIX TRUNCATED DODECAHEDRON
-//add https://archive.org/details/GradshteinI.S.RyzhikI.M.TablesOfIntegralsSeriesAndProducts/page/n682/mode/1up 683
+
 //ADD BELL POLYNOMİALS OF THE SECOND KİND AND INCOMPLETE BELL POLY
 //ADD orders of simple group families
 //ADD arctaxiacab aetcsdcldk 
-//ADD FIX 3j symbol variants
+
+//ADD https://en.wikipedia.org/wiki/Fractional_calculus
+
+//ADD 2 https://arxiv.org/pdf/0808.0982 and q discrete painleve
 
 
+//LEMNATOMİC and atomic idk poltypcxlm polynomaiil
+//https://www.statisticshowto.com/hansmanns-distributions/
+//https://www.statisticshowto.com/kent-distribution/
 
 
+//ADD ruelle and artnmazır and iahra zeta
 
-
-
-
-
-
+//DONE 3j symbol variants
+//DONE https://archive.org/details/GradshteinI.S.RyzhikI.M.TablesOfIntegralsSeriesAndProducts/page/n682/mode/1up 683
 
 let dualsMap = new Map([]);
 
@@ -819,12 +823,12 @@ function sphtoxyz(theta, phi) {
 }
 
 
-function dot3(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]}
-function cross3(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}
-function sub3(a,b){return[a[0]-b[0],a[1]-b[1],a[2]-b[2]]}
-function add3(a,b){return[a[0]+b[0],a[1]+b[1],a[2]+b[2]]}
-function mul3(a,s){return[a[0]*s,a[1]*s,a[2]*s]}
-function norm3(a){let m=Math.sqrt(dot3(a,a));return[m>0?a[0]/m:0,m>0?a[1]/m:0,m>0?a[2]/m:0]}
+function dot3v(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]}
+function cross3v(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}
+function sub3v(a,b){return[a[0]-b[0],a[1]-b[1],a[2]-b[2]]}
+function add3v(a,b){return[a[0]+b[0],a[1]+b[1],a[2]+b[2]]}
+function mul3v(a,s){return[a[0]*s,a[1]*s,a[2]*s]}
+function norm3v(a){let m=Math.sqrt(dot3(a,a));return[m>0?a[0]/m:0,m>0?a[1]/m:0,m>0?a[2]/m:0]}
 
 
 function radiuscube(phi,theta){
@@ -932,19 +936,49 @@ function Ccircle(r=1, x=math.complex(0,0)) {
 function Chankel(r) {
     const points = [];
     for (let i = 0; i < bign; ++i) {
-        const t = i / (bign - 1); // Parameter t goes from 0 to 1
+        const t = i / (bign - 1);
         let point;
 
         if (i < bign / 3) {
-            point = math.complex(-bign,r*( 1.0 - t));
+            // Right to top-left: from +bign + i*r to -1 + i*r
+            point = math.complex(sqrt(bign) * (1 - 3 * t) + (-1) * 3 * t, r);
         } else if (i < 2 * bign / 3) {
-            point = math.complex(-r, r*(1.0 - 2 * t));
+            // Top-left to bottom-left: from -1 + i*r to -1 - i*r
+            const tt = t - 1/3;
+            point = math.complex(-1, r * (1 - 6 * tt));
         } else {
-            point = math.complex(bign, r*(-1.0 + t));
+            // Bottom-left to right: from -1 - i*r to +bign - i*r
+            const tt = t - 2/3;
+            point = math.complex(-1 + (sqrt(bign) + 1) * 3 * tt, -r);
         }
 
         points.push(point);
     }
+
+    return new contour(points);
+}
+function Cmhankel(r) {
+    const points = [];
+    for (let i = 0; i < bign; ++i) {
+        const t = i / (bign - 1);
+        let point;
+
+        if (i < bign / 3) {
+            // Right to top-left: from +bign + i*r to -1 + i*r
+            point = math.complex(sqrt(bign) * (1 - 3 * t) + (-1) * 3 * t, r);
+        } else if (i < 2 * bign / 3) {
+            // Top-left to bottom-left: from -1 + i*r to -1 - i*r
+            const tt = t - 1/3;
+            point = math.complex(-1, r * (1 - 6 * tt));
+        } else {
+            // Bottom-left to right: from -1 - i*r to +bign - i*r
+            const tt = t - 2/3;
+            point = math.complex(-1 + (sqrt(bign) + 1) * 3 * tt, -r);
+        }
+
+        points.push(rconj(point));
+    }
+
     return new contour(points);
 }
 function Ccauchy(r) {
@@ -982,13 +1016,13 @@ function transpose(A){
 
 function eigenvals(A, maxIter = 1000, tol = 1e-12) {
   function C(re, im) { return math.complex(re,im)}
-  function add(a, b) { return C(a.re + b.re, a.im + b.im); }
+  /*function add(a, b) { return C(a.re + b.re, a.im + b.im); }
   function sub(a, b) { return C(a.re - b.re, a.im - b.im); }
   function mul(a, b) { return C(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re); }
   function div(a, b) {
     var den = b.re * b.re + b.im * b.im;
     return C((a.re * b.re + a.im * b.im) / den, (a.im * b.re - a.re * b.im) / den);
-  }
+  }*/
   function conj(a) { return C(a.re, -a.im); }
   function abs(a) { return Math.hypot(a.re, a.im); }
   function scale(a, s) { return C(a.re * s, a.im * s); }
@@ -1700,6 +1734,390 @@ function selectorsquare(z) {
 }
 
 
+
+
+//https://iquilezles.org/articles/distfunctions2d/
+
+//2d SDFs 
+
+//use hypot for length
+//maxc for max minc for min
+
+function sdfcircle(x,y,r){
+    return sub(hypot(x,y), r)
+}
+function sdfroundedbox(x,y,bx,by,rx,ry,rz,rw){
+    // r.xy or r.zw depending on x sign
+    let r0 = (re(x)>0) ? rx : rz
+    let r1 = (re(x)>0) ? ry : rw
+
+    // r.x or r.y depending on y sign
+    let rr = (re(y)>0) ? r0 : r1
+
+    let qx = sub(sub(abs(x),bx), sub(0,rr))
+    let qy = sub(sub(abs(y),by), sub(0,rr))
+
+    return sub(
+        add(
+            minc(maxc(qx,qy), 0),
+            hypot(maxc(qx,0), maxc(qy,0))
+        ),
+        rr
+    )
+}
+function sdfchamferbox(x,y,bx,by,ch){
+    let px = sub(abs(x),bx)
+    let py = sub(abs(y),by)
+
+    // swap if py > px
+    let sx = (re(py)>re(px)) ? py : px
+    let sy = (re(py)>re(px)) ? px : py
+
+    sy = add(sy, ch)
+
+    let k = sub(1, sqrt(2))
+
+    if(re(sy)<0 && re(add(sy, mul(sx,k)))<0)
+        return sx
+
+    if(re(sx)<re(sy))
+        return mul(add(sx,sy), sqrt(div(1,2)))
+
+    return hypot(sx,sy)
+}
+function sdfbox(x,y,bx,by){let dx=sub(mag(x),bx),dy=sub(mag(y),by);return add(hypot(maxc(dx,0),maxc(dy,0)),minc(maxc(dx,dy),0))}
+function sdforientedbox(x,y,ax,ay,bx,by,th){let lx=sub(bx,ax),ly=sub(by,ay),l=hypot(lx,ly),dx=div(lx,l),dy=div(ly,l),qx=sub(x,mul(add(ax,bx),0.5)),qy=sub(y,mul(add(ay,by),0.5)),rx=add(mul(dx,qx),mul(sub(0,dy),qy)),ry=add(mul(dy,qx),mul(dx,qy)),hx=sub(mag(rx),mul(l,0.5)),hy=sub(mag(ry),mul(th,0.5));return add(hypot(maxc(hx,0),maxc(hy,0)),minc(maxc(hx,hy),0))}
+function sdfsegment(x,y,ax,ay,bx,by){let pax=sub(x,ax),pay=sub(y,ay),bax=sub(bx,ax),bay=sub(by,ay),h=clamp(div(add(mul(pax,bax),mul(pay,bay)),add(mul(bax,bax),mul(bay,bay))),0,1);return hypot(sub(pax,mul(bax,h)),sub(pay,mul(bay,h)))}
+function sdfrhombus(x,y,bx,by){by=sub(0,by);x=mag(x);y=mag(y);let h=clamp(div(add(add(mul(bx,x),mul(by,y)),mul(by,by)),add(mul(bx,bx),mul(by,by))),0,1);let px=sub(x,mul(bx,h)),py=sub(y,mul(by,sub(h,1)));return mul(hypot(px,py),signum(px))}
+function sdftrapezoid(x,y,r1,r2,he){let k1x=r2,k1y=he,k2x=sub(r2,r1),k2y=mul(2,he);x=mag(x);let cax=sub(x,minc(x,(re(y)<0)?r1:r2)),cay=sub(mag(y),he);let cbx=sub(sub(x,k1x),mul(k2x,clamp(div(add(mul(sub(k1x,x),k2x),mul(sub(k1y,y),k2y)),add(mul(k2x,k2x),mul(k2y,k2y))),0,1))),cby=sub(sub(y,k1y),mul(k2y,clamp(div(add(mul(sub(k1x,x),k2x),mul(sub(k1y,y),k2y)),add(mul(k2x,k2x),mul(k2y,k2y))),0,1)));let s=(re(cbx)<0&&re(cay)<0)?sub(0,1):1;return mul(s,sqrt(minc(add(mul(cax,cax),mul(cay,cay)),add(mul(cbx,cbx),mul(cby,cby)))))}
+function sdfparallelogram(x,y,wi,he,sk){let ex=sk,ey=he;if(re(y)<0){x=sub(0,x);y=sub(0,y)}let wx=sub(x,ex),wy=sub(y,ey);wx=sub(wx,clamp(wx,sub(0,wi),wi));let dx=add(mul(wx,wx),mul(wy,wy)),dy=sub(0,wy);let s=sub(mul(x,ey),mul(y,ex));if(re(s)<0){x=sub(0,x);y=sub(0,y)}let vx=sub(x,wi),vy=y;let h=clamp(div(add(mul(vx,ex),mul(vy,ey)),add(mul(ex,ex),mul(ey,ey))),sub(0,1),1);vx=sub(vx,mul(ex,h));vy=sub(vy,mul(ey,h));dx=minc(dx,add(mul(vx,vx),mul(vy,vy)));dy=minc(dy,sub(mul(wi,he),mag(s)));return mul(sqrt(dx),signum(sub(0,dy)))}
+function sdfequilateraltriangle(x,y,r){let k=sqrt(3);x=sub(mag(x),r);y=add(y,div(r,k));if(re(add(x,mul(k,y)))>0){let nx=div(sub(x,mul(k,y)),2),ny=div(sub(sub(0,mul(k,x)),y),2);x=nx;y=ny}x=sub(x,clamp(x,sub(0,mul(2,r)),0));return mul(sub(0,hypot(x,y)),signum(y))}
+function sdftriangleisosceles(x,y,qx,qy){x=mag(x);let h=clamp(div(add(mul(x,qx),mul(y,qy)),add(mul(qx,qx),mul(qy,qy))),0,1);let ax=sub(x,mul(qx,h)),ay=sub(y,mul(qy,h));let bx=sub(x,mul(qx,clamp(div(x,qx),0,1))),by=sub(y,qy);let s=sub(0,signum(qy));let d1x=add(mul(ax,ax),mul(ay,ay)),d1y=mul(s,sub(mul(x,qy),mul(y,qx)));let d2x=add(mul(bx,bx),mul(by,by)),d2y=mul(s,sub(y,qy));let dx=(re(d1x)<re(d2x))?d1x:d2x,dy=(re(d1x)<re(d2x))?d1y:d2y;return mul(sub(0,sqrt(dx)),signum(dy))}
+function sdftriangle(x,y,x0,y0,x1,y1,x2,y2){let e0x=sub(x1,x0),e0y=sub(y1,y0),e1x=sub(x2,x1),e1y=sub(y2,y1),e2x=sub(x0,x2),e2y=sub(y0,y2);let v0x=sub(x,x0),v0y=sub(y,y0),v1x=sub(x,x1),v1y=sub(y,y1),v2x=sub(x,x2),v2y=sub(y,y2);let h0=clamp(div(add(mul(v0x,e0x),mul(v0y,e0y)),add(mul(e0x,e0x),mul(e0y,e0y))),0,1);let pq0x=sub(v0x,mul(e0x,h0)),pq0y=sub(v0y,mul(e0y,h0));let h1=clamp(div(add(mul(v1x,e1x),mul(v1y,e1y)),add(mul(e1x,e1x),mul(e1y,e1y))),0,1);let pq1x=sub(v1x,mul(e1x,h1)),pq1y=sub(v1y,mul(e1y,h1));let h2=clamp(div(add(mul(v2x,e2x),mul(v2y,e2y)),add(mul(e2x,e2x),mul(e2y,e2y))),0,1);let pq2x=sub(v2x,mul(e2x,h2)),pq2y=sub(v2y,mul(e2y,h2));let s=signum(sub(mul(e0x,e2y),mul(e0y,e2x)));let d0x=add(mul(pq0x,pq0x),mul(pq0y,pq0y)),d0y=mul(s,sub(mul(v0x,e0y),mul(v0y,e0x)));let d1x=add(mul(pq1x,pq1x),mul(pq1y,pq1y)),d1y=mul(s,sub(mul(v1x,e1y),mul(v1y,e1x)));let d2x=add(mul(pq2x,pq2x),mul(pq2y,pq2y)),d2y=mul(s,sub(mul(v2x,e2y),mul(v2y,e2x)));let dx=d0x,dy=d0y;if(re(d1x)<re(dx)){dx=d1x;dy=d1y}if(re(d2x)<re(dx)){dx=d2x;dy=d2y}return mul(sub(0,sqrt(dx)),signum(dy))}
+function sdforientedvesica(x,y,ax,ay,bx,by,w){let dx=sub(bx,ax),dy=sub(by,ay),r=mul(0.5,hypot(dx,dy)),d=div(mul(0.5,sub(mul(r,r),mul(w,w))),w),vx=div(dx,r),vy=div(dy,r),cx=mul(add(bx,ax),0.5),cy=mul(add(by,ay),0.5),px=sub(x,cx),py=sub(y,cy),qx=mul(0.5,mag(add(mul(vy,px),mul(vx,py)))),qy=mul(0.5,mag(add(mul(sub(0,vx),px),mul(vy,py))));let hx,hy,hz;if(re(mul(r,qx))<re(mul(d,sub(qy,r)))){hx=0;hy=r;hz=0}else{hx=sub(0,d);hy=0;hz=add(d,w)}return sub(hypot(sub(qx,hx),sub(qy,hy)),hz)}
+function sdfmoon(x,y,d,ra,rb){y=mag(y);let a=div(add(sub(mul(ra,ra),mul(rb,rb)),mul(d,d)),mul(2,d)),b=sqrt(maxc(sub(mul(ra,ra),mul(a,a)),0));if(re(mul(d,sub(mul(x,b),mul(y,a))))>re(mul(mul(d,d),maxc(sub(b,y),0))))return hypot(sub(x,a),sub(y,b));return maxc(sub(hypot(x,y),ra),sub(0,sub(hypot(sub(x,d),y),rb)))}
+function sdfroundedcross(x,y,h){let k=mul(0.5,add(h,div(1,h)));x=mag(x);y=mag(y);if(re(x)<1&&re(y)<re(add(mul(x,sub(k,h)),h)))return sub(k,sqrt(add(mul(sub(x,1),sub(x,1)),mul(sub(y,k),sub(y,k)))));return sqrt(minc(add(mul(x,x),mul(sub(y,h),sub(y,h))),add(mul(sub(x,1),sub(x,1)),mul(y,y))))}
+function sdfegg(x,y,he,ra,rb,bu){let r=div(mul(0.5,add(add(he,ra),rb)),bu),da=sub(r,ra),db=sub(r,rb),yy=div(sub(sub(mul(db,db),mul(da,da)),mul(he,he)),mul(2,he)),xx=sqrt(sub(mul(da,da),mul(yy,yy)));x=mag(x);let k=sub(mul(y,xx),mul(x,yy));if(re(k)>0&&re(k)<re(mul(he,add(x,xx))))return sub(hypot(add(x,xx),add(y,yy)),r);return minc(sub(hypot(x,y),ra),sub(hypot(x,sub(y,he)),rb))}
+function sdfheart(x,y){x=mag(x);if(re(add(y,x))>1)return sub(sqrt(add(mul(sub(x,0.25),sub(x,0.25)),mul(sub(y,0.75),sub(y,0.75)))),div(sqrt(2),4));return mul(sqrt(minc(add(mul(x,x),mul(sub(y,1),sub(y,1))),add(mul(sub(x,mul(0.5,maxc(add(x,y),0))),sub(x,mul(0.5,maxc(add(x,y),0)))),mul(sub(y,mul(0.5,maxc(add(x,y),0))),sub(y,mul(0.5,maxc(add(x,y),0))))))),signum(sub(x,y)))}// !
+function sdfcross(x,y,bx,by,r){x=mag(x);y=mag(y);if(re(y)>re(x)){let t=x;x=y;y=t}let qx=sub(x,bx),qy=sub(y,by),k=maxc(qy,qx),wx,wy;if(re(k)>0){wx=qx;wy=qy}else{wx=sub(by,x);wy=sub(0,k)}return add(mul(signum(k),hypot(maxc(wx,0),maxc(wy,0))),r)}
+function sdfroundedx(x,y,w,r){x=mag(x);y=mag(y);let m=mul(minc(add(x,y),w),0.5);return sub(hypot(sub(x,m),sub(y,m)),r)}
+function sdfunevencapsule(x,y,r1,r2,h){x=mag(x);let b=div(sub(r1,r2),h),a=sqrt(sub(1,mul(b,b))),k=add(mul(x,sub(0,b)),mul(y,a));if(re(k)<0)return sub(hypot(x,y),r1);if(re(k)>re(mul(a,h)))return sub(hypot(x,sub(y,h)),r2);return sub(add(mul(x,a),mul(y,b)),r1)}
+function sdfpentagon(x,y,r){let kx=0.809016994,ky=0.587785252,kz=0.726542528;x=mag(x);let d1=minc(add(mul(sub(0,kx),x),mul(ky,y)),0);x=sub(x,mul(2,mul(d1,sub(0,kx))));y=sub(y,mul(2,mul(d1,ky)));let d2=minc(add(mul(kx,x),mul(ky,y)),0);x=sub(x,mul(2,mul(d2,kx)));y=sub(y,mul(2,mul(d2,ky)));x=sub(x,clamp(x,sub(0,mul(r,kz)),mul(r,kz)));y=sub(y,r);return mul(hypot(x,y),signum(y))}
+function sdfhexagon(x,y,r){let kx=sub(0,0.866025404),ky=0.5,kz=0.577350269;x=mag(x);y=mag(y);let d=minc(add(mul(kx,x),mul(ky,y)),0);x=sub(x,mul(2,mul(d,kx)));y=sub(y,mul(2,mul(d,ky)));x=sub(x,clamp(x,sub(0,mul(kz,r)),mul(kz,r)));y=sub(y,r);return mul(hypot(x,y),signum(y))}
+function sdfoctogon(x,y,r){let kx=sub(0,0.9238795325),ky=0.3826834323,kz=0.4142135623;x=mag(x);y=mag(y);let d1=minc(add(mul(kx,x),mul(ky,y)),0);x=sub(x,mul(2,mul(d1,kx)));y=sub(y,mul(2,mul(d1,ky)));let d2=minc(add(mul(sub(0,kx),x),mul(ky,y)),0);x=sub(x,mul(2,mul(d2,sub(0,kx))));y=sub(y,mul(2,mul(d2,ky)));x=sub(x,clamp(x,sub(0,mul(kz,r)),mul(kz,r)));y=sub(y,r);return mul(hypot(x,y),signum(y))}
+function sdfhexagram(x,y,r){let kx=sub(0,0.5),ky=0.8660254038,kz=0.5773502692,kw=1.7320508076;x=mag(x);y=mag(y);let d1=minc(add(mul(kx,x),mul(ky,y)),0);x=sub(x,mul(2,mul(d1,kx)));y=sub(y,mul(2,mul(d1,ky)));let d2=minc(add(mul(ky,x),mul(kx,y)),0);x=sub(x,mul(2,mul(d2,ky)));y=sub(y,mul(2,mul(d2,kx)));x=sub(x,clamp(x,mul(r,kz),mul(r,kw)));y=sub(y,r);return mul(hypot(x,y),signum(y))}
+function sdfpentagram(x,y,r){let k1x=0.809016994,k2x=0.309016994,k1y=0.587785252,k2y=0.951056516,k1z=0.726542528;x=mag(x);let d1=maxc(add(mul(k1x,x),mul(sub(0,k1y),y)),0);x=sub(x,mul(2,mul(d1,k1x)));y=sub(y,mul(2,mul(d1,sub(0,k1y))));let d2=maxc(add(mul(sub(0,k1x),x),mul(sub(0,k1y),y)),0);x=sub(x,mul(2,mul(d2,sub(0,k1x))));y=sub(y,mul(2,mul(d2,sub(0,k1y))));x=mag(x);y=sub(y,r);let vx=k2x,vy=sub(0,k2y);let h=clamp(div(add(mul(x,vx),mul(y,vy)),mul(k1z,r)),0,mul(k1z,r));return mul(hypot(sub(x,mul(vx,h)),sub(y,mul(vy,h))),signum(sub(mul(y,vx),mul(x,vy))))}
+function sdfpie(x,y,cx,cy,r){x=mag(x);let l=sub(hypot(x,y),r);let h=clamp(add(mul(x,cx),mul(y,cy)),0,r);let mx=sub(hypot(sub(x,mul(cx,h)),sub(y,mul(cy,h))),0);return maxc(l,mul(mx,signum(sub(mul(cy,x),mul(cx,y)))))}
+function sdfcutdisk(x,y,r,h){let w=sqrt(sub(mul(r,r),mul(h,h)));x=mag(x);let s=maxc(add(mul(sub(h,r),mul(x,x)),mul(mul(w,w),sub(add(h,r),mul(2,y)))),sub(mul(h,x),mul(w,y)));if(re(s)<0)return sub(hypot(x,y),r);if(re(x)<re(w))return sub(h,y);return hypot(sub(x,w),sub(y,h))}
+function sdfarc(x,y,scx,scy,ra,rb){x=mag(x);let t=(re(mul(scy,x))>re(mul(scx,y)))?hypot(sub(x,mul(scx,ra)),sub(y,mul(scy,ra))):mag(sub(hypot(x,y),ra));return sub(t,rb)}
+function sdfring(x,y,nx,ny,r,th){x=mag(x);let rx=add(mul(nx,x),mul(ny,y)),ry=add(mul(sub(0,ny),x),mul(nx,y));let a=sub(mag(sub(hypot(rx,ry),r)),mul(th,0.5));let b=mul(hypot(rx,maxc(0,sub(mag(sub(r,ry)),mul(th,0.5)))),signum(rx));return maxc(a,b)}
+function sdfhorseshoe(x,y,cx,cy,r,wx,wy){x=mag(x);let l=hypot(x,y);let rx=add(mul(sub(0,cx),x),mul(cy,y)),ry=add(mul(cy,x),mul(cx,y));let nx=((re(ry)>0)||(re(rx)>0))?rx:mul(l,signum(sub(0,cx)));let ny=(re(rx)>0)?ry:l;rx=nx;ry=ny;rx=sub(rx,wx);ry=sub(mag(sub(ry,r)),wy);return add(hypot(maxc(rx,0),maxc(ry,0)),minc(0,maxc(rx,ry)))}
+function sdfvesica(x,y,w,h){let d=div(mul(0.5,sub(mul(w,w),mul(h,h))),h);x=mag(x);y=mag(y);let cx,cy,cz;if(re(mul(w,y))<re(mul(d,sub(x,w)))){cx=0;cy=w;cz=0}else{cx=sub(0,d);cy=0;cz=add(d,h)}return sub(hypot(sub(x,cy),sub(y,cx)),cz)}
+function sdfcirclewave(x,y,tb,ra){tb=mul(div(mul(3.1415927,5),6),maxc(tb,0.0001));let cox=mul(ra,sin(tb)),coy=mul(ra,cos(tb));x=mag(sub(mod(x,mul(cox,4)),mul(cox,2)));let p1x=x,p1y=y,p2x=mag(sub(x,mul(2,cox))),p2y=sub(mul(2,coy),y);let d1=(re(mul(coy,p1x))>re(mul(cox,p1y)))?hypot(sub(p1x,cox),sub(p1y,coy)):mag(sub(hypot(p1x,p1y),ra));let d2=(re(mul(coy,p2x))>re(mul(cox,p2y)))?hypot(sub(p2x,cox),sub(p2y,coy)):mag(sub(hypot(p2x,p2y),ra));return minc(d1,d2)}
+function sdfcools(x,y){let six=(re(y)<0)?sub(0,x):x;x=mag(x);y=sub(mag(y),0.2);let rex=sub(x,minc(round(div(x,0.4)),0.4)),aby=sub(mag(sub(y,0.2)),0.6);let d=dot2(sub(six,clamp(mul(0.5,sub(six,y)),0,0.2)),sub(0,y));d=minc(d,dot2(sub(x,clamp(mul(0.5,sub(x,aby)),0,0.4)),sub(0,aby)));d=minc(d,dot2(rex,sub(y,clamp(y,0,0.4))));let s=sub(add(mul(2,x),add(aby,mag(add(aby,0.4)))),0.4);return mul(sqrt(d),signum(s))}
+function sdfellipse(x,y,ax,ay){x=mag(x);y=mag(y);if(re(x)>re(y)){let t=x;x=y;y=t;t=ax;ax=ay;ay=t}let l=sub(mul(ay,ay),mul(ax,ax)),m=div(mul(ax,x),l),m2=mul(m,m),n=div(mul(ay,y),l),n2=mul(n,n),c=div(sub(add(m2,n2),1),3),c3=mul(mul(c,c),c),q=add(c3,mul(mul(m2,n2),2)),d=add(c3,mul(m2,n2)),g=add(m,mul(m,n2)),co;if(re(d)<0){let h=div(acos(div(q,c3)),3),s=cos(h),t=mul(sin(h),sqrt(3)),rx=sqrt(add(sub(m2,mul(c,add(s,t,2))),0)),ry=sqrt(add(sub(m2,mul(c,add(s,sub(0,t),2))),0));co=div(add(add(ry,mul(signum(l),rx)),div(mag(g),mul(rx,ry)),sub(0,m)),2)}else{let h=mul(mul(2,m,n),sqrt(d)),s=mul(signum(add(q,h)),power(mag(add(q,h)),div(1,3))),u=mul(signum(sub(q,h)),power(mag(sub(q,h)),div(1,3))),rx=add(sub(sub(0,s),u),add(mul(m2,2),mul(sub(0,c),4))),ry=mul(sub(s,u),sqrt(3)),rm=sqrt(add(mul(rx,rx),mul(ry,ry)));co=div(add(div(ry,sqrt(sub(rm,rx))),div(mul(2,g),rm),sub(0,m)),2)}let rx2=mul(ax,co),ry2=mul(ay,sqrt(sub(1,mul(co,co))));return mul(hypot(sub(rx2,x),sub(ry2,y)),signum(sub(y,ry2)))}
+function sdfparabola1(x,y,k){x=mag(x);let ik=div(1,k),p=div(mul(ik,sub(y,mul(0.5,ik))),3),q=mul(0.25,mul(ik,ik,x)),h=sub(mul(q,q),mul(p,mul(p,p))),xx;if(re(h)>0){let r=power(add(q,sqrt(h)),div(1,3));xx=add(r,div(p,r))}else{let r=sqrt(p);xx=mul(2,mul(r,cos(div(acos(div(q,mul(p,r))),3))))}return mul(hypot(sub(x,xx),sub(y,mul(k,mul(xx,xx)))),signum(sub(x,xx)))}
+function sdfparabola2(x,y,wi,he){x=mag(x);let ik=div(mul(wi,wi),he),p=div(mul(ik,sub(sub(he,y),mul(0.5,ik))),3),q=div(mul(x,mul(ik,ik)),4),h=sub(mul(q,q),mul(p,mul(p,p))),xx;if(re(h)>0){let r=power(add(q,sqrt(h)),div(1,3));xx=add(r,div(p,r))}else{let r=sqrt(p);xx=mul(2,mul(r,cos(div(acos(div(q,mul(p,r))),3))))}xx=minc(xx,wi);return mul(hypot(sub(x,xx),sub(y,sub(he,div(mul(xx,xx),ik)))),signum(add(mul(ik,sub(y,he)),mul(x,x))))}
+function sdfbezier(x,y,ax,ay,bx,by,cx,cy){let a1x=sub(bx,ax),a1y=sub(by,ay),b1x=add(ax,sub(ax,mul(2,bx)),cx),b1y=add(ay,sub(ay,mul(2,by)),cy),cx2=mul(2,a1x),cy2=mul(2,a1y),dx=sub(ax,x),dy=sub(ay,y),kk=div(1,dot2(b1x,b1y,b1x,b1y)),kx=mul(kk,dot2(a1x,a1y,b1x,b1y)),ky=div(mul(kk,add(mul(2,dot2(a1x,a1y,a1x,a1y)),dot2(dx,dy,b1x,b1y))),3),kz=mul(kk,dot2(dx,dy,a1x,a1y)),p=sub(ky,mul(kx,kx)),p3=mul(mul(p,p),p),q=add(mul(kx,sub(mul(2,mul(kx,kx)),mul(3,ky))),kz),h=add(mul(q,q),mul(4,p3)),res;if(re(h)>=0){h=sqrt(h);let x1=div(sub(h,q),2),x2=div(sub(sub(0,h),q),2),u1=mul(signum(x1),power(mag(x1),div(1,3))),u2=mul(signum(x2),power(mag(x2),div(1,3))),t=clamp(sub(add(u1,u2),kx),0,1);res=dot2(add(dx,mul(add(cx2,mul(b1x,t)),t)),add(dy,mul(add(cy2,mul(b1y,t)),t)))}else{let z=sqrt(sub(0,p)),v=div(acos(div(q,mul(p,z,2))),3),m=cos(v),n=mul(sin(v),1.732050808),t1=clamp(sub(mul(add(m,m),z),kx),0,1),t2=clamp(sub(mul(sub(0,n,m),z),kx),0,1);res=minc(dot2(add(dx,mul(add(cx2,mul(b1x,t1)),t1)),add(dy,mul(add(cy2,mul(b1y,t1)),t1))),dot2(add(dx,mul(add(cx2,mul(b1x,t2)),t2)),add(dy,mul(add(cy2,mul(b1y,t2)),t2))))}return sqrt(res)}
+function sdfblobbycross(x,y,he){x=mag(x);y=mag(y);let nx=mag(sub(x,y)),ny=sub(1,add(x,y));x=div(nx,sqrt(2));y=div(ny,sqrt(2));let p=div(sub(sub(he,y),div(0.25,he)),mul(6,he)),q=div(x,mul(he,he,16)),h=sub(mul(q,q),mul(p,mul(p,p))),xx;if(re(h)>0){let r=sqrt(h);xx=sub(power(add(q,r),div(1,3)),mul(power(mag(sub(q,r)),div(1,3)),signum(sub(r,q))))}else{let r=sqrt(p);xx=mul(2,mul(r,cos(div(acos(div(q,mul(p,r))),3))))}xx=minc(xx,div(sqrt(2),2));let zx=sub(xx,x),zy=sub(mul(he,sub(1,mul(2,mul(xx,xx)))),y);return mul(hypot(zx,zy),signum(zy))}
+function sdftunnel(x,y,wx,wy){x=mag(x);y=sub(0,y);let qx=sub(x,wx),qy=sub(y,wy),d1=dot2(maxc(qx,0),qy);qx=(re(y)>0)?qx:sub(hypot(x,y),wx);let d2=dot2(qx,maxc(qy,0)),d=sqrt(minc(d1,d2));return (re(maxc(qx,qy))<0)?sub(0,d):d}
+function sdfstairs(x,y,wx,wy,n){let bax=mul(wx,n),bay=mul(wy,n),d=minc(dot2(sub(x,clamp(x,0,bax)),sub(y,0)),dot2(sub(x,bax),sub(y,clamp(y,0,bay)))),s=signum(maxc(sub(0,y),sub(x,bax))),dia=hypot(wx,wy);let rx=div(add(mul(wx,x),mul(sub(0,wy),y)),dia),ry=div(add(mul(wy,x),mul(wx,y)),dia),id=clamp(round(div(rx,dia)),0,sub(n,1));rx=sub(rx,mul(id,dia));let px=div(add(mul(wx,rx),mul(wy,ry)),dia),py=div(add(mul(sub(0,wy),rx),mul(wx,ry)),dia),hh=div(wy,2);py=sub(py,hh);if(re(py)>re(mul(hh,signum(px))))s=1;let fx=(re(id)<0.5||re(px)>0)?px:sub(0,px),fy=(re(id)<0.5||re(px)>0)?py:sub(0,py);d=minc(d,dot2(fx,sub(fy,clamp(fy,sub(0,hh),hh))));d=minc(d,dot2(sub(fx,clamp(fx,0,wx)),sub(fy,hh)));return mul(sqrt(d),s)}
+function sdfquadraticcircle(x,y){x=mag(x);y=mag(y);if(re(y)>re(x)){let t=x;x=y;y=t}let a=sub(x,y),b=add(x,y),c=div(sub(mul(2,b),1),3),h=add(mul(a,a),mul(c,mul(c,c))),t;if(re(h)>=0){h=sqrt(h);t=sub(mul(signum(sub(h,a)),power(mag(sub(h,a)),div(1,3))),power(add(h,a),div(1,3)))}else{let z=sqrt(sub(0,c)),v=div(acos(div(a,mul(c,z))),3);t=sub(0,mul(z,add(cos(v),mul(sin(v),1.732050808))))}t=mul(t,0.5);let wx=sub(add(sub(0,t),0.75),add(mul(t,t),x)),wy=sub(add(t,0.75),add(mul(t,t),y));return mul(hypot(wx,wy),signum(sub(add(mul(a,a,0.5),b),1.5)))}
+function sdfhyberbola(x,y,k,he){x=mag(x);y=mag(y);let rx=div(sub(x,y),sqrt(2)),ry=div(add(x,y),sqrt(2)),x2=div(mul(rx,rx),16),y2=div(mul(ry,ry),16),r=div(mul(k,sub(mul(4,k),mul(rx,ry))),12),q=mul(sub(x2,y2),mul(k,k)),h=add(mul(q,q),mul(r,mul(r,r))),u;if(re(h)<0){let m=sqrt(sub(0,r));u=mul(m,cos(div(acos(div(q,mul(r,m))),3)))}else{let m=power(sub(sqrt(h),q),div(1,3));u=div(sub(m,div(r,m)),2)}let w=sqrt(add(u,x2)),b=sub(mul(k,ry),mul(mul(x2,rx),2)),t=sub(div(rx,4),add(w,sub(0,sqrt(add(sub(mul(2,x2),u),div(b,mul(w,4)))))));t=maxc(t,sub(sqrt(add(mul(he,he,0.5),k)),div(he,sqrt(2))));let d=hypot(sub(rx,t),sub(ry,div(k,t)));return (re(mul(rx,ry))<re(k))?d:sub(0,d)}
+
+
+//seelctors
+//selectorhexagon(xx,yy,5) selectorhexagram(xx,yy,3)
+function selectorequilateraltriangle(x,y,r){return smallerthan(re(sdfequilateraltriangle(x,y,r)),0)}
+function selectorhexagon(x,y,r){return smallerthan(re(sdfhexagon(x,y,r)),0)}
+function selectorhexagram(x,y,r){return smallerthan(re(sdfhexagram(x,y,r)),0)}
+
+function selectorbox(x,y,a1,a2){return smallerthan(re(sdfbox(x,y,a1,a2)),0)}
+function selectorbox2(x,y,R){let [a1,a2]=rearray(R);return smallerthan(re(sdfbox(x,y,a1,a2)),0)}
+function selectorbox21(x,y,a1){return smallerthan(re(sdfbox(x,y,mul(a1,2),a1)),0)}
+
+
+//i^(8/3)*(1-selectorbox(xx,yy-5.5,89,2.5))*(1-selectorbox(xx,yy-26.5,89,2.5))+i^(8/3)*(1-(1-selectorbox(xx,yy-5.5,89,2.5))*(1-selectorbox(xx,yy-26.5,89,2.5)))/2-signum(selectorhexagram(xx-22,yy-16,3)-selectorhexagram(xx-22,yy-16,2)+selectorhexagon(xx-22,yy-16,3)-selectorhexagon(xx-22,yy-16,2))*i^(8/3)/2
+
+// L-inf
+
+function sdfiox(x,y,rx,ry){
+    x=sub(hypot(x,0),rx)
+    y=sub(hypot(y,0),ry)
+    return maxc(x,y)
+}
+
+function sdicircle(x,y,r){
+    x=hypot(x,0)
+    y=hypot(y,0)
+    let px=maxc(x,sub(y,r))
+    let py=maxc(y,sub(x,r))
+    let a=mul(add(px,py),0.5)
+    let b=mul(sub(px,py),0.5)
+    return sub(a,hypot(sub(mul(r,r),mul(b,b)),0))
+}
+
+function sdiellipse(x,y,rx,ry){
+    x=hypot(x,0)
+    y=hypot(y,0)
+    let px=maxc(x,sub(y,ry))
+    let py=maxc(y,sub(x,rx))
+    let m=add(mul(rx,rx),mul(ry,ry))
+    let d=sub(py,px)
+    return sub(px,
+        div(mul(sub( mul(ry,hypot(sub(mul(rx,rx),mul(d,d)),0)),mul(rx,d)),rx), m))
+}
+
+function sdiparabola(x,y,wi,he){
+    x=hypot(x,0)
+    let a=sub(sub(x,y),wi)
+    let b=sub(sub(y,x),he)
+    if(re(a)>0) return maxc(hypot(sub(x,wi),0),hypot(y,0))
+    if(re(b)>0) return maxc(hypot(sub(y,he),0),x)
+    return add(x,mul(sub(wi, hypot(sub(mul(wi,wi),mul(4,mul(he,b))),0)),div(mul(0.5,wi),he)))
+}
+
+function sdiline(x,y,ax,ay,bx,by){
+    let pax=sub(x,ax), pay=sub(y,ay)
+    let bax=sub(bx,ax), bay=sub(by,ay)
+    let s = re(mul(bax,bay))>0 ? 1 : -1
+    let h=clamp(
+        div(add(pay,mul(s,pax)),add(bay,mul(s,bax))),
+        0,1
+    )
+    let qx=hypot(sub(pax,mul(h,bax)),0)
+    let qy=hypot(sub(pay,mul(h,bay)),0)
+    return maxc(qx,qy)
+}
+
+function sdiroundbox(x,y,rx,ry,rb){
+    x=sub(hypot(x,0),rx)
+    y=sub(hypot(y,0),ry)
+    let px=maxc(x,sub(y,rb))
+    let py=maxc(y,sub(x,rb))
+    let a=mul(add(px,py),0.5)
+    let b=mul(sub(px,py),0.5)
+    return sub(a,hypot(sub(mul(rb,rb),mul(b,b)),0))
+}
+
+function sdirhombus(x,y,w,h){
+    x=hypot(x,0)
+    y=hypot(y,0)
+    x=sub(x,w)
+    let f=clamp(div(sub(y,x),add(h,w)),0,1)
+    let qx=hypot(sub(x,mul(f,sub(0,w))),0)
+    let qy=hypot(sub(y,mul(f,h)),0)
+    return mul(
+        maxc(qx,qy),
+        re(add(mul(h,x),mul(w,y)))>0 ? 1 : -1
+    )
+}
+
+function sdiorientedbox(x,y,rx,ry,ang){
+    let cx=Math.cos(ang), sy=Math.sin(ang)
+    let qx=add(mul(cx,x),mul(sy,y))
+    let qy=sub(mul(cx,y),mul(sy,x))
+    let d1=maxc(sub(hypot(qx,0),rx),sub(hypot(qy,0),ry))
+    let sx=maxc(hypot(sub(mul(cx,rx),mul(sy,ry)),0),
+                hypot(add(mul(cx,rx),mul(sy,ry)),0))
+    let d2=maxc(sub(hypot(x,0),sx),sub(hypot(y,0),sx))
+    return maxc(d1,d2)
+}
+
+function sdicapsule(x,y,vax,vay,vbx,vby,rb){
+    // recenter
+    x=sub(x,mul(add(vbx,vax),0.5))
+    y=sub(y,mul(add(vby,vay),0.5))
+
+    let ux=sub(vbx,vax)
+    let uy=sub(vby,vay)
+    let l=hypot(ux,uy)
+    ux=div(ux,l)
+    uy=div(uy,l)
+
+    let vx=sub(0,uy)
+    let vy=ux
+
+    l=mul(l,0.5)
+    let ax=mul(ux,l)
+    let ay=mul(uy,l)
+    let wx=mul(vx,rb)
+    let wy=mul(vy,rb)
+
+    let ss = re(mul(ux,uy))>0 ? 1 : -1
+    let de = div(1,add(ay,mul(ss,ax)))
+
+    let w1x=sub(sub(x,ax),wx)
+    let w1y=sub(sub(y,ay),wy)
+    let w2x=sub(sub(x,ax),sub(0,wx))
+    let w2y=sub(sub(y,ay),sub(0,wy))
+
+    let t1=clamp(mul(sub(0,add(w1y,mul(ss,w1x))),de),0,2)
+    let t2=clamp(mul(sub(0,add(w2y,mul(ss,w2x))),de),0,2)
+
+    let q1x=hypot(add(w1x,mul(ax,t1)),0)
+    let q1y=hypot(add(w1y,mul(ay,t1)),0)
+    let q2x=hypot(add(w2x,mul(ax,t2)),0)
+    let q2y=hypot(add(w2y,mul(ay,t2)),0)
+
+    let d=minc(maxc(q1x,q1y),maxc(q2x,q2y))
+
+    let pax=sub(x,ax)
+    let pay=sub(y,ay)
+    let pbx=add(x,ax)
+    let pby=add(y,ay)
+
+    let da=dot2(pax,pay,pax,pay)
+    let db=dot2(pbx,pby,pbx,pby)
+
+    if(re(minc(da,db))<re(mul(rb,rb))){
+        let s=1
+        if(re(db)<re(da)){ pax=pbx; pay=pby; s=-1 }
+
+        let b1=mul(add(pax,pay),0.5)
+        let b2=mul(sub(pax,pay),0.5)
+        let c=sub(dot2(pax,pay,pax,pay),mul(rb,rb))
+
+        let r1=hypot(sub(mul(b1,b1),mul(c,0.5)),0)
+        let r2=hypot(sub(mul(b2,b2),mul(c,0.5)),0)
+
+        let t1a=sub(0,b1)+r1
+        let t1b=b1+r1
+        let t2a=sub(0,b2)+r2
+        let t2b=b2+r2
+
+        if(re(mul(s,dot2(add(pax,t1a),add(pay,t1a),sub(0,ux),sub(0,uy))))<0) d=minc(d,t1a)
+        if(re(mul(s,dot2(sub(pax,t1b),sub(pay,t1b),sub(0,ux),sub(0,uy))))<0) d=minc(d,t1b)
+        if(re(mul(s,dot2(add(pax,t2a),sub(pay,t2a),sub(0,ux),sub(0,uy))))<0) d=minc(d,t2a)
+        if(re(mul(s,dot2(sub(pax,t2b),add(pay,t2b),sub(0,ux),sub(0,uy))))<0) d=minc(d,t2b)
+
+        d=sub(0,d)
+    }else{
+        let qax=hypot(add(mul(ux,x),mul(uy,y)),0)
+        let qay=hypot(add(mul(sub(0,uy),x),mul(ux,y)),0)
+        qax=sub(qax,l)
+        qay=sub(qay,rb)
+        let di=maxc(qax,qay)
+        d=mul(d,signum(di))
+    }
+    return d
+}
+function sdist(x,y,cx,cy){
+    x=hypot(sub(x,cx),0)
+    y=hypot(sub(y,cy),0)
+    return maxc(x,y)
+}
+
+
+function sdiarc(x,y,rb,w,an){
+    let ux=Math.cos(an)
+    let uy=Math.sin(an)
+    let vx=sub(0,uy)
+    let vy=ux
+
+    let h=hypot(sub(mul(rb,rb),mul(w,w)),0)
+
+    let d=minc(
+        sdist(x,y,add(mul(ux,w),mul(h,vx)),add(mul(uy,w),mul(h,vy))),
+        sdist(x,y,sub(mul(ux,w),mul(h,vx)),sub(mul(uy,w),mul(h,vy)))
+    )
+
+    if(re(sub(0,mul(rb,ux)))<re(w)) d=minc(d,sdist(x,y,sub(0,rb),0))
+    if(re(mul(rb,ux))<re(w)) d=minc(d,sdist(x,y,rb,0))
+    if(re(sub(0,mul(rb,uy)))<re(w)) d=minc(d,sdist(x,y,0,sub(0,rb)))
+    if(re(mul(rb,uy))<re(w)) d=minc(d,sdist(x,y,0,rb))
+
+    let b1=mul(add(x,y),0.5)
+    let b2=mul(sub(x,y),0.5)
+    let c=sub(dot2(x,y,x,y),mul(rb,rb))
+
+    let h1=sub(mul(b1,b1),mul(c,0.5))
+    let h2=sub(mul(b2,b2),mul(c,0.5))
+
+    if(re(h1)>0){
+        let r=hypot(h1,0)
+        let t=sub(0,b1)+r
+        if(re(dot2(add(x,t),add(y,t),ux,uy))<re(w)) d=minc(d,hypot(t,0))
+    }
+    if(re(h2)>0){
+        let r=hypot(h2,0)
+        let t=sub(0,b2)+r
+        if(re(dot2(add(x,t),sub(y,t),ux,uy))<re(w)) d=minc(d,hypot(t,0))
+    }
+    return d
+}
+
+
+
+
+///////
+
+
+//https://en.wikipedia.org/wiki/Fraunhofer_diffraction_equation
+
+function complexamplitudewave(xp,yp,a=1,k=1,t=0,c=1){return mul(a,exp(mul(I,k,c,t)))}
+
+function fraunhoferdiffractiondd(xp,A){let [F,a,k,t,c,x,y,z,N,p,yp]=A;return mul(evale(F,{x:xp,y:yp,r:p}),exp(mul(-1,I,k,div(add(mul(xp,x),mul(yp,y)),z))),complexamplitudewave(xp,yp,a,k,t,c))}
+function fraunhoferdiffractiond(yp,A){let [F,a,k,t,c,x,y,z,N,p]=A;return integral(fraunhoferdiffractiondd,sub(0,N),N,[F,a,k,t,c,x,y,z,N,p,yp])}
+function fraunhoferdiffractionu(F,a,k,t,c,x,y,z,N,p){let II= integral(fraunhoferdiffractiond,sub(0,N),N,[F,a,k,t,c,x,y,z,N,p])
+let l=div(pi(),0.5,k);return div(mul(II,exp(mul(I,k,z)),exp(div(mul(I,k,add(sqr(x),sqr(y))),2,z))),I,l,z)
+}
+function fraunhoferdiffraction(F,a,k,t,c,x,y,z,N,p){let II=fraunhoferdiffractionu(F,a,k,t,c,x,y,z,N,p);return mul(II,conj(II))}
+
+//fraunhoferdiffraction(selectorcircle,1,1,0,1,xx,yy,1,1,0.5)
+//fraunhoferdiffraction(selectorhexagram,1,1,0,1,xx,yy,1,1,0.5)
+//fraunhoferdiffraction(selectorbox2,1,1,0,1,xx,yy,1,1,[1,0.5])
+//////////
+
+function fresneldiffractiondd(xp,A){let[F,a,k,t,c,x,y,z,N,p,yp]=A
+return mul(evale(F,{x:xp,y:yp,r:p}),
+exp(mul(I,k,div(add(sqr(sub(x,xp)),sqr(sub(y,yp))),2,z))),
+complexamplitudewave(xp,yp,a,k,t,c))}
+function fresneldiffractiond(yp,A){let[F,a,k,t,c,x,y,z,N,p]=A
+return integral(fresneldiffractiondd,sub(0,N),N,[F,a,k,t,c,x,y,z,N,p,yp])}
+function fresneldiffractionu(F,a,k,t,c,x,y,z,N,p){let II=integral(fresneldiffractiond,sub(0,N),N,[F,a,k,t,c,x,y,z,N,p])
+let l=div(pi(),0.5,k)
+return div(mul(II,exp(mul(I,k,z))),I,l,z)}
+function fresneldiffraction(F,a,k,t,c,x,y,z,N,p){let II=fresneldiffractionu(F,a,k,t,c,x,y,z,N,p)
+return mul(II,conj(II))}
+
+
+function helmholtzdiffractiondd(kx,A){let[F,a,k,t,c,x,y,z,N,p,ky]=A
+let kz=pow(sub(sqr(k),add(sqr(kx),sqr(ky))),0.5)
+return mul(evale(F,{x:kx,y:ky,r:p}),exp(mul(I,add(mul(kx,x),mul(ky,y),mul(kz,z)))))}
+function helmholtzdiffractiond(ky,A){let[F,a,k,t,c,x,y,z,N,p]=A
+return integral(helmholtzdiffractiondd,sub(0,N),N,[F,a,k,t,c,x,y,z,N,p,ky])}
+function helmholtzdiffractionu(F,a,k,t,c,x,y,z,N,p){let II=integral(helmholtzdiffractiond,sub(0,N),N,[F,a,k,t,c,x,y,z,N,p])
+return mul(II,complexamplitudewave(x,y,a,k,t,c))}
+function helmholtzdiffraction(F,a,k,t,c,x,y,z,N,p){let II=helmholtzdiffractionu(F,a,k,t,c,x,y,z,N,p)
+return mul(II,conj(II))}
+
+
+
+
+
+
+
+function tomatrixoperator(oper,N,p){let M=Array(N);for(let i=0;i<N;i++){M[i]=Array(N);for(let j=0;j<N;j++)M[i][j]=0}for(let j=0;j<N;j++){let f=function(i){return i==j?1:0};for(let i=0;i<N;i++)M[i][j]=oper(f,i,p)}return M}
+/*ADDADD ADD FIX
+function greensfrommatrix(A){let N=leng(A),G=Array(N);for(let i=0;i<N;i++){G[i]=Array(N);for(let j=0;j<N;j++)G[i][j]=0}for(let j=0;j<N;j++){G[j][j]=div(1,g(g(A,j),j));for(let i=j+1;i<N;i++){let s=0;for(let k=j;k<=j;k++)s=add(s,mul(g(g(A,i),k),g(G[k],j)));G[i][j]=div(sub(0,s),g(g(A,i),i))}}return G}
+
+function matrixtooper(M){let N=leng(M);return function(f,i,p){let s=0;for(let j=0;j<N;j++)s=add(s,mul(g(g(M,i),j),f(j,p)));return s}}
+function matopcont(G,f,x,periodic=0){let N=leng(G[0]),s=0;if(periodic){let r=g(G,0),xi=x;while(re(xi)<0) xi=add(xi,N);xi=modc(xi,N);for(let k=0;k<N;k++){let c=add(g(r,k),mul(sub(xi,Math.floor(xi)),sub(g(r,modc(k+1,N)),g(r,k))));s=add(s,mul(c,f(k)))}}else{let j=Math.floor(x);let a=sub(x,j);if(re(j)>=N-1) j=N-2;for(let k=0;k<N;k++){let c=add(g(g(G,j),k),mul(a,sub(g(g(G,j+1),k),g(g(G,j),k))));s=add(s,mul(c,f(k)))}}return s}
+function matrixopercontinuous(G,f,x){
+  let j=Math.floor(x), a=sub(x,j), N=leng(G), s=0;
+  if(re(j)>=N-1) j=N-2; 
+  for(let k=0;k<N;k++) s=add(s,mul(add(mul(sub(1,a),g(g(G,j),k)),mul(a,g(g(G,j+1),k))),evale(f,{k})));
+  return s;
+}*/
+
+//matrixtooper(greensfrommatrix(tomatrixoperator(hderv,5,1)))(sin,x)
+
+function greensfunction(oper,N,p,f,x){return matopcont(greensfrommatrix(tomatrixoperator(hderv,N,p)),f,x)}
+//function greensfunction(oper,N,p,x){return matrixtooper(greensfrommatrix(tomatrixoperator(hderv,N,p)))(sin,x)}
+
+
+
 function tobinary(n) {
     if (n === 0) return '0'
     let intpart = Math.floor(Math.abs(n)).toString(2)
@@ -1928,7 +2346,11 @@ function mdiv(a, b) {
 //final_matrix = p;
     return math.complex(final_matrix[0][0].re,final_matrix[1][0].re);
 }
+function det(M){return determinant(M)}
 function determinant(matrix) {
+    if(leng(matrix)==0)return matrix
+    if(leng(g(matrix,0))==0)return g(matrix,0)
+    if(leng(matrix)==1)return g(g(matrix,0),0)
     // Helper function to get the minor matrix
     function getMinor(matrix, row, col) {
         let size = leng(matrix);
@@ -1947,7 +2369,7 @@ function determinant(matrix) {
         return minor;
     }
     
-    
+
     
     
 
@@ -2111,6 +2533,24 @@ function riggedconfigurationnu(M){
     for(let i=0;i<leng(fi);i++)fi[i]=conjugatepartition(fi[i]);
     return fi;
 }
+
+
+
+function yukawapotential(r,a,m,g=1){return div(mul(g,g,exp(mul(-1,a,m,r))),-1,r)}
+function coulombpotential(r,q1,q2){return div(mul(q1,q2),-1,r);}
+function gravpotential(r,M,m,G=1){return div(mul(G,M,m),-1,r);}
+function exprepulsive(r,A,B){return mul(A,exp(mul(-1,B,r)));}
+function ljpotential(r,epsilon,sigma){return mul(4,epsilon,sub(pow(div(sigma,r),12),pow(div(sigma,r),6)));}
+function ljgeneral(r,epsilon,sigma,n,m){return mul(epsilon,sub(pow(div(sigma,r),n),pow(div(sigma,r),m)));} 
+function squarewell(r,V0,R){return mag(r)<mag(R)?sub(0,V0):0;}
+function dipolepotential(r,mu){return div(mul(mu,mu),-1,pow(r,3));}
+function morsepotential(r,D,alpha,re){return mul(D,pow(sub(1,exp(mul(-1,alpha,sub(r,re)))),2));}
+function harmonicpotential(r,k,r0=0){return mul(0.5,k,pow(sub(r,r0),2));}
+function logpotential(r,k=1){return mul(k,log(r));}
+function invpower(r,C,n){return div(C,pow(r,n));}
+function screenedcoulomb(r,q1,q2,kappa){return div(mul(q1,q2,exp(mul(-1,kappa,r))),-1,r);}
+function vdw(r,C6){return div(C6,-1,pow(r,6));}
+//schrodinger("x^2",2,x,10,0.01)
 
 
 function wronskian(functions, x) {
@@ -3832,8 +4272,40 @@ function stretchedModifiedkostkapoly(L, M, k, t) {
 
 
 
+function olmstead(t,x){return besselk(mul(I,t),x)}
+function kontorovichlebedev(t,x){return besseli(mul(I,t),x)}
 
 
+function icosahedralinvariant(q){let r=rogersramanujanr(q);return div(penteract(sub(1,penteract(r))),penteract(r),sqr(add(1,mul(11,penteract(r)),mul(-1,pow(r,10)))))}
+//https://arxiv.org/pdf/2102.01019
+function icosahedralquinticj(a,b,c,p,q,r){return div(mul(4,432,b,p,p,p,q,q,q),sub(mul(r,12,sub(mul(a,c),sqr(b))),sqr(c)))}
+function icosahedralquinticz(j){return div(hypg21(11/60,31/60,6/5,div(1,j)),pow(j,11/60))}
+function icosahedralquinticw(j){return div(hypg21(-1/60,19/60,4/5,div(1,j)),pow(j,-1/60))}
+function icosahedralquintics(j){return div(icosahedralquinticz(j),icosahedralquinticw(j))}
+function icosahedralquinticm(j){return div(hypg21(11/60,31/60,6/5,div(1,j)),hypg21(-1/60,19/60,4/5,div(1,j)),pow(mul(1728,j),1/5))}//return div(icosahedralquinticz(j),icosahedralquinticw(j),pow(sqrt(1728),1/5))}
+function icosahedralquintictv(v,e,z,w){return add(mul(pow(e,mul(3,v)),pow(z,6)) ,mul(2,w,pow(z,5),pow(e,mul(2,v))), mul(-5,pow(e,v),pow(z,4),sqr(w)), mul(-5,pow(e,mul(4,v)),sqr(z),pow(w,4)), mul(-2,z,pow(w,5),pow(e,mul(3,v))), mul(pow(e,mul(2,v)),pow(w,6)))}
+function icosahedralquinticf(z,w){return mul(z,w,add(pow(z,10),mul(11,mul(z,z,z,z,z,w,w,w,w,w)),mul(-1,pow(w,10))))}
+function icosahedralquintich(z,w){return add(mul(-1,pow(z,20)),mul(-1,pow(w,20)),mul(228,pow(z,15),pow(w,5)),mul(-228,pow(z,5),pow(w,15)),mul(-494,pow(z,10),pow(w,10)))}
+function icosahedralquintict(z,w){return add(mul(pow(z,30)),mul(pow(w,30)),mul(522,pow(z,25),pow(w,5)),mul(-522,pow(z,5),pow(w,25)),mul(-10005,pow(z,20),pow(w,10)),mul(-10005,pow(z,10),pow(w,20)))}
+
+//icosahedralquinticyv(1,i,-12/5,1-i)
+function icosahedralquinticyv(v,a,b,c){
+    let r=inversequadratic(mul(12,12,add(mul(a,a,a,a),mul(a,b,c),mul(-1,b,b,b))),mul(12,add(mul(2,a,a,a,c),mul(11,a,a,b,b),mul(b,c,c))),sqr(sub(mul(a,c),mul(8,b,b))),0,1)
+    r=sub(0,r)
+    let s=div(sub(mul(12,a,r),c),6,b,-1)
+    let p=div(add(sqrt(r),s),2)
+    let q=div(sub(sqrt(r),s),-2)
+    let j=icosahedralquinticj(a,b,c,p,q,r)
+    let y=icosahedralquinticm(j)
+   // let w=icosahedralquinticw(j)
+   // let z=icosahedralquinticz(j)
+    let f=icosahedralquinticf(y,1)
+    let tv=icosahedralquintictv(v,exp(mul(0.2,2,pi(),I)),y,1)
+   // return [r,p,q,j,y,f,tv]
+    //−0.140712 − 1.06363ir
+    // 0.749812 − 0.413396ip | 0.0671022 + 0.365581i.q | −0.324158 − 2.04659ij |  0.178352 + 0.0718131iy | −0.178721 − 0.0713975if | −0.761539 + 0.997924itv
+    return div(add(mul(6,s,f),mul(2,tv,sqrt(mul(3,r,f)))),-1,sub(sqr(tv),mul(3,f)))
+}
 
 
 function hooklength(K,i,j)//h_K(i,j)  https://en.wikipedia.org/wiki/Hook_length_formula
@@ -4404,6 +4876,7 @@ function mdiv(a, b) {
 
 function id(x){return x};
 function succ(x){return add(x,1)};
+function pred(x){return add(x,-1)};
 function cons(x){return 1};
 function biggerthan(a, b) {
   return re(a) > re(b) ? 1 : 0; 
@@ -4503,7 +4976,9 @@ return acoth(x)
 }
 //integral(qgaussianvs,0,x,0,ceil(5+mag(x)*5))}
 
-
+//https://en.wikipedia.org/wiki/Bump_function
+function expbump(x){return exp(div(1,sub(sqr(x),1)))}
+function expbump2(x,c=-1,d=1){return exp(div(-1,sub(x,c),sub(d,x)))}
 
 function bump(x){return exp(div(1,sub(sqr(x),1)))}
 function invbump(x){return exp(div(-1,sub(sqr(x),1)))}
@@ -4561,43 +5036,50 @@ function integralold(func, initial, end, input, N = bign) {
        
        
        
-       
+       const _gaussLegendreCache = new Map();
+
        function integral(func, initial, end, input, N = bign) {
        
     //  return integraladaptives(func, initial, end, input)
      //  return integraladaptive(func, initial, end, input, 1e-5)
     // Precompute Gauss–Legendre nodes & weights for given N
-    function gaussLegendreNodesWeights(n) {
-        const EPS = 1e-3;
-        const x = new Array(n);
-        const w = new Array(n);
-        const m = Math.floor((n + 1) / 2);
-        
-        for (let i = 0; i < m; i++) {
-            // Initial guess for root
-            let z = Math.cos(Math.PI * (i + 0.75) / (n + 0.5));
-            let z1, p1, p2, p3, pp;
-
-            do {
-                p1 = 1;
-                p2 = 0;
-                for (let j = 0; j < n; j++) {
-                    p3 = p2;
-                    p2 = p1;
-                    p1 = ((2 * j + 1) * z * p2 - j * p3) / (j + 1);
-                }
-                pp = n * (z * p1 - p2) / (z * z - 1);
-                z1 = z;
-                z = z1 - p1 / pp;
-            } while (Math.abs(z - z1) > EPS);
-
-            x[i] = -z;
-            x[n - i - 1] = z;
-            w[i] = 2 / ((1 - z * z) * pp * pp);
-            w[n - i - 1] = w[i];
-        }
-        return { x, w };
+ function gaussLegendreNodesWeights(n) {
+    if (_gaussLegendreCache.has(n)) {
+        return _gaussLegendreCache.get(n);
     }
+
+    const EPS = 1e-3;
+    const x = new Array(n);
+    const w = new Array(n);
+    const m = Math.floor((n + 1) / 2);
+
+    for (let i = 0; i < m; i++) {
+        let z = Math.cos(Math.PI * (i + 0.75) / (n + 0.5));
+        let z1, p1, p2, p3, pp;
+
+        do {
+            p1 = 1;
+            p2 = 0;
+            for (let j = 0; j < n; j++) {
+                p3 = p2;
+                p2 = p1;
+                p1 = ((2 * j + 1) * z * p2 - j * p3) / (j + 1);
+            }
+            pp = n * (z * p1 - p2) / (z * z - 1);
+            z1 = z;
+            z = z1 - p1 / pp;
+        } while (Math.abs(z - z1) > EPS);
+
+        x[i] = -z;
+        x[n - i - 1] = z;
+        w[i] = 2 / ((1 - z * z) * pp * pp);
+        w[n - i - 1] = w[i];
+    }
+
+    const res = { x, w };
+    _gaussLegendreCache.set(n, res);
+    return res;
+}
 
     // Gauss–Legendre integration
     function gaussLegendre(a, b, n) {
@@ -4839,19 +5321,44 @@ function fastTransform2(kernel, func, xMin, xMax, p, N = mul(bign, 2)) {
        
        
        
-
+/*
 function cintegral(func, C , t=0 , N = bign) {
 let sum = math.complex(0,0); 
 let n = N;
 const h = div(1, n);
 for (let i = 0; i <= n-1; i += 1){
    // console.log(C.cdist(mul(h,i)))
-	sum = add(sum,mul(evale(func,{t:t,x:C.cdist(mul(h,i))}),sub(C.cdist(mul(h,i)),C.cdist(mul(h,i-1)))));
+	sum = add(sum,mul(evale(func,{x:C.cdist(mul(h,i)),t:t}),sub(C.cdist(mul(h,i)),C.cdist(mul(h,i-1)))));
 }
 return sum;
 
 }
+*/
 
+function cintegral(func, C, t = 0, N = bign) {
+    let sum = math.complex(0, 0);
+    const pts = C.points;
+    const n = pts.length - 1; // last point = first point for closed contour
+
+    for (let i = 0; i < n; i++) {
+        let z0 = pts[i];
+        let z1 = pts[i + 1];
+
+        // Midpoint evaluation (better convergence)
+        let zm = math.divide(math.add(z0, z1), 2);
+
+        let fval = evale(func, { x: zm, y: t });
+        let dz = math.subtract(z1, z0);
+
+        sum = math.add(sum, math.multiply(fval, dz));
+    }
+
+    return sum;
+}
+
+//cintegral("1/(x-y)",Ccircle(),x)
+
+function cintegraltest(){console.log(Ccircle());return sub(cintegral(rec,Ccircle()),mul(2,pi(),I))}
 
 
 function CMtotal(tp,fp,tn,fn){   return add(tp,fn,fp,tn)}
@@ -5356,6 +5863,86 @@ function sumofdivisors(n) {
   }
   return sum;
 }
+function ruler(n) {
+    if(!Number.isInteger(n)){
+        let x=n;
+        let bin = tobinary(x);
+     let [intPart = "0", fracPart = "0"] = bin.split('.');
+
+    // check fractional part right to left
+    if (fracPart && fracPart.includes('1')) {
+        for (let i = fracPart.length - 1; i >= 0; i--) {
+            if (fracPart[i] === '1') {
+                return -(fracPart.length - i); // negative exponent
+            }
+        }
+    }
+
+    // fraction all zeros → check integer part right to left
+    if (intPart && intPart.includes('1')) {
+        for (let i = intPart.length - 1; i >= 0; i--) {
+            if (intPart[i] === '1') {
+                return intPart.length - 1 - i; // exponent
+            }
+        }
+    }
+
+    // number is zero
+    return null;
+}
+
+    let k = 0;
+    while ((n & 1) === 0) {
+        n >>= 1;
+        k++;
+    }
+    return k;
+}
+function generalizedruler(n, p) {
+    let k = 0;
+    while (n % p === 0 && n > 0) {
+        n /= p;
+        k++;
+    }
+    return k;
+}
+
+function kempner(n) {
+    if (n <= 1) return 1;
+
+    const factors = {};
+    let x = n;
+    for (let p = 2; p * p <= x; p++) {
+        while (x % p === 0) {
+            factors[p] = (factors[p] || 0) + 1;
+            x /= p;
+        }
+    }
+    if (x > 1) factors[x] = (factors[x] || 0) + 1;
+    function vp(m, p) {
+        let s = 0;
+        while (m > 0) {
+            m = Math.floor(m / p);
+            s += m;
+        }
+        return s;
+    }
+    function minM(p, e) {
+        let lo = 0, hi = p * e;
+        while (lo < hi) {
+            const mid = Math.floor((lo + hi) / 2);
+            if (vp(mid, p) >= e) hi = mid;
+            else lo = mid + 1;
+        }
+        return lo;
+    }
+
+    let ans = 0;
+    for (const p in factors) {
+        ans = Math.max(ans, minM(+p, factors[p]));
+    }
+    return ans;
+}
 
 function sumofodddivisors(n) {
   let sum = 0;
@@ -5432,6 +6019,8 @@ function carmichael(n) {
 
     return result;
 }
+function riesel(k,n){return sub(mul(k,pow(2,n)),1)}
+function sierpinskinum(k,n){return add(mul(k,pow(2,n)),1)}
 function mangoldt(n) {
     if (n < 2) return 0;
 
@@ -5445,6 +6034,25 @@ function mangoldt(n) {
     }
 
     return log(n); // n itself is prime
+}
+function chebyshevpsi(n){
+    let fi=0;
+    for(let i=0;i<=n;i++)fi=add(fi,mangoldt(i))
+        return fi;
+    
+}
+function landau(n) {
+    const dp = Array(n + 1).fill(0);
+    dp[0] = 1;
+
+    for (let k = 1; k <= n; k++) {
+        const bk = (k);
+        for (let s = n; s >= k; s--) {
+            const candidate = lcm(dp[s - k], bk);
+            if (candidate > dp[s]) dp[s] = candidate;
+        }
+    }
+    return dp[n];
 }
 function gcd(a, b) {
     return b === 0 ? a : gcd(b, a % b);
@@ -5937,6 +6545,9 @@ function inversequadratic( a, b, c=0,y=0, parity = 0) {
     } else {
         return div(add(sub(0,b), sqrtDiscriminant), mul(2, a));
     }
+}
+function citardauq(a,b,c){
+    return div(c,0.5,sub(mul(-1,signum(re(b)),sqrt(sub(sqr(b),mul(4,a,c)))),b))
 }
 function inversedepressedcubic(p,q,k=0){
 	return mul(-2,sqrt(div(p,-3)),cos(sub(div(acos(mul(div(mul(3,q),2,p),sqrt(div(-3,p)))),3),div(mul(2,pi(),k),3))));
@@ -6510,6 +7121,27 @@ function squarewave(b,a=1) {
 //	return div(fi,0.25,pi())
     return mul(a, lessthan(modc(b, 2 * math.pi), math.pi) ? 1.0 : -1.0);
 }
+
+
+function fakesin(x){return sl(div(mul(2.6220575,x),pi()))}
+function squareslfourier(a,m=bign,n=1) {
+	let fi=0;
+	for(let k=n;k<m;k++)
+	fi=add(fi,div(fakesin(mul(a,add(k,k,-1))),add(k,k,-1)))
+	return div(fi,0.25,pi())
+    return mul(a, lessthan(modc(b, 2 * math.pi), math.pi) ? 1.0 : -1.0);
+}
+function triangleslfourier(a,m=bign,n=0){
+let fi=0
+for(let k=n;k<m;k++)fi=add(fi,div(mul(pow(sub(0,1),k),fakesin(mul(add(add(k,k),1),a))),pow(add(add(k,k),1),2)))
+return div(mul(8,fi),pow(pi(),2))
+}
+function sawtoothslfourier(a,m=bign,n=1){
+let fi=0
+for(let k=n;k<m;k++)fi=add(fi,div(mul(pow(sub(0,1),add(k,1)),fakesin(mul(k,a))),k))
+return div(mul(2,fi),pi())
+}
+
 function squarefourier(a,m=bign,n=1) {
 	let fi=0;
 	for(let k=n;k<m;k++)
@@ -6574,7 +7206,7 @@ return fi;
 }	
 function dedekindsumd(a,b,c){
 let fi=math.complex(0,0);
-for(let n=1;n<=sub(todoub(c),1);n++)
+for(let n=1;n<=sub(re(c),1);n++)
 fi=add(fi,mul(sawtooth(div(mul(a,n),c)),sawtooth(div(mul(b,n),c))));
 return fi;
 }	
@@ -6671,7 +7303,7 @@ function euleriannum(n,k){
 	if(n==0)return ncr(1e-12,k);
 if(n==round(math.complex(n).re))return add(mul(sub(n,k),euleriannum(sub(n,1),sub(k,1))),mul(add(k,1),euleriannum(sub(n,1),sub(k,1))));	
 let fi=math.complex(0,0);
-for(let i=0;i<=todoub(k);i++)
+for(let i=0;i<=re(k);i++)
 fi=add(fi,mul(pow(-1,i),ncr(add(n,1),i),pow(sub(k,i,-1),n)));
 return fi;
 }
@@ -6686,13 +7318,13 @@ let x=div(add(1,n),2);	return mul(bernoulli(mul(2,x)),pow(-1,sub(x,1)),div(sub(p
 
 function necklace(k,n){
 	let fi=math.complex(0,0);
-for(let i=1;i<=todoub(n);i++)
+for(let i=1;i<=re(n);i++)
 fi=add(fi,pow(k,gcd(i,n)));
 return div(fi,n);
 }
 function necklacel(k,n){//A087854
 let fi=math.complex(0,0);
-for(let d=0;d<=todoub(n);d++)
+for(let d=0;d<=re(n);d++)
 if(gcd(d,k)==1)	
 fi=add(fi,mul(totient(d),stirling2(div(n,d),k)));
 return mul(fi,div(factorial(k),n));
@@ -6700,7 +7332,7 @@ return mul(fi,div(factorial(k),n));
 
 function necklacelb(k,n){//A087854
 let fi=math.complex(0,0);
-for(let d=0;d<=todoub(n);d++)
+for(let d=0;d<=re(n);d++)
 if(gcd(d,k)==1)	
 fi=add(fi,mul(mobius(d),pow(k,div(n,d))));
 return div(fi,n);
@@ -6727,28 +7359,36 @@ function numberofdebrujin(k,n){
 
 //ADD FIX
 
-function stirling2(a,b){
+function stirling2(a,b,h=0){
+if(im(b)<0)return conj(stirling2(a,conj(b),h))
+let fun2="(e^x-1)^("+b+")/("+factorial(b)+")"   
+return div(fractionalderiv(fun2,h,a),factorial(a))
+
   //  return bellpoly
 let c=a;
 if(math.complex(c).im<0)a=conj(a);
 let fi=math.complex(0,0);
-for(let i=0;i<=todoub(b);i++)
+for(let i=0;i<=re(b);i++)
 fi=add(fi,mul(pow(-1,sub(b,1)),ncr(b,i),pow(i,a)));
 if(math.complex(c).im<0)
 return conj(div(fi,gamma(add(b,1))));
 return div(fi,gamma(add(b,1)));
 }
-function stirling(x,y){
+function stirling(x,y,h=0){
+   // if(Number.isInteger(x) &&Number.isInteger(y) )return stirlingi(x,y)
+
+let fun2="poch(x,"+x+")"    
+return div(fractionalderiv(fun2,h,y),factorial(y))
 /*	let n = sub(x,y);
 let fi=math.complex(0,0);
-for(let i=0;i<=todoub(n);i++)
+for(let i=0;i<=re(n);i++)
 fi=add(fi,mul(euleriannum2(n,i),ncr(add(x,i),add(n,n))));
 return div(fi,gamma(add(y,1)));
 }
 function unsignedstirling(x,y){
 return mul(stirling(x,y),pow(-1,sub(x,y)));*/
 }
-function stirling(n, k, memo = {}) {
+function stirlingi(n, k, memo = {}) {
   const key = `${n},${k}`;
   if (key in memo) return memo[key];
   if (n === 0 && k === 0) return 1;
@@ -6850,7 +7490,7 @@ function stieltjesphase(n,parity=0,lambert=0){
 
 function worpitzkynum(a,b){
 let fi=math.complex(0,0);
-for(let i=0;i<=todoub(b);i++)
+for(let i=0;i<=re(b);i++)
 fi=add(fi,div(mul(pow(-1,add(b,i)),pow(add(i,1),a),factorial(b)),factorial(i),factorial(sub(b,i))));
 return fi;
 }
@@ -9167,11 +9807,7 @@ function gettonthbasedigit(x, n, m, b) {
     
 function nthprime(x) {
  
-    let n = parseInt(math.complex(x).re);
-
-    if (isNaN(n) || n < 1) {
-        throw new Error("Input must be a positive integer.");
-    }
+    let n = re(floor(x))
 
     let count = 0;
     let candidate = 1;
@@ -9232,31 +9868,10 @@ function pmean(args, p) {
 
 function agmh(a,b){return agm(add(a,b),mul(a,b))}//arithmaticgeometrichalfhyperoperator
 
-function gagm(a, b, x, iters = 20) {
+function gagm(a,b,x,iters=20){
 
-    let frac = approxfraction(x);
-    let nom = frac[0];
-    let denom = frac[1];
-
-    let vals = args.slice();
-
-    for (let i = 0; i < iters; i++) {
-
-        for (let k = 0; k < nom; k++) {
-            let m = amean(...vals);
-            for (let j = 0; j < vals.length; j++)
-                vals[j] = m;
-        }
-
-        for (let k = 0; k < denom - nom; k++) {
-            let m = gmean(...vals);
-            for (let j = 0; j < vals.length; j++)
-                vals[j] = m;
-        }
-    }
-
-    return amean(...vals);
 }
+
 
 
 
@@ -9367,7 +9982,7 @@ function rcsignumapply(x,p){
 	return x;
 }
 
-// Complex operations
+// Complex vectors
 function dotc(a, b) {
     const aComp = math.complex(a);
     const bComp = math.complex(b);
@@ -9380,6 +9995,37 @@ function crossc(a, b) {
     return sub(mul(aComp.re, bComp.im), mul(aComp.im, bComp.re));
 }
 
+function dot2(x1,y1,x2,y2){return add(mul(x1,x2),mul(y1,y2))}
+function dot3(x1,y1,z1,x2,y2,z1){return add(mul(x1,x2),mul(y1,y2),mul(z1,z2))}
+function cross3(x1,y1,z1, x2,y2,z2){
+    return [
+        sub(mul(y1,z2), mul(z1,y2)),
+        sub(mul(z1,x2), mul(x1,z2)),
+        sub(mul(x1,y2), mul(y1,x2))
+    ]
+}
+function hadamard3(x1,y1,z1, x2,y2,z2){
+    return [
+        mul(x1,x2),
+        mul(y1,y2),
+        mul(z1,z2)
+    ]
+}
+function mcross3(x1,y1,z1, x2,y2,z2){
+    let c = rearray(cross3(x1,y1,z1, x2,y2,z2))
+    return sqrt(add(
+        mul(c[0],c[0]),
+        mul(c[1],c[1]),
+        mul(c[2],c[2])
+    ))
+}
+function outer3(x1,y1,z1, x2,y2,z2){
+    return [
+        [mul(x1,x2), mul(x1,y2), mul(x1,z2)],
+        [mul(y1,x2), mul(y1,y2), mul(y1,z2)],
+        [mul(z1,x2), mul(z1,y2), mul(z1,z2)]
+    ]
+}
 function rconj(x){
 return math.complex(-re(x),im(x));
 }
@@ -9923,7 +10569,9 @@ function re(b) {
     return math.complex(b).re;
 }
 
-
+function congruence(x){
+    return modc(re(x),im(x))
+}
 
 
 function roundim(b) {
@@ -10000,6 +10648,15 @@ function cbrt(b) {
     return pow(b, complex(1.0 / 3.0));
 }
 
+function crenel(k,d,x){return mul(d,sinc(mul(pi(),k,d)),exp(mul(2,pi(),I,k,x)))}
+
+function conicalp(m,l,x){return associatedlegendre(add(-0.5,mul(I,l)),m,x)}
+function conicalq(m,l,x){return associatedlegendreq(add(-0.5,mul(I,l)),m,x)}
+
+
+function chapmand(u,X){let [x,z]=X;return div(exp(mul(x,sub(1,div(sin(z),sin(u))))),add(1,cos(u)))}
+//return exp(sub(0,sqrt(add(sqr(x),sqr(u),mul(2,x,u,cos(z))))))}
+function chapman(x,z){return add(1,mul(x,sin(z),integral([x,z],0,z,[x,z])))}
 function bringquintic(x,a){return add(pow(x,5),x,a)}
 function br(x)				{
 	if(math.complex(x).re<0)
@@ -10097,6 +10754,7 @@ function angle(b) {
 }
 
 function unit(b) {
+    if(b==0)return 0;
     return div(b, math.abs(b));
 }
 
@@ -10110,7 +10768,7 @@ function signumop(a, b) {
 
 // Helper functions
 function maxc(...args) {
-    return args.reduce((acc, val) => maxcc(acc, val));
+    return args.reduce((acc, val) => maxcr(acc, val));
 }
 
 
@@ -10203,13 +10861,13 @@ function boxcar(x,b,a,aa){return mul(aa,sub(hstep(sub(x,a)),hstep(sub(x,b))))}
 function rect(t,x,y){return sub(hstep(sub(t,sub(x,div(y,2)))),hstep(sub(t,add(x,div(y,2)))))}
 
 function ustep(a, b) {
-    if (toDouble(b) < 0) return 0;
+    if (re(b) < 0) return 0;
     if (math.equal(math.complex(b), math.complex(0))) return div(a, 2.0);
     return a;
 }
 
 function hustep(a, b) {
-    if (toDouble(b) < toDouble(a)) return 0;
+    if (re(b) < re(a)) return 0;
     if (math.equal(b, a)) return 0.5;
     return 1;
 }
@@ -10304,11 +10962,21 @@ function wiener01(t,reset=0){
   for(let k=1;k<=wiener01.n;k++)s+=Math.sqrt(2)*Math.sin((k-0.5)*Math.PI*t)*wiener01.a[k-1]/((k-0.5)*Math.PI)
   return s
 }
-
-
+function fractionalbrownian(t, H = 0.5, reset = 0) {
+    if (!fractionalbrownian.a || reset) {
+        fractionalbrownian.n = 256;
+        fractionalbrownian.a = Array.from({length: fractionalbrownian.n}, randn);
+    }
+    let s = 0;
+    for (let k = 1; k <= fractionalbrownian.n; k++) {
+        let scale = 1 / Math.pow(k - 0.5, H + 0.5);  // H controls roughness
+        s += Math.sqrt(2) * Math.sin((k - 0.5) * Math.PI * t) * fractionalbrownian.a[k - 1] * scale;
+    }
+    return s;
+}
 function wiener0t(t,tt=1,reset=0){return Math.sqrt(tt)*wiener01(t/tt,reset)}
 function brownianbridge(t,tt=1,reset=0){return wiener0t(t,tt,reset)-t/tt*wiener0t(tt,tt,reset)}
-
+function brownianmotion(t,tt=1,reset=0){return  wiener0t(t,tt,reset)}
 function findmin0to1(f,tt=1,g=2001){
   let m=Infinity,x=0
   for(let i=0;i<g;i++){
@@ -10407,6 +11075,16 @@ function sechcdf(x){
 	function radialinvmultiquadratic(s,x)
 	{return pow(add(mul(x,x),mul(s,s)),-0.5);}
 	
+    function macaulaybracket(x,n=1,a=0){
+        if(re(a)>re(x))return 0
+        return pow(sub(x,a),n)
+    }
+    function heavysidetheta(x){return add(0.5,div(signum(x),2))}
+    //https://en.wikipedia.org/wiki/Singularity_function
+    function singularitybracket(x,n=1,a=0){
+        return mul(pow(sub(x,a),n),heavysidetheta(sub(x,a)))
+    }
+    
 	function relu(x){if(math.complex(x).re<0)return 0;return x;}
 	function gelu(x){return mul(add(1,erf(div(x,sqrt(2)))),x,0.5);}
 	function elu(a,x){if(math.complex(x).re<0)return mul(a,sub(exp(x),1));return x;}
@@ -10537,6 +11215,21 @@ const fun="2*e^(x*("+x+"))/(e^2*x+1)"
 return fractionalderiv(fun,0,n)
 }   
 
+
+
+function grunskycoefdd(z,zz,func,n,m){
+  //  console.log(func)
+    return div(sub(evale(func,{x:z}),evale(func,{x:zz})),sub(z,zz),-1)
+}
+function grunskycoefd(zz,func,n,m){
+const fun="grunskycoefdd(x,"+zz+",\""+func+"\","+n+","+m+")"
+return fractionalderiv(fun,0,m)}
+
+function grunskycoef(func,n,m){
+    if(n==m)return 0;
+const fun="grunskycoefd(x,\""+func+"\","+n+","+m+")"
+return fractionalderiv(fun,0,n)}
+
 //http://irma.math.unistra.fr/~guoniu/papers/p95entpou.pdf
 
 function entringerpouperdgeneratingupsilon(x,y,z){return div(mul(add(sin(x),cos(x)),sin(mul(2,z))),sqr(cos(add(x,y,z))))}
@@ -10600,6 +11293,7 @@ function boustrophedoncoef(n,k){return mul(ncr(n,k),eulernum(sub(n,k)))}
 		return div(mul(factorial(n),hypg21(1,sub(k,n,-1),add(k,2),-1)),gamma(add(k,2)),gamma(sub(n,k)));
 	}
 	function lazycaterer(n){return div(add(mul(n,n),n,2),2)}
+    function arclazycaterer(n){return div(sub(sqrt(sub(mul(8,n),7)),1),2)}
 	function cakenum(n){return add(ncr(n,3),ncr(n,2),ncr(n,1),ncr(n,0))}
 	function divcircleintoareas(n){return add(ncr(n,3),ncr(n,2),ncr(n,1),ncr(n,0),ncr(n,4))}
 	
@@ -10645,7 +11339,7 @@ function fermat(b) {return add(pow( (2.0), pow( (2.0), b)),  (1.0));}
 function arcfermat(b) {return log2(log2(sub(b,1)))}
 
 function fermatprime(b) {
-    return fermatprimeList[Math.max(parseInt(toDouble(b)), 4)]; // Example, update with actual list
+    return fermatprimeList[Math.max(parseInt(re(b)), 4)]; // Example, update with actual list
 }
 
 function proth(a, b) {return add(mul(a, pow( (2.0), b)),  (1.0));}
@@ -10677,7 +11371,7 @@ function hilbert(b) {return add(mul( (4.0), b),  (1.0));}
 function archilbert(b){return div(sub(b,1),4)}
 
 function idoneal(b) {
-    return idonealList[Math.max(parseInt(toDouble(b)), 65)]; // Example, update with actual list
+    return idonealList[Math.max(parseInt(re(b)), 65)]; // Example, update with actual list
 }
 
 function leyland(a, b) {return add(pow(a, b), pow(b, a));}
@@ -10810,10 +11504,19 @@ function orientedTree(b) {
 function magic(b) {
     return mul(math.complex(2.0), add(ncr(b, math.complex(1.0)), add(ncr(b, math.complex(2.0)), ncr(b, math.complex(3.0)))));
 }
-
+//https://mathworld.wolfram.com/MagicConstant.html
 function magicconst(b) {
     return div(mul(b, add(pow(b, math.complex(2.0)), math.complex(1.0))), math.complex(2.0));
 }
+
+function magicn(n,a,d){return div(mul(n,add(a,a,mul(d,sub(sqr(n),1)))),2)}
+
+function magiccube(n){return div(mul(n,add(cum(n),1)),2)}
+//https://mathworld.wolfram.com/MagicConstant.html
+function magicdconst(n,d){return div(mul(n,add(pow(n,d),1)),2)}
+
+function multimagic(n,k){return div(generalizedharmonicnum(sqr(n),sub(0,k)),n)}
+
 
 function alucin(b) {
     return div(div(pow(b, math.complex(3.0))), mul(sub(math.complex(1.0), pow(b, math.complex(2.0))), mul(sub(math.complex(1.0), pow(b, math.complex(3.0))), sub(math.complex(1.0), pow(b, math.complex(4.0))))));
@@ -10836,13 +11539,38 @@ function karmantrefftz(a, b) {
 function symmetricaljoukowsky(b, a) {
     return mul(math.exp(mul(math.complex(0,1), globalc)), add(sub(b, a), add(div(math.complex(1.0), sub(b, a)), div(mul(math.complex(2.0), pow(a, math.complex(2.0))), add(a, globalc)))));
 }
+function cayley(x) {
+    return div(
+        add(math.complex(1,0), mul(x, math.complex(0,1))),
+        sub(math.complex(1,0), mul(x, math.complex(0,1)))
+    );
+}
 
-function cayley(b) {
+function arccayley(w) {
+    return div(
+        mul(math.complex(0,1), sub(math.complex(1,0), w)),
+        add(math.complex(1,0), w)
+    );
+}
+
+function cayleyp(b) {
     return div(sub(b, math.complex(0.0, 1.0)), add(b, math.complex(1.0, 0.0)));
+}
+function arccayleyp(w) {
+    return div(
+        add(w, math.complex(0.0, 1.0)),
+        sub(math.complex(1.0, 0.0), w)
+    );
 }
 
 function bilinear(b) {
     return div(sub(b, math.complex(1.0)), add(b, math.complex(1.0)));
+}
+function arcbilinear(w) {
+    return div(
+        add(math.complex(1.0, 0.0), w),
+        sub(math.complex(1.0, 0.0), w)
+    );
 }
 
 function poincarediscmetric(a, b) {
@@ -14160,7 +14888,16 @@ function epsteinzeta(a,b,c,s)
 }
 
 
-function specialselection(x,n=2,m=0){return sqr(div(sin(mul(pi(),add(x,1e-7))),n,sin(div(sub(mul(pi(),add(x,1e-7)),mul(pi(),m)),n))))
+function specialselectionold(x,n=2,m=0){return sqr(div(sin(mul(pi(),add(x,1e-7))),n,sin(div(sub(mul(pi(),add(x,1e-7)),mul(pi(),m)),n))))
+}
+
+function specialselection(xz,n=2,m=0){
+    let x=modc(sub(xz,m),n)
+ let fi=0;
+ let N=ceil(bign/2-mag(n)/2)
+ let Np=ceil(bign/2+mag(n)/2)
+for(let i=-N;i<=Np;i++){fi=add(fi,ncr(0,sub(x,mul(n,i))))} 
+return fi
 }
 
 function casin(x){return div(asin(x),x);}
@@ -14224,15 +14961,61 @@ function nthhyperfactorial(x,z){
 }
 function secondhyperfactorial(x){return nthhyperfactorial(2,x)}
 
+function secondfactorial(x){return pow(x,pow(x,2))}
+function nthfactorial(x,n){return pow(x,pow(x,n))}
+function inversetriangular(x){return div(sub(sqrt(add(1,x,x,x,x,x,x,x,x)),1),2)}
+function ninversetriangular(x){return floor(div(sub(sqrt(add(1,x,x,x,x,x,x,x,x)),1),2))}
+function alfredmoessnerfactoriallinearized(n){//A125714
+let j=add(ninversetriangular(add(n,1)),1)
+let t=div(mul(j,add(j,1)),2)
+let i=modc(sub(t,n),t)
+return sabs(stirling(add(j,1),sub(j,i)))
+}
 
+//https://oeis.org/A098694
+function doublesuperfactorial(x){let A=1.28242712;return div(mul(pow(A,div(3,2)),pow(2,sub(add(add(mul(x,x),x),sub(0,div(1,24))),0)),pow(pi(),sub(sub(0,div(x,2)),div(1,4))),barnesg(add(x,div(3,2))),barnesg(add(x,2))),exp(div(1,8)))}
+function triplesuperfactorial(x){let A=1.28242712;return div(mul(pow(3,mul(div(1,2),mul(x,sub(mul(3,x),1)))),pow(div(mul(2,barnesg(div(4,3)),barnesg(div(5,3))),mul(barnesg(div(7,3)),barnesg(div(8,3)))),x),barnesg(add(x,div(4,3))),barnesg(add(x,div(5,3))),barnesg(add(x,2))),mul(barnesg(div(4,3)),barnesg(div(5,3))))}
+function quadruplesuperfactorial(x){let A=1.28242712;return div(mul(pow(A,div(15,4)),pow(2,sub(add(add(mul(4,mul(x,x)),mul(4,x)),sub(0,div(1,24))),0)),pow(pi(),sub(sub(0,div(x,2)),div(1,4))),barnesg(add(x,div(5,4))),barnesg(add(x,div(3,2))),barnesg(add(x,div(7,4))),barnesg(add(x,2)),pow(gamma(div(1,4)),sub(sub(0,x),div(1,4))),pow(gamma(div(3,4)),sub(sub(0,x),div(3,4)))),exp(div(5,16)))}
+function quintuplesuperfactorial(x){let A=1.28242712;return div(mul(pow(5,mul(div(1,2),mul(x,sub(mul(5,x),3)))),pow(div(mul(24,barnesg(div(6,5)),barnesg(div(7,5)),barnesg(div(8,5)),barnesg(div(9,5))),mul(barnesg(div(11,5)),barnesg(div(12,5)),barnesg(div(13,5)),barnesg(div(14,5)))),x),barnesg(add(x,div(6,5))),barnesg(add(x,div(7,5))),barnesg(add(x,div(8,5))),barnesg(add(x,div(9,5))),barnesg(add(x,2))),mul(barnesg(div(6,5)),barnesg(div(7,5)),barnesg(div(8,5)),barnesg(div(9,5))))}
+function sextuplesuperfactorial(x){let A=1.28242712;return div(mul(pow(A,div(3,2)),pow(2,sub(add(add(mul(3,mul(x,x)),mul(2,x)),sub(0,div(1,24))),0)),pow(3,mul(x,sub(mul(3,x),1))),pow(pi(),sub(sub(0,div(x,2)),div(1,4))),pow(div(mul(5,barnesg(div(7,6)),barnesg(div(4,3)),barnesg(div(5,3)),barnesg(div(11,6))),mul(barnesg(div(13,6)),barnesg(div(7,3)),barnesg(div(8,3)),barnesg(div(17,6)))),x),barnesg(add(x,div(7,6))),barnesg(add(x,div(4,3))),barnesg(add(x,div(3,2))),barnesg(add(x,div(5,3))),barnesg(add(x,div(11,6))),barnesg(add(x,2))),mul(exp(div(1,8)),barnesg(div(7,6)),barnesg(div(4,3)),barnesg(div(5,3)),barnesg(div(11,6))))}
+function septuplesuperfactorial(x){let A=1.28242712;return div(mul(pow(7,mul(div(1,2),mul(x,sub(mul(7,x),5)))),pow(div(mul(720,barnesg(div(8,7)),barnesg(div(9,7)),barnesg(div(10,7)),barnesg(div(11,7)),barnesg(div(12,7)),barnesg(div(13,7))),mul(barnesg(div(15,7)),barnesg(div(16,7)),barnesg(div(17,7)),barnesg(div(18,7)),barnesg(div(19,7)),barnesg(div(20,7)))),x),barnesg(add(x,div(8,7))),barnesg(add(x,div(9,7))),barnesg(add(x,div(10,7))),barnesg(add(x,div(11,7))),barnesg(add(x,div(12,7))),barnesg(add(x,div(13,7))),barnesg(add(x,2))),mul(barnesg(div(8,7)),barnesg(div(9,7)),barnesg(div(10,7)),barnesg(div(11,7)),barnesg(div(12,7)),barnesg(div(13,7))))}
+function octuplesuperfactorial(x){let A=1.28242712;return div(mul(pow(A,div(15,4)),pow(2,sub(add(mul(12,mul(x,x)),sub(0,div(1,24))),0)),pow(pi(),sub(sub(0,div(x,2)),div(1,4))),pow(div(mul(105,barnesg(div(9,8)),barnesg(div(11,8)),barnesg(div(13,8)),barnesg(div(15,8))),mul(barnesg(div(17,8)),barnesg(div(19,8)),barnesg(div(21,8)),barnesg(div(23,8)))),x),barnesg(add(x,div(9,8))),barnesg(add(x,div(5,4))),barnesg(add(x,div(11,8))),barnesg(add(x,div(3,2))),barnesg(add(x,div(13,8))),barnesg(add(x,div(7,4))),barnesg(add(x,div(15,8))),barnesg(add(x,2)),pow(gamma(div(1,4)),sub(sub(0,x),div(1,4))),pow(gamma(div(3,4)),sub(sub(0,x),div(3,4)))),mul(exp(div(5,16)),barnesg(div(9,8)),barnesg(div(11,8)),barnesg(div(13,8)),barnesg(div(15,8))))}
+function nonuplesuperfactorial(x){let A=1.28242712;return div(mul(pow(3,mul(x,sub(mul(9,x),5))),pow(div(mul(4480,barnesg(div(10,9)),barnesg(div(11,9)),barnesg(div(4,3)),barnesg(div(13,9)),barnesg(div(14,9)),barnesg(div(5,3)),barnesg(div(16,9)),barnesg(div(17,9))),mul(barnesg(div(19,9)),barnesg(div(20,9)),barnesg(div(7,3)),barnesg(div(22,9)),barnesg(div(23,9)),barnesg(div(8,3)),barnesg(div(25,9)),barnesg(div(26,9)))),x),barnesg(add(x,div(10,9))),barnesg(add(x,div(11,9))),barnesg(add(x,div(4,3))),barnesg(add(x,div(13,9))),barnesg(add(x,div(14,9))),barnesg(add(x,div(5,3))),barnesg(add(x,div(16,9))),barnesg(add(x,div(17,9))),barnesg(add(x,2))),mul(barnesg(div(10,9)),barnesg(div(11,9)),barnesg(div(4,3)),barnesg(div(13,9)),barnesg(div(14,9)),barnesg(div(5,3)),barnesg(div(16,9)),barnesg(div(17,9))))}
+function decuplesuperfactorial(x){let A=1.28242712;return div(mul(pow(A,div(3,2)),pow(2,sub(add(add(mul(5,mul(x,x)),mul(4,x)),sub(0,div(1,24))),0)),pow(5,mul(x,sub(mul(5,x),3))),pow(pi(),sub(sub(0,div(x,2)),div(1,4))),pow(mul(barnesg(div(11,10)),barnesg(div(6,5)),barnesg(div(13,10)),barnesg(div(7,5)),barnesg(div(8,5)),barnesg(div(17,10)),barnesg(div(9,5)),barnesg(div(19,10))),sub(x,1)),pow(div(567,mul(barnesg(div(21,10)),barnesg(div(11,5)),barnesg(div(23,10)),barnesg(div(12,5)),barnesg(div(13,5)),barnesg(div(27,10)),barnesg(div(14,5)),barnesg(div(29,10)))),x),barnesg(add(x,div(11,10))),barnesg(add(x,div(6,5))),barnesg(add(x,div(13,10))),barnesg(add(x,div(7,5))),barnesg(add(x,div(3,2))),barnesg(add(x,div(8,5))),barnesg(add(x,div(17,10))),barnesg(add(x,div(9,5))),barnesg(add(x,div(19,10))),barnesg(add(x,2))),exp(div(1,8)))}
 
+function alfredmoessnerfactorial(n,m){//A125714
+let j=n
+let i=m
+return sabs(stirling(add(j,1),sub(j,i)))
+}
 function zeta(x) {
+
+if(re(x)>8){
+let s=0
+for(let n=1;n<bign;n++){
+let t=div(1,pow(n,x))
+s=add(s,t)
+if(mag(t)<1e-7)break}
+return s}
+if(re(x)<=0){
+let t=mul(pow(2,x),mul(pow(PI,sub(x,1)),mul(sin(mul(div(PI,2),x)),mul(gamma(sub(1,x)),zeta(sub(1,x))))))
+return t}
+let fi=0
+for(let n=0;n<bign;n++){
+let inner=0
+for(let k=0;k<=n;k++)
+inner=add(inner,mul(ncr(n,k),div(pow(-1,k),pow(add(k,1),x))))
+let term=div(inner,pow(2,add(n,1)))
+fi=add(fi,term)
+if(mag(term)<1e-7)break}
+return div(fi,sub(1,pow(2,sub(1,x))))
+
 
 
 /*
 const fun="-digamma(1-x)";
 return div(fractionalderiv(fun,0,sub(x,1)),gamma(x))
-*/
+*./
     
        let fi=math.complex(0,0);
       let N=bign*2;
@@ -14241,7 +15024,7 @@ return div(fractionalderiv(fun,0,sub(x,1)),gamma(x))
       /*
       for(let n=1;n<bign;n++)fi=add(fi,div(mobius(n),pow(n,x)));
       return div(1,fi);
-      */
+      *./
       
       
       for(let n=0;n<bign*3;n++){
@@ -14264,20 +15047,20 @@ return div(fi,sub(1,pow(2,sub(1,x))));
     for(let k=1;k<=N;k++)
 fi=add(fi,div(add(mul(ss,cos(mul(2,pi(),k))),mul(cc,sin(mul(2,pi(),k)))),pow(k,sub(1,x))));
     return mul(2,pow(mul(2,pi()),sub(x,1)),gamma(sub(1,x)),fi);
-   */
+   *./
     
     
     //  let fi=math.complex(0,0);
      // let N=bign*2;
   /*   if(re(x)<2 && re(x)>0){
       return zetaalt(x)
-  }*/
+  }*./
      
     for(let k=1;k<=N;k++)
         fi=add(fi,div(mul(ncr(mul(2,N),sub(N,k)),pow(-1,k),pow(k,sub(0,x))),ncr(mul(2,N),N)));
     return div(fi,sub(pow(2,sub(1,x)),1));
     
-        
+   */     
 }
 function cohensp(x){let fi=0;for(let k=1;k<bign;k++)fi=add(fi,div(1,pow(k,x),add(exp(mul(2,pi(),k)),1)));}
 function cohensm(x){let fi=0;for(let k=1;k<bign;k++)fi=add(fi,div(1,pow(k,x),sub(exp(mul(2,pi(),k)),1)));}
@@ -14345,6 +15128,20 @@ return fi;
 
 }
 
+function rogersl(z){return mul(pi(),1/6,add(dilog(z),mul(0.5,log(z),log(sub(1,z)))))}
+function riemannxi(x){return mul(0.5,x,sub(x,1),pow(pi(),mul(-0.5,x)),gamma(dix(x,2)),zeta(x))}
+function landauxi(x){return riemannxi(add(0.5,mul(I,x)))}
+function riemannsiegeltheta(x){
+    let w=0
+   // let fi=mul(-0.5,x,log(pi()))
+    //    for(let k=0;k<bign;k++)
+    //        fi=add(fi,div(mul(pow(-1,k),polygamma(k+k,1/4),pow(div(x,2),add(k,k,1))),factorial(add(k,k,1))))
+    
+    return sub(mul(-0.5,I,sub(loggamma(add(0.25,mul(0.5,I,x)),w),loggamma(sub(0.25,mul(0.5,I,x)),w))),div(mul(x,log(pi())),2))}
+//
+function zfunc(x){return mul(exp(mul(I,riemannsiegeltheta(x))),zeta(add(0.5,mul(I,x))))}
+
+
 function debruijnnewmand(u,LZ){
 	const l=g(LZ,0);const z=g(LZ,1);
 	return mul(exp(mul(l,u,u)),debruijnnewmanphi(u),cos(mul(z,u)));
@@ -14361,6 +15158,9 @@ function debruijnnewmanphi(u){
 }
 //function legendrechi(a,b) {
 function legendrechi(v,z) {
+    
+    return div(sub(polylogarithm(v,z),polylogarithm(v,sub(0,z))),2)
+    
     return mul(pow(2,sub(0,v)),z,lerchtranscendent(sqr(z),v,0.5))
     let fi = math.complex(0);
     for (let i = 0; i < bign; i++) {
@@ -14368,8 +15168,10 @@ function legendrechi(v,z) {
     }
     return fi;
 }
-
-
+function polyarctan(v,z){
+return mul(-1,I,legendrechi(v,mul(I,z)))
+}
+function ti(n,x){return div(sub(polylogarithm(n,mul(I,x)),polylogarithm(n,mul(I,-1,x))),2,I)}
 
 
 
@@ -14538,6 +15340,24 @@ function incboseeinstein(j,x,b){
 function incpolylogarithm(s,z,b){
     return div(integral(incpolylogarithmd,b,sqrt(bign),[s,z]),gamma(s))
 }
+//debye(2,x)
+function debyen(t,n){return div(pow(t,n),sub(exp(t),1))}
+function debye(n,x){return div(mul(n,integral(debyen,0,x,n)),pow(x,n))}
+
+function debyepn(n,x){return div(mul(n,integral(debyen,1,x,n)),pow(x,n))}
+function debyepc(n,x){let fi=0;for(let k=1;k<bign;k++)fi=add(fi,div(lincgamma(add(n,1),k),pow(k,add(n,1)),factorial(n)));return fi;}
+function debyep(n,x){return add(debyepc(n,x),debyepn(n,x))}
+
+
+function debye2(n,x){return sub(mul(factorial(n),zeta(add(n,1))),debye(n,x))}
+function debye2s(n,x){let fi=0;for(let k=1;k<bign;k++)for(let i=1;i<=bign;i++)fi=add(fi,div(mul(exp(mul(-1,k,x)),mul(fallingfactorial(n,i),pow(x,sub(n,-1,i)))),pow(k,i)));return fi;}
+
+function debyemcn(t,n){return div(mul(pow(t,n),cos(t)),sub(exp(t),1))}
+function debyemc(n,x){return div(mul(n,integral(debyemcn,0,x,n)),pow(x,n))}
+function debyemsn(t,n){return div(mul(pow(t,n),sin(t)),sub(exp(t),1))}
+function debyems(n,x){return div(mul(n,integral(debyemsn,0,x,n)),pow(x,n))}
+
+//function debyei(n,x){let fi=0;for(let k=1;k<bign;k++)fi=add(fi,div(lincgamma(lincgamma(add(n,1),mul(k,x)),mul(k,x)),pow(k,add(n,1))));return div(mul(n,fi),pow(x,n));}
 
 
 function abelplanad(t,X){
@@ -14547,7 +15367,18 @@ function abelplanad(t,X){
 function abelplana(s,z){
  return  integral(abelplanad,0,sqrt(sqrt(bign)),[s,z],bign*4)
 }
+/*
+function polylogarithmhz(n,z){let s=n
+if(re(z)<0)
+return div(mul(add(mul(pow(I,sub(1,s)),hurwitzzeta(sub(1,s),add(0.5,div(log(sub(0,z)),2,pi(),I)))),mul(pow(I,sub(s,1)),hurwitzzeta(sub(1,s),sub(0.5,div(log(sub(0,z)),2,pi(),I))))),gamma(sub(1,s))),pow(mul(2,pi()),sub(1,s)))
+ return mul(hurwitzzeta(sub(1,s),div(log(z),2,pi(),I)),div(pow(mul(2,pi(),I),n),gamma(n)))    
+}*/
 function polylogarithm(s,z){
+// return mul(polylogarithmhz(s,z),div(zeta(s),polylogarithmhz(s,1)))
+  // s=add(s,0.001)
+  //   return mul(polylogarithmhz(s,z),div(dirichleteta(s),polylogarithmhz(s,-1)))
+   
+    
  //   if(mag(z)<1)return sub(div(mul(pow(mul(2,pi()),s),exp(mul(pi(),I,s,0.5)),hurwitzzeta(sub(1,s),div(log(z),2,pi(),I))),gamma(s)),mul(polylogarithm(s,div(1,z)),exp(mul(pi(),I,s))))
 //  if(re(s)<0) ///// return add(div(z,2),mul(z,abelplana(s,z)))
    ////return add(div(z,2),div(incgamma(sub(1,s),sub(0,log(z))),pow(sub(0,log(z)),sub(1,s))),mul(2,z,abelplana(s,z)))
@@ -14641,7 +15472,37 @@ function dilog(x){
 	return polylogarithm(3,x)
 
 	}
-
+    
+    
+    function qdilog(x,q){return qpochinf(x,q)}
+    
+    
+    //https://arxiv.org/pdf/math/0310062
+    function zetaassosiactiony1(x,z){return hypg21(z,sub(0,z),1,x)}
+    function zetaassosiactiony2(x,z){return mul(sub(1,x), hypg21(add(z,1),sub(1,z),2,sub(1,x)))}
+    function zetaassosiactiong(z){return div(sub(digamma(add(1,mul(I,z))),mul(-1,digamma(sub(1,mul(I,z)))),digamma(add(1,z)),digamma(sub(1,z))),3)}
+    function zetaassosiactiona(z){return div(gamma(0.5),gamma(add(1,div(z,2))),gamma(sub(0.5,div(z,2))))}
+    function zetaassosiactiontau(z){return div(z,sub(1,z))}
+    function zetaassosiactionu(x,z){return sub(zetaassosiactiony1(x,z),mul(z,zetaassosiactiony2(x,z)))}
+    function zetaassosiactionz(m){return div(pow(pi(),mul(2,m)),factorial(add(m,m,1)))}
+    
+   // function faddeevqdilog(b,x){return div(,qexpalt(exp(),sub(0,exp(sub(div(mul(2,pi(),z),b),div(mul(pi(),I),b,b))))))}
+function faddeevqdilogd(t,F){let [b,x]=F;
+return div(log(add(1,exp(add(mul(t,b,b),mul(2,pi(),b,x))))),add(1,exp(t)))
+    }   
+   function faddeevqdilog(b,x){
+        return exp(div(mul(I,integral(faddeevqdilogd,-sqrt(bign),sqrt(bign),[b,x])),2,pi()))
+    }
+    
+    function blochwigner(z){
+        return add(im(dilog(z)),mul(log(mag(z)),arg(sub(1,z))))
+    }
+    function blochwignerj(x){return log(sabs(x),log(sabs(sub(1,x))))}
+    function kroneckerblochwigner(q,x){
+        let fi=0;for(let i=-bign;i<=bign;i++)fi=add(fi,blochwigner(mul(x,pow(q,i))))
+            return fi;
+    }
+//add analyric version ADD https://people.mpim-bonn.mpg.de/zagier/files/doi/10.1007/BF01453591/fulltext.pdf
 function golombdickmand(t){
 	return exp(li(t));
 }
@@ -14690,6 +15551,1426 @@ function laurentexpansion(a,c,z) {
     }
 return fi;
 }
+
+function laurentpoly(P,x){let fi=0;
+for(let i=0;i<leng(P);i++)fi=add(fi,mul(g(P,i),pow(x,i)));
+return di;
+}
+
+function reshetikhinturaevinvariant(r,A,B,D,Q){
+    let fi=0;
+    for(let j=0;j<leng(Q);j++){
+        let fid=1;
+        for(let l=1;l<bign;l++)fid=add(fid,mul(g(A,j),pow(r,sub(0,l))))
+fi=add(fi,mul(exp(mul(2,pi(),I,g(Q,j))),pow(r,g(D,j)),g(B,j),fid))    
+}
+    
+}
+
+
+function chernsimonform(A,dA,p){return trace(matrixpower(matrixcurvature(A,dA),div(add(p,1),2)))}
+
+function cherncharacteristicpoly(t,V,dV){
+    return determinant(matrixadd(matrixscal(curvature2form(V,dV),div(mul(I,t),2,pi())),identitymatrix(leng(V))))
+}
+
+function kahlermetric(V,dV){return matrixscal(matrixmul(dV,(matrixconj(dV))),div(1,sqr(add(1,sqr(determinant(V))))))}
+function curvature2form(V,dV){return matrixscal(wedgechen(dV,(matrixconj(dV))),div(2,sqr(add(1,sqr(determinant(V))))))}
+function firstchernclass(V,dV){return div(mul(I,trace(curvature2form(V))),2,pi())}
+function chernclass(k,V,dV){return mul(fractionalderiv2(cherncharacteristicpoly2,0,[V,dV],k),factorial(k))}
+
+
+
+//https://en.wikipedia.org/wiki/Chromatic_polynomial
+function trianglechromaticpoly(x){return mul(x,sub(x,1),sub(x,2))}
+function completegraphchromaticpoly(x,n){return fallingfactorial(x,n)}
+function edgelessgraphchromaticpoly(x,n){return pow(x,n)}
+function pathgraphchromaticpoly(x,n){return mul(x,pow(sub(x,1),sub(n,1)))}
+function treegraphchromaticpoly(x,n){return mul(x,pow(sub(x,1),sub(n,1)))}
+function cyclegraphchromaticpoly(x,n){return add(pow(sub(x,1)),mul(pow(-1,n),sub(x,1)))}
+function petersengraphchromaticpoly(x){return mul(x,sub(x,1),sub(x,2),add(mul(x,x,x,x,x,x,x),mul(-12,x,x,x,x,x,x),mul(67,x,x,x,x,x),mul(-230,x,x,x,x),mul(529,x,x,x),mul(-814,x,x),mul(775,x),-352))}
+
+
+
+//GRAPH POLYNOMİALS 
+//USE ADJENCGY MATRIX
+
+function chromaticvalues(a){
+a=rearray(a)
+const n=a.length
+const memo=new Map()
+function key(m){return m.map(r=>r.join('')).join('|')}
+function clone(m){return m.map(r=>r.slice())}
+function zeropoly(d){return Array(d+1).fill(0)}
+function add(p,q){
+const m=Math.max(p.length,q.length)
+const r=Array(m).fill(0)
+for(let i=0;i<m;i++)r[i]=(p[i]||0)+(q[i]||0)
+return r
+}
+function sub(p,q){
+const m=Math.max(p.length,q.length)
+const r=Array(m).fill(0)
+for(let i=0;i<m;i++)r[i]=(p[i]||0)-(q[i]||0)
+return r
+}
+function chrompoly(m){
+m=rearray(m)
+const k=key(m)
+if(memo.has(k))return memo.get(k)
+const s=m.length
+let ei=-1,ej=-1,found=false
+for(let i=0;i<s;i++){
+for(let j=i+1;j<s;j++){
+if(m[i][j]){
+ei=i;ej=j;found=true
+break
+}
+}
+if(found)break
+}
+if(!found){
+const p=zeropoly(s)
+p[s]=1
+memo.set(k,p)
+return p
+}
+const mdel=clone(m)
+mdel[ei][ej]=0
+mdel[ej][ei]=0
+const pdel=chrompoly(mdel)
+const mcon=[]
+for(let i=0;i<s;i++)if(i!==ej){
+const row=[]
+for(let j=0;j<s;j++)if(j!==ej){
+if(i===ei&&j===ei)row.push(0)
+else if(i===ei)row.push(m[ei][j]||m[ej][j])
+else if(j===ei)row.push(m[i][ei]||m[i][ej])
+else row.push(m[i][j])
+}
+mcon.push(row)
+}
+const pcon=chrompoly(mcon)
+const res=sub(pdel,pcon)
+memo.set(k,res)
+return res
+}
+const poly=chrompoly(a)
+const vals=[]
+for(let k=0;k<=n;k++){
+let s=0
+for(let i=0;i<poly.length;i++)s+=poly[i]*k**i
+vals.push(s)
+}
+return rearray(vals)
+}
+
+
+function chromaticpoly(a,x){
+    return lagrangepolylinear(x,rearray(chromaticvalues(a)))
+}
+
+//chromaticvalues([[0,1,1],[1,0,1],[1,1,0]])
+//chromaticpoly([[0,1,1],[1,0,1],[1,1,0]],x)
+
+
+
+function chromaticsymmetric(a,x){
+a=rearray(a);x=rearray(x)
+const n=a.length,m=x.length
+let edges=[]
+for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)if(a[i][j])edges.push([i,j])
+function find(p,i){while(p[i]!==i)i=p[i];return i}
+function compmask(mask){
+let p=Array(n).fill(0).map((_,i)=>i)
+for(let e=0;e<edges.length;e++)if(mask&(1<<e)){
+let u=edges[e][0],v=edges[e][1]
+let ru=find(p,u),rv=find(p,v)
+if(ru!==rv)p[ru]=rv
+}
+let sz=Array(n).fill(0)
+for(let i=0;i<n;i++)sz[find(p,i)]++
+return sz.filter(s=>s>0)
+}
+function pk(k){
+let s=0
+for(let i=0;i<m;i++)s=add(s,pow(x[i],k))
+return s
+}
+let total=0
+const em=1<<edges.length
+for(let mask=0;mask<em;mask++){
+let bits=0
+for(let e=0;e<edges.length;e++)if(mask&(1<<e))bits++
+let comps=compmask(mask)
+let term=1
+for(let i=0;i<comps.length;i++)term=mul(term,pk(comps[i]))
+if(bits%2)total=sub(total,term)
+else total=add(total,term)
+}
+return total
+}
+function chromaticquasisymmetric(a,x,t){
+a=rearray(a);x=rearray(x)
+const n=a.length,m=x.length
+let total=0
+let col=Array(n).fill(0)
+function dfs(i){
+if(i===n){
+let asc=0,weight=1
+for(let u=0;u<n;u++){
+weight*=x[col[u]]
+for(let v=u+1;v<n;v++)if(a[u][v]&&col[u]<col[v])asc++
+}
+total+=weight*(t**asc)
+return
+}
+for(let c=0;c<m;c++){
+let ok=true
+for(let j=0;j<i;j++)if(a[i][j]&&col[j]===c){ok=false;break}
+if(ok){
+col[i]=c
+dfs(i+1)
+}
+}
+}
+dfs(0)
+return total
+}
+function tuttepoly(a,x,y){
+a=rearray(a)
+const n=a.length
+let edges=[]
+for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)if(a[i][j])edges.push([i,j])
+function find(p,i){while(p[i]!==i)i=p[i];return i}
+function compcount(mask){
+let p=Array(n).fill(0).map((_,i)=>i)
+for(let e=0;e<edges.length;e++)if(mask&(1<<e)){
+let u=edges[e][0],v=edges[e][1]
+let ru=find(p,u),rv=find(p,v)
+if(ru!==rv)p[ru]=rv
+}
+let c=0
+for(let i=0;i<n;i++)if(find(p,i)===i)c++
+return c
+}
+const ke=compcount((1<<edges.length)-1)
+let total=sub(0,0)
+const em=1<<edges.length
+for(let mask=0;mask<em;mask++){
+let ka=compcount(mask)
+let size=0
+for(let e=0;e<edges.length;e++)if(mask&(1<<e))size++
+let term=mul(
+pow(sub(x,1),sub(ka,ke)),
+pow(sub(y,1),sub(add(ka,size),n))
+)
+total=add(total,term)
+}
+return total
+}
+
+function whitneyrankgeneratingfunction(a,x,y){return tuttepoly(a,add(x,1),add(y,1))}
+function dichromaticpoly(G,x,y){
+  return mul(pow(x,knotcomponent(G)),tuttepoly(G,add(x,1),add(y,1)));
+}
+
+function flowpoly(G,k){return mul(pow(-1,sub(add(edgecount(G),knotcomponent(G)),leng(G))),tuttepoly(G,sub(1,k)))}
+function reliabilitypoly(G,p){return mul(pow(sub(1,p),sub(leng(G),knotcomponent(G))),pow(p,add(sub(edgecount(G),leng(G)),knotcomponent(G))),tuttepoly(G,1,div(1,p)))}
+function coranknullitypoly(G,u,v){return mul(pow(u,knotcomponent(G)),reliabilitypoly(G,p))}
+//ADD Martin polynomial
+
+function bollobasriordan(G,BV,x,y,z){
+  let n = leng(G);
+  let edges=[];
+  for(let i=0;i<n;i++) for(let j=i+1;j<n;j++) if(G[i][j]) edges.push([i,j]);
+  let m = edges.length;
+  let kG = knotcomponent(G);
+  let rG = sub(n,kG);  // r(G)=v(G)-k(G)
+  let R = 0;
+
+  for(let mask=0;mask<(1<<m);mask++){
+    let F=Array.from({length:n},()=>Array(n).fill(0));
+    for(let e=0;e<m;e++) if(mask & (1<<e)){
+      let [u,v]=edges[e];
+      F[u][v]=F[v][u]=1;
+    }
+    let kF = knotcomponent(F);
+    let rF = sub(n,kF);
+    let nF = sub(edgecount(F),rF);
+    let bcF = connectedboundarycomponents(F,BV);
+
+    let expX = sub(rG,rF);
+    let expY = nF;
+    let expZ = add(sub(kF,bcF),nF);
+
+    R = add(R, mul(mul(pow(x,expX), pow(y,expY)), pow(z,expZ)));
+  }
+  return R;
+}
+//jonespoly([1,1,1],2)
+//function jonespoly(B,t){//return det(matrixsub(matrixscal(V,sqrt(t)),matrixscal(transpose(V),pow(t,-1/2))))}
+
+
+
+
+function jonespoly(bw,t,n=-1,i=0){bw=rearray(bw)
+   // console.log(bw)
+let strands=(n==-1)?maxc(...vectormap(mag,bw))+1:n;
+//console.log(strands)
+let U=sub(0,pow(t,0.5),pow(t,-0.5))
+if(leng(bw)<=0 )return pow(U,add(strands,-1))//n unlink
+if(leng(bw)<=1 )return pow(U,add(strands,-2))//n-1 unlink
+if(leng(bw)==2 && g(bw,0)!=g(bw,1) && mag(sub(mag(g(bw,0)),mag(g(bw,1))))==1)return pow(U,add(strands,-3)) //unresolveabke its n-2 unlinks
+if(leng(bw)==2 && g(bw,0)!=g(bw,1))return pow(U,add(strands,-3))//unresolveabke its n-2 unlinks
+    bw=simplifybraidword(bw)
+    
+    
+    i=re(modc(i,leng(bw)))
+
+     let L0 = [];
+    for(let k=0;k<leng(bw);k++){
+        if(k !== i) L0.push(g(bw,k));
+    }
+    let Lq = bw.slice();
+    Lq[i] = -Lq[i];
+    
+  //  console.log("l0",L0,jonespoly(L0,t,strands,i))
+  //  console.log("lq",Lq,jonespoly(Lq,t,strands,i))
+    
+    Lq=simplifybraidword(Lq)
+    L0=simplifybraidword(L0)
+    
+    if(g(bw,i)==0){//L+ = 
+  //  console.log("+ "+"L+=",bw,"L0=",L0,"L-=",Lq)
+    return add(mul(pow(t,2),jonespoly(Lq,t,strands,i)),mul(sub(pow(t,1.5),pow(t,0.5)),jonespoly(L0,t,strands,i)))
+        
+    }else{//L- = 
+ //      console.log("- "+"L+=",Lq,"L0=",L0,"L-=",bw)
+    return sub(mul(pow(t,-2),jonespoly(Lq,t,strands,i)),mul(sub(pow(t,-0.5),pow(t,-1.5)),jonespoly(L0,t,strands,i)))       
+        
+    }
+    
+    return 0
+}
+
+
+function homfly(bw, l, m, n=-1, i=0) {
+    bw = rearray(bw);
+    let strands = (n==-1) ? maxc(...vectormap(mag,bw)) + 1 : n;
+    
+let U=div(sub( l, div(1,l)),m)
+    if(leng(bw) <= 0) return pow(U, add(strands, -1)); // n unlinks
+    if(leng(bw) <= 1) return pow(U, add(strands, -2)); // n-1 unlinks
+    if(leng(bw) == 2 && g(bw,0) != g(bw,1)) return pow(U, add(strands, -3));
+
+    bw = simplifybraidword(bw);
+    i = re(modc(i, leng(bw)));
+
+    let L0 = [];
+    for(let k=0; k<leng(bw); k++) {
+        if(k !== i) L0.push(g(bw,k));
+    }
+
+    let Lq = bw.slice();
+    Lq[i] = -Lq[i];
+
+    Lq = simplifybraidword(Lq);
+    L0 = simplifybraidword(L0);
+
+    if(g(bw,i) == 0) { // L+
+        // l*P(L+) - l^-1*P(L-) = m*P(L0) => P(L+) = (m*P(L0) + l^-1*P(L-)) / l
+        return div(
+            add(mul(m, homfly(L0, l, m, strands, i)), mul(pow(l, -1), homfly(Lq, l, m, strands, i))),
+            l
+        );
+    } else { // L-
+        // l*P(L+) - l^-1*P(L-) = m*P(L0) => P(L-) = (l*P(L+) - m*P(L0)) / l^-1
+        return div(
+            sub(mul(l, homfly(Lq, l, m, strands, i)), mul(m, homfly(L0, l, m, strands, i))),
+            pow(l, -1)
+        );
+    }
+}
+
+function khovanovhomology(bw, q, n, strands=-1, i=0) {//untested
+    bw = rearray(bw);
+    strands = (strands==-1) ? maxc(...vectormap(mag,bw)) + 1 : strands;
+    
+    if(leng(bw) <= 0) { 
+        // unknot: normalized
+        if(n > 0) {
+            let sum = 0;
+            if(n-1 > 1-n)
+            for(let k = n-1; k >= 1-n; k -= 2) sum = add(sum, pow(q,k));
+            else for(let k = 1-n; k >= n-1; k -= 2) sum = add(sum, pow(q,k));
+            return sum;
+        } else return 1;
+    }
+    if(leng(bw) <= 1) return khovanovhomology([], q, n, strands-1, i);
+    if(leng(bw) == 2 && g(bw,0) != g(bw,1))return khovanovhomology([], q, n, strands-2, i);
+
+    bw = simplifybraidword(bw);
+    i = re(modc(i, leng(bw)));
+
+    let L0 = [];
+    for(let k=0; k<leng(bw); k++) if(k!==i) L0.push(g(bw,k));
+    let Lq = bw.slice();
+    Lq[i] = -Lq[i];
+
+    L0 = simplifybraidword(L0);
+    Lq = simplifybraidword(Lq);
+
+    let lam = pow(q,n); // λ = q^n
+
+    if(g(bw,i) == 0) { 
+        // crossing positive (L+)
+        return div(
+            add(mul(sub(q,div(1,q)), khovanovhomology(L0,q,n,strands,i)), mul(pow(lam,-1), khovanovhomology(Lq,q,n,strands,i))),
+            lam
+        );
+    } else { 
+        // crossing negative (L-)
+        return div(
+            sub(mul(lam, khovanovhomology(Lq,q,n,strands,i)), mul(sub(q,div(1,q)), khovanovhomology(L0,q,n,strands,i))),
+            pow(lam,-1)
+        );
+    }
+}
+
+
+//https://en.wikipedia.org/wiki/Khovanov_homology and homfly 
+
+
+function simplifiedtraceinvariant(V,t){return div(sub(1,jonespoly(V,t)),sub(1,t),sub(1,cum(t)))}
+
+function arfknot(V){return simplifiedtraceinvariant(V,I)}
+function arfknotalt(sm){/*alt*/if(round(modc(mul(alexanderpoly(bw,-1),alexanderpoly(bw,1)),8))==7)return 1;return 0;}
+function arfknotalt2(bw){/*alt*/if(round(modc(mul(alexanderpoly(bw,-1),alexanderpoly(bw,1)),8))==5)return 1;return 0;}
+//ADD Kervaire invariant
+//ADD de Rham invariant
+// Arf–Kervaire invariant 
+//add uhhh idk forgor
+
+//homfly([1,1,1],l,m)=-l^4+l^2m^2+2l^2
+//22 8 21 -4
+//homfly([1,1,1],2,1)
+
+
+
+
+function kauffmanx(bw,x){return jonespoly(bw,pow(x,4))}
+
+function kauffmanbracket(bw,x){return div(kauffmanx(bw,x),pow(sub(0,pow(x,3)),sub(0,writhe(bw))))}
+
+//function kauffmanfs(bw,a,z){return div(36,pow(a,sub(0,writhe(bw))))}
+
+//=div(add(sub(0,z),sqrt(add(sqr(z),4))),2)
+function kauffmanf(bw,a,z){return 0}//FIX ADD fuc
+    //let A=pow(z,1);return mul(pow(a,sub(0,writhe(bw))),kauffmanbracket(bw,A))}
+//chromaticsymmetric([[0,1,0],[1,0,1],[0,1,0]],[1,2,3]) 84
+//tuttepoly([[0,1,0],[1,0,1],[0,1,0]],3,5) 9
+
+
+function linkinnumber(L,k,a=5,z=5){
+    L=rearray(L)
+    let FL=kauffmanf(L,a,z)
+    L[k]=-L[k]
+    let FLP=kauffmanf(L,a,z)
+    return div(div(FLP,FL),log(a),4)
+}
+//https://mathworld.wolfram.com/BLMHoPolynomial.html
+function blmho(bw,z){let t =div(add(sub(0,z),sqrt(add(sqr(z),4))),2);return mul(2,div(1,z),jonespoly(bw,t),jonespoly(bw,add(div(1,t),1,div(-2,z))))}//return kauffmanf(bw,1,z)}
+
+//ADD KNOT/GRAPH ADJENCY MÖATRIX GENERATORS
+
+/*[
+  [1,4,2,5],
+  [3,6,4,1],
+  [5,2,6,3],
+  [7,10,8,11],
+  [9,12,10,7]
+]
+
+function cinquefoilknot(){
+return[
+[1,-1,0,0],
+[0,1,-1,0],
+[0,0,1,-1],
+[0,0,0,1]
+]
+
+
+}*/
+
+
+
+//KNOT POLYBNOMIALS
+//KNOTS ARE seifert matrices ///// old :  planar diagram
+
+
+
+//ADD
+
+//kauffman bracket
+
+//jones poly
+
+//homefly
+
+
+//the rest should be easy
+
+
+
+
+/*
+function unormalizedpositivealexanderpoly(sm,t){
+return determinant(matrixsub(sm,matrixscal(transpose(sm),t)))
+}
+function alexanderpolynormalizer(sm){
+let d=0;
+for(let i=0;i<100 && unormalizedpositivealexanderpoly(sm,0.00001)<0.00001;i++)
+{d++
+console.log(unormalizedpositivealexanderpoly(sm,0.00001))}
+return d;
+}
+function zunnormalizedalexanderpoly(sm,t){return div(unormalizedpositivealexanderpoly(sm,t),pow(t,alexanderpolynormalizer(sm)),pow(t,div(leng(sm),2)))}
+function alexanderpoly(sm,t){return div(zunnormalizedalexanderpoly(sm,t),zunnormalizedalexanderpoly(sm,0.001))}
+*/
+function alexandermatrixsm(sm,t){return matrixsub(sm,matrixscal(transpose(sm),t))}
+function unnormalizedalexanderpolysm(sm,t){return div(determinant(matrixsub(sm,matrixscal(transpose(sm),t))),pow(t,div(leng(sm),2)))}
+function alexanderpolysm(sm,t){return div(determinant(matrixsub(sm,matrixscal(transpose(sm),t))),pow(t,div(leng(sm),2)))}
+function conwaypolysm(sm,t){return alexanderpoly(sm,sqr(div(add(t,sqrt(add(sqr(t),4))),2)))}
+function conjconwaypolsmy(sm,t){return alexanderpoly(sm,sqr(div(sub(t,sqrt(add(sqr(t),4))),2)))}
+
+function reducedburau(b,t){return reducedburaurepresentation(b,t)}
+function alexandermatrix(b,t){let B=reducedburau(b,t);return matrixsub(identity(B.length),B)}
+function unnormalizedalexander(b,t){t=add(t,1e-10);let B=reducedburau(b,t);//console.log(sub(1,pow(t,add(leng(B),1))))
+     return div(mul(sub(1,t),determinant(matrixsub(identitymatrix(leng(B)),B))),sub(1,pow(t,add(leng(B),1))))} 
+//return div(determinant(matrixsub(identitymatrix(leng(B)),B)),add(t,1))}
+//div(determinant(matrixsub(identitymatrix(B.length),B)),pow(t,div(B.length,2)))}  console.log(B,matrixsub(identitymatrix(leng(B)),B));
+function alexanderpoly(b,t){return div(unnormalizedalexander(b,t),pow(t,div(log10(div(unnormalizedalexander(b,10),unnormalizedalexander(b,0.1))),2)))}
+function conwaypoly(b,t){return alexanderpoly(b,sqr(div(add(t,sqrt(add(sqr(t),4))),2)))}
+function conjconwaypoly(b,t){return alexanderpoly(b,sqr(div(sub(t,sqrt(add(sqr(t),4))),2)))}
+
+//alexanderpoly(cinquefoilknot(),2) 2.75
+
+
+
+
+
+
+//invariants
+function reversearray(arr){
+    return arr.slice().reverse();
+}
+
+function isalternating(arr) {
+    if (!Array.isArray(arr) || arr.length < 2) return true;
+    for (let i = 1; i < arr.length; i++) {
+        if (arr[i] === 0 || arr[i - 1] === 0) return false;
+        if ((arr[i] > 0) === (arr[i - 1] > 0)) return false;
+    }
+    return true;
+}
+
+function knotalternating(bw){let arr=vectorizebw([1,1,1])
+  let seen = new Set();
+    let prev = null;
+    for (let num of arr) {
+        let absNum = Math.abs(num);
+        if (seen.has(absNum)) continue;
+        if (prev !== null) {
+            if ((num > 0) === (prev > 0)) return false; 
+        }
+        prev = num;
+        seen.add(absNum);
+    }
+    return true;}
+
+function crossingnumber(bw){return leng(bw)}
+
+
+function knotamphicheiral(bw,t=10){return (mag(sub(jonespoly(bw,div(1,t)),jonespoly(bw,t)))<0.002)}
+
+//function knotinvertable(bw,t=10){return (mag(sub(jonespoly(vectormap(x=>-x,bw),t),jonespoly(bw,t)))<0.002)}
+function knotinvertable(bw,t=10){return (mag(sub(jonespoly(reversearray(bw),t),jonespoly(bw,t)))<0.002)}
+
+function knotstrands(bw,n=-1){let strands=(n==-1)?maxc(...vectormap(mag,bw))+1:n;return strands}
+
+function knoteulercharacteristic(bw,n=-1){return sub(knotstrands(bw,n),crossingnumber(bw))}
+function knotgenus(bw,n=-1){return div(sub(2,knotcomponent(bw,n),knoteulercharacteristic(bw,n)),2)}
+function crosscapnumber(bw,n=-1){return sub(1,knoteulercharacteristic(bw,n))}
+function knotcomponent(bw,n=-1){let A=vectorizebw([1,1,1]);return add(countappeartwice(A),sub(knotstrands(bw,n),knotstrands(bw,-1)))}
+function finitetypeinvariant(bw){let e=0.001;return div(sub(conwaypoly(bw,t),conwaypoly(bw,add(t,e)),conwaypoly(bw,sub(t,e))),e,e)}
+
+function jonespolyalt(t,A){if(t==0)return 0;let [bw,k]=A ;return mul(jonespoly(bw,t,-1,1),pow(t,k))}
+function willertonsfish(bw,n=0){/*j3*/return div(evale('nthderiv("jonespoly(['+bw+'],x)*x^('+n+')",0,'+add(3,n)+')',{}),factorial(add(3,n)))}
+
+function countappeartwice(arr) {
+    const freq = {};
+    
+    for (const x of arr) {
+        freq[x] = (freq[x] || 0) + 1;
+    }
+    
+    let count = 0;
+    for (const key in freq) {
+        if (freq[key] === 2) count++;
+    }
+    
+    return count;
+}
+
+
+//ADD https://en.wikipedia.org/wiki/Seifert_surface https://en.wikipedia.org/wiki/Linking_number
+
+//ADD https://en.wikipedia.org/wiki/Arnold_invariants
+//HARD https://en.wikipedia.org/wiki/Unknotting_number
+//HARD https://en.wikipedia.org/wiki/Stick_number
+//HARD https://en.wikipedia.org/wiki/Bridge_number + tunnel number
+//HARD https://en.wikipedia.org/wiki/Hyperbolic_volume
+
+
+//stuff idc this is a mess
+
+function reducedburaugenerator(n,i,t){
+i=mag(i)
+let s=sub(n,1),M=identitymatrix(s)
+if(i===1){
+M[0][0]=sub(0,t);M[0][1]=1
+M[1][0]=0;M[1][1]=1
+}else if(i>=2&&i<=sub(n,2)){
+let r=sub(i,2)
+M[r][r]=1;M[r][add(r,1)]=0;M[r][add(r,2)]=0
+M[add(r,1)][r]=t;M[add(r,1)][add(r,1)]=sub(0,t);M[add(r,1)][add(r,2)]=1
+M[add(r,2)][r]=0;M[add(r,2)][add(r,1)]=0;M[add(r,2)][add(r,2)]=1
+}else if(i===sub(n,1)){
+M[sub(s,2)][sub(s,2)]=1;M[sub(s,2)][sub(s,1)]=0
+M[sub(s,1)][sub(s,2)]=t;M[sub(s,1)][sub(s,1)]=sub(0,t)
+}
+return M
+}
+
+
+function reducedburaurepresentation(braid, t) {
+    braid = rearray(braid);
+    let n = Math.max(...braid.map(Math.abs)) + 1; // number of strands
+    if (n <= 2) return [[pow(sub(0,t),gsum(braid))]]; // degenerate B2 case
+    let size = n - 1;
+    let M = identitymatrix(size);
+
+    for (let k = 0; k < braid.length; k++) {
+        let gMat = reducedburaugenerator(n, g(braid, k), t);
+        M = matrixmul(M, signum(braid[k]) === 1 ? gMat : matrixinverse(gMat));
+       
+    }
+   //  console.log(M)
+    return M;
+}
+
+function unreducedburaugenerator(strands,i,t){
+i=mag(i)
+let s=add(strands,0),M=identitymatrix(s)
+if(s===1){M[0][0]=sub(0,t);return M}
+let a=sub(i,1),b=i
+M[a][a]=sub(1,t)
+M[a][b]=t
+M[b][a]=1
+M[b][b]=0
+return M
+}
+
+
+function unreducedburaurepresentation(braid, t) {braid=rearray(braid)
+    // automatically determine number of strands
+    let strands = Math.max(...braid.map(Math.abs)) + 1;
+    if(strands==1)return [[pow(sub(0,t),gsum(braid))]]
+    let M=identitymatrix(strands+0)
+    for(let i=0;i<leng(braid);i++)
+    M=matrixmul(M,(signum(braid[i])==1)?unreducedburaugenerator(strands,g(braid,i),t):matrixinverse(unreducedburaugenerator(strands,g(braid,i),t)))
+return M
+}
+
+
+//planardiagramsimplify(braidwordtoplanardiagram([1,1,-1,1]))
+
+
+
+
+
+function simplifypairized(pairs) {
+     let changed = true;
+
+    while (changed) {
+        changed = false;
+
+        for (let i = 0; i < pairs.length - 2; i++) {
+
+            let [q, a] = pairs[i];
+            let [b, c] = pairs[i+1];
+            let [d, r] = pairs[i+2];
+
+            if (a === b && b === -c && c === d) {
+                pairs.splice(i, 3, [q, r]);
+                changed = true;
+                break;
+            }
+            if (a === -b && b === -c && c === -d) {
+
+                let n = -a;
+                let m = -c;
+
+                let exists = false;
+
+                for (let j = 0; j < pairs.length; j++) {
+                    if (j === i || j === i+1 || j === i+2) continue;
+
+                    let [x,y] = pairs[j];
+                    if (
+                        (x === n && y === m) ||
+                        (x === m && y === n)
+                    ) {
+                        exists = true;
+                        break;
+                    }
+                }
+
+                if (exists) {
+                    pairs.splice(i, 3, [q, r]);
+                    changed = true;
+                    break;
+                }
+            }
+            
+    for (let i = 0; i < pairs.length; i++) {
+        let [a, b] = pairs[i];
+
+        for (let j = i + 1; j < pairs.length; j++) {
+            let [c, d] = pairs[j];
+
+            // check if [a,b] and [-a,-b]
+            if (c === -a && d === -b && signum(a)==signum(b)) {
+        //    console.log(a,b,c,d)
+                // remove both
+                pairs.splice(j, 1);
+                pairs.splice(i, 1);
+
+                // merge strand b into a
+                for (let k = 0; k < pairs.length; k++) {
+                    let [x, y] = pairs[k];
+
+                    if (x === b) x = a;
+                    if (x === -b) x = -a;
+
+                    if (y === b) y = a;
+                    if (y === -b) y = -a;
+
+                    pairs[k] = [x, y];
+                }
+
+                changed = true;
+                    break;
+            }
+        }
+    }
+        }
+    }
+
+    return pairs;
+}
+
+
+
+
+//function braidwordtoburau(B,t){let n=0;for(let i=0;i<leng(B);i++)if(abs(g(B,i))>n)n=abs(g(B,i));let d=sub(n,1);function id(k){let M=[];for(let i=0;i<k;i++){M[i]=[];for(let j=0;j<k;j++)M[i][j]=i==j?1:0;}return M;}function mulm(A,B){let k=leng(A);let M=[];for(let i=0;i<k;i++){M[i]=[];for(let j=0;j<k;j++){let s=0;for(let r=0;r<k;r++)s=add(s,mul(g(g(A,i),r),g(g(B,r),j)));M[i][j]=s;}}return M;}function bur(i){let M=id(d);let j=sub(abs(i),1);if(re(i)>0){M[j][j]=sub(1,t);if(j<sub(d,1)){M[j][add(j,1)]=1;M[add(j,1)][j]=t;M[add(j,1)][add(j,1)]=0;}}else{let ti=div(1,t);M[j][j]=sub(1,ti);if(j<sub(d,1)){M[j][add(j,1)]=1;M[add(j,1)][j]=ti;M[add(j,1)][add(j,1)]=0;}}return M;}let R=id(d);for(let i=0;i<leng(B);i++)R=mulm(R,bur(g(B,i)));return R;}
+//function burautobraidword(M,t){let d=leng(M);function id(k){let A=[];for(let i=0;i<k;i++){A[i]=[];for(let j=0;j<k;j++)A[i][j]=i==j?1:0;}return A;}function mulm(A,B){let k=leng(A);let C=[];for(let i=0;i<k;i++){C[i]=[];for(let j=0;j<k;j++){let s=0;for(let r=0;r<k;r++)s=add(s,mul(g(g(A,i),r),g(g(B,r),j)));C[i][j]=s;}}return C;}function invbur(i){let j=sub(abs(i),1);let A=id(d);if(re(i)>0){let ti=div(1,t);A[j][j]=sub(1,ti);if(j<sub(d,1)){A[j][add(j,1)]=1;A[add(j,1)][j]=ti;A[add(j,1)][add(j,1)]=0;}}else{A[j][j]=sub(1,t);if(j<sub(d,1)){A[j][add(j,1)]=1;A[add(j,1)][j]=t;A[add(j,1)][add(j,1)]=0;}}return A;}function eq(A,B){for(let i=0;i<leng(A);i++)for(let j=0;j<leng(A);j++)if(g(g(A,i),j)!=g(g(B,i),j))return 0;return 1;}let W=[];let I=id(d);while(!eq(M,I)){let found=0;for(let k=1;k<=d;k++){let T=mulm(invbur(k),M);if(!eq(T,M)){W.push(k);M=T;found=1;break;}let T2=mulm(invbur(sub(0,k)),M);if(!eq(T2,M)){W.push(sub(0,k));M=T2;found=1;break;}}if(!found)break;}return W;}
+function bsmooth(P,n){
+    let Pr=rearray(P)
+    for(let i=0;i<leng(P);i++){
+
+  // if(g(g(P,i),1)==-n)Pr[i]=[g(g(P,i),0),n]
+  // if(g(g(P,i),0)==n)Pr[i]=[-n,g(g(P,i),1)]
+  
+  if(g(g(P,i),0)==n)Pr[i]=[-n,g(g(P,i),1)]
+  if(g(g(P,i),1)==-n)Pr[i]=[n,g(g(P,i),0)]
+ if(g(g(P,i),0)==-n)Pr[i]=[g(g(P,i),1),-n]
+
+ //   if(g(g(P,i),0)==-n)Pr[i]=[g(g(P,i),1),-n] 
+    }   
+    return Pr
+}
+function asmooth(P,n){
+    let Pr=rearray(P)
+    for(let i=0;i<leng(P);i++){
+       
+        if(g(g(P,i),0)==n)Pr[i]=[-n,g(g(P,i),1)]
+         if(g(g(P,i),0)==-n)Pr[i]=[n,g(g(P,i),1)]
+    //   if(g(g(P,i),1)==-n)Pr[i]=[n,g(g(P,i),0)]
+   //    if(g(g(P,i),1)==n)Pr[i]=[-n,g(g(P,i),0)]
+
+    }
+    return Pr
+}
+function csmooth(P,n){
+    let Pr=rearray(P)
+    for(let i=0;i<leng(P);i++){
+       
+        if(g(g(P,i),0)==n)Pr[i]=[-n,g(g(P,i),1)]
+         if(g(g(P,i),0)==-n)Pr[i]=[n,g(g(P,i),1)]
+       if(g(g(P,i),1)==-n)Pr[i]=[n,g(g(P,i),0)]
+       if(g(g(P,i),1)==n)Pr[i]=[-n,g(g(P,i),0)]
+
+    }
+    return Pr
+}
+
+function vectorizebw(bw) {
+    const n = Math.max(...bw.map(x => Math.abs(x))) + 1;
+    const m = bw.length;
+
+    // Track strands at each horizontal level
+    let strands = Array.from({ length: n }, (_, i) => i);
+
+    // Build a list of crossings with over/under info
+    const crossings = bw.map((gen, k) => {
+        const i = Math.abs(gen) - 1;
+        const s1 = strands[i];
+        const s2 = strands[i + 1];
+        const over = gen > 0 ? s1 : s2;
+        const under = gen > 0 ? s2 : s1;
+        // Swap strands for next crossing
+        [strands[i], strands[i + 1]] = [strands[i + 1], strands[i]];
+        return { over, under, label: k + 1, gen };
+    });
+
+    // Map strand -> crossings in order
+    const strandPaths = Array.from({ length: n }, () => []);
+
+    for (let cross of crossings) {
+        strandPaths[cross.over].push({ label: cross.label, sign: +1 });
+        strandPaths[cross.under].push({ label: cross.label, sign: -1 });
+    }
+
+    const visited = Array(n).fill(false);
+    const result = [];
+
+    for (let start = 0; start < n; start++) {
+        if (visited[start]) continue;
+
+        let curr = start;
+        const firstCross = [];
+
+        do {
+            visited[curr] = true;
+
+            // Take all crossings for this strand in order
+            for (let entry of strandPaths[curr]) {
+                const val = entry.sign * entry.label;
+                if (!result.includes(val)) {
+                    result.push(val);
+                    if (firstCross.length === 0) firstCross.push(val);
+                }
+            }
+
+            // Move along braid word to next bottom position
+            for (let k = 0; k < m; k++) {
+                const gen = bw[k];
+                const i = Math.abs(gen) - 1;
+                if (curr === i) curr = i + 1;
+                else if (curr === i + 1) curr = i;
+            }
+
+        } while (curr !== start);
+
+        // close loop by adding first crossing again
+        if (firstCross.length) result.push(firstCross[0]);
+    }
+
+    return result;
+}
+
+function pairize(arr) {
+    const pairs = [];
+    const seen = new Set();
+    
+    for (let i = 0; i < arr.length - 1; i++) {
+        if (!seen.has(arr[i])) {
+            pairs.push([arr[i], arr[i+1]]);
+            seen.add(arr[i]);
+        }
+    }
+    
+    return pairs;
+}
+
+
+function rehab(P) {
+    // Build adjacency: value → list of edge indices
+    const adj = new Map();
+    for (let i = 0; i < P.length; i++) {
+        const [a, b] = P[i];
+
+        if (!adj.has(a)) adj.set(a, []);
+        if (!adj.has(b)) adj.set(b, []);
+
+        adj.get(a).push(i);
+        adj.get(b).push(i);
+    }
+
+    const used = new Array(P.length).fill(false);
+    const result = [];
+
+    for (let i = 0; i < P.length; i++) {
+
+        if (used[i]) continue;
+
+        // start new loop from this edge
+        let [a, b] = P[i];
+        used[i] = true;
+        result.push([a, b]);
+
+        let current = b;
+
+        while (true) {
+            const edges = adj.get(current) || [];
+            let found = false;
+
+            for (let ei of edges) {
+                if (used[ei]) continue;
+
+                let [x, y] = P[ei];
+
+                used[ei] = true;
+
+                if (x === current) {
+                    result.push([x, y]);
+                    current = y;
+                } else {
+                    result.push([current, x === current ? y : x]);
+                    current = x === current ? y : x;
+                }
+
+                found = true;
+                break;
+            }
+
+            if (!found) break; // loop closed
+        }
+    }
+
+    return result;
+}
+function countloops(P) {
+
+    const adj = new Map();
+    for (let [a, b] of P) {
+        if (!adj.has(a)) adj.set(a, []);
+        if (!adj.has(b)) adj.set(b, []);
+        adj.get(a).push(b);
+        adj.get(b).push(a);
+    }
+
+    const visited = new Set();
+    let loops = 0;
+
+    function dfs(v) {
+        if (visited.has(v)) return;
+        visited.add(v);
+        for (let u of adj.get(v) || []) dfs(u);
+    }
+
+    for (let [a, _] of P) {
+        if (!visited.has(a)) {
+            dfs(a);
+            loops++;
+        }
+    }
+
+    return loops;
+}
+
+function writhe(bw){
+  let w = 0
+  for(let i=0;i<leng(bw);i++){
+    w += signum(g(bw,i))
+  }
+  return w
+}
+
+
+
+function r1bw(bw){
+let k=[]
+for(let i=0;i<leng(bw);i++){
+let x=g(bw,i)
+if(i<leng(bw)-1&&g(bw,i+1)==-x){i++;continue}
+if(i>0&&g(bw,i-1)==-x)continue
+k.push(x)
+}return k
+}
+
+function r2bw(bw){
+let changed=true
+while(changed){
+changed=false
+for(let i=0;i<leng(bw)-1;i++){
+let x=g(bw,i)
+let y=g(bw,i+1)
+if(abs(re(x))==abs(re(y))&&re(x)==-re(y)){
+bw.splice(i,2)
+changed=true
+break
+}}}
+return bw
+}
+function r3bw(bw){
+  const out = bw.slice();
+  for(let i=0;i<out.length-2;i++){
+    const x = out[i], y = out[i+1], z = out[i+2];
+    const ix = Math.abs(x), iy = Math.abs(y), iz = Math.abs(z);
+    // signs must be equal for standard braid R3
+    if(ix === iz && Math.abs(ix - iy) === 1 && iy !== ix && Math.sign(x) === Math.sign(y) && Math.sign(y) === Math.sign(z)){
+      // apply R3: a b a -> b a b
+      out[i] = y;
+      out[i+1] = x;
+      out[i+2] = y;
+      i += 2; // skip past this triple to avoid overlapping re-application
+    }
+  }
+  return out;
+}
+
+function simplifybraidword(bw){
+  //if(bw.length < 3) return bw.slice(); // nothing to simplify
+
+  let prev = null;
+  let k = 0;
+
+  // try up to 100 iterations of simplification
+  while(k < 100){
+    k++;
+    prev = bw.slice();
+
+    // Apply Reidemeister moves
+    bw = r1bw(bw);
+    bw = r2bw(bw);
+    bw = r3bw(bw);
+
+    // Apply all cyclic shifts once
+    if(bw.length > 1){
+      const bwcopy = [];
+      for(let i=0;i<bw.length;i++){
+        bwcopy[i] = bw[(i+1) % bw.length];
+      }
+      bw = bwcopy;
+    }
+
+    // Stop if nothing changed after simplification + shift
+    let same = bw.length === prev.length && bw.every((v,i)=>v===prev[i]);
+    if(same) break;
+  }
+
+  return bw;
+}
+
+
+
+
+
+function dowkerthistlewaitetoplanardiagram(dt){
+dt=rearray(dt)
+let n=dt.length
+let used=Array(2*n+1).fill(false)
+let pd=[]
+for(let i=0;i<n;i++){
+let odd=2*i+1
+let even=Math.abs(dt[i])
+let sign=dt[i]>0?1:-1
+used[odd]=true
+used[even]=true
+if(sign>0){
+pd.push([odd,even,odd% (2*n)+1,(even% (2*n))+1])
+}else{
+pd.push([odd,(even% (2*n))+1,odd% (2*n)+1,even])
+}
+}
+return rearray(pd)
+}
+function planardiagramtodowkerthistlewaite(pd){
+pd=rearray(pd)
+let n=pd.length
+let dt=Array(n).fill(0)
+for(let i=0;i<n;i++){
+let a=pd[i][0]
+let b=pd[i][1]
+let odd=Math.min(a,b)
+let even=Math.max(a,b)
+let index=(odd-1)/2
+let sign=(b===even)?1:-1
+dt[index]=sign*even
+}
+return rearray(dt)
+}
+function braidwordtoplanardiagram(braid){
+braid=rearray(braid)
+let m=0
+for(let i=0;i<braid.length;i++){
+m=Math.max(m,Math.abs(braid[i]))
+}
+let strands=m+1
+let crossings=braid.length
+let total=2*crossings
+let nextLabel=1
+let strandEnds=[]
+for(let i=0;i<strands;i++){
+strandEnds.push(nextLabel++)
+}
+let pd=[]
+for(let k=0;k<braid.length;k++){
+let g=braid[k]
+let i=Math.abs(g)-1
+let a=strandEnds[i]
+let b=strandEnds[i+1]
+let c=nextLabel++
+let d=nextLabel++
+if(g>0){
+pd.push([a,c,b,d])
+}else{
+pd.push([a,d,b,c])
+}
+strandEnds[i]=c
+strandEnds[i+1]=d
+}
+for(let i=0;i<strands;i++){
+let a=strandEnds[i]
+let b=i===strands-1?1:strandEnds[i+1]
+}
+return rearray(pd)
+}
+function braidwordtodowkerthistlewaite(braid){
+let pd=braidwordtoplanardiagram(braid)
+return planardiagramtodowkerthistlewaite(pd)
+}
+function planardiagramtobraidword(pd){
+pd=rearray(pd)
+let braid=[]
+for(let i=0;i<pd.length;i++){
+let c=pd[i]
+let a=c[0]
+let b=c[1]
+let diff=Math.abs(a-b)
+let gen=Math.floor((Math.min(a,b)-1)/2)+1
+if(b>a){
+braid.push(gen)
+}else{
+braid.push(-gen)
+}
+}
+return rearray(braid)
+}
+function dowkerthistlewaitetobraidword(dt){
+let pd=dowkerthistlewaitetoplanardiagram(dt)
+return planardiagramtobraidword(pd)
+}
+
+//matrix stuff #2
+function trace(A){
+let n=leng(A),s=0;
+for(let i=0;i<n;i++)s=add(s,g(g(A,i),i));
+return s}
+
+function matrixconj(A){
+let R=[];
+for(let i=0;i<leng(A);i++){
+let Ri=[];
+for(let j=0;j<leng(g(A,i));j++){
+Ri[j]=conj(g(g(A,i),j))}
+R[i]=Ri}
+return R}
+
+function wedge(a,b){
+let n=leng(a),M=[];
+for(let i=0;i<n;i++){
+let Mi=[];
+for(let j=0;j<n;j++){
+Mi[j]=sub(mul(g(a,i),g(b,j)),mul(g(a,j),g(b,i)))}
+M[i]=Mi}
+return M}
+function vectorwedge(A,B){
+let n=leng(A),m=leng(B),T=[];
+for(let i=0;i<n;i++){
+let Ti=[];
+for(let j=0;j<m;j++){
+Ti[j]=sub(mul(g(A,i),g(B,j)),mul(g(A,j),g(B,i)))}
+T[i]=Ti}
+return T}
+function matrixwedge(A,B){
+let r=leng(A),s=leng(B),n=leng(g(A,0)),R=[];
+for(let i=0;i<r;i++){
+let Ri=[];
+for(let j=0;j<s;j++){
+let Rij=[];
+for(let k=0;k<n;k++){
+let Rijk=[];
+for(let l=0;l<n;l++){
+Rijk[l]=sub(mul(g(g(A,i),k),g(g(B,j),l)),mul(g(g(A,i),l),g(g(B,j),k)))}
+Rij[k]=Rijk}
+Ri[j]=Rij}
+R[i]=Ri}
+return R}
+function wedgechen(A,B){
+let n=leng(A),R=[];
+for(let i=0;i<n;i++){
+let Ri=[];
+for(let j=0;j<n;j++){
+let s=0;
+for(let k=0;k<n;k++)s=add(s,sub(mul(g(g(A,i),k),g(g(B,k),j)),mul(g(g(B,i),k),g(g(A,k),j))));
+Ri[j]=s}
+R[i]=Ri}
+return R}
+
+function wedgelin(A,B){
+let n=leng(A),R=[];
+for(let k=0;k<n;k++)for(let l=0;l<n;l++){
+let row=[];
+for(let i=0;i<n;i++)for(let j=0;j<n;j++){
+row.push(sub(mul(g(g(A,i),k),g(g(B,j),l)),mul(g(g(A,i),l),g(g(B,j),k))))}
+R.push(row)}
+return R}
+
+function matrixcurvaturet(A,dA){
+let m=leng(A),F=[];
+for(let mu=0;mu<m;mu++){
+let Fmu=[];
+for(let nu=0;nu<m;nu++){
+let comm=matrixsub(matrixmul(g(A,mu),g(A,nu)),matrixmul(g(A,nu),g(A,mu)));
+Fmu[nu]=matrixadd(g(g(dA,mu),nu),comm)}
+F[mu]=Fmu}
+return F}
+function matrixcurvature(A,dA){
+let m=leng(A),F=[];
+for(let mu=0;mu<m;mu++){
+let Fmu=[];
+for(let nu=0;nu<m;nu++){
+Fmu[nu]=matrixadd(g(g(dA,mu),nu),wedgechen(g(A,mu),g(A,nu)))}
+F[mu]=Fmu}
+return F}
+
+function lagrangepolylinear(x,y){
+y=rearray(y)
+let n=leng(y),s=sub(0,0)
+for(let i=0;i<n;i++){
+let li=div(1,1)
+for(let j=0;j<n;j++)if(i!==j)li=mul(li,div(sub(x,j),sub(i,j)))
+s=add(s,mul(g(y,i),li))
+}
+return s
+}
+function lagrangepoly(x,xx,y){
+xx=rearray(xx);y=rearray(y)
+let n=leng(xx),s=sub(0,0)
+for(let i=0;i<n;i++){
+let li=div(1,1)
+for(let j=0;j<n;j++)if(i!==j)li=mul(li,div(sub(x,g(xx,j)),sub(g(xx,i),g(xx,j))))
+s=add(s,mul(g(y,i),li))
+}
+return s
+}
+
+function connectedcomponents(G){G=rearray(G)
+
+  let n=G.length;
+  let visited=new Array(n).fill(false);
+  let count=0;
+  for(let i=0;i<n;i++){
+    if(!visited[i]){
+      count++;
+      let stack=[i];
+      visited[i]=true;
+      while(stack.length){
+        let v=stack.pop();
+        for(let j=0;j<n;j++){
+          if(G[v][j]&&!visited[j]){
+            visited[j]=true;
+            stack.push(j);
+          }
+        }
+      }
+    }
+  }
+  return count;
+}
+function weaklyconnectedcomponents(G){G=rearray(G)
+  let n=G.length;
+  let visited=new Array(n).fill(false);
+  let count=0;
+  for(let i=0;i<n;i++){
+    if(!visited[i]){
+      count++;
+      let stack=[i];
+      visited[i]=true;
+      while(stack.length){
+        let v=stack.pop();
+        for(let j=0;j<n;j++){
+          if((G[v][j]||G[j][v])&&!visited[j]){
+            visited[j]=true;
+            stack.push(j);
+          }
+        }
+      }
+    }
+  }
+  return count;
+}
+function stronglyconnectedcomponents(G){G=rearray(G)
+  let n=G.length;
+  let visited=new Array(n).fill(false);
+  let count=0;
+  for(let i=0;i<n;i++){
+    if(!visited[i]){
+      count++;
+      let stack=[i];
+      visited[i]=true;
+      while(stack.length){
+        let v=stack.pop();
+        for(let j=0;j<n;j++){
+          if((G[v][j]&&G[j][v])&&!visited[j]){
+            visited[j]=true;
+            stack.push(j);
+          }
+        }
+      }
+    }
+  }
+  return count;
+}
+function connectedboundrycomponents(G, BV){
+  let n = BV.length;
+  let subG = [];
+  for(let i=0;i<n;i++){
+    subG.push([]);
+    for(let j=0;j<n;j++){
+      subG[i].push(G[BV[i]][BV[j]] ? 1 : 0);
+    }
+  }
+  return connectedcomponents(subG);
+}
+
+function weakedgecount(G){G=rearray(G)
+  let n=G.length;
+  let count=0;
+  for(let i=0;i<n;i++){
+    for(let j=i+1;j<n;j++){
+      if(G[i][j]||G[j][i]) count++;
+    }
+  }
+  return count;
+}
+function strongedgecount(G){G=rearray(G)
+  let n=G.length;
+  let count=0;
+  for(let i=0;i<n;i++){
+    for(let j=i+1;j<n;j++){
+      if(G[i][j]&&G[j][i]) count++;
+    }
+  }
+  return count;
+}
+function edgecount(G){G=rearray(G)
+  let n=G.length;
+  let count=0;
+  for(let i=0;i<n;i++){
+    for(let j=i+1;j<n;j++){
+      if(G[i][j]) count++;
+    }
+  }
+  return count;
+}
+function biedgecount(G){G=rearray(G)
+  let n=G.length;
+  let count=0;
+  for(let i=0;i<n;i++){
+    for(let j=0;j<n;j++){
+      if(G[i][j]) count++;
+    }
+  }
+  return count;
+}
+
+function matrixnullity(M){return sub(leng(M),rank(matrixsub(M,identitymatrix(leng(M)))))}
+function graphrank(G){return rank(G)}
+function graphaltrank(G){return sub(leng(G),knotcomponent(G))}
+function graphnullity(G){return sub(edgecount(G),graphrank(G))}
+function levelkunnormalizedcorrelation(k,N){return div(sin(div(pi(),add(k,N))),sin(div(mul(pi(),N),add(k,N))))} 
+
+//https://www.layer8.co.uk/maths/braids/braid-user-documentation.html#Command-Line-Options
+
+/*
+function colouringinvariant(B,t){
+return rank(matrixsub(reducedburaurepresentation(B,t),identitymatrix(leng(B)-2)))
+return sub(knotstrands(B),-2,rank(reducedburaurepresentation(B,t)))
+}
+
+
+//reducedburau
+function birackinvariant(K,t,k,tt=t){
+let B=rearray(K)
+let fi=0
+for(let i=0;i<k;i++){
+let w=modc(writhe(B),k)
+//colouringinvariant
+fi=add(fi,mul(colouringinvariant(B,tt),pow(t,w)))
+console.log(colouringinvariant(B,tt),B)
+B[leng(B)]=knotstrands(B)
+}
+return fi
+}
+*/
+    
+    
+
+
+
+
+function rank(A){
+  A = rearray(A);
+  let n = leng(A), m = leng(g(A,0));
+  let M = [];
+  for(let i=0;i<n;i++){
+    M[i]=[];
+    for(let j=0;j<m;j++) M[i][j]=g(g(A,i),j);
+  }
+
+  let r=0;
+  for(let c=0,row=0;c<m && row<n;c++){
+    let p=-1;
+    for(let i=row;i<n;i++){
+      let v=g(g(M,i),c);
+      if(re(v)!==0 || im(v)!==0){ p=i; break; }
+    }
+    if(p==-1) continue;
+    if(p!=row){ let t=M[row]; M[row]=M[p]; M[p]=t; }
+
+    let piv=g(g(M,row),c);
+    for(let j=c;j<m;j++) M[row][j]=div(g(g(M,row),j),piv);
+
+    for(let i=0;i<n;i++) if(i!=row){
+      let f=g(g(M,i),c);
+      for(let j=c;j<m;j++)
+        M[i][j]=sub(g(g(M,i),j),mul(f,g(g(M,row),j)));
+    }
+
+    row++; r++;
+  }
+  return r;
+}
+
+
+
+
+
 
 
 //https://en.wikipedia.org/wiki/Daubechies_wavelet
@@ -15121,6 +17402,10 @@ function fusscatalan(m,p,r)
 {return mul(div(r,add(mul(m,p),r)),ncr(add(mul(m,p),r),m))}
 function catalan(n)
 {return div(ncr(mul(2,n),n),add(n,1))};
+
+//https://oeis.org/wiki/User:Peter_Luschny/Orbitals
+function qcatalan(n,q){return div(qncr(mul(2,n),n,q),add(n,1))}
+
 function supercatalan(m,n)
 {return div(mul(factorial(add(m,m)),factorial(add(n,n))),factorial(add(m,n),factorial(m),factorial(n)))};
 function lobb(m,n)
@@ -15273,7 +17558,10 @@ function dirichleteta(b) {
     
     return fi;
 }
-
+//https://archive.org/details/GradshteinI.S.RyzhikI.M.TablesOfIntegralsSeriesAndProducts/page/n954/mode/1up
+function digammabeta(x){
+    return div(sub(digamma(div(add(x,1),2)),digamma(div(x,2))),2)
+}
 function dirichletbeta(b) {
     b = math.complex(b); // Ensure b is complex
     let fi = math.complex(0);
@@ -15365,6 +17653,11 @@ return integral(gammad,0,bign/4,z);
     return fi;*/
 }
 
+function mikhailov(n,a,b,z){returndiv(mul(factorial(add(n,a)),hypg21(sub(0,n),add(n,a,b,1),add(a,1),div(sub(z,1),2))),factorial(n),factorial(a))}
+
+function gasperrahmanqbetad(t,A){let [q,a,b,c]=A;return div(mul(pow(t,sub(a,1)),qpochinf(mul(q,t),q),qhypergeometric(pow(q,a),pow(q,c),pow(q,b),q,mul(q,t))),qpochinf(mul(pow(q,b),t),q))}
+function gasperrahmanqbeta(a,b,c,q,i=1){return qintegral2(gasperrahmanqbetad,i,q,[q,a,b,c])}
+
 function hadamardgamma(x){
     return div(sub(digamma(sub(1,div(x,2))),digamma(sub(0.5,div(x,2)))),2,gamma(sub(1,x)))
     return div(lerchtranscendent(-1,1,sub(0,x)),gamma(sub(0,x)))
@@ -15383,6 +17676,8 @@ function auxgafactorial(x,a){return sub(1,div(mul(auxpafactorial(x,a),sin(mul(pi
 function lafactorial(x,a){return mul(factorial(x),auxgafactorial(x,a))}
 
 function lvfactorial(x){return mul(factorial(x),auxgafactorial(x,1.031474316))}
+//lvzero
+function lvzfactorial(x){return sub(mul(2,lvfactorial(x)),factorial(x))}
 
 function factoriallambda(x){return mul(lfactorial(x),lfactorial(sub(0,x)))}
 
@@ -15396,10 +17691,107 @@ function afe(x){return add(1,div(mul(sin(mul(pi(),x)),sub(div(1,x),div(1,x,x))),
 function kfactorial(x){return mul(factorial(x),div(add(1,div(mul(sin(mul(2,pi(),x)),digamma()),2,pi())),2,pi()))}
 
 
-function fibonorial(x){return mul(pow(1.618033,ncr(x,2)),qfac(x,sub(0,pow(1.618033,-2))))}
-function rfibonorial(x){return mul(pow(1.618033,ncr(x,2)),rqfac(x,sub(0,pow(1.618033,-2))))}//r 2 r forced
+//https://oeis.org/A003266
+function cfibonorial(x){return mul(pow(1.618033,ncr(x,2)),qfac(x,sub(add(1.618033,-2))))}
+function rfibonorial(x){return mul(pow(1.618033,ncr(x,2)),rqfac(x,sub(add(1.618033,-2))))}//r 2 r forced
+function zfibonorial(x){return zconj(cfibonorial,x)}
+function fibonorial(x){return yconj(cfibonorial,x)}
 //qfac(x,-1/(2.618033))
+//https://oeis.org/A135407
+function clucasorial(x){return mul(pow(1.618033,ncr(x,2)),qpoch(-1,sub(add(1.618033,-2)),add(x,1)))}
+//function rlucasorial(x){return mul(pow(1.618033,ncr(x,2)),qpoch(x,sub(add(1.618033,-2))))}//r 2 r forced
+function zlucasorial(x){return zconj(clucasorial,x)}
+function lucasorial(x){return yconj(clucasorial,x)}
 
+
+function gradshteingeneralizedellipticd(t,K){
+    let [j,k]=K
+    return pow(sub(1,mul(k,k,cos(t))),sub(-0.5,j))
+}
+
+//https://archive.org/details/GradshteinI.S.RyzhikI.M.TablesOfIntegralsSeriesAndProducts/page/n682/mode/1up
+function gradshteingeneralizedelliptic(j,k){return integral(gradshteingeneralizedellipticd,0,pi(),[j,k])}
+
+function gradshteingeneralizedelliptica(m,j){return div(mul(pi(),factorial(j),factorial(add(m,m,m,m,j,j))),pow(64,m),factorial(mul(2,j)),factorial(add(m,m,j)),sqr(factorial(m)))}
+function gradshteingeneralizedellipticlambda(j,k){return div(mul(pi(),sqrt(div(mul(k,k,add(j,j,1)),sub(1,sqr(k))))),2)}
+
+function gradshteingeneralizedellipticrd(t,K){
+let [m,k,a,d]=K;return div(mul(pow(cos(div(t,2)),add(a,a,-1)),pow(sin(div(t,2)),sub(mul(2,d),a,a,1))),pow(sub(1,mul(k,k,cos(t))),add(m,0.5)))}
+
+function gradshteingeneralizedellipticr(m,k,a,d){return integral(gradshteingeneralizedellipticrd,0,pi(),[m,k,a,d])}
+function gradshteingeneralizedellipticm(m,v,a,d){return div(mul(pow(-1,v),pow(2,v),poch(add(m,0.5),v),gamma(a),gamma(sub(add(d,v),a))),factorial(v),gamma(add(d,v)))}
+function gradshteingeneralizedellipticw(m,v,a,d){return div(mul(pow(2,v),poch(add(m,0.5),v),gamma(add(a,v)),gamma(sub(add(d,0),a))),factorial(v),gamma(add(d,v)))}
+
+
+
+function smoothunrelu(x,n=bign){
+    let fi=0;
+    for(let i=0;i<re(n);i++)
+    fi=add(fi,ncr(0,add(x,i)))
+return fi;
+}
+
+//http://www.luschny.de/math/seq/SwissKnifePolynomials.html
+function swissknifechenseq(k){//FIX make k noniteger
+    return div(mul(pow(-1,floor(div(add(k,1),4))),swissknifechenseqd(4,add(k,1))),pow(2,floor(div(k,2))))
+}
+function swissknifechenseqd(c,k){
+    return sub(1,specialselection(k,c))
+}
+
+function swissknifepoly(n,x){
+   /* let fi=0;
+    for(let k=0;k<=n;k++)
+        for(let v=0;v<=k;v++)
+        fi=add(fi,mul(pow(-1,v),ncr(k,v),swissknifechenseq(k),pow(add(x,v,1),n)))
+    return fi;*/
+    let fi=0;
+    for(let k=0;k<=bign;k++)
+        for(let v=0;v<=k;v++)
+        fi=add(fi,mul(smoothunrelu(sub(k,n)),pow(-1,v),ncr(k,v),swissknifechenseq(k),pow(add(x,v,1),n)))
+    return fi;
+}
+
+
+
+
+function A370475(n){
+    let fi=0;for(let k=0;k<bign;k++)fi=add(fi,mul(ncr(n,k),div(ncr(add(1,mul(3/2,n),mul(5/2,k)),n),add(1,mul(3/2,n),mul(5/2,k)))));return fi;
+}
+
+//ADD ? function A153304
+
+function floorxo2(x){return div(sub(x,sqr(sin(mul(0.5,pi(),x)))),2)}
+function ceilxo2(x){return div(add(x,sqr(sin(mul(0.5,pi(),x)))),2)}
+
+  function floorxo4(x){
+        return sub(div(x,4),div(sqr(sin(mul(x,pi(),0.25))),2),mul(2,sqr(sin(mul(add(x,4),pi(),0.25))),sqr(sin(mul(add(x,2),pi(),0.25))),sqr(sin(mul(add(x,3),pi(),0.25)))))
+    }
+    
+    
+function floorxon(x,n){//only works for integer n f u
+    let fi=0;
+    for (let i=1;i<n;i++){fi=add(fi,mul(specialselection(sub(x,i),n),div(i,n)))}
+    return sub(div(x,n),fi)}  
+function ceilxon(x,n){//only works for integer n f u
+    let fi=0;
+    for (let i=1;i<n;i++){fi=add(fi,mul(specialselection(sub(x,i),n),div(sub(n,i),n)))}
+    return add(div(x,n),fi)}     
+
+
+function racistfactorial(x,n=5){//A356858
+return div(factorial(add(x,specialselection(x,n))),factorial(floorxon(x,n)),pow(n,floorxon(x,n)))
+}
+
+
+
+function quartersquare(x){/*A002620*/return mul(ceilxo2(x),floorxo2(x))}
+
+
+function triangularpartition(x,h=0){//A001840
+let fun="x/((1 - x)^2*(1 - x^3))"
+return fractionalderiv(fun,h,x)
+}
 
 function ellipticgamma(z,p,q){
 	let fi = math.complex(1, 0); 
@@ -15460,6 +17852,106 @@ function jacobitheta4(z, q) {
     for (let n = -bign; n <= bign; n++) {
     fi=add(fi,mul(pow(-1,n),pow(q,sqr(n)),exp(mul(2,I,z,n))))
     } 	return fi;
+}
+
+function jacobithetap(z,q){
+let fi=math.complex(0,0)
+for(let n=-bign;n<=bign;n++){
+let e=exp(mul(2,I,z,n))
+fi=add(fi,mul(mul(2,I,n),mul(pow(q,sqr(n)),e)))
+}
+return fi
+}
+
+function jacobitheta1p(z,q){
+let fi=math.complex(0,0)
+for(let n=-bign;n<=bign;n++){
+let a=add(n,0.5)
+let e=exp(mul(add(n,n,1),I,z))
+fi=add(fi,mul(mul(add(n,n,1),I),mul(pow(sub(0,1),sub(n,0.5)),mul(pow(q,sqr(a)),e))))
+}
+return fi
+}
+
+function jacobitheta2p(z,q){
+let fi=math.complex(0,0)
+for(let n=-bign;n<=bign;n++){
+let a=add(n,0.5)
+let e=exp(mul(add(n,n,1),I,z))
+fi=add(fi,mul(mul(add(n,n,1),I),mul(pow(q,sqr(a)),e)))
+}
+return fi
+}
+
+function jacobitheta3p(z,q){
+let fi=math.complex(0,0)
+for(let n=-bign;n<=bign;n++){
+let e=exp(mul(2,I,z,n))
+fi=add(fi,mul(mul(2,I,n),mul(pow(q,sqr(n)),e)))
+}
+return fi
+}
+
+function jacobitheta4p(z,q){
+let fi=math.complex(0,0)
+for(let n=-bign;n<=bign;n++){
+let e=exp(mul(2,I,z,n))
+fi=add(fi,mul(mul(2,I,n),mul(pow(sub(0,1),n),mul(pow(q,sqr(n)),e))))
+}
+return fi
+}
+
+
+function jacobithetapn(z,q,m){
+let fi=math.complex(0,0)
+for(let n=-bign;n<=bign;n++){
+let k=mul(2,n)
+let e=exp(mul(2,I,z,n))
+fi=add(fi,mul(pow(mul(I,k),m),mul(pow(q,sqr(n)),e)))
+}
+return fi
+}
+
+function jacobitheta1pn(z,q,m){
+let fi=math.complex(0,0)
+for(let n=-bign;n<=bign;n++){
+let a=add(n,0.5)
+let k=add(n,n,1)
+let e=exp(mul(k,I,z))
+fi=add(fi,mul(pow(mul(I,k),m),mul(pow(sub(0,1),sub(n,0.5)),mul(pow(q,sqr(a)),e))))
+}
+return fi
+}
+
+function jacobitheta2pn(z,q,m){
+let fi=math.complex(0,0)
+for(let n=-bign;n<=bign;n++){
+let a=add(n,0.5)
+let k=add(n,n,1)
+let e=exp(mul(k,I,z))
+fi=add(fi,mul(pow(mul(I,k),m),mul(pow(q,sqr(a)),e)))
+}
+return fi
+}
+
+function jacobitheta3pn(z,q,m){
+let fi=math.complex(0,0)
+for(let n=-bign;n<=bign;n++){
+let k=mul(2,n)
+let e=exp(mul(2,I,z,n))
+fi=add(fi,mul(pow(mul(I,k),m),mul(pow(q,sqr(n)),e)))
+}
+return fi
+}
+
+function jacobitheta4pn(z,q,m){
+let fi=math.complex(0,0)
+for(let n=-bign;n<=bign;n++){
+let k=mul(2,n)
+let e=exp(mul(2,I,z,n))
+fi=add(fi,mul(pow(mul(I,k),m),mul(pow(sub(0,1),n),mul(pow(q,sqr(n)),e))))
+}
+return fi
 }
 
 /*
@@ -16062,15 +18554,15 @@ let b = mul(a,math.complex(0,1));
 
 
 
-function sl(a) {
-let b = sub(1.311028775 , modc(a,mul(1.311028775,4,add(1,I))));
+function sl(a) {//return sn(a,I)
+let b = sub(1.311028775 , smodc(a,mul(1.311028775,4,add(1,I))));
     const l1 = lemniscates(b);
     const l2 = lemniscatet(b);
     return div(l1, l2);
 }
 
-function cl(a) {
-    const x=modc(a,mul(1.311028775,4,add(1,I)));
+function cl(a) {//return cn(a,I)
+    const x=smodc(a,mul(1.311028775,4,add(1,I)));
     const l1 = lemniscates(x);
     const l2 = lemniscatet(x);
     return div(l1, l2);
@@ -16716,27 +19208,47 @@ function gnomon(b) {
 
 const PI = math.pi;
 
+function barnesg(x){
+
+let g=1
+while(re(x)<6){g=div(g,gamma(x));x=add(x,1)}
+let z=sub(x,1)
+let z2=pow(z,2)
+let logg=add(
+add(mul(div(z2,2),log(z)),sub(0,mul(div(3,4),z2))),
+add(mul(div(z,2),log(mul(2,PI))),sub(0,div(log(z),12)))
+)
+logg=add(logg,-0.1654211437)
+logg=add(logg,add(div(1,mul(240,pow(z,2))),add(sub(0,div(1,mul(1008,pow(z,4)))),add(div(1,mul(1440,pow(z,6))),sub(0,div(1,mul(1056,pow(z,8))))))))
+return mul(g,exp(logg))
+}
 // Barnes-G Function
+/*
 function barnesg(x) {
     if(x==1)return 1;
     if(x==0)return 0;
-    if(Number.isInteger(x) && re(x)>0)return mul(barnesg(sub(x,1)),gamma(sub(x,1)))
-    const b=add(x,-2);
+   // if(Number.isInteger(x) && re(x)>0)return mul(barnesg(sub(x,1)),gamma(sub(x,1)))
+    const b=add(x,-1);
 //    return div(pow(gamma(b),sub(b,1)),kfunc(b));
-    const aggs = mul(pow(2.0 * PI, div(b, 2.0)),  math.exp(mul(-1, div(add(b, mul(b, add(b, 0.5772156649))), 2.0))));
+    const aggs = mul(pow(2.0 * PI, div(b, 2.0)),  exp(mul(-1, div(add(b, mul(b, b,  add(1, 0.5772156649))), 2.0))));
     let aggt = math.complex(1, 0);
 
-    for (let k = 1; k < bign *2 ; k++) {
-        aggt = mul(aggt, mul(pow(add(1.0 , div(b,k)), k), math.exp(sub(div(pow(b, 2), mul(2,k)), b))));
+    for (let k = 1; k < bign *2  ; k++) {
+
+    aggt = mul(aggt, mul(pow(add(1.0 , div(b,k)), k), exp(sub(div(pow(b, 2), mul(2,k)), b))));
+    
     }
 
     return mul(aggs, aggt);
-}
+}*/
+function logbarnesg(x){return log(barnesg(x))}
 function weakfactorial(n){
 	if (n<=1)return 1;
 	return lcm(n,weakfactorial(sub(n,1)));
 }
 function romanfactorial(x){
+  //  return mul(div(add(mul(-2,sqr(cos(mul(0.5,pi(),x)))),1),factorial(sub(-1,x))),sub(1,smoothunrelu(sub(0,x))))
+    return add(mul(div(add(mul(-2,sqr(cos(mul(0.5,pi(),x)))),1),factorial(sub(-1,x))),sub(1,smoothunrelu(sub(0,x)))),mul(factorial(x),sqr(smoothunrelu(sub(0,x)))))
 	return add(div(pow(-1,sub(-1,x)),factorial(sub(-1,x))),mul(div(sub(mag(add(x,0)),mag(sub(x,2)),-2),4),factorial(x)));
 return add(div(pow(-1,sub(-1,x)),factorial(sub(-1,x))),luschnyfactorial(x));
 return div(pow(-1,sub(-1,x)),factorial(sub(-1,x)));
@@ -16754,6 +19266,12 @@ function kfunc(x) {
     }
 
     return div(pow(gamma(b), sub(b, 1.0)), mul(aggs, aggt));
+}
+
+
+
+function romancoef(n,k){
+ return div(romanfactorial(n),romanfactorial(k),romanfactorial(sub(n,k)))   
 }
 function subfactorial(x) {
     if(x==0)return 1;
@@ -16808,7 +19326,7 @@ function  touchardpoly(n,x){
 }
 
 function hurwitzzeta(z,a){
-	let fi=math.complex(0,0);
+      let fi=math.complex(0,0)
 	for(let n=0;n<bign;n++){
 		let num =math.complex(0,0);
 		for(let k=0;k<=n;k++)
@@ -16948,10 +19466,13 @@ function compellipticmodulus(a, b) {
     return pow(div(jacobitheta4(a, sub(0,b)) , jacobitheta3(a, b)), math.complex(2));
 }
 
-function ellipticlambda(a, b) {
+function ellipticlambda( b) {
+    return modulartransformtm(b);
+    return pow(div(jacobitheta2(0, b) , jacobitheta3(0, b)), math.complex(4));
+}
+function ellipticlambda2(a, b) {
     return pow(div(jacobitheta2(a, b) , jacobitheta3(a, b)), math.complex(4));
 }
-
 function ellipticlambdaq(q) {
     return pow(div(jacobitheta2(0,q) , jacobitheta3(0,q)), math.complex(4));
 }
@@ -16959,17 +19480,23 @@ function ellipticlambdat(t) {let q = modulartransformqt(t);
     return pow(div(jacobitheta2(0,q) , jacobitheta3(0,q)), math.complex(4));
 }
 
+function arcellipticlambda(z){return modulartransformmt(z);}//return div(compellint1(sqrt(sub(1,sqr(z)))),-1,I,compellint1(z))}
+function arcellipticlambdastar(z){return modulartransformkt(z);}//return sqr(arcellipticlambda(sqr(z)))}
+
 
 
 function ellipticlambdastar2(a, q) {let t=mul(I,sqrt(modulartransformtq(q)));
     return pow(div(jacobitheta2(a, t), jacobitheta3(a, t )), math.complex(2));
 }
 
-function ellipticlambdastar(x){//FIX
+function ellipticlambdastar(t){//FIX
+return modulartransformtk(t);
+let q=(modulartransformtq(t))
+ //   let t=mul(I,sqrt(q))
+    return sqr(div(jacobitheta2(0, q),jacobitheta3(0, q )))
     
-    
-let q=mul(sqrt(x),I);
-return sqrt(ellipticlambdaq(modulartransformtq(mul(I,sqrt(x)))))
+//let q=mul(sqrt(x),I);
+//return sqrt(ellipticlambdaq(modulartransformtq(mul(I,sqrt(x)))))
  } /*
     let t=(mul(I,sqrt(x)));
    t=mul((exp(mul(pi(),I,t))));
@@ -17151,6 +19678,18 @@ function weierstrassutilitygw(g2, g3, guess=0) {
     wgwcache.set(key, result);
     return result;
 }*/
+function krewerasx(w,z,w1,w2){
+    return div(sub(weierstrasselliptic(w,w1,w2),1/3),-4,z)
+}
+function krewerasfy(w,z,w1,w2){
+    return div(weierstrassellipticd(w,w1,w2),2,z,sub(weierstrasselliptic(w,w1,w2),1/3))
+}
+
+
+
+function krewerasr(x,z,w1,w2,b){
+    return add(b,div(weierstrassellipticd(div(w2),w1,mul(w2,3)),2,z,sub(x,weierstrasselliptic(div(w2),w1,mul(w2,3)))))
+}
 
 function blaschkefactor(a,z){
     if(a==0)return z;
@@ -17204,19 +19743,21 @@ function cin(b) {
     return mul(-1.0, integral(mcosc, 0, b));
 }
 function msinc(x){return div(sub(1,sin(x)),x);}
-function cin(b) {
-    return mul(-1.0, integral(msinc, 0, b));
-}
 
 
 function nielsenci(a, b) {
     return mul(sub(0,a), integral(cosc, b, bign));
 }
 
-function si(b) {
+function si(b) {//use usi() for offset
     return mul(-1.0, integral(sinc, 0, b));
 }
-
+function lsi(b) {//lower offset sine
+    return sub(mul(-1.0, integral(sinc, 0, b)),div(pi(),2));
+}
+function usi(b) {//upper offset sine
+    return add(mul(-1.0, integral(sinc, 0, b)),div(pi(),2));
+}
 function nielsensi(a, b) {
     return mul(sub(0,a), integral(sinc, 0, b));
 }
@@ -17246,27 +19787,57 @@ function lnsec(x,n=1){return pow(math.log(math.sec(x)),n);}
 function lncot(x,n=1){return pow(math.log(math.cot(x)),n);}
 function lncsc(x,n=1){return pow(math.log(math.csc(x)),n);}
 
-function logsin(x){return integral(lnsin,math.complex(0,0),div(pi(),2),x);}
-function logcos(x){return integral(lncos,math.complex(0,0),div(pi(),2),x);}
-function logtan(x){return integral(lntan,math.complex(0,0),div(pi(),2),x);}
-function logsec(x){return integral(lnsec,math.complex(0,0),div(pi(),2),x);}
-function logcsc(x){return integral(lncsc,math.complex(0,0),div(pi(),2),x);}
-function logcot(x){return integral(lncot,math.complex(0,0),div(pi(),2),x);}
+/*
+function slncos(x,n=1){return pow(math.log(sabs(math.cos(x))),n);}*/
+function slnsin(x,n=1){return pow(math.log(sabs(math.sin(x))),n);}
+function slntan(x,n=1){return pow(math.log(sabs(math.tan(x))),n);}
+function slnsec(x,n=1){return pow(math.log(sabs(math.sec(x))),n);}
+function slncot(x,n=1){return pow(math.log(sabs(math.cot(x))),n);}
+function slncsc(x,n=1){return pow(math.log(sabs(math.csc(x))),n);}
+
+
+function slncos(xx,n=1){let x=add(xx,div(I,1e10));return div(add(pow(math.log(math.cos(x)),n),conj(pow(math.log(math.cos(conj(x))),conj(n)))),2);}
+
+
+function logsin(x,t=1.57079632679){return integral(lnsin,math.complex(0,0),t,x);}
+function logcos(x,t=1.57079632679){return integral(lncos,math.complex(0,0),t,x);}
+function logtan(x,t=1.57079632679){return integral(lntan,math.complex(0,0),t,x);}
+function logsec(x,t=1.57079632679){return integral(lnsec,math.complex(0,0),t,x);}
+function logcsc(x,t=1.57079632679){return integral(lncsc,math.complex(0,0),t,x);}
+function logcot(x,t=1.57079632679){return integral(lncot,math.complex(0,0),t,x);}
+
+function logssin(x,t=1.57079632679){return integral(slnsin,math.complex(0,0),t,x);}
+function logscos(x,t=1.57079632679){return integral(slncos,math.complex(0,0),t,x);}
+function logstan(x,t=1.57079632679){return integral(slntan,math.complex(0,0),t,x);}
+function logssec(x,t=1.57079632679){return integral(slnsec,math.complex(0,0),t,x);}
+function logscsc(x,t=1.57079632679){return integral(slncsc,math.complex(0,0),t,x);}
+function logscot(x,t=1.57079632679){return integral(slncot,math.complex(0,0),t,x);}
+
 
 function owentd(x,h){return div(npdf(mul(h,x)),add(1,sqr(x)))}
 function owent(h,a){return mul(npdf(h),integral(owentd,0,a,h))}
-
-
-
-
-//ADD
 /*
+function logcos(x,t=1.57079632679){
+    if(re(x)>=0 && im(x)>0)return integraladaptivecomplex(slncos,0,1.57,x)
+    if(re(x)<0 && im(x)>0)return conj(integraladaptivecomplex(slncos,0,1.57,rconj(x)))
+    return integral(slncos,0,1.57,x)
+}
+
+*/
+
+
+
+//https://en.wikipedia.org/wiki/Bailey_pair
 function baileypairb(A,n,aa){
     let fi=math.complex(0,0)
     for(let r=0;r<=n;r++)
-    fi=add(fi,div(,qpoch(q,q,sub(n,r)),qpoch(mul(aa,q),q,add(n,r))))
+    fi=add(fi,div(g(A,i),qpoch(q,q,sub(n,r)),qpoch(mul(aa,q),q,add(n,r))))
 }
-*/
+function baileypaira(B,n,aa){
+    let fi=math.complex(0,0)
+    for(let j=0;j<=n;j++)
+    fi=add(fi,div(mul(g(B,i),qpoch(mul(a,q),q,add(n,j,-1)),pow(-1,sub(n,j)),pow(q,ncr(sub(n,j),2))),qpoch(q,q,sub(n,j))))
+}
 
 
 
@@ -17315,6 +19886,13 @@ function chi(b) {
         log(b),
 		integral(coshmc,0,b)
     );
+}
+
+function chin(z){
+    let fi=0;
+    for(let i=1;i<bign;i++)
+    fi=add(fi,div(pow(z,mul(2,n)),2,n,factorial(mul(2,n))))
+    
 }
 
 
@@ -17418,6 +19996,11 @@ function fresnels(b) {
     return integral(sinsqr, 0, b);
 }
 
+
+function fresnelf(b){return sub(mul(sub(0.5,fresnels(x)),cos(sqr(x))),mul(sub(0.5,fresnelc(x)),sin(sqr(x))))}
+function fresnelg(b){return add(mul(sub(0.5,fresnels(x)),sin(sqr(x))),mul(sub(0.5,fresnelc(x)),cos(sqr(x))))}
+
+
 function fresnelt(b) {
     const sinsqrIntegral = integral(sinsqr, 0, b);
     const cossqrIntegral = integral(cossqr, 0, b);
@@ -17437,6 +20020,36 @@ function fresnelsc(b) {
 function fresnelcs(b) {
     return div(1.0, integral(sinsqr, 0, b));
 }
+//https://en.wikipedia.org/wiki/Lobachevsky_integral_formula
+function lobachevsky(n,m=n){return integral(generalizedfresnelsd,sub(0,sqrt(bign)),sqrt(bign),[n,m])}
+
+//https://arxiv.org/pdf/1211.3963
+function generalizedfresnelsd(t,N){let [n,m]=N;return mul(sin(pow(t,n)),pow(t,m))}
+function generalizedfresnelcd(t,N){let [n,m]=N;return mul(cos(pow(t,n)),pow(t,m))}
+function generalizedfresnelvd(t,N){let [n,m]=N;return mul(exp(pow(t,n)),pow(t,m))}
+
+
+function generalizedfresnels(x,n=2,m=0){return integral(generalizedfresnelsd,0,x,[n,m])}
+function generalizedfresnelc(x,n=2,m=0){return integral(generalizedfresnelcd,0,x,[n,m])}
+function generalizedfresnelv(x,n=2,m=0){return integral(generalizedfresnelvd,0,x,[n,m])}
+
+function generalizedfresnelt(x,n=2,m=0){return div(generalizedfresnels(x,n,m),generalizedfresnelc(x,n,m))}
+function generalizedfresnelct(x,n=2,m=0){return div(generalizedfresnelc(x,n,m),generalizedfresnels(x,n,m))}
+function generalizedfresnelcs(x,n=2,m=0){return div(1,generalizedfresnels(x,n,m))}
+function generalizedfresnelsc(x,n=2,m=0){return div(1,generalizedfresnelc(x,n,m))}
+
+function generalizedfresnelf(x,n=2,m=0){return sub(mul(sub(0.5,generalizedfresnels(x,n,m)),cos(sqr(x))),mul(sub(0.5,generalizedfresnelc(x,n,m)),sin(sqr(x))))}
+function generalizedfresnelg(x,n=2,m=0){return add(mul(sub(0.5,generalizedfresnels(x,n,m)),sin(sqr(x))),mul(sub(0.5,generalizedfresnelc(x,n,m)),cos(sqr(x))))}
+
+
+
+function fresnelv(n,m,x){return div(mul(pow(x,add(m,1)),hypg11(1,add(1,div(add(m,1),n)),mul(-1,I,pow(x,n)))),add(m,1))}
+function fresnelvr(n,m,x){return div(mul(pow(x,add(m,1)),hypg12(1,add(0.5,div(add(m,1),2,n)),add(1,div(add(m,1),2,n)),div(pow(x,mul(2,n)),-4))),add(m,1))}
+function fresnelvi(n,m,x){return div(mul(pow(x,add(m,n,1)),hypg12(1,add(1,div(add(m,1),2,n)),add(1.5,div(add(m,1),2,n)),div(pow(x,mul(2,n)),-4))),-1,add(m,1),add(1,div(add(m,1),n)))}
+
+
+//
+function binetfactorial(z){return sub(loggamma(z),mul(sub(z,0.5),log(z)),sub(0,z),div(log(mul(2,pi())),2))}
 
 function gudermann(b) {
     return integral(sech, 0, b);
@@ -17481,7 +20094,10 @@ function compellint1(k) {
 	return mul(0.5,pi(),hypg21(0.5,0.5,1,mul(k,k)));
     return integral(compellint1d, 0, 1,a);*/
 }
-function ellint1(phi, k) {return integral(compellint1d, 0, phi,k);
+function ellint1(phi, k) {
+    
+   // if(re(phi)<1)
+    return integraladaptivecomplex(compellint1d, 0, phi,k);
         let a = [1];
     let b = [sqrt(sub(1, sqr(k)))];
 
@@ -17502,7 +20118,7 @@ function compellint2(k) {
     let a = [1];
     let b = [sqrt(sub(1, sqr(k)))];
     let c = [k];
-    let sum = sqr(c[0]) / 2;
+    let sum = div(sqr(c[0]) , 2);
 
     for (let n = 1; n <= bign; n++) {
         a.push(div(add(a[n - 1], b[n - 1]), 2));
@@ -17545,6 +20161,11 @@ function compellint3(n,a) {
 function ellint3(n,p,a) {
  return integral(compellint3d, 0, p,[n,a]);
 }
+
+//https://archive.org/details/GradshteinI.S.RyzhikI.M.TablesOfIntegralsSeriesAndProducts/page/n908/mode/1up
+// the D(phi,k) 
+function ellint4(p,k){return div(sub(ellint1(p,k),ellint2(p,k)),k,k)}
+function compellint4(k){let p=div(pi(),2);return div(sub(ellint1(p,k),ellint2(p,k)),k,k)}
 
 
 function ellabelad(t,D){const c=g(D,0);const e=g(D,1);return div(1,sqrt(mul(sub(1,mul(c,c,t,t)),add(1,mul(e,e,t,t)))))}
@@ -17677,22 +20298,22 @@ function cc(z, k) {
     return nevthetc(z, k);
 }
 function cs(z, k) {
-	const kk=compellint1(sqr(k));const ck=compellint1((sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
+	const kk=compellint1((k));const ck=compellint1(sqrt(sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
     return div(div(mul(jacobitheta1(a,q),jacobitheta3(0,q)),jacobitheta2(a,q),jacobitheta4(0,q)))
 //    return div(nevthetc(a, b), nevthets(a, b));
 }
 function cn(z, k) {
-		const kk=compellint1(sqr(k));const ck=compellint1((sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
+	const kk=compellint1((k));const ck=compellint1(sqrt(sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
     return div(mul(jacobitheta4(0,q),jacobitheta2(a,q)),jacobitheta2(0,q),jacobitheta4(a,q))
    // return div(nevthetc(a, b), nevthetn(a, b));
 }
 function cd(z, k) {
-	const kk=compellint1(sqr(k));const ck=compellint1((sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
+	const kk=compellint1((k));const ck=compellint1(sqrt(sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
     return div(mul(jacobitheta3(0,q),jacobitheta2(a,q)),jacobitheta2(0,q),jacobitheta3(a,q))
   //  return div(nevthetc(a, b), nevthetd(a, b));
 }
 function sc(z, k) {
-	const kk=compellint1(sqr(k));const ck=compellint1((sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
+	const kk=compellint1((k));const ck=compellint1(sqrt(sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
     return div(mul(jacobitheta1(a,q),jacobitheta3(0,q)),jacobitheta2(a,q),jacobitheta4(0,q))
 	//return div(nevthets(a, b), nevthetc(a, b));
 }
@@ -17700,22 +20321,22 @@ function ss(z, k) {
     return nevthets(z, k);
 }
 function sn(z, k) {
-	const kk=compellint1(sqr(k));const ck=compellint1((sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
+	const kk=compellint1((k));const ck=compellint1(sqrt(sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
     return div(mul(jacobitheta1(a,q),jacobitheta3(0,q)),jacobitheta2(0,q),jacobitheta4(a,q))
   //  return div(nevthets(a, b), nevthetn(a, b));
 }
 function sd(z, k) {
-		const kk=compellint1(sqr(k));const ck=compellint1((sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
+		const kk=compellint1((k));const ck=compellint1(sqrt(sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
     return div(mul(sqr(jacobitheta3(0,q)),jacobitheta1(a,q)),jacobitheta2(0,q),jacobitheta4(0,q),jacobitheta3(a,q))
   //  return div(nevthets(a, b), nevthetd(a, b));
 }
 function nc(z, k) {
-	const kk=compellint1(sqr(k));const ck=compellint1((sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
+	const kk=compellint1((k));const ck=compellint1(sqrt(sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
     return div(mul(jacobitheta4(a,q),jacobitheta2(0,q)),jacobitheta2(a,q),jacobitheta4(0,q))
    // return div(nevthetn(a, b), nevthetc(a, b));
 }
 function ns(z, k) {
-	const kk=compellint1(sqr(k));const ck=compellint1((sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
+	const kk=compellint1((k));const ck=compellint1(sqrt(sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
     return div(1,div(mul(jacobitheta1(a,q),jacobitheta3(0,q)),jacobitheta2(0,q),jacobitheta4(a,q)))
     //return div(nevthetn(a, b), nevthets(a, b));
 }
@@ -17723,22 +20344,22 @@ function nn(z, k) {
     return nevthetn(z, k)
 }
 function nd(z, k) {
-	const kk=compellint1(sqr(k));const ck=compellint1((sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
+	const kk=compellint1((k));const ck=compellint1(sqrt(sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
     return div(1,div(1,div(mul(jacobitheta4(0,q),jacobitheta3(a,q)),jacobitheta3(0,q),jacobitheta4(a,q))))
   //  return div(nevthetn(a, b), nevthetd(a, b));
 }
 function dc(z, k) {
-		const kk=compellint1(sqr(k));const ck=compellint1((sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
+		const kk=compellint1((k));const ck=compellint1(sqrt(sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
     return div(1,div(mul(jacobitheta3(0,q),jacobitheta2(a,q)),jacobitheta2(0,q),jacobitheta3(a,q)))
   //  return div(nevthetd(a, b), nevthetc(a, b));
 }
 function ds(z, k) {
-	const kk=compellint1(sqr(k));const ck=compellint1((sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
+	const kk=compellint1((k));const ck=compellint1(sqrt(sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
     return div(1,div(mul(sqr(jacobitheta3(0,q)),jacobitheta1(a,q)),jacobitheta2(0,q),jacobitheta4(0,q),jacobitheta3(a,q)))
    // return div(nevthetd(a, b), nevthets(a, b));
 }
 function dn(z, k) {
-	const kk=compellint1(sqr(k));const ck=compellint1((sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
+	const kk=compellint1((k));const ck=compellint1(sqrt(sub(1, pow(k, 2))));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
     return mul(1,div(mul(jacobitheta4(0,q),jacobitheta3(a,q)),jacobitheta3(0,q),jacobitheta4(a,q)))
     //return div(nevthetd(a, b), nevthetn(a, b));
 }
@@ -17747,7 +20368,7 @@ function dd(z, k) {
 }
 
 function am(za,k) {
-    	const kk=compellint1(sqr(k));const ck=compellint1((sub(1, pow(k, 2))));const z=smodc(za,mul(ck,2,I));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
+    	const kk=compellint1((k));const ck=compellint1(sqrt(sub(1, pow(k, 2))));const z=smodc(za,mul(ck,2,I));const q=exp(div(mul(pi(),ck),kk,-1));const a=div(mul(pi(),z),2,kk)
      // return integral(dn,0,z,k);
         let fi=div(mul(pi(),z),2,kk);
 for(let n=1;n<=bign/2;n++)fi=add(fi,mul(2,sin(mul(2,n,z)),div(pow(q,n),n,add(1,pow(q,add(n,n))))))
@@ -17769,6 +20390,133 @@ function jacobiepsilon(z, k){
 	return ellint2(am(z,k),k)
 }
 	
+    
+    
+    function somos4int(n,V=[1,1,1,1]){
+let a=rearray(V)
+let k=leng(a)
+if(n<k)return g(a,n)
+for(let i=k;i<=n;i++){
+let t=div(add(mul(g(a,i-1),g(a,i-3)),mul(g(a,i-2),g(a,i-2))),g(a,i-4))
+a[i]=t
+}
+return g(a,n)
+}
+
+//https://arxiv.org/pdf/0807.2538 ADD general and somo5 stuff
+function somos4ell(x){
+    let a=math.complex(0.112724016 , -0.824911686)
+    let sk= 1.555836426
+    let b=math.complex(0.215971963 , 0.616028193)
+    let w1=1.496729323*2
+    let w2=mul(I,1.225694691*2)
+    let z0=math.complex( 0.204680500,1.225694691)
+    let k= 1.859185431
+
+  // console.log( weierstrassellipticsigma(k,w1,w2))
+ // console.log(weierstrassellipticsigma(add(z0,mul(x,k)),w1,w2))//pow(sk,sqr(x)))
+    let zonk=add(z0,mul(x,k))//mul(sub(mul(2,x),3),add( 0.929592715,div(w2,2)))
+    return mul(a,pow(b,x),div(weierstrassellipticsigma(zonk,w1,w2),pow(sk,sqr(x))))
+}
+
+
+/*
+    
+   function somos4a(V=[1,1,1,1]){
+return div(sub(g(V,4),mul(g(V,2),g(V,2))),mul(g(V,3),g(V,1)))
+}
+ function somos4b(V=[1,1,1,1]){
+return sub(div(g(V,4),g(V,0)),mul(somos4a(V),div(mul(g(V,3),g(V,1)),g(V,0))))
+}
+function somos4j(V=[1,1,1,1]){
+let t0=g(V,0),t1=g(V,1),t2=g(V,2),t3=g(V,3)
+let a=somos4a(V)
+return div(sub(add(mul(t0,t0,mul(t3,t3)),mul(t1,t1,mul(t2,t2))),mul(a,t0,t1,t2,t3)),mul(t0,t1,t2,t3))
+}
+
+    
+function somos4phi(x,V=[1,1,1,1]){
+    let a=somos4a(V)
+    let b=somos4b(V)
+    let j=somos4j(V)
+    let g2=add(sqr(a),mul(-4,b,j))
+    let g3=add(mul(a,a,a),mul(-6,a,b,j),mul(4,b,b))
+    return weierstrassellipticg(x,g2,g3)
+}
+function somos4k(V){
+    let a=somos4a(V)
+    let b=somos4b(V)
+    let j=somos4j(V)
+    let g2=add(sqr(a),mul(-4,b,j))
+    let g3=add(mul(a,a,a),mul(-6,a,b,j),mul(4,b,b))
+    x1=div(mul(g(a,2),g(a,0)),sqr(g(a,1)))
+    return arcweierstrassellipticg(x1,g2,g3)
+}
+ function somos4z(V){
+    let a=somos4a(V)
+    let b=somos4b(V)
+    let j=somos4j(V)
+    let g2=add(sqr(a),mul(-4,b,j))
+    let g3=add(mul(a,a,a),mul(-6,a,b,j),mul(4,b,b))
+    x0=div(mul(g(a,1),g(a,3)),sqr(g(a,2)))
+    return arcweierstrassellipticg(x0,g2,g3)
+}   
+    
+    
+    
+function somos4ell(x,V=[1,1,1,1]){
+let a=[g(V,0),g(V,1),g(V,2),g(V,3)]
+a[4]=somos4int(4,V)
+let alpha=somos4a(a)
+let beta=somos4b(a)
+let j=somos4j(a)
+let g2=add(sqr(alpha),mul(-4,beta,j))
+let g3=add(mul(alpha,alpha,alpha),mul(-6,alpha,beta,j),mul(4,beta,beta))
+let [w2,w3]=weierstrassutilityge(g2,g3)
+let x0=div(mul(g(a,1),g(a,3)),sqr(g(a,2)))
+let x1=div(mul(g(a,2),g(a,0)),sqr(g(a,1)))
+let kappa=(re(x1)>0)?arcweierstrassellipticg(x1,g2,g3):sub(0,arcweierstrassellipticg(x1,g2,g3))
+let z0=arcweierstrassellipticg(x0,g2,g3)
+let B=div(mul(g(a,1),weierstrassellipticsigma(kappa,w2,w3)),g(a,0))
+return [a,alpha,beta,j,g2,g3,kappa,z0,B,w2,w3]
+return mul(g(a,0),mul(pow(B,x),div(weierstrassellipticsigma(add(z0,mul(x,kappa)),w2,w3),pow(weierstrassellipticsigma(kappa,w2,w3),mul(x,x)))))
+}
+
+    
+    */
+    
+ /*   function jabotinskymatrixd(f,X){
+        let [x,xd]=X;
+        return div(fractionalderiv("",x,xd),factorial(xd))
+    }*/
+    
+function     jabotinskymatrix(f,x=0,N=5){
+    let O=identitymatrix(N)
+    for(let n=0;n<N;n++)for(let m=0;m<N;m++){        //m=k
+        let fo = x1=>pow(evale(f,{x:x1}),m)
+    O[n][m]=div(fractionalderiv(fo,x,n),factorial(n))}
+    return O
+}
+const jabotinskyCache = {};
+function evaluatejabotinksymatrix(f,x=0,k=1,N=5,x0=0,k1=1){
+    let key = f.toString() + '|' + x0 + '|' + N + k1 + k;
+     let O;
+    if (jabotinskyCache[key]) {
+        O = jabotinskyCache[key];
+    } else {
+        O = jabotinskymatrix(f, x0, N);
+         O=matrixpower(O,k)
+        jabotinskyCache[key] = O; // store in cache
+    }
+   
+    let fi=0;for(let i=0;i<N;i++){//console.log(g(g(O,i),k))
+    fi=add(fi,mul(g(g(O,i),k1),pow(x,i)))}
+    return fi;
+}
+    
+    
+    
+    
 
 /*
 smtc=[1];
@@ -17965,6 +20713,7 @@ function smh(z){return sub(0,sm(sub(0,z)));}
 function dixoncapxi(a,b){return div(mul(-1,b,exp(sub(0,a)),sub(1,mul(b,sub(1,exp(sub(0,a)))))))}
 function dixoncaps(a,b){return mul(exp(sub(0,b)),pow(sub(1,exp(sub(0,b))),sub(a,1)))}
 //https://arxiv.org/pdf/math/0507268
+//Proposition 2. Consider the Yule process with two types of particles. The probabilities that particles are all of the second type at time t ar
 function dixoncapx(z){return mul(exp(sub(0,z)),smh(sub(1,exp(sub(0,z)))))}
 function dixoncapy(z){return mul(exp(sub(0,z)),cmh(sub(1,exp(sub(0,z)))))}
 function dixoncapp(z){return mul(smh(z),cmh(z))} 
@@ -17985,7 +20734,23 @@ function dixonsn(x,n){return integral(dixonsnd,0,sqrt(bign),[x,n]);}
 function dixoncn(x,n){return integral(dixoncnd,0,sqrt(bign),[x,n]);}
 function dixondn(x,n){return integral(dixondnd,0,sqrt(bign),[x,n]);}
 
+//https://verse-and-dimensions.fandom.com/wiki/User:Cheetahrock63/Hypercomplex_stuff/Functions_of_a_hypercomplex_variable/Elliptic_integrals,_elliptic_functions,_and_relatives_(Part_3)#Euclidean_tiling_stereocurves
+function aperiogonaldihedral(z){return sub(1,cos(mul(pi(),z)))}
+function aperiogonalhosohedral(z){return div(1,sub(1,cos(mul(pi(),z))))}
+function squat(z){return tesseract(cn(mul(z,compellint1(sqrt(0.5))),sqrt(0.5)))}
+function trat(z){return div(1,cum(mul(cm(mul(z,beta(1/3,1/3),1/3)),sm(mul(z,beta(1/3,1/3),1/3)))))}
+function hexat(z){return cum(mul(cm(mul(z,beta(1/3,1/3),1/3)),sm(mul(z,beta(1/3,1/3),1/3))))}
 
+function aperiogonaldihedralsimple(z){return cot(mul(0.5,pi(),z))}
+function aperiogonalhosohedralsimple(z){return tan(mul(0.5,pi(),z))}
+function squatsimple(z){return (cn(mul(z,compellint1(sqrt(0.5))),sqrt(0.5)))}
+function tratsimple(z){return div(1,(mul(cm(mul(z,beta(1/3,1/3),1/3)))))}
+function hexatsimple(z){return (mul(cm(mul(z,beta(1/3,1/3),1/3))))}
+
+//sm(arcsm(x))
+function arcsm(x){return mul(x,hypg21(1/3,2/3,4/3,cum(x)))}
+function arcucm(x){return mul(cbrt(sub(1,cum(x))),hypg21(1/3,2/3,4/3,sub(1,cum(x))))}
+function arccm(x){return mul(arcucm(x),exp(mul(I,div(pi(),1.5),round(div(mul(1.5,arg(x)),pi())))))}
 
 function hexasin(z){}
 
@@ -18046,8 +20811,259 @@ function dixoneta(x) {
 
 
 
+function circumradiusregular(n, sl=1){
+    return div(sl, mul(2, sin(div(pi(), n))));
+}
+function inradiusregular(n, sl=1){
+    return div(sl, mul(2, tan(div(pi(), n))));
+}
+function apothem(n, sl=1){
+    return div(sl, mul(2, tan(div(pi(), n))));
+}
+function arearegular(n, sl=1){
+    return div(mul(n, pow(sl,2)), mul(4, tan(div(pi(), n))));
+}
+function perimeterregular(n, sl=1){
+    return mul(n, sl);
+}
+function centralangleregular(n){
+    return div(mul(2, pi()), n);
+}
+function regularvertex(n, k, sl=1){
+    let R = circumradiusregular(n, sl);
+    let a = div(mul(2, pi(), k), n);
+    return [ mul(R, cos(a)), mul(R, sin(a)) ];
+}
 
 
+function hyperboliccircumradius(p,q){
+   return  asinh(sqrt(div(sub(2,mul(add(cos(div(pi(),0.5,p)),1),sqr(csc(div(pi(),q))))),sub(cos(div(pi(),0.5,p)),1))))
+}
+
+
+
+
+
+
+
+
+
+
+function diskmobius(zeta, w, z){
+    let u = div(sub(zeta,w), sub(1, mul(conj(w),zeta)));
+    return div(add(u,z), add(1, mul(conj(z),u)));
+}
+function hyperbolichalf(x){return div(sub(div(2,x),sqrt(sub(div(4,x,x),4))),2)}
+function regularsagitta(n,sl=1){return mul(2,sl,sqr(sin(div(pi(),2,n))))}
+
+
+function hyperbolicface66(z){return add(pow(div(z,tanh(div(1.76274717404,2))),-6),1)}
+function hyperboliccopy66(z){return div(pow(pow(sub(0,z),6),1/6),-1)}
+//hyperbolic66(x)
+//hyperbolic66(x/7)
+function  hyperbolic66u(z,n=2){//n== -1 0 1 or 2
+    if(n==-1)return 1;
+    if(n==0)return mul(hyperbolicface66(z),selectorcircle(z));
+    let fi=1;
+    
+    for(let i=0;i<6;i++){
+        let ze=mul(exp(mul(I,mul(pi(),2,1/6,i))),pow(I,1))
+      let s=diskmobius(z,0,mul(ze,tanh(div(1.76274717404,2))))
+    let ss=hyperbolic66u(s,n-1)  
+        fi=mul(fi,ss)
+        }
+    return div(fi,pow(hyperbolic66u(z,n-2),5));
+}
+//hyperbolichalf(tanh(div(1.76274717404,2)))
+function hyperbolic66n(z,n=2){return div(hyperbolic66u(z,n),hyperbolic66u(mul(0.41421356237328444,I),n),-1)}
+//hyperbolic66(x/7)
+//hyperbolic66(x/7,1,9)
+function hyperbolic66(x,n=1, N=bign){
+    let z = mul(I,x)
+    maxSteps=N
+    const r = tanh(1.76274717404 / 2);
+    const roots = []; // 6th roots of unity
+    for(let i=0;i<6;i++) roots.push(mul(exp(mul(I,mul(pi(),2,1/6,i))),pow(I,1)));
+  //  console.log(roots)
+    let w = z;
+    for(let step=0; step<maxSteps; step++){
+        let best = w;
+        let bestAbs = 10000000;
+        
+        for(let i=0;i<6;i++){
+            let candidate = diskmobius(w,mul(roots[i],r),0);
+            if(mag(candidate) < bestAbs){
+                best = candidate;
+                bestAbs = mag(candidate);
+            }
+        }
+        
+        //if(bestAbs >= abs(w)) break; // no improvement
+        w = best;
+    }
+    
+    return hyperbolic66n(w, n);
+}
+
+
+function thyperbolic66(t,n=1,N=bign){
+    return hyperbolic66(modulartransformtq(t),n,N)
+}
+function upperplanehyperbolic66(x,n=1,N=bign){
+    return hyperbolic66(modulartransformcq(x),n,N)
+}
+
+
+
+
+function hyperbolicfacepq(p,q,z){return add(pow(div(z,tanh(div(hyperboliccircumradius(p,q),2))),sub(0,p)),1)}
+
+
+//hyperbolicpqu(6,5,x/7,1)
+
+function hyperbolicpqu(p,q,z,n=1){//n== -1 0 1 
+      if(n==-1)return 1;
+    if(n==0)return mul(hyperbolicfacepq(p,q,mul(z,exp(mul(I,pi(),div(1,p))))),selectorcircle(z));
+    let fi=1;
+    
+  if(n==1)    for(let i=0;i<q;i++){
+        let ze=exp(mul(I,mul(pi(),1,div(2,q),add(i,0.0))))
+      //  ze=mul(ze,I)
+      //exp(mul(I,pi(),div(1,p)))
+      let s=diskmobius(mul(z,-1),0,mul(1,ze,tanh(div(hyperboliccircumradius(p,q),2))))
+    let ss=hyperbolicpqu(p,q,div(s,ze),n-1)  
+        fi=mul(fi,ss)
+        }
+        
+ if(n==2)       for(let i=0;i<p;i++){
+        let ze=exp(mul(I,mul(pi(),1,div(2,p),add(i,0.0))))
+      //  ze=mul(ze,I)
+      //exp(mul(I,pi(),div(1,p)))
+      let s=diskmobius(mul(z,-1),0,mul(1,ze,tanh(div(hyperboliccircumradius(p,q),2))))
+    let ss=hyperbolicpqu(p,q,div(s,ze),n-1)  
+        fi=mul(fi,ss)
+        }
+ if(n==1)  return div(fi,pow(hyperbolicpqu(p,q,z,n-2),sub(q,1)));
+ if(n==2)return div(fi,pow(hyperbolicpqu(p,q,z,n-2),sub(p,1)));
+  return 4; 
+}
+
+
+
+
+//hyperbolicpq(5,5,x/7,1,2)
+//hyperbolicpq(6,5,x/7,1,6)
+//hyperbolicpq(6,5,x/7,1,1)
+
+
+function hyperbolicpqm(p,q,x,n=1, N=bign){
+    let z = x//(N%2==0)?mul(x,exp(mul(I,pi(),div(1,p)))):mul(x,exp(mul(I,pi(),div(1,q))))
+    maxSteps=N
+    const r = tanh(div(hyperboliccircumradius(p,q) , 2));
+    
+    const rootsp = []; 
+    const rootsq = []; 
+    for(let i=0;i<maxc(p,q);i++) rootsp.push(mul(exp(mul(I,mul(pi(),2,div(1,p),add(i,0))))));
+    for(let i=0;i<maxc(p,q);i++) rootsq.push(mul(exp(mul(I,mul(pi(),2,div(1,q),add(i,0))))));
+  //  console.log(roots)
+  let w=z
+  
+    for(let step=0; step<maxSteps; step++){
+        let best = w;
+        let bestAbs = 10000000;
+        
+        for(let i=0;i<maxc(p,q);i++){
+            let candidate = ((N-step)%2==0)?
+            diskmobius(w,mul(rootsq[i],r,pow(-1,0)),0):
+            diskmobius(w,mul(rootsp[i],r,pow(-1,1)),0);
+            
+            if((N-step)%2==1)candidate=mul(candidate,exp(mul(I,mul(pi(),i,-2,div(1,p)))))
+            if((N-step)%2==0)candidate=mul(candidate,exp(mul(I,mul(pi(),i,-2,div(1,q)))))
+
+            if(mag(candidate) < bestAbs){
+                best = candidate;
+                bestAbs = mag(candidate);
+            }
+        }
+        
+        //if(bestAbs >= abs(w)) break; // no improvement
+        w = best;
+    }
+    //return w;
+    return hyperbolicpqu(p,q,mul(w), n);
+}
+
+
+
+function hyperbolicpq(p,q,z,n=6){return div(hyperbolicpqm(p,q,z,1,n),hyperbolicpqm(p,q,mul(hyperbolichalf(tanh(div(hyperboliccircumradius(p,q),2))),1),1,n),-1)}
+
+function thyperbolicpq(p,q,t,n=6){
+    return hyperbolicpq(p,q,modulartransformtq(t),n)
+}
+function upperplanehyperbolicpq(p,q,x,n=6,N=bign){
+    return hyperbolicpq(p,q,modulartransformcq(x),n)
+}
+
+
+
+
+
+
+
+
+
+function estimatefractionalbrownian(func, {
+    samples = 2048,
+    hs = [1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128]
+} = {}) {
+
+    let xs = Array.from({length: samples},
+        (_, i) => div(i, sub(samples, 1))
+    );
+
+    function meanIncrement(h) {
+        let s = 0, c = 0;
+        for (let i = 0; i < xs.length; i++) {
+            let x = xs[i];
+            if (add(x, h) <= 1) {
+                let f1 = evale(func, {x: x});
+                let f2 = evale(func, {x: add(x, h)});
+                s = add(s, Math.abs(sub(f2, f1)));
+                c = add(c, 1);
+            }
+        }
+        return div(s, c);
+    }
+
+    let logh = [];
+    let logS = [];
+
+    for (let j = 0; j < hs.length; j++) {
+        let h = hs[j];
+        let S = meanIncrement(h);
+        if (S > 0) {
+            logh.push(Math.log(h));
+            logS.push(Math.log(S));
+        }
+    }
+
+    // linear regression slope
+    let n = logh.length;
+    let mx = div(logh.reduce((a,b)=>add(a,b),0), n);
+    let my = div(logS.reduce((a,b)=>add(a,b),0), n);
+
+    let num = 0, den = 0;
+    for (let i = 0; i < n; i++) {
+        num = add(num, mul(sub(logh[i], mx), sub(logS[i], my)));
+        den = add(den, mul(sub(logh[i], mx), sub(logh[i], mx)));
+    }
+
+    return div(num, den); // estimated t
+}
+function estimatefractionalbrownianexponent(func, {
+    samples = 2048,
+    hs = [1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128]
+} = {}) {return mul(2,estimatefractionalbrownian(func,samples,hs))}
 
 /*
 function generalizedquadraticsintuple(a,b,c,l,j){
@@ -18139,7 +21155,7 @@ function weberr5(a,b) {
     );
 }
 function todoub(x) {
-    return math.number(x);
+   return re(x)
 }
 
 function qnum(a, q) {
@@ -18242,15 +21258,15 @@ function qpoch(a, q, k) {
     if(k==0)return 1;
     
     let fi = math.complex(1.0, 0);
-    if (todoub(k) > 0 && Number.isInteger(k)) {
-        for (let i = 0; i <= todoub(k) - 1.0; i++) {
+    if (re(k) > 0 && Number.isInteger(k)) {
+        for (let i = 0; i <= re(k) - 1.0; i++) {
             fi = mul(fi, sub(math.complex(1.0, 0), mul(a, pow(q, i))));
         }
         return fi;
     }
-    if (todoub(k) === 0) return math.complex(0, 0);
-    if (todoub(k) < 0  && Number.isInteger(k)) {
-        for (let i = 1; i <= math.abs(todoub(k)); i++) {
+    if (re(k) === 0) return math.complex(0, 0);
+    if (re(k) < 0  && Number.isInteger(k)) {
+        for (let i = 1; i <= math.abs(re(k)); i++) {
             fi = mul(fi, div(math.complex(1.0, 0), sub(math.complex(1.0, 0), mul(a, pow(q, sub(0,i))))));
         }
         return fi;
@@ -18491,8 +21507,22 @@ return mul(pow(sin(u),mul(2,n)),cos(mul(z,cos(u))));
 }
 
 function besselj(a, b) {
+        let term = div(pow(div(b, 2), a), gamma(add(a, 1)));
+    let sum  = term;
+    for (let n = 0; n < 1000; n++) {
+        term = mul(term,
+            div(
+                mul(-1, pow(div(b, 2), 2)),
+                mul(add(n, 1), add(n, a, 1))
+            )
+        );
+        sum = add(sum, term);
+        if (norm(term) < 1e-14 * norm(sum)) break;
+    }
+    return sum;
+}
 //return div(mul(2,pow(b,a),integral(besseljd,0,div(pi(),2),[b,a],mul(1+mag(a,re(b)),bign))),pi(),doublefactorial(add(a,a,-1)))
-    let fi = math.complex(0, 0);
+ /*   let fi = math.complex(0, 0);
     let divi=10;
     for (let n = 0; norm(divi)>0.01*norm(fi); n++) {
         const sign = pow(-1, n);
@@ -18500,15 +21530,16 @@ function besselj(a, b) {
        fi = add(fi, divi);
     }
     return fi;
-}
+}*/
 function besseljp(a, b) {
-    // J'_a(b) = (J_{a-1}(b) - J_{a+1}(b)) / 2
+    // J'_a(b) = (J_{a-h}(b) - J_{a+h}(b)) / 2h
+    let h=1e-5;
     return div(
         sub(
-            besselj(sub(a, 1), b),
-            besselj(add(a, 1), b)
+            besselj(sub(a, h), b),
+            besselj(add(a, h), b)
         ),
-        2
+        2,h
     );
 }
 
@@ -18525,7 +21556,7 @@ function besseljzero(v, m) {
     besseljzeroCache.set(key, result);
     return result;
 }
-
+/*
 const mathieuZeroCache = new Map();
 
 function mathieuradial(q, m, n,parity=0) {
@@ -18558,17 +21589,104 @@ function mathieuzero(q,n,m,parity=0) {
     mathieuZeroCache.set(key, result);
     return result;
 }
+*/
 
+//mathieucczero(1,1,1)
+const mathieuZeroCache2 = new Map()
+function mathieucczero(mu,m,n){
+    
+    const key = `${m},${n},${mu}`;
+    if (mathieuZeroCache2.has(key)) {
+        return mathieuZeroCache2.get(key);
+    }
+    function sign(x) {
+    return re(x) > 0 ? 1 : re(x) < 0 ? -1 : 0;
+}
+    //let apr=sqr(div(mul(pi(),add(m,div(n,2),-3/4)),2,mu))
+    let apr=0.1
+    
+    const f = (q) => mathieucce(q, mu, n);
+    //const result = newtonzero(f,apr,1e-5,1e-5,5)
+    let fi=(m==0)?2:6
+    let c=m
+    /*
+    for(let i=0;i<bign*bign && fi<43.7;i++)
+    {
+        if(mag(f(fi))<0.015){
+            console.log(fi," - ",f(fi))
+            if(c==0){apr=fi;break;}
+            c-=1;while(mag(f(fi))<0.015 && fi<43.7)fi+=0.25
+        }
+        fi+=0.25
+    }*/
+    
+    let prevFi = fi;
+let prevVal = f(prevFi);
 
+for (let i = 0; i < bign * bign && fi < 43.7; i++) {
 
+    let curVal = f(fi);
 
+    // real sign check (works for real or complex f)
+    let s1 = sign(mag(prevVal) ? Math.sign(prevVal.re ?? prevVal) : 0);
+    let s2 = sign(mag(curVal) ? Math.sign(curVal.re ?? curVal) : 0);
+
+    if (s1 * s2 < 0) {
+        console.log("sign change near", prevFi, fi);
+
+        if (c === 0) {
+            apr = (prevFi + fi) / 2; // midpoint approx root
+            break;
+        }
+
+        c--;
+
+        // skip this zero crossing
+        prevFi = fi;
+        prevVal = curVal;
+        while (fi < 43.7) {
+            fi += 1;
+            let v = f(fi);
+            if (s2 * Math.sign(v.re ?? v) < 0) break;
+        }
+    }
+
+    prevFi = fi;
+    prevVal = curVal;
+    fi += 1;
+}
+    
+    //mathieums(1,mathieumszero(2,x,2),2,2)
+    result = halleyzero(f,apr,1e-5,1e-5,3)
+    mathieuZeroCache2.set(key, result);
+    return result
+}
+
+function ellipticmembranefreq(e,mu,v,m,n,t=0,c=1,a=1){
+    let mu0=atanh(e)
+    let f=mul(a,sqrt(sub(1,sqr(e))))
+    let q=mathieucczero(mu0,m,n)
+    return w=div(mul(2,c,sqrt(q)),f)
+}   
+//ellipticmembrane(0.5,x,0,1,1)
+//ellipticmembrane(0.7615941559557649,x,0,1,1)
+
+//ellipticmembrane(tanh(1),x,0,2,2)
+function ellipticmembrane(e,mu,v,m,n,t=0,c=1,a=1){
+    let mu0=atanh(e)
+    let f=mul(a,sqrt(sub(1,sqr(e))))
+    let q=mathieucczero(mu0,m,n)
+    let w=div(mul(2,c,sqrt(q)),f)
+    return mul(mathieucce(q,mu,n),mathieuce(q,v,n),cos(mul(w,t)))
+}
+ 
 function circularmembrane(m,n,r,th,t,a=1,c=1,aa=1,bb=0,cc=1,dd=0)
 {const l=div(besseljzero(m,n),1);
     return mul(add(mul(aa,cos(mul(c,l,t))),mul(bb,sin(mul(c,l,t)))),besselj(m,mul(l,r)),add(mul(cc,cos(mul(m,th))),mul(dd,sin(mul(m,th)))))
     }
     //ellipticalmembrane(3,2,re(x),im(x),2,1,1,1)
     //ellipticalmembrane(4,2,re(x),im(x),2,1,1,1)
-    
+   
     
 /*    
 function ellipticalmembranea(m,n,x,y,t,a=2,b=1,c=1,amplitude=1,mod=0){
@@ -18600,8 +21718,61 @@ function ellipticalmembrane(m,n,x,y,t,a=2,b=1,mode=1,rmode=1,amplitude=1,tension
 }
 */
 
+//https://paulbourke.net/geometry/chladni/
+function chladni3d(c1,c2,c3,x,y,z){
+    return add(cos(mul(c1,x)),cos(mul(c2,y)),cos(mul(c3,z)))
+}
+
+
+function chladniplate(n,m,x,y,l=1){
+return sub(mul(cos(div(mul(n,x,pi()),l)),cos(div(mul(m,y,pi()),l))),mul(cos(div(mul(m,x,pi()),l)),cos(div(mul(n,y,pi()),l))))    
+}
+function chladniplate1(n,m,x,y,Lx=1,Ly=Lx){
+return mul(cos(div(mul(m,pi(),x),Lx)),cos(div(mul(n,pi(),y),Ly)))  
+}
+function chladniplatecenter(n,m,x,y,Lx=1,Ly=Lx){
+return mul(sin(div(mul(m,pi(),x),Lx)),sin(div(mul(n,pi(),y),Ly)))  
+}
+
+function chladniplatecenter2(n,m,x,y,l=1){
+return sub(mul(sin(div(mul(n,x,pi()),l)),sin(div(mul(m,y,pi()),l))),mul(sin(div(mul(m,x,pi()),l)),sin(div(mul(n,y,pi()),l))))    
+}
+
+function chladniplatecircular(n,m,r,t,c1=1,c2=0,L=1){
+    const l=div(besseljzero(m,n),L);
+    return mul(besselj(n,mul(r,l)),add(mul(c1,cos(mul(n,t))),mul(c2,sin(mul(n,t)))))
+}
+//ADD ELLİPTİC
+
+
 function jinc(x){return div(besselj(1,x),x);}
 function somb(x,y=0){let p = mul(sqrt(add(mul(x,x),mul(y,y))),pi()); return div(besselj(1,p),p,0.5);}
+
+
+function blep(t){return sub(0.5,div(si(mul(pi(),t)),pi(),1))}
+//if(mag(x)<div(l,2))return 0;
+function kaiserwindoww(x,a,l){if(mag(x)<div(l,2))return 0;return div(besseli(0,mul(pi(),a,sqrt(sub(1,sqr(div(x,l,0.5)))))),l,besseli(0,mul(pi(),a)))}
+function kaiserwindowf(x,a,l){let f=div(sqrt(add(1,sqr(a))),l);return div(sin(sqrt(sub(sqr(mul(pi(),l,f)),sqr(mul(pi(),a))))),sqrt(sub(sqr(mul(pi(),l,f)),sqr(mul(pi(),a)))),besseli(0,mul(pi(),a)))}
+function kaiserwindowh(x,a,l){let f=div(sqrt(add(1,sqr(a))),l);return div(sinh(sqrt(sub(sqr(mul(pi(),l,f)),sqr(mul(pi(),a))))),sqrt(sub(sqr(mul(pi(),l,f)),sqr(mul(pi(),a)))),besseli(0,mul(pi(),a)))}
+function kaiserwindowwn(a,n,nn){return div(besseli(0,mul(a,pi(),sqrt(sub(1,sqr(sub(div(n,nn,2),1)))))),besseli(0,mul(pi(),a)))}//if(n==0)return 0;return mul(l,kaiserwindoww(div(mul(l,sub(n,div(nn,2))),n),a,l))}
+//kaiserwindowdn(10,3,50,100)
+function kaiserwindowdn(a,x,nn=bign*bign){
+let n = mul(x,   nn)
+    let fi=0
+    let fid=0
+    if(0<=n && n<nn){
+   //  for(let i=0;i<=n;i++)   console.log(kaiserwindowwn(a,l,i,nn))
+    for(let i=0;i<=n;i++)fi=add(fi,kaiserwindowwn(a,i,nn))
+    for(let i=0;i<=nn;i++)fid=add(fid,kaiserwindowwn(a,i,nn))
+    } else
+    if(nn<=n && n<nn+nn-1){
+    for(let i=0;i<=nn+nn-1-n;i++)fi=add(fi,kaiserwindowwn(a,i,nn))
+    for(let i=0;i<=nn;i++)fid=add(fid,kaiserwindowwn(a,i,nn))
+    } else return 0
+    
+    return sqrt(div(fi,fid))
+}
+
 
 function besselk(aa, b) {
     const a=add(aa,0.001)
@@ -18614,10 +21785,14 @@ function besselk(aa, b) {
 }
 function besseli(a, b) {
   //  return mul(pow(I,sub(0,a)),besselj(a,mul(I,b)));
+  if(mag(b)>10 && re(b)<0)return mul(sqrt(div(2,pi())),pow(mul(I,b),sub(-0.5,a)),pow(b,a),mul(cosh(add(b,div(mul(pi(),I,add(a,a,1)),4))),add(1,div(mul(sub(1,mul(4,a,a)),sinh(add(b,div(mul(pi(),I,add(a,a,1)),4)))),8,b))))
+  if(mag(b)>10)return div(exp(b),sqrt(mul(2,pi(),b)))
     let fi = math.complex(0, 0);
-    for (let n = 0; n < bign; n++) {
+    let fid=234
+    for (let n = 0; n < bign*10 && mag(sub(fid,fi))>0.01; n++) {
         const numerator = pow(div(b, math.complex(2.0, 0)), add(1e-7,a, mul(2.0, n)));
         const denominator = mul(gamma(add(n, math.complex(1.0, 0))), gamma(add(1e-7,a, n, math.complex(1.0, 0))));
+        fid=fi;
         fi = add(fi, div(numerator, denominator));
     }
     return fi;
@@ -18664,11 +21839,15 @@ function besseldiff(x, y, yp, nu) {
     return div(sub(0,mul(x,yp),mul(sub(sqr(x),sqr(nu)),y)),x,x)
     return div(sub(mul(x, x, y), mul(nu, nu, y)), mul(x, x));
 }
-function bessely(aa,b){//ADD FIXC DO AOFİX FİX FIX
+function bessely(aa,b){//DONE likeidk lşsdk
+const a=add(aa,0.001);
+if(Number.isInteger(aa)){return div(add(besseljp(aa,b),mul(besseljp(sub(0,aa),b),pow(-1,aa))),pi())}
+return div(sub(mul(besselj(a,b),cos(mul(pi(),a))),besselj(sub(0,a),b)),sin(mul(pi(),a)))
+
   //  console.log(cot(mul(pi(),a)))
-    const a=add(aa,0.0001);
-    if(re(b)>add(aa))
-    return div(sub(integral(besselyd1,0,pi(),[b,a]),integral(besselyd2,0,bign/2,[b,a])),pi())
+    
+ //   if(re(b)>add(aa))
+ //   return div(sub(integral(besselyd1,0,pi(),[b,a]),integral(besselyd2,0,bign/2,[b,a])),pi())
    // if(re(b)<sub(0,aa))
  //return add/(
 return sub( mul(pow(b,a),pow(2,sub(0,a)),cot(mul(pi(),a)),reghypg01(add(1,a),div(sqr(b),-4))) ,mul(pow(2,a),pow(b,sub(0,a)),csc(mul(pi(),a)),reghypg01(sub(1,a),div(sqr(b),-4))));
@@ -18703,12 +21882,13 @@ const aa=add(a,0.1);    return div(sub(mul(cos(mul(aa,pi())),besselj(aa,b)),bess
     */}
 function besselyp(a, b) {
     // Y'_a(b) = (Y_{a-1}(b) - Y_{a+1}(b)) / 2
+    let h=0.001;
     return div(
         sub(
-            bessely(sub(a, 1), b),
-            bessely(add(a, 1), b)
+            bessely(sub(a, h), b),
+            bessely(add(a, h), b)
         ),
-        2
+        2,h
     );
 }
 
@@ -18926,6 +22106,16 @@ const fun="epx(-x)*((("+a+")+x)/("+a+"))^("+x+")"
 return fractionalderiv(fun,0,k)
 }
 
+//https://arxiv.org/pdf/1804.01420
+function bieberbacht(z1,z2,z3,z){return div(mul(sub(z,z2),sub(z3,z1)),sub(z,z1),sub(z3,z2))}
+function bieberbachx(z1,z2,z3,z4){return div(mul(sub(z4,z2),sub(z3,z1)),sub(z4,z1),sub(z3,z2))}
+function bieberbachm(z1,z2,z3,z4,z){return div(add(sqrt(bieberbachx(z1,z2,z3,z4)),bieberbacht(z1,z2,z3,z)),sub(sqrt(bieberbachx(z1,z2,z3,z4)),bieberbacht(z1,z2,z3,z)))}
+function bieberbachk(x){return div(sub(sqrt(x),1),add(sqrt(x),1))}
+function bieberbachcap(k){return div(hypg21(0.5,0.5,1,sqr(k)),hypg21(0.5,0.5,1,sub(1,sqr(k))))}
+function bieberbachw(u,p,l,q){return div(mul(l,sub(div(derv2(jacobitheta1,sub(u,p),q),jacobitheta1(sub(u,p),q)),div(derv2(jacobitheta1,add(u,p),q),jacobitheta1(add(u,p),q)))),-2,pi(),I)}
+function bieberbachw2p(u,p,q){return div(sub(div(derv2(jacobitheta1,sub(u,p),q),jacobitheta1(sub(u,p),q))),-1)}
+function bieberbachnpq(u,p,q){return log(div(derv2(jacobitheta1,sub(u,p),q),jacobitheta1(sub(u,q),q)))}
+
 function jump(x,a){return div(mul(exp(sub(0,a)),pow(a,x)),factorial(x))}
 
 function powerpoly(k,x){
@@ -18945,10 +22135,22 @@ function stirlingpoly(n,m){
 }
 
 
+function fractionalisprime(x){
+  return   fractionalderiv(primeexp,0,x)
+    
+}
+function fractionalprime(x){
+ // return   sub(div(1,fractionalderiv(fractionalprimep,0,x)),0)
+    return   fractionalderiv(fractionalprimep,0,x)
+}
 
-
-
-
+function fractionalprimep(x){
+    let fi=0;
+    for(let i=0;i<bign*2;i++)
+ //       fi=add(fi,div(pow(x,i),nthprime(add(1,i)),factorial(i)))
+    fi=add(fi,div(mul(pow(x,i),nthprime(add(1,i))),factorial(i)))
+    return fi;
+}
 
 
 
@@ -19191,8 +22393,28 @@ function weierstrassellipticd(b, w, ww, automod=0) {
     }
     return mul(fi,-2);
 }
+//weierstrassellipticsigma(x,1,i)
+
+//weierstrassellipticzeta(math.complex(0.3,0.2),1,math.complex(0,1))
+//weierstrassellipticsigma(math.complex(0.3,0.2),1,math.complex(0,1))
 function weierstrassellipticsigma(bn, w, ww) {
-	
+	let fi=1;let z=bn
+    let n1=weierstrassellipticzeta(div(w,2),w,ww)//div(,-12,w)
+    let q=exp(div(mul(ww,pi(),I),w));
+  //  console.log(n1)
+    if(mag(q)>1)q=div(1,q)
+  //      console.log(q,exp(div(mul(n1,z,z),w)),jacobitheta1(div(mul(pi(),z),w),q),jacobitheta1p(0,q))
+    return div(mul(w,exp(div(mul(n1,z,z),w)),jacobitheta1(div(mul(pi(),z),w),q)),jacobitheta1p(0,q),pi())
+    for(let i=1;i<bign;i++)fi=mul(fi,sub(1,sqr(div(sin(div(mul(pi(),bn),w)),sin(div(mul(i,pi(),ww),w))))))
+    return div(mul(div(w,pi()),exp(div(mul(n1,sqr(z)),w)),sin(div(mul(pi(),z),w)),fi),pi())
+    /*let v=div(mul(pi(),bn),2,w)
+    let q=modulartransformtq(div(ww,w));
+    let v1=jacobitheta1(v,q)
+    let v1p=derv2(jacobitheta1,v,q)
+    let v1ppp=nthderivp(jacobitheta1,v,3,q)
+    
+    return div(mul(2,w,exp(div(mul(v,v,v1ppp),-6,v1p)),v1),pi(),v1p)
+    
     let fi = bn;
     let bgn = math.floor(math.sqrt(bign * 3) / 2);  // Adjust bign if needed
     for (let i = sub(0,bgn); i <= bgn; i++) {
@@ -19205,9 +22427,11 @@ function weierstrassellipticsigma(bn, w, ww) {
             }
         }
     }
-    return fi;
+    return fi;*/
 }
 function weierstrassellipticzeta(bn, w, ww) {
+   // let w=mul(wa,2)
+   // let ww=mul(wwa,2)
 
     let fi =  div(1.0, pow(bn, 1));
     let bgn = math.floor(math.sqrt(bign * 3) / 2);  // Adjust bign if needed
@@ -19356,19 +22580,19 @@ function arcdsd(a, b) {
     return div(1.0, math.sqrt(denominator));
 }
 
-
-function arcsn(a, b) {return integral(arcsnd,math.complex(0),a,b);}
-function arccn(a, b) {return integral(arccnd,a,math.complex(1),b);}
-function arcdn(a, b) {return integral(arcdnd,a,math.complex(1),b);}
-function arcns(a, b) {return integral(arcsnd,math.complex(0),div(1,a),b);}
-function arcnc(a, b) {return integral(arccnd,div(1,a),math.complex(1),b);}
-function arcnd(a, b) {return integral(arcdnd,div(1,a),math.complex(1),b);}
-function arccd(a, b) {return integral(arccdd,a,math.complex(1),b);}
-function arccs(a, b) {return integral(arccsd,a,math.complex(bign),b);}
-function arcds(a, b) {return integral(arcdsd,a,math.complex(bign),b);}
-function arcdc(a, b) {return integral(arccdd,div(1,a),math.complex(1),b);}
-function arcsc(a, b) {return integral(arccsd,div(1,a),math.complex(bign),b);}
-function arcsd(a, b) {return integral(arcdsd,div(1,a),math.complex(bign),b);}
+//FIX
+function arcsn(a, k){let b=sqr(k);return integral(arcsnd,math.complex(0),a,b);}
+function arccn(a, k){let b=sqr(k);return integral(arccnd,a,math.complex(1),b);}
+function arcdn(a, k){let b=sqr(k);return integral(arcdnd,a,math.complex(1),b);}
+function arcns(a, k){let b=sqr(k);return integral(arcsnd,math.complex(0),div(1,a),b);}
+function arcnc(a, k){let b=sqr(k);return integral(arccnd,div(1,a),math.complex(1),b);}
+function arcnd(a, k){let b=sqr(k);return integral(arcdnd,div(1,a),math.complex(1),b);}
+function arccd(a, k){let b=sqr(k);return integral(arccdd,a,math.complex(1),b);}
+function arccs(a, k){let b=sqr(k);return integral(arccsd,a,math.complex(bign),b);}
+function arcds(a, k){let b=sqr(k);return integral(arcdsd,a,math.complex(bign),b);}
+function arcdc(a, k){let b=sqr(k);return integral(arccdd,div(1,a),math.complex(1),b);}
+function arcsc(a, k){let b=sqr(k);return integral(arccsd,div(1,a),math.complex(bign),b);}
+function arcsd(a, k){let b=sqr(k);return integral(arcdsd,div(1,a),math.complex(bign),b);}
 
 
 function erfdiff(x,y,yp){return mul(-2,x,yp)}
@@ -19385,10 +22609,15 @@ function abserf(z){
     const y=im(z);
     return sqrt(mul(erf(sub(x,mul(x,sqrt(div(sqr(y),x,x,-1))))),erf(add(x,mul(x,sqrt(div(sqr(y),x,x,-1)))))))
 }*/
+function derf(n,b){
+    return div(mul(pow(-1,sub(n,1)),2,hermitepoly(sub(n,1),b),exp(mul(-1,b,b))),sqrt(pi()))
+}
 function erf(b){
+    //return div(mul(2,b,confluenthypergeometricm(1/2,3/2,mul(-1,b,b))),sqrt(pi()))
+     //return div(mul(2,exp(mul(-1,b,b)),b,confluenthypergeometricm(1,3/2,mul(1,b,b))),sqrt(pi()))
 //return sub(1,div(incbeta(sub(0.5,div(b,sqrt(2),sqrt(mul(n,2)))),n,n),0.5,beta(n,n)))}
 //let fi=math.complex(0,0);for(let n=0;n<bign;n++)fi=add(fi,div(pow(b,add(n,n,1)),factorial(n),add(n,n,1)));return div(fi,sqrt(pi()),0.5)}
-//return ode2rk4(erfdiff,b,0,div(2,sqrt(pi())))}
+//return ode2rk4(erfdiff,b,0,div(2,sqrt(pi())))//}
 //return sub(div(mul(2,b,hypg12(1/4,1/2,5/4,div(pow(b,4),4))),sqrt(pi())),div(mul(2,b,b,b,hypg12(3/4,3/2,7/4,div(pow(b,4),4))),3,sqrt(pi())))}//return ode2rk4(erfdiff,b,0,div(2,sqrt(pi())))}
 return mul(div(2,sqrt(pi())),integral(expmsqr,0,b,0,bign*(1+ceil((mag(div(b,1)))))));}//ode2rk4(erfdiff,b,0,div(2,sqrt(pi())),0,0,20)}//return sub(div(mul(2,b,hypg12(1/4,1/2,5/4,div(pow(b,4),4))),sqrt(pi())),div(mul(2,b,b,b,hypg12(3/4,3/2,7/4,div(pow(b,4),4))),3,sqrt(pi())))}//return ode2rk4(erfdiff,b,0,div(2,sqrt(pi())))}//return mul(div(2,sqrt(pi())),integral(expmsqr,0,b,0,bign+ceil((mag(b)))))}// mul(b,div(2,sqrt(pi())),hypg11(1/2,3/2,mul(-1,b,b)))} //mul(pow(pi(),-0.5),incgamma(0.5,mul(b,b)))}//return mul(div(2,b,sqrt(pi())),hypg11(1/2,3/2,mul(-1,b,b)))}// mul(div(2,sqrt(pi())),integral(expmsqr,0,b,0,bign+ceil(sqrt(mag(b)))));}
 function erfc(b){return sub(1,erf(b))}//return sub(1,mul(2*math.sqrt(pi()),integral(expmsqr,math.complex(0),b)));}
@@ -19397,6 +22626,7 @@ function erfi(b){return mul(math.complex(0,-1),erf(mul(b,math.complex(0,1))));}
 function dawsondplus(b){return mul(math.sqrt(pi())/2,math.exp(mul(b,b,-1)),erfi(b));}
 function dawsondminus(b){return mul(math.sqrt(pi())/2,math.exp(mul(b,b)),erf(b));}
 function faddeeva(b){return erfcx(mul(b,math.complex(0,-1)));}
+function erfw(x){return mul(erfc(mul(-1,I,x)),exp(mul(-1,x,x)))}
 function hilberttransformf(b){return mul(2/math.sqrt(pi()),dawsondplus(b));}//hilberttransormofthe gaussian
 function hilberttransformsub(b){return math.multiply(2/math.sqrt(pi()),dawsondplus(math.sqrt(b)));}//hilberttransormofthe x^2n e^-x^2
 	
@@ -19417,7 +22647,9 @@ for(let m=0;m<re(k);m++)fi=add(fi,div((mul((invcerf(sub(k,1,m))),(invcerf(m)))),
 	return fi;
 }
 function inverf(x){
-return newtoninvf(erf,x,atanh(x));
+   // let a=
+   if(mag(sub(x,1))>0.1 && mag(sub(x,-1))>0.1)
+return newtoninvf(erf,x,atanh(x),1e-3,bign/2);
 	let fi = math.complex(0,0);
 	for(let k=0;k<bign;k++)fi=add(fi,mul(div(invcerf(k),add(k,k,1)),pow(mul(1.77245385091,x,0.5),add(k,k,1))));
 	return fi;
@@ -19545,13 +22777,89 @@ function ramanujantheta(a,b){
 	for(let k=-bign;k<=bign;k++)fi=add(fi,mul(pow(a,div(mul(k,add(k,1)),2)),pow(b,div(mul(k,sub(k,1)),2))));
 	return fi;
 }
-
-function ramanujantautheta(b) {
-    let logGammaTerm1 = math.log(gamma(add(6.0, mul(math.complex(0.0, 1.0), b))));
-    let logGammaTerm2 = math.log(gamma(sub(6.0, mul(math.complex(0.0, 1.0), b))));
-    let result = sub(mul(-math.log(2.0 * pi()), b), div(sub(logGammaTerm1, logGammaTerm2), 2.0));
-    return result;
+function riemannr(z){
+    let fi=1;
+    for(let n=1;n<bign;n++)
+        fi=add(fi,div(pow(log(z),n),n,factorial(n),zeta(add(n,1))))
+    return fi;
 }
+
+
+
+
+function ramanujantautheta(z) {
+    
+    return sub(0,mul(z,log(mul(2,pi()))),div(mul(I,sub(loggamma(add(6,mul(I,z)),0),loggamma(sub(6,mul(I,z)),0))),2))
+    
+   // let logGammaTerm1 = loggamma(add(6.0, mul(math.complex(0.0, 1.0), b)),0);
+   // let logGammaTerm2 = loggamma(sub(6.0, mul(math.complex(0.0, 1.0), b)),0);
+   // let result = sub(mul(-math.log(2.0 * pi()), b), div(sub(logGammaTerm1, logGammaTerm2), 2.0));
+   // return result;
+}
+
+const zetaZeros = [
+  14.134725141734693,
+  21.022039638771555,
+  25.010857580145688,
+  30.424876125859513,
+  32.935061587739189,
+  37.586178158825671,
+  40.918719012147495,
+  43.327073280914999,
+  48.005150881167159,
+  49.773832477672302,
+  52.970321477714460,
+  56.446247697063394,
+  59.347044002602353,
+  60.831778524609809,
+  65.112544048081606,
+  67.079810529494173,
+  69.546401711173979,
+  72.067157674481907,
+  75.704690699083933,
+  77.144840068874805,
+  79.337375020249367,
+  82.910380854086030,
+  84.735492980517050,
+  87.425274613125229,
+  88.809111207634466,
+  92.491899270558484,
+  94.651344040519886,
+  95.870634228245310,
+  98.831194218193692,
+ 101.317851005731391
+];
+
+function zetazeroim(n){
+    if(n>0)return g(zetaZeros,n-1)
+    return -g(zetaZeros,-n-1)
+}
+function zetazero(n){
+    if(n>0)return add(0.5,mul(I,g(zetaZeros,n-1)))
+    return add(0.5,mul(-1,I,g(zetaZeros,n-1)))
+}
+
+
+
+
+function primecounting(z,m=bign){
+    let fi=sub(riemannr(z),div(1,log(z)),div(atan(div(pi(),log(z))),pi(),-1))
+    for(let n=1;n<=m;n++){
+      //  let R=riemannr(pow(z,zetazero(n)))
+        fi=sub(fi,riemannr(pow(z,zetazero(-n))),riemannr(pow(z,zetazero(n))))
+    }
+    return fi;
+}
+
+//FIX
+
+
+
+
+
+
+
+
 function schlaflian(b) {
     return mul(4.0, pow(math.sin(div(pi(), b)), 2.0));
 }
@@ -19611,8 +22919,8 @@ function cauchyintegralsuperfunction(func,z,r=0.1){
     return kcarcpsi(div(log(x),log(filog(b))),b)
 }*/
 
-function kcchi(x,b=eulerc()){
-    const fix=filog(b);
+function kcchi(x,b=eulerc(),n=0){
+    const fix=filog(b,n);
     
     if(mag(log(fix))<1){
         
@@ -19623,18 +22931,20 @@ function kcchi(x,b=eulerc()){
       
     }
     
+  // return 10
     
-    let fi=x;
-    for(let i=0;i<bign;i++)
-    fi=div(log(fi),log(b))
-    return mul(sub(fi,fix),pow(log(fix),bign))
+    
+    let fis=sub(x,div(I,190000000000));
+    for(let i=0;i<bign/2;i++)
+    fis=logb(fis,b)
+    return mul(sub(fis,fix),pow(log(fix),bign/2))  
     
 }
-function kcarcchi(x,b=eulerc()){
-    const fix=filog(b);
+function kcarcchi(x,b=eulerc(),n=0){
+    const fix=filog(b,n);
     
     if(mag(log(fix))<1){
-        
+  //      if(mag(x)<mag(div(log(div(log(x),log(b))),log(b)))){
     let fis=add(fix,mul(x,pow(log(fix),bign)));
      for(let i=0;i<bign;i++)
     fis=div(log(fis),log(b))
@@ -19642,24 +22952,32 @@ function kcarcchi(x,b=eulerc()){
       
     }
     
-    let fi=add(fix,mul(x,pow(log(fix),sub(0,bign))));
-     for(let i=0;i<bign;i++)
+    let fi=add(fix,mul(x,pow(log(fix),sub(0,bign/2))));
+     for(let i=0;i<bign/2;i++)
     fi=pow(b,fi)
     return fi;
 }
-function kcpsi(x,b=eulerc()){
-      const fix=filog(b);
-return div(log(kcchi(x,b)),log(fix))
+function kcpsi(x,b=eulerc(),n=0){
+      const fix=filog(b,n);
+      
+      return  div(log(kcchi(x,b,n)),log(log(fix)))
+      
+      
+      
+return div(log(kcchi(x,b,n)),log(fix))
 }
 function kcpsir(x,b=eulerc()){
     
 return div(log(kcchi(x,b)),log(b))
 }
-function kcarcpsir(x,b=eulerc()){
-return kcarcchi(pow(b,x))
+function kcarcpsir(x,b=eulerc(),n=0){
+return kcarcchi(pow(b,x),n)
 }
-function kcarcpsi(x,b=eulerc()){
-    const fix=filog(b);
+function kcarcpsi(x,b=eulerc(),n=0){
+    
+    const fix=filog(b,n);
+    return kcarcchi(pow(log(fix),x),b,n)
+    
     let fi=add(fix,mul(pow(log(fix),sub((x),bign*2))));
      for(let i=0;i<bign*2;i++)
     fi=pow(b,fi)
@@ -19706,7 +23024,304 @@ fi=sub(fix,pow(log(fix),add(b,1.0,div((log(fix-fi)),log(log(fix))))))
 for(let i=0;i<bign;i++)fi=div(log(fi),log(a));
 return fi;
 }*/
-    //DOESNT WORK FIX ADD https://arxiv.org/pdf/2104.01990
+    // https://arxiv.org/pdf/2104.01990
+    
+    //Bl(s+1)=e^Bl(s)/(e^-ls+1)
+    //Blb(s+1)=b^Bl(s)/(e^-ls+1)
+    //Blbv(s+1)=b^Bl(s)/(b2^-ls+1)
+    
+    function tetrbeta1(s,l,n){
+        let fi=0;
+        for(let i=0;i<n;i++)
+            fi=div(exp(fi),add(1,exp(mul(l,sub(n,i,s)))))
+        return fi;
+    }
+    
+    function tetrtau1(s,l,n,k){
+        if (k==1)return sub(log(beta(add(s,1),l,n)),tetrbeta(s,l,n))
+        return sub(log(add(beta(add(s,1),l,n),tau(add(s,1),l,n,sub(k,1)))),beta(s,l,n))
+    }
+    
+    function tetrtau1k(s,l,k){return tetrtau(s,l,k,k)}
+    
+     function tetrbeta2(s,n){
+         
+     let fi=0;
+     for(let i=0;i<n;i++)
+         fi=div(exp(fi),add(exp(div(sub(n,i,s),sqrt(add(1,s)))),1))
+     return fi;
+ }
+ 
+ function tetrtau2(s,n,k){
+ if (k<=1)return sub(log(tetrbeta2(add(s,1),n)),tetrbeta2(s,n))
+     return sub(log(add(tetrbeta2(add(s,1),n),tetrtau2(add(s,1),n,sub(k,1)))),tetrbeta2(s,n))
+ }
+ 
+ function betatetr2(s,n){return add(tetrbeta2(s,n),tetrtau2(s,n,n))}
+ 
+ function tetrbeta3(s,n){
+       let fi=s;
+        for(let i=20;i>=1;i--)
+           fi=div(exp(fi),add(exp(div(sub(i,s)),sqrt(add(1,s))),1))
+        return fi;
+    }
+ 
+ function tetrbetaf3(w,n){
+       let fi=0;
+       let s=mul(-1,log(w));
+        for(let i=20;i>=1;i--)
+           fi=div(exp(fi),add(mul(exp(div(sub(i,0)),sqrt(add(1,s))),w),1))
+        return fi;
+    }
+    //https://github.com/JmsNxn92/The-Beta-Method-Thesis/
+    
+    
+    
+    function betatetr4(z,b=eulerc(),l=1,n=3)
+    {let bb=log(b)
+    return add(tetrbeta4(z,bb,l),tetrtau4(z,bb,l,n))}
+    
+    function tetrbeta4(z,b,l)
+    {
+    return    tetrbetab(z,exp(b),l,10)
+    }
+    //betatetr4(x+0.75+1,e)-tetr(x)
+    function tetrtau4(z,b,l,n){
+        //for(let i=n;i<=1;i--)
+            if(n<0 || mag(tetrbeta4(add(z,1),b,l))>100)return inftozero(div(log(add(1,exp(mul(-1,l,z)))),-1,b))
+        return inftozero(sub(div(log(add(1,div(tetrtau4(add(z,1),b,l,n-1),tetrbeta4(add(z,1),b,l)))),b),div(log(add(1,exp(mul(-1,l,z)))),b)))
+    }
+    
+    function betatetrc4(z,b=2,l=1,n=3){
+        let m=0
+        let mm=-1
+        
+        if(re(z)>mm && re(z)<=m)return betatetr4(z,b,l,n)
+        if(re(z)>bign && re(z)<=-bign)return betatetr4(z,b,l,n)
+            
+        let mmo=add(modc(z,1),mm);
+        let res=betatetr4(mmo,b,l,n)
+        if(re(z)>m){
+            for(let i=0;i<re(sub(ceil(re(z)),m));i++)res=pow(b,res);
+        }
+        if(re(z)<mm){
+            for(let i=0;i<re(sub(m,ceil(re(z))));i++)res=div(log(res),log(b));
+        }
+        return res
+       // if(re(z)>mm && re(z)<=m)return add(tetrbetab(z,b,l,n),tetrtaub(z,b,l,n,k))
+       // if(re(z)>m)return pow(b,betatetrcb(sub(z,1),b,l,n,k))
+       //     return div(log(betatetrcb(add(z,1),b,l,n,k)),log(b))
+    }
+    
+    /*
+function tetrrho4(z,j,b=eulerc(),l=1){
+    if(j==0)return 0;
+    if(j==1)return div(log(add(1,mul(-1,l,z))),-1,b)
+    return sub(tetrtau4(z,sub(j,1),b,l),tetrtau4(z,sub(j,2),b,l))
+}
+ //tetrtaub(s,b=2,l=1,n=15,k=3)
+ function tetrtau4(z,j,b=eulerc(),l=1){
+    return tetrtaub(z,b,l,15,j)
+}
+ 
+function tetrtaurho(z,j,b=eulerc(),l=1){
+    
+}
+ */
+ 
+ 
+ 
+ 
+ 
+    //betatetr(x)
+    /* if(re(z)>-1 && re(z)<=0)return add(tetrbeta2(z,n),tetrtau2(z,n,k))
+        if(real(z)>0)return exp(betatetr(sub(z,1),n,k))
+            return log(betatetr(add(z,1),n,k)) */
+    function betatetru(z,l=1,n=8,k=4){
+        return add(tetrbeta(z,l,n),tetrtau(z,l,n,k))
+    }    
+    function betatetrc(z,l=1,n=8,k=4){
+       
+        if(re(z)>-1 && re(z)<=0)return add(tetrbeta(z,l,n),tetrtau(z,l,n,k))
+        if(real(z)>0)return exp(betatetrc(sub(z,1),l,n,k))
+            return log(betatetrc(add(z,1),l,n,k))
+    }
+    function betatetr(x,l=1,n=8,k=4){let z=add(1.74444,x);return betatetrc(z,l,n,k)}
+    
+    function tetrbeta(s,l=1,n=10){
+        let fi=s;
+        for(let i=n;i>=1;i--)
+            fi=div(exp(mul(fi,l)),add(1,exp(mul(l,sub(i,s)))))
+        return fi;
+    }
+    function tetrbetap(s,l,n,j){
+        let fi=1;
+        for(let k=1;k<=j;k++)
+            fi=mul(fi,tetrbeta(add(s,k),l,n))
+        return fi;
+    }
+    function tetrtau(s,l=1,n=10,k=3){
+        let N=k
+        return sub(logtower(eulerc(),N,tetrbeta(add(s,N),l,n)),tetrbeta(s,l,n))
+    }
+    
+    function tetrbetab(s,b=2,l=1,n=15){
+        let fi=s;
+      //  let B=add(0.5,div(1,add(1,mag(im(s)))))
+        for(let i=n;i>=1 && mag(fi)<1000;i--)
+            //fi=div(pow(b,mul(fi,l)),add(1,exp(,mul(l,sub(i,s)))))
+        
+            fi=div(pow(b,mul(fi,l)),add(1,pow(eulerc(),mul(l,sub(i,s)))))
+        return fi;
+    }
+    function tetrbetabb(s,b=2,bb=2,l=1,n=15){
+        let fi=s;
+        for(let i=n;i>=1;i--)
+            fi=div(pow(b,mul(fi,l)),add(1,pow(bb,mul(l,sub(i,s)))))
+        return fi;
+    }
+    function tetrtaub(s,b=2,l=1,n=15,k=3){
+        let N=k
+        return sub(logtower(b,N,tetrbetab(add(s,N),b,l,n)),tetrbetab(s,b,l,n))
+    }
+    function betatetrub(z,b=2,l=1,n=15,k=4){
+        return add(tetrbetab(z,b,l,n),tetrtaub(z,b,l,n,k))
+    } 
+    function betatetrcb(z,b=2,l=1,n=15,k=4){
+        let m=0
+        let mm=-1
+        
+        if(re(z)>mm && re(z)<=m)return add(tetrbetab(z,b,l,n),tetrtaub(z,b,l,n,k))
+            
+        let mmo=add(modc(z,1),mm);
+        let res=add(tetrbetab(mmo,b,l,n),tetrtaub(mmo,b,l,n,k))
+        if(re(z)>m){
+            for(let i=0;i<sub(ceil(re(z)),m);i++)res=pow(b,res);
+        }
+        if(re(z)<m){
+            for(let i=0;i<sub(m,ceil(re(z)));i++)res=div(log(res),log(b));
+        }
+        return res
+       // if(re(z)>mm && re(z)<=m)return add(tetrbetab(z,b,l,n),tetrtaub(z,b,l,n,k))
+       // if(re(z)>m)return pow(b,betatetrcb(sub(z,1),b,l,n,k))
+       //     return div(log(betatetrcb(add(z,1),b,l,n,k)),log(b))
+    }
+    
+    function betatetrb(x,b=2,l=1,n=8,k=4,s=1,a=1){
+        let z=add(betadislocation(x,b,l,n,k,s,a),x);
+        return betatetrcb(z,b,l,n,k)
+    }
+    
+    const betadislocationCache = new Map();
+
+    function betadislocation(zaa,b=2,l=1,n=8,k=4,s=1,a=1){
+    
+    const key = [b,l,n,k,s,a].join(',');
+    if(betadislocationCache.has(key)) return betadislocationCache.get(key);
+
+     let f = function(xa){
+        return sub(betatetrcb(xa,b,l,n,k), s);
+    }
+    const result = newtonzero(f, a);
+    betadislocationCache.set(key, result);
+    return result;
+}//////////////////////////////////7
+    const beta4dislocationCache = new Map();
+//beta4dislocation(x,x,3,1,1)
+
+//betatetrc4(beta4dislocation(1,10^i,3,1,1),10^i,1,3) -> 1
+//betatetrc4(beta4dislocation(1,10^i,3,0,0),10^i,1,3) -> 0
+    function beta4dislocation(zaa,b=2,n=5,s=1,a=1,fast=0){//if(fast)return 0;
+  //    if(mag(sub(b,1))<=0.5)return 0;
+   //      if(mag(sub(b,0))<=0.5)return 0;
+   //      if(mag(sub(b,-1))<=0.5)return 0;
+    const key = [b,n,s,a].join(',');
+    let result
+    if(beta4dislocationCache.has(key)) return beta4dislocationCache.get(key);
+
+     let f = function(xa){
+        return sub(betatetrc4(xa,b,1,n), s);
+    }
+    log
+     result = newtonzero(f, a,0.01,3);
+    //result=0
+   if(beta4dislocationCache.size<1000) beta4dislocationCache.set(key, result);
+    return result;
+}////////////////////////////////
+    const kcarcpsihdislocationCache = new Map();
+
+    function kcarcpsihdislocation(zaa,b=2,n=0,s=1,a=1){
+      
+    //return kcpsi(s,b,n)
+    
+    const key = [b,n,s,a].join(',');
+    if(kcarcpsihdislocationCache.has(key)) return kcarcpsihdislocationCache.get(key);
+
+     let f = function(xa){
+        return sub(kcarcpsi(xa,b,n),s);
+    }
+    const result = halleyzero(f, a,0.01,3);
+    kcarcpsihdislocationCache.set(key, result);
+    return result;
+}//betatetrc4(x,1+i,1,8)
+//betatetrc4(x,1+i,1,3)
+//tetrbetaultraa(x,x)
+//tetrbetaultraa(x,10^i)
+function kcarcpsihh(x,b=2,n=0){return kcarcpsi(add(x,kcpsi(add(1,div(I,1000000)),b,n)),b,n)}// kcarcpsi(add(x,kcarcpsihdislocation(x,b,n,s,a)),b,n)}
+function kcarcpsih(x,b=2,n=0){return kcarcpsi(add(-1,x,kcpsi(b,b,n)),b,n)}//function kcarcpsihh(x,b=2,n=0,s=b,a=math.complex(1,1)){return kcarcpsi(add(-1,x,kcarcpsihdislocation(x,b,n,s,a)),b,n)}
+function kcarcpsihhh(x,b=2,n=0,s=b,a=math.complex(1,1)){return kcarcpsi(add(x,-1,kcarcpsihdislocation(x,b,n,s,a)),b,n)}
+function kcarcpsihhhh(x,b=2,n=0,s=1,a=math.complex(1,2)){return kcarcpsi(add(x,kcarcpsihdislocation(x,b,n,s,a)),b,n)}
+const betaultra= new Map();
+function tetrbetaultraa(x,b=2){
+    
+   if(x==0)return 1;
+   if(b==0)return 0;
+   //if(mag(b)<0.5)return 0;
+//    console.log(1,x)   
+    if(im(b)<0 && mag(im(b))>0.0001)return conj(tetrbetaultraa(conj(x),conj(b)))
+// console.log(2,x)    
+if(mag(im(b))<0.000000001)return tetrbetaultraa(x,add(b,mul(I,-0.00001,signum(im(add(x,div(I,123123123123)))))))
+ //console.log(3,x)   
+if(im(x)>1.5)return kcarcpsihhh(sub(x,-1,I),b,0,tetrbetaultraa(I,b),math.complex(1,add(1,im(b))))
+   //     if(im(x)>0.5)return add(mul(sub(-1,sub(0,im(x)),-0.5),kcarcpsihh(x,b,0)),mul(add(sub(0,im(x)),2,-0.5),betatetrb(x,b)))
+    //if(im(x)<-1.5)return kcarcpsihhh(sub(x,div(I,2)),b,1)
+  //  if(im(x)<-0.5)return add(mul(sub(-1,im(x),-0.5),kcarcpsihhh(sub(x,div(I,2)),b,1)),mul(add(im(x),2,-0.5),betatetrb(x,b)))
+        //return betatetrb(x,b)
+    let W=1.4
+     if(im(x)<-1.5)return kcarcpsihhh(sub(x,-1,mul(-1,W,I)),b,1,tetrbetaultraa(mul(-1,W,I),b),math.complex(-1,add(-1,mul(-1,W),im(b))))  
+    let n=3
+    return betatetrc4(add(x,beta4dislocation(x,b,n,0,conj(b)),1),b,1,n)
+}
+//tetrbetaultra(x,2+i*2*sin(2*pi*t))
+//7 tetrbetaultra(i+1,x)
+function tetrbetaultra(x,b=2){
+    if(b==1)return sub(1,pow(0,add(re(x),1)));
+    if(b==0 && 0.5<modc(sub(re(x),1),1) && re(x)<-1)return div(sub(1,pow(-1,floor(re(x)))),2)
+    if(b==0 && re(x)>1)return sub(1,pow(0,pow(0,sub(modc(sub(x,1),2),1))))
+    if(b==0)return pow(0,x)    
+    if(x==0)return 1;
+    if(x==-1)return 0;
+    if(x==1)return b;
+  //  console.log(b)
+    return pow(b,pow(b,pow(b,pow(b,pow(b,pow(b,tetrbetaultraa(sub(x,6),b)))))))
+    return pow(b,pow(b,pow(b,tetrbetaultraa(sub(x,3),b))))
+}
+//tetrbetaultrab(x,10^i)
+function tetrbetaultrab(x,b=2){
+   if(x==0)return 1;
+   if(b==0)return 0; 
+    if(im(b)<0 && mag(im(b))>0.0001)return conj(tetrbetaultrab(conj(x),conj(b)))
+
+if(mag(im(b))<0.000000001)return tetrbetaultrab,add(b,mul(I,-0.00001,signum(im(add(x,div(I,123123123123))))))
+ console.log(3,x)   
+if(im(x)>1.5)return kcarcpsihhh(sub(x,-1,I),b,0,tetrbetaultrab(I,b),math.complex(1,add(1,im(b))))
+    let W=1.3
+    if(im(x)<-1.3)return kcarcpsihhh(sub(x,-1,mul(-1,W,I)),b,1,tetrbetaultrab(mul(-1,W,I),b),math.complex(-1,add(-1,mul(-1,W),im(b))))  
+    let n=3
+    return betatetrc4(add(x,beta4dislocation(x,b,n,1,1,1)),b,1,n) 
+}
+
+    /*
  function tetrbeta1  (a,b,c){
  		let  fi=b;
 		let  l = a;
@@ -19740,7 +23355,63 @@ return fi;
      return fi;
  }
  
- function tetrtau2(s,n,k){
+  function tetrbeta22(s,b=2,n=10){
+     let fi=0;
+     for(let i=0;i<n;i++)
+         fi=div(pow(b,fi),add(pow(eulerc(),div(sub(n,i,s),sqrt(add(1,s)))),1))
+     return fi;
+ }*/
+ /*
+const newtonCache = new Map();
+const tetrbetaCache = new Map();
+function tetrbeta23(s, b = 2, n = 20) {
+    const keyZero = `zero_${b}`;
+    const keyMin1 = `min1_${b}`;
+    let zero = newtonCache.has(keyZero) ? newtonCache.get(keyZero) : newtonCache.set(keyZero, newtonzero(`tetrbeta22(x,20,${b})-1`, 1)).get(keyZero);
+    let min1 = newtonCache.has(keyMin1) ? newtonCache.get(keyMin1) : newtonCache.set(keyMin1, newtonzero(`tetrbeta22(x,20,${b})`, 1)).get(keyMin1);
+    const x = div(sub(s, zero), sub(zero, min1));
+    const y = add(zero, mul(s, sub(zero, min1)));
+    const keyTetr = `tetrbeta_${y}_${n}_${b}`;
+    return tetrbetaCache.has(keyTetr) ? tetrbetaCache.get(keyTetr) : tetrbetaCache.set(keyTetr, tetrbeta22(y, n, b)).get(keyTetr);
+}
+const newtonCache = new Map();
+const tetrbetaCache = new Map();
+
+function tetrbeta23(s, b = 2, n = 20) {
+    const keyX0 = `x0_${b}_${n}`;
+    const keyX1 = `x1_${b}_${n}`;
+    const keyXm1 = `xm1_${b}_${n}`;
+
+    let x0 = newtonCache.has(keyX0)
+        ? newtonCache.get(keyX0)
+        : newtonCache.set(keyX0, newtonzero(`tetrbeta22(x,${n},${b})-1`, 1)).get(keyX0);
+
+    let x1 = newtonCache.has(keyX1)
+        ? newtonCache.get(keyX1)
+        : newtonCache.set(keyX1, newtonzero(`tetrbeta22(x,${n},${b})-${b}`, b)).get(keyX1);
+
+    let xm1 = newtonCache.has(keyXm1)
+        ? newtonCache.get(keyXm1)
+        : newtonCache.set(keyXm1, newtonzero(`tetrbeta22(x,${n},${b})`, 0.5)).get(keyXm1); // initial guess
+
+    const Ls = add(x0, mul(s, div(sub(x1, xm1), 2))); // L(s) = x0 + s*(x1-xm1)/2
+
+    const fMinus1 = tetrbeta22(xm1, n, b);
+    const f0 = tetrbeta22(x0, n, b);
+    const f1 = tetrbeta22(x1, n, b);
+
+    const a = 1 / (f0 - fMinus1);
+
+    const keyTetr = `tetrbeta_${s}_${b}_${n}`;
+    if (tetrbetaCache.has(keyTetr)) return tetrbetaCache.get(keyTetr);
+
+    const result = mul(a, tetrbeta22(Ls, n, b));
+    tetrbetaCache.set(keyTetr, result);
+    return result;
+}
+
+
+  function tetrtau2(s,n,k){
      if(k==0)return sub(log(tetrbeta2(add(s,1),n)),tetrbeta2(s,n))
          return sub(log(add(tetrbeta2(add(1,s),n),tetrtau2(add(s,1),n,sub(k,1)))),tetrbeta2(s,n))
  }
@@ -19753,6 +23424,8 @@ return fi;
      return log(tetrbeta(add(x,1),n,k))
  }
  
+ 
+*/
  
  
 
@@ -19784,6 +23457,20 @@ return fi;
 		}
         */
         
+        
+
+        
+        
+        
+        
+        
+        
+        function asintower(n,a){
+        let xx=a;
+        for(let i=0;i<n;i++)xx=(asin(xx));
+        return xx;
+        }
+        
         function powertower(x,n,a=x){
         let xx=a;
         for(let i=0;i<n;i++)xx=pow(x,xx);
@@ -19794,7 +23481,7 @@ return fi;
         for(let i=0;i<n;i++)xx=div(log(xx),log(x));
         return xx;
         }
-        
+        //tetrtrack(2.71,0)
         function tetrtrack(b,x){
             const z=x;
             const L1 = filog(b,0) //div(wrightw2(sub(log(log(b)),mul(I,pi()))),-1,log(b))//filog(b,0) //(mag(im(b))<0.1)?filog(b,0):div(wrightw2(sub(log(log(b)),mul(I,pi()))),-1,log(b));
@@ -19819,6 +23506,7 @@ return fi;
             let psi2=(x)=>{return (mag(s2)<1)?div(log(mul(pow(s2,sub(0,N)),sub(powertower(b,N,x),L2))),log(s2)):div(log(mul(pow(s2,N),sub(logtower(b,N,x),L2))),log(s2))}
             let apsi1=(x)=>{return (mag(s1)<1)?logtower(b,N,add(L1,exp(mul(log(s1),add(x,N))))):powertower(b,N,add(L1,exp(mul(log(s1),sub(x,N)))))}
             let apsi2=(x)=>{return (mag(s2)<1)?logtower(b,N,add(L2,exp(mul(log(s2),add(x,N))))):powertower(b,N,add(L2,exp(mul(log(s2),sub(x,N)))))}
+            let apsi=(x)=>{return (im(x)<0) ? apsi2(x) : apsi1(x)}
             
             let F0=(x)=>{return div(add(mul(A,exp(-1,r1,I,x)),B,mul(C,exp(mul(I,r2,x)))),add(mul(D,exp(-1,r1,I,x)),E,mul(F,exp(mul(I,r2,x)))))}
             
@@ -19838,23 +23526,46 @@ return fi;
             let rho1=(z)=>{let fi=z;for(let k=0;k<N;k++)fi=add(fi,mul(f0(k),exp(mul(2,pi(),I,k,z))));return fi;}
             let rho2=(z)=>{let fi=z;for(let k=0;k<N;k++)fi=add(fi,mul(g0(k),exp(mul(2,pi(),I,k,z))));return fi;}
     
-            let G0d=(t,z)=>{return div(mul(apsi1(rho1(add(Ai,exp(mul(I,t))))),exp(mul(I,t))),sub(add(Ai,exp(mul(I,t))),z))}
+            let G0d=(t,z)=>{return div(mul(apsi(rho1(add(Ai,exp(mul(I,t))))),exp(mul(I,t))),sub(add(Ai,exp(mul(I,t))),z))}
             let G0=(z)=>{return div(integral(G0d,0,pi(),z),2,pi())}
 
             let J0d=(u,z)=>{return add(
-            div(mul(add(1,I,I), apsi2(rho2(add(-1,sub(0,Ai,mul(u,I)),u,u)))),add(Ai,1,z,mul(u,add(I,-2))))    ,
-            div(mul(add(-1,I,I),apsi2(rho2(add(1,sub(0,Ai,mul(u,I),u,u))))), add(Ai,-1,z,mul(u,add(I,2)))))}
+            div(mul(add(1,I,I), apsi(rho2(add(-1,sub(0,Ai,mul(u,I)),u,u)))),add(Ai,1,z,mul(u,add(I,-2))))    ,
+            div(mul(add(-1,I,I),apsi(rho2(add(1,sub(0,Ai,mul(u,I),u,u))))), add(Ai,-1,z,mul(u,add(I,2)))))}
             let J0=(z)=>{return div(integral(J0d,0,0.5,z),2,pi())}
           
             let H0d=(y,z)=>{return sub(
-            div(pow(b,F0(mul(I,y))),sub(mul(I,y),-1,z)),
-            div(div(log(F0(mul(I,y))),log(b)),sub(mul(I,y),1,z)))}
+            div(pow(b,apsi(rho1((mul(I,y))))),sub(mul(I,y),-1,z)),
+            div(div(log(apsi(rho1((mul(I,y))))),log(b)),sub(mul(I,y),1,z)))}
+          //  div(pow(b,F0(mul(I,y))),sub(mul(I,y),-1,z)),
+          //  div(div(log(F0(mul(I,y))),log(b)),sub(mul(I,y),1,z)))}
             let H0=(z)=>{return div(integral(H0d,sub(0,AA),AA,z),2,pi())}
           // return L2
-          return [f0d(2,x),g0d(2,x)]
-            return add(G0(x),J0(x))
+         // return [f0d(2,x),g0d(2,x)]
+            return add(G0(x),J0(x),H0(x))
         }//https://www.researchgate.net/publication/325532999_Tetration_for_complex_bases
         //not done
+        
+        
+        
+        
+        //https://en.wikipedia.org/wiki/Flat_function example
+        function flatfunc(x){return exp(div(-1,x,x))}
+        
+       //kcarcpsi(kcarcpsi(tetrtrack(e,x),e),e) 
+        //kcarcpsi(kcarcpsi(tetrtrack(2+i,x),2+i),2+i)-(2+i)^(kcarcpsi(kcarcpsi(tetrtrack(2+i,x-1),2+i),2+i))
+        //NOT FIX NOT DONE
+  function btetr(b,x){
+      
+if(im(x)<0)return kcarcpsi(kcarcpsi(tetrtrack(b,x),b,1),b,1) 
+  return kcarcpsi(kcarcpsi(tetrtrack(b,x),b,0),b,0)   
+
+
+
+  }      
+        
+        
+        
         
         
         
@@ -20135,11 +23846,19 @@ let fi = b;
             }
             
             
-            
-     function tetrregit(a,b) {  
+            const tetrregitcache = new Map();
+     function tetrregit(a,b,n=0) {
+
+         
+       const k = a.toString()+n.toString();
+  let L = tetrregitcache.get(k);
+  if (L === undefined) {
+    L = conj(filog(a));
+    tetrregitcache.set(k, L);
+  }
       const N = bign; 
-let fi = b;
-            let L = conj(filog(a));
+let fi = sub(b,1);
+       
        fi=sub(L,pow(log(L),add(fi,1,div(log(sub(L,powertower(a,sub(N,1)))),log(log(L))))))
             for (let i = 0; i < N; i++) {
                 fi = div(log(fi),log(a));
@@ -20152,14 +23871,14 @@ let fi = b;
      
           function arctetrregit(a,b) {  
       const N = bign; 
-let fi = b;
+let fi = add(b,0);
             let L = conj(filog(a));
            for (let i = 0; i < N; i++) {
                 fi = pow(a,fi);
             }
             fi=sub(L,fi)
             fi=div(log(fi),log(log(L)))
-            fi=sub(fi,1,div(log(sub(L,powertower(a,sub(N,1)))),log(log(L))))
+            fi=sub(fi,0,div(log(sub(L,powertower(a,sub(N,1)))),log(log(L))))
             return fi;
           }
         
@@ -20581,28 +24300,99 @@ function pent2u(x){
 //newtonzero("tetrs2(x)-x",0)  1.7303749482706337 -2.7527612196203917
 //0.11376615649538735 8.845904160281748
 function pents2(x){
-           const L=  -2.7527612196203917;
-       const Lp= 8.845904160281748;
-       let fi=sub(L,pow(Lp,add(x,1,sub(0,6),div(log(L),log(Lp)))));
-        for(let i=0;i<6;i++)
+           const L=  -1.5702829859249143;
+       const Lp= 4.814318974588616;
+       let fi=sub(L,pow(Lp,add(x,1,sub(0.45,3),div(log(L),log(Lp)))));
+        for(let i=0;i<3;i++)
            fi=tetrs2(fi);
        return fi;
 }
 
+function pents2attracting(x){
+           const L=  1.546351461037819;
+       const Lp=0.2091460182818139;
+       let fi=sub(L,pow(Lp,add(x,1,sub(0,-2),div(log(L),log(Lp)))));
+        for(let i=0;i<3;i++)
+           fi=slogs2(fi);
+       return fi;
+}
+
+function pentalogs2(x){
+           const L=  -1.5702829859249143;
+       const Lp= 4.814318974588616;
+       let fi=x;
+        for(let i=0;i<3;i++)
+           fi=slogs2(fi);
+        fi=add(div(log(div(sub(L,fi),L)),log(Lp)),2)
+       return add(fi,-0.45);
+}
 
 function sexts2(x){//sextation there is 3 real choices wow
 //newtonzero("pents2(x)-x",x)
 //-2.6839923389512133 -0.8947936102828048 1.7053994361978206
 //0.21153866214262962 2.229351532267998 0.053947604161663776
 
-                  const L=  -0.8947936102828048;
-       const Lp= 2.229351532267998;
-       let fi=sub(L,pow(Lp,add(x,1,sub(0,3),div(log(L),log(Lp)))));
+//1.5136565424511566
+//0.09920020804798924
+
+                  const L=  1.5136565424511566;
+       const Lp= 0.09920020804798924;
+       let fi=sub(L,pow(Lp,add(x,1,add(0.2599,2),div(log(L),log(Lp)))));
+        for(let i=0;i<3;i++)
+           fi=pentalogs2(fi);
+       return fi;
+       
+} 
+function sexalogs2(x){
+                 const L=  1.5136565424511566;
+       const Lp= 0.09920020804798924;
+       let fi=x;
         for(let i=0;i<3;i++)
            fi=pents2(fi);
+        fi=add(div(log(div(sub(L,fi),L)),log(Lp)),-3)
+       return sub(fi,0.2599);
+}
+function hepts2repelling(x){//we are damned the wa!!
+//newtonzero("sexts2(x)-x",x) derv("sexts2(x)",1.689531549194656)
+//1.4875620592350174 -3.08981171089091
+//0.0589075677126516 11.919243805280644
+
+                  const L=  -3.08981171089091;
+       const Lp= 11.919243805280644;
+       let fi=sub(L,pow(Lp,add(x,1,add(-0.4173/2,-1),div(log(L),log(Lp)))));
+        for(let i=0;i<3;i++)
+           fi=sexts2(fi);
        return fi;
        
 }
+function hepts2(x){//we are damned the wa!!
+//newtonzero("sexts2(x)-x",x) derv("sexts2(x)",1.689531549194656)
+//1.4875620592350174 -3.08981171089091
+//0.0589075677126516 11.919243805280644
+
+                  const L=  1.4875620592350174;
+       const Lp= 0.0589075677126516;
+       let fi=sub(L,pow(Lp,add(x,1,add(0,3,-0.82860925221),div(log(L),log(Lp)))));
+        for(let i=0;i<3;i++)
+           fi=sexalogs2(fi);
+       return fi;
+       
+}
+
+function heptalogs2(x){
+//newtonzero("sexts2(x)-x",x) derv("sexts2(x)",1.689531549194656)
+//1.4875620592350174 -3.08981171089091
+//0.0589075677126516 11.919243805280644
+ const L=  1.4875620592350174;
+       const Lp= 0.0589075677126516;
+       let fi=x;
+        for(let i=0;i<3;i++)
+           fi=sexts2(fi);
+        fi=add(div(log(div(sub(L,fi),L)),log(Lp)),-3)
+       return sub(fi,-0.8286092522);
+       
+}
+
 /*
 function septs2(x){//septation
 //newtonzero("sexts2(x)-x",x)
@@ -20870,118 +24660,104 @@ function septs2(x){//septation
   return mag(x) < N ? x : N;
 }
 
+
     
     
-    function uparrowx(ba, ea, arrnum) {
-  if (mag(ba) > bign - 1.0) return bign;
-  if (mag(ea) > Math.sqrt(bign) - 1.0) return bign;
-  if (mag(arrnum) > bign - 1.0) return bign;
-
-  if (equalto(arrnum, -2)) return 1.0 + ea;
-  if (smallerthanequalto(arrnum, -1))
-    return limit(
-      (2 + arrnum) * (ba + ea) + (1.0 - (arrnum + 2)) * (1.0 + ea)
-    );
-  if (smallerthanequalto(arrnum, 0))
-    return limit(
-      (1 + arrnum) * ba * ea + (1.0 - (arrnum + 1)) * (ba + ea)
-    );
-  if (biggerthanequalto(arrnum, 0) && smallerthanequalto(arrnum, 1))
-    return limit(
-      arrnum * Math.pow(ba, ea) + (1.0 - arrnum) * ba * ea
-    );
-  if (biggerthanequalto(arrnum, 1) && smallerthanequalto(arrnum, 2))
-    return limit(
-      (arrnum - 1) * uparrow(cmpx(ba), cmpx(ea), 2.0, cmpx(0)) +
-      (2.0 - arrnum) * Math.pow(ba, ea)
-    );
-
-  let xm = ea;
-  let fn = ea;
-  let fnn = ea;
-  let xn = ba;
-  let xnn = 0;
-
-  for (let i = 0; i < bign; ++i) {
-    fn = uparrowx(ba, xn, arrnum - 1) - xn;
-    fnn = uparrowx(ba, xnn, arrnum - 1) - xnn;
-    xm = xn - fn * (xn - xnn) / (fn - fnn);
-    if (Math.abs(xm - xn) < epsilon) break;
-    xnn = xn;
-    xn = xm;
-  }
-
-  let L = xm;
-
-  let tetl = (uparrowx(eulerc, L + epsilon, arrnum - 1) - uparrowx(eulerc, L - epsilon, arrnum - 1)) / (2.0 * epsilon);
-
-  return limit(
-    hhlog(
-      eulerc,
-      hhlog(
-        eulerc,
-        L - Math.pow(tetl, 1.0 + ea + (Math.log(L - uparrowx(eulerc, uparrowx(eulerc, ea - ea, arrnum - 1), arrnum - 1))) / Math.log(tetl)),
-        arrnum - 1
-      ),
-      arrnum - 1
-    ),
-    1000.0
-  );
+   function hhlog(ba,ea,level){
+if(level==1)return logb(ea,ba)
+if(level>1&&level<2)return add(mul(sub(2,level),logb(ea,ba)),mul(sub(level,1),slog(ba,ea)))
+if(level==2)return slog(ba,ea)
+if(re(ea)<=0)return sub(hhlog(ba,uparrow(cmpx(ba),cmpx(ea),sub(level,1),0),level),1)
+if(re(ea)>1)return add(hhlog(ba,hhlog(ea,ba,sub(level,1)),level),1)
+return sub(1,ea)
 }
 
-function uparrowt(ba, ea, arrnum) {
-  if (mag(ba) > bign - 1.0) return bign;
-  if (mag(ea) > bign - 2.0) return bign;
+function uparrow(ba,ea,arrnum,fastperi=0){
+if(re(ba)>sub(bign,1))return bign
+if(re(ea)>sub(bign,1))return bign
+if(Math.abs(arrnum)>sub(bign,1))return bign
+if(arrnum==-2)return add(1,ea)
+if(arrnum<=-1)return limit(add(mul(add(2,arrnum),add(ba,ea)),mul(sub(1,add(arrnum,2)),add(1,ea))))
+if(arrnum<=0)return limit(add(mul(add(1,arrnum),mul(ba,ea)),mul(sub(1,add(arrnum,1)),add(ba,ea))))
+if(arrnum>0&&arrnum<=1)return limit(add(mul(arrnum,pow(ba,ea)),mul(sub(1,arrnum),mul(ba,ea))))
+let peri=0
+if(arrnum==2){
+if(fastperi==0){bign=div(bign,10);peri=cmpx(add(Math.abs(re(sub(0,div(mul(2,pi()),log(sub(0,lambertw(sub(0,log(ba))))))))),0),add(Math.abs(im(sub(0,div(mul(2,pi()),log(sub(0,lambertw(sub(0,log(ba))))))))),0));bign=mul(bign,10)}else peri=fastperi
 
-  if (smallerthan(arrnum, -2)) return ea;
-  if (equalto(arrnum, -2)) return 1.0 + ea;
-  if (equalto(arrnum, -1)) return ba + ea;
-  if (equalto(arrnum, 0)) return ba * ea;
-  if (biggerthan(arrnum, 0) && smallerthan(arrnum, 1))
-    return limit(arrnum * Math.pow(ba, ea) + (1.0 - arrnum) * ba * ea);
-  if (equalto(arrnum, 1)) return Math.pow(ba, ea);
-
-  if (smallerthanequalto(ea, -1)) return 0;
-
-  if (biggerthanequalto(ea, 0)) {
-    let fi = 0.0;
-    for (let i = Math.floor(re(ea)); i > -1; i--) {
-      fi +=
-        -limit(uparrowt(cmpx(ba), limit(uparrow(cmpx(ba), cmpx(i + epsilon, limit(tocomp(ea)).imag()) - 1.0, arrnum), bign), arrnum - 1)) +
-        limit(uparrowt(cmpx(ba), limit(uparrow(cmpx(ba), cmpx(i - epsilon, limit(tocomp(ea)).imag()) - 1.0, arrnum), bign), arrnum - 1));
-    }
-    return limit(uparrow(cmpx(ba), limit(uparrowt(ba, ea - 1.0, arrnum), bign), arrnum - 1)) + fi;
-  }
-  return 1.0 + ea;
+if(im(ea)<sub(0,im(peri)))return limit(uparrow(cmpx(ba),sub(ea,conj(peri)),arrnum,peri))
+if(im(ea)>im(peri))return limit(uparrow(cmpx(ba),sub(ea,peri),arrnum,peri))
+}
+if(re(ea)>1)return limit(uparrow(cmpx(ba),limit(uparrow(cmpx(ba),sub(ea,1),arrnum,peri),bign),sub(arrnum,1)))
+if(re(ea)<=0)return limit(div(logb(uparrow(cmpx(ba),add(ea,1),arrnum,peri),ba),1))
+let fi=logb(cmpx(1,im(ea)),ba)
+return limit(add(mul(sub(0,re(ea)),fi),mul(uparrow(cmpx(ba),fi,sub(arrnum,1)),add(1,re(ea)))))
 }
 
-function lowerhypo(ba, ea, arrnum) {
-  if (mag(ea) > bign - 1.0) return bign;
-  if (equalto(ea, 0)) return 1.0;
-  if (smallerthan(arrnum, 0)) return ba;
-  if (equalto(arrnum, 0)) return ba + 1.0;
-  if (equalto(arrnum, 1)) return ba + ea;
-  if (equalto(arrnum, 2)) return ba * ea;
-  if (equalto(arrnum, 3)) return ba + ea;
-  if (biggerthan(arrnum, 1) && smallerthan(arrnum, 2))
-    return (ea + ba) * (2.0 - arrnum) + (ea * ba) * (arrnum - 1.0);
-  if (biggerthanequalto(ea, 0))
-    return limit(lowerhypo(lowerhypo(ba, ea - 1.0, arrnum), ba, arrnum - 1));
-  return 1.0 + ea;
+function uparrowt(ba,ea,arrnum){
+if(Math.abs(todoub(ba))>sub(bign,1))return bign
+if(Math.abs(todoub(ea))>sub(bign,2))return bign
+if(arrnum<-2)return ea
+if(arrnum==-2)return add(1,ea)
+if(arrnum==-1)return add(ba,ea)
+if(arrnum==0)return mul(ba,ea)
+if(arrnum>0&&arrnum<1)return add(mul(arrnum,pow(ba,ea)),mul(sub(1,arrnum),mul(ba,ea)))
+if(arrnum==1)return pow(ba,ea)
+if(todoub(ea)<=sub(0,1))return 0
+if(todoub(ea)>0){
+let fi=0
+for(let i=Math.floor(todoub(ea));i>-1;i--){
+fi=add(fi,sub(0,limit(uparrowt(cmpx(ba),limit(uparrow(cmpx(ba),sub(add(i,1/bign),im(limit(tocomp(ea))),1),arrnum),bign),sub(arrnum,1)))),limit(uparrowt(cmpx(ba),limit(uparrow(cmpx(ba),sub(sub(i,1/bign),im(limit(tocomp(ea))),1),arrnum),bign),sub(arrnum,1)))
+)}
+return add(limit(uparrow(cmpx(ba),limit(uparrowt(ba,sub(ea,1),arrnum),bign),sub(arrnum,1))),fi)
+}
+return add(1,ea)
 }
 
-function commhypo(ba, ea, arrnum) {
-  if (mag(ea) > bign - 1.0) return bign;
-  if (equalto(ea, 0)) return 1.0;
-  if (smallerthan(arrnum, 0)) return ba;
-  if (equalto(arrnum, 0)) return Math.log(Math.exp(ba) + Math.exp(ea));
-  if (equalto(arrnum, 1)) return ba + ea;
-  if (equalto(arrnum, 2)) return Math.exp(Math.log(ba) + Math.log(ba));
-  if (equalto(arrnum, 3)) return Math.pow(ba, Math.log(ea));
-  if (biggerthan(arrnum, 1) && smallerthan(arrnum, 2))
-    return Math.log(Math.exp(ba) + Math.exp(ea)) * (1.0 - arrnum) + (ea + ba) * arrnum;
-  return limit(Math.exp(commhypo(Math.log(ea), Math.log(ea), arrnum - 1)));
-}
+function uparrowx(ba,ea,arrnum){
+if(mag(ba)>bign-1)return bign
+if(mag(ea)>pow(bign,1)-1)return bign
+if(mag(arrnum)>bign-1)return bign
+if(equalto(arrnum,-2))return add(1,ea)
+if(smallerthanequalto(arrnum,-1))return limit(add(mul(sub(2,sub(0,arrnum)),add(ba,ea)),mul(sub(1,add(arrnum,2)),add(1,ea))))
+if(smallerthanequalto(arrnum,0))return limit(add(mul(add(1,arrnum),mul(ba,ea)),mul(sub(1,add(arrnum,1)),add(ba,ea))))
+if(biggerthanequalto(arrnum,0)&&smallerthanequalto(arrnum,1))return limit(add(mul(arrnum,pow(ba,ea)),mul(sub(1,arrnum),mul(ba,ea))))
+if(biggerthanequalto(arrnum,1)&&smallerthanequalto(arrnum,2))return limit(add(mul(sub(arrnum,1),uparrow(cmpx(ba),cmpx(ea),2,cmpx(0))),mul(sub(2,arrnum),pow(ba,ea))))
+let xm=ea,fn=ea,fnn=ea,xn=ba,xnn=0
+for(let i=0;i<bign;++i){fn=sub(uparrowx(ba,xn,sub(arrnum,1)),xn)
+fnn=sub(uparrowx(ba,xnn,sub(arrnum,1)),xnn)
+xm=sub(xn,div(mul(fn,sub(xn,xnn)),sub(fn,fnn)))
+if(mag(sub(xm,xn))<1/bign)break
+xnn=xn
+xn=xm}
+let L=xm
+let tetl=div(sub(uparrowx(eulerc(),add(L,1/bign),sub(arrnum,1)),uparrowx(eulerc(),sub(L,1/bign),sub(arrnum,1))),mul(2,1/bign))
+return limit(hhlog(eulerc(),hhlog(eulerc(),sub(L,pow(tetl,add(1,add(ea,div(Math.log(sub(L,uparrowx(eulerc(),uparrowx(eulerc(),sub(ea,ea),sub(arrnum,1)),sub(arrnum,1)))),Math.log(tetl)))))),sub(arrnum,1)),sub(arrnum,1)),1000)}
+
+
+
+function lowerhypo(ba,ea,arrnum){
+if(mag(ea)>bign-1)return bign
+if(equalto(ea,0))return 1
+if(smallerthan(arrnum,0))return ba
+if(equalto(arrnum,0))return add(ba,1)
+if(equalto(arrnum,1))return add(ba,ea)
+if(equalto(arrnum,2))return mul(ba,ea)
+if(equalto(arrnum,3))return add(ba,ea)
+if(biggerthan(arrnum,1)&&smallerthan(arrnum,2))return add(mul(add(ea,ba),sub(2,arrnum)),mul(mul(ea,ba),sub(arrnum,1)))
+if(biggerthanequalto(ea,0))return limit(lowerhypo(lowerhypo(ba,sub(ea,1),arrnum),ba,sub(arrnum,1)))
+return add(1,ea)}
+
+function commhypo(ba,ea,arrnum){
+if(mag(ea)>bign-1)return bign
+if(equalto(ea,0))return 1
+if(smallerthan(arrnum,0))return ba
+if(equalto(arrnum,0))return Math.log(add(Math.exp(ba),Math.exp(ea)))
+if(equalto(arrnum,1))return add(ba,ea)
+if(equalto(arrnum,2))return Math.exp(add(Math.log(ba),Math.log(ba)))
+if(equalto(arrnum,3))return pow(ba,Math.log(ea))
+if(biggerthan(arrnum,1)&&smallerthan(arrnum,2))return add(mul(sub(1,arrnum),Math.log(add(Math.exp(ba),Math.exp(ea)))),mul(arrnum,add(ea,ba)))
+return limit(Math.exp(commhypo(Math.log(ea),Math.log(ea),sub(arrnum,1))))}
+
 
 function BEAF(a = 1.0, b = 1.0, c = 1.0, d = 1.0, e = 0, f = 0) {
   if (mag(f) > bign - 1.0) return bign;
@@ -20990,37 +24766,44 @@ function BEAF(a = 1.0, b = 1.0, c = 1.0, d = 1.0, e = 0, f = 0) {
   if (mag(d) > Math.sqrt(bign) - 1.0) return bign;
   if (mag(b) > Math.sqrt(bign) - 1.0) return bign;
   if (mag(a) > Math.sqrt(bign) - 1.0) return bign;
-
+//console.log(a,b,c,d,e,f)
   if (smallerthanequalto(b, 1.0)) return limit(Math.pow(a, b));
 
   if (smallerthanequalto(f, 1.0)) {
     if (smallerthanequalto(e, 1.0)) {
-      if (smallerthanequalto(d, 1.0)) return limit(uparrow(a, b, c));
+      if (smallerthanequalto(d, 1.0)) return limit(uparrowt(a, b, c));
       if (smallerthanequalto(c, 1.0) && smallerthanequalto(d, 1.0))
         return limit(uparrow(a, b, c));
       if (smallerthanequalto(c, 1.0))
-        return limit(BEAF(a, a, limit(BEAF(a, b - 1.0, a / a, d)), d - 1.0));
-      return limit(BEAF(a, limit(BEAF(a, b - 1.0, c, d)), c - 1.0, d));
+        return limit(BEAF(a, a, limit(BEAF(a, sub(b,1), 1, d)), sub(d , 1.0)));
+      return limit(BEAF(a, limit(BEAF(a, sub(b , 1.0), c, d)), sub(c , 1.0), d));
     }
     if (smallerthanequalto(c, 1.0) && smallerthanequalto(d, 1.0))
-      return limit(BEAF(a, a, a, limit(BEAF(a, b - 1.0, a / a, a / a, e)), e - 1.0));
+      return limit(BEAF(a, a, a, limit(BEAF(a, sub(b , 1.0), 1, 1, e)), sub(e , 1.0)));
     if (smallerthanequalto(c, 1.0))
-      return limit(BEAF(a, a, limit(BEAF(a, b - 1.0, a / a, d, e)), d - 1.0, e));
-    return limit(BEAF(a, limit(BEAF(a, b - 1.0, c, d, e)), c - 1.0, d, e));
+      return limit(BEAF(a, a, limit(BEAF(a, sub(b , 1.0), 1, d, e)), sub(d , 1.0), e));
+    return limit(BEAF(a, limit(BEAF(a, sub(b , 1.0), c, d, e)), sub(c , 1.0), d, e));
   }
   if (smallerthanequalto(c, 1.0) && smallerthanequalto(d, 1.0) && smallerthanequalto(e, 1.0))
-    return limit(BEAF(a, a, a, a, limit(BEAF(a, b - 1.0, a / a, a / a, a / a, f)), f - 1.0));
+    return limit(BEAF(a, a, a, a, limit(BEAF(a, sub(b , 1.0), 1, 1, 1, f)), sub(f , 1.0)));
   if (smallerthanequalto(c, 1.0) && smallerthanequalto(d, 1.0))
-    return limit(BEAF(a, a, a, limit(BEAF(a, b - 1.0, a / a, a / a, e)), e - 1.0, f));
+    return limit(BEAF(a, a, a, limit(BEAF(a, sub(b , 1.0), 1, 1, e)), sub(e , 1.0), f));
   if (smallerthanequalto(c, 1.0))
-    return limit(BEAF(a, a, limit(BEAF(a, b - 1.0, a / a, d, e)), d - 1.0, e, f));
-  return limit(BEAF(a, limit(BEAF(a, b - 1.0, c, d, e, f)), c - 1.0, d, e, f));
+    return limit(BEAF(a, a, limit(BEAF(a, sub(b , 1.0), 1, d, e)), sub(d , 1.0), e, f));
+  return limit(BEAF(a, limit(BEAF(a, sub(b , 1.0), c, d, e, f)), sub(c , 1.0), d, e, f));
 }
     
     
     
+    //https://googology.fandom.com/wiki/Fusible_number
+    function margin(x,N=bign/2){
+       if(re(x)<0)return sub(0,x) 
+    if(N<=0)return x;
+let M=sub(N,2)
+return div(margin(sub(x,margin(sub(x,1),M),div(-1,getdenom(add(margin(sub(x,1),M),x,-1))),pow(2,ceil(log2(margin(sub(x,1),M))))),M),2)
+    }
     
-    
+    //FIX THESE
     
     
     
@@ -21043,9 +24826,9 @@ function gilog(b,n=0) {//x^(1/x)^(1/x)..
 
 
 
+function cmpx(x=1,y=0){return add(x,mul(I,y))}
 
-
-
+//BEAF(x,x,x,x)
 
 
 
@@ -21083,8 +24866,17 @@ function asimplegrammar(a,n){
 return pow(mul(a,n),sub(n,1))
 }
 
+
+
+
+
+//ADDADDADD
+//https://verse-and-dimensions.fandom.com/wiki/User_blog:Cheetahrock63/Hypercomplex_Blog:_Factorial_Portal#Sloane-Plouffe_superfactorial
 function bouncingfactorial(b) {
 return div(sqr(barnesg(add(b,2))),gamma(sub(b,-1)));
+    
+}
+function tbouncingfactorial(b){
     return div(pow(tetr(gamma(add(b,1)), gamma(add(b,1))), 2.0)
         , gamma(add(b,1)));
 }
@@ -21093,6 +24885,97 @@ function dilbertlambda(b) {
     return div(math.sqrt(lambertw(mul(2.0, mul(b, b))))
         , math.sqrt(2.0));
 }
+function swingingfactorial(x){
+  return div(factorial(x),sqr(factorial(div(sub(x,sqr(sin(div(mul(pi(),x),2)))),2))))  
+}
+
+function superduperfactorial(x){
+    // exp((6 + 13 n + 9 n^2 + 2 n^3 - 8*(n + 2)*log(A) - 2*(n + 2)^2*log(2*Pi) + 4*(2 n + 1)*logG(n + 2) - 4*(n + 1)^2*logGamma(n + 2) + 8*psi(-3, n + 2))/8)
+    return exp(div(add(6,mul(13,x),mul(9,x,x),mul(2,x,x,x),mul(-8,add(x,2),log(A)),mul(-2,add(n,2),pow(2,log(mul(2,pi())))),mul(4,add(x,x,1),logbarnesg(add(x,2))),mul(4,add(x,1),pow(2,loggamma(x))),mul(8,polygamma(-3,add(x,2)))),8))
+    
+    
+}
+//https://oeis.org/A141811
+function partialcatalannumber(n,k){
+    return mul(catalan(k),catalan(sub(n,2)),0.5)
+}
+
+
+//https://oeis.org/wiki/User:Peter_Luschny/Orbitals
+function extendedcatalan(x){return div(factorial(x),factorial(floorxo2(sub(x,1))),factorial(floorxo2(add(x,1))))}
+function qextendedcatalan(x,q){return div(qfactorial(x,q),factorial(floorxo2(sub(x,1))),qfactorial(floorxo2(add(x,1)),q))}
+//https://oeis.org/A057977
+//(1/(2*Pi))*Int_{x=0..4}(x^(2*n-1)* ((4-x)^2/x)^cos(Pi*n))^(1/4)
+function binom1d(x,n){return pow(mul(pow(x,add(n,n,-1)),pow(div(sqr(sub(4,x)),x),cos(mul(pi(),n)))),0.25)}
+function binom1integral(n){return div(integral(binom1d,0,4,n),2,pi())}
+function binom1(n){return div(sub(swingingfactorial(n),luschnyorbital(n)),2)}
+//function fibonorial
+function luschnyorbital(n){return mul(swingingfactorial(n),sub(1,div(2,add(floorxo2(n),1))))}//sub(,mul(2,))}
+
+//https://oeis.org/A274888
+function qswingingfactorial(x,q){
+  return div(factorial(x),sqr(qfactorial(div(sub(x,sqr(sin(div(mul(pi(),x),2)))),2),q)))  
+}
+function qluschnyorbital(n,q)
+{return mul(qswingingfactorial(n,q),sub(1,div(2,add(floorxo2(n),1))))}//sub(,mul(2,))}
+function qbinom1(n){return div(sub(qswingingfactorial(n,q),qluschnyorbital(n,q)),2)}
+
+
+function qqswingingfactorial(x,q){
+  return div(factorial(x),sqr(qfactorial(div(sub(x,sqr(qsin(div(mul(pi(),x),2),q))),2),q)))  
+}
+
+
+
+
+
+
+
+
+
+function centralhypercubeedge(n){//https://oeis.org/A002457
+return div(factorial(add(n,n,1)),sqr(factorial(n)))
+}
+
+function totalhypercubeedge(n,k){//https://oeis.org/A116666
+    return mul(ncr(n,sub(k,1)),add(k,k,-1))
+}
+
+function hypercubeedge(n,k){//https://oeis.org/A116666
+    return mul(ncr(n,k),add(k,k,1))
+}
+
+
+function banachmathbox(x){//https://oeis.org/A000531
+    return div(sub(div(factorial(add(x,x,1)),sqr(factorial(x))),pow(4,x)),2)
+}
+
+function gesselsequence(x){https://oeis.org/A135404
+return div(mul(pow(16,x),poch(5/6,x),poch(1/2,x)),poch(2,x),poch(5/3,x))
+}
+
+function quadruplefactorial(x){//A001813
+return div(factorial(mul(2,x)),factorial(x))
+}
+
+//function centralfactorial
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function olga(b) {
     return div(b, add(mul(b, b), 1.0));
@@ -21126,6 +25009,7 @@ function wrightw(b) {
    return lambertw(exp(b),ceil(re(div(sub(im(b),pi()),2,pi()))))
 }
 function wrightw2(b) {
+    return conj(wrightw(conj(b)))
    return conj(lambertw(exp(conj(b)),ceil(div(sub(im(conj(b)),pi()),2,pi()))))
 }
 function tania(b) {
@@ -21231,6 +25115,51 @@ function gammareg(a,z){return div(incgamma(a,z),gamma(a));}
 function lgammareg(a,z){return div(lincgamma(a,z),gamma(a));}
 function ggammareg(a,x,z){return div(gincgamma(a,x,z),gamma(a));}
 
+
+//gcell(0.5,1,1,x)
+//ghyp(1,1,x)
+//https://www.homepages.ucl.ac.uk/~ucahrha/conferences/ruijsenaars/ADEs-specialfn.pdf
+function grat(a,z){return mul(pow(mul(2,pi()),-0.5),exp(div(mul(I,z,log(a)),-1,a)),gamma(add(div(mul(I,z),-1,a),0.5)))}
+function adef(A,B,c0,c1,a,z){let fi=1;for(let i=0;i<leng(A);i++)fi=mul(fi,grat(a,sub(z,g(A,i))));for(let i=0;i<leng(B);i++)fi=div(fi,grat(a,sub(z,g(B,i))));return mul(fi,exp(add(c0,mul(c1,z))))}
+function gtrig(r,a,z){let fi=1;for(let i=1;i<bign;i++)fi=div(fi,sub(1,mul(pow(exp(mul(-1,a,r)),sub(mul(2,i),1)),exp(mul(2,I,r,z)))));return fi;}
+function adeftrig(A,B,c0,c1,c2,r,a,z){let fi=1;for(let i=0;i<leng(A);i++)fi=mul(fi,gtrig(r,a,sub(z,g(A,i))));for(let i=0;i<leng(B);i++)fi=div(fi,gtrig(r,a,sub(z,g(B,i))));return mul(fi,exp(add(c0,mul(c1,z),mul(c2,z,z))))}
+function gell(r,a,b,z){let fi=0;for(let n=1;n<bign;n++)fi=add(fi,div(sin(mul(2,n,r,z)),2,n,sinh(mul(n,r,a)),sinh(mul(n,r,b))));return mul(exp(mul(I,fi)))}
+function adefell(A,B,c0,c1,c2,c3,r,a,b,z){let fi=1;for(let i=0;i<leng(A);i++)fi=mul(fi,gell(r,a,b,sub(z,g(A,i))));for(let i=0;i<leng(B);i++)fi=div(fi,gell(r,a,b,sub(z,g(B,i))));return mul(fi,exp(add(c0,mul(c1,z),mul(c2,z,z),mul(c3,z,z,z))))}
+function gcell(r,a,b,z){return mul(exp(div(mul(pi(),pi(),z),6,I,r,a,b)),gell(r,a,b,z))}
+function ghyp(a,b,z){let r=div(mul(I,pi()),b);return div(mul(exp(sub(0,div(mul(r,z,z),2,a),div(sub(mul(r,a),div(sqr(pi()),r,a)),24))),gtrig(r,a,add(z,div(pi(),2,r)))),gtrig(div(pi(),a),div(pi(),r),add(mul(I,z),div(a,2))))}// gcell(1e-6,a,b,z)}
+function adefhyp(A,B,c0,c1,c2,a,b,z){let fi=1;for(let i=0;i<leng(A);i++)fi=mul(fi,ghyp(a,b,sub(z,g(A,i))));for(let i=0;i<leng(B);i++)fi=div(fi,ghyp(a,b,sub(z,g(B,i))));return mul(fi,exp(add(c0,mul(c1,z),mul(c2,z,z))))}
+//elliptic gamma hyperbolic gamma ellipticgamma hyperbolicgamma
+//Hyperbolic functions were formally introduced in 1757 by Vincenzo Riccati.[14][13][15] Riccati used Sc. and Cc. (sinus/cosinus circulare) to refer to circular functions and Sh. and Ch. (sinus/cosinus hyperbolico) to refer to hyperbolic functions.[
+//i hate this notation
+//cant bare it
+//so i am gonna make cc neville theta c instead 
+//and ch hyperbolic elliptic Function
+//ADD psi Q P the other psi and uhh
+function zratf(s,c,z){return hurwitzzeta(s,add(0.5,c,mul(-1,I,z)))}
+function zrat(a,s,z){return div(hurwitzzeta(s,sub(0.5,div(mul(I,z),a))),pow(a,s))}
+//function zetaq(s,c,z)
+
+function zhypd(u,Q){let [a,b,s,z]=Q;return div(tanh(div(mul(pi(),sub(z,u)),a)),pow(mul(2,cosh(div(mul(pi(),u),b))),s))}
+function zhyp(a,b,s,z){return div(mul(I,integral(zhypd,sub(0,sqrt(bign)),sqrt(bigb),[a,b,s,z])),2,a)}
+function zetahyp(p,s){return mul(pow(mul(2,pi(),p),s),zhyp(1,div(1,p),s,sub(div(I,2),div(I,2,p))))}
+
+function zekcoef(k,r,b,s){return div(mul(r,integral(zekcoefd,sub(0,div(pi(),2,r)),div(pi(),2,r),[k,r,b,s])),pi())}
+function zekcoefd(x,Q){let [k,r,b,s]=Q;let fi=0;for(let n=1;n<bign;n++)fi=add(fi,div(cos(mul(2,n,r,x)),n,sinh(mul(n,r,b))));return mul(exp(mul(s,f)),exp(mul(2,I,k,r,x)))}
+function zell(r,a,b,s,z){let fi=div(mul(I,z,zekcoef(0,r,b,s)),a);for(let k=1;k<bign;k++)fi=sub(fi,div(mul(zekcoef(k,r,b,s),exp(mul(-2,I,k,r,z))),2,sinh(mul(k,r,a))),div(mul(zekcoef(-k,r,b,s),exp(mul(-2,I,-k,r,z))),2,sinh(mul(-k,r,a))))}
+function ztrigp(k,s){return ncr(add(s,k,-1),k)}
+function ztrig(r,a,s,z){let fi=div(mul(I,sub(z,div(mul(I,a),2))),a);for(let k=1;k<bign;k++)fi=add(fi,div(mul(ztrigp(k,s),exp(mul(2,I,k,r,z))),2,sinh(mul(k,r,a))));return fi;}
+function zetatrig(a,s){let fi=0;for(let n=1;n<bign;n++)fi=add(fi,sub(pow(div(a,sub(1,exp(mul(-1,n,a)))),s),pow(a,s)));return fi;}
+
+
+
+
+//ghyp(ap,am,)
+function relativistivf(ap,am,d,y,z){let a=average(ap,am);return div(ghyp(ap,am,add(z,y,mul(I,d),mul(-1,I,a))),ghyp(ap,am,add(y,mul(I,d),mul(-1,I,a))))}
+function relativistivk(ap,am,c0,c1,c2,c3,z){return div( ghyp(ap,am,mul(I,c0,c1,div(am,-2))),ghyp(ap,am,mul(I,c0,c2,div(ap,-2))),ghyp(ap,am,mul(I,mul(I,add(c0,c3)))) ,ghyp(ap,am,add(z,mul(I,average(am,ap)))), ghyp(ap,am,add(z,mul(I,add(c0,c1,div(am,-2))))),ghyp(ap,am,add(z,mul(I,add(c0,c2,div(ap,-2))))),ghyp(ap,am,add(z,mul(I,add(c0,c3)))))}
+
+function relativistici(ap,am,c0,c1,c2,c3,v,vh,z){return mul(relativistivf(ap,am,c0,v,z),relativistivk(ap,am,c0,c1,c2,c3,z),relativistivf(ap,am,div(add(c0,c1,c2,c3),2),vh,z))}
+
+
 function incbetad(t,A){
 	const a=g(A,0);const b=g(A,1);
 	return mul(pow(t,sub(a,1)),pow(sub(1,t),sub(b,1)));
@@ -21239,6 +25168,8 @@ function incbeta(x,a,b){return integral(incbetad,0,x,[a,b]);}
 function regincbeta(x,a,b){return div(incbeta(x,a,b),beta(a,b));}
 function uincbeta(x,a,b){return sub(beta(a,b),incbeta(x,a,b));}
 function reguincbeta(x,a,b){return div(uincbeta(x,a,b),beta(a,b));}
+
+//partial summations
 
 function partialexp(x,k){return div(mul(exp(x),incgamma(add(k,1),x)),factorial(k))}
 function partialsin(x,k){return add(div(mul(pow(-1,k),pow(x,add(k,k,3)),hypg12(1,add(k,2),add(k,2.5),div(sqr(x),-4))),factorial(add(k,k,3))),sin(x))}
@@ -21250,11 +25181,12 @@ function partialsinh(x,k){return sub(sinh(x),div(mul(pow(x,add(k,k,3)),hypg12(1,
 
 function partialsinc(x,k){return add(div(mul(pow(-1,k),pow(x,add(k,k,2)),hypg12(1,add(k,2),add(k,2.5),div(sqr(x),-4))),factorial(add(k,k,3))),sinc(x))}
 
-function generalizedpartialsin(x,k,a=1,b=1){return add(div(mul(pow(-1,k),pow(x,add(a,k,k,2)),hypg12(1,add(div(b,2),k,1.5),add(div(b,2),k,2),div(sqr(x),-4))),factorial(add(b,k,k,2))),div(mul(pow(z,a),hypg12(1,add(div(b,2),0.5),add(div(b,2),1),div(sqr(x),-4))),factorial(b)))}//sum z^2n+a (-1)^n / (2n+b)!
-function generalizedpartialsinh(x,k,a=1,b=1){return add(div(mul(-1,pow(x,add(a,k,k,2)),hypg12(1,add(div(b,2),k,1.5),add(div(b,2),k,2),div(sqr(x),4))),factorial(add(b,k,k,2))),div(mul(pow(z,a),hypg12(1,add(div(b,2),0.5),add(div(b,2),1),div(sqr(x),4))),factorial(b)))}
-function generalizedtaylorsin(x,k,a=1,b=1){return add(div(mul(pow(-1,k),pow(x,add(a,k,k,2)),hypg12(1,add(div(b,2),k,1.5),add(div(b,2),k,2),div(sqr(x),-4))),factorial(add(b,k,k,2))),div(mul(pow(z,a),hypg12(1,add(div(b,2),0.5),add(div(b,2),1),div(sqr(x),-4))),factorial(b)))}
-function generalizedtaylorsinh(x,k,a=1,b=1){return add(div(mul(-1,pow(x,add(a,k,k,2)),hypg12(1,add(div(b,2),k,1.5),add(div(b,2),k,2),div(sqr(x),4))),factorial(add(b,k,k,2))),div(mul(pow(z,a),hypg12(1,add(div(b,2),0.5),add(div(b,2),1),div(sqr(x),4))),factorial(b)))}
+function generalizedpartialsin(x,k,a=1,b=1,z=x){return add(div(mul(pow(-1,k),pow(x,add(a,k,k,2)),hypg12(1,add(div(b,2),k,1.5),add(div(b,2),k,2),div(sqr(x),-4))),factorial(add(b,k,k,2))),div(mul(pow(z,a),hypg12(1,add(div(b,2),0.5),add(div(b,2),1),div(sqr(x),-4))),factorial(b)))}//sum z^2n+a (-1)^n / (2n+b)!
+function generalizedpartialsinh(x,k,a=1,b=1,z=x){return add(div(mul(-1,pow(x,add(a,k,k,2)),hypg12(1,add(div(b,2),k,1.5),add(div(b,2),k,2),div(sqr(x),4))),factorial(add(b,k,k,2))),div(mul(pow(z,a),hypg12(1,add(div(b,2),0.5),add(div(b,2),1),div(sqr(x),4))),factorial(b)))}
+function generalizedtaylorsin(x,k,a=1,b=1,z=x){return add(div(mul(pow(-1,k),pow(x,add(a,k,k,2)),hypg12(1,add(div(b,2),k,1.5),add(div(b,2),k,2),div(sqr(x),-4))),factorial(add(b,k,k,2))),div(mul(pow(z,a),hypg12(1,add(div(b,2),0.5),add(div(b,2),1),div(sqr(x),-4))),factorial(b)))}
+function generalizedtaylorsinh(x,k,a=1,b=1,z=x){return add(div(mul(-1,pow(x,add(a,k,k,2)),hypg12(1,add(div(b,2),k,1.5),add(div(b,2),k,2),div(sqr(x),4))),factorial(add(b,k,k,2))),div(mul(pow(z,a),hypg12(1,add(div(b,2),0.5),add(div(b,2),1),div(sqr(x),4))),factorial(b)))}
 
+//semi somwhere between sin and cosine 
 
 function semisin(x){return div(mul(2,sqrt(x),hypg12(1,0.75,1.25,div(sqr(x),-4))),sqrt(pi()))}
 function semisinh(x){return div(mul(2,sqrt(x),hypg12(1,0.75,1.25,div(sqr(x),4))),sqrt(pi()))}
@@ -21471,7 +25403,9 @@ function newtonzero(func, guess, tolerance = 1e-7, maxIter = bign) {
         if (Math.abs(f_x) < tolerance) {
             return x; // root found
         }
-
+        if (Math.abs(f_x) > 1000) {
+            return 0; // root failed
+        }
         x = math.subtract(x, math.divide(f_x, f_prime_x));
 
         if (Math.abs(f_x) < tolerance) {
@@ -21608,25 +25542,23 @@ for (let i = 0; i < maxIter/3; i++) {
             return x; } }
    return x;
 }
-function halleyzero(func, guess, tolerance = 1e-7, maxIter = bign) {
+function halleyzero(func, guess, tolerance = 1e-7,parameter=0, maxIter = bign) {
     let x = guess;
     for (let i = 0; i < maxIter; i++) {
-        let f_x = evale(func, { x: x });
-        let f_prime_x = nthderiv(func, x, 1);
-        let f_double_prime_x = nthderiv(func, x, 2);
+        let fx = evale(func, { x: x ,p:parameter});
+        let fp = nthderivp(func, x, 1,parameter);
+        let fpp = nthderivp(func, x, 2,parameter);
+        
+        let numerator = mul(2,mul(fx, fp));
+        let denominator = sub(mul(2, pow(fp, 2)),mul(fx, fpp));
 
-        // Halley's formula: x_n+1 = x_n - (2 * f(x_n) * f'(x_n)) / (2 * (f'(x_n))^2 - f(x_n) * f''(x_n))
-        let numerator = math.multiply(2, math.multiply(f_x, f_prime_x));
-        let denominator = math.subtract(math.multiply(2, math.pow(f_prime_x, 2)), math.multiply(f_x, f_double_prime_x));
+        x = sub(x, div(numerator, denominator));
 
-        x = math.subtract(x, math.divide(numerator, denominator));
-
-        if (Math.abs(f_x) < tolerance) {
+        if (mag(fx) < tolerance) {
             return x; // Root found
         }
     }
 	return x;
-    throw new Error("Max iterations reached, root not found.");
 }
 
 function halleyfix(func, guess, tolerance = 1e-7, maxIter = bign) {
@@ -21691,6 +25623,159 @@ function halleyinvf(func, y, guess, tolerance = 1e-7, maxIter = bign) {
 	return x;
     throw new Error("Max iterations reached, inverse not found.");
 }
+
+function secantzero(func,x0,x1=mul(x,1.1),tolerance=1e-7,parameter=0,maxIter=bign){
+    let f0,f1,x2;
+    for(let i=0;i<maxIter;i++){
+        f0=evale(func,{x:x0,p:parameter});
+        f1=evale(func,{x:x1,p:parameter});
+        x2=sub(x1,div(mul(f1,sub(x1,x0)),sub(f1,f0)));
+        if(mag(f1)<tolerance) return x1;
+        x0=x1;x1=x2;
+    }
+    return x1;
+}
+function steffensenzero(func,guess,tolerance=1e-7,parameter=0,maxIter=bign){
+    let x=guess,fx,gx;
+    for(let i=0;i<maxIter;i++){
+        fx=evale(func,{x,p:parameter});
+        gx=evale(func,{x:add(x,fx),p:parameter});
+        x=sub(x,div(mul(fx,fx),sub(gx,fx)));
+        if(mag(fx)<tolerance) return x;
+    }
+    return x;
+}
+function ridderzero(func,a,b=0,tolerance=1e-7,parameter=0,maxIter=bign){
+    let fa,fb,m,fm,s,x,fx;
+    for(let i=0;i<maxIter;i++){
+        m=mul(0.5,add(a,b));
+        fa=evale(func,{x:a,p:parameter});
+        fb=evale(func,{x:b,p:parameter});
+        fm=evale(func,{x:m,p:parameter});
+        s=sqrt(sub(pow(fm,2),mul(fa,fb)));
+        if(mag(s)<tolerance) return m;
+        x=add(m,mul(sub(m,a),div((fa>fb?1:-1)*fm,s)));
+        fx=evale(func,{x,p:parameter});
+        if(mag(fx)<tolerance) return x;
+        (fm*fx<0)?(a=m,b=x):(fa*fx<0)?(b=x):(a=x);
+    }
+    return mul(0.5,add(a,b));
+}
+
+function brentzero(func,a,b=0,tolerance=1e-7,parameter=0,maxIter=bign){
+    let fa=evale(func,{x:a,p:parameter}),fb=evale(func,{x:b,p:parameter}),c=a,fc=fa,d=b,e=b;
+    for(let i=0;i<maxIter;i++){
+        if(mag(fc)<mag(fb)){a=b;b=c;c=a;fa=fb;fb=fc;fc=fa;}
+        let tol=add(mul(2,Number.EPSILON,mag(b)),tolerance),m=mul(0.5,sub(c,b));
+        if(mag(m)<=tol||fb==0) return b;
+        if(mag(e)>=tol&&mag(fa)>mag(fb)){
+            let s=div(fb,fa),p,q;
+            p=(a==c)?mul(2,mul(m,s)):mul(s,sub(mul(2,m),mul(sub(b,a),sub(fc,fb))));
+            q=(a==c)?sub(1,s):sub(mul(fc,sub(fc,fb)),mul(fa,sub(fa,fb)));
+            if(p>0) q=sub(0,q); p=mag(p);
+            if(mul(2,p)<Math.min(mul(3,mul(m,q)),mag(mul(e,q)))){e=d;d=div(p,q);}
+            else{d=m;e=m;}
+        } else {d=m;e=m;}
+        a=b;fa=fb;
+        b=add(b,(mag(d)>tol)?d:(m>0?tol:-tol));
+        fb=evale(func,{x:b,p:parameter});
+        if((fb>0&&fc>0)||(fb<0&&fc<0)){c=a;fc=fa;d=b;e=b;}
+    }
+    return b;
+}
+function mullerzero(func,x0,x1=add(x0,1),x2=add(x0,-1),tolerance=1e-7,parameter=0,maxIter=bign){
+    let f0,f1,f2,h1,h2,d1,d2,a,b,c,rad,x3;
+    for(let i=0;i<maxIter;i++){
+        f0=evale(func,{x:x0,p:parameter});
+        f1=evale(func,{x:x1,p:parameter});
+        f2=evale(func,{x:x2,p:parameter});
+        h1=sub(x1,x0);h2=sub(x2,x1);
+        d1=div(sub(f1,f0),h1);d2=div(sub(f2,f1),h2);
+        a=div(sub(d2,d1),add(h2,h1));
+        b=add(d2,mul(h2,a));
+        c=f2;
+        rad=sqrt(sub(pow(b,2),mul(4,mul(a,c))));
+        x3=sub(x2,div(mul(2,c),(mag(add(b,rad))>mag(sub(b,rad))?add(b,rad):sub(b,rad))));
+        if(mag(sub(x3,x2))<tolerance) return x3;
+        x0=x1;x1=x2;x2=x3;
+    }
+    return x2;
+}
+// !
+function householderzero(func,guess,order=3,tolerance=1e-7,parameter=0,maxIter=bign){
+   let x=guess,fx,f1,fk,sum;
+    for(let i=0;i<maxIter;i++){
+        fx=evale(func,{x,p:parameter});
+        f1=nthderivp(func,x,1,parameter);
+        sum=f1;
+        for(let k=2;k<=order;k++){
+            fk=nthderivp(func,x,k,parameter);
+            sum=add(sum,mul(div(pow(fx,k-1),factorial(k)),fk));
+        }
+        x=sub(x,div(fx,sum));
+        if(mag(fx)<tolerance) return x;
+    }
+    return x;
+}
+function laguerrezero(func,guess,n=3,tolerance=1e-7,parameter=0,maxIter=bign){
+    let x=guess,fx,f1,f2,G,H,rad,a;
+    for(let i=0;i<maxIter;i++){
+        fx=evale(func,{x,p:parameter});
+        if(mag(fx)<tolerance) return x;
+        f1=nthderivp(func,x,1,parameter);
+        f2=nthderivp(func,x,2,parameter);
+        G=div(f1,fx);
+        H=sub(pow(G,2),div(f2,fx));
+        rad=sqrt(mul(n-1,sub(mul(n,H),pow(G,2))));
+        a=div(n,add(G,(mag(add(G,rad))>mag(sub(G,rad))?rad:sub(0,rad))));
+        x=sub(x,a);
+        if(mag(a)<tolerance) return x;
+    }
+    return x;
+}
+function riddermodzero(func,guess,tolerance=1e-6,parameter=0,maxIter=bign){
+    let y0=guess,y1=add(y0,0.1),f0,f1,m,fm,d,ny;
+    for(let i=0;i<maxIter;i++){
+        f0=evale(func,{x:y0,p:parameter});
+        f1=evale(func,{x:y1,p:parameter});
+        if(mag(f1)<tolerance) return y1;
+        m=mul(0.5,add(y0,y1));
+        fm=evale(func,{x:m,p:parameter});
+        d=sqrt(sub(pow(fm,2),mul(f0,f1)));
+        if(mag(d)==0) return m;
+        ny=sub(m,div(mul(sub(m,y0),fm),d));
+        if(mag(sub(ny,y1))<tolerance) return ny;
+        y0=y1;y1=ny;
+    }
+    return y1;
+}
+function zrrzero(func,guess,tolerance=1e-7,parameter=0,maxIter=bign){
+    let xnn=0,xn=guess,xm,fn,fnn;
+    for(let i=0;i<maxIter;i++){
+        fn=evale(func,{x:xn,p:parameter});
+        fnn=evale(func,{x:xnn,p:parameter});
+        xm=sub(xn,div(mul(fn,sub(xn,xnn)),sub(fn,fnn)));
+        if(mag(sub(xm,xn))<tolerance) return xm;
+        xnn=xn;xn=xm;
+    }
+    return xn;
+}
+function broydenzero(func,guess,tolerance=1e-7,parameter=0,maxIter=bign){
+    let x=guess,f0,f1,dx,B=1;
+    for(let i=0;i<maxIter;i++){
+        f0=evale(func,{x,p:parameter});
+        if(mag(f0)<tolerance) return x;
+        dx=div(sub(0,f0),B);
+        x=add(x,dx);
+        f1=evale(func,{x,p:parameter});
+        B = add(B, div(sub(sub(f1,f0), mul(B,dx)), dx));
+    }
+    return x;
+}
+
+
+
+
 function euler(ode, x0, y0, h, steps) {
     let x = x0;
     let y = y0;
@@ -21897,8 +25982,8 @@ let fix = newtonfix(funcStr, add(bf,math.complex(0.2,0.2)));
     }
 }
 function superfunctionf(funcStr, arcfuncStr, a, bf, initialGuess=1,globalc=2, bignc=bign, startq=-12341234, ffgh = 1) {
-    let bs = bf;
-
+    let bs =bf// modc(bf,1);
+bignc=bignc*2
     try {
         let fi = (bs);
         if (ffgh) {
@@ -21931,8 +26016,12 @@ if(startq!==-12341234)fix=add(startq,math.complex(1e-7,1e-7));else  fix = newton
         for (let i = 0; i < bignc; i++) {
             fi = evale(funcStr, {x:fi});
         }
-
-        
+  /*      for (let i = 0; i < floor(re(bf)); i++) {
+            fi = evale(funcStr, {x:fi});
+        }
+        for (let i = 0; i <= ceil(re(sub(-1,bf))); i++) {
+            fi = evale(arcfuncStr, {x:fi});
+        }*/
         return fi;
     } catch (error) {
         throw new Error('Calculation error: ' + error.message);
@@ -22168,6 +26257,56 @@ function kummercabs(n,z){
 	return integral(kummercabsd,0,z,n);
 }
 
+function modinv(a, m) {
+    let m0 = m, x0 = 0, x1 = 1;
+    if (m === 1) return 0;
+    while (a > 1) {
+        let q = Math.floor(a / m);
+        [a, m] = [m, a % m];
+        [x1, x0] = [x0, x1 - q * x0];
+    }
+    if (x1 < 0) x1 += m0;
+    return x1;
+}
+
+function kloostermansum(a,b,m){
+    let fi=0;
+    for(let n=1;n<m;n++)
+        if(gcd(n,m)==1)
+            fi=add(fi,exp(div(mul(2,pi(),I,add(mul(a,n),mul(b,modinv(n)))),m)))
+    
+}
+
+function shortkloostermansum(a,b,m,a){
+    let fi=0;
+    for(let n=1;n<a;n++)
+        if(gcd(n,m)==1)
+            fi=add(fi,exp(div(mul(2,pi(),I,add(mul(a,n),mul(b,modinv(n)))),m)))
+    
+}
+function kloostermanlift(a, b, m, tau) {
+    let sum = new Complex(0, 0);
+    const omega = countPrimeFactors(m); 
+
+    for (let v = 0; v < m; v++) {
+        for (let w = 0; w < m; w++) {
+            if ((v * v - tau * w * w) % m === (a * b) % m) {
+                let angle = (4 * Math.PI * v) / m;
+                sum = sum.add(new Complex(Math.cos(angle), Math.sin(angle)));
+            }
+        }
+    }
+
+    if (omega % 2 !== 0) {
+        sum.re *= -1;
+        sum.im *= -1;
+    }
+    return sum;
+}
+
+
+
+
 function maxcc(a,b){
 	if(re(math.abs(a))>re(math.abs(b)))return a;
 	return b;
@@ -22207,6 +26346,18 @@ function primeexp(x){
 function compositeprime(x){
 	return sub(1,primeexp(x));
 }
+
+function functionalexp(func,x){
+	let fi=math.complex(0,0);let ii=x;for(let i=1;i<bign;i++){
+	fi=add(fi,div(ii,factorial(i)));
+    ii=evale(func,{x:ii})
+    }return fi;}
+    
+
+
+function funcexpsqr(x){return functionalexp(sqr,x)}
+
+function funcexpexp(x){return functionalexp(exp,x)}
 
 function customsin(func,x){return div(sub(customexp(func,mul(math.complex(0,1),x)),customexp(func,mul(-1,math.complex(0,1),x))),math.complex(0,1),2)}
 function customcos(func,x){return div(add(customexp(func,mul(math.complex(0,1),x)),customexp(func,mul(-1,math.complex(0,1),x))),2)}
@@ -22362,12 +26513,62 @@ function imagpartderv(func, x) {
   return div(sub(im(evale(func,{x:add(x,math.complex(0,1e-7))})), im(evale(func,{x:sub(x,math.complex(0,1e-7))}))), mul(2,1e-7))
 }
 
+function estimate_rho(func, R, angles = 16) {
+    let maxrho = -Infinity;
+
+    for (let k = 0; k < angles; k++) {
+        let theta = mul(2 * Math.PI, div(k, angles));
+
+        let z1 = mul(R,  exp(mul(I, theta)));
+        let z2 = mul(2 * R, exp(mul(I, theta)));
+
+        let f1 = mag(evale(func, { x: z1 }));
+        let f2 = mag(evale(func, { x: z2 }));
+
+        if (f1 <= 1 || f2 <= 1) continue;
+
+        let rho_k = div(
+            sub(log(log(f2)), log(log(f1))),
+            log(2)
+        );
+
+        if (rho_k > maxrho) maxrho = rho_k;
+    }
+
+    return maxrho;
+}
+
+
+function indicator(func, theta, R = bign * 2, p = -1, samples = 5) {
+    let r = R;
+
+    let rho = (p === -1)
+        ? estimate_rho(func, R, samples)
+        : p;
+
+    let z = mul(r, exp(mul(I, theta)));
+    let val = mag(evale(func, { x: z }));
+
+    return div(log(val), pow(r, rho));
+}
 
 
 
+-
+function hderv2(func,x,h=1){return div(sub(hderv(func,add(x,h),h),hderv(func,x,h)),h)}
+function hderv3(func,x,h=1){return div(sub(hderv2(func,add(x,h),h),hderv2(func,x,h)),h)}
+function hlap1(func,x,h=1){return hderv2(func,x,h)}
+function hschwarzian(func,x,h=1){let fp=hderv(func,x,h),fpp=hderv2(func,x,h),fppp=hderv3(func,x,h);return sub(div(fppp,fp),mul(div(3,2),power(div(fpp,fp),2)))}
+function hdistf(func,x,h=1){return sub(evale(func,{x:add(x,h),h:h}),evale(func,{x:x,h:h}))}
+function hdistb(func,x,h=1){return sub(evale(func,{x:x,h:h}),evale(func,{x:sub(x,h),h:h}))}
+function hdistm(func,x,h=1){return sub(evale(func,{x:add(x,h),h:h}),evale(func,{x:sub(x,h),h:h}))}
 
+function hdervf(func,x,h=1){return div(hdistf(func,x,h),h)}
+function hdervb(func,x,h=1){return div(hdistb(func,x,h),h)}
+function hdervm(func,x,h=1){return div(hdistm(func,x,h),mul(2,h))}
 
-
+function hderv2m(func,x,h=1){return div(sub(evale(func,{x:add(x,h),h:h}),mul(2,evale(func,{x:x,h:h}))),power(h,2))}
+function hlapm(func,x,h=1){return hderv2m(func,x,h)}
 
 
 function derve(func,input){
@@ -22499,6 +26700,16 @@ function intg(func,input,input2){
 return integral(func,0,input,input2);
 
 }
+function nthdifference(func,input,n,h=1){
+	if(n==0)return evale(func,{x:input});
+
+let fi=math.complex(0,0);
+for(let i=0;i<=n;i++)
+//fi = add(fi,mul(pow(-1,i),ncr(n,i),evale(func,{x:sub(add(input,div(n,2)),mul(h,i))})));	
+fi=add(fi,mul(pow(-1,i),ncr(n,i),evale(func,{x:add(input,mul(sub(div(n,2),i),h))})))
+return div(fi,pow(h,n));
+return fi;
+}
 function nthderiv(func,input,n,hh=1.2){
 	if(n==0)return evale(func,{x:input});
 	const h=pow(10,add(-7,div(n,hh)));
@@ -22522,7 +26733,7 @@ function fractionalderiv(func,input,n,N=bign){
 }
 */
 function fractionalderiv(func, input, n, N = bign) {
-
+//if(re(n)<0)return fractionalintg(func,input,sub(0,n))
     let h = div(0.1, N)
     let fi = 0;
 
@@ -22541,7 +26752,26 @@ function fractionalderiv(func, input, n, N = bign) {
     return div(fi, pow(h, n))
 }
 
+function fractionalderiv2(func, input,p, n, N = bign) {
 
+    let h = div(0.1, N)
+    let fi = 0;
+
+    for (let k = 0; k <= N; k++)
+        fi = add(
+            fi,
+            mul(
+                pow(-1, k),
+                ncr(n, k),
+                evale(func, {
+                    x: sub(input, mul(sub(k, div(n, 2)), h)),
+                    p:p
+                })
+            )
+        );
+
+    return div(fi, pow(h, n))
+}
 
 function nthderivp(func,input,n,p){
 	if(n==0)return evale(func,{x:input});
@@ -22655,9 +26885,9 @@ function evaltaylorseries(x, A) {
     }
     return result;
 }
-function getcoefseries(func, z0=0 ) {
-	let res = [0,0,0,0,0,0,0,0,0]
-    for (let i=0;i<9;i++) res[i]=div(nthderiv(func, z0, i),factorial(i));
+function getcoefseries(func, z0=0 ,N=9,hh=1.1) {
+	let res = []
+    for (let i=0;i<N;i++) res[i]=div(nthderiv(func, z0, i,hh),factorial(i));
         return  res ;
 }
 function gettaylorff(func, n, z0=0 ,a=0,chur=4) {
@@ -22685,6 +26915,147 @@ function evalanalytic(func, z, z0=0,terms = bign/2) {
 
     return result;
 }
+function solvelinear(A,b){
+  let n = b.length;
+    let eps = 1e-14;
+
+    for(let i=0;i<n;i++){
+        // pivot
+        let piv = i;
+        for(let k=i;k<n;k++){
+            if(Math.abs(A[k][i].re ?? A[k][i]) > eps){
+                piv = k; break;
+            }
+        }
+
+        if(piv !== i){
+            let t=A[i]; A[i]=A[piv]; A[piv]=t;
+            t=b[i]; b[i]=b[piv]; b[piv]=t;
+        }
+
+        if(Math.abs(A[i][i].re ?? A[i][i]) < eps){
+            return null; // singular system
+        }
+
+        let inv = div(1,A[i][i]);
+        for(let j=i;j<n;j++) A[i][j]=mul(A[i][j],inv);
+        b[i]=mul(b[i],inv);
+
+        for(let k=0;k<n;k++){
+            if(k===i) continue;
+            let f=A[k][i];
+            for(let j=i;j<n;j++){
+                A[k][j]=sub(A[k][j],mul(f,A[i][j]));
+            }
+            b[k]=sub(b[k],mul(f,b[i]));
+        }
+    }
+    return b;
+}
+
+const _padeCache = new Map();
+
+function evalpade(func, x, z0=0, N=5,hh=1.5){
+    // build a key for caching based on function reference, z0, N
+    let key = func + '|' + z0 + '|' + N + hh;
+
+    // retrieve memoized coefficients if available
+    let memo = _padeCache.get(key);
+    let a, q, p;
+
+    if(memo){
+        a = memo.a;
+        q = memo.q;
+        p = memo.p;
+    } else {
+        // compute coefficients
+        a = rearray(getcoefseries(func, z0, N*2+1,hh));
+
+        // build Padé denominator system
+        let A = [];
+        let b = [];
+        for(let k=N+1;k<=2*N;k++){
+            let row = [];
+            for(let j=1;j<=N;j++){
+                row.push(a[k-j]);
+            }
+            A.push(row);
+            b.push(sub(0,a[k]));
+        }
+
+        // solve for denominator
+        q = solvelinear(A,b);
+        if(!q) return NaN;
+        q.unshift(1);
+
+        // numerator coefficients
+        p = [];
+        for(let k=0;k<=N;k++){
+            let s = 0;
+            for(let j=0;j<=k;j++){
+                s = add(s, mul(a[k-j], q[j]));
+            }
+            p.push(s);
+        }
+
+        // memoize
+        _padeCache.set(key, {a,q,p});
+    }
+
+    // evaluate rational function at x
+    let dx = sub(x,z0);
+    let num = 0, den = 0;
+    for(let i=0;i<p.length;i++){
+        num = add(num, mul(p[i], pow(dx,i)));
+        den = add(den, mul(q[i], pow(dx,i)));
+    }
+
+    return div(num,den);
+}
+
+const _taylorPadeCache = new Map();
+
+function evaltaylorpade(F, x, z0=0){
+    let N = Math.floor(sub(div(leng(F),2),1));
+    let key = F + '|' + z0 + '|' + N;
+    let memo = _taylorPadeCache.get(key);
+    let a=F, q, p;
+
+    if(memo){
+        q = memo.q;
+        p = memo.p;
+    } else {
+        let A=[], b=[];
+        for(let k=N+1;k<=2*N;k++){
+            let row=[];
+            for(let j=1;j<=N;j++) row.push(a[k-j]);
+            A.push(row);
+            b.push(sub(0,a[k]));
+        }
+        q = solvelinear(A,b);
+        if(!q) return NaN;
+        q.unshift(1);
+        p=[];
+        for(let k=0;k<=N;k++){
+            let s=0;
+            for(let j=0;j<=k;j++) s=add(s,mul(a[k-j],q[j]));
+            p.push(s);
+        }
+        _taylorPadeCache.set(key,{q,p});
+    }
+
+    let dx=sub(x,z0), num=0, den=0;
+    for(let i=0;i<=N;i++){
+        num=add(num,mul(p[i],pow(dx,i)));
+        den=add(den,mul(q[i],pow(dx,i)));
+    }
+    return div(num,den);
+}
+
+
+
+
+
 function rmod(x,n){return math.complex(math.mod(x.re,n),x.im);}
 //function rfloor(x,n){return math.complex(math.floor(x.re),x.im);}
 
@@ -22756,9 +27127,9 @@ function intge(func,input){
         return mul(div(h, math.complex(3,0)), sum);}
           return simpsonsRule(start,input, bign);
        }
-	   function qintegral(func,x,q){
+	   function qintegral2(func,x,q,p){
 		   let fi=math.complex(0);
-		   for(let i=0;i<bign;i++)fi=add(fi,mul(x,pow(q,i),evale(func,{x:mul(x,pow(q,i))})));
+		   for(let i=0;i<bign;i++)fi=add(fi,mul(x,pow(q,i),evale(func,{x:mul(x,pow(q,i)),p:p})));
 		   return mul(sub(1,q),fi)
 	   }
 function ramanujansum(func,input)
@@ -22914,7 +27285,7 @@ function nome(k){return nomem(sqr(k));}
 function arcnome(q){
 	//let q = modulartransformqt(qq);
 //return div(mul(16,pow(dedekindeta(mul(0.5,t)),8),pow(dedekindeta(mul(2,t)),16)),pow(dedekindeta(t),24))}	
-return mul(pow(div(jacobitheta2(0,q),jacobitheta3(0,q)),4),1.175/*for correction sake you can delete this*/)}
+return mul(pow(div(jacobitheta2(0,q),jacobitheta3(0,q)),4),1/*for correction sake you can delete this*/)}
 //function arcnome(q){return arcnomet(modulartransformqt(q))}
 //tq kq mq dq
 //td kd md qd
@@ -22925,37 +27296,51 @@ return mul(pow(div(jacobitheta2(0,q),jacobitheta3(0,q)),4),1.175/*for correction
 // Q is nome
 // K is elliptic modulus
 // A is modular Angle -> k=sin(a)
-// D is q^2 or Qbar is convention
+// D is q^2 or Qbar is convention disc
+// C cayley 1-qi/1+qi C(q) poincare halfplane
 
+//ADD MAYBE F phş=atan(q)*2
 
+//C
+function modulartransformtc(t){return arccayley(exp(mul(pi(),I,t)))};
+function modulartransformkc(k){return arccayley(nome(k))}
+function modulartransformmc(m){return arccayley(nome(sqrt(m)))}
+function modulartransformdc(d){return arccayley(sqrt(d))}
+function modulartransformac(a){return arccayley(nome(sin(a)))}
+function modulartransformqc(q){return arccayley(q)}
 //Q
 function modulartransformtq(t){return exp(mul(pi(),I,t))};
 function modulartransformkq(k){return nome(k)}
 function modulartransformmq(m){return nome(sqrt(m))}
 function modulartransformdq(d){return sqrt(d)}
+function modulartransformcq(c){return cayley(c)}
 function modulartransformaq(a){return nome(sin(a))}
 //D
 function modulartransformtd(t){return sqr(exp(mul(pi(),I,t)))}
 function modulartransformkd(k){return sqr(nome(k))}
 function modulartransformmd(m){return sqr(nome(sqrt(m)))}
 function modulartransformqd(q){return sqr(q)}
+function modulartransformcd(c){return sqr(cayley(c))}
 function modulartransformad(a){return sqr(nome(sin(a)))}
 //m
 function modulartransformtm(t){return arcnome(exp(mul(pi(),I,t)))}
 function modulartransformkm(k){return sqr(k)}
 function modulartransformqm(q){return arcnome(q)}
+function modulartransformcm(c){return arcnome(cayley(c))}
 function modulartransformdm(d){return arcnome(sqrt(d))}
 function modulartransformam(a){return sqr(sin(a))}
 //T
 function modulartransformkt(k){return div(log(nome(k)),I,pi())}
 function modulartransformmt(m){return div(log(nome(sqrt(m))),I,pi())}
 function modulartransformqt(q){return div(log(q),I,pi())}
+function modulartransformct(c){return div(log(cayley(c)),I,pi())}
 function modulartransformdt(d){return div(log(sqrt(d)),I,pi())}
 function modulartransformat(a){return div(log(nome(sin(a))),I,pi())}
 //K
-function modulartransformtk(t){return sqrt(arcnome(exp(mul(pi(),I,t))))}
+function modulartransformtk(t){return sqrt(add(0,arcnome(exp(mul(pi(),I,t)))))}
 function modulartransformmk(m){return sqrt(m)}
 function modulartransformqk(q){return sqrt(arcnome(q))}
+function modulartransformck(c){return sqrt(arcnome(cayley(c)))}
 function modulartransformdk(d){return sqrt(arcnome(sqrt(d)))}
 function modulartransformak(a){return sin(a)}
 //A
@@ -22963,12 +27348,14 @@ function modulartransformta(t){return asin(sqrt(arcnome(exp(mul(pi(),I,t)))))}
 function modulartransformka(k){return asin(k)}
 function modulartransformma(m){return asin(sqrt(m))}
 function modulartransformqa(q){return asin(sqrt(arcnome(q)))}
+function modulartransformcqa(c){return asin(sqrt(arcnome(cayley(c))))}
 function modulartransformda(d){return asin(sqrt(arcnome(sqrt(d))))}
 
 
 function modularcomplementk(k){return sqrt(sub(1,sqr(k)))}
 function modularcomplementm(m){return sub(1,m)}
 function modularcomplementq(q){return modulartransformmq(sub(1,modulartransformqm(q)))}
+function modularcomplementc(c){return modulartransformmc(sub(1,modulartransformcm(c)))}
 function modularcomplementd(d){return modulartransformmd(sub(1,modulartransformdm(d)))}
 function modularcomplementt(t){return modulartransformmt(sub(1,modulartransformtm(t)))}
 function modularcomplementa(a){return modulartransformma(sub(1,modulartransformam(a)))}
@@ -23027,8 +27414,9 @@ function fibpoly(n,b){ return  div(sub(pow(add(b,math.sqrt(add(mul(b,b),4))),n),
 function lucaspoly(n,b){ return mul(pow(2,sub(0,n)),add(pow(add(b,math.sqrt(add(mul(b,b),4))),n),pow(sub(b,math.sqrt(add(mul(b,b),4))),n)));}
 	  
 function	 chebyshevu(n,b){return div(math.sin(mul(add(1,n),math.acos(b))),sin(acos(b)));}  
-function	 chebyshevw(n,b){return div(math.sin(mul(add(n,0.5),math.acos(b))),sin(div(math.acos(x),2)));}//return div(cos(mul(add(1,n),b)),cos(b));}  
-function	 chebyshevt(n,b){return  mul(math.sqrt(sub(1,mul(b,b))),chebyshevw(add(n,1),b));}  
+function	 chebyshevw(n,b){return div(math.sin(mul(add(n,0.5),math.acos(b))),sin(div(math.acos(b),2)));}//return div(cos(mul(add(1,n),b)),cos(b));}  
+function	 chebyshevtw(n,b){return  mul(math.sqrt(sub(1,mul(b,b))),chebyshevw(add(n,1),b));}  
+function    chebyshevt(n,b){return cos(mul(n,acos(b)))}
 function	 chebyshevv(n,b){return mul(math.sqrt(sub(1,mul(b,b))),chebyshevu(sub(n,1),b));}  
 function dirichletkernel(n,b){return div(math.sin(mul(0.5,add(add(n,n),1),b)),sin(div(b,2)));}	   
 function chebyshevc(n,b){return mul(2,chebyshevt(n,mul(0.5,b)));}
@@ -23038,7 +27426,41 @@ function chebyshevtstar(n,b){return chebyshevt(n,sub(add(b,b),1));}
     
 	function morganvoyce(n,x){return div(sin(mul(add(n,1),acos(add(div(x,2),1)))),sin(acos(add(div(x,2),1))))}
     function morganvoyce2(n,x){return div(cos(mul(add(n,0.5),acos(add(div(x,2),1)))),cos(div(acos(add(div(x,2),1)),2)))}
-	
+
+function zolotarevpolyt(n,x,s){return mul(pow(add(1,s),n),chebyshevt(n,div(sub(x,s),add(1,s))))}
+function zolotarevpolyu(n,x,k,p=1){
+    let v=div(mul(p,compellint1(k)),n)
+    let ssn=sn(v,(k))//modulartransformkq sqr
+    let u=ellint1(mul(ssn,sqrt(div(add(1,x),add(x,sqr(ssn),sqr(ssn),-1)))),k)
+    
+    let s=jacobieta(sub(u,v),k)
+    let a=jacobieta(add(u,v),k)
+    
+    return div(mul(pow(-1,p),add(pow(div(s,a),n),pow(div(a,s),n))),2)
+    
+}
+
+//https://archive.org/details/GradshteinI.S.RyzhikI.M.TablesOfIntegralsSeriesAndProducts/page/n927/mode/1up
+	function jacobieta(f,k){
+    let a=div(mul(pi(),f),2,compellint1(sqrt(sub(1,sqr(k)))))
+    let b= exp(div(mul(pi(),compellint1(sqrt(sub(1,sqr(k))))),-1,compellint1(k)))
+    return jacobitheta1(a,b)}
+    
+    function jacobieta1(f,k){
+    let a=div(mul(pi(),f),2,compellint1(sqrt(sub(1,sqr(k)))))
+    let b= exp(div(mul(pi(),compellint1(sqrt(sub(1,sqr(k))))),-1,compellint1(k)))
+    return jacobitheta2(a,b)}
+    
+    function jacobictheta(f,k){
+    let a=div(mul(pi(),f),2,compellint1(sqrt(sub(1,sqr(k)))))
+    let b= exp(div(mul(pi(),compellint1(sqrt(sub(1,sqr(k))))),-1,compellint1(k)))
+    return jacobitheta4(a,b)}
+    
+    function jacobictheta1(f,k){
+    let a=div(mul(pi(),f),2,compellint1(sqrt(sub(1,sqr(k)))))
+    let b= exp(div(mul(pi(),compellint1(sqrt(sub(1,sqr(k))))),-1,compellint1(k)))
+    return jacobitheta3(a,b)}
+
 	function dicksond(n,x,a){
 		let fi = math.complex(0,0);
 		for (let i=0;i<=floor(n/2);i++)
@@ -23054,7 +27476,14 @@ function chebyshevtstar(n,b){return chebyshevt(n,sub(add(b,b),1));}
 		for (let i=0;i<=floor(n/2);i++)
 		fi = add(fi,mul(div(sub(n,mul(k,i)),sub(n,i)),ncr(sub(n,i),i),pow(sub(0,a),i),pow(x,sub(n,add(i,i)))));
 	return fi;}
-	 
+	 function bohrjessen(s,X=[]){
+         let fi=1;
+         if(leng(X)==0)X=randunitdisclist(bign)
+         for(let i=0;nthprime(i)<leng(X);i++)
+             fi=div(fi,sub(1,div(g(X,i),pow(nthprime(i),s))))
+     return fi;
+     }
+     //function yangyangentropyd()//no 
 //ADD
 /*function brewersum(n,a){
      
@@ -23071,12 +27500,21 @@ function chebyshevtstar(n,b){return chebyshevt(n,sub(add(b,b),1));}
 			fi=add(fi,mul(ncr(n,i),pow(-1,sub(i,1)),pow(i,sub(0,j))));
 		return fi;
 	}
+    //https://pdf.sciencedirectassets.com/272565/1-s2.0-S0097316500X02038/1-s2.0-009731659390030C/main.pdf?X-Amz-Security-Token=IQoJb3JpZ2luX2VjEPL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLWVhc3QtMSJHMEUCICN%2Bkae5bMsvh4P6CjgdA0YhyolZKKCEZWuMscHwmSYnAiEA71yv8iUSnCtMrMOKGgl0OFmyAyICKuPaCGsBqoxnBEgquwUIu%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAFGgwwNTkwMDM1NDY4NjUiDJC13AUYmkb6MJAiISqPBSSC6a%2F5dk4ra44h%2BXi8H9Objv%2FPqR766nKjYxk6JkjuYqi%2F9ANJ4qDJG7%2FM6AOzqbiGs689OOEY2PBqzO8ZlVGTm8ze0LGepJyDqDn7kHMlLZkOShDqJpC2pqEu19ETJyrkxvdDzQDX%2BaOxwrP9xpiKgUUzLeGB3x3xgQwcrw2v5jz%2B%2FbumfxluTL0Hpzbl0uv0Qj8DGACMYlcgKMVxrw8IkwoREl%2Fn3UnmWY%2FrQLqCTwidm%2BYby6FCC2kyOSB7bFE6o4vuL0TzzLxb%2F2YEaAiqyEOLqVIx3wVdnPyt1P6CvojUgeNoNo9Oyz2U24crD%2BDzg%2Fe0qiMlcC9NtoLMxrQ8nHzY5EL8G6XmF6pjXzTupYiBJ0d7i%2BxvJPcsTQSdvNWU3kaYbBO%2BYWpPOyaXrSQXr40cwig1mwEh11Dw9ublM0nrCMxuCNLoGeQ9gA6nLOn9GGZm%2BVtkXCWExTLKs6yXPjjvptMi0jI9rNovSlFPSvsh0ToolXZr5p%2FBKrcphUHLWuJD5akD%2B6bEINqeb36Lh%2BiX%2BWqOibjq9N1uoAf7Nesep%2Bhl6RfAGARIV9i%2Bnn0ww1ez4OnLt7tiwQg3%2BraB8V%2BlhXHxN%2F7qb282jGssCsF7gvEkEWGkO%2FSMLGXAgMwBImAyoPusp%2Fo%2BNp9JMdFnxDgx4S4YwEZPtWN3evv7zX14SLlyeRcVh86cxqZ4p26zKzmoo3diXvT71P74SjequgVZKfqcXx8TjUVqzZvqxpnT9zHLxpch9LOfm35WftZnhexQVoyNav4vzEnSwATk%2FuUJNz%2Bi6QCP8UwDwa%2FR67Duxh4sGOQGRInYsqi1lXfWTs0PRffGCYf8y1D3c05xQJAxkmt%2FxkFSURHKSocwv6WxzAY6sQGhWvf2id6I9XeoUbjQa4I4EDQD7zedc6CKDmAsQci4N2EXZOMOntwKfBQ%2BwpanrSuGeyZE9Y8zbp2HIXPRilDJwn6Vg6h5Xxn4XwT5ygHY5Djf56vkbWIPtZGsJ8ovDqVzxegaOPypSe%2B%2BHwBlQu5SkfUv5mqOcmwiKceQsXo6Qp8ARcDouTr1p7N1GK5VHd0F%2FJBWGgPBvjA%2FJ5hs9Cv2M%2FkZgDhEtDLfXnxPAsnwaJ0%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260211T104958Z&X-Amz-SignedHeaders=host&X-Amz-Expires=300&X-Amz-Credential=ASIAQ3PHCVTYUZNOWJ4N%2F20260211%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=f502ccc5cc328786a5a89286eefc54167dd815a06c621cef2186177a0eda17f7&hash=e337ecf375dd8dfb39635c03f4da673954de5a1b33852715c270eb94ff50e06f&host=68042c943591013ac2b2430a89b270f6af2c76d8dfd086a07176afe7c76c2c61&pii=009731659390030C&tid=spdf-dbeed56f-c910-4ced-a2ed-43ae92adfd7d&sid=3e3f49d664377642e33a6e437ec6dd0361b6gxrqa&type=client&tsoh=d3d3LnNjaWVuY2VkaXJlY3QuY29t&rh=d3d3LnNjaWVuY2VkaXJlY3QuY29t&ua=111457050150555656&rr=9cc3485e0adc4a5f&cc=us&kca=eyJrZXkiOiJyaWNabDVlWURvUDhtcEhSQnhteEhKczdvc1VWRG5qOEpMNFFhaFFkWG1xRGN6QjFoaG4vVzZza1FXaStiWStsNThtVUxodVFWWm1qSFhDSk05dHVaQ3gvZW1YOTNOczJNRUxuNG9kQysxTno1M2pRMThrQUc4V0hwRjNuc2VlMDdHTHUvc09YNlVRanJ5emxRQ2ZrMmgzUS9mc2tJTnFrcjM2NXhJWjFRS1ZOY29JPSIsIml2IjoiYjRlOGJhNWQxYzQ3M2Q0ZTE3ODUyZGQzOGMyNDQ4NjEifQ==_1770807023808
 	function harmoniclog(n,t,x){
 		let fi=math.complex(0,0);
 		for(let j=0;j<=math.complex(t).re;j++)
 			fi=add(fi,mul(pow(-1,j),pochhammer(t,j),pow(math.log(x),sub(t,j)),twoindexharmonic(n,j)));
 		return mul(pow(x,n),fi);
 	}
+    function charmoniclog(n,t,x){
+		let fi=math.complex(0,0);
+		for(let j=0;j<=bign;j++)
+			fi=add(fi,mul(smoothunrelu(sub(j,t)),pow(-1,j),pochhammer(t,j),pow(math.log(x),sub(t,j)),twoindexharmonic(n,j)));
+		return mul(pow(x,n),fi);
+	}
+   // function harmoniclog1(x,n){return harmoniclog(n,1,x)}
+   // function hromanfactorial(n,x0=1){return div(integral(harmoniclog1,0,x0,sub(n,1)),harmoniclog1(x0,n))}
 	function harmonicc(t){
 		let fi=math.complex(0,0);
 		for(let j=1;j<=bign;j++)
@@ -23089,17 +27527,39 @@ function chebyshevtstar(n,b){return chebyshevt(n,sub(add(b,b),1));}
 			fi=add(fi,div(math.sin(mul(j,t)),mul(j,j)));
 		return fi;
 	}
+    
+  
+    function quadruplicatedtetrahedral(x){//A190718
+        return ncr(add(floorxo4(x),3),3)
+    }
+    function enumquantumstate(x){//A144678
+    return add(quadruplicatedtetrahedral(x),quadruplicatedtetrahedral(sub(x,1)),quadruplicatedtetrahedral(sub(x,2)),quadruplicatedtetrahedral(sub(x,3)))
+    }
+    
+    function goldenrectangle(k){//https://oeis.org/A180662 A001654
+    return mul(fibonacci(x),fibonacci(add(x,1)))}
+    
+    function fibonorialcoef(n,k){//https://oeis.org/A010048
+    return mul(pow(1.61803399,mul(k,sub(n,k))),qncr(n,k,sub(1.61803399,2)))}
+    function centralfibonorialcoef(n){//A003267
+    return fibonorialcoef(mul(2,n),n)}
+    function catalanorial(n){//https://oeis.org/A003046
+    return div(mul(pow(1.2824271291,3/2),pow(2,add(sqr(n),n,-1/24)),barnesg(add(n,3/2))),exp(1/8),barnesg(add(n,3)),pow(pi(),add(div(n,2),0.25)))
+    return div(mul(pow(2,div(add(n,1),2)),sqrt(barnesg(mul(n,2))),gamma(mul(2,n))),sqr(n),add(n,1),sqr(barnesg(n)),pow(gamma(n),9/2))}
 	
 //	function scorergid(t,x){return math.sin(add(div(mul(t,t,t),3),mul(x,t)));}
 		function scorergid(t,x){ return mul(math.exp(sub(div(mul(t,t,t),-3),div(mul(t,x),2))),math.cos(add(mul(0.5,math.sqrt(3),x,t),div(pi(),1.5))));}
 	function scorerhid(t,x){return math.exp(add(div(mul(t,t,t),-3),mul(x,t)));}
 	function scorergi(x){return div(integral(scorergid,0,sqrt(bign),x,mul(bign,2)),sub(0,pi()));}
 	function scorerhi(x){return div(integral(scorerhid,0,sqrt(bign),x,mul(bign,2)),pi());}
-	function aid(x){return div(mul(x,besselk(2/3,div(pow(x,3/2),3,0.5))),-1,pi(),sqrt(3))}//return(derv(ai,x))};
-	function bid(x){return(derv(bi,x))};
-    //function airyd(t,x){return exo(sub(div(cum(t),3),mul(x,t)))}
+	function aip(x){return div(mul(x,besselk(2/3,div(pow(x,3/2),3,0.5))),-1,pi(),sqrt(3))}//return(derv(ai,x))};
+	function bip(x){return(derv(bi,x))};
+    function airyd(t,x){return exp(sub(div(cum(t),3),mul(x,t)))}
+    function airyad(t,x){return cos(sub(div(cum(t),3),mul(x,t)))}
 	function ai(x){
  //   return integral(airyd,,)
+//if(re(x)>7&&re(x)==x)return 0
+  //   return div(integral(airyad,0,mag(x),x),pi())
     if(x.im>0)return ai(conj(x));
 	if(x.re>0) return mul(1/pi(),math.sqrt(div(x,3)),besselk(0.333333333,mul(0.666666666,pow(x,1.5))));
 	return mul(math.sqrt(div(sub(0,x),9)),add(besselj(0.33333333,mul(pow(sub(0,x),1.5),0.666666666)),besselj(-0.33333333,mul(pow(sub(0,x),1.5),0.666666666))));}
@@ -23122,10 +27582,30 @@ function sinczeta(x){let fi=math.complex(0,0);
 for(let i=0;i<20;i++)fi=add(fi,pow(math.abs(sinczero[i]),sub(0,x)));
 return fi;
 }
+//https://dlmf.nist.gov/9.13
+function generalizedairya(n,z){return mul(div(div(1,add(n,2)),0.5,pi()),sin(mul(div(1,add(n,2)),pi())),pow(z,0.5),besselk(div(1,add(n,2)),div(pow(z,div(add(n,2),2)),0.5,add(n,2))))}
+function generalizedairyb(n,z){return mul(pow(div(z,add(n,2)),0.5),sub(besseli(div(1,add(n,2)),div(pow(z,div(add(n,2),2)),0.5,add(n,2))),besseli(div(-1,add(n,2)),div(pow(z,div(add(n,2),2)),0.5,add(n,2)))))}
+
 
 function airyfockv(x){return div(mul(sqrt(pi()),ai(x)),2)}
 function airyfockw1(x){return mul(exp(mul(I,pi(),div(1,6))),2,airyfockv(mul(x,pow(2,mul(I,eulerc(),pi(),div(1,3))))))}
 function airyfockw2(x){return mul(exp(mul(I,pi(),div(-1,6))),2,airyfockv(div(x,pow(2,mul(I,eulerc(),pi(),div(1,3))))))}
+
+function mapairypdf(x){return mul(2,exp(mul(-2,x,x,div(x,3))),sub(mul(x,ai(sqr(x))),aip(sqr(x))))}
+function mapairycdf(x){
+    //if(mag(im(x))<0.01 && re(x)<-2)return 0;
+    if (0&&mag(im(x))>0.5)
+    return add(1/3,
+    mul(-2,x,x,x,x,x,div(hypg22(7/6,5/3,7/3,8/3,mul(-4/3,x,x,x)),15,pow(3,2/3),gamma(5/3))),
+    mul(-1,x,x,x,x,  div(hypg22(5/6,4/3,5/3,7/3,mul(-4/3,x,x,x)),6 ,pow(3,1/3),gamma(4/3))),
+    mul(1 ,x,x,      div(hypg22(1/6,2/3,1/3,5/3,mul(-4/3,x,x,x)),1 ,pow(3,2/3),gamma(2/3))),
+    mul(2 ,x,      div(hypg22(-1/6,1/3,-1/3,4/3,mul(-4/3,x,x,x)),1 ,pow(3,1/3),gamma(1/3)))
+    )
+    
+    
+    
+    const m=div(gamma(1/3),mul(2,pi(),pow(3,1/6)));return add(m,integral(mapairypdf,0,x))
+    }
 
 //function airytn(n,z){
 	
@@ -23156,9 +27636,13 @@ function multiinfqpochhammer(A,q){
 	fi=mul(fi,infqpochhammer(g(A,i),q));	
 	return fi;
 }
+//jacobipsi(log(1/x))
+function jacobipsi(x){return div(sub(jacobitheta3(0,exp(mul(-1,x,pi()))),1),2)}
 function modifiedjacobitheta(x,p){
 return mul(infqpochhammer(div(p,x),p),infqpochhammer(x,p));	
 }
+
+
 
 function polymodifiedjacobitheta(X,p){
 	let fi=math.complex(1,0);
@@ -23720,12 +28204,16 @@ function smallestnegativeinteger(A, fail) {
 
   return smallestNumber;
 }
-function hypergeometric(A,B,x){
-	
+//mapairycdf(x)
+function hypergeometric(A,B,x,M=0){
+   
 	if(leng(A)==2 && leng(B)==1 && (mag(x)>1) )return hypg21(g(A,0),g(A,1),g(B,0),x);
-	const lim = minc(bign,-smallestnegativeinteger(A,-bign));
+
+    if( (mag(x)>1) )return mul(meijergalt(sub(0,x),vectormap(z=>sub(1,z),A),[0,...vectormap(z=>sub(1,z),B)],1,leng(A)),div(gmul(vectormap(z=>gamma(z),B)),gmul(vectormap(z=>gamma(z),A))))
+    const lim = bign*3//minc(bign,-smallestnegativeinteger(A,-bign));
 	let fi=math.complex(0,0);
-	for(let n=0;n<=lim;n++){
+    let fid=1213
+	for(let n=0;n<=lim && mag(sub(fi,fid))>div(mag(fi),100);n++){
 	let nom=pow(x,n);
 		for(let i=0;i<leng(A);i++)
 			nom=mul(nom,pochhammer(g(A,i),n));
@@ -23733,7 +28221,27 @@ function hypergeometric(A,B,x){
 	
 		for(let i=0;i<leng(B);i++)
 			denom=mul(denom,pochhammer(g(B,i),n));
-	fi=add(fi,div(nom,denom));
+	fid=fi;
+    fi=add(fi,div(nom,denom));
+    
+	}
+	return fi;
+}
+function matrixhypergeometric(A,B,x,M=0){
+   
+	
+    const lim = bign
+	let fi=matrixsub(identitymatrix(leng(x)),identitymatrix(leng(x)));
+	for(let n=0;n<=lim;n++){
+	let nom=matrixpoweri(x,n);
+		for(let i=0;i<leng(A);i++)
+			nom=matrixscal(nom,pochhammer(g(A,i),n));
+	let denom=facti(n);
+	
+		for(let i=0;i<leng(B);i++)
+			denom=mul(denom,pochhammer(g(B,i),n));
+    fi=matrixadd(fi,matrixscal(nom,div(1,denom)));
+    
 	}
 	return fi;
 }
@@ -23797,7 +28305,9 @@ function hypg10(a,c=1){return hypergeometric([a],[],c);}
 function hypg01(b,c=1){ if(Number.isInteger(sub(b,0.5))){return mul(gamma(b),pow(c,div(sub(1,b),2)),struvel(sub(1,b),mul(2,sqrt(c))))}return hypergeometric([],[b],c);}
 function hypg02(b,bb,c=1){return hypergeometric([],[b,bb],c);}
 function hypg03(b,bb,bbb,c=1){return hypergeometric([],[b,bb,bbb],c);}
-function hypg11(a,b,c=1){return hypergeometric([a],[b],c);}//hypergeometric([a,bign*bign],[b],div(c,bign,bign))}
+function hypg11(a,b,c=1){
+    //return hypergeometric([a,bign*bign],[b],div(c,bign,bign))
+    return hypergeometric([a],[b],c);}//hypergeometric([a,bign*bign],[b],div(c,bign,bign))}
 
 function hypg12(a,b,bb,c=1){return hypergeometric([a],[b,bb],c);}
 
@@ -23810,8 +28320,8 @@ function hypg33(a,aa,aaa,b,bb,bbb,c=1){return hypergeometric([a,aa,aaa],[b,bb,bb
 
 function reghypg21(a,b,c,z=1){return div(hypg21(a,b,c,z),gamma(c))}
 function reghypg01(b,z=1){
-    if(Number.isInteger(sub(b,0.5))){//console.log("k");
-    return mul(pow(z,div(sub(1,b),2)),struvel(sub(1,b),mul(2,sqrt(z))))}
+   // if(Number.isInteger(sub(b,0.5))){//console.log("k");
+   // return mul(pow(z,div(sub(1,b),2)),struvel(sub(1,b),mul(2,sqrt(z))))}
     return div(hypg01(b,z),gamma(b))}
 
 
@@ -24144,33 +28654,45 @@ function meijergr(A,B,C,D,z,r=1){
 	}
 	return mul(fi,pow(pi(),sub(leng(C),1)));
 }
-
+//  (0.5*meijergalt(x^2,[0.5,1,1],[0.5,0],1,2))-atan(x)
 function meijerg(A,B,C,D,z,cz=0){//cz is radius   f this s
-    if(mag(z)<cz)return meijergr(A,B,C,D,z,1)
+   // if(mag(z)<cz)return meijergr(A,B,C,D,z,1)
+     //  console.log(z)
 let fi = math.complex(0,0);
-
-if(leng(A)==0)
+   let fid=123
+   //let lf=0
+//(0.5*meijergalt(x^2,[0.5,1],[0.5,0],1,2,2,2,0))-atan(x)
+if(leng(A)==0 || leng(A)+leng(B)<leng(C)+leng(D) || (leng(A)+leng(B)==leng(C)+leng(D) && mag(z)<1))
+//if(mag(z)<1)
+ 
 for(let h=0;h<leng(C);h++)
-for(let k=0;k<bign;k++)
+for(let k=0;k<bign*3 && mag(sub(fi,fid))>0.01;k++)
 {	let num = math.complex(1,0);
 let Bh = div(add(g(C,h),k),1);
 for(let i=0;i<leng(A);i++)        num=mul(num,gamma(add(sub(1,g(A,i)),Bh)));
 for(let i=0;i<leng(D);i++)		  num=div(num,gamma(add(sub(1,g(D,i)),Bh)));
 for(let i=0;i<leng(B);i++)		  num=div(num,gamma(sub(      g(B,i),Bh)));
 for(let i=0;i<leng(C);i++)if(i!=h)num=mul(num,gamma(sub(      g(C,i),Bh)));
-	fi=add(fi,inftozero(div(mul(num,pow(-1,k),pow(div(1,z),Bh)),factorial(k),1)));
-}	
+	fid=fi;//lf=k;
+    fi=add(fi,inftozero(div(mul(num,pow(-1,k),pow(div(z),Bh)),factorial(k),1)));
+    //fi=add(fi,inftozero(div(mul(num,pow(-1,k),pow(div(z),Bh)),factorial(k),1)));
+}
 else
 for(let h=0;h<leng(A);h++)
-for(let k=0;k<bign;k++)
-{	let num = math.complex(1,0);
+for(let k=0;k<bign*3 && mag(sub(fi,fid))>0.01;k++)
+{ 	//return meijergr(A,B,C,D,z,1)
+let num = math.complex(1,0);
 let Ah = div(sub(add(1,k),g(A,h)),1);
 for(let i=0;i<leng(A);i++)if(i!=h)num=mul(num,gamma(sub(1,g(A,i),Ah)));
 for(let i=0;i<leng(D);i++)		  num=div(num,gamma(sub(1,g(D,i),Ah)));
 for(let i=0;i<leng(B);i++)	  	  num=div(num,gamma(add(  g(B,i),Ah)));
 for(let i=0;i<leng(C);i++)		  num=mul(num,gamma(add(  g(C,i),Ah)));
-	fi=add(fi,inftozero(div(mul(num,pow(-1,k),pow(div(1,z),Ah)),factorial(k),1)));
+	fid=fi;//lf=k;
+    //fi=add(fi,mul(inftozero(div(mul(num,pow(-1,k),pow(div(1,z),Ah)),factorial(k),1)),add(k,2)));
+    fi=add(fi,inftozero(div(mul(num,pow(-1,k),pow(div(1,z),Ah)),factorial(k),1)));
 }
+
+//fi=div(fi,lf)	
 return fi;
     
     
@@ -24194,7 +28716,7 @@ return fi;
 	}
 	return mul(fi,pow(pi(),sub(leng(C),1))); */
 }
-function meijergalt(z,A,B,m,n,p=leng(A),q=leng(B),r=1){
+function meijergalt(z,A,B,m,n,p=leng(A),q=leng(B),r=0){
 	let E = [];let F = [];let G = [];let H = [];
 	for(let i=0;i<n;i++)E.push(g(A,i));
 	for(let i=n;i<p;i++)F.push(g(A,i));
@@ -24202,6 +28724,95 @@ function meijergalt(z,A,B,m,n,p=leng(A),q=leng(B),r=1){
 	for(let i=m;i<q;i++)H.push(g(B,i));
 	return meijerg(E,F,G,H,z,r);
 }
+
+//atan  0.5*meijergalt(x^2,[0.5,1],[0.5,0],1,2)
+
+
+function mittagleffler(a,b,z){
+    let fi=0;let fid=123;for(let i=0;i<bign*2 && mag(sub(fi,fid))>0.01;i++){
+        fid=fi;
+        fi=add(fi,div(pow(z,i),gamma(add(mul(a,i),b))))}
+    return fi;
+}
+function mittagleffler3(a,b,c,z){
+    let fi=0;let fid=123;for(let i=1;i<bign*2 && mag(sub(fi,fid))>0.01;i++){
+        fid=fi;
+        fi=add(fi,div(mul(gamma(add(c,i)),pow(z,i)),factorial(i),gamma(add(mul(a,i),b))))}
+    return div(fi,gamma(c));
+}
+function prabhakar(a,b,c,z){
+    let fi=0;let fid=123;for(let i=0;i<bign*2 && mag(sub(fi,fid))>0.01;i++){
+        fid=fi;
+        fi=add(fi,div(mul(pow(z,i),poch(c,i)),gamma(add(mul(a,i),b)),factorial(i)))}
+    return fi;
+}
+function wright(l,m,z){
+    let fi=0;let fid=123;for(let i=0;i<bign*2 && mag(sub(fi,fid))>0.01;i++){
+        fid=fi;
+        fi=add(fi,div(pow(z,i),factorial(i),gamma(add(mul(a,i),b))))}
+    return fi;
+}
+
+
+
+
+
+function mlcosh(z,a=1,b=1){return div(add(mittagleffler(a,b,z),mittagleffler(a,b,neg(z))),2)}
+function mlsinh(z,a=1,b=1){return div(sub(mittagleffler(a,b,z),mittagleffler(a,b,neg(z))),2)}
+function mltanh(z,a=1,b=1){return div(mlsinh(z,a,b),mlcosh(z,a,b))}
+function mlsech(z,a=1,b=1){return div(1,mlcosh(z,a,b))}
+function mlcsch(z,a=1,b=1){return div(1,mlsinh(z,a,b))}
+function mlcoth(z,a=1,b=1){return div(mlcosh(z,a,b),mlsinh(z,a,b))}
+
+function mlcos(z,a=1,b=1){return div(add(mittagleffler(a,b,mul(I,z)),mittagleffler(a,b,neg(mul(I,z)))),2)}
+function mlsin(z,a=1,b=1){return div(sub(mittagleffler(a,b,mul(I,z)),mittagleffler(a,b,neg(mul(I,z)))),mul(2,I))}
+function mltan(z,a=1,b=1){return div(mlsin(z,a,b),mlcos(z,a,b))}
+function mlsec(z,a=1,b=1){return div(1,mlcos(z,a,b))}
+function mlcsc(z,a=1,b=1){return div(1,mlsin(z,a,b))}
+function mlcot(z,a=1,b=1){return div(mlcos(z,a,b),mlsin(z,a,b))}
+
+function ml3cosh(z,a=1,b=1,c=1){return div(add(mittagleffler3(a,b,c,z),mittagleffler3(a,b,c,neg(z))),2)}
+function ml3sinh(z,a=1,b=1,c=1){return div(sub(mittagleffler3(a,b,c,z),mittagleffler3(a,b,c,neg(z))),2)}
+function ml3tanh(z,a=1,b=1,c=1){return div(ml3sinh(z,a,b,c),ml3cosh(z,a,b,c))}
+function ml3sech(z,a=1,b=1,c=1){return div(1,ml3cosh(z,a,b,c))}
+function ml3csch(z,a=1,b=1,c=1){return div(1,ml3sinh(z,a,b,c))}
+function ml3coth(z,a=1,b=1,c=1){return div(ml3cosh(z,a,b,c),ml3sinh(z,a,b,c))}
+
+function ml3cos(z,a=1,b=1,c=1){return div(add(mittagleffler3(a,b,c,mul(I,z)),mittagleffler3(a,b,c,neg(mul(I,z)))),2)}
+function ml3sin(z,a=1,b=1,c=1){return div(sub(mittagleffler3(a,b,c,mul(I,z)),mittagleffler3(a,b,c,neg(mul(I,z)))),mul(2,I))}
+function ml3tan(z,a=1,b=1,c=1){return div(ml3sin(z,a,b,c),ml3cos(z,a,b,c))}
+function ml3sec(z,a=1,b=1,c=1){return div(1,ml3cos(z,a,b,c))}
+function ml3csc(z,a=1,b=1,c=1){return div(1,ml3sin(z,a,b,c))}
+function ml3cot(z,a=1,b=1,c=1){return div(ml3cos(z,a,b,c),ml3sin(z,a,b,c))}
+
+function pcosh(z,a=1,b=1,c=1){return div(add(prabhakar(a,b,c,z),prabhakar(a,b,c,neg(z))),2)}
+function psinh(z,a=1,b=1,c=1){return div(sub(prabhakar(a,b,c,z),prabhakar(a,b,c,neg(z))),2)}
+function ptanh(z,a=1,b=1,c=1){return div(psinh(z,a,b,c),pcosh(z,a,b,c))}
+function psech(z,a=1,b=1,c=1){return div(1,pcosh(z,a,b,c))}
+function pcsch(z,a=1,b=1,c=1){return div(1,psinh(z,a,b,c))}
+function pcoth(z,a=1,b=1,c=1){return div(pcosh(z,a,b,c),psinh(z,a,b,c))}
+
+function pcos(z,a=1,b=1,c=1){return div(add(prabhakar(a,b,c,mul(I,z)),prabhakar(a,b,c,neg(mul(I,z)))),2)}
+function psin(z,a=1,b=1,c=1){return div(sub(prabhakar(a,b,c,mul(I,z)),prabhakar(a,b,c,neg(mul(I,z)))),mul(2,I))}
+function ptan(z,a=1,b=1,c=1){return div(psin(z,a,b,c),pcos(z,a,b,c))}
+function psec(z,a=1,b=1,c=1){return div(1,pcos(z,a,b,c))}
+function pcsc(z,a=1,b=1,c=1){return div(1,psin(z,a,b,c))}
+function pcot(z,a=1,b=1,c=1){return div(pcos(z,a,b,c),psin(z,a,b,c))}
+
+function wcosh(z,l=1,m=1){return div(add(wright(l,m,z),wright(l,m,neg(z))),2)}
+function wsinh(z,l=1,m=1){return div(sub(wright(l,m,z),wright(l,m,neg(z))),2)}
+function wtanh(z,l=1,m=1){return div(wsinh(z,l,m),wcosh(z,l,m))}
+function wsech(z,l=1,m=1){return div(1,wcosh(z,l,m))}
+function wcsch(z,l=1,m=1){return div(1,wsinh(z,l,m))}
+function wcoth(z,l=1,m=1){return div(wcosh(z,l,m),wsinh(z,l,m))}
+
+function wcos(z,l=1,m=1){return div(add(wright(l,m,mul(I,z)),wright(l,m,neg(mul(I,z)))),2)}
+function wsin(z,l=1,m=1){return div(sub(wright(l,m,mul(I,z)),wright(l,m,neg(mul(I,z)))),mul(2,I))}
+function wtan(z,l=1,m=1){return div(wsin(z,l,m),wcos(z,l,m))}
+function wsec(z,l=1,m=1){return div(1,wcos(z,l,m))}
+function wcsc(z,l=1,m=1){return div(1,wsin(z,l,m))}
+function wcot(z,l=1,m=1){return div(wcos(z,l,m),wsin(z,l,m))}
+
 function meijera(A,B,C,D,k,z,r=1){
 	
 		let bk = g(C,k);
@@ -24466,32 +29077,256 @@ for(let j=0;j<leng(B);j++)fi=mul(fi,gamma(sub(1,g(g(B,i),j),mul(g(g(BB,i),j),x))
     return fi;
 }
 
-function barneszeta(s,w,A){//barneszeta(x,2,[1,2,3])
+
+
+
+//https://tetrationforum.org/showthread.php?tid=1694
+function toyzeta(s){let fi=0;for(let n=1;n<bign;n++)fi=add(fi,div(1,add(pow(n,s),pow(n,sub(0,s)))));return fi;}
+
+
+
+
+//ADD https://ir.cwi.nl/pub/2100/2100D.pdf
+//ADD https://arxiv.org/pdf/hep-th/0301143
+//https://en.wikipedia.org/wiki/Multiple_zeta_function
+
+
+//https://arxiv.org/pdf/2506.20074
+function berndtintegrald(x,Q){let [s,m]=Q;return div(pow(x,sub(s,1)),pow(add(cos(x),cosh(x)),m))}
+function berndtintegral(s,m){return integral(berndtintegrald,0,sqrt(bign),[s,m])}
+
+function berndtmintegrald(x,Q){let [s,m]=Q;return div(pow(x,sub(s,1)),pow(sub(cos(x),cosh(x)),m))}
+function berndtmintegral(s,m){return integral(berndtmintegrald,0,sqrt(bign),[s,m])}
+
+function berndtz(s,t,a,b,g1,g2,g3,g4){return dib(mul(pow(pi(),add(g1,g2,g3,g4)),sinh(mul(t,s))),pow(sin(mul(b,pi(),s)),g1),pow(cos(mul(a,pi(),s)),g2),pow(sinh(mul(b,pi(),s)),g3),pow(cosh(mul(b,pi(),s)),g4))}
+function berndtzhat(s,t,a,b,g1,g2,g3,g4){return dib(mul(pow(pi(),add(g1,g2,g3,g4)),cosh(mul(t,s))),pow(sin(mul(b,pi(),s)),g1),pow(cos(mul(a,pi(),s)),g2),pow(sinh(mul(b,pi(),s)),g3),pow(cosh(mul(b,pi(),s)),g4))}
+
+function benrdtg(p,m1,m2,y){let fi=0;for(let n=0;n<bign;n++)fi=add(fi,div(mul(pow(-1,n),pow(n,p)),pow(sinh(mul(n,y)),m1),pow(cosh(mul(n,y)),m2)))}
+function benrdtghat(p,m1,m2,y){let fi=0;for(let n=0;n<bign;n++)fi=add(fi,div(mul(pow(-1,n),pow(add(n,n,-1),p)),pow(sinh(mul(y,0.5,add(n,n,-1))),m1),pow(cosh(mul(y,0.5,add(n,n,-1))),m2)))}
+
+
+//https://arxiv.org/pdf/1006.3336
+function cauchyzeta(s){let fi=0;for(let m=1;m<bign;m++)fi=add(fi,div(pow(-1,m),sinh(mul(m,pi())),pow(m,s)),div(pow(-1,-m),sinh(mul(-m,pi())),pow(-m,s)))}
+
+
+//https://www.researchgate.net/publication/257851538_Values_of_twisted_Barnes_zeta_functions_at_negative_integers
+function twistedzetad(t,Q){let [s,x,w,A]=Q
+    let fi=mul(exp(mul(-1,x,t)),pow(t,sub(s,1)))
+    for(let i=1;i<=leng(A);i++)fi=mul(fi,div(sub(mul(g(A,j),t),log(g(A,j))),sub(1,mul(pow(w,g(A,i-1)),exp(mul(t,g(A,i-1)))))))
+}
+function twistedzeta(s,x,w,A){
+  return div(integral( twistedzeta,0,sqrt(bign),[s,x,w,A]),gamma(s))  
+}
+
+
+
+
+
+
+
+
+
+
+
+
+function barneszetad11(t,Q){let[s,w,n]=Q
+return div(mul(pow(sub(0,t),sub(s,1)),exp(mul(-1,w,t))),pow(sub(1,exp(mul(t,-1))),n))
+}
+function barneszeta1(s,w,n){//b1"111111111111
+    let q=sqrt(bign)/8;let qq=sqrt(bign)*2;;if(1 || re(s)<n){if(re(w)<0)return (barneszetaalt1(s,w,n,-q,-qq));return (barneszetaalt1(s,w,n,q,qq))}
+}
+function barneszetaalt1(s,w,n,q=1,qq=5){//barneszeta1(x,2,3)
+return div(add(
+integral(barneszetad11,math.complex(qq,q),math.complex(-q,q),[s,w,n]),
+integral(barneszetad11,math.complex(-q,q),math.complex(-q,-q),[s,w,n]),
+integral(barneszetad11,math.complex(-q,-q),math.complex(qq,-q),[s,w,n])
+),I,div(-2,gamma(sub(1,s))),pi())
+}
+function barneszetad1n(t,Q){let[s,w,n,a]=Q
+return div(mul(pow(sub(0,t),sub(s,1)),exp(mul(-1,w,t))),pow(sub(1,exp(mul(t,-1))),n))
+}
+function barneszeta1n(s,w,n,a){//b3333333333333
+    let q=sqrt(bign)/8;let qq=sqrt(bign)*2;;if(1 || re(s)<n){if(re(w)<0)return (barneszetaalt1n(s,w,n,a,-q,-qq));return (barneszetaalt1n(s,w,n,a,q,qq))}
+}
+function barneszetaalt1n(s,w,n,a,q=1,qq=5){//barneszeta1(x,2,3)
+return div(add(
+integral(barneszetad1n,math.complex(qq,q),math.complex(-q,q),[s,w,n,a]),
+integral(barneszetad1n,math.complex(-q,q),math.complex(-q,-q),[s,w,n,a]),
+integral(barneszetad1n,math.complex(-q,-q),math.complex(qq,-q),[s,w,n,a])
+),I,div(-2,gamma(sub(1,s))),pi())
+}
+
+
+
+
+
+function multiplepolylogarithmd4(t,Q){let[s,w,A,X]=Q;let Z=pairvectors(A,X)
+return div(mul(pow(sub(0,t),sub(s,1)),exp(mul(-1,w,t))),
+gmul(vectormap(x=>sub(1,div(exp(mul(t,-1,g(x,0))),g(x,1))),Q)))
+}
+function multiplepolylogarithm(s,w,A,X){//barneszeta(4,2,[1,2,3])
+    let q=sqrt(bign)/8;let qq=sqrt(bign)*2;;if(1 || re(s)<leng(A)){if(re(w)<0)return (multiplepolylogarithmalt(s,w,A,X,-q,-qq));return (multiplepolylogarithmalt(s,w,A,X,q,qq))}
+}
+function multiplepolylogarithmalt(s,w,A,X,q=1,qq=5){//barneszetaalt(x,2,[1,2,3])-barneszeta(x,2,[1,2,3])
+return div(add(
+integral(multiplepolylogarithmd4,math.complex(qq,q),math.complex(-q,q),[s,w,A,X]),
+integral(multiplepolylogarithmd4,math.complex(-q,q),math.complex(-q,-q),[s,w,A,X]),
+integral(multiplepolylogarithmd4,math.complex(-q,-q),math.complex(qq,-q),[s,w,A,X])
+
+),I,div(-2,gamma(sub(1,s))),pi())}
+
+
+function multiplelerchtranscendentd4(t,Q){let[s,Z,S,A]=Q;let R=pairvectors(Z,S)
+return div(mul(pow(sub(0,t),sub(s,1)),
+gmul(vectormap(x=>exp(mul(-1,x,t)),A))),
+gmul(vectormap(x=>sub(1,mul(exp(mul(t,-1,g(x,0))),g(x,1)),R))))
+}
+function multiplelerchtranscendent(s,Z,S,A){//barneszeta(4,2,[1,2,3])
+    let q=sqrt(bign)/8;let qq=sqrt(bign)*2;;if(1 || re(s)<leng(A)){if(re(g(A,0))<0)return (multiplelerchtranscendentalt(s,Z,S,A,-q,-qq));return (multiplelerchtranscendentalt(s,Z,S,A,q,qq))}
+}
+function multiplelerchtranscendentalt(s,w,Z,S,A,q=1,qq=5){//barneszetaalt(x,2,[1,2,3])-barneszeta(x,2,[1,2,3])
+return div(add(
+integral(multiplelerchtranscendentd4,math.complex(qq,q),math.complex(-q,q),[s,Z,S,A]),
+integral(multiplelerchtranscendentd4,math.complex(-q,q),math.complex(-q,-q),[s,Z,S,A]),
+integral(multiplelerchtranscendentd4,math.complex(-q,-q),math.complex(qq,-q),[s,Z,S,A])
+
+),I,div(-2,gamma(sub(1,s))),pi())}
+
+//unreal i just want to generalize like meijerg iff P and Q are only 1 or -1 then its eqivalant else its just more genreal
+function meijerzetad4(t,QQ){let[s,Z,S,A,B,P,Q]=QQ;let R=pairvectors(Z,S,P);let T=pairvectors3(A,B,Q)
+return div(pow(sub(0,t),sub(s,1)),
+gmul(vectormap(x=>pow(mul(exp(mul(t,-1,g(x,0))),g(x,1)),g(x,3)),T)),
+gmul(vectormap(x=>pow(sub(1,mul(exp(mul(t,-1,g(x,0))),g(x,1))),g(x,3)),R)))
+}
+function meijerzeta(s,Z,S,A,B,P,Q){//barneszeta(4,2,[1,2,3])
+    let q=sqrt(bign)/8;let qq=sqrt(bign)*2;;if(1 || re(s)<leng(A)){if(re(g(A,0))<0)return (meijerzetaalt(s,Z,S,A,B,P,Q,-q,-qq));return (meijerzetaalt(s,Z,S,A,B,P,Q,q,qq))}
+}
+//meijerzeta(x,[1,1],[1,2],[1,1],[1],[2],[-1])
+//meijerzeta(2,[1,1],[1,2],[1,1],[1],[2],[-1])
+function meijerzetaalt(s,w,Z,S,A,B,P,Q,q=1,qq=5){//barneszetaalt(x,2,[1,2,3])-barneszeta(x,2,[1,2,3])
+return div(add(
+integral(meijerzetad4,math.complex(qq,q),math.complex(-q,q),[s,Z,S,A,B,P,Q]),
+integral(meijerzetad4,math.complex(-q,q),math.complex(-q,-q),[s,Z,S,A,B,P,Q]),
+integral(meijerzetad4,math.complex(-q,-q),math.complex(qq,-q),[s,Z,S,A,B,P,Q])
+
+),I,div(-2,gamma(sub(1,s))),pi())}
+
+
+
+
+
+
+
+function pairvectors(S,X){
+    let R=[];
+    for(let i=0;i<leng(S);i++)
+        R.push([g(S,i),g(X,i)]);
+    return R;
+}
+function pairvectors3(S,X,Q){
+    let R=[];
+    for(let i=0;i<leng(S);i++)
+        R.push([g(S,i),g(X,i),g(Q,i)]);
+    return R;
+}
+
+
+
+//return div(integral( barneszetad,0,sqrt(bign),[s,w,A]),gamma(s))
+
+function barneszetad(t,Q){let[s,w,A]=Q
+return div(mul(pow(t,sub(s,1)),exp(mul(-1,w,t))),gsum(vectormap(x=>sub(1,exp(mul(t,-1,x))),A)))
+}
+function barneszetad2(t,Q){let[s,w,A]=Q
+return div(mul(pow(t,sub(s,1)),exp(mul(t,sub(gsum(A),w)))),gmul(vectormap(x=>sub(exp(mul(t,-1,x)),1),A)))
+}
+function barneszetad3(t,Q){let[s,w,A]=Q;t=sub(0,t)
+return div(mul(pow(t,sub(s,1)),exp(mul(t,sub(gsum(A),w)))),gmul(vectormap(x=>sub(exp(mul(t,-1,x)),1),A)))
+}
+function barneszetad4(t,Q){let[s,w,A]=Q
+return div(mul(pow(sub(0,t),sub(s,1)),exp(mul(-1,w,t))),gmul(vectormap(x=>sub(1,exp(mul(t,-1,x))),A)))
+}
+
+//add https://en.wikipedia.org/wiki/Multiple_gamma_function ELLİPTİC AND THE UHHH F
+
+
+
+//https://scispace.com/pdf/multiple-sine-functions-4z3lghe3pz.pdf selbergzeta 
+
+
+//https://en.wikipedia.org/wiki/Hankel_contour IC
+function hankelgamma(z){return mul(-2,I,sin(mul(pi(),z)),gamma(z))}
+
+
+
+//barneszetaalt(x,2,[1,1])
+function barneszetaalt(s,w,A,q=1,qq=5){//barneszetaalt(x,2,[1,2,3])-barneszeta(x,2,[1,2,3])
+return div(add(
+integral(barneszetad4,math.complex(qq,q),math.complex(-q,q),[s,w,A]),
+integral(barneszetad4,math.complex(-q,q),math.complex(-q,-q),[s,w,A]),
+integral(barneszetad4,math.complex(-q,-q),math.complex(qq,-q),[s,w,A])
+
+),I,div(-2,gamma(sub(1,s))),pi())
+
+//Ccircle(1) Chankel
+//barneszetaalt(0.2,2,[1,1])
+//barneszetad4(x,[0.2,2,[1,1]])
+//return div(cintegral(barneszetad2,Ccircle(1),[s,w,A]),gamma(s),sub(exp(mul(2,pi(),I,s)),1))
+//let q=3
+//let qq=7
+/*
+integral(barneszetad4,math.complex(7,1),math.complex(-1,1),[s,w,A]),
+integral(barneszetad4,math.complex(-1,1),math.complex(-1,-1),[s,w,A]),
+integral(barneszetad4,math.complex(-1,-1),math.complex(7,-1),[s,w,A])
+
+
+integral(barneszetad4,math.complex(-7,1),math.complex(1,1),[s,w,A]),
+integral(barneszetad4,math.complex(1,1),math.complex(1,-1),[s,w,A]),
+integral(barneszetad4,math.complex(1,-1),math.complex(-7,-1),[s,w,A])
+
+),//gamma(sub(1,s))
+div(mul(-2,pi(),I),1))*/
+//barneszetaalt(x,2,[1,1])+acc(40)
+//sub(exp(mul(2,pi(),I,s)),1))
+
+return div(cintegral(barneszetad4,Chankel(1),[s,w,A]),gamma(s),sub(exp(mul(2,pi(),I,s)),1))
+return div(integral( barneszetad2,0,mul(sqrt(bign),exp(mul(-1,I,t))),[s,w,A]),gamma(s))
+
+return div(integral( barneszetad,0,sqrt(bign),[s,w,A]),gamma(s))}
+//hurwitzzeta(x-1,2)-hurwitzzeta(x,2)
+function barneszeta(s,w,A){//barneszeta(4,2,[1,2,3])
+    let q=sqrt(bign)/8;let qq=sqrt(bign)*2;;if(1 || re(s)<leng(A)){if(re(w)<0)return (barneszetaalt(s,w,A,-q,-qq));return (barneszetaalt(s,w,A,q,qq))}
+//return div(integral( barneszetad,0,sqrt(bign),[s,w,A]),gamma(s))
+//barneszeta(x,1,[1,1])
 	let N = leng(A);
 	let G = new Array(N);
 	let fi=math.complex(0,0);
-    let W=round(pow(10,1/(x+1)))
+    let W=round(mul(2,pow(bign,div(1,1+leng(A)))))//round(pow(10,1/(bign+1)))
 	for(let k=0;k<pow(W,N);k++){
 		let GGG=k;
 		for(let i=0;i<N;i++){
 		G[i]=math.mod(GGG,W);
 		GGG=floor(GGG/W);
 		}
-	//	console.log(G);
+		//console.log(G);
 		
 	let den=math.complex(0,0);
 		for(let i=0;i<N;i++){
-			den=add(den,mul(g(A,i),g(G,i)));
+			den=add(den,mul(g(A,i),add(g(G,i),1)));
 		}
 		fi=add(fi,div(1,pow(add(w,den),s)));
 	}
 	return fi;
 }
+//hurwitzzeta(x-1,2)-hurwitzzeta(x,2)
+//(barneszeta(x,2,[1,2]))/(hurwitzzeta(x-1,2)-hurwitzzeta(x,2))+acc(20)
+
+
 function barneszetap(s,w,A){//barneszetap(x,2,[1,2,3])
 	let N = leng(A);
 	let G = new Array(N);
 	let fi=math.complex(0,0);
-      let W=round(pow(10,1/(x+1)))
+   let W=round(mul(2,pow(bign,div(1,1+leng(A)))))
 // let W=1+ceil((bign)/log(5*N+1))
 	for(let k=0;k<pow(W,N);k++){
 		let GGG=k;
@@ -24514,7 +29349,7 @@ function barneszetawp(s,w,A){//barneszetap(x,2,[1,2,3])
 	let N = leng(A);
 	let G = new Array(N);
 	let fi=math.complex(0,0);
-      let W=round(pow(10,1/(x+1)))
+   let W=round(mul(2,pow(bign,div(1,1+leng(A)))))
 //  let W=1+ceil((bign)/log(5*N+1))
 	for(let k=0;k<pow(W,N);k++){
 		let GGG=k;
@@ -24552,20 +29387,84 @@ return fi}
 
 
 
+function appello(x,A){//barneszeta(4,2,[1,2,3])
+
+
+	let N = leng(A);
+	let G = new Array(N);
+	let fi=math.complex(1,0);
+    let W=round(mul(2,pow(bign,div(1,1+leng(A)))))//round(pow(10,1/(bign+1)))
+	for(let k=0;k<pow(W,N);k++){
+		let GGG=k;
+		for(let i=0;i<N;i++){
+		G[i]=math.mod(GGG,W);
+		GGG=floor(GGG/W);
+		}
+	//	console.log(G);
+		
+	let den=math.complex(1,0);
+		for(let i=0;i<N;i++){
+			den=mul(den,pow(exp(mul(2,pi(),I,g(A,i))),g(G,i)));
+		}
+		fi=mul(fi,sub(1,mul(den,exp(mul(2,pi(),I,x)))));
+	}
+	return fi;
+}
 
 
 
 
 
-
-
-
-function multiplegamma(w,A){
+//
+//multiplegamma(x,[1,1])
+function multiplegamma(w,A){let x=w
+    if(leng(A)==0)return div(1,x)
+        if(leng(A)==1)return div(mul(pow(g(A,0),sub(div(w,g(A,0)),0.5)),gamma(div(w,g(A,0)))),sqrt(2),sqrt(pi()))
+        let Ap=rearray(A);Ap.pop();
+    if(re(g(A,leng(A)-1))>0 && re(x)<0)return mul(multiplegamma(x,Ap),multiplegamma(add(w,g(A,leng(A)-1)),A))
+    if(re(g(A,leng(A)-1))>0 && re(x)>re(g(A,leng(A)-1))+2)return div(multiplegamma(sub(w,g(A,leng(A)-1)),A),multiplegamma(sub(w,g(A,leng(A)-1)),Ap))
+    if(re(g(A,leng(A)-1))<0 && re(x)<1)return mul(multiplegamma(x,Ap),multiplegamma(add(w,g(A,leng(A)-1)),A))
+  //  if(re(g(A,leng(A)-1))<0 && re(x)>0)return div(multiplegamma(sub(w,g(A,leng(A)-1)),A),multiplegamma(x,Ap))
     let b = bign;
 	//bign = floor(sqrt(bign));
 	const fi= exp(div(sub(barneszeta(0.01,w,A),barneszeta(-0.01,w,A)),0.02));
 //	bign=b;
+//const fi=exp(barneszetap(0,w,A))
 	return fi;
+}
+//multiplegamma1(2,x)+acc(30)
+function multiplegamma1(w,n){let x=w;let A=n
+    if(n==0)return div(1,x)
+        if(n==1)return div(mul(pow(1,sub(div(w,1),0.5)),gamma(div(w,1))),sqrt(2),sqrt(pi()))
+        let Ap=sub(n,1)
+   // if(re(n)>0 && re(x)<0)return mul(multiplegamma1(x,Ap),multiplegamma1(add(w,1),n))
+    //if(re(n)>0 && re(x)>re(1)+2)return div(multiplegamma1(sub(w,1),n),multiplegamma1(sub(w,1),Ap))
+ 
+  //  if(re(g(A,leng(A)-1))<0 && re(x)>0)return div(multiplegamma(sub(w,g(A,leng(A)-1)),A),multiplegamma(x,Ap))
+    let b = bign;
+	//bign = floor(sqrt(bign));
+	const fi= exp(div(sub(barneszeta1(0.01,w,n),barneszeta1(-0.01,w,n)),0.02));
+//	bign=b;
+//const fi=exp(barneszetap(0,w,A))
+	return fi;
+}
+//nthlevelsuperduperfactorial(x)+acc(30)
+function nthlevelsuperduperfactorial(x,n=3){
+    return mul(pow(multiplegamma1(add(x,n,-2),n),
+    sub(mul(2,sqr(sin(mul(n,pi(),0.5)))),1))
+    //pow(-1,add(n,1)))
+    ,pow(sqrt(mul(2,pi())),ncr(add(x,n,-2),sub(n,1))),
+    pow(0.3366271261764529,ncr(add(x,n,-3),sub(n,2))),
+    pow(1/0.9035676374168872,ncr(add(x,n,-4),sub(n,3))),
+    pow(1/0.9883353335404063,ncr(add(x,n,-5),sub(n,4))),
+   // pow(0.3366271261764529,ncr(add(x,n,-3),sub(n,2))),
+    )
+}
+
+
+
+function multiplefactorial(w,A){
+    return div(multiplegamma(w,A),multiplegamma(div(gsum(A),2),A))
 }
 
 
@@ -24575,16 +29474,94 @@ function doublegammad(t,A){
 	const q=add(b,div(1,b));
 	return div(sub(div(sub(exp(mul(-1,w,t)),exp(mul(-0.5,q,t))),sub(1,exp(mul(-1,b,t))),sub(1,exp(mul(-1,t,pow(b,-1))))),div(div(sqr(sub(div(q,2),w)),2),exp(t)),div(sub(div(q,2),w),t)),t);
 }
-function doubleloggamma(b,w){
+function doubleloggamma(b,w=1){
 	return integral(doublegammad,0.01/bign,sqrt(bign)*1.5,[b,w]);
 }
 
 
+//superdupergamma(x)+acc(30)
+//(multiplegamma(x,[1,1,1])/multiplegamma(x+1,[1,1,1]))/((barnesg(x)*(2*pi)^(-x/2))^-1)=0.3366271261764529
+function doublegamma11(x){return div(pow(mul(2,pi()),div(x,2)),barnesg(x))}
+function superdupergamma(x){
+  //  if(re(x)>1)return mul(superdupergamma(sub(x,1)),barnesg(x))
+   // if(re(x)<0)return div(superdupergamma(add(x,1)),barnesg(add(x,1)))
+        return mul(pow(mul(2,pi()),mul(x,add(x,1),0.25)),pow(0.3366271261764529,x),multiplegamma(add(x,1),[1,1,1]),1/0.9035676374168872)
+   // return mul(pow(div(0.5,pi()),mul(-0.25,x,add(x,1))),multiplegamma(add(x,0),[1,1,1]),0.3366271261764529)
+    
+    }
 
+//multiplegamma(add(x,0),[1,1,1,1])/multiplegamma(add(x,1),[1,1,1,1])
+//superdupergamma4(x)+acc(30)
+//(superdupergamma4(x+1)/superdupergamma4(x))/superdupergamma(x)+acc(30)
+//pow(0.2,x),
+//superdupergamma4(x)/superdupergamma4(x-1)/superdupergamma(x)
+function superdupergamma4(x){
+   // if(re(x)>1)return mul(superdupergamma4(sub(x,1)),superdupergamma(add(x,0)))
+   // if(re(x)<0)return div(superdupergamma4(add(x,1)),superdupergamma(add(x,1)))
+        
+    //pow(1/4.833185749401683,x)
+    //pow(1/0.7614635915406629,x)  pow(1/0.7614635915406629,x),1/1.093814199378776,
+    //pow(1/0.891590892734917,x),
+        return mul(pow(1/0.9015234487489272,x),1/0.9883353335404063,pow(mul(2,pi()),mul(x,add(x,1),add(x,2),1/12)),pow(0.3366271261764529,mul(x,add(x,1),0.5)),div(1,multiplegamma(add(x,2),[1,1,1,1])))
+}
+//superdupergamma5(x)+acc(30)
+function superdupergamma5(x){
+  //  if(re(x)>1)return mul(superdupergamma5(sub(x,1)),superdupergamma4(add(x,0)))
+    if(re(x)<0)return div(superdupergamma5(add(x,1)),superdupergamma4(add(x,1)))
+ 
+        return mul(pow(1/0.9015234487489272,mul(x,add(x,1),0.5)),pow(1/0.9883353335404063,x),pow(mul(2,pi()),mul(x,add(x,1),add(x,2),add(x,3),1/48)),pow(0.3366271261764529,mul(x,add(x,1),add(x,2),1/6)),div(multiplegamma(add(x,3),[1,1,1,1,1])))
+}
 
+function superduperdigamma(x){return div(derv(superdupergamma,x),superdupergamma(x))}
+function superduperfactorial(x){return superduperdigamma(add(x,2))}
 
+//multiplegamma(add(x,1),[1,1,1,1])/multiplegamma(add(x,0),[1,1,1,1])
 
+//ADD extand https://www.sciencedirect.com/science/article/pii/S0022314X06001569
+function umultiplesin(x,A){
+    return div(pow(multiplegamma(sub(gsum(A),x),A),pow(-1,leng(A))),multiplegamma(x,A))
+}
+function multiplesin(x,A){
+    return umultiplesin(sub(gsum(A),x),A)
+}
+function multipleholdersin(x,A){//multipleholdersin(x,[1,1])+acc(30)
+    const q=gsum(A);return div(multiplegamma(add(div(q,2),mul(I,x)),A),multiplegamma(sub(div(q,2),mul(I,x)),A))
+}
 
+function qmultiplegamma(q,x,A){let B=rearray(A);let C=rearray(A);B.append(modulartransformqt(q));C.append(sub(0,modulartransformqt(q)));return div(mul(multiplegamma(x,B),multiplegamma(x,C)),multiplegamma(x,A))}
+//https://arxiv.org/pdf/1106.1754
+function bilateralzeta(s,w,A){let B=rearray(A);B[0]=sub(0,B[0]);return add(barneszeta(s,add(w,g(A,0)),A),barneszeta(s,w,B))}
+
+function holderdoublesin(b,x){const q=add(b,div(1,b));return div(doublegamma(b,add(div(q,2),mul(I,x))),doublegamma(b,sub(div(q,2),mul(I,x))))}
+ function holderdoubleupsilon(b,x){const q=add(b,div(1,b));return div(1,doublegamma(b,add(div(q,2),mul(I,x))),doublegamma(b,sub(div(q,2),mul(I,x))))}
+      
+    /*
+    function doublesin(b,w){const q=add(b,div(1,b));return div(doublegamma(b,w),doublegamma(b,sub(q,w)))}
+function doubleupsilon(b,w){const q=add(b,div(1,b));return div(1,doublegamma(b,w),doublegamma(b,sub(q,w)))}
+
+    */
+
+//https://arxiv.org/pdf/1905.08068
+function kurokawamultiplegamma(k,w,A){
+    let b = bign;
+	const fi= exp(div(sub(barneszeta(add(k,0.01),w,A),barneszeta(sub(k,0.01),w,A)),0.02));
+	return fi;
+}
+function qkurokawamultiplegamma(q,k,x,A){let B=rearray(A);let C=rearray(A);B.append(modulartransformqt(q));C.append(sub(0,modulartransformqt(q)));return div(mul(kurokawamultiplegamma(k,B),kurokawamultiplegamma(k,x,C)),kurokawamultiplegamma(k,x,A))}
+
+//https://arxiv.org/pdf/2402.07740
+function alekseevskyp(n,xx,u){/*Pn+1 x+1 - Pn+1x = Pnx*/
+let x=sub(xx,1)
+let fi=0;for(let i=0;i<=n;i++)fi=add(fi,div(mul(pow(-1,i),poch(x,sub(n,i))),factorial(sub(n,i)),pow(sub(i,exp(sub(0,u))),i)))
+return add(fi,div(mul(pow(-1,add(n,1)),exp(mul(-1,u,x))),pow(sub(1,exp(sub(0,u))),n)))
+}
+
+function apello2(a,b,c,w,ww,x){
+    let fi=mul(x,exp(add(mul(a,x,x),mul(b,x),c)))
+    for(let m=-bign;m<=bign;m++)
+        for(let n=0;n<bign;n++)
+            fi=mul(fi,pow(sub(1,div(x,sub(mul(n,w),mul(m,w,w)))),exp(add(div(x,sub(mul(n,w),mul(m,w,w))),div(sqr(x),sqr(sub(mul(n,w),mul(m,w,w))))))))
+}
 
 
 
@@ -24682,14 +29659,26 @@ function ddim(W){
 
 
 
-function loggamma(x){return log(gamma(x))}
+function loggamma(x,k){
+  //  let fi=sub(0,mul(x,0.577215664901532),log(x));
+  //  for(let i=1;i<bign;i++)fi=add(fi,sub(div(x,k),log(add(1,div(x,k)))))
+  //  return fi;
+   if(x!=re(x) && k!== undefined){ 
+   let q=mul(2,pi(),I,k)
+   if(im(x)>0)
+   return add(q,math.complex(-0.6509231993018562 ,- 1.8724366472624299),integral(digamma,I,x))
+    return add(q,math.complex(-0.6509231993018562 , 1.8724366472624299),integral(digamma,sub(0,I),x))
+   }
+    
+    
+    return log(gamma(x))}
 
 /*function doublegammamove(b,w,a){
 	let m = div(a,b);
 	return mul(doublegamma(b,w),pow(div(pow(b,sub(mul(b,w),0.5)),gamma(mul(b,w))),m));
 }*/
 
-function doublegamma(b,w,n=5){//doublegammamove
+function doublegamma(b,w=1,n=5){//doublegammamove
 	if(n==0 || re(w)>0)return doublegammaa(b,w);
 let fi=add(w,b);
 	fi= div(mul(pow(b,sub(mul(b,w),0.5)),sqrt(mul(2,pi()))),gamma(mul(b,w)));
@@ -24699,6 +29688,10 @@ function singlegamma(w,a){return div(mul(pow(a,sub(div(w,a),0.5)),gamma(div(w,a)
 function doublegammaa(b,w){return exp(doubleloggamma(b,w));}
 function doublesin(b,w){const q=add(b,div(1,b));return div(doublegamma(b,w),doublegamma(b,sub(q,w)))}
 function doubleupsilon(b,w){const q=add(b,div(1,b));return div(1,doublegamma(b,w),doublegamma(b,sub(q,w)))}
+
+
+
+
 function braid(fn, perm) {
   if (typeof fn !== 'function') throw new TypeError('fn must be a function');
   const p = normalizePerm(perm);
@@ -25219,6 +30212,26 @@ function multinomial(n,R){
 	fi=div(fi,factorial(g(R,i)));
 return fi;
 }
+function qmultinomial(n,R,q){
+	fi=qfactorial(n,q);
+	for(let i=0;i<leng(R);i++)
+	fi=div(fi,qfactorial(g(R,i),q));
+return fi;
+}
+//https://oeis.org/A274888
+function qswingingfactorialcoef(m,n,q){
+    return qmultinomial(m,[floorxo2(n),sqr(sin(mul(pi(),0.5,n))),floorxo2(n)],q)
+}
+//A244006
+function qlatticepath3(n,m,q){
+    return qmultinomial(n,[m,m,m],q)
+}
+function qlatticepath(n,m,k,q){//k pos integer
+    return qmultinomial(n,vectorscal(identityvector(k),m),q)
+}
+
+function identityvector(n){  return Array(n).fill(1);}
+
 function rcomplexion(n,p){//https://en.wikipedia.org/wiki/Stars_and_bars_(combinatorics)
 	return div(factorial(add(n,p,-1)),factorial(p),factorial(sub(n,1)));
 }
@@ -25442,7 +30455,7 @@ fi=add(fi,mul(      div(mul(poch(a,m),poch(b,m)),poch(c,add(m,n)))              
 
 
 function conhorngamma1(a,b,bb,x,y){let fi=math.complex(0);for(let m=0;m<bign;m++)for(let n=0;n<bign;n++)
-fi=add(fi,mul(      mul(poch(a,m),poch(b,sub(n,m)),poch(bb,sub(mün)))                   ,div(mul(pow(x,m),pow(y,n)),factorial(m),factorial(n))))}
+fi=add(fi,mul(      mul(poch(a,m),poch(b,sub(n,m)),poch(bb,sub(m,n)))                   ,div(mul(pow(x,m),pow(y,n)),factorial(m),factorial(n))))}
 
 function conhorngamma2(b,bb,x,y){let fi=math.complex(0);for(let m=0;m<bign;m++)for(let n=0;n<bign;n++)
 fi=add(fi,mul(      mul(poch(b,sub(n,m)),poch(bb,sub(m,n)))                    ,div(mul(pow(x,m),pow(y,n)),factorial(m),factorial(n))))}
@@ -25641,7 +30654,55 @@ function lauricellac(a,b,c,ccc,x,y,z){
 return fi;
 }
 
-//ADD GENERALZİE LAURİCALLE
+function eneralizedlauricellaa(a,B,C,X){
+let fi=math.complex(0);
+for(let k=0;k<bign;k++){
+let num=pochhammer(a,k),t=1;
+for(let i=0;i<leng(X);i++)t=mul(t,div(mul(pochhammer(B[i],k),pow(X[i],k)),mul(pochhammer(C[i],k),factorial(k))));
+fi=add(fi,inftozero(mul(num,t)));
+}
+return fi;
+}
+function eneralizedlauricellab(A,B,C,X){
+let fi=math.complex(0);
+for(let k=0;k<bign;k++){
+let num=1,den=pochhammer(C[0],k),t=1;
+for(let i=0;i<leng(X);i++)num=mul(num,pochhammer(A[i],k),pochhammer(B[i],k));
+for(let i=0;i<leng(X);i++)t=mul(t,div(pow(X[i],k),factorial(k)));
+fi=add(fi,inftozero(div(mul(num,t),den)));
+}
+return fi;
+}
+function eneralizedlauricellac(a,b,C,X){
+let fi=math.complex(0);
+for(let k=0;k<bign;k++){
+let num=mul(pochhammer(a,k),pochhammer(b,k)),t=1;
+for(let i=0;i<leng(X);i++)t=mul(t,div(pow(X[i],k),mul(pochhammer(C[i],k),factorial(k))));
+fi=add(fi,inftozero(mul(num,t)));
+}
+return fi;
+}
+function generalizedlauricellac2(A,B,C,X){
+let fi=math.complex(0);
+for(let k=0;k<bign;k++){
+let num=1,t=1;
+for(let i=0;i<leng(X);i++)num=mul(num,pochhammer(A[i],k),pochhammer(B[i],k));
+for(let i=0;i<leng(X);i++)t=mul(t,div(pow(X[i],k),mul(pochhammer(C[i],k),factorial(k))));
+fi=add(fi,inftozero(mul(num,t)));
+}
+return fi;
+}
+//IDK ABOUT THE D FIX
+function generalizedlauricellad(a,B,c,X){
+    let fi=math.complex(0);
+    for(let k=0;k<bign;k++){
+        let num=pochhammer(a,k),den=pochhammer(c,k),t=1;
+        for(let i=0;i<leng(X);i++)
+            num=mul(num,pochhammer(g(B,i),k));
+        for(let i=0;i<leng(X);i++)
+            t=mul(t,div(pow(g(X,i),k),factorial(k)));
+        fi=add(fi,inftozero(div(mul(num,t),den)))}return fi}
+
 
  
 
@@ -25868,10 +30929,14 @@ function jacksonricattiqbesselxi3(vv,x,q){return mul(jacksonsphericalqhankel13(v
 function jacksonricattiqbesselzeta1(vv,x,q){return mul(jacksonsphericalqhankel21(vv,x,q),x)}
 function jacksonricattiqbesselzeta2(vv,x,q){return mul(jacksonsphericalqhankel22(vv,x,q),x)}
 function jacksonricattiqbesselzeta3(vv,x,q){return mul(jacksonsphericalqhankel23(vv,x,q),x)}
+//https://arxiv.org/pdf/math/0403481
+function qkummersummation(a,b,q){return qhypergeometric([a,b],[div(mul(a,q),b)],div(q,-1,b))}
+	function rogersverywellpoisedsummation(a,b,c,d,q){return qhypergeometric([a,mul(q,sqrt(a)),mul(-1,q,sqrt(a)),b,c,d],[sub(0,sqrt(a)),sqrt(a),div(mul(a,q),b),div(mul(a,q),c),div(mul(a,q),d)],q,div(mul(a,q),b,c,d))}
+ 	function qgausssummation(a,b,c,d,q){return qhypergeometric([a,b,mul(d,q)],[c,d],q,div(c,a,b,q))}
 
-	
+    
 function qcharlierpoly(n,qx,a,q){
-	return qhypergeometric([pow(q,sub(0,n)),qx],[0],div(pow(q,add(n,1)),a,-1))
+	return qhypergeometric([pow(q,sub(0,n)),qx],[0],q,div(pow(q,add(n,1)),a,-1))
 }
 
 function rogerspoly(n,x,b,q){
@@ -25924,8 +30989,6 @@ function bigqlegendre(n,x,c,q){return qhypergeometric([pow(q,sub(0,n)),pow(q,add
 
 
 
-
-
 function racahpoly(n,lx,a,b,c,d){
 	const x=div(sqrt(add(c,d,1)),-4);
 	return hypergeometric([sub(0,n),add(n,a,b,1),sub(0,x),add(x,c,d,1)],[add(a,1),add(c,1),add(b,d,1)],1)
@@ -25946,6 +31009,43 @@ function krawtchoukpoly(n,x,p,nn){
     return reghypg21(sub(0,n),sub(0,x),sub(0,nn),div(1,p))
 }
 
+
+//https://content.wolfram.com/sites/19/2012/06/Mikhailov.pdf
+function walkerd(x){return div(mul(x,x,exp(mul(-1,x,x)),hypg22(1,1,3/2,2,sqr(x))),2)}
+function walker(n){return integral(walkerd,0,n)}
+
+function mobiuszex(a,b,c,d,x){return div(mul(add(mul(a,x),b),exp(x)),add(mul(x,c),d))}
+function mobiusw(a,b,c,d,x){//ax+b / cx+d r^x = X
+    let z=div(b,a,-1)
+    
+    return newtonzero(x0 => sub(mobiuszex(a,b,c,d,x0),x),z)
+}
+
+
+//https://oeis.org/A002538/a002538.pdf
+function carlitzphi(j,s,k){
+    let fi=0;
+    let ss=3
+    for(let t=0;t<bign;t++){
+        ss=div(mul(pow(-1,t),ncr(add(k,k,1),t),ncr(sub(j,1),s),pow(s,t)),factorial(sub(j,t)))
+    fi=add(fi,inftozero(ss))
+    }
+    return fi;
+}
+function carlitza(k,j){return beta(k,sub(k,j,-1))}
+
+function carlitzq(k,z){
+    let fi=0;
+    let ss=3
+    for(let t=1;t<bign;t++){
+        ss=mul(carlitza(k,t),pow(z,t))
+    fi=add(fi,inftozero(ss))
+    }
+    return fi;
+}
+    function carlitzu(r,z){return mul(pow(-1,r),pow(sub(1,z),sub(-1,r,r)),carlitzq(r,z))}
+    
+    
 
 function schwarztriangle(a,b,c,z){
 	//schwarztriangle(1/3,1/3,1/3,x)
@@ -25992,6 +31092,11 @@ function schwarzchristoffelmap(A,B,z){
 	return integral(schwarzchristoffelmapd,math.complex(0,0),z,[A,B]);
 }
 
+
+function schwarzsemiinfintestrip(z,k=1,c=1){return add(c,mul(k,acosh(z)))}
+
+
+function schwarzsquare(z){return mul(sqrt(2),ellint1(sqrt(add(z,1)),div(1,sqrt(2))))}
 
 
 const legendreCachea = {};
@@ -26207,7 +31312,7 @@ function sphericalharmonicacoustic(l, m, theta, phi) {
     const term1 = math.sqrt(
         div(
             mul(
-                mul(2 * l + 1, gamma(sub(l, m))),
+                mul(add(l,l,1), gamma(sub(l, m))),
                 div(1, gamma(add(l, m)))
             ),
             4 * math.pi
@@ -26255,49 +31360,136 @@ function inftozero(term, subb = 0) {
     
     return term;
 }
+//wigner3j(1,1,2,xx,yy,-xx-yy)
+ // let G= hypg32(add(j2,sub(j3,j1)),add(j3,m3,1),sub(m3,j3),add(m3,1,sub(j2,j1)),sub(j3,j1,m2,-1),1)
+ // if(mag(G)<100000)return G
+ // let fi=0;
+ // let N=minc(sub(add(j1,j2),j3),sub(j1,m1),add(j2,m2))
+ // let K=maxc(0,sub(j2,j3,m1),add(m2,sub(j1,j3)))
+ // for(let k=K;k<=N;k++)
+ //     fi=add(fi,div(pow(-1,k),factorial(k),factorial(sub(add(j1,j2),j3,k)),factorial(sub(j1,m1,k)),factorial(add(j2,sub(m2,k))),factorial(sub(add(j3,m1,k),j2)),factorial(sub(add(j3,k),j1,m2))))
+
 function wigner3j(j1,j2,j3,m1,m2,m3) {
-    let fi = math.complex(0,0);
-	const j1a=math.complex(j1).re;const j2a=math.complex(j2).re;const j3a=math.complex(j3).re;
-	const m1a=math.complex(m1).re;const m2a=math.complex(m2).re;const m3a=math.complex(m3).re;
-    const kStart = math.max(0,sub(sub(j2a,j3a),m1a),add(sub(j1a,j3a),m2a));
-    const kEnd =math.min(sub(j1a,m1a),add(j2a,m2a),sub(add(j1a,j2a),j3a));
-//console.log(kStart);   
-//console.log(kEnd);
-   for (let k = kStart; k <= kEnd; k++) {
-        const term = div(
-            pow(-1, k),
-            mul(
-                nfactorial(k),
-                nfactorial(add(j1, j2, sub(0,j3), sub(0,k))),
-                nfactorial(sub(sub(j1, m1), k)),
-                nfactorial(sub(sub(j2, m2), k)),
-                nfactorial(add(j3, sub(0,j2), m1, k)),
-                nfactorial(add(j3, sub(0,j1), sub(0,m2), k))
-            ));
-	//	console.log(term);
-        fi = add(fi, inftozero(term));
+let fi = 0;
+for(let k = 0; k <= bign; k++) {
 
-    }
-//	console.log(fi);
-    const multiplier = mul(
-        pow(-1, sub(sub(j1, j2), m3)),
-        math.sqrt(
-            ntriangef(j1,j2,j3)
-        ),
-        math.sqrt(
-            mul(
-                nfactorial(sub(j1, m1)),
-                nfactorial(add(j1, m1)),
-                nfactorial(sub(j2, m2)),
-                nfactorial(add(j2, m2)),
-                nfactorial(sub(j3, m3)),
-                nfactorial(add(j3, m3))
-            )
-        )
-    );
+  let d1 = factorial(k);
+  let d2 = factorial(sub(add(j1,j2),j3,k));
+  let d3 = factorial(sub(j1,m1,k));
+  let d4 = factorial(add(j2,sub(m2,k)));
+  let d5 = factorial(sub(add(j3,m1,k),j2));
+  let d6 = factorial(sub(add(j3,k),j1,m2));
 
-    return mul(multiplier, fi);
+  // filter Gamma poles / infinities
+  if(!isFinite(d1) ||!isFinite(d2) ||!isFinite(d3) ||!isFinite(d4) ||!isFinite(d5) ||!isFinite(d6)) continue;
+
+  let term = div(
+    pow(-1,k),
+    mul(d1,d2,d3,d4,d5,d6)
+  );
+
+  fi = add(fi, term);
 }
+
+  return mul(
+  kroneckerdelta(add(m1,m2,m3),0),
+  pow(-1,sub(j1,j2,m3)),
+  sqrt(div(mul(factorial(sub(add(j1,j2),j3)),factorial(sub(add(j1,j3),j2)),factorial(sub(add(j2,j3),j1))),factorial(add(j1,j2,j3,1)))),
+  sqrt(mul(factorial(sub(j1,m1)),factorial(sub(j2,m2)),factorial(sub(j3,m3)),factorial(add(j1,m1)),factorial(add(j2,m2)),factorial(add(j3,m3)))),
+  fi
+  )
+}
+
+function kroneckerdelta(i,j=0,e=1e-5){
+    if(mag(sub(i,j))<e)return 1
+    return 0;
+    
+
+}
+function wigner3nj1(J, L, K) {
+  let n = leng(J);
+  let R = add(gsum(J), gsum(L), gsum(K));
+
+  let S = 0;
+
+  for(let x = 0; x <= bign; x++) {
+
+    let prod = 1;
+    let bad = false;
+
+    for(let i = 0; i < n; i++) {
+
+      let ji  = g(J,i);
+      let ki  = g(K,i);
+      let jip = g(J,(i+1)%n);
+      let kip = g(K,(i+1)%n);
+      let li  = g(L,i);
+
+      let sj = wigner6j(ji, ki, x, kip, jip, li);
+
+      if(!isFinite(sj)) { bad = true; break; }
+
+      prod = mul(prod, sj);
+    }
+
+    if(bad) continue;
+
+    let weight = add(mul(2,x),1);
+    let phase  = pow(-1, add(R, mul(n-1,x)));
+
+    S = add(S, mul(weight, phase, prod));
+  }
+
+  return S;
+}
+
+//wigner3nj2([1,1,2],[1.5,2.5,2],[2.5,1.5,2])
+//wigner9j(1,1,2,1.5,2.5,2,2.5,1.5,2)
+//0.02509505737713912
+function wigner3nj2(J, L, K) {
+  let n = leng(J);
+  let R = add(gsum(J), gsum(L), gsum(K));
+
+  let S = 0;
+
+  for(let x = 0; x <= bign; x++) {
+
+    let prod = 1;
+    let bad = false;
+
+    for(let i = 0; i < n; i++) {
+
+      let ji  = g(J,i);
+      let ki  = g(K,i);
+      let jip = g(J,(i+1)%n);
+      let kip = g(K,(i+1)%n);
+      let li  = g(L,i);
+
+      let sj = wigner6j(ji, ki, x, kip, jip, li);
+
+      if(!isFinite(sj)) { bad = true; break; }
+
+      prod = mul(prod, sj);
+    }
+
+    if(bad) continue;
+
+    let weight = add(mul(2,x),1);
+    let phase  = pow(-1, add(R, mul(n,x)));
+
+    S = add(S, mul(weight, phase, prod));
+  }
+
+  return S;
+}
+
+
+
+function wigner12j1(a1,a2,a3,a4,b12,b23,b34,b41,c1,c2,c3,c4){return wigner3nj1([a1,a2,a3,a4],[b12,b23,b34,b41],[c1,c2,c3,c4])}
+function wigner12j2(a1,a2,a3,a4,b12,b23,b34,b41,c1,c2,c3,c4){return wigner3nj2([a1,a2,a3,a4],[b12,b23,b34,b41],[c1,c2,c3,c4])}
+
+function wigner15j1(a1,a2,a3,a4,b12,b23,b34,b41,c1,c2,c3,c4){return wigner3nj1([a1,a2,a3,a4,a5],[b12,b23,b34,b45,b51],[c1,c2,c3,c4,c5])}
+function wigner15j2(a1,a2,a3,a4,b12,b23,b34,b41,c1,c2,c3,c4){return wigner3nj2([a1,a2,a3,a4,a5],[b12,b23,b34,b45,b51],[c1,c2,c3,c4,c5])}
 
 
 function catastrophek(t,A){
@@ -26382,27 +31574,81 @@ function wignerd(j,b,mp,m){
 		fi=add(fi,inftozero(div(mul(pow(-1,add(sub(mp,m),s)),pow(math.cos(div(b,2)),sub(add(j,j,m),add(mp,s,s))),pow(math.sin(div(b,2)),add(sub(mp,m),s,s))),mul(factorial(sub(add(j,m),s)),factorial(add(sub(mp,m),s)),factorial(sub(sub(j,mp),s)),factorial(s)))));
 	return mul(fi,math.sqrt(mul(factorial(add(j,mp)),factorial(sub(j,mp)),factorial(add(j,m)),factorial(sub(j,m)))));
 }
-function wigner6j(j1,j2,j3,J1,J2,J3){
-	let fi=math.complex(0,0)
-	for(let t=math.max(add(J1,j2,J3),add(J1,J2,j3),add(j1,J2,J3),add(j1,j2,j3));t<math.min(add(j1,j2,J1,J2),add(j2,j3,J2,J3),add(j1,j3,J1,J3));t++)
-	{fi=add(fi,inftozero(div(mul(pow(-1,t),factorial(add(t,1))),wigner6jf(j1,j2,j3,J1,J2,J3,t+0.01))));
-	}//console.log (inftozero(fi));
-	return mul(fi,math.sqrt(mul(triangef(j1,j2,j3),triangef(j1,J2,J3),triangef(J1,j2,J3),triangef(J1,J2,j3))));
+function wigner6j(j1,j2,j3,j4,j5,j6) {
+  // Triangle prefactor Δ(j_a,j_b,j_c)
+  function Delta(a,b,c) {
+    return sqrt(
+      div(
+        mul(
+          factorial(sub(add(a,b),c)),
+          factorial(sub(add(a,c),b)),
+          factorial(sub(add(b,c),a))
+        ),
+        factorial(add(a,b,c,1))
+      )
+    );
+  }
+
+  let S = 0;
+
+  // Compute the a_i and b_j sums for Racah formula
+  let a1 = add(j1 , j2 , j3);
+  let a2 = add(j1 , j5 , j6);
+  let a3 = add(j4 , j2 , j6);
+  let a4 = add(j4 , j5 , j3);
+
+  let b1 = add(j1 , j2 , j4 , j5);
+  let b2 = add(j1 , j3 , j4 , j6);
+  let b3 = add(j2 , j3 , j5 , j6);
+
+  for(let k = 0; k <= bign; k++) {
+
+    let d1 = factorial(sub(k,a1));
+    let d2 = factorial(sub(k,a2));
+    let d3 = factorial(sub(k,a3));
+    let d4 = factorial(sub(k,a4));
+
+    let d5 = factorial(sub(b1,k));
+    let d6 = factorial(sub(b2,k));
+    let d7 = factorial(sub(b3,k));
+
+    // skip invalid Gamma arguments
+    if(!isFinite(d1) || !isFinite(d2) || !isFinite(d3) || !isFinite(d4) ||
+       !isFinite(d5) || !isFinite(d6) || !isFinite(d7)) continue;
+
+    let term = div(
+      mul(pow(-1,k), factorial(add(k,1))),
+      mul(d1,d2,d3,d4,d5,d6,d7)
+    );
+
+    S = add(S, term);
+  }
+
+  // Multiply by the four Δ prefactors
+  return mul(
+    Delta(j1,j2,j3),
+    Delta(j1,j5,j6),
+    Delta(j4,j2,j6),
+    Delta(j4,j5,j3),
+    S
+  );
+}
+function wigner9j(j1,j2,j3, j4,j5,j6, j7,j8,j9) {
+  let S = 0;
+
+  for(let x = 0; x <= bign; x++) {
+    let term1 = wigner6j(j1,j4,j7,j8,j9,x);
+    let term2 = wigner6j(j2,j5,j8,j4,x,j6);
+    let term3 = wigner6j(j3,j6,j9,x,j1,j2);
+    if(!isFinite(term1) || !isFinite(term2) || !isFinite(term3)) continue;
+   let phase = pow(-1, mul(2,x));
+    let mult = add(mul(2,x),1);
+    S = add(S, mul(phase, mult, term1, term2, term3));
+  }
+  return S;
 }
 
-function wigner6jf(j1,j2,j3,J1,J2,J3,t){
-	return mul(
-	factorial(sub(t,add(j1,j2,j3))),
-	factorial(sub(t,add(j1,J2,J3))),
-	factorial(sub(t,add(J1,J2,j3))),
-	factorial(sub(t,add(J1,j2,J3))),
-	factorial(sub(add(j1,j2,J1,J2),t)),
-	factorial(sub(add(j2,j3,J2,J3),t)),
-	factorial(sub(add(j1,j3,J1,J3),t))
-	)
-}
 
- 
 function triangef(a, b, c) {
     const term1 = factorial(add(a, b, mul(-1, c)));
     const term2 = factorial(add(a, mul(-1, b), c));
@@ -26422,7 +31668,7 @@ function ntriangef(a, b, c) {
 
 
 
-
+/*
 function wigner3jhypg(j1,j2,j3,m1,m2,m3){
 	j1=add(j1,1e-7);j2=add(j2,1e-7);j3=add(j3,1e-7);
 	m1=add(m1,1e-7);m2=add(m2,1e-7);m3=add(m3,1e-7);
@@ -26445,6 +31691,19 @@ function wigner3jhypg(j1,j2,j3,m1,m2,m3){
 	; }
 
 
+function wigner6jf(j1,j2,j3,J1,J2,J3,t){
+	return mul(
+	factorial(sub(t,add(j1,j2,j3))),
+	factorial(sub(t,add(j1,J2,J3))),
+	factorial(sub(t,add(J1,J2,j3))),
+	factorial(sub(t,add(J1,j2,J3))),
+	factorial(sub(add(j1,j2,J1,J2),t)),
+	factorial(sub(add(j2,j3,J2,J3),t)),
+	factorial(sub(add(j1,j3,J1,J3),t))
+	)
+}
+
+ 
 function wigner6jhypg(j1,j2,j3,j4,j5,j6){
 	j1=add(j1,1e-7);j2=add(j2,1e-7);j3=add(j3,1e-7);
 	j4=add(j4,1e-7);j5=add(j5,1e-7);j6=add(j6,1e-7);
@@ -26471,7 +31730,7 @@ function wigner6jhypg(j1,j2,j3,j4,j5,j6){
 	))
 	
 	; }
-
+*/
 
 function rubixcomb(x){
 	let divo = sub(div(sub(x,2),2),mul(0.5,sqr(math.sin(mul(div(sub(x,2),2),pi())))));
@@ -26483,22 +31742,22 @@ function redrubixcomb(x){
 }
 
 function gauntcoefficient(l1,l2,l3,m1,m2,m3){
-	return mul(math.sqrt(div(mul(add(l1,l1,1),add(l2,l2,1),add(l3,l3,1)),mul(4,pi()))),wigner3jhypg(l1,l2,l3,0,0,0),wigner3jhypg(l1,l2,l3,m1,m2,m3));
+	return mul(math.sqrt(div(mul(add(l1,l1,1),add(l2,l2,1),add(l3,l3,1)),mul(4,pi()))),wigner3j(l1,l2,l3,0,0,0),wigner3j(l1,l2,l3,m1,m2,m3));
 }
 function spinweightedsphericalharmonic(l1,l2,l3,m1,m2,m3,s1,s2,s3){
-	return mul(math.sqrt(div(mul(add(l1,l1,1),add(l2,l2,1),add(l3,l3,1)),mul(4,pi()))),wigner3jhypg(l1,l2,l3,sub(0,s1),sub(0,s2),sub(0,s3)),wigner3jhypg(l1,l2,l3,m1,m2,m3));
+	return mul(math.sqrt(div(mul(add(l1,l1,1),add(l2,l2,1),add(l3,l3,1)),mul(4,pi()))),wigner3j(l1,l2,l3,sub(0,s1),sub(0,s2),sub(0,s3)),wigner3j(l1,l2,l3,m1,m2,m3));
 }
 function wigner1jm(j,m,mp){
-	return mul(math.sqrt(add(j,j,1)),wigner3jhypg(j,0,j,m,0,mp));
+	return mul(math.sqrt(add(j,j,1)),wigner3j(j,0,j,m,0,mp));
 }
 function racahv(j1,j2,j3,m1,m2,m3){
-	return mul(pow(-1,sub(sub(j1,j2),j3)),wigner3jhypg(j1,j2,j3,m1,m2,m3));
+	return mul(pow(-1,sub(sub(j1,j2),j3)),wigner3j(j1,j2,j3,m1,m2,m3));
 }
 function racahw(j1,j2,j3,j4,j5,j6){
-	return mul(pow(-1,add(j1,j2,j3,j4)),wigner3jhypg(j1,j2,j3,j4,j5,j6));
+	return mul(pow(-1,add(j1,j2,j3,j4)),wigner3j(j1,j2,j3,j4,j5,j6));
 }
 function clebschgordan(j1,j2,j,m1,m2,m){
- return mul(math.sqrt(add(j,j,1)),pow(-1,sub(add(m,j1),j2)),wigner3jhypg(j1,j2,j,m1,m2,sub(0,j)));
+ return mul(math.sqrt(add(j,j,1)),pow(-1,sub(add(m,j1),j2)),wigner3j(j1,j2,j,m1,m2,sub(0,j)));
 }
 function recouplingcoefficient(j1,j2,j3,j4,j5,j6,j7,j8,j9){
  return mul(math.sqrt(mul(add(j3,j3,1),add(j6,j6,1),add(j7,j7,1),add(j8,j8,1))),wigner9j(j1,j2,j3,j4,j5,j6,j7,j8,j9));
@@ -26514,7 +31773,7 @@ function hexagonaldelta(j1,j2,j3,j4,j5,j6){
 		return 1;
 	}
 	return 0;
-}
+}/*
 function wigner9j(j1,j2,j3,j4,j5,j6,j7,j8,j9){
 let fi=math.complex(0,0);
 let x = math.complex(0,0);
@@ -26523,7 +31782,7 @@ for(let q=0;x<=add(j1,j2,j3,j4,j5,j6,j7,j8,j9);x=add(x,0.5)){
 	fi=add(fi,inftozero(mul(pow(-1,add(x,x)),add(x,x,1),wigner6jhypg(j1,j4,j7,j8,j9,x),wigner6jhypg(j2,j5,j8,j4,x,j6),wigner6jhypg(j3,j6,j9,x,j1,j2))));
 }
 	return fi;
-}
+}*/
 
 
 function bei(v,z){
@@ -26551,10 +31810,28 @@ function kei(v,z){
 	mul(pow(term,add(v,v)),sub(besseli(sub(0,v),term),mul(math.exp(mul(math.complex(0,1.5),pi(),v)),besselj(sub(0,v),term)))),
 	mul(math.exp(mul(math.complex(0,0.5),pi(),v)),pow(z,add(v,v)),sub(besseli(v,term),mul(math.exp(mul(math.complex(0,0.5),pi(),v)),besselj(v,term))))
 	));}
+    
+    //hankel1(0,x*e^(-3/4*pi*i))
+function her(v,z){return div(add(hankel1(v,mul(z,exp(mul(-3/4,pi(),I)))),conj(hankel1(v,mul(conj(z),exp(mul(-3/4,pi(),I)))))),2)}
+function hei(v,z){return div(sub(hankel1(v,mul(z,exp(mul(-3/4,pi(),I)))),conj(hankel1(v,mul(conj(z),exp(mul(-3/4,pi(),I)))))),2,I)}
+ 
+function her2(v,z){return div(add(hankel2(v,mul(z,exp(mul(-3/4,pi(),I)))),conj(hankel1(v,mul(conj(z),exp(mul(-3/4,pi(),I)))))),2)}
+function hei2(v,z){return div(sub(hankel2(v,mul(z,exp(mul(-3/4,pi(),I)))),conj(hankel1(v,mul(conj(z),exp(mul(-3/4,pi(),I)))))),2,I)}
+
+function heri(v,z){return div(add(hankeli(v,mul(z,exp(mul(-3/4,pi(),I)))),conj(hankel1(v,mul(conj(z),exp(mul(-3/4,pi(),I)))))),2)}
+function heii(v,z){return div(sub(hankeli(v,mul(z,exp(mul(-3/4,pi(),I)))),conj(hankel1(v,mul(conj(z),exp(mul(-3/4,pi(),I)))))),2,I)}
+ 
+    
 function bei0(x){return bei(0,x);}
 function ber0(x){return ber(0,x);}
 function kei0(x){return kei(0,x);}
 function ker0(x){return ker(0,x);}
+function her0(x){return her(0,x);}
+function hei0(x){return hei(0,x);}
+function her20(x){return her2(0,x);}
+function hei20(x){return hei2(0,x);}
+function heri0(x){return heri(0,x);}
+function heii0(x){return heii(0,x);}
 
 function sonined(t,N){[m,n,x]=N
     return mul(besselj(n,mul(x,t)),pow(t,add(n,1)),pow(sub(1,sqr(t)),sub(m,n,-1)))
@@ -26759,12 +32036,28 @@ function retrymax (func,x,n){
 function generalizedpoygamma(z,q){
     return div(add(hurwitzzetap(add(z,1),q),mul(add(digamma(sub(0,z)),0.57721),hurwitzzeta(add(z,1),q))),gamma(sub(0,z)))
 }
+function polygammad(t,F){
+    let [n,z]=F
+    return mul(pow(sub(z,t),sub(n,2)),loggamma(t))
+}
+function digammaat1(x){return digamma(add(x,1))}
+function polygammau(n,z){
+    //sub(fractionalintg(digammaat1,z,n),mul(pow(-1,add(n,1)),factorial(n),zeta(add(n,1))))
+    //fractionalintg(digamma,z,n)
+    //div(integral(polygammad,0,z,[n,z]),factorial(sub(n,2)))
+    return (re(n)<0)?fractionalintg(digamma,z,n):fractionalderiv(digamma,z,n)
+}
+//https://www.sciencedirect.com/science/article/pii/S0377042798001927
+function negapolygamma(n,z){return polygamma(sub(0,n),z)}
 
+/*function generalizedglaisherconst(k){
+   ADD ADD ADD 
+}*/
+function polygamma(nn,z){
+    let n=(re(nn)<0)?add(nn,0.001):nn
+    if(z==1)return  mul(pow(-1,add(n,1)),factorial(n),zeta(add(n,1)))
+   return mul(polygammau(n,z),div(polygamma(n,1),polygammau(n,1)))
 
-
-function polygamma(n,z){
-    
-    return fractionalderiv(digamma,z,n)
     
 	return mul(pow(-1,add(n,1)),factorial(n),hurwitzzeta(add(n,1),z));
 /*	const m1 = math.log(gamma(b));
@@ -26777,9 +32070,71 @@ function polygamma(n,z){
 	return sub(fi,0.5772156649);*/
 }
 
+
+function negadigamma(x){return add(mul(x,0.5,sub(1,x)),mul(x,0.5,log(mul(2,pi()))),zetap(-1),hurwitzzetap(-1,x))}
+function negatrigamma(x){return add(div(mul(x,add(mul(6,x,x),mul(-9,x),1)),-24),mul(0.25,x,x,log(mul(2,pi()))),div(zetap(-2),2),mul(x,zetap(-1)),div(zetap(-2,x),2))}
+
+function odddoublebarnesg(x){//A057863
+return div(sqrt(barnesg(add(x,x,2))),pow(2,div(sqr(x),2)),barnesg(add(x,1)),sqrt(factorial(x)))}
+
+function evenfibonorial(x){//A194157
+    return mul(pow(1.61803399,mul(x,sub(x,1))),qfac(x,div(1,pow(1.61803399,4))))
+}
+
+// ADD A093884
+function oddfibonorialalt(x){//A194158
+    return div(fibonorial(mul(x,2)),evenfibonorial(x))
+}
+function dotfibonorial(x){//A094584
+//(30*(-1-sqrt(5))^n + (-15+7*sqrt(5))*2^n - (15+7*sqrt(5))*(-3-sqrt(5))^n + 2n*((5-2*sqrt(5))*2^n + (5+2*sqrt(5))*(-3-sqrt(5))^n)) / (10*(-1-sqrt(5))^n).
+//
+// (10*(-1-sqrt(5))^n)
+let s=sqrt(5)
+    return div(add(mul(30,pow(sub(-1,s),x)),mul(add(-15,mul(7,s)),pow(2,x)),mul(-1,add(15,mul(7,s)),pow(sub(-3,s),x)),mul(2,x,add(mul(sub(5,mul(2,s)),pow(2,x)),mul(add(5,mul(2,s)),pow(sub(-3,s),x))))),mul(10,pow(sub(-1,s),x)));
+}
+//ADD A126772
+
+
+function symplecticgrassmanniandegree(x){//https://oeis.org/A005118
+return div(factorial(div(mul(x,sub(x,1)),2)),odddoublebarnesg(sub(x,1)))
+}
+
+function teslervolume(x){//A248330 volume of tesler polytope catalanorialyoung
+return mul(symplecticgrassmanniandegree(x),catalanorial(x))
+}
+function chanrobbinsyuenvolume(x){
+    return mul(pow(2,sqr(x)),catalanorial(x))
+}
+function numoftreerootedplanarmaps(x){//A005568
+return mul(catalan(x),catalan(add(x,1)))
+}
+//littleschroder = schroderhipparchus(x)
+
+//abeleq("mobiustransform(1,2,3,4,x)","inversemobiustransform(1,2,3,4,x)",1,x,1)
 function mobiustransform(a,b,c,d,z){
 	return div(add(mul(a,z),b),add(mul(c,z),d));
 }
+function inversemobiustransform(a,b,c,d,w){
+	 return div(sub(mul(d,w),b),sub(a,mul(c,w)));
+}//
+function mobiustransformderv(a,b,c,d,z){
+	return div(sub(mul(a,d),mul(b,c)),sqr(add(mul(c,z),d)));
+}
+/*
+function abelmobiustransform(a,b,c,d,x){
+    let L=inversequadratic(c,sub(d,a),b,0,0)
+    let L2=inversequadratic(c,sub(d,a),b,0,1)
+    let l=mobiustransformderv(a,b,c,d,L)
+    if(l==1)return div(-1,c,sub(x,L))
+        return div(log(div(sub(x,L),sub(x,L2))),log(l))
+}
+function inverseabelmobiustransform(a,b,c,d,x){
+    let L=inversequadratic(c,sub(d,a),b)
+     let L2=inversequadratic(c,sub(d,a),b,0,1)
+    let l=mobiustransformderv(a,b,c,d,L)
+    if(l==1)return sub(L,div(1,c,x))
+        return div(sub(L,mul(L2,pow(l,x))),sub(1,pow(l,x)))
+}*/
 function riamannsphmobiustransform(a,z){return div(add(z,a),sub(1,mul(z,conj(a))))}
 function unitdiscmobiustransform(a,z){return div(sub(z,a),add(1,mul(-1,z,conj(a))))}
 function upperplanemobiustransform(a,z){return div(add(mul(sub(1,mul(I,a)),z),conj(a),mul(-1,I)),add(mul(add(sqr(mag(a)),mul(conj(a),I)),z),mul(I,sqr(mag(a))),a))}
@@ -26793,22 +32148,22 @@ function mobiustransform10inf2(w1,w0,winf,z){return div(sub(mul(z,winf,sub(w0,w1
 function mobiustransform3(w1,w2,w3,z1,z2,z3,z){return div(add(mul(add(mul(z1,w1,sub(w2,w3)),mul(-1,z2,w2,sub(w1,w3)),mul(z3,w3,sub(w1,w2))),z),mul(z1,add(mul(z3,w2,sub(w3,w1)),mul(z2,w3,sub(w1,w2)))),mul(z2,z3,w1,sub(w2,w3))),add(mul(add(mul(z1,sub(w2,w3)),mul(z2,sub(w3,w1)),mul(z3,sub(w1,w2))),z),mul(z1,z3,sub(w3,w1)),mul(z2,add(mul(z1,sub(w1,w2)),mul(z3,sub(w2,w3))))))}
 
 
-function sylvestermatrix(P, Q) {
-  const m = sub(leng(P), 1);
-  const n = sub(leng(Q), 1);
-  const size = add(m, n);
-  const M = Array.from({ length: size }, () => Array(size).fill(0));
+function sylvestermatrix(P,Q) {
+  const m = sub(leng(P),1);
+  const n = sub(leng(Q),1);
+  const size = add(m,n);
+  const M = Array.from({ length: size },() => Array(size).fill(0));
   for (let i = 0; i < n; i++)
     for (let j = 0; j <= m; j++)
-      M[i][add(size - m - i - 1, j)] = g(P, j);
+      M[i][add(size - m - i - 1,j)] = g(P,j);
   for (let i = 0; i < m; i++)
     for (let j = 0; j <= n; j++)
-      M[add(i, n)][add(size - n - i - 1, j)] = g(Q, j);
+      M[add(i,n)][add(size - n - i - 1,j)] = g(Q,j);
   return M;
 }
 
-function resultant(P, Q) {
-  return determinant(sylvestermatrix(P, Q));
+function resultant(P,Q) {
+  return determinant(sylvestermatrix(P,Q));
 }
 
 function discriminant(P) {
@@ -26873,6 +32228,14 @@ function diagonalmatrix(V) {
   const M = Array.from({ length: n }, () => Array(n).fill(0));
   for (let i = 0; i < n; i++) {
     g(M, i)[i] = g(V, i);
+  }
+  return M;
+}
+function identitymatrix(n) {
+  
+  const M = Array.from({ length: n }, () => Array(n).fill(0));
+  for (let i = 0; i < n; i++) {
+    g(M, i)[i] = 1;
   }
   return M;
 }
@@ -27189,6 +32552,10 @@ function matrixadjugate(A) {
   return Adj;
 }
 function matrixinverse(A){
+  
+     if(leng(A)==0)return [[div(1,A)]]
+    if(leng(g(A,0))==0)return [[g(A,0)]]
+   if(leng(A)==1)return [[div(1,g(g(A,0),0))]]
   if(!Array.isArray(A)) return div(1,A);
 
   const detA = determinant(A);
@@ -27198,7 +32565,7 @@ function matrixinverse(A){
 
 function matrixpoweri(A, k) {
   let n = leng(A);
-  let R = identity(n);
+  let R = identitymatrix(n);
   let i = 0;
   while (i < k) {
     R = matrixmul(R, A);
@@ -27207,7 +32574,7 @@ function matrixpoweri(A, k) {
   return R;
 }
 function matrixpower(A, k) {
-return matrixexp(matrixscal(A,k))
+return matrixexp(matrixscal(matrixlog(A),k))
 }
 function matrixcofactor(A) {
   const n = leng(A);
@@ -27232,7 +32599,7 @@ function matrixcofactor(A) {
   return C;
 }
 
-function matrixexp(A) {
+function matrixexpt(A) {
   const n = leng(A);
   const m = leng(g(A, 0));
 
@@ -27253,6 +32620,34 @@ function matrixexp(A) {
 
   return result;
 }
+function matrixexp(A) {
+    const n = A.length;
+    const { eigenvalues, eigenvectors } = findEigenvectors(A);
+    const V = (eigenvectors);
+    const V_inv = matrixinverse(V);
+    const expD_matrix = Array(n).fill(0).map(() => Array(n).fill(0));
+    for (let i = 0; i < n; i++) {
+        expD_matrix[i][i] = Math.exp(eigenvalues[i]); 
+    }
+    return matrixmul(V, matrixmul(expD_matrix, V_inv));
+}
+function matrixlog(X) {let A=rearray(X)
+    const n = A.length;
+    if (!A.every(row => row.length === n)) return identitymatrix(n);
+    const { eigenvalues, eigenvectors } = findEigenvectors(A);
+ //   if (eigenvalues.some(x => x <= 0)) return identitymatrix(n);
+    const logD = vectormap(log,eigenvalues);
+    const V = (eigenvectors);
+    const V_inv = matrixinverse(V);
+    const logD_matrix = logD.map((val, i) => {
+        const row = Array(n).fill(0);
+        row[i] = val;
+        return row;
+    });
+
+    return matrixmul(V, matrixmul(logD_matrix, V_inv));
+}
+
   // make a copy
   function matrixcopy(X) {
     const n = leng(X);
@@ -27346,10 +32741,21 @@ function polyvectormap(func, ...X) {
     function dot(v1, v2) {
         return v1.reduce((sum, x, i) => add(sum , mul(x ,v2[i])), 0);
     }
-
+function vectormap(func, X) {
+  return X.map((_, i) => evale(func, { x: g(X, i) }));
+}
+function matrixmap(func,X){
+let R=[];
+for(let j=0;j<leng(X);j++){
+let Rj=[];
+for(let i=0;i<leng(g(X,j));i++){
+let v=g(g(X,j),i);
+if(v&&leng(v))Rj[i]=tensormap(func,v);else Rj[i]=evale(func,{x:v})}
+R[j]=Rj}
+return R}
 //ADD HOGE
 
-
+//kcarcpsi(kcarcpsi(tetrtrack(2+i,x),2+i),2+i)-(2+i)^(kcarcpsi(kcarcpsi(tetrtrack(2+i,x-1),2+i),2+i))
 
 
 
@@ -27369,13 +32775,49 @@ function slog1(x,a=0.4){
 
 
 
+function slogt2(x){
+    return newtoninv(tetr2,x,slog(x),0.1,2)
+    
+}
+function slog2(x){
+    if(mag(im(x))<1.35 && re(x)<1)return slogt2(x)
+    return sub(slogt2(logb(x,2)),-1)
+    return sub(slogt2(pow(2,x)),1)
+}
+
+function slogt10(x){
+    return newtoninv(tetr10,x,div(slog(x),2),0.1,2)
+    
+}
+function slog10(x){
+    if(1 && re(x)<0.1)  return sub(slogt10(pow(10,x)),1)
+  //      if(re(x)<1&&mag(im(x))<1.35)
+    return sub(slogt10(logb(x,10)),-1)
+    return sub(slogt2(pow(2,x)),1)
+}
+
+function googolzplex(z){return tetr10(add(z,1,slog10(100)))}
+function googolzminexa(z){return div(1,googolzplex(z))}
+function googolzminex(z){return conj(tetrregit(0.1,conj(add(z,-1,math.complex(0)))))}
+function googolziex(z){return tetrbetaultra(add(z,math.complex(1.8462980665026365,-0.8496158817028807)),pow(10,I))}
+function googolzniex(z){return conj(googolziex(conj(z)))}
 
 
+//0.1 log 10100 = -100
+// -2.0000000000000004 - 1.3643763538418414i
+//halleyzero("tetrregit(0.1,x)-(logtower(0.1,15,10^100))",x)
+//halleyzero("tetrregit(0.1,x)-(logtower(0.1,4,-100))",x)+acc(55)
+//tetrregit(0.1,laguerrezero("(tetrregit(0.1,x))",x))+acc(20)
 
+// 1.3517534528457398 + 0.5709794113235633i + 15 16.3517534528457398 + 0.5709794113235633i 
 
+//tetrbetaultra(x,10^i)
+//slog(loglog10100)=-0.15370193349736352 - 0.8496158817028807i
+//slog10100 = -0.15370193349736352 - 0.8496158817028807i + 2 =1.8462980665026365 - 0.8496158817028807i
+//function googolziex(z){return tetrbetaultra(mul(add(z,0),2),add(1.5230690312370838,mul(1.48771110423141,I)))}
 
-
-
+//1.5230690312370838 + 1.48771110423141i
+//tetrbetaultra(x*2,1.5230690312370838+1.48771110423141*i)
 
 
 function slogm(xk){
@@ -27648,7 +33090,7 @@ return y;
 }
 function ode2rk4(func, e, s = 0, sp = 0, p=0, off=0 , N=bign) {
     
-    let dx = div(sub(e, s), N);
+    let dx = div(sub(e, off), N);
     let y = s;
     let yp = sp;
 
@@ -27688,8 +33130,8 @@ function ode2rk4(func, e, s = 0, sp = 0, p=0, off=0 , N=bign) {
 }
 
 function ode2rk4ortho(func, e, s = 0, sp = 0, p = 0, off = 0) {let bignu=ceil(bign/3);
-    let dx_imag = mul(div(sub(im(e), im(s)), bignu),I);
-    let dx_real = div(sub(re(e), re(s)), bignu);
+    let dx_imag = mul(div(sub(im(e), im(off)), bignu),I);
+    let dx_real = div(sub(re(e), re(off)), bignu);
     let y = s;
     let yp = sp;
 
@@ -27909,7 +33351,7 @@ function rk4Step(func, x, y, yp, dx, p) {
 
 function ode3rk4(func, e, s = 0, sp = 0, spp = 0, p = 0, off = 0, N = bign) {
     
-    let dx = div(sub(e, s), N);
+    let dx = div(sub(e, off), N);
     let y = s;
     let yp = sp;
     let ypp = spp;
@@ -27973,7 +33415,7 @@ function painleve2diff(x,y,yp,a){
 }
 
 function painleve2(x,a=1,s=0,sp=0,off=1){
-	return ode2rk4(painleve2diff,x,s,sp,a,off);
+	return ode2rk4(painleve2diff,x,s,sp,a,off,20);
 }
 
 function painleve3diff(x,y,yp,A){
@@ -28081,9 +33523,67 @@ function lamee(x,h,k,v,s=0,sp=mul(v,add(v,1),k,k),off=0){
 
 
 
+function cosdiff(x,y,yp){return sub(0,(y))}
 
-function heun(a,q,aa,bb,cc,z){
-    
+function cosrk4(x,s=1,sp=0,o=0){return ode2rk4(cosdiff,x,s,sp,0,o)}
+
+
+function heundiff(x,y,yp,A){
+    let [aa,q,a,b,c,d,e]=A;
+    //console.log([aa,q,a,b,c,d,e])
+    //console.log(mul(-1,add(mul(yp,add(div(c,x),div(d,sub(x,1)),div(e,sub(x,a)))),div(mul(sub(mul(a,b,x),q),y),x,sub(x,1),sub(x,aa)))))
+    return mul(-1,add(mul(yp,add(div(c,x),div(d,sub(x,1)),div(e,sub(x,a)))),div(mul(sub(mul(a,b,x),q),y),x,sub(x,1),sub(x,aa))))
+}
+
+function heun(aa,q,a,b,c,d,z){
+   // let aa=sub(1,aaa)
+  //  let q=sub(mul(a,b),qq)
+ //   let z=sub(1,zz)
+    if(mag(z)<0.7)return heung(aa,q,a,b,c,d,z);
+    let s=div(unit(iabs(z)),2)
+    s=mul(sqrt(s),sqrt(I))
+    if(im(z)<0)s=conj(s)
+    //if( (re(z)>1&& im(z)>0))s=div(add(I,1),2)
+    //if( (re(z)>1&& im(z)<0))s=div(sub(1,I),2)
+    //if(re(z)<-1)s=-0.5
+    //let sy=heunl(aa,q,a,b,c,d,s);
+    let sy=heung(aa,q,a,b,c,d,s);
+    ep=0.001
+    let sd=div(sub(heung(aa,q,a,b,c,d,add(s,ep)),sy),ep);
+ return ode2rk4(heundiff,z,sy,sd,[aa,q,a,b,c,d,sub(add(a,b,1),d,c)],s,bign);   
+}
+
+function heuncp(aa,q,a,b,c,d,e,n){return mul(add(n,-1,a),add(n,-1,b))}
+function heunbq(aa,q,a,b,c,d,e,n){return mul(n,add(mul(add(n,-1,c),add(aa,1)),mul(aa,d),e))}
+function heunbqq(aa,q,a,b,c,d,e,n){return mul(-1,add(mul(n,add(mul(add(n,-1,c),add(aa,1)),mul(aa,d),e)),q))}
+function heunar(aa,q,a,b,c,d,e,n){return mul(add(n,1),add(n,c),aa)}
+
+//heun(3,2,2,1,1,1,math.complex(0,2)) = 0.360944 + 0.506042
+//heung(3, 2, 2, 1, 1, 1, 0.4) = 1.366
+//heung(3, 2, 2, 1, 1, 1, 0.2) = 1.15
+//ode2rk4(heundiff,x,0.901+0.3*i,0.482+0.35*i,[3,2,2,1,1,1,2],i/2)
+//heung(3, 2, 2, 1, 1, 1, 0.4)
+function heunl(aa,q,a,b,c,d,z){
+    //console.log(sub(1,aa),sub(mul(a,b),q),a,b,d,c,sub(1,z))
+    return heung(sub(1,aa),sub(mul(a,b),q),a,b,d,c,sub(1,z))
+}
+function heung(aa,q,a,b,c,d,z){
+    let e=sub(add(a,b,1),c,d)
+    let cm=1
+    let cp=0
+    let cn=div(mul(q,cm),c,aa)
+    let fi=cm;
+    for(let n=1;n<bign;n++)
+    {
+   //     console.log(cn)
+     //   console.log(heunar(aa,q,a,b,c,d,e,n))
+        fi=add(fi,mul(cn,pow(z,n)))
+        cp=div(sub(0,mul(heunbqq(aa,q,a,b,c,d,e,n),cn),mul(heuncp(aa,q,a,b,c,d,e,n),cm)),heunar(aa,q,a,b,c,d,e,n))
+        cm=cn;
+        cn=cp;
+        
+    }
+    return fi;
 }
 
 
@@ -28097,19 +33597,20 @@ function heun(a,q,aa,bb,cc,z){
 
 
 
-
+//athieurvmunsolved(0,[xx,yy]),
+//mathieurvmunsolved(0,[re(x),im(x)])
 const mathieulCache = new Map();
 function mathieurvmunsolved(a,Q){
-    const q=g(Q,0);const v=g(Q,1);
+    const q=g(Q,0);const v=sub(g(Q,1),2)//v=modc(g(Q,1),2);
     
-    return sub(sub(a, pow(v, 2)), div(pow(q, 2), sub(a, pow(add(v, 2), 2), div(pow(q, 2), sub(a, pow(add(v, 4), 2), div(pow(q, 2), sub(a, pow(add(v, 6), 2), div(pow(q, 2), sub(a, pow(add(v, 8), 2))))))))), div(pow(q, 2), sub(a, pow(sub(v, 2), 2), div(pow(q, 2), sub(a, pow(sub(v, 4), 2), div(pow(q, 2), sub(a, pow(sub(v, 6), 2), div(pow(q, 2), sub(a, pow(sub(v, 8), 2))))))))))
+  //  return sub(sub(a, pow(v, 2)), div(pow(q, 2), sub(a, pow(add(v, 2), 2), div(pow(q, 2), sub(a, pow(add(v, 4), 2), div(pow(q, 2), sub(a, pow(add(v, 6), 2), div(pow(q, 2), sub(a, pow(add(v, 8), 2))))))))), div(pow(q, 2), sub(a, pow(sub(v, 2), 2), div(pow(q, 2), sub(a, pow(sub(v, 4), 2), div(pow(q, 2), sub(a, pow(sub(v, 6), 2), div(pow(q, 2), sub(a, pow(sub(v, 8), 2))))))))))
     
     let low=0;
     let hig=0;
-    for(let n=ceil(4/2)*2;n>=2;n-=2){
+    for(let n=ceil(bign)*2;n>=2;n-=2){
      low=div(sqr(q),sub(a,sqr(add(v,n)),low))
     hig=div(sqr(q),sub(a,sqr(sub(v,n)),hig))
-    }return sub(a,v,low,hig);
+    }return sub(a,sqr(v),low,hig);
 }
 function mathieulguess(rr,q){
     if(re(rr)<mul(3,pow(rr,1.5)))
@@ -28117,14 +33618,17 @@ function mathieulguess(rr,q){
     return mathieufraceigenlarge(rr,q);
     return add(div(pow(rabs(sub(q,mul(3,pow(rr,1.5)))),add(1.46,mul(0.06,rr))),-0.5,add(5,cum(3))),mul(2.3,pow(rr,1.8)))
 }
+//mathieul(x,3)
 function mathieul(q, rr = 0, gues=0.112) {
     const key = `${q},${rr},${gues}`;
     if (mathieulCache.has(key)) {
     return mathieulCache.get(key);}
     
-    const guess= (mag(q)<5) ? mathieufraceigensmall(rr,q):mathieufraceigenlarge(rr,q);
-  
-    const result = newtoninvfp(mathieurvmunsolved, 0, guess, [q,rr]);
+    const guess= (mag(q)<2) ? mathieufraceigensmall(rr,q):mathieufraceigenlarge(rr,q);
+   // const v=rr;
+ // const guess=add(sqr(v),div(sqr(q),2,sub(sqr(v),1)),div(mul(tesseract(q),add(mul(5,v,v),7)),32,cum(sub(sqr(v),1)),sub(sqr(v),4)))
+    const result = halleyinvfp(mathieurvmunsolved, 0, guess, [q,rr]);
+   // const result = newtoninvfp(mathieurvmunsolved, 0, guess, [q,rr]);
     mathieulCache.set(key, result);
     return result;
     }
@@ -28169,7 +33673,7 @@ function mathieuan(a,q,nn){
    // if(re(q)<0)return (nn%2==0) ? mathieuan(a,sub(0,q),nn) : mathieubn(a,sub(0,q),nn) 
 if(nn%2==0)return mathieua2n(a,q,nn);return mathieua1n(a,q,nn);}
 */
-function mathieubn(a, q, nn) {
+function mathieubnu(a, q, nn) {
     const key = `${a},${q},${nn}`;
     if (cacheMathieuB[key] !== undefined) return cacheMathieuB[key];
     let result;
@@ -28179,7 +33683,7 @@ function mathieubn(a, q, nn) {
     return result;
 }
 
-function mathieuan(a, q, nn) {
+function mathieuanu(a, q, nn) {
     const key = `${a},${q},${nn}`;
     if (cacheMathieuA[key] !== undefined) return cacheMathieuA[key];
     let result;
@@ -28191,6 +33695,47 @@ function mathieuan(a, q, nn) {
 
 const cacheMathieuB = {};
 const cacheMathieuA = {};
+function mathieubn(a, q, nn) {
+    const key = `${a},${q},${nn}`;
+    if (cacheMathieuBn[key] !== undefined) return cacheMathieuBn[key];
+    let result=31;
+    let fi=0
+    if(nn%2==1){
+        fi=0
+        for(let m=0;m*2+1<=nn;m++)fi=add(fi,sqr(mathieubnu(a,q,m*2+1)))
+        result = div(mathieubnu(a,q,nn),sqrt(fi))
+    }
+    if(nn%2==0){
+        fi=0
+        for(let m=0;m*2+2<=nn;m++)fi=add(fi,sqr(mathieubnu(a,q,m*2+2)))
+        result = div(mathieubnu(a,q,nn),sqrt(fi))
+    }
+    cacheMathieuBn[key] = result;
+    return result;
+}
+
+function mathieuan(a, q, nn) {
+    const key = `${a},${q},${nn}`;
+    if (cacheMathieuAn[key] !== undefined) return cacheMathieuAn[key];
+    let result=31;
+    let fi=0
+    if(nn%2==0){
+        fi=mul(2,sqr(mathieuanu(a,q,0)))
+        for(let m=1;m*2<=nn;m++)fi=add(fi,sqr(mathieuanu(a,q,m*2)))
+        result = div(mathieuanu(a,q,nn),sqrt(fi))
+    }
+    if(nn%2==1){
+        fi=0
+        for(let m=0;m*2+1<=nn;m++)fi=add(fi,sqr(mathieuanu(a,q,m*2+1)))
+        result = div(mathieuanu(a,q,nn),sqrt(fi))
+    }
+    
+    cacheMathieuAn[key] = result;
+    return result;
+}
+
+const cacheMathieuBn = {};
+const cacheMathieuAn= {};
 
 
 //mathieucce1(10,x,1)
@@ -28255,13 +33800,13 @@ fi=add(fi,mul(mathieuc2n(a,q,mul(r,2),nn),exp(mul(I,z,add(nn,r,r)))))
 function mathieuc(a,q,z,nn=0){
 let fi=0;
     for(let m=0;m<ceil(bign/2);m++)
-fi=add(fi,mul(mathieuan(a,q,add(mul(2,m),modc(nn,2))),cos(mul(add(m,m,modc(nn,2)),z))));
+    fi=add(fi,mul(mathieuan(a,q,add(mul(2,m),modc(nn,2))),cos(mul(add(m,m,modc(nn,2)),z))));
 return fi
 }
 function mathieus(a,q,z,nn=0){
 let fi=0;
     for(let m=0;m<ceil(bign/2);m++)
-fi=add(fi,mul(mathieubn(a,q,sub(add(m,m,2),modc(nn,2))),sin(mul(sub(add(m,m,2),modc(nn,2)),z))));
+fi=add(fi,mul(mathieubnu(a,q,sub(add(m,m,2),modc(nn,2))),sin(mul(sub(add(m,m,2),modc(nn,2)),z))));
 return fi
 }
 
@@ -28274,7 +33819,7 @@ fi=add(fi,
     mul(pow(-1,add(r,n)),
         mathieuan(a,sub(0,q),mul(2,r)),
         
-        (mul(besselj(r,mul(sqrt(q),exp(mul(1,I,z)))),bessely(r,mul(sqrt(q),exp(mul(-1,I,z))))))
+        (mul(I,besselj(r,mul(sqrt(q),exp(mul(1,I,z)))),bessely(r,mul(sqrt(q),exp(mul(-1,I,z))))))
         
         ))
 //console.log(im(mul(besselj(r,mul(sqrt(q),exp(mul(1,I,z)))),bessely(r,mul(sqrt(q),exp(mul(-1,I,z)))))))
@@ -28287,7 +33832,7 @@ function mathieuf1(a,q,z,nn=1){
 let fi=0;
 const n=div(sub(nn,1),2);
 for(let r=0;r<ceil(bign/5);r++){
-fi=add(fi,mul(pow(-1,add(r,n)),
+fi=add(fi,mul(I,pow(-1,add(r,n)),
     mathieuan(a,sub(0,q),add(1,mul(2,r))),
     add(mul(besselj(r,       mul(sqrt(q),exp(mul(1,I,z)))),bessely(add(r,1),mul(sqrt(q),exp(mul(-1,I,z))))) 
        ,mul(besselj(add(r,1),mul(sqrt(q),exp(mul(1,I,z)))),bessely(r,       mul(sqrt(q),exp(mul(-1,I,z)))))       )))
@@ -28315,10 +33860,258 @@ fi=add(fi,mul(pow(-1,add(r,n)),mathieubn(a,sub(0,q),add(2,mul(2,r))),sub(mul(bes
 }
 return mul(fi,-0.25,pi(),q,add(n,1))
 }
+
+
+
+
+function mathieumc2f(j,a,h,z,s,nn=0){
+    let q=sqr(h)
+let fi=0;
+const n=div(sub(nn,0),2);
+let e=sub(2,iversonbracketeq0(s))
+for(let l=0;l<ceil(bign/4);l++){
+fi=add(fi,div(mul(mathieuan(a,q,mul(2,l)),
+add(
+mul(mathieubessel(j,add(l,s),mul(h,exp(z))),mul(sub(l,s),div(h,exp(z))))
+,mul(besseli(add(l,s),div(h,exp(z))),mathieubessel(j,sub(l,s),mul(h,exp(z)))))
+),pow(-1,l),mathieuan(a,q,mul(2,s))))
+}
+return div(mul(fi,pow(-1,n)),e)
+}
+function mathieums1f(j,a,h,z,s,nn=0){
+    let q=sqr(h)
+let fi=0;
+const n=div(sub(nn,1),2);
+for(let l=0;l<ceil(bign/4);l++){
+fi=add(fi,div(mul(mathieubn(a,q,add(mul(2,l),1)),
+add(
+mul(mathieubessel(j,add(l,s,1),mul(h,exp(z))),besseli(sub(l,s),div(h,exp(z))))
+,mul(besseli(add(l,s,1),div(h,exp(z))),mathieubessel(j,sub(l,s),mul(h,exp(z)))))
+),pow(-1,l),mathieubn(a,q,add(1,mul(2,s)))))
+}
+return div(mul(fi,pow(-1,n)))
+}
+
+
+function mathieums2f(j,a,h,z,s,nn=0){
+    let q=sqr(h)
+let fi=0;
+const n=div(sub(nn,2),2);
+for(let l=0;l<ceil(bign/4);l++){
+fi=add(fi,div(mul(mathieubn(a,q,add(mul(2,l),2)),
+sub(
+mul(mathieubessel(j,add(l,s,2),mul(h,exp(z))),besseli(sub(l,s),div(h,exp(z))))
+,mul(besseli(add(l,s,2),div(h,exp(z))),mathieubessel(j,sub(l,s),mul(h,exp(z)))))
+),pow(-1,l),mathieubn(a,q,add(2,mul(2,s)))))
+}
+return div(mul(fi,pow(-1,n)))
+}
+function mathieumc1f(j,a,h,z,s,nn=0){
+    let q=sqr(h)
+let fi=0;
+const n=div(sub(nn,1),2);
+for(let l=0;l<ceil(bign/4);l++){
+fi=add(fi,div(mul(mathieuan(a,q,add(mul(2,l),1)),
+add(
+mul(mathieubessel(j,add(l,s,1),mul(h,exp(z))),besseli(sub(l,s),div(h,exp(z))))
+,mul(besseli(add(l,s,1),div(h,exp(z))),mathieubessel(j,sub(l,s),mul(h,exp(z)))))
+),pow(-1,l),mathieuan(a,q,add(1,mul(2,s)))))
+}
+return div(mul(fi,pow(-1,n)))
+}
+
+
+
+
+function mathieuie2(a,h,z,s,nn=0){
+    let q=sqr(h)
+let fi=0;
+const n=div(sub(nn,0),2);
+let e=sub(2,iversonbracketeq0(s))
+for(let l=0;l<ceil(bign/4);l++){
+fi=add(fi,div(mul(mathieuan(a,q,mul(2,l)),
+add(
+mul(besseli(add(l,s),mul(h,exp(z))),besseli(sub(l,s),div(h,exp(z))))
+,mul(besseli(add(l,s),div(h,exp(z))),besseli(sub(l,s),mul(h,exp(z)))))
+),pow(-1,l),mathieuan(a,q,mul(2,s))))
+}
+return div(mul(fi,pow(-1,s)),e)
+}
+function mathieuie1(a,h,z,s,nn=0){
+    let q=sqr(h)
+let fi=0;
+const n=div(sub(nn,1),2);
+for(let l=0;l<ceil(bign/4);l++){
+fi=add(fi,div(mul(mathieubn(a,q,add(mul(2,l),1)),
+add(
+mul(besseli(add(l,s,1),mul(h,exp(z))),besseli(sub(l,s),div(h,exp(z))))
+,mul(besseli(add(l,s,1),div(h,exp(z))),besseli(sub(l,s),mul(h,exp(z)))))
+),pow(-1,l),mathieubn(a,q,add(1,mul(2,s)))))
+}
+return div(mul(fi,pow(-1,s)))
+}
+
+
+function mathieuio2(a,h,z,s,nn=0){
+    let q=sqr(h)
+let fi=0;
+const n=div(sub(nn,2),2);
+for(let l=0;l<ceil(bign/4);l++){
+fi=add(fi,div(mul(mathieubn(a,q,add(mul(2,l),2)),
+sub(
+mul(besseli(add(l,s,2),mul(h,exp(z))),besseli(sub(l,s),div(h,exp(z))))
+,mul(besseli(add(l,s,2),div(h,exp(z))),besseli(sub(l,s),mul(h,exp(z)))))
+),pow(-1,l),mathieubn(a,q,add(2,mul(2,s)))))
+}
+return div(mul(fi,pow(-1,s)))
+}
+function mathieuio1(a,h,z,s,nn=0){
+    let q=sqr(h)
+let fi=0;
+const n=div(sub(nn,1),2);
+for(let l=0;l<ceil(bign/4);l++){
+fi=add(fi,div(mul(mathieuan(a,q,add(mul(2,l),1)),
+sub(
+mul(besseli(add(l,s,1),mul(h,exp(z))),besseli(sub(l,s),div(h,exp(z))))
+,mul(besseli(add(l,s,1),div(h,exp(z))),besseli(sub(l,s),mul(h,exp(z)))))
+),pow(-1,l),mathieuan(a,q,add(1,mul(2,s)))))
+}
+return div(mul(fi,pow(-1,s)))
+}
+
+
+
+
+
+
+function mathieuke2(a,h,z,s,nn=0){
+    let q=sqr(h)
+let fi=0;
+const n=div(sub(nn,0),2);
+let e=sub(2,iversonbracketeq0(s))
+for(let l=0;l<ceil(bign/4);l++){
+fi=add(fi,div(mul(mathieuan(a,q,mul(2,l)),
+add(
+mul(besselk(add(l,s),mul(h,exp(z))),besseli(sub(l,s),div(h,exp(z))))
+,mul(besseli(add(l,s),div(h,exp(z))),besselk(sub(l,s),mul(h,exp(z)))))
+),mathieuan(a,q,mul(2,s))))
+}
+return div(fi,e)
+}
+function mathieuke1(a,h,z,s,nn=0){
+    let q=sqr(h)
+let fi=0;
+const n=div(sub(nn,1),2);
+for(let l=0;l<ceil(bign/4);l++){
+fi=add(fi,div(mul(mathieubn(a,q,add(mul(2,l),1)),
+sub(
+mul(besselk(add(l,s,1),mul(h,exp(z))),besseli(sub(l,s),div(h,exp(z))))
+,mul(besseli(add(l,s,1),div(h,exp(z))),besselk(sub(l,s),mul(h,exp(z)))))
+),mathieubn(a,q,add(mul(2,s),1))))
+}
+return fi
+}
+function mathieuko2(a,h,z,s,nn=0){
+    let q=sqr(h)
+let fi=0;
+const n=div(sub(nn,2),2);
+let e=sub(2,iversonbracketeq0(s))
+for(let l=0;l<ceil(bign/4);l++){
+fi=add(fi,div(mul(mathieubn(a,q,add(mul(2,l),2)),
+sub(
+mul(besselk(add(l,s,2),mul(h,exp(z))),besseli(sub(l,s),div(h,exp(z))))
+,mul(besseli(add(l,s,2),div(h,exp(z))),besselk(sub(l,s),mul(h,exp(z)))))
+),mathieubn(a,q,add(mul(2,s),2))))
+}
+return div(fi,e)
+}
+function mathieuko1(a,h,z,s,nn=0){
+    let q=sqr(h)
+let fi=0;
+const n=div(sub(nn,1),2);
+for(let l=0;l<ceil(bign/4);l++){
+fi=add(fi,div(mul(mathieuan(a,q,add(mul(2,l),1)),
+add(
+mul(besselk(add(l,s,1),mul(h,exp(z))),besseli(sub(l,s),div(h,exp(z))))
+,mul(besseli(add(l,s,1),div(h,exp(z))),besselk(sub(l,s),mul(h,exp(z)))))
+),mathieuan(a,q,add(mul(2,s),1))))
+}
+return fi
+}
+function mathieuke(q,z,nn=0,s=0,rr=nn){
+    if(modc(nn,2)==0)
+    return  mathieuke2(mathieul(q,rr),q,z,s,nn)
+    return  mathieuke1(mathieul(q,sub(0,rr)),q,z,s,nn)
+}
+function mathieuko(q,z,nn=0,s=0,rr=nn){
+    if(modc(nn,2)==0)
+    return  mathieuko2(mathieul(q,sub(0,rr)),q,z,s,nn)
+    return  mathieuko1(mathieul(q,rr),q,z,s,nn)
+}
+function mathieuie(q,z,nn=0,s=0,rr=nn){
+    if(modc(nn,2)==0)
+    return  mathieuie2(mathieul(q,rr),q,z,s,nn)
+    return  mathieuie1(mathieul(q,sub(0,rr)),q,z,s,nn)
+}
+
+function mathieuio(q,z,nn=0,s=0,rr=nn){
+    if(modc(nn,2)==0)
+    return  mathieuio2(mathieul(q,sub(0,rr)),q,z,s,nn)
+    return  mathieuio1(mathieul(q,rr),q,z,s,nn)
+}
+function mathieumc(j,q,z,nn=0,s=0,rr=nn){
+    if(modc(nn,2)==0)
+    return  mathieumc2f(j,mathieul(q,rr),q,z,s,nn)
+    return  mathieumc1f(j,mathieul(q,rr),q,z,s,nn)
+}
+
+function mathieums(j,q,z,nn=0,s=0,rr=nn){
+    if(modc(nn,2)==0)
+    return  mathieums2f(j,mathieul(q,sub(0,rr)),q,z,s,nn)
+    return  mathieums1f(j,mathieul(q,sub(0,rr)),q,z,s,nn)
+}
+
+function mathieubessel(j,v,z){
+    if(j==0)return besselj(v,z)
+    if(j==1)return bessely(v,z)
+    if(j==2)return hankel1(v,z)
+    if(j==3)return hankel2(v,z)
+    if(j==4)return besseli(v,z)
+    if(j==5)return besselk(v,z)
+    if(j==6)return hankeli(v,z)
+    return sin(z)    
+}
+
+/*
+function mathieuce0fourierbc(q,z,N=bign){
+    return cos(mul(sqrt(mul(2,q)),cos(z)))
+   /* let fi=sub(0,besselj(0,sqrt(mul(2,q))));
+    for(let i=0;i<N;i++)fi=add(fi,mul(2,besselj(mul(2,i),sqrt(mul(2,q))),cos(mul(2,z,i))))
+    return fi;
+}*/
+//mathieurvmunsolved(im(x),[re(x),1])*mathieurvmunsolved(im(x),[re(x),0])
+//mathieucefourier(10,x,2)
 function mathieucefourier(q,z,nn=0,rr=nn){
+    let zh=smodc(z,mul(add(1,modc(nn,2)),pi()))
+    let N=20
+   // if(im(z)==0)return (mathieuc(mathieul(q,rr),q,z,nn));
+    if(mag(re(zh))<0.2)N=40
+   // if(mag(im(zh))>0.5)
+       
+       let ip=(mathieuc(mathieul(q,rr),q,re(zh),nn));
+   let ipp=(mathieuc(mathieul(q,rr),q,add(re(zh),0.001),nn))
+    return ode2rk4(mathieudiff,zh,ip,div(sub(ipp,ip),0.001),[mathieul(q,sub(rr)),q],re(zh),N);
+    return ode2rk4(mathieudiff,zh,(mathieuc(mathieul(q,rr),q,0,nn)),0,[mathieul(q,sub(rr)),q],0,N);
+    
 return  mathieuc(mathieul(q,rr),q,z,nn)
 }
 function mathieusefourier(q,z,nn=1,rr=nn){
+     let zh=smodc(z,mul(add(1,modc(nn,2)),pi()))
+    let N=20
+    if(mag(re(zh))<0.2)N=60
+    let der =div(sub((mathieus(mathieul(q,sub(0,rr)),q,0.001,nn)),(mathieus(mathieul(q,sub(0,rr)),q,-0.001,nn))),0.002)
+    return ode2rk4(mathieudiff,zh,0,der,[mathieul(q,sub(0,rr)),q],0,N);
+    
 return  mathieus(mathieul(q,sub(0,rr)),q,z,nn)
 }
 
@@ -28331,6 +34124,8 @@ return mul(-1,I,mathieuse(q,mul(I,z),nn,rr))
 }
 
 function mathieufefourier(q,z,nn=0,rr=nn){
+    //return (mathieuf1(mathieul(q,rr),q,z,nn))
+    
     if(modc(nn,2)==0)
 return ode2rk4(mathieudiff,z,0,div(im(mathieuf2(mathieul(q,rr),q,0.02,nn)),0.02),[mathieul(q,rr),q]);
 return ode2rk4(mathieudiff,z,0,div(im(mathieuf1(mathieul(q,rr),q,0.002,nn)),0.002),[mathieul(q,rr),q]);
@@ -28408,6 +34203,58 @@ function hilleq(z,qfunc,l,s=0,sp=1,off=0){//https://dlmf.nist.gov/28.29
 //ADD INCE POLY STUFF https://dlmf.nist.gov/28.31
 
 
+/* PLAİN WRONG DO NOT CONSIDER"
+function predatoreq(x,y,P){let [c,d]=P;return sub(mul(d,x,y),mul(c,y))}
+function predatoreq2(x,y,yp,P){let [c,d]=P;return sub(mul(d,y,yp),mul(c,yp))}
+
+
+function preyeq(x,y,P){let [a,b]=P;return sub(mul(a,x),mul(b,x,y))}
+function preyeq2(x,y,yp,P){let [a,b]=P;return sub(mul(a,y),mul(b,y,yp))}
+
+function lotkavolterraeq(x,y,P){let [a,b,c]=P;return add(mul(a,x),mul(b,x,y),mul(c,y))}
+function lotkavolterraeq2(x,y,yp,P){let [a,b,c]=P;return add(mul(a,y),mul(b,y,yp),mul(c,yp))}
+
+
+function prey(a,b,x,x0=1){return ode1rk4(preyeq,x,x0,[a,b])}
+*/
+
+
+//prey(1,0.5,0.75,0.25,x,10,4)+i*predator(1,0.5,0.75,0.25,x,10,4)
+function preydiff(x,y,yp,P){let [a,b,c,d]=P;return add(div(sqr(yp),y),mul(sub(mul(d,y),c),yp),mul(-1,d,a,y,y),mul(a,c,y))}
+function predetordiff(x,y,yp,P){let [a,b,c,d]=P;return add(div(sqr(yp),y),mul(sub(a,mul(b,y)),yp),mul(-1,b,a,y,y),mul(a,c,y))}
+
+
+function prey(a,b,c,d,z,p0=0.5,q0=0.5,off=0,N=bign){return ode2rk4(preydiff,z,p0,sub(mul(a,p0),mul(b,p0,q0)),[a,b,c,d],off,N)}
+function predator(a,b,c,d,z,p0=0.5,q0=0.5,off=0,N=bign){return ode2rk4(predetordiff,z,q0,sub(mul(d,q0,p0),mul(c,q0)),[a,b,c,d],off,N)}
+
+function generalizedlotkavolterradiff(x,y,yp,P){let [a,b,c,d,e,f]=P;return add(mul(add(a,f),yp),mul(sub(mul(b,e),mul(a,f)),y),sub(mul(b,g),mul(c,f)))}
+function generalizedlotkavolterra(a,b,c,d,e,f,z,p0=0.5,q0=0.5,off=0,N=bign){return ode2rk4(preydiff,z,p0,add(mul(a,p0),mul(b,q0),c),[a,b,c,d,e,f],off,N)}
+
+//https://kops.uni-konstanz.de/server/api/core/bitstreams/e8aa0e2c-b7f9-436d-9c07-a5e467c690e7/content
+function preygdiff(x,y,yp,P){let [a,b,c,d,k]=P;return add(div(sqr(yp),y),mul(sub(mul(d,y),c),yp),div(mul(-1,d,a,y,y,y),k),mul(a,c,y))}
+function predetorgdiff(x,y,yp,P){let [a,b,c,d,k]=P;return add(div(sqr(yp),y),mul(sub(a,mul(b,y),div(mul(a,div(add(div(yp,y),c),d)),k)),yp),mul(-1,a,b,y,y),mul(a,c,y))}
+
+
+function preyg(a,b,c,d,k,z,p0=0.5,q0=0.5,off=0,N=bign){return ode2rk4(preygdiff,z,p0,sub(mul(a,p0,sub(1,div(p0,k))),mul(b,p0,q0)),[a,b,c,d,k],off,N)}
+function predatorg(a,b,c,d,k,z,p0=0.5,q0=0.5,off=0,N=bign){return ode2rk4(predetorgdiff,z,q0,sub(mul(d,p0,q0),mul(c,q0)),[a,b,c,d,k],off,N)}
+function gausepreyp(a,b,c,d,k,z,p0=0.5,q0=0.5,off=0,N=bign){return sub(1,exp(sub(0,ode2rk4(preygdiff,z,p0,sub(mul(a,p0,sub(1,div(p0,k))),mul(b,p0,q0)),[a,b,c,d,k],off,N))))}
+function gausepreyf(a,b,c,d,k,z,p0=0.5,q0=0.5,off=0,N=bign){return sub(1,div(ode2rk4(preygdiff,z,p0,sub(mul(a,p0,sub(1,div(p0,k))),mul(b,p0,q0)),[a,b,c,d,k],off,N),k))}
+
+//SIR epidemic
+function susceptiblediff(x,y,yp,P){let [b,c]=P;return sub(div(sqr(yp),y),mul(c,yp))}
+function infecteddiff(x,y,yp,P){let [b,c]=P;return add(div(sqr(yp),y),mul(yp,sub(mul(b,y),c)))}
+
+function susceptible(b,c,z,p0=0.5,q0=0.5,off=0,N=bign){return ode2rk4(susceptiblediff,z,p0,mul(-1,b,p0,q0),[b,c],off,N)}
+function infected(b,c,z,p0=0.5,q0=0.5,off=0,N=bign){return ode2rk4(infecteddiff,z,q0,sub(mul(b,q0,p0),mul(c,q0)),[b,c],off,N)}
+
+function hostdiff(x,y,yp,P){let [a,r,c,d]=P;return add(div(sqr(yp),y),mul(sub(mul(c,a,y),d),yp),mul(-1,c,a,r,y,y),mul(r,d,y))}
+function parasitoiddiff(x,y,yp,P){let [a,r,c,d]=P;return add(div(sqr(yp),y),mul(sub(r,mul(a,y)),yp),mul(-1,r,a,y,y),mul(r,d,y))}
+
+function host(a,r,c,d,z,p0=0.5,q0=0.5,off=0,N=bign){return ode2rk4(susceptiblediff,z,p0,sub(mul(r,p0),mul(a,p0,q0)),[a,r,c,d],off,N)}
+function parasitoid(ba,r,c,d,z,p0=0.5,q0=0.5,off=0,N=bign){return ode2rk4(infecteddiff,z,q0,sub(mul(c,a,q0,p0),mul(d,q0)),[a,r,c,d],off,N)}
+
+
+
 function mathieudiff(x,y,yp,N){
   const a=g(N,0);
     const q=g(N,1);
@@ -28424,29 +34271,48 @@ function modifiedmathieucoshdiff(x,y,yp,N){
   return div(add(mul(x,yp),mul(y,sub(mul(4,q,x,x),q,q,a))),sub(1,sqr(x)))
 }
 
-
-function mathieu(a,q,z,s=sin(mul(sqrt(a),z)),sp=0,off=0){
-    return ode2rk4(mathieudiff,z,s,sp,[a,q],off);
+//mathieu(mathieul(10,2),10,x)
+function mathieu(a,q,z,s=(mul(sqrt(a))),sp=0,off=0,N=bign*2){
+    return ode2rk4(mathieudiff,z,s,sp,[a,q],off,N);
 }
-
-function mathieufraceigenlarge(m,q)
-{const h=sqrt(q); const v= floor(m); const s=add(m,m,1);
+function modifiedmathieu(a,q,z,s=(mul(sqrt(a))),sp=0,off=0,N=bign*2){
+    return ode2rk4(mathieudiff,mul(z,I),s,sp,[a,q],off,N);
+}
+function mathieufraceigenlarge(m,q)//this works for q<500 q>20
+{const h=sqrt(q); const v= floor(sub(m,0)); const s=add(m,m,1);
     return add(
         mul(-2,h,h),
         mul(2,s,h),
         div(add(sqr(s),1),-8),
         div(add(cum(s),s,s,s),pow(2,7),-1,h),
-        div(add(mul(s,s,s,s,5),mul(34,s,s),9),-1,h,h,pow(2,12))
+        div(add(mul(s,s,s,s,5),mul(34,s,s),9),-1,h,h,pow(2,12)),
+        div(add(mul(s,s,s,s,s,33),mul(410,s,s,s),mul(405,s)),-1,h,h,h,pow(2,17)),
+        div(add(mul(s,s,s,s,s,s,63),mul(1260,s,s,s,s),mul(2943,s,s),486),-1,h,h,h,h,pow(2,20)),
+        div(add(mul(s,s,s,s,s,s,s,527),mul(15617,s,s,s,s,s),mul(69001,s,s,s),mul(41607,s)),-1,h,h,h,h,h,pow(2,25))
         //div()
         
         )
 }
 function mathieufraceigensmall(m,q)
 {const h=sqrt(q); const v= floor(m); const s=add(m,m,1);
-    if(m==0) return add(mul(sub(log10(add(1,exp(q))),div(q,4.6)),-8),2.46)
+  /*  if(m==0) return add(mul(sub(log10(add(1,exp(q))),div(q,4.6)),-8),2.46)
     if(m==1) return add(mul(sub(log10(add(1,exp(mul(-0.6,sub(q,3))))),div(mul(-0.6,sub(q,3)),5)),-10),5.46)
     if(m==2) return sub(add(mul(sub(log10(add(1,exp(mul(-0.45,sub(q,16))))),div(mul(-0.45,sub(q,16)),5.5)),-5.8),22.3),div(pow(q,1.4),20))
-    return add(
+    if(m==3) return sub(add(mul(sub(log10(add(1,exp(mul(-0.45,sub(q,16))))),div(mul(-0.45,sub(q,16)),5.5)),-5.8),22.3),div(pow(q,1.4),20))
+*/
+
+if(m==0)return polynomial([0,0,-1/2,0,7/128,0,-29/2304,0,68687/18874368],q)
+if(m==1)return polynomial([1,1,-1/8,-1/64,-1/1536,11/36864,49/589824,55/9437184,-83/35389440],q)
+if(m==2)return polynomial([4,0,5/12,0,-763/13824,0,1002401/79626240,0,-1669068401/458647142400],q)
+if(m==3)return polynomial([9,0,1/16,1/64,13/20480,-5/20480,-1691/23592960,-609/104857600],q)
+    
+if(m==-1)return polynomial([1,-1,-1/8,1/64,-1/1536,-11/36864,49/589824,-55/9437184,-83/35389440],q)
+if(m==-2)return polynomial([4,0,-1/12,0,5/13824,0,-289/79626240,0,21391/458647142400],q)  
+if(m==-3)return polynomial([9,0,1/16,-1/64,13/20480,5/20480,-1691/23592960,609/104857600],q)
+      
+ 
+ 
+return add(
         sqr(v),
         div(sqr(q),2,sub(sqr(v),1)),
         div(mul(q,q,q,q,add(mul(5,v,v),7)),32,cum(sub(sqr(v),1)),sub(sqr(v),4)),
@@ -28537,29 +34403,30 @@ function mathieusenormalizer(q, n) {
 }
 
 function mathieuce(q, z, n=0) {
-if(re(n)<=2&&(Number.isInteger(n)))return mul(mathieucefourier(q,z,n),mathieucenormalizer(q,n));
+if((Number.isInteger(n)))return mul(mathieucefourier(q,z,n),mathieucenormalizer(q,n));
 return mul(mathieucesmall(q,z,n),mathieucenormalizer(q,n));
 }
 function mathieuse(q, z, n=0) {
-if(re(n)<=2&&(Number.isInteger(n)))return mul(mathieusenormalizer(q,n),mathieusefourier(q,z,n));
+if((Number.isInteger(n)))return mul(mathieusenormalizer(q,n),mathieusefourier(q,z,n));
 return mul(mathieusesmall(q,z,n),mathieusenormalizer(q,n));
 }
 function mathieuceunnormalizesqr(z,Q) {const [q,n]=Q;
-if(re(n)<=2&&(Number.isInteger(n)))return sqr(mathieucefourier(q,z,n));
+if((Number.isInteger(n)))return sqr(mathieucefourier(q,z,n));
 return sqr(mathieucesmall(q,z,n));
 }
+//re(n)<=2&&
 function mathieuseunnormalizesqr(z,Q) {const [q,n]=Q;
-if(re(n)<=2&&(Number.isInteger(n)))return sqr(mathieusefourier(q,z,n));
+if((Number.isInteger(n)))return sqr(mathieusefourier(q,z,n));
 return sqr(mathieusesmall(q,z,n));
 }
 function mathieufe(q, z, n=0) {
 //if(re(n)<=2&&(Number.isInteger(n)))
-    return mathieufefourier(q,z,n);
+    return mul(mathieufefourier(q,z,n),mathieucenormalizer(q,n));
 //return mathieucesmall(q,z,n);
 }
 function mathieuge(q, z, n=0) {
-if(re(n)<=2&&(Number.isInteger(n)))
-    return mathieugefourier(q,z,n);
+//if(re(n)<=2&&(Number.isInteger(n)))
+    return mul(mathieugefourier(q,z,n),mathieusenormalizer(q,n));
 //return mathieucesmall(q,z,n);
 }
 function mathieume(q, z, n=0) {
@@ -28996,8 +34863,15 @@ function dominanteigenvectorvalue(A){
     let v = dominanteigenvector(A);
     return v[dominanteigenvectorindex(A)];
 }
+function findEigenvectors(matrix, tolerance = 1e-10, maxIterations = 100){
+    let V= findEigenvectorst(matrix, tolerance, maxIterations)
+    return {
+        eigenvalues: V.eigenvalues,
+        eigenvectors: transpose(V.eigenvectors)
+    };
+}
 
-function findEigenvectors(matrix, tolerance = 1e-10, maxIterations = 1000) {
+function findEigenvectorst(matrix, tolerance = 1e-10, maxIterations = 100) {
     const n = matrix.length;
     
     // Deep copy matrix
@@ -29456,7 +35330,7 @@ function spheroidale(n, m, d, gg, p = 0) {
  
 let c=0
 let R=sub(p,1);
-let result=associateEigenvectors(A,math.eigs(A).values,findEigenvectors(A).eigenvectors).eigenvectors[R]
+let result=associateEigenvectors(A,math.eigs(A).values,findEigenvectorst(A).eigenvectors).eigenvectors[R]
 let a=rearray(result);
 //console.log("s",a);
 for(let s=sub(0,R);s<=sub(d,R,1);s++)
@@ -29779,11 +35653,18 @@ return ode2rk4( dhdiff,div(trianglewavec(x,mul(K,4)),K,4),s,sp,k,off);
 function airydiff(x,y,yp){
 	return mul(x,y);
 }
+function logairydiff(x,y,yp){
+	return sub(x,sqr(yp));
+}
 function aidiff(x,s=0.355028053888,sp=-0.258819403793){
 	return ode2rk4(airydiff,x,s,sp);
 }
 function bidiff(x,s=0.614926627446,sp=-0.448288357354){
 	return ode2rk4(airydiff,x,s,sp);
+}
+
+function aildiff(x,s= -1.038,sp=-0.7286){
+	return ode2rk4(logairydiff,x,s,sp);
 }
 
 /*
@@ -29991,6 +35872,9 @@ function superarcchord(x,a=1,N=bign*2){return superfunctionf(arccrd,crd,a,x,2,2,
 
 function supertra(x,a=0,N=bign/2){return superfunctionf(trappmann,arctrappmann,a,x,-1000,3,N,-1000,0)}
 function superzex(x,a=1,N=bign/2){return superfunctionf(zex,lambertw,a,x,0,3,N,0,0)}
+function zex2(x){return mul(x,pow(2,x))}
+function lambertwb2(x){return lambertwb(2,x)}
+function superzex2(x,a=1,N=bign/2){return superfunctionf(zex2,lambertwb2,a,x,0,3,N,0,0)}
     //return superfunctionf2(zex,a,x,0,3,N,0,0)}//return superfunctionf(zex,lambertw,a,x,0,3,N,0,0)}
 
 function superfactorial(x,a=3,N=bign*1.5){return superfunctionf(factorial,arcfactorial,a,x,2,2,N,2,0)}
@@ -30154,7 +36038,7 @@ function cheta2(x,k=0,a=sqr(eulerc()),N=bign){return zconjn(superfunctionf(expet
 //1.5259833+0.0178411*i
 //function sheldontetr(x){return 2}
 
-
+function catalanmersenne(x,a=2,N=bign){return superfunctionf(mersenne,arcmersenne,a,x,0,3,N,1,0)}
 function supermersenne(x,a=2,N=bign){return superfunctionf(mersenne,arcmersenne,a,x,0,3,N,0,0)}
 
 function submersenne(x){return mersenne(add(1,arcmersenne(x)))}
@@ -30277,13 +36161,27 @@ function fastnewtonzero(func, xx, N = bign * 6, eps = 1e-6, dx = 1e-4) {
     return x;
 }
 
+function logn(x,n=0){
+    return add(log(x),mul(I,2,n))
+}
+
+function logbnm(x,b,n=0,m=0){
+    return div(logn(x,n),logn(b,m))
+}
 
 
 
-
-
-
-function expofactorialapprox(x){return add(1,mul(0.5708707,sub(x,1)),mul(0.232292,pow(sub(x,1),2)),mul(0.114153,pow(sub(x,1),3)),mul(0.0234736,pow(sub(x,1),4)))}//add(1,mul(0.575571,sub(x,1)),mul(0.151142,sqr(sub(x,1))))
+function expofactorialapprox(x){//return add(1,mul(0.575571,sub(x,1)),mul(0.151142,pow(sub(x,1),2)))}
+  //  return add(1,mul(0.069474,sub(x,2)),mul(0.093728,pow(x,2)),mul(0.037104,pow(x,3)),mul(0.002836,pow(x,4)))
+    
+    
+  
+return add(1,mul(0.5708707,sub(x,1)),mul(0.232292,pow(sub(x,1),2)),mul(0.114153,pow(sub(x,1),3)),mul(0.0234736,pow(sub(x,1),4)))}
+    
+    
+    
+    
+    //add(1,mul(0.575571,sub(x,1)),mul(0.151142,sqr(sub(x,1))))
 
 function expofactoriall(x,n=floor((bign)/3)*3){
     if(n==0)return x;
@@ -30298,6 +36196,54 @@ function ospexpofactorial(x,bignc=ceil(bign/2)*3){
     for(let i=0;i<bignc;i++){fi=pow(add(y,1,i),fi)}
     return fi;
 }
+function mospexpofactorial(x,bignc=ceil(bign/2)*3,k=0){
+    
+    let y=expofactorialapprox(add(k,x,bignc));
+ //   y = add(x,mul(5,I))
+     let fi=(y)//y//expofactorialapproxi//y//expofactorialapprox(y);
+    for(let i=0;i<bignc;i++){fi=logb(fi,add(x,sub(bignc,i,0)))}
+    //for(let i=0;i<bignc;i++){fi=logbnm(fi,add(x,sub(bignc,i,0)),t,tt)}
+    return fi;
+}
+function mmospexpofactorial(x,bignc2=bign,bignc=ceil(bign/2)*3){
+    //return mospexpofactorial(x,10)
+    //return pow(x,expofactorialapprox(sub(x,1)))
+    //return div(log(expofactorialapprox(add(x,1))),log(add(x,1)))
+   //return tetr(x)
+  // return (kcarcpsi(add(x,0),add(x,-1)))
+  //return tetr(sub(x,1));
+   if(mag(im(x))<1.0) return expofactorialapprox(x)
+//return exp(x)    
+//return tospexpofactorial(x)
+//return (kcarcpsihhh(add(x,0),add(x,-1)))
+   //if(mag(im(x))<2.0) return lerp(mospexpofactorial(x,10),expofactorialapprox(x),sub(2,mag(im(x))))
+   // return expofactorialapprox(add(x,I))
+//return mospexpofactorial(x,10)
+//return lerp(expofactorialapprox(I),pow(mul(I,im(x)),expofactorialapprox(I)),re(x))
+//return expofactorialapprox(math.complex(re(x),signum(im(x))))
+//return expofactorialapprox(x)
+    let x3=sub(x,bignc2)
+    let x2=add(-2,x3,mul(I,signum(im(x))))
+    let fi=mospexpofactorial(x2,bignc*2,0);
+//    fi=expofactorialapprox(math.complex(re(x),signum(im(x))))
+   //--fi=pow(-1,pow(-2,pow(-3,expofactorialapprox(sub(I,4)))))
+//   fi=pow(-1,pow(-2,expofactorialapprox(sub(I,1.5))))
+   
+    for(let i=0;i<bignc2-1;i++)
+        fi=agm(pow(add(x3,1,i),fi),fi)
+   //fi=logb(add(x3,1,i),fi)
+    return (fi);
+}
+function expofactorial(x,N1=7,N2=20){
+    //expofactorial(x,3-re(modc(floor(x),3)),20)
+    //if(im(x)<0)return mospexpofactorial(x)
+    let xx=add(modc(x,1),0);
+    let fi=mmospexpofactorial(xx,N1,N2,0)
+    
+    for(let i=0;i<floor(re(x));i++)fi=pow(add(xx,i,1),fi)
+    for(let i=0;i<ceil(-re(x));i++)fi=div(log(fi),log(sub(xx,i,0)))
+        return fi;
+}
 function rospexpofactorial(x,h=0,bigncd=ceil(bign/2)){
    let  bignc = ceil(re(x)+h);
     const y=sub(x,bignc);
@@ -30306,12 +36252,28 @@ function rospexpofactorial(x,h=0,bigncd=ceil(bign/2)){
     for(let i=0;i>bignc;i--){fi=_log(fi,add(y,1,i))}
     return fi;
 }
-function tospexpofactorial(x,bignc=ceil(bign/2)){
+function tospexpofactorial(x,bignc=ceil(bign)){
    const y=sub(x,bignc);
      let fi=rospexpofactorial(x,add(-1.5,mag(im(x))));
     for(let i=0;i<bignc;i++){fi=pow(add(y,1,i),fi)}
     return fi;
-}
+}/*
+function expofactorial(x,N=5){
+ let fi= tospexpofactorial(sub(x,N));
+ for(let i=sub(0,N,-1);i<0;i++)fi=pow(add(x,i),fi)
+ return fi;
+}*/
+ function expolocate(x){
+   //  let s=tetr(x)
+     let N=bign
+     let fi=tetr(sub(x,N))
+     for(let i=1;i<=N;i++)
+         fi=exp(mul(fi,log(add(x,i,-N))))
+//     fi=exp(mul(fi,log(3)))
+
+    return fi;
+ }
+ 
 /*
 function osppexpofactorial(x,bignc=ceil(bign/2)){
     const y=add(x,bignc);
@@ -30320,6 +36282,19 @@ function osppexpofactorial(x,bignc=ceil(bign/2)){
     return fi;
 }
 */
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 //function supereinstein1(x,a=1,N=bign*0.5){return  superfunctionregitff(einstein1,arceinstein1,a,x,0,3,N,0.93082,0)}
@@ -30694,12 +36669,16 @@ function kernelzngreen(u,z=1,n=1){return div(1,sabs(pow(sub(u,z),sub(n,2))))}
 function kerneldoublelayerpotential(u,z=1,n=1){return div(sub(kernelzngreen(u,add(z,0.0001),n),kernelzngreen(u,z,n)),0.0001)}
 //function kernelhypoelliptic(u,z=1){return 1}
 function kernelheat(z,w,t,n){return div(exp(div((sqr(sub(z,w))),-4,t)),pow(mul(4,pi(),t),div(n,2)))}
+function heatkernel(t,a,D){return div(exp(mul(-1,a,t)),gmul(vectormap(x=>sub(1,exp(mul(-1,t,x))),D)))}
 function kernelquasimodularweierstrass(u,z=1,w1=1,w2=I){return weierstrasselliptic(sub(u,z),w1,w2)}
 function kernelschwarzchristoffel(u,z=1){return 1}
 function kernelbessel(u,z=1,v=1){return besselj(v,sub(u,z))}
 function kernelfaddeev(u,w=1){return div(sub(exp(mul(I,z)),exp(mul(I,w))),sub(u,w))}
 function kernelselberg(u,z=1){return 1}
 function kernellagrange(u,w=1){return div(1,sqr(sub(u,w)))}
+function kernalairy(x,y){return  (x==y)?sub(sqr(aip(x)),mul(x,sqr(ai(x)))):div(sub(mul(ai(x),aip(y)),mul(aip(x),ai(y))),sub(x,y))}
+
+
 
 //???
 function kernellognormal(u){return div(exp(neg(sqr(log(abs(u))))),mul(abs(u),sqrt(2),pi()))}
@@ -31091,6 +37070,7 @@ function crystalballc(x,a,n,xx,s){return div(mul(n,exp(div(sqr(a),-1))),sabs(a),
 function crystalballd(x,a,n,xx,s){return mul(sqrt(div(pi(),2)),add(1,erf(div(sabs(a),sqrt(2)))))}
 
 function crystalball(x,a,n,xx,s){return (re(div(sub(x,xx),s))>re(sub(0,a)))?mul(crystalballn(x,a,n,xx,s),exp(div(sqr(sub(x,xx)),-2,s,s))):mul(crystalballn(x,a,n,xx,s),crystalballa(x,a,n,xx,s),pow(sub(crystalballb(x,a,n,xx,s),div(sub(x,xx),s)),sub(0,n))) }
+function crystalballpdf(a,n,xx,s,x){return crystalball(x,a,n,xx,s)}
 
 
 
@@ -31469,6 +37449,160 @@ function lomaxcf(a,l,t){return mul(a,exp(mul(-1,t,l,I)),pow(mul(-1,l,t,I),a),inc
 function categoricaldistpmf(P,x){return g(P,x)}//return to this add
 function categoricaldistmode(P){let m=g(P,0);for(let i=0;i<leng(P);i++)if(g(P,i)>m)m=g(P,i);return m}
 
+function orderedcategoricaldistpmf(P, x){
+    let S = 0;
+    for(let i=0;i<leng(P);i++) S = add(S,G(P,i));
+    return (x>=0 && x<leng(P)) ? div(G(P,x),S) : 0;
+}
+
+function orderedcategoricaldistmode(P){
+    let imax = 0;
+    for(let i=1;i<leng(P);i++)
+        if(g(P,i) > g(P,imax)) imax = i;
+    return imax;  
+}
+function unorderedcategoricaldistpmf(P, k){
+    let Q = rearray(P).slice().sort((a,b)=>sub(b,a));
+    let S = 0;
+    for(let i=0;i<Q.length;i++) S = add(S,Q[i]);
+    return (k>=0 && k<Q.length) ? div(Q[k],S) : 0;
+}
+
+function unorderedcategoricaldistmode(P){
+    let m = 0;
+    for(let i=0;i<leng(P);i++)
+        if(g(P,i)> m) m = g(P,i);
+    return m;  
+}
+
+//https://arxiv.org/pdf/1005.3274
+
+function amorosopdf(a,b,c,m,x){return div(mul(sabs(div(c,a)),pow(div(sub(x,m),a),sub(mul(b,c),1)),exp(mul(-1,pow(div(sub(x,m),a),c)))),gamma(b))}
+
+
+function amoroso2pdf(a,t,aa,b,x){return div(mul(sabs(div(b,c)),pow(div(sub(x,a),t),sub(mul(a,b),1)),exp(mul(-1,pow(div(sub(x,a),t),b)))),gamma(aa))}
+function amoroso2cdf(a,t,aa,b,x){return div(lincgamma(aa,pow(div(sub(x,a),t),b)),gamma(aa))}
+
+
+function wilsonhilfertypdf(a,l,x){return div(mul(3,pow(div(a,l),a),pow(x,sub(mul(3,a),1)),exp(div(mul(a,pow(t,3)),l))),gamma(a))}
+
+function amoroso2pdf(a,t,aa,b,x){return amoroso2pdf(a,t,aa,b,x)}
+function amoroso2cdf(a,t,aa,b,x){return amoroso2cdf(a,t,aa,b,x)}
+function stacypdf(t,aa,b,x){return amoroso2pdf(0,t,aa,b,x)}
+function stacycdf(t,aa,b,x){return amoroso2cdf(0,t,aa,b,x)}
+function fishtippettpdf(a,t,b,x){return amoroso2pdf(a,t,1,b,x)}
+function fishtippettcdf(a,t,b,x){return amoroso2cdf(a,t,1,b,x)}
+function frechetpdf(a,t,aa,x){return amoroso2pdf(a,t,div(1,aa),sub(0,aa),x)}
+function frechetcdf(a,t,aa,x){return amoroso2cdf(a,t,div(1,aa),sub(0,aa),x)}
+function genfrechetpdf(a,t,aa,b,x){return amoroso2pdf(a,t,aa,sub(0,b),x)}
+function genfrechetcdf(a,t,aa,b,x){return amoroso2cdf(a,t,aa,sub(0,b),x)}
+function scinvchipdf(t,x){return amoroso2pdf(0,t,div(1,2),sub(0,2),x)}
+function scinvchicdf(t,x){return amoroso2cdf(0,t,div(1,2),sub(0,2),x)}
+function invchipdf(t,x){return amoroso2pdf(0,t,div(1,2),sub(0,2),x)}
+function invchicdf(t,x){return amoroso2cdf(0,t,div(1,2),sub(0,2),x)}
+function invrayleighpdf(t,x){return amoroso2pdf(0,t,div(1,2),sub(0,2),x)}
+function invrayleighcdf(t,x){return amoroso2cdf(0,t,div(1,2),sub(0,2),x)}
+function pearsonvpdf(a,t,aa,x){return amoroso2pdf(a,t,aa,sub(0,1),x)}
+function pearsonvcdf(a,t,aa,x){return amoroso2cdf(a,t,aa,sub(0,1),x)}
+function invgammapdf(a,t,aa,x){return amoroso2pdf(a,t,aa,sub(0,1),x)}
+function invgammacdf(a,t,aa,x){return amoroso2cdf(a,t,aa,sub(0,1),x)}
+function scinvchisqpdf(t,k,x){return amoroso2pdf(0,t,div(k,2),sub(0,1),x)}
+function scinvchisqcdf(t,k,x){return amoroso2cdf(0,t,div(k,2),sub(0,1),x)}
+function invchisqpdf(t,k,x){return amoroso2pdf(0,t,div(k,2),sub(0,1),x)}
+function invchisqcdf(t,k,x){return amoroso2cdf(0,t,div(k,2),sub(0,1),x)}
+function levypdf(a,t,k,x){return amoroso2pdf(a,t,div(k,2),sub(0,1),x)}
+function levycdf(a,t,k,x){return amoroso2cdf(a,t,div(k,2),sub(0,1),x)}
+function invexppdf(t,x){return amoroso2pdf(0,t,1,sub(0,1),x)}
+function invexpcdf(t,x){return amoroso2cdf(0,t,1,sub(0,1),x)}
+function pearson3pdf(a,t,aa,x){return amoroso2pdf(a,t,aa,1,x)}
+function pearson3cdf(a,t,aa,x){return amoroso2cdf(a,t,aa,1,x)}
+function gammapdf(a,t,aa,x){return amoroso2pdf(a,t,aa,1,x)}
+function gammacdf(a,t,aa,x){return amoroso2cdf(a,t,aa,1,x)}
+function erlangpdf(a,t,n,x){return amoroso2pdf(a,t,n,1,x)}
+function erlangcdf(a,t,n,x){return amoroso2cdf(a,t,n,1,x)}
+function stgammapdf(t,aa,x){return amoroso2pdf(0,t,aa,1,x)}
+function stgammacdf(t,aa,x){return amoroso2cdf(0,t,aa,1,x)}
+function scchisqpdf(t,k,x){return amoroso2pdf(0,t,div(k,2),1,x)}
+function scchisqcdf(t,k,x){return amoroso2cdf(0,t,div(k,2),1,x)}
+function chisqpdf(t,k,x){return amoroso2pdf(0,t,div(k,2),1,x)}
+function chisqcdf(t,k,x){return amoroso2cdf(0,t,div(k,2),1,x)}
+function shiftexppdf(a,t,x){return amoroso2pdf(a,t,1,1,x)}
+function shiftexpcdf(a,t,x){return amoroso2cdf(a,t,1,1,x)}
+function exppdf(a,t,x){return amoroso2pdf(a,t,1,1,x)}
+function expcdf(a,t,x){return amoroso2cdf(a,t,1,1,x)}
+function stexppdf(t,x){return amoroso2pdf(0,t,1,1,x)}
+function stexpcdf(t,x){return amoroso2cdf(0,t,1,1,x)}
+function wienpdf(a,t,x){return amoroso2pdf(a,t,4,1,x)}
+function wiencdf(a,t,x){return amoroso2cdf(a,t,4,1,x)}
+function nakagamipdf(a,t,aa,x){return amoroso2pdf(a,t,aa,2,x)}
+function nakagamicdf(a,t,aa,x){return amoroso2cdf(a,t,aa,2,x)}
+function scchipdf(t,k,x){return amoroso2pdf(0,t,div(k,2),2,x)}
+function scchicdf(t,k,x){return amoroso2cdf(0,t,div(k,2),2,x)}
+function chipdf(t,k,x){return amoroso2pdf(0,t,div(k,2),2,x)}
+function chicdf(t,k,x){return amoroso2cdf(0,t,div(k,2),2,x)}
+function halfnormpdf(a,t,x){return amoroso2pdf(a,t,div(1,2),2,x)}
+function halfnormcdf(a,t,x){return amoroso2cdf(a,t,div(1,2),2,x)}
+function rayleighpdf(a,t,x){return amoroso2pdf(a,t,1,2,x)}
+function rayleighcdf(a,t,x){return amoroso2cdf(a,t,1,2,x)}
+function maxwellpdf(a,t,x){return amoroso2pdf(a,t,3/2,2,x)}
+function maxwellcdf(a,t,x){return amoroso2cdf(a,t,3/2,2,x)}
+function wilsonhilfpdf(a,t,aa,x){return amoroso2pdf(a,t,aa,3,x)}
+function wilsonhilfcdf(a,t,aa,x){return amoroso2cdf(a,t,aa,3,x)}
+function genweibullpdf(a,t,n,x){return amoroso2pdf(a,t,n,1,x)}
+function genweibullcdf(a,t,n,x){return amoroso2cdf(a,t,n,1,x)}
+function weibullpdf(a,t,x){return amoroso2pdf(a,t,1,1,x)}
+function weibullcdf(a,t,x){return amoroso2cdf(a,t,1,1,x)}
+function pseudoweibullpdf(a,t,beta,x){return amoroso2pdf(a,t,add(1,1),beta,x)}
+function pseudoweibullcdf(a,t,beta,x){return amoroso2cdf(a,t,add(1,1),beta,x)}
+function strexppdf(t,beta,x){return amoroso2pdf(0,t,1,beta,x)}
+function strexpcdf(t,beta,x){return amoroso2cdf(0,t,1,beta,x)}
+
+
+function generalizednegativebinomialpmf(m,t,b,x){return div(mul(m,ncr(add(m,mul(b,x)),x),pow(sub(1,t),x),pow(t,add(m,mul(b,x),mul(-1,x)))),add(m,mul(b,x)))}
+
+function betaexponentialpdf(a,b,c,x){return div(mul(c,exp(mul(-1,b,c,x)),pow(sub(1,exp(mul(-1,c,x))),add(a,-1))),beta(a,b))}
+function betaexponentialmgf(a,b,c,t){return div(beta(sub(b,div(t,c)),a),beta(a,b))}
+function betaexponentialcgf(a,b,c,t){return log(div(beta(sub(b,div(t,c)),a),beta(a,b)))}
+function betaexponentialcf(a,b,c,t){return div(beta(sub(b,div(mul(I,t),c)),a),beta(a,b))}
+function betaexponentialpgf(a,b,c,t){return div(beta(sub(b,div(log(t),c)),a),beta(a,b))}
+
+//https://arxiv.org/pdf/1905.12852
+
+function newmixturedistpmf(m,bb,a,b,c,x){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,div(mul(ncr(x,j),pow(-1,j),beta(add(b,div(add(j,m,mul(bb,x),mul(-1,x)),c)),a)),beta(a,b)));return mul(fi,div(mul(m,ncr(add(m,add(bb,x)),x)),add(m,mul(bb,x))))}
+//https://www.statisticshowto.com/waring-distribution/
+function waringdistpmf(a,x){return div(mul(add(a,1),gamma(x),gamma(add(a,1))),gamma(add(a,x,1)))}
+function simonyulepmf(a,b,x){return div(mul(a,gamma(add(a,b,1)),gamma(add(x,b))),add(a,b),gamma(add(a,b,x)),gamma(b))}
+function generalizedwaringdistpmf(a,b,v,x){return div(mul(gamma(add(v,a)),gamma(add(x,v)),gamma(add(x,b))),factorial(x),gamma(v),gamma(add(x,v,a,b)),beta(a,b))}
+
+function alphadistpdf(a,b,x){return div(mul(b,exp(div(sqr(sub(a,div(b,x))),-2))),x,x,sqrt(2),sqrt(pi()),ncdf(a))}
+function alphadistcdf(a,b,x){return div(npdf(sub(a,div(1,x))),x,x,ncdf(a))}
+function alphadistmode(a,b){return div(mul(b,sub(sqrt(add(8,sqr(a))),a)),4)}
+
+function asinpdf(x){return div(1,pi(),sqrt(mul(x,sub(1,x))))}
+function asincdf(x){return div(mul(2,asin(sqrt(x))),pi())}
+function asinmean(){return 0.5}
+function asinmedian(){return 0.5}
+function asinvar(){return 1/8}
+function asinskew(){return 0}
+function asinkurtosis(){return -3/2}
+function asinexcesskurtosis(){return -3/2-3}
+
+//function arcsinexpcdf(a,x){return div(mul(2,pow(asincdf(x),a)),pi())}
+//function arcsinexppdf(a,x){return div(mul(2,pow(asincdf(x),a)),pi())}
+
+
+//https://www.statisticshowto.com/bipolar-distribution/ Add
+//https://www.statisticshowto.com/bivariate-normal-distribution/ Add ADD 
+//https://www.statisticshowto.com/bivariate-poisson-distribution-2/
+
+
+
+
+
+
+
+
+
 function hypergeometricdistpmf(nn,kk,n,k){return div(mul(ncr(kk,k),ncr(sub(nn,kk),sub(n,k))),ncr(nn,n))}
 function hypergeometricdistcdf(nn,kk,n,k){return div(mul(ncr(n,add(k,1)),ncr(sub(nn,n),sub(kk,k,1)),hypg32(1,sub(k,kk,-1),sub(k,n,-1),add(k,2),add(nn,k,sub(2,kk,n)),1)),ncr(nn,kk))}
 function hypergeometricdistmean(nn,kk,n){return div(mul(n,kk),nn)}
@@ -31561,6 +37695,7 @@ function wnchypg(x,n,m1,m2,w){return walleniusnoncentralhypergeometricdistpmf(m1
 function walleniusnoncentralhypergeometricdistarcmean(m1,m2,n,w,mu){return sub(add(div(mu,m1),pow(sub(1,div(sub(n,mu),m2)),w)),1);}
 function walleniusnoncentralhypergeometricdistmean(m1,m2,n,w,gues=1){const xmin=maxc(0,sub(n,m2));const xmax=minc(n,m1);return newtoninv("walleniusnoncentralhypergeometricdistarcmean("+m1+","+m2+","+n+","+w+",x)",0,div(add(xmin,xmax),gues));}
 function walleniusnoncentralhypergeometricdistvar(m1,m2,n,w,gues=1){const nn=add(m1,m2);const mu=walleniusnoncentralhypergeometricdistmean(m1,m2,n,w,gues);const a=mul(mu,sub(m1,mu));const b=mul(sub(n,mu),add(mu,sub(m2,n)));return div(mul(nn,a,b),sub(nn,1),add(mul(m1,b),mul(m2,a)))}
+
 
 function hardydistpmf(p,q,m,x){let fi=math.complex(0,0);for(let j=div(add(m,1),2);j<=m;j++)fi=add(fi,mul(ncr(sub(n,1),sub(n,j)),pow(q,sub(n,j),add(hardydista(p,q,j,m),hardydistb(p,q,j,m)))));return fi;}
 function hardydista(p,q,j,m){return mul(ncr(sub(j,1),sub(mul(j,2),m,1)),pow(p,sub(m,j,-1)),pow(sub(1,p,q),sub(mul(j,2),m,1)))}
@@ -31757,6 +37892,14 @@ function zerotruncatedpoissondistvar(l){return sub(div(add(l,mul(l,l)),sub(1,exp
 
 //Add function mixedpoissondistpmf(func,)
 
+//https://www.researchgate.net/profile/J-Dorp/publication/243102729_The_Standard_Two-Sided_Power_Distribution_and_its_Properties/links/5460e2e00cf27487b4526435/The-Standard-Two-Sided-Power-Distribution-and-its-Properties.pdf?origin=publication_detail&_tp=eyJjb250ZXh0Ijp7ImZpcnN0UGFnZSI6InB1YmxpY2F0aW9uIiwicGFnZSI6InB1YmxpY2F0aW9uRG93bmxvYWQiLCJwcmV2aW91c1BhZ2UiOiJwdWJsaWNhdGlvbiJ9fQ&__cf_chl_tk=jEGT.mKHjbAnVMb0oVaQ2l4cpkAZH4OYhxQ_5BS4Nj4-1770479178-1.0.1.1-46XdyAub40hFSw0nVWbSKVm8oMCEuIL1xLOHlh8Oyis
+function asymetriclaplacepdf(m,s,k,x){return (re(x)<re(m))?(div(mul(k,exp(div(mul(s,sabs(sub(x,m))),-1,k))),s,add(1,sqr(k)))):(div(mul(k,exp(div(mul(s,k,sabs(sub(x,m))),-1))),s,add(1,sqr(k))))}
+
+function standarttwosidedpowerpdf(t,n,x){return (re(x)<re(t))?(mul(n,pow(div(x,t),sub(n,1)))):mul(n,pow(div(sub(1,x),sub(1,t)),sub(n,1)))}
+function standarttwosidedpowercdf(t,n,x){return (re(x)<re(t))?(mul(t,pow(div(x,t),n))):(sub(1,mul(sub(1,t),pow(div(sub(1,x),sub(1,t)),n))))}
+function standarttwosidedpowermean(t,n){return div(add(mul(t,sub(n,1)),1),add(n,1))}
+function standarttwosidedpowervar(t,n){return div(sub(n,mul(2,t,sub(n,1),sub(1,t))),add(n,2),sqr(add(n,1)))}
+
 
 //weird guys
 function polyadistpmf(n,m,r,c,x){return div(mul(ncr(add(div(r,c),x,-1),x),ncr(sub(n,1,x,div(sub(nn,r),c,-1)),sub(n,x))),ncr(add(div(nn,c),n,-1),n))}
@@ -31769,9 +37912,14 @@ function rutherfordcontagiousdist(n,x,p){if(n==0)return 0;if(n<x)return 0;return
 function rutherfordcontagiousdistlinear(n,x,p,c=1){if(n==0)return 0;if(n<x)return 0;return add(mul(add(p,mul(c,sub(x,1))),rutherfordcontagiousdist(n-1,x-1)),mul(sub(1,add(p,mul(c,x))),rutherfordcontagiousdist(n-1,x)))}
 function rutherfordcontagiousdistlist(n,x,P){if(n==0)return 0;if(n<x)return 0;return add(mul(g(P,x-1),rutherfordcontagiousdist(n-1,x-1)),mul(sub(1,g(P,x)),rutherfordcontagiousdist(n-1,x)))}
 
+function muthpdf(k,x){return mul(sub(exp(mul(k,x)),k),exp(add(div(exp(mul(k,x)),k,-1),mul(x,k),div(1,k))))}
+function muthcdf(k,x){return sub(1,exp(add(div(exp(mul(k,x)),k,-1),mul(x,k),div(1,k))))}
+function muthmean(k){return 1}
 
-
-
+function noncentralbetadistpdf(a,b,l,x){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,div(mul(exp(div(l,-2)),pow(div(l,2),j),pow(x,add(a,j,-1)),pow(sub(1,x),sub(b,1))),factorial(i),beta(add(a,j),b)));return fi;}
+function noncentralbetadistcdf(a,b,l,x){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,div(mul(exp(div(l,-2)),pow(div(l,2),j),incompletebeta(x,add(a,j),b)),factorial(i)));return fi;}
+function noncentralbetadistmean(a,b,l){return div(mul(exp(div(l,-2)),gamma(add(a,1)),gamma(add(a,b)),hypg22(add(a,b),add(a,1),a,add(a,b,1),div(l,2))),gamma(a),gamma(add(a,b,1)))}
+function noncentralbetadistvar(a,b,l){return sub(div(mul(exp(div(l,-2)),gamma(add(a,2)),gamma(add(a,b)),hypg22(add(a,b),add(a,2),a,add(a,b,2),div(l,2))),gamma(a),gamma(add(a,b,2))),sqr(noncentralbetadistmean(a,b,l)))}
 
 function fourbetadistpdf(a,b,aa,c,y){return div(betadistpdf(y,a,b),sub(c,a))}
 function fourbetadistmean(a,b,aa,c){return div(add(mul(a,c),mul(b,aa)),add(a,b))}
@@ -31821,10 +37969,6 @@ function logitnormaldistcdf(m,s,x){return div(add(1,erf(div(sub(logit(x),m),sqrt
 //ADD https://en.wikipedia.org/wiki/Logit-normal_distribution moment generating and stuff
 function logitnormaldistmedian(m,s){return logit(m)}
 
-//https://en.wikipedia.org/wiki/Kent_distribution
-//https://en.wikipedia.org/wiki/Von_Mises%E2%80%93Fisher_distribution
-//https://en.wikipedia.org/wiki/Bingham_distribution
-//https://en.wikipedia.org/wiki/Marchenko%E2%80%93Pastur_distribution
 
 function kumaraswamydistpdf(a,b,x){return mul(a,b,pow(x,sub(a,2),pow(sub(1,pow(x,a)),sub(b,1))))}
 function kumaraswamydistcdf(a,b,x){return sub(1,pow(sub(1,pow(x,a)),b))}
@@ -31918,8 +38062,34 @@ function triangulardistentropy(a,b,c){return add(0.5,log(div(sub(b,a),2)))}
 function triangulardistmgf(a,b,c,t){return div(mul(2,add(mul(sub(b,c),exp(mul(a,t))),mul(-1,sub(b,a),exp(mul(c,t))),mul(sub(c,a),exp(mul(b,t))))),sub(b,a),sub(c,a),sub(b,c),t,t)}
 function triangulardistcf(a,b,c,t){return triangulardistmgf(a,b,c,mul(I,t)) }
 function triangulardistpgf(a,b,c,z){return triangulardistmgf(a,b,c,log(z))}
-//ADD https://en.wikipedia.org/wiki/Trapezoidal_distribution
-//https://en.wikipedia.org/wiki/Continuous_uniform_distribution
+
+function trapezoidaldistpdf(a,b,c,d,x){return (re(x)<b)? div(sub(x,a),0.5,sub(add(d,c),a,b),sub(b,a)) :(re(x)<c)? div(2,sub(add(d,c),a,b)) : div(sub(d,x),0.5,sub(add(d,c),a,b),sub(d,c)) }
+function trapezoidaldistcdf(a,b,c,d,x){return (re(x)<b)? div(sqr(sub(x,a)),sub(add(d,c),a,b),sub(b,a)) :(re(x)<c)? div(sub(mul(2,x),a,b),sub(add(d,c),a,b)) : sub(1,div(sqr(sub(d,x)),sub(add(d,c),a,b),sub(d,c))) }
+function trapezoidaldistmean(a,b,c,d){return div(sub(div(sub(cum(d),cum(c)),sub(d,c)),div(sub(cum(b),cum(a)),sub(b,a))),3,sub(add(d,c),b,a))}
+function trapezoidaldistvar(a,b,c,d){return sub(div(sub(div(sub(tesseract(d),tesseract(c)),sub(d,c)),div(sub(tesseract(b),tesseract(a)),sub(b,a))),6,sub(add(d,c),b,a)),sqr(trapezoidaldistmean(a,b,c,d)))}
+function trapezoidaldistentropy(a,b,c,d){return add(div(sub(add(b,d),c,a),2,sub(add(d,c),a,b)),log(div(sub(add(d,c),a,b),2)))}
+function trapezoidaldistmgf(a,b,c,d,t){return div(sub(div(sub(exp(mul(d,t)),exp(mul(c,t))),sub(d,c)),div(sub(exp(mul(b,t)),exp(mul(a,t))),sub(b,a))),sub(add(d,c),a,b),t,t,0.5)}
+function trapezoidaldistcf(a,b,c,d,t){return div(sub(div(sub(exp(mul(d,t,I)),exp(mul(c,t,I))),sub(d,c)),div(sub(exp(mul(I,b,t)),exp(mul(I,a,t))),sub(b,a))),sub(add(d,c),a,b),t,t,-0.5)}
+function trapezoidaldistcgf(a,b,c,d,t){return log(div(sub(div(sub(exp(mul(d,t)),exp(mul(c,t))),sub(d,c)),div(sub(exp(mul(b,t)),exp(mul(a,t))),sub(b,a))),sub(add(d,c),a,b),t,t,0.5))}
+function trapezoidaldistpgf(a,b,c,d,z){let t=log(z);return div(sub(div(sub(exp(mul(d,t)),exp(mul(c,t))),sub(d,c)),div(sub(exp(mul(b,t)),exp(mul(a,t))),sub(b,a))),sub(add(d,c),a,b),t,t,0.5)}
+
+function continuousuniformdistpdf(a,b,x){return (mag(sub(x,average(a,b)))<mag(div(sub(a,b),2)))?div(1,sub(b,a)):0}
+function continuousuniformdistcdf(a,b,x){return (mag(sub(x,average(a,b)))<mag(div(sub(a,b),2)))?div(sub(x,a),sub(b,a)):(div(sub(add(mul(unit(div(sub(x,average(a,b)),sub(b,a),0.5)),sub(b,a),0.5),average(a,b)),a),sub(b,a)))}
+function continuousuniformdistmean(a,b){return average(a,b)}
+function continuousuniformdistmedian(a,b){return average(a,b)}
+function continuousuniformdistvar(a,b){return div(sqr(sub(b,a)),12)}
+function continuousuniformdistmad(a,b){return div((sub(b,a)),4)}
+function continuousuniformdistskew(a,b){return 0}
+function continuousuniformdistexcesskurtosis(a,b){return -6/5}
+function continuousuniformdistkurtosis(a,b){return -6/5+3}
+function continuousuniformdistentropy(a,b){return log(sub(b,a))}
+function continuousuniformdistmgf(a,b,t){return div(sub(exp(mul(t,b)),exp(mul(t,a))),t,sub(b,a))}
+function continuousuniformdistcf(a,b,t){return div(sub(exp(mul(I,t,b)),exp(mul(I,t,a))),I,t,sub(b,a))}
+function continuousuniformdistcgf(a,b,t){return log(div(sub(exp(mul(t,b)),exp(mul(t,a))),t,sub(b,a)))}
+function continuousuniformdistpgf(a,b,t){return div(sub(exp(mul(log(t),b)),exp(mul(log(t),a))),log(t),sub(b,a))}
+
+
+
 function irwinhalldistpdf(n,x){let fi=math.complex(0,0);for(let k=0;k<=floor(re(x));k++)fi=add(fi,mul(pow(-1,k),ncr(n,k),pow(sub(x,k),sub(n,1))));return div(fi,gamma(n))}
 function irwinhalldistcdf(n,x){let fi=math.complex(0,0);for(let k=0;k<=floor(re(x));k++)fi=add(fi,mul(pow(-1,k),ncr(n,k),pow(sub(x,k),n)));return div(fi,factorial(n))}
 function irwinhalldistmean(n){return div(n,2)}
@@ -32008,6 +38178,7 @@ function generalizedgammadistvar(a,d,p){return mul(a,a,sub(div(gamma(div(add(d,2
 function generalizedgammadistentropy(a,d,p){return add(log(div(mul(a,gamma(div(d,p))),p)),div(d,p),mul(a,sub(div(1,p),div(d,p)),digamma(div(d,p))))}
 function generalizedgammadistrawmoment(a,d,p,r){return div(mul(pow(a,r),gamma(div(add(d,r),p))),gamma(div(d,p)))}
  
+
 //function exponentialdist
  
 function rayleighdistpdf(s,x){return div(mul(x,exp(div(sqr(x),-2,s,s))),s,s)}
@@ -32312,7 +38483,7 @@ function scaledinversechisquareddistmgf(v,tt,t){return div(mul(pow(div(mul(mul(v
 function scaledinversechisquareddistcf(v,tt,t){return div(mul(pow(mul(-0.5,I,mul(mul(v,tt),t)),div(v,4)),besselk(div(v,2),sqrt(mul(-2,mul(mul(v,tt),t),I)))),0.5,gamma(div(v,2)))}
 function scaledinversechisquareddistpgf(v,tt,z){return div(mul(pow(div(mul(mul(v,tt),log(z)),-2,I),div(v,4)),besselk(div(v,2),sqrt(mul(-2,mul(mul(v,tt),log(z)))))),0.5,gamma(div(v,2)))}
 
-//ADD function inversewishartdistpdf(v,x){return 1}
+
 
 function hyperbolicdistpdf(m,a,b,d,x){const c=sqrt(sub(sqr(a),sqr(b)));return div(mul(c,exp(add(mul(-1,a,sqrt(add(sqr(d),sqr(sub(x,m))))),mul(b,sub(x,m))))),2,a,d,besselk(1,mul(d,c)))}
 function hyperbolicdistmean(m,a,b,d){const c=sqrt(sub(sqr(a),sqr(b)));return add(m,div(mul(d,b,besselk(2,mul(d,c))),c,besselk(1,mul(d,c))))}
@@ -32857,11 +39028,6 @@ function lsstcgf(m,s,v,t){return add(mul(m,t),studentstcgf(v,mul(s,t)))}
 function lsstpgf(m,s,v,t){return studentstpgf(v,pow(t,s))}
 function lsstrawmoment(m,s,v,k){return add(mul(s,k,studentstrawmoment(v,k)),m)}
 
-function wishartpdf(v,S,X){let p=rows(S);let a=div(v,2);let mg=Array.from({length:p},(_,j)=>gamma(sub(a,div(j,2)))).reduce((u,w)=>u*w,1);mg=mul(mg,pow(pi(),mul(p,div(sub(p,1),4))));return div(mul(pow(determinant(X),div(sub(v,p,1),2)),exp(div(mul(-1,trace(mul(inv(S),X))),2))),mul(pow(2,mul(v,div(p,2))),pow(determinant(S),a),mg))}
-function wishartlogpdf(v,S,X){let p=rows(S);let a=div(v,2);let lg=mul(div(p,4),mul(p,sub(p,1)));let sumg=Array.from({length:p},(_,j)=>log(gamma(sub(a,div(j,2))))).reduce((u,w)=>u+w,0);return add(mul(div(sub(v,p,1),2),log(determinant(X))),mul(-0.5,trace(mul(inv(S),X))),mul(-mul(div(v,2),mul(p,log(2))),1),mul(-mul(a,log(determinant(S))),1),mul(-1,add(lg,sumg)))}
-function wishartmean(v,S){return mul(v,S)}
-function wishartmode(v,S){return mul(sub(v,add(rows(S),1)),S)}
-
 function noncentraltcdfhat(v,m,x){let fi=0;for(let j=0;j<bign;j++)fi = add(fi,mul(div(mul(exp(div(sqr(m),-2)),pow(div(sqr(m),2),j)),factorial(j)),regincbeta(div(sqr(x),add(sqr(x),v)),div(sqr(x),add(sqr(x),v)),add(j,0.5),div(v,2))),mul(div(mul(m,exp(div(sqr(m),-2)),pow(div(sqr(m),2),j)),sqrt(2),gamma(add(j,1.5))),regincbeta(add(j,1),div(v,2))));return add(ncdf(sub(0,m)),div(fi,2))}
 function noncentraltcdf(v,m,x){return (re(x)<0)?(sub(1,noncentraltcdfhat(v,sub(0,m),x))):(noncentraltcdfhat(v,m,x))}
 function noncentraltpdf(v,m,x){return mul(studentstpdf(v,x),exp(div(sqr(m),-2)),add(hypg11(div(add(v,1),2),0.5,div(mul(m,m,x,x),2,add(sqr(x),v))),div(mul(sqrt(2),m,x,gamma(add(div(v,2),1)),hypg11(add(div(v,2),1),1.5,div(mul(m,m,x,x),2,add(v,sqr(x))))),sqrt(add(sqr(x),v)),gamma(div(add(v,1),2)))))}
@@ -33039,7 +39205,6 @@ function polyweibullpdf(B,T,x){let fi=0;for(let i=0;i<leng(B);i++)fi=add(fi,div(
 function discretephasetypecdf(TA,T,x){return sub(1,matrixmul(rowmatrix(TA),matrixmul(matrixpower(T,k),colmatrix(Array(leng(T)).fill(1)))))}
 function discretephasetypepmf(TA,T,x){return matrixmul(TA,matrixmul(matrixpower(T,sub(k,1)),matrixadd(colmatrix(Array(leng(T)).fill(1)),matrixscal(matrixmul(T,colmatrix(Array(leng(T)).fill(1))),-1))))}
 
-
 /*
 function chisqrpdf(k,x){return div(mul(pow(x,sub(div(k,2),1)),exp(div(x,-2))),pow(2,div(k,2)),gamma(div(k,2)))}
 function chisqrcdf(k,x){return div(lincgamma(div(k,2),div(x,2)),gamma(div(k,2)))}
@@ -33076,22 +39241,260 @@ function inversechicdf(v,x){return div(incgamma(div(v,2),div(1,2,x)),gamma(div(v
 
 
 */
+//painleve2(x,0,0.5170,-0.064,0)
+function tracywidomqa(x){return painleve2(x,0,0.000108347393,-0.00024742066,5)}//return mul(sqrt(div(x,-2)),add(1,div(pow(x,-3),8),mul(pow(x,-6),-73/128),mul(pow(x,-9),10657/1024)))}//painleve2(x,0,0.8945,-1,0)}//return painleve2(sub(x),0,0.5170,-0.064,0)}
+function tracywidomq(x){return painleve2(x,0,0.000108347393,-0.00024742066,5)}
+function tracywidomp(x,o){return mul(sqr(tracywidomq(x)),sub(x,o))}
+function tracywidomf(x){return exp(div(add(integral(tracywidomp,x,2,x),0),-2))}
+function tracywidome(x){return exp(div(integral(tracywidomq,x,0),-2))}
+//return mul(pi(),sub(mul(ai(z),derv(gi,z)),mul(aip(z),gi(z))))//
+function tracywidom1cdf(x){return mul(tracywidome(x),tracywidomf(x))}
+function tracywidom2cdf(x){return sqr(tracywidomf(x))}
+function tracywidom4cdf(x){let e=tracywidome(x);return mul(0.5,tracywidomf(x),add(e,div(1,e)))}
+
+function tracywidom1pdf(x){return derv(tracywidom2cdf,x)}
+function tracywidom2pdf(x){return derv(tracywidom2cdf,x)}
+function tracywidom4pdf(x){return derv(tracywidom2cdf,x)}
+
+
+function normalexponentialgammadistpdfa(m,k,t,x){return mul(exp(div(sqr(sub(x,m)),4,t,t)),paraboliccylinderd(sub(-1,k,k),div(sabs(sub(x,m)),t)))}
+function normalexponentialgammadistpdf2(x,T){let [m,k,t]=T;return mul(exp(div(sqr(sub(x,m)),4,t,t)),paraboliccylinderd(sub(-1,k,k),div(sabs(sub(x,m)),t)))}
+function normalexponentialgammadistpdfn(m,k,t){return integral(normalexponentialgammadistpdf2,-bign,bign,[m,k,t])}
+function normalexponentialgammadistpdf(m,k,t,x){return div(normalexponentialgammadistpdfa(m,k,t,x),normalexponentialgammadistpdfn(m,k,t))}
+function normalexponentialgammadistmean(m,k,t){return m}
+function normalexponentialgammadistmedian(m,k,t){return m}
+function normalexponentialgammadistmode(m,k,t){return m}
+function normalexponentialgammadistvar(m,k,t){return div(sqr(t),sub(k,1))}
+function normalexponentialgammadistskew(m,k,t){return 0}
+
+
+function fishersnoncentralhypergeomtricdistpdf(m1,m2,n,w,x){let N=add(m1,m2);let fi=0;for(let i=maxc(0,sub(n,m2));i<=minc(n,m1);i++)fi=add(fi,mul(ncr(m1,i),ncr(m2,sub(n,i)),pow(w,i)));return div(mul(ncr(m1,x),ncr(m2,sub(n,x)),pow(w,x)),fi)}
+function fishersnoncentralhypergeomtricdistp(m1,m2,n,w,k){let N=add(m1,m2);let fi=0;for(let i=maxc(0,sub(n,m2));i<=minc(n,m1);i++)fi=add(fi,mul(ncr(m1,i),ncr(m2,sub(n,i)),pow(w,i),pow(i,k)));return fi}
+
+function fishersnoncentralhypergeomtricdistmode(m1,m2,n,w){let N=add(m1,m2);return floor(div(mul(add(m1,1),add(n,1),w),-0.5,sub(add(m1,n,mul(-1,N),mul(-1,w,add(m1,n,2))),sqrt(sub(add(m1,n,mul(-1,N),mul(-1,w,add(m1,n,2))),mul(4,sub(w,1),mul(add(m1,1),add(n,1),w)))))))}
+function fishersnoncentralhypergeomtricdistmean(m1,m2,n,w){return div(fishersnoncentralhypergeomtricdistp(m1,m2,n,w,1),fishersnoncentralhypergeomtricdistp(m1,m2,n,w,0))}
+function fishersnoncentralhypergeomtricdistvar(m1,m2,n,w){return sub(div(fishersnoncentralhypergeomtricdistp(m1,m2,n,w,2),fishersnoncentralhypergeomtricdistp(m1,m2,n,w,0)),sqr(div(fishersnoncentralhypergeomtricdistp(m1,m2,n,w,1),fishersnoncentralhypergeomtricdistp(m1,m2,n,w,0))))}
+
+
+function  cantorcdf(x){return cantor(clamp(x))}
+
+function cosinepdf(x){return div(add(1,cos(x)),2,pi())}
+function cosinecdf(x){return div(add(pi(),x,sin(x)),2,pi())}
+//ADD CHI BAR SQR
+
+
+function davispdf(m,b,n,x){return div(mul(pow(b,n),pow(sub(x,m),sub(-1,n))),gamma(n),zeta(n),sub(exp(div(b,sub(x,m))),1))}
+
+function zeromodifiedlognormalpdf(m,s,p,x){return mul(sub(1,p),div(exp(div(sqr(sub(log(x),m)),-2,s,s)),x,s,sqrt(2),sqrt(pi())))}
+
+
+function demoivrepdf(x){if(mag(sub(x,50))<50)return 0.01;return 0;}
+function demoivrecdf(x){return clamp(div(x,100));}
+
+function generalizedextremevaluecdf(m,s,c,x){return exp(mul(-1,pow(add(1,div(mul(c,sub(x,m)),s)),div(-1,c))))}
+
+function factorialdistpdf(q,x){return div(sqr(ncr(q,x)),ncr(mul(2,q),q))}
+
+function ferrerig(a,b,c,q,p){let fi=0;for(let j=1;j<bign;j++)fi=add(fi,mul(pow(sub(0,c),sub(j,1)),exp(mul(-1,j,a)),pow(j,sub(-1,p))));return mul(fi,factorial(p))}
+function ferreripdf(a,b,c,q,x){return div(sqrt(b),add(div(exp(add(a,mul(b,sqr(sub(x,q))))),ferrerig(a,b,c,q,-1.5)),c))}
+//ADD eulerian dist
+
+
+function fisherzpdf(z,l,a,c,x){return div(sub(eulerc(),div(mul(a,sub(x,z)),l)),beta(a,c),sabs(l),pow(add(1,div(mul(eulerc(),sub(x,z)),l)),add(a,c)))}
+
+function fiskpdf(l,k,x){return div(mul(l,k,pow(mul(l,x),sub(k,1))),sqr(add(1,pow(mul(l,x),k))))}
+function fiskcdf(l,k,x){return div(pow(mul(l,x),k),add(1,pow(mul(l,x),k)))}
+
+function floryschulzpmf(a,x){return mul(a,a,x,pow(sub(1,a),sub(x,1)))}
+function floryschulzcdf(a,x){return sub(1,mul(pow(sub(1,a),x),add(1,mul(a,x))))}
+function floryschulzmean(a){return div(2,a)}
+function floryschulzmode(a){return div(1,log(sub(1,a)))}
+function floryschulzvar(a){return div(sub(1,a),a)}
+
+function gammanormalpdf(m,s,v,w,t,x){let m0=x;let s2=div(sub(x,m),s);return div(mul(2,sqrt(t),exp(div(mul(t,sqr(sub(m,m0))),-2,s,s)),pow(div(mul(v,s2,s2),2),div(w,2)),exp(div(mul(v,s2,s2),-2,s,s))),sqrt(2),sqrt(pi()),gamma(div(v,2)),pow(s,add(v,1)))}
+
+function gammapoissonpdf(a,b){return div(mul(gamma(add(x,b)),pow(a,x)),factorial(x),gamma(b),pow(add(1,a),add(b,x)))}
+
+function ghoshdistpdf(k,x){return div(mul(2,pow(x,k),exp(mul(-1,sqr(x)))),gamma(add(k,1)))}
+
+function gompertzmakehampdf(c,d,k){return mul(add(c,mul(d,pow(k,x))),exp(div(add(mul(c,x),mul(d,sub(pow(k,x),1))),-1,log(k))))}
+//function gompertzmakegamcdf(c,) fuck it
+function halphenfactoriald(x,T){let [v,a]=T;return mul(exp(add(mul(-1,x,x),mul(a,x))),pow(x,add(v,v,-1)))}
+function halphenfactorial(v,a){return mul(2,integral(halphenfactoriald,0,sqrt(bign),[v,a]))}
+
+function halphenapdf(a,v,m,x){return div(mul(pow(x,sub(v,1)),exp(mul(-1,a,add(div(x,m),div(m,x))))),2,pow(m,v),besselk(v,mul(2,a)))}
+function halphenbpdf(a,v,m,x){return div(mul(pow(x,add(v,v,-1)),exp(add(mul(-1,sqr(div(x,m))),mul(a,div(x,m))))),pow(m,mul(2,v)),halphenfactorial(v,a))}
 
 
 
+function gramcharlierpdf(k,x){return mul(pow(mul(2,pi()),-0.5),div(sub(1,k),6,sub(mul(3,x),sqr(x))),exp(div(-1,2,x,x)))}
+
+//https://www.statisticshowto.com/inverse-normal-distribution/
+function generalizedinversenormalpdfu(a,c,s,x){return mul(exp(div(sqr(add(a,mul(c,x))),-2,s,s)),pow(x,sub(-1,a)))}
+function generalizedinversenormalpdfu2(x,R){let [a,c,s]=R;return mul(exp(div(sqr(add(a,mul(c,x))),-2,s,s)),pow(x,sub(-1,a)))}
+function generalizedinversenormalpdf(a,c,s,x){return div(generalizedinversenormalpdfu(a,c,s,x),integral(generalizedinversenormalpdfu2,-sqrt(bign),sqrt(bign),[a,c,s,x]))}
+
+function generalizedinversenormal2pdf(m,s,x){return mul(div(s,pi()),exp(div(sqr(mul(m,x)),-2,s,s)),pow(x,-2))}
 
 
+function lahapdf(x){return div(sqrt(2),pi(),add(1,tesseract(x)))}
+function lahadistpdf(m,sx){return div(mul(sqrt(2),pow(s,3)),pi(),add(tesseract(s),tesseract(sub(x,m))))}
+
+function lindleypdf(t,x){return div(mul(t,t,add(1,x),exp(mul(-1,t,x))),add(t,1))}
+function lindleycdf(t,x){return sub(1,div(mul(exp(mul(-1,t,x)),add(1,t,mul(t,x))),add(1,t)))}
+//maybe add https://www.statisticshowto.com/lindley-distribution/ the moment stuff df
+
+function kummerpdf(a,b,c,d,x){return div(mul(div(gamma(a),pow(d,a),kummeru(a,sub(a,-1,c),div(b,d))),pow(x,sub(a,1)),exp(mul(-1,b,x))),pow(add(1,mul(d,x)),c))}
+
+
+function mielkebetakappapdf(k,t,m,b,x){return div(mul(k,pow(div(sub(x,m),b),sub(k,1))),b,pow(add(1,pow(div(sub(x,m),b),t)),add(1,div(k,t))))}
+
+function modifiedgeometriccdf(p,x){return add(1,mul(-1,pow(sub(1,p),x)),mul(p,pow(sub(1,p),x)))}
+
+function polyapdf(nn,n,m,r,c,x){return div(mul(ncr(add(div(r,c),x,-1),x),ncr(add(div(sub(nn,r),c),n,-1,sub(0,x)),sub(n,x))),ncr(add(div(nn,c),n,1),n))}
+
+function parabolicdist2pdf(m,s,x){return div(1,add(div(sqr(sub(x,m)),s,s)))}
+
+function sinpdf(x){return div(cos(x),2)}
+function standartsincdf(x){return div(mul(pi(),sin(mul(pi(),z))),2)}
+//ADD kapetyn and generalized errordist 1 2 
+
+//may ADD https://www.statisticshowto.com/stuttering-poisson-distribution/
+
+function sibuyapdf(a,x){return sub(1,pow(sub(1,exp(sub(0,x))),a))}
+function sibuyacdf(a,x){return sub(1,div(1,x,beta(x,sub(1,a))))}
+function discretesibuyapdf(a,x){return mul(ncr(a,x),pow(-1,sub(x,1)))}
+
+function tine(x){return mul(div(2,x,x),sub(1,cos(x)))}
+function tinepdf(x){return (re(x)<0)?add(x,1):sub(1,x)}
+
+
+function tweediecumulant(p,t){if(p==1)return exp(t);if(p==2)return sub(0,log(sub(0,t)));let a=div(sub(p,2),sub(p,1));return div(mul(sub(a,1),pow(div(t,sub(a,1)),a)),a)}
+function tweediepdfd(z,T){let [a,p,t,s]=T;return exp(div(sub(mul(t,z),weediecumulant(a,p,t)),s,s))}
+function tweediepdf(a,p,t,s,x0,x1,x){return div(integral(tweediepdfd,x0,x,[a,p,t,s]),integral(tweediepdfd,x1,x,[a,p,t,s]))}
+
+
+function exponentiatedexponentialcdf(a,l,x){return pow(sub(1,exp(mul(-1,l,x))),a)}
+function exponentiatedexponentialpdf(a,l,x){return mul(a,l,exp(mul(-1,l,x)),pow(sub(1,exp(mul(-1,l,x))),sub(a,1)))}
+
+function exponentiatedweibullcdf(k,l,a,x){return pow(sub(1,exp(pow(div(x,l,-1),k))),a)}
+function exponentiatedweibullpdf(k,l,a,x){return div(mul(a,k,pow(div(x,l),sub(k,1)),pow(sub(1,exp(pow(div(x,l,-1),k))),sub(a,1)),exp(pow(div(x,l,-1),k))),l)}
+
+function bradfordpdf(b,x){return div(div(b,log(add(1,b))),add(1,mul(b,x)))}
+
+function beckmannpdf(s,ts,t){return mul(div(1,4,pi(),s,s),exp(div(sub(sqr(tan(t)),sqr(tan(ts))),-2,s,s)))}
+function discretebetageometricpmf(a,b,x){return div(beta(add(a,1),add(x,b)),beta(a,b))}
+function betageometricpdf(a,b,x){return div(beta(add(a,1),add(x,b,-1)),beta(a,b))}
+
+
+function watsonpdf(c,k,t){return div(exp(mul(k,sqr(cos(t)))),c)}
+
+function complexwatsonpdf(k,kk,t){return div(exp(mul(k,sqr(cos(t)))),div(mul(hypg11(1,sub(k,1),kk),2,pow(pi(),sub(k,1))),factorial(sub(k,2))))}
+
+//https://www.jstor.org/stable/2680713?read-now=1&seq=8
+function offsetnormaldist(k,kk,p){return mul(hypg11(sub(2,k),1,mul(-1,kk,sqr(cos(p)))),exp(mul(-1,kk,sqr(sin(p)))))}
 
 ////MULTIVARIATE
 
+function binghampdf(n,M,Z,X){return matrixmul(matrixinverse(matrixhypergeometric([1/2],[div(n,2)],Z)),exp(trace(matrixmul(Z,matrixmul(transpose(M),matrixmul(X,matrixmul(transpose(X),M)))))))}
+
+//ADD
+//https://en.wikipedia.org/wiki/Kent_distribution
+//https://en.wikipedia.org/wiki/Von_Mises%E2%80%93Fisher_distribution
+
+//https://en.wikipedia.org/wiki/Marchenko%E2%80%93Pastur_distribution
+
+
+function vonmisesfisherpdf(M,k,X){let p=sub(leng(X),1);return mul(div(pow(k,sub(div(p,2),1)),pow(mul(2,pi()),div(p,2)),besseli(sub(div(p,2),1),k)),exp(matrixmul(transpose(M),X)))}
+
+
+//THE BIG one
+
+function logdgrandunifieddistp(x,C){let [n,a,s,b,A,B]=C
+let nom=0;for(let i=0;i<leng(A);i++)nom=add(nom,mul(g(A,i),pow(div(sub(x,a),s),mul(i,b,n))))
+let dom=0;for(let i=0;i<leng(B);i++)dom=add(dom,mul(g(B,i),pow(div(sub(x,a),s),mul(i,b,n))))
+return div(mul(-1,sabs(div(b,s)),div(nom,dom)),div(sub(x,a),s))
+}
+/* ADD
+Extended Pearson distribution
+Inverse Gaussian Distribution
+Reciprocal inverse Gaussian distribution
+Halphen distribution
+!Hyperbola distribution
+!Halphen B distribution
+!Inverse Halphen B distribution
+!Sichel distribution
+!Libby-Novick distribution
+?Gauss hypergeometric distribution
+?Confluent hypergeometric distribution
+!Generalized Halphen distribution
+!Generalized Sichel distribution
+*/
+
+function grandunifieddistpdf(n,s,a,b,A,B,x0,x){return exp(integral(logdgrandunifieddistp,x0,x,[n,a,s,b,A,B]))}
+
+function extendedpearsonpdf(a0,a1,a2,b0,b1,b2,x){return grandunifieddistpdf(1,0,1,1,[a0,a1,a2],[b0,b1,b2],0,x)}
+
+
+
+function multivariatefishersnoncentralhypergeomtricdistpmfu(M,n,W,X){let N=gsum(M);let c=leng(X);let fi=1;for(let i=0;i<c;i++)fi=mul(fi,ncr(g(M,i),g(X,i)),pow(g(W,i),g(X,i)))}
+function multivariatefishersnoncentralhypergeomtricsafedistpmfu(M,W,X){let N=gsum(M);let c=leng(X);let fi=1;for(let i=0;i<c;i++)fi=mul(fi,ncr(g(M,i),g(X,i)),pow(g(W,i),g(X,i)))}
+
+ function normalgammadistpdf(m,l,a,b,x,t){/*MULTİVAR XT*/return div(mul(pow(b,a),sqrt(l),pow(t,sub(a,0.59),exp(mul(-1,b,t)),exp(div(mul(l,t,sqr(sub(x,m))),-2)))),gamma(a),sqrt(2),sqrt(pi()))}
+function normalgammadistmean(m,l,a,b){/*MULTİVAR XT*/return [m,div(a,b)]}
+function normalgammadistmode(m,l,a,b){/*MULTİVAR XT*/return [m,div(sub(a,0.5),b)]}
+function normalgammadistvar(m,l,a,b){/*MULTİVAR XT*/return [div(b,l,sub(a,1)),div(a,b,b)]}
+
+function normalinversegammadistpdf(m,l,a,b,x,ss){/*MULTİVAR XS^2*/return div(mul(sqrt(l),pow(b,a),pow(div(1,ss),add(a,1)),exp(div(add(b,b,mul(l,sqr(sub(x,m)))),-2,ss))),sqrt(mul(2,pi(),ss)),gamma(a))}
+function normalinversegammadistcdf(m,l,a,b,x,ss){/*MULTİVAR XS^2*/return div(mul(exp(div(b,-1,ss)),pow(div(b,ss,-1),a),add(1,erf(div(mul(sqrt(l),sub(x,m)),sqrt(mul(ss,2)))))),2,ss,gamma(a))}
+function normalinversegammadistmean(m,l,a,b){/*MULTİVAR XS^2*/return [m,div(b,sub(a,1))]}
+function normalinversegammadistmode(m,l,a,b){/*MULTİVAR XS^2*/return [m,div(b,add(a,1,div(1,2)))]}
+function normalinversegammadistvar(m,l,a,b){/*MULTİVAR XS^2*/return [div(b,l,sub(a,1)),div(sqr(b),sqr(sub(a,1)),sub(a,2))]}
+
+
+function multivariatenormalinversegammadistpdf(M,V,a,b,X,ss){let k=leng(X);return mul(pow(determinant(V),-0.5),pow(mul(2,pi()),div(k,-2)),div(pow(b,a),gamma(a)),pow(ss,sub(-1,a,div(k,2))),exp(div(add(b,b,matrixmul(transpose(vectorsub(X,M)),matrixmul(matrixinverse(V),vectorsub(X,M)))),-2,ss)))}
+function multivariatenormalinversegammadistmode(m,l,a,b){let k=leng(X);return [M,div(b,add(a,1,div(1,k)))]}
 //function multinomialpdf(N,k,P,X){let fi=0;for(let i=0;i<leng(X);i++)fi=add(fi,);return fi}
-//^this is uh templemplste
 
 
 //A_j is number of allels size j
 function ewenspdf(t,A){let fi=0;for(let j=0;j<leng(A);j++)fi=add(fi,div(pow(t,g(A,j)),pow(j,g(A,j)),factorial(g(A,j))));return div(mul(fi,factorial(leng(A))),pochammer(t,leng(A)))}
-
-
+/*
+//determinant(stiefelpdf(5,[[1,0,0],[0,1,0],[0,0,x]]))
+function stiefelpdf(N,Q){
+    let p=leng(Q)
+    let s=0
+    let pl=0.1;
+  let norm=div(1,mul(pow(2,p-1),pow(pi(),sub(div(1,2),p-1)),multivariategamma(p,div(p,2))));
+  let fi=matrixsub(Q,Q);
+  function recurse(lvec,idx,remaining){
+    if(idx==p-1){
+      let lp=remaining; 
+   //   console.log(lvec)
+      if(lvec.length==0 || re(g(lvec,lvec.length-1))>lp){
+        let X=[...lvec,lp];
+        let Xmat=diagonalmatrix(X);
+        let vand=1;
+        for(let i=0;i<p;i++) for(let j=i+1;j<p;j++) vand=mul(vand,sub(g(X,i),g(X,j)));
+        let val=matrixmul(
+          matrixhypergeometric([],[],matrixsub(Q,mul(-1,I,Xmat))),
+          pow(matrixhypergeometric([div(N,2)],[div(p,2)],mul(I,Xmat,div(1,N))),N),
+          vand
+        );
+        //console.log(val)
+        s+=1;
+        fi=matrixadd(fi,val);
+      }
+      return;
+    }
+    let start=(lvec.length==0)?remaining:sub(g(lvec,lvec.length-1),0.01);
+    for(let lam=start;lam>-remaining;lam-=pl){ 
+      recurse([...lvec,lam],idx+1,sub(remaining,lam));
+    }
+  }
+  recurse([],0,1); 
+  return matrixscal(fi,div(norm,div(s,pl)));
+}*/
 
 
 function multinomialpdf(N,k,P,X){let fi=1;for(let i=0;i<leng(P);i++)fi=mul(fi,div(pow(g(P,i),g(X,i)),factorial(g(X,i))));return mul(fi,factorial(leng(P)))}
@@ -33115,8 +39518,13 @@ function multinomialdirichletcgf(n,A,T){let a=gsum(A);return log(multinomialdiri
 function multinomialdirichletpgf(n,A,T){let a=gsum(A);return multinomialdirichletmgf(n,a,A,vectormap(log,T))}
 
  
-    
-////MATRIX MULTIVALURD
+function inverteddirichlet(N,X){let a=gsum(N),f=1;for(let i=0;i<sub(leng(N),1);i++)f=mul(f,pow(g(X,i),sub(g(N,i),1)));return mul(div(gamma(a),gprod(vectormap(gamma,N))),f,pow(add(1,gsum(X)),sub(0,a)))}
+function dirichletnegativemultinomialpdf(a0,x0,A,X){let fi=1;for(let i=0;i<leng(X);i++)fi=mul(fi,div(gamma(add(g(X,i),g(A,i))),factorial(g(X,i)),gamma(g(A,i))));return div(mul(beta(add(x0,gsum(X)),add(a0,gsum(A))),fi),beta(x0,a0))}
+function dirichletnegativemultinomialmean(a0,x0,A){return vectorscal(A,div(x0,sub(a0,1)))}
+function dirichletnegativemultinomialcf(a0,x0,A){return div(mul(beta(add(x0,gsum(X)),add(a0,gsum(A))),generalizedlauricellad(x0,A,add(x0,ao,gsum(A))),vectormap(x=>exp(mul(I,x)),T)),beta(x0,a0))}
+function dirichletnegativemultinomialmgf(a0,x0,A){return div(mul(beta(add(x0,gsum(X)),add(a0,gsum(A))),generalizedlauricellad(x0,A,add(x0,ao,gsum(A))),vectormap(x=>exp(x),T)),beta(x0,a0))}
+function dirichletnegativemultinomialcgf(a0,x0,A){return log(div(mul(beta(add(x0,gsum(X)),add(a0,gsum(A))),generalizedlauricellad(x0,A,add(x0,ao,gsum(A))),vectormap(x=>exp(x),T)),beta(x0,a0)))}
+function dirichletnegativemultinomialpgf(a0,x0,A){return div(mul(beta(add(x0,gsum(X)),add(a0,gsum(A))),generalizedlauricellad(x0,A,add(x0,ao,gsum(A))),vectormap(x=>x,T)),beta(x0,a0))}
 
 
 //LKJ
@@ -33137,6 +39545,130 @@ function multivariatenormalmgf(M,S,T){return exp(add(matrixmul(transpose(M),T),d
   
   
   //multivariatenormalmgf([4,2],[[1,2],[3,4]],[5,6])  
+function multivariatenegativepdf(P,X){let fi=1;for(let i=1;i<leng(X);i++)fi=mul(fi,div(pow(g(P,i),g(X,i)),factorial(g(X,i))));return div(mul(gamma(gsum(X)),pow(g(P,0),g(X,0)),fi),gamma(g(X,0)))}
+function multivariatenegativemean(P,x0){return vectorscal(P,div(x0,g(P,0)))}
+function multivariatenegativemgf(P,x0,T){let t=0;for(let i=1;i<leng(T);i++)t=add(t,mul(g(P,i),exp(mul(g(T,i)))));return pow(div(g(P,0),sub(1,t)),x0)}
+function multivariatenegativecf(P,x0,T){let t=0;for(let i=1;i<leng(T);i++)t=add(t,mul(g(P,i),exp(mul(I,g(T,i)))));return pow(div(g(P,0),sub(1,t)),x0)}
+function multivariatenegativecgf(P,x0,T){let t=0;for(let i=1;i<leng(T);i++)t=add(t,mul(g(P,i),exp(mul(g(T,i)))));return log(pow(div(g(P,0),sub(1,t)),x0))}
+function multivariatenegativepgf(P,x0,T){let t=0;for(let i=1;i<leng(T);i++)t=add(t,mul(g(P,i),exp(log(g(T,i)))));return pow(div(g(P,0),sub(1,t)),x0)}
+
+function generalizedmultivariatedirichletwong(A,C,X){let fi=1,S=0;for(let i=0;i<leng(X);i++){S=add(S,g(X,i));fi=mul(fi,div(mul(pow(g(X,i),sub(g(A,i),1)),pow(sub(1,S),sub(g(C,i),1))),beta(g(A,i),add(gsum(A.slice(i+1)),g(C,i)))))}return fi}
+function generalizedmultivariatedirichlet(A,R){let num=[],den=[];for(let i=0;i<leng(A);i++){num.push(add(g(A,i),g(R,i)));den.push(g(A,i))}return div(multivariablebeta(num),multivariablebeta(den))}
+function generalizeddirichletwongmoment(A,C,R){let M=1;for(let i=0;i<leng(A);i++){let bi=add(gsum(A.slice(i+1)),g(C,i)),sumR=gsum(R.slice(i+1));M=mul(M,div(beta(add(g(A,i),g(R,i)),add(bi,sumR)),beta(g(A,i),bi))) }return M}
+function dirichletpdf(A,X){let f=1;for(let i=0;i<leng(X);i++)f=mul(f,pow(g(X,i),sub(g(A,i),1)));return div(f,multivariablebeta(A))}
+
+function multivariablebeta(A){
+    let num = 1;
+    for(let i=0;i<A.length;i++) num =mul(num,gamma(g(A,i)));
+    return div( num , gamma(A.reduce((s,a)=>add(s,a),0)));
+}
+
+//multivariatelaplace([],[[1,2],[3,4]],[xx,yy])
+function multivariatelaplacepdf(M,S,X){let Y=vectorsub(X,M);let v=div(sub(2,leng(X)),2);return div(mul(pow(div(matrixmul(transpose(X),matrixmul(matrixinverse(S),X)),2),div(v,2)),besselk(v,sqrt(mul(2,matrixmul(transpose(X),matrixmul(matrixinverse(S),X)))))),0.5,pow(mul(2,pi()),div(leng(X),2)),sqrt(determinant(S)))}
+function multivariatelaplacemean(M,S){return M}
+function multivariatelaplacemode(M,S){return M}
+function multivariatelaplacevar(M,S){return S}
+function multivariatelaplacfirieskew(M,S){return 0}
+function multivariatelaplaceskew(M,S){return 0}
+function multivariatelaplacecf(M,S,T){return div(exp(mul(I,matrixmul(transpose(M),T))),add(1,div(matrixmul(transpose(T),matrixmul(S,T)),2)))}
+function multivariatelaplacemgf(M,S,T){return div(exp(mul(matrixmul(transpose(M),T))),add(1,div(matrixmul(transpose(T),matrixmul(S,T)),2)))}
+function multivariatelaplacepgf(M,S,R){let T=vectormap(log,R);return div(exp(mul(matrixmul(transpose(M),T))),add(1,div(matrixmul(transpose(T),matrixmul(S,T)),2)))}
+function multivariatelaplacecgf(M,S,T){return log(div(exp(mul(matrixmul(transpose(M),T))),add(1,div(matrixmul(transpose(T),matrixmul(S,T)),2))))}
+
+function asymmultivariatelaplace(M,S,B,X){let Y=vectorsub(X,M);let q=matrixmul(transpose(Y),matrixmul(matrixinverse(S),Y));let v=div(sub(2,leng(X)),2);let t=matrixmul(transpose(B),Y);let k=add(2,matrixmul(transpose(B),matrixmul(S,B)));return div(mul(exp(t),pow(div(q,k),div(v,2)),besselk(v,sqrt(mul(k,q)))),pow(mul(2,pi()),div(leng(X),2)),sqrt(determinant(S)))}
+function multivariatelaplacemean(M,S){return M}
+function multivariatelaplacevar(M,S){return vectoradd(S,vectormul(transpose(M),M))}
+function asymmultivariatelaplacecf(M,S,B,T){return div(exp(mul(I,matrixmul(transpose(M),T))),sub(1,add(mul(I,matrixmul(transpose(B),T)),div(matrixmul(transpose(T),matrixmul(S,T)),2))))}
+function asymmultivariatelaplacemgf(M,S,B,T){return div(exp(matrixmul(transpose(M),T)),sub(1,add(matrixmul(transpose(B),T),div(matrixmul(transpose(T),matrixmul(S,T)),2))))}
+function asymmultivariatelaplacepgf(M,S,B,R){let T=vectormap(log,R);return div(exp(matrixmul(transpose(M),T)),sub(1,add(matrixmul(transpose(B),T),div(matrixmul(transpose(T),matrixmul(S,T)),2))))}
+function asymmultivariatelaplacecgf(M,S,B,T){return sub(matrixmul(transpose(M),T),log(sub(1,add(matrixmul(transpose(B),T),div(matrixmul(transpose(T),matrixmul(S,T)),2)))))} 
+
+function inverteddirichletpdf(N,X){let a=gsum(N),f=1;for(let i=0;i<sub(leng(N),1);i++)f=mul(f,pow(g(X,i),sub(g(N,i),1)));return mul(div(gamma(a),gprod(vectormap(gamma,N))),f,pow(add(1,gsum(X)),sub(0,a)))}
+function inverteddirichletlogpdf(N,X){let a=gsum(N),s=0;for(let i=0;i<sub(leng(N),1);i++)s=add(s,mul(sub(g(N,i),1),log(g(X,i))));return add(sub(log(gamma(a)),gsum(vectormap(log,vectormap(gamma,N)))),add(s,mul(sub(0,a),log(add(1,gsum(X))))))}
+
+function multivariatetpdf(M,S,n,X){let Y=vectorsub(X,M);let p=leng(X);let q=matrixmul(transpose(Y),matrixmul(matrixinverse(S),Y));return div(mul(gamma(div(add(n,p),2)),pow(add(1,div(q,n)),sub(0,div(add(n,p),2)))),mul(gamma(div(n,2)),pow(mul(n,pi()),div(p,2)),sqrt(determinant(S))))}
+function multivariatetmean(M,S,n){return M}
+function multivariatetmedian(M,S,n){return M}
+function multivariatetmode(M,S,n){return M}
+function multivariatetvar(M,S,n){return matrixscal(S,div(v,sub(v,2)))}
+function multivariatetskew(M,S,n){return 0}
+
+function ellipticalmultivariatet(n,X){let p=leng(X);let q=matrixmul(transpose(X),X);return div(mul(gamma(div(add(n,p),2)),pow(add(1,div(q,n)),sub(0,div(add(n,p),2)))),mul(gamma(div(n,2)),pow(mul(n,pi()),div(p,2))))}
+function radialmultivariatet(n,p,r2){return div(mul(pow(div(p,n),div(p,2)),pow(r2,sub(div(p,2),1)),pow(add(1,mul(div(p,n),r2)),sub(0,div(add(p,n),2)))),beta(div(p,2),div(n,2)))}
+function rankreducedmultivariatet(T,M,S,n,c,Y){let m=leng(Y);let C=add(matrixmul(T,M),c);let Q=matrixmul(transpose(sub(Y,C)),matrixmul(matrixinverse(matrixmul(T,matrixmul(S,transpose(T)))),sub(Y,C)));return div(mul(gamma(div(add(n,m),2)),pow(add(1,div(Q,n)),sub(0,div(add(n,m),2)))),mul(gamma(div(n,2)),pow(mul(n,pi()),div(m,2)),sqrt(determinant(matrixmul(T,matrixmul(S,transpose(T)))))))}
+
+function matrixtpdf(M,S,O,n,v,X){let p=leng(M);let Y=matrixsub(X,M);let A=add(identity(p),matrixmul(matrixinverse(S),matrixmul(Y,matrixmul(matrixinverse(O),transpose(Y)))));return div(multivariategamma(p,div(add(v,n,p,sub(0,1)),2)),mul(pow(pi(),div(mul(n,p),2)),multivariategamma(p,div(add(v,p,sub(0,1)),2)),pow(determinant(O),div(n,2)),pow(determinant(S),div(p,2)),pow(determinant(A),div(add(v,n,p,sub(0,1)),2))))}
+function matrixtmean(M,S,O,n,v){return M}
+function matrixtmean(M,S,O,n,v){return M}
+//function matrixtvar(M,S,O,n,v){return matrixscal(matrix,div(1,sub(v,2)))}
+
+function reparammatrixtpdf(M,S,O,a,b,X){let p=leng(M);let n=leng(X[0]);let Y=matrixsub(X,M);let A=add(identity(n),mul(div(b,2),matrixmul(matrixinverse(S),matrixmul(Y,matrixmul(matrixinverse(O),transpose(Y))))));return div(multivariategamma(p,add(a,div(n,2))),mul(pow(div(mul(2,pi()),b),div(mul(n,p),2)),multivariategamma(p,a),pow(determinant(O),div(n,2)),pow(determinant(S),div(p,2)),pow(determinant(A),add(a,div(n,2)))))}
+function reparammatrixtmean(M,S,O,a,b,X){return M}
+
+function multivariategamma(p,a){return div(mul(pow(pi(),mul(0.25,p,sub(p,1))),barnesg(add(a,0.5)),barnesg(add(a,1))),barnesg(add(a,div(sub(1,p),2))),barnesg(add(a,1,div(p,-2))))}
+function multivariateloggamma(p,a){return log(div(mul(pow(pi(),mul(0.25,p,sub(p,1))),barnesg(add(a,0.5)),barnesg(add(a,1))),barnesg(add(a,div(sub(1,p),2)))),barnesg(add(a,1,div(p,-2))))}
+function multivariateloggammabraid(a,p){return log(div(mul(pow(pi(),mul(0.25,p,sub(p,1))),barnesg(add(a,0.5)),barnesg(add(a,1))),barnesg(add(a,div(sub(1,p),2)))),barnesg(add(a,1,div(p,-2))))}
+function multivariatedigamma(p,a){return derv2(multivariateloggammabraid,a,p)}
+function multivariatepolygamma(p,n,a){return fractionalderiv2(multivariateloggammabraid,a,n,p)}
+function multivariatebeta(p,a,b){return div(mul(multivariategamma(p,a),multivariategamma(p,b)),multivariategamma(p,add(a,b)))}
+
+function matrixgammapdf(a,b,S,X){return div(mul(pow(determinant(S),sub(0,a)),pow(determinant(X),sub(a,div(add(leng(X),1),2))),exp(trace(matrixscal(matrixmul(matrixinverse(S),X),div(-1,b))))),pow(b,mul(a,leng(X))),multivariategamma(leng(X),a))}
+
+function inversematrixgammapdf(a,b,P,X){return div(mul(pow(determinant(P),a),pow(determinant(X),sub(0,a,div(add(leng(X),1),2))),exp(trace(matrixscal(matrixmul(P,X),div(-1,b))))),pow(b,mul(a,leng(X))),multivariategamma(leng(X),a))}
+
+
+function wishartpdf(v,S,X){let p=rows(S);let a=div(v,2);let mg=Array.from({length:p},(_,j)=>gamma(sub(a,div(j,2)))).reduce((u,w)=>u*w,1);mg=mul(mg,pow(pi(),mul(p,div(sub(p,1),4))));return div(mul(pow(determinant(X),div(sub(v,p,1),2)),exp(div(mul(-1,trace(mul(inv(S),X))),2))),mul(pow(2,mul(v,div(p,2))),pow(determinant(S),a),mg))}
+function wishartlogpdf(v,S,X){let p=rows(S);let a=div(v,2);let lg=mul(div(p,4),mul(p,sub(p,1)));let sumg=Array.from({length:p},(_,j)=>log(gamma(sub(a,div(j,2))))).reduce((u,w)=>u+w,0);return add(mul(div(sub(v,p,1),2),log(determinant(X))),mul(-0.5,trace(mul(inv(S),X))),mul(-mul(div(v,2),mul(p,log(2))),1),mul(-mul(a,log(determinant(S))),1),mul(-1,add(lg,sumg)))}
+function wishartmean(v,S){return mul(v,S)}
+function wishartmode(v,S){return mul(sub(v,add(rows(S),1)),S)}
+function wishartcf(v,S,T){return pow(determinant(sub(identitymatrix(leng(T)),matrixscal(matrixmul(T,V),mul(2,I)))),div(n,-2))}
+function wishartmgf(v,S,T){return pow(determinant(sub(identitymatrix(leng(T)),matrixscal(matrixmul(T,V),2))),div(n,-2))}
+function wishartcgf(v,S,T){return log(pow(determinant(sub(identitymatrix(leng(T)),matrixscal(matrixmul(T,V),2))),div(n,-2)))}
+function wishartpgf(v,S,T){return pow(determinant(sub(identitymatrix(leng(T)),matrixscal(matrixmul(vectormap(log,T),V),2))),div(n,-2))}
+
+function inversewishart(v,P,X){return inversematrixgammapdf(div(v,2),2,P,X)}
+
+function normalwishartpdf(M0,l,W,v,M,X){return matrixmul(multivariatenormalpdf(M0,matrixinverse(matrixscal(X,l)),M),wishartpdf(v,W,X))}
+//FIX unsure tho https://en.wikipedia.org/wiki/Normal-inverse-Wishart_distribution may write it explicity later
+function normalinversewishartpdf(M0,l,P,v,M,X){return matrixmul(multivariatenormalpdf(M0,(matrixscal(X,div(1,l))),M),inversewishartpdf(v,P,X))}
+
+function complexwishartpdf(G,n,X){return div(mul(pow(determinant(X),sub(n,leng(X))),exp(mul(-1,trace(matrixmul(matrixinverse(G),X))))),pow(determinant(G),n),multivariategamma(p,n))}
+function complexwishartcf(G,n,T){return pow(determinant(matrixsub(identitymatrix(leng(T),matrixscal(matrixmul(G,T),I)),sub(0,n))))}
+function complexwishartmgf(G,n,T){return pow(determinant(matrixsub(identitymatrix(leng(T),matrixscal(matrixmul(G,T),1)),sub(0,n))))}
+function complexwishartcgf(G,n,T){return log( pow(determinant(matrixsub(identitymatrix(leng(T),matrixscal(matrixmul(G,T),1)),sub(0,n)))))}
+function complexwishartpgf(G,n,T){return pow(determinant(matrixsub(identitymatrix(leng(T),matrixscal(matrixmul(G,vectormap(log,T)),1)),sub(0,n))))}
+
+function matrixbetapdf(a,b,X){return mul(div(1,multivariatebeta(p,a,b)),pow(determinant(X),sub(a,div(add(1,leng(X)),2))),pow(determinant(matrixsub(identitymatrix(leng(X)),X)),sub(b,div(add(1,leng(X)),2))))}
+function matrixbetacdf(a,b,Z){return matrixhypergeometric([a],[add(a,b)],matrixscal(Z,I))}
+
+
+//longest name 
+function multivariatewalleniusnoncentralhypergeometricdistributionpmfd(t,Q){let [M,n,W,X]=Q;let c=leng(X);let N=gsum(M);let D=vectordot(W,vectorsub(M,X));let fi=1;for(let i=0;i<c;i++)fi=mul(fi,pow(sub(1,pow(t,div(g(W,i),D))),g(X,i)));return fi;}
+function multivariatewalleniusnoncentralhypergeometricdistributionpmf(M,n,W,X){let N=gsum(M);let c=leng(X);let fi=1;for(let i=0;i<c;i++)fi=mul(fi,ncr(g(M,i),g(X,i)));return mul(fi,integral(multivariatewalleniusnoncentralhypergeometricdistributionpmfd,0,1,[M,n,W,X])) }
+function multivariatewalleniusnoncentralhypergeometricsafedistributionpmf(M,W,X){let n=gsum(X);let N=gsum(M);let c=leng(X);let fi=1;for(let i=0;i<c;i++)fi=mul(fi,ncr(g(M,i),g(X,i)));return mul(fi,integral(multivariatewalleniusnoncentralhypergeometricdistributionpmfd,0,1,[M,n,W,X])) }
+
+//complementarymultivariatewalleniusnoncentralhypergeometricdistributionpmf(3,[1,2],1,[2,1],[xx,yy])
+//complementarymultivariatewalleniusnoncentralhypergeometricdistributionpmfd(x,[3,[1,2],1,[2,1],[3,3]],x)
+
+//complementarymultivariatewalleniusnoncentralhypergeometricdistributionpmf([1,2,3],1,[3,2,1],[xx,yy,5-xx-yy])
+
+function complementarymultivariatewalleniusnoncentralhypergeometricdistributionpmfd(t,Q){let [Ma,na,Wa,Xa]=Q;let c=leng(X);let N=gsum(Ma);let M=Ma;let n=sub(N,na);let X=vectorsub(Xa,Ma);let W=vectormap(rec,Wa);let D=vectordot(W,vectorsub(M,X));let fi=1;for(let i=0;i<c;i++)fi=mul(fi,pow(sub(1,pow(t,div(g(W,i),D))),g(X,i)));return fi;}
+function complementarymultivariatewalleniusnoncentralhypergeometricdistributionpmf(Ma,na,Wa,Xa){let N=gsum(Ma); let c=leng(Xa);  let M=Ma;let n=sub(N,na);let X=vectorsub(Xa,Ma);let W=vectormap(rec,Wa);   let fi=1;for(let i=0;i<c;i++)fi=mul(fi,ncr(g(M,i),g(X,i)));return mul(fi,integral(multivariatewalleniusnoncentralhypergeometricdistributionpmfd,0,1,[M,n,W,X])) }
+function complementarymultivariatewalleniusnoncentralhypergeometricsafedistributionpmf(Ma,Wa,Xa){let N=gsum(Ma); let c=leng(Xa); let na=gsum(Xa);  let M=Ma;let n=sub(N,na);let X=vectorsub(Xa,Ma);let W=vectormap(rec,Wa);   let fi=1;for(let i=0;i<c;i++)fi=mul(fi,ncr(g(M,i),g(X,i)));return mul(fi,integral(multivariatewalleniusnoncentralhypergeometricdistributionpmfd,0,1,[M,n,W,X])) }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //END MULTIVARIATE
 
@@ -34452,6 +40984,10 @@ function walleniusnoncentralhypergeometricdistcov2(m1,m2,n,w,x) { return sqrt(di
 function walleniusnoncentralhypergeometricdisteff(m1,m2,n,w,x) { return div(walleniusnoncentralhypergeometricdistvar(m1,m2,n,w,x),sqr(walleniusnoncentralhypergeometricdistmean(m1,m2,n,w,x))); }
 function walleniusnoncentralhypergeometricdistvmr(m1,m2,n,w,x) { return div(walleniusnoncentralhypergeometricdistvar(m1,m2,n,w,x),walleniusnoncentralhypergeometricdistmean(m1,m2,n,w,x)); }
 function walleniusnoncentralhypergeometricdistzscore(m1,m2,n,w,x) { return div(sub(x,walleniusnoncentralhypergeometricdistmean(m1,m2,n,w,x)),walleniusnoncentralhypergeometricdiststandartdeviation(m1,m2,n,w,x)); }
+
+
+
+
 // hardydistcgf missing
 function hardydist2cf(p,q,m,x) { return log(hardydistcf(p,q,m,x)); }
 function yulesimondistsurvival(p,k) { return sub(1,yulesimondistcdf(p,k)); }
@@ -35282,7 +41818,7 @@ function importAllFunctionsToMath() {
 
   
 //cos(x)+sin(x)*i
-// CustomEvaluator.js
+
 class CustomEvaluator {
     constructor() {
         this.functions = {};
@@ -35310,10 +41846,9 @@ class CustomEvaluator {
             'c': { precedence: 3, fn: (a, b) => ncr(a, b) },
             'p': { precedence: 3, fn: (a, b) => cpr(a, b) },
         };
-        this.expressionCache = new Map(); // Cache for parsed expressions
+        this.expressionCache = new Map(); 
     }
 
-    // ---------- Unary Operators ----------
     isUnaryOperator(token) {
         return (token === '-' || token === '/' || token === '%' || token === '!');
     }
@@ -35330,7 +41865,6 @@ class CustomEvaluator {
         }
     }
 
-    // ---------- Postfix Operators ----------
     isPostfixOperator(token) {
         return token === '!' || token === "'" || token === '%';
     }
@@ -35339,6 +41873,7 @@ class CustomEvaluator {
         const operand = this.evaluateTree(tree.operand, variables);
         switch (tree.operator) {
             case '!': return factorial(operand);
+            case 'i': return mul(I,operand);
             case "'": return mul(div(operand, 180), Math.PI);
             case '%': return div(operand, 100);
             default:
@@ -35346,7 +41881,6 @@ class CustomEvaluator {
         }
     }
 
-    // ---------- Comparison / Logical ----------
     eq(a, b) { return andr(sub(a, b), sub(b, a)) === 0; }
     neq(a, b) { return andr(sub(a, b), sub(b, a)) !== 0; }
     lt(a, b) { return re(sub(a, b)) < 0; }
@@ -35354,7 +41888,6 @@ class CustomEvaluator {
     le(a, b) { return orr(this.eq(a, b), this.lt(a, b)); }
     ge(a, b) { return orr(this.eq(a, b), this.gt(a, b)); }
 
-    // ---------- Functions ----------
     addFunction(name, fn) {
         this.functions[name] = fn;
     }
@@ -35370,7 +41903,6 @@ class CustomEvaluator {
         }
     }
 
-    // ---------- Evaluation ----------
     evaluate(expression, variables = {}) {
         if (expression.charAt(0) === ";") return math.evaluate(expression.substring(1), variables);
         const tokens = this.tokenize(expression);
@@ -35418,13 +41950,11 @@ class CustomEvaluator {
         throw new Error(`Variable '${name}' not defined`);
     }
 
-    // ---------- Tokenization ----------
     tokenize(expression) {
         const regex = /\s*(=>|[\+\-\*/%^(),\[\]]|'[^']*'|"[^"]*"|[A-Za-z_][A-Za-z0-9_]*|[0-9]*\.?[0-9]+)\s*/g;
         return expression.split(regex).filter(token => token && token.trim() !== '');
     }
 
-    // ---------- Parsing ----------
     parse(tokens) {
         let index = 0;
 
@@ -35442,7 +41972,6 @@ class CustomEvaluator {
         };
 
         const parseTerm = () => {
-            // Handle unary operators
             if (this.isUnaryOperator(tokens[index])) {
                 const operator = tokens[index++];
                 const operand = parseTerm();
@@ -35503,7 +42032,6 @@ class CustomEvaluator {
         return parseExpression();
     }
 
-    // ---------- Helpers ----------
     isNumber(token) { return !isNaN(token) && !isNaN(parseFloat(token)); }
     isFunction(token) { return typeof this.functions[token] === 'function'; }
     isOperator(token) { return token in this.operators; }
@@ -35683,5 +42211,3 @@ function getParamNames(func) {
     // Import into `math`
     math.import(importedFunctions, { override: true });
 
-
-//death
