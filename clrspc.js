@@ -3111,7 +3111,7 @@ if (colorMode === 'shiny') {
     const x = complexInput.re, y = complexInput.im;
     const u = complexOutput.re, v = complexOutput.im;
     const fr = deriv.re, fi = deriv.im;
-
+//console.log(x,u,fr)
     const r = Math.hypot(u,v);
     if (r < 1e-8) return [0,0,0];
 
@@ -3256,7 +3256,7 @@ return [
         let hue=(q<1)?q:(q<2)?add(q,q,-1):(q<3)?add(q,1):add(q,q,-2)
         return colorMode === 'hsv4'
             ? hsvToRgb(hue * 180 / 3, chroma, lightnessAdjusted)
-            : hslToRgb(hue * 180 / 3, lightnessAdjusted);
+            : hslToRgb(hue * 180 / 3, chroma ,lightnessAdjusted);
     }
     if (colorMode === 'qhsv' || colorMode === 'qhsl') {
         return colorMode === 'qhsv'

@@ -1,0 +1,1168 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>N‑D Coxeter</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+<script src="clrspc.js"></script>
+<script src="polyhedra.js"></script>
+<script src="mthfnc.js"></script>
+<!-->
+
+be careful the code sucks
+passed it though ai to clense it
+made it worse 
+at least no more lines that
+go very far right
+i have commited many sins doing this
+just unsee as much as possible
+thanks 
+
+<--->
+<style>
+body{font-family:Arial;margin:10px}
+input{width:45px}
+canvas{border:1px solid black;width:700px;height:700px}
+table{border-collapse:collapse; margin-top:10px}
+td{padding:2px}
+input[type=range] { width:800px; margin:5px 0 }
+label { display:block; margin-top:10px }
+#matrixContainer, #decorationContainer { margin:10px 0 }
+.checkbox-group { display:flex; flex-wrap:wrap; gap:15px; margin-top:10px }
+</style>
+</head>
+
+<body>
+
+<h3>N‑D Coxeter</h3>
+
+<label>Dimension N:
+  <input id="dimN" type="number" value="4" min="2" max="10">
+  <button onclick="resizeMatrix()">Resize</button>
+</label>
+
+<div id="matrixContainer"></div>
+<div id="decorationContainer"></div>
+
+<label>String:
+  <input id="cdString" type="text" style="width:400px" placeholder="e.g. x3o3o3o *c3o">
+  <button onclick="parseCDString()">Apply String</button>
+</label>
+
+<label>Presets:
+  <select id="presets" onchange="applyPreset(this.value)">
+    <option value="">-- Select a Preset --</option>
+	<option value="">-- 2D --</option>
+	<option value="x3o">Triangle</option>
+	<option value="x7o">Septagon</option>
+	<option value="">-- 3D --</option>
+    <option value="x3o3o">Tetrahedron</option>
+	<option value="o3x3o">Octahedron</option>
+	<option value="x3x3o">Truncated Tetrahedron</option>
+	<option value="x3o3x">Cuboctahedron</option>
+	<option value="x3x3x">Truncated Octahedron</option>
+	<option value="x4o3o">Cube</option>
+	<option value="x4x3o">Truncated Cube</option>
+	<option value="x4o3x">Small Rhombicuboctahedron</option>
+	<option value="x4x3x">Great Rhombicuboctahedron</option>
+	<option value="x5o3o">Dodecahedron</option>
+	<option value="x5x3o">Truncated Dodecahedron</option>
+	<option value="o5x3o">Icosiodecahedron</option>
+	<option value="o5x3x">Truncated Icosihedron</option>
+	<option value="o5o3x">Icosihedron</option>
+	<option value="x5o3x">Small Rhombicosidodecahedron</option>
+	<option value="x5x3x">Great Rhombicosidodecahedron</option>
+	<option value="s4s3s">Snub Cube</option>
+	<option value="s5s3s">Snub Dodecahedron</option>
+	<option value="">-- 4D --</option>
+	<option value="x3o3o3o">Pentachoron</option>
+	<option value="o3x3o3o">Rectified pentachoron</option>
+	<option value="x3x3o3o">Truncated pentachoron</option>
+	<option value="o3x3o3o">Rectified pentachoron</option>
+	<option value="x3o3x3o">Small rhombated pentachoron</option>
+	<option value="x3o3o3x">Small prismatodecachoron</option>
+	<option value="o3x3x3o">Decachoron</option>
+	<option value="x3x3x3o">Great rhombated pentachoron</option>
+	<option value="x3x3o3x">Prismatorhombated pentachoron</option>
+	<option value="x3x3x3x">Great prismatodecachoron</option>
+	
+	<option value="x4o3o3o">Tesseract</option>
+	<option value="o4x3o3o">Rectified tesseract</option>
+	<option value="o4o3x3o">Icositetrachoron</option>
+	<option value="o4o3o3x">Hexadecachoron</option>
+	<option value="x4x3o3o">Truncated tesseract	</option>
+	<option value="x4o3x3o">Small rhombated tesseract</option>
+	<option value="x4o3o3x">Small disprismatotesseractihexadecachoron</option>
+	<option value="o4x3x3o">Tesseractihexadecachoron</option>
+	<option value="o4x3o3x">Rectified icositetrachoron</option>
+	<option value="o4o3x3x">Truncated hexadecachoron</option>
+	<option value="x4x3x3o">Great rhombated tesseract</option>
+	<option value="x4x3o3x">Prismatorhombated tesseract</option>
+	<option value="x4o3x3x">Prismatorhombated hexadecachoron</option>
+	<option value="o4x3x3x">Truncated icositetrachoron</option>
+	<option value="x4x3x3x">Great disprismatotesseractihexadecachoron</option>
+	
+	
+
+	<option value="x3o4x3o">Small rhombated icositetrachoron</option>
+	<option value="x3o4o3x">Small prismatotetracontoctachoron</option>
+	<option value="o3x4x3o">Tetracontoctachoron</option>
+	<option value="x3x4x3o">Great rhombated icositetrachoron</option>
+	<option value="x3x4o3x">Prismatorhombated icositetrachoron</option>
+	<option value="x3x4x3x">Great prismatotetracontoctachoron</option>
+	
+	<option value="s3s4o3o">Snub disicositetrachoron</option>
+	
+		
+		
+	<option value="x5o3o3o">Hecatonicosachoron</option>
+	<option value="o5x3o3o">Rectified hecatonicosachoron</option>
+	<option value="o5o3x3o">Rectified hexacosichoron</option>
+	<option value="o5o3o3x">Hexacosichoron</option>
+	<option value="x5x3o3o">Truncated hecatonicosachoron</option>
+	<option value="x5o3x3o">Small rhombated hecatonicosachoron</option>
+	<option value="x5o3o3x">Small disprismatohexacosihecatonicosachoron</option>
+	<option value="o5x3x3o">Hexacosihecatonicosachoron</option>
+	<option value="o5x3o3x">Small rhombated hexacosichoron</option>
+	<option value="o5o3x3x">Truncated hexacosichoron</option>
+	<option value="x5x3x3o">Great rhombated hecatonicosachoron</option>
+	<option value="x5x3o3x">Prismatorhombated hexacosichoron</option>
+	<option value="x5o3x3x">Prismatorhombated hecatonicosachoron</option>
+	<option value="o5x3x3x">Great rhombated hexacosichoron</option>
+	<option value="x5x3x3x">Great disprismatohexacosihecatonicosachoron</option>
+	
+	<option value="">-- 5D --</option>
+	
+	<option value="x3o3o3o3o">5-simplex</option>
+	<option value="o3x3o3o3o">Rectified 5-simplex</option>
+	<option value="o3o3x3o3o">Birectified 5-simplex</option>
+	<option value="x3x3o3o3o">Truncated 5-simplex</option>
+	<option value="x3o3x3o3o">Cantellated 5-simplex	</option>
+	<option value="x3o3o3x3o">Runcinated 5-simplex</option>
+	<option value="x3o3o3o3x">Stericated 5-simplex</option>
+	<option value="o3x3x3o3o">Bitruncated 5-simplex</option>
+	<option value="o3x3o3x3o">Bicantellated 5-simplex</option>
+	<option value="x3x3x3o3o">Cantitruncated 5-simplex</option>
+	<option value="x3x3o3x3o">Runcitruncated 5-simplex</option>
+	<option value="x3x3o3o3x">Steritruncated 5-simplex</option>
+	<option value="x3o3x3x3o">Runcicantellated 5-simplex</option>
+	<option value="x3o3x3o3x">Stericantellated 5-simplex</option>
+	<option value="o3x3x3x3o">Bicantitruncated 5-simplex</option>
+	<option value="x3x3x3x3o">Runcicantitruncated 5-simplex</option>
+	<option value="x3x3x3o3x">Stericantitruncated 5-simplex	</option>
+	<option value="x3x3o3x3x">Steriruncitruncated 5-simplex</option>
+	<option value="x3x3x3x3x">Omnitruncated 5-simplex</option>
+	
+	<option value="x4o3o3o3o">5-cube</option>
+	<option value="o4x3o3o3o">Rectified 5-cube</option>
+	<option value="o4o3x3o3o">Birectified 5-cube</option>
+	<option value="x4x3o3o3o">Truncated 5-cube</option>
+	<option value="x4o3x3o3o">Cantellated 5-cube</option>
+	<option value="x4o3o3x3o">Runcinated 5-cube</option>
+	<option value="x4o3o3o3x">Stericated 5-cube</option>
+	<option value="o4x3x3o3o">Bitruncated 5-cube</option>
+	<option value="o4x3o3x3o">Bicantellated 5-cube</option>
+	<option value="x4x3x3o3o">Cantitruncated 5-cube</option>
+	<option value="x4x3o3x3o">Runcitruncated 5-cube</option>
+	<option value="x4x3o3o3x">Steritruncated 5-cube</option>
+	<option value="x4o3x3x3o">Runcicantellated 5-cube</option>
+	<option value="x4o3x3o3x">Stericantellated 5-cube</option>
+	<option value="o4x3x3x3o">Bicantitruncated 5-cube</option>
+	<option value="x4x3x3x3o">Runcicantitruncated 5-cube</option>
+	<option value="x4x3x3o3x">Stericantitruncated 5-cube</option>
+	<option value="x4x3o3x3x">Steriruncitruncated 5-cube</option>
+	<option value="x4x3x3x3x">Omnitruncated 5-cube</option>
+
+	<option value="">-- 6D --</option>
+	<option value="x3o3o3o3o*c3o">Hexelte</option>
+	<option value="o3o3o3o3o*c3x">Hexelte Gamma</option>
+	<option value="">-- 7D --</option>
+	<option value="o3o3o3o3o3x*c3o">Septelte Alpha</option>
+	<option value="x3o3o3o3o3o*c3o">Septelte Beta</option>
+	<option value="o3o3o3o3o3o*c3x">Septelte Gamma</option>
+	<option value="">-- 8D --</option>
+	<option value="o3o3o3o3o3o3x*c3o">Octelte Alpha</option>
+	<option value="x3o3o3o3o3o3o*c3o">Octelte Beta</option>
+	<option value="o3o3o3o3o3o3o*c3x">Octelte Gamma</option>
+  </select>
+</label>
+<hr>
+
+
+
+
+<button onclick="generate()">Generate</button>
+<button onclick="anim()">Stop/Start</button>
+<button onclick="animf()">Face/Unface</button>
+<button onclick="anime()">Edge/Unedge</button>
+<button onclick="resett()">Reset Memory</button>
+
+<div style="display:flex; align-items:center; gap:10px;">
+  <label for="projSlider">Projection distance (focus):</label>
+  <input type="range" id="projSlider" min="2" max="50" value="14">
+  <span id="projVal">14</span>
+</div>
+
+<div style="display:flex; align-items:center; gap:10px;">
+  <label for="d3Slider">Perspective distance (3D):</label>
+  <input type="range" id="d3Slider" min="1" max="100" value="26">
+  <span id="d3Val">26</span>
+</div>
+
+<select id="blendModeSelect">
+  <option value="alpha">Alpha</option>
+  <option value="additive">Additive</option>
+  <option value="subtractive">Subtractive</option>
+  <option value="multiplicative" selected>Multiplicative</option>
+  <option value="opaque">Opaque</option>
+  <option value="screen">Screen</option>
+  <option value="darken">Darken</option>
+  <option value="lighten">Lighten</option>
+  <option value="reverseSubtract">Reverse Subtract</option>
+  <option value="standardSubtract">Subtract</option>
+</select>
+
+<label>Background Color:
+  <input type="color" id="bgColorPicker" value="#ffffff">
+</label>
+
+<div style="display:flex; align-items:center; gap:10px;">
+  <label>RG: <span id="rgVal">91</span></label><br>
+  <input type="range" id="rkSlider" min="1" max="200" value="91">
+</div>
+<div style="display:flex; align-items:center; gap:10px;">
+  <label>BK: <span id="bkVal">60</span></label><br>
+  <input type="range" id="bkSlider" min="1" max="200" value="60">
+</div>
+<div style="display:flex; align-items:center; gap:10px;">
+  <label>GK: <span id="gkVal">37</span></label><br>
+  <input type="range" id="gkSlider" min="1" max="200" value="37">
+</div>
+<div style="display:flex; align-items:center; gap:10px;">
+  <label>LLL: <span id="lllVal">2</span></label><br>
+  <input type="range" id="lllSlider" min="0" max="10" step="0.01" value="2">
+</div>
+<div style="display:flex; align-items:center; gap:10px;">
+  <label>a: <span id="aVal">0.5</span></label><br>
+  <input type="range" id="aSlider" min="0" max="1" step="0.001" value="0.5">
+</div>
+
+<button id="toggleDistances">Show / Hide Distance Controls</button>
+<div id="distanceControls" style="display:none"></div>
+
+<br>
+<canvas id="canvas" width="700" height="700"></canvas>
+
+<script>
+// --------------------------------------------------------------------
+// Global state
+let N = 4;                       // current dimension
+let vertsND = [];                 // n‑dimensional vertices
+let verts3D = [];                 // projected 3D vertices
+let faces = [];
+let edgeIndices = [];
+let computeFaces = null;
+
+let isanim = 1;
+let isface = 1;
+let isedge = 1;
+let mmm = new Array(10).fill(0);  // distance rank toggles (first 10)
+mmm[0] = 1;                       // shortest distance on by default
+
+let rotX = 0, rotY = 0;           // 3D rotation (mouse)
+let zoom = 1;
+let projDist = 14;                // projection distance (focus)
+let perspDist = 26;               // perspective distance for 3D display
+
+// Higher‑dimensional rotation angles – one per coordinate plane (i,j)
+let ndAngles = [];
+let ndSpeeds = [];
+
+// UI elements
+const dimNInput = document.getElementById('dimN');
+const matrixDiv = document.getElementById('matrixContainer');
+const decoDiv = document.getElementById('decorationContainer');
+const projSlider = document.getElementById('projSlider');
+const projVal = document.getElementById('projVal');
+const d3Slider = document.getElementById('d3Slider');
+const d3Val = document.getElementById('d3Val');
+const canvas = document.getElementById('canvas');
+const gl = canvas.getContext('webgl2');
+const bgPicker = document.getElementById('bgColorPicker');
+const blendSelect = document.getElementById('blendModeSelect');
+const rkSlider = document.getElementById('rkSlider');
+const gkSlider = document.getElementById('gkSlider');
+const bkSlider = document.getElementById('bkSlider');
+const lllSlider = document.getElementById('lllSlider');
+const aSlider = document.getElementById('aSlider');
+const rkVal = document.getElementById('rkVal');
+const gkVal = document.getElementById('gkVal');
+const bkVal = document.getElementById('bkVal');
+const lllVal = document.getElementById('lllVal');
+const aVal = document.getElementById('aVal');
+
+let rk = 91, gk = 60, bk = 37, lll = 2, aa = 0.5;
+
+// WebGL objects
+let triProgram = null, edgeProgram = null;
+let triVAO = null, edgeVAO = null;
+let triCount = 0, edgeCount = 0;
+
+// Blending modes
+const BlendModes = {
+  alpha:          { src: gl.SRC_ALPHA, dst: gl.ONE_MINUS_SRC_ALPHA, eq: gl.FUNC_ADD },
+  additive:       { src: gl.SRC_ALPHA, dst: gl.ONE, eq: gl.FUNC_ADD },
+  subtractive:    { src: gl.ONE, dst: gl.ONE, eq: gl.FUNC_REVERSE_SUBTRACT },
+  multiplicative: { src: gl.DST_COLOR, dst: gl.ZERO, eq: gl.FUNC_ADD },
+  opaque:         { src: gl.ONE, dst: gl.ZERO, eq: gl.FUNC_ADD },
+  screen:         { src: gl.ONE_MINUS_DST_COLOR, dst: gl.ONE, eq: gl.FUNC_ADD },
+  darken:         { src: gl.ONE, dst: gl.ONE, eq: gl.FUNC_MIN },
+  lighten:        { src: gl.ONE, dst: gl.ONE, eq: gl.FUNC_MAX },
+  reverseSubtract:{ src: gl.ONE, dst: gl.ONE, eq: gl.FUNC_REVERSE_SUBTRACT },
+  standardSubtract:{ src: gl.ONE, dst: gl.ONE, eq: gl.FUNC_SUBTRACT }
+};
+let blendMode = BlendModes.multiplicative;
+
+
+function applyPreset(val) {
+    if(!val) return;
+    document.getElementById('cdString').value = val;
+    parseCDString();
+}
+function parseCDString() {
+    const str = document.getElementById('cdString').value.trim().toLowerCase();
+    if (!str) return;
+
+    const realNodes = str.match(/[xos]/g) || [];
+    const dim = realNodes.length;
+    if (dim < 1) return;
+
+    N = dim;
+    dimNInput.value = N;
+    resizeMatrix(); 
+
+    let matrix = Array.from({ length: N }, (_, i) => 
+        Array.from({ length: N }, (_, j) => (i === j ? 1 : 2))
+    );
+    let decorations = new Array(N).fill(0);
+
+    const nodeMap = "abcdefghijklmnopqrstuvwxyz";
+    let nodeIndex = -1; 
+    let i = 0;
+    
+    // We need to track where the NEXT node should connect to.
+    // Usually it's the previous node, but after a * pointer, it's the pointer target.
+    let connectionSource = -1; 
+
+    while (i < str.length) {
+        let char = str[i];
+
+        // --- CASE 1: Real Node (x, o, s) ---
+        if (/[xos]/.test(char)) {
+            nodeIndex++;
+            decorations[nodeIndex] = (char === 'x' ? 1 : (char === 's' ? 2 : 0));
+            
+            // Connect to the source (either previous node or a * branch point)
+            if (connectionSource >= 0 && nodeIndex < N) {
+                // If a branch value wasn't already set by a number, default to 3
+                if (matrix[nodeIndex][connectionSource] === 2) {
+                    matrix[nodeIndex][connectionSource] = matrix[connectionSource][nodeIndex] = 3;
+                }
+            }
+            
+            // By default, the next node will connect to THIS node
+            connectionSource = nodeIndex;
+            i++;
+        }
+        // --- CASE 2: Branch Value (3, 4, 5/2, etc.) ---
+        else if (/[0-9]/.test(char)) {
+            let start = i;
+            while (i < str.length && /[0-9\/.]/.test(str[i])) i++;
+            let val = eval(str.substring(start, i));
+
+            // Set the link for the UPCOMING node
+            if (connectionSource >= 0 && nodeIndex + 1 < N) {
+                matrix[connectionSource][nodeIndex + 1] = matrix[nodeIndex + 1][connectionSource] = val;
+            }
+        }
+        // --- CASE 3: Pointer / Loop (*c) ---
+        else if (char === '*') {
+            i++; 
+            let targetChar = str[i];
+            let targetIdx = nodeMap.indexOf(targetChar);
+            i++;
+
+            if (targetIdx >= 0 && targetIdx < N) {
+                // Update the connection source! 
+                // The NEXT node will now sprout from the targetIdx instead of the current nodeIndex.
+                connectionSource = targetIdx;
+
+                // If a branch value follows the asterisk (e.g. *c3), apply it to that future link
+                if (i < str.length && /[0-9]/.test(str[i])) {
+                    let start = i;
+                    while (i < str.length && /[0-9\/.]/.test(str[i])) i++;
+                    let val = eval(str.substring(start, i));
+                    if (nodeIndex + 1 < N) {
+                        matrix[targetIdx][nodeIndex + 1] = matrix[nodeIndex + 1][targetIdx] = val;
+                    }
+                }
+            }
+        }
+        else {
+            i++;
+        }
+    }
+
+    // Sync to UI
+    for (let r = 0; r < N; r++) {
+        document.getElementById(`d${r}`).value = decorations[r];
+        for (let c = 0; c < N; c++) {
+            document.getElementById(`m${r}${c}`).value = matrix[r][c];
+        }
+    }
+    generate();
+}
+function parseBranch(b) {
+    if (b.includes('/')) {
+        let parts = b.split('/');
+        return parseFloat(parts[0]) / parseFloat(parts[1]);
+    }
+    return parseFloat(b) || 3;
+}
+
+function updateUIFromParsed(dim, nodes, connections) {
+    // Set Dimension
+    N = dim;
+    dimNInput.value = N;
+    resizeMatrix(); // This clears the table and builds inputs
+
+    // Fill Decoration
+    nodes.forEach((n, i) => {
+        let decoVal = (n.type === 'x') ? 1 : (n.type === 's' ? 2 : 0);
+        document.getElementById(`d${i}`).value = decoVal;
+    });
+
+    // Fill Matrix
+    // Default matrix is already 1s on diag and 2s elsewhere from resizeMatrix()
+    connections.forEach(c => {
+        if (c.from < N && c.to < N) {
+            document.getElementById(`m${c.from}${c.to}`).value = c.val;
+            document.getElementById(`m${c.to}${c.from}`).value = c.val;
+        }
+    });
+
+    generate();
+}
+
+
+
+// --------------------------------------------------------------------
+// Robust shader compilation and program linking
+function createProgram(vsSrc, fsSrc) {
+  const vs = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(vs, vsSrc);
+  gl.compileShader(vs);
+  if (!gl.getShaderParameter(vs, gl.COMPILE_STATUS)) {
+    console.error('Vertex shader compilation failed:', gl.getShaderInfoLog(vs));
+    gl.deleteShader(vs);
+    return null;
+  }
+
+  const fs = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(fs, fsSrc);
+  gl.compileShader(fs);
+  if (!gl.getShaderParameter(fs, gl.COMPILE_STATUS)) {
+    console.error('Fragment shader compilation failed:', gl.getShaderInfoLog(fs));
+    gl.deleteShader(vs);
+    gl.deleteShader(fs);
+    return null;
+  }
+
+  const prog = gl.createProgram();
+  gl.attachShader(prog, vs);
+  gl.attachShader(prog, fs);
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+    console.error('Program linking failed:', gl.getProgramInfoLog(prog));
+    gl.deleteProgram(prog);
+    gl.deleteShader(vs);
+    gl.deleteShader(fs);
+    return null;
+  }
+
+  gl.detachShader(prog, vs);
+  gl.detachShader(prog, fs);
+  gl.deleteShader(vs);
+  gl.deleteShader(fs);
+
+  return prog;
+}
+
+// --------------------------------------------------------------------
+// Shaders
+const vsTri = `#version 300 es
+in vec3 a_pos;
+in vec3 a_normal;
+in vec3 a_color;
+uniform float rx;
+uniform float ry;
+uniform float zoom;
+uniform float d;
+uniform float aspect;
+uniform float aa;
+out vec3 v_color;
+out vec3 v_normal;
+vec3 rotX(vec3 p,float a){ float c=cos(a),s=sin(a); return vec3(p.x, p.y*c-p.z*s, p.y*s+p.z*c); }
+vec3 rotY(vec3 p,float a){ float c=cos(a),s=sin(a); return vec3(p.x*c+p.z*s, p.y, -p.x*s+p.z*c); }
+void main(){
+  vec3 p = rotX(rotY(a_pos, ry), rx);
+  float s = zoom*2.0/(d-p.z);
+  gl_Position = vec4((p.x*s)/aspect, p.y*s, (2.0*p.z)/d, 1.0);
+  v_color = a_color;
+  v_normal = a_normal;
+}`;
+
+const fsTri = `#version 300 es
+precision highp float;
+uniform float aa;
+in vec3 v_color;
+in vec3 v_normal;
+out vec4 o;
+void main(){
+  vec3 L = normalize(vec3(0.6,0.7,0.4));
+  float lam = abs(dot(normalize(v_normal),L));
+  float i = (1.0-aa) + aa*lam;
+  o = vec4(v_color*i, 1.0);
+}`;
+
+const vsEdge = `#version 300 es
+in vec3 a_pos;
+uniform float rx;
+uniform float ry;
+uniform float zoom;
+uniform float d;
+uniform float aspect;
+vec3 rotX(vec3 p,float a){ float c=cos(a),s=sin(a); return vec3(p.x, p.y*c-p.z*s, p.y*s+p.z*c); }
+vec3 rotY(vec3 p,float a){ float c=cos(a),s=sin(a); return vec3(p.x*c+p.z*s, p.y, -p.x*s+p.z*c); }
+void main(){
+  vec3 p = rotX(rotY(a_pos, ry), rx);
+  float s = zoom*2.0/(d-p.z);
+  gl_Position = vec4((p.x*s)/aspect, p.y*s, (2.0*p.z)/d, 1.0);
+}`;
+
+const fsEdge = `#version 300 es
+precision highp float;
+out vec4 o;
+void main(){ o = vec4(0.05,0.05,0.05,1); }`;
+
+// --------------------------------------------------------------------
+// Dynamic UI generation
+
+function initNDRotations() {
+  ndAngles = [];
+  ndSpeeds = [];
+  for (let i = 0; i < N; i++) {
+    for (let j = i+1; j < N; j++) {
+      ndAngles.push(0);
+      ndSpeeds.push(0.005 + Math.random()*0.01);
+    }
+  }
+}
+
+// --------------------------------------------------------------------
+// ND rotation
+function rotateND(p, angles) {
+  if (!Array.isArray(p) || p.length < N) return p;
+  let v = [...p];
+  let idx = 0;
+  for (let i = 0; i < N; i++) {
+    for (let j = i+1; j < N; j++) {
+      let ang = angles[idx++];
+      let c = Math.cos(ang);
+      let s = Math.sin(ang);
+      let vi = v[i];
+      let vj = v[j];
+      v[i] = vi*c - vj*s;
+      v[j] = vi*s + vj*c;
+    }
+  }
+  return v;
+}
+
+// --------------------------------------------------------------------
+// ND perspective projection to 3D
+function projectND(p) {
+  if (!Array.isArray(p) || p.length < N) return [0,0,0];
+  if (N === 3) return [p[0], p[1], p[2]];
+  let depthCoord = p[N-1];
+  let denom = projDist - depthCoord;
+  let s = (denom === 0) ? 1e6 : projDist / denom;
+  let x = (N > 0) ? p[0] : 0;
+  let y = (N > 1) ? p[1] : 0;
+  let z = (N > 2) ? p[2] : 0;
+  return [x * s, y * s, z * s];
+}
+
+// --------------------------------------------------------------------
+// Edge detection
+let edgeCache = new Map();
+function buildEdges(V) {
+
+  const vertKey = V.length + ":" + N;   // fast key (safe because verticesfromcoxeter is deterministic)
+  const maskKey = mmm.join('');
+  const key = vertKey + "|" + maskKey;
+
+  if (edgeCache.has(key)) {
+    return edgeCache.get(key);
+  }
+
+  const n = V.length;
+  const pairs = [];
+  const edges = [];
+  const edgeIndices = [];
+
+  for (let i = 0; i < n; i++) {
+    for (let j = i+1; j < n; j++) {
+
+      let d2 = 0;
+      for (let k = 0; k < N; k++) {
+        const diff = V[i][k] - V[j][k];
+        d2 += diff*diff;
+      }
+
+      pairs.push({i, j, d: Math.sqrt(d2)});
+    }
+  }
+
+  const distList = [...new Set(pairs.map(p => Math.floor(p.d*1000)/1000))];
+  distList.sort((a,b)=>a-b);
+
+  const eps = distList[0] * 0.01;
+
+  for (let p of pairs) {
+
+    for (let m = 0; m < Math.min(10, distList.length); m++) {
+
+      if (mmm[m] !== 1) continue;
+
+      if (Math.abs(p.d - distList[m]) < eps) {
+
+        edgeIndices.push([p.i, p.j]);
+
+        const a = projectND(V[p.i]);
+        const b = projectND(V[p.j]);
+
+        edges.push(...a, ...b);
+        break;
+      }
+    }
+  }
+
+  const result = {
+    edges: new Float32Array(edges),
+    edgeIndices
+  };
+
+  edgeCache.set(key, result);
+
+  //console.log(`Edge indices count: ${edgeIndices.length}`);
+
+  return result;
+}
+
+// --------------------------------------------------------------------
+// Face finding
+let faceCacheMap = new Map();
+
+function makeFaceFinder(edgeIndices, maxFaces = 50000) {
+  if (!isface) return () => [];
+const arr = edgeIndices.map(([a,b])=>{
+    if(a>b){let t=a;a=b;b=t}
+    return a*100000+b
+})
+arr.sort((x,y)=>x-y)
+const key = arr.join(',')
+  if (faceCacheMap.has(key)) return faceCacheMap.get(key);
+
+  const adj = {};
+  edgeIndices.forEach(([a,b]) => {
+    if (!adj[a]) adj[a] = [];
+    if (!adj[b]) adj[b] = [];
+    adj[a].push(b);
+    adj[b].push(a);
+  });
+
+  function sharedEdges(f1, f2) {
+    let count = 0;
+    const edges1 = new Set();
+    for (let i = 0; i < f1.length; i++) {
+      let a = f1[i], b = f1[(i+1)%f1.length];
+      edges1.add(a<b ? `${a},${b}` : `${b},${a}`);
+    }
+    for (let i = 0; i < f2.length; i++) {
+      let a = f2[i], b = f2[(i+1)%f2.length];
+      if (edges1.has(a<b ? `${a},${b}` : `${b},${a}`)) {
+        count++;
+        if (count>1) return count;
+      }
+    }
+    return count;
+  }
+
+  const faces = [];
+  const n = Object.keys(adj).length;
+/*
+  // triangles
+  for (let i = 0; i < n; i++) {
+    for (let j of adj[i]) {
+      if (j <= i) continue;
+      for (let k of adj[j]) {
+        if (k <= i || k === j) continue;
+        if (adj[i].includes(k)) {
+          const tri = [i,j,k];
+          let ok = true;
+          for (let f of faces) if (sharedEdges(f,tri)>1) { ok=false; break; }
+          if (ok) faces.push(tri);
+          if (faces.length>=maxFaces) break;
+        }
+      }
+      if (faces.length>=maxFaces) break;
+    }
+    if (faces.length>=maxFaces) break;
+  }
+  console.log(`Found ${faces.length} triangles`);
+*/
+  // larger cycles
+  let size = 3;
+  while (size <= 12 && faces.length < maxFaces) {
+    let newFaces = 0;
+    for (let [a,b] of edgeIndices) {
+      let queue = [[a,b]];
+      let visited = new Set([a,b]);
+      while (queue.length) {
+        let path = queue.shift();
+        let last = path[path.length-1];
+        for (let nxt of adj[last]) {
+          if (nxt === path[0] && path.length >= size) {
+            let candidate = [...path];
+            let ok = true;
+            for (let f of faces) if (sharedEdges(f, candidate)>1) { ok=false; break; }
+            if (ok) {
+              faces.push(candidate);
+              newFaces++;
+              if (faces.length>=maxFaces) break;
+            }
+            continue;
+          }
+          if (visited.has(nxt)) continue;
+          visited.add(nxt);
+          queue.push([...path, nxt]);
+        }
+        if (faces.length>=maxFaces) break;
+      }
+      if (faces.length>=maxFaces) break;
+    }
+    if (newFaces===0) break;
+    size++;
+  }
+  console.log(`Total faces found: ${faces.length}`);
+
+  const computeFaces = function(Vrot) {
+    if (!isface) return [];
+    return faces.map(face => face.map(idx => Vrot[idx]));
+  };
+  faceCacheMap.set(key, computeFaces);
+  return computeFaces;
+}
+
+// --------------------------------------------------------------------
+// Main generation
+function generate() {
+  // Read matrix
+  let M = [];
+  for (let i = 0; i < N; i++) {
+    let row = [];
+    for (let j = 0; j < N; j++) {
+      let el = document.getElementById(`m${i}${j}`).value;
+      row.push(parseFloat(el) || 1);
+    }
+    M.push(row);
+  }
+
+  // Read decoration
+  let D = [];
+  for (let i = 0; i < N; i++) {
+    let el = document.getElementById(`d${i}`).value;
+    D.push(parseFloat(el) || 0);
+  }
+
+  // Generate N‑D vertices (external library)
+  vertsND = verticesfromcoxeter(M, D);
+
+  // Build edges & faces
+  const { edges: edgeBuf, edgeIndices: newEdges } = buildEdges(vertsND);
+  edgeIndices = newEdges;
+  computeFaces = makeFaceFinder(edgeIndices);
+
+  // Apply ND rotation
+  let rotatedND = vertsND.map(v => rotateND(v, ndAngles));
+
+  // Project to 3D
+  verts3D = rotatedND.map(projectND);
+
+  // Re‑build edge buffer with projected vertices
+  let edgeBufProj = [];
+  for (let [a,b] of edgeIndices) {
+    if (a >= verts3D.length || b >= verts3D.length) continue;
+    edgeBufProj.push(...verts3D[a], ...verts3D[b]);
+  }
+
+  // Compute faces (using rotated vertices)
+  faces = computeFaces(rotatedND);
+ // console.log('Faces from computeFaces:', faces.length);
+
+  // Upload to WebGL
+  upload(new Float32Array(edgeBufProj));
+}
+
+// --------------------------------------------------------------------
+// WebGL upload with diagnostics
+  
+
+function upload(edgeBuffer) {
+  const newEdgeProg = createProgram(vsEdge, fsEdge);
+const newTriProg = createProgram(vsTri, fsTri);
+  if (!newTriProg || !newEdgeProg) {
+    console.warn('Shader compilation failed, keeping previous programs');
+    draw();
+    return;
+  }
+
+  if (triProgram) gl.deleteProgram(triProgram);
+  if (edgeProgram) gl.deleteProgram(edgeProgram);
+  triProgram = newTriProg;
+  edgeProgram = newEdgeProg;
+
+  gl.enable(gl.BLEND);
+  gl.blendFunc(blendMode.src, blendMode.dst);
+  gl.enable(gl.DEPTH_TEST);
+
+  if (triVAO) gl.deleteVertexArray(triVAO);
+  if (edgeVAO) gl.deleteVertexArray(edgeVAO);
+  triVAO = gl.createVertexArray();
+  edgeVAO = gl.createVertexArray();
+
+  // --- Build triangle data ---
+  let pos = [], norm = [], col = [];
+  let validFaceCount = 0;
+//console.log(faces)
+  for (let f of faces) {
+  let faceVerts=vectormap(x=>projectND(x),f)
+ // console.log(faceVerts)
+   //let faceVerts = f.map(idx => verts3D[idx]) //.filter(v => v !== undefined);
+   if (faceVerts.length < 3) continue;
+    validFaceCount++;
+
+    let center = [0,0,0];
+    faceVerts.forEach(v => {
+      center[0] += v[0];
+      center[1] += v[1];
+      center[2] += v[2];
+    });
+    center = center.map(c => c / faceVerts.length);
+
+    let v0 = faceVerts[0], v1 = faceVerts[1], v2 = faceVerts[2];
+    let n = math.cross(math.subtract(v1,v0), math.subtract(v2,v0));
+    if (math.norm(n) < 1e-6) continue;
+    n = math.divide(n, math.norm(n));
+
+    let e1 = math.divide(math.subtract(v0,center), math.norm(math.subtract(v0,center)));
+    let e2 = math.cross(n, e1);
+
+    let sortedVerts = [...faceVerts].sort((a,b) => {
+      let pa = math.subtract(a, center);
+      let pb = math.subtract(b, center);
+      let angleA = Math.atan2(math.dot(pa,e2), math.dot(pa,e1));
+      let angleB = Math.atan2(math.dot(pb,e2), math.dot(pb,e1));
+      return angleA - angleB;
+    });
+
+    for (let i = 1; i < sortedVerts.length-1; i++) {
+      let p0 = sortedVerts[0];
+      let p1 = sortedVerts[i];
+      let p2 = sortedVerts[i+1];
+      pos.push(...p0, ...p1, ...p2);
+      norm.push(...n, ...n, ...n);
+
+      let k = f.length;
+      let color = [
+        ((k * rk) % 255)/255 + 0.1,
+        ((k * gk) % 255)/255 + 0.1,
+        ((k * bk) % 255)/255 + 0.1,
+        0.5
+      ].map(v => v * lll);
+      col.push(...color, ...color, ...color);
+    }
+  }
+
+  triCount = pos.length / 3;
+  //console.log(`Valid faces with ≥3 vertices: ${validFaceCount}, triangle count: ${triCount}`);
+
+  // --- Setup triangle VAO ---
+  gl.bindVertexArray(triVAO);
+
+  let loc = gl.getAttribLocation(triProgram, "a_pos");
+  if (loc !== -1 && pos.length) {
+    let buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(pos), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 3, gl.FLOAT, false, 0, 0);
+  }
+
+  loc = gl.getAttribLocation(triProgram, "a_normal");
+  if (loc !== -1 && norm.length) {
+    let buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(norm), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 3, gl.FLOAT, false, 0, 0);
+  }
+
+  loc = gl.getAttribLocation(triProgram, "a_color");
+  if (loc !== -1 && col.length) {
+    let buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(col), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 4, gl.FLOAT, false, 0, 0);
+  }
+
+  // --- Setup edge VAO ---
+  if (isedge) {
+    edgeCount = edgeBuffer.length / 3;
+    gl.bindVertexArray(edgeVAO);
+    loc = gl.getAttribLocation(edgeProgram, "a_pos");
+    if (loc !== -1 && edgeBuffer.length) {
+      let buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, edgeBuffer, gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, 3, gl.FLOAT, false, 0, 0);
+    }
+  }
+
+  gl.bindVertexArray(null);
+  draw();
+}
+
+// --------------------------------------------------------------------
+// Drawing
+function draw() {
+  if (!triProgram || !edgeProgram) return;
+
+  gl.viewport(0,0,canvas.width,canvas.height);
+  const hex = bgPicker.value;
+  const r = parseInt(hex.substr(1,2),16)/255;
+  const g = parseInt(hex.substr(3,2),16)/255;
+  const b = parseInt(hex.substr(5,2),16)/255;
+  gl.clearColor(r, g, b, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+  // Edges
+  gl.depthMask(true);
+  gl.useProgram(edgeProgram);
+  gl.bindVertexArray(edgeVAO);
+  gl.uniform1f(gl.getUniformLocation(edgeProgram,"rx"), rotX);
+  gl.uniform1f(gl.getUniformLocation(edgeProgram,"ry"), rotY);
+  gl.uniform1f(gl.getUniformLocation(edgeProgram,"zoom"), zoom);
+  gl.uniform1f(gl.getUniformLocation(edgeProgram,"d"), perspDist);
+  gl.uniform1f(gl.getUniformLocation(edgeProgram,"aspect"), canvas.width/canvas.height);
+  if (edgeCount) gl.drawArrays(gl.LINES, 0, edgeCount);
+
+  // Faces
+  if (blendMode != BlendModes.opaque) {
+    gl.depthMask(false);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(blendMode.src, blendMode.dst);
+    if (blendMode.eq !== undefined) gl.blendEquation(blendMode.eq);
+  }
+  gl.useProgram(triProgram);
+  gl.bindVertexArray(triVAO);
+  gl.uniform1f(gl.getUniformLocation(triProgram,"rx"), rotX);
+  gl.uniform1f(gl.getUniformLocation(triProgram,"ry"), rotY);
+  gl.uniform1f(gl.getUniformLocation(triProgram,"zoom"), zoom);
+  gl.uniform1f(gl.getUniformLocation(triProgram,"d"), perspDist);
+  gl.uniform1f(gl.getUniformLocation(triProgram,"aspect"), canvas.width/canvas.height);
+  gl.uniform1f(gl.getUniformLocation(triProgram,"aa"), aa);
+  if (triCount) gl.drawArrays(gl.TRIANGLES, 0, triCount);
+
+  gl.depthMask(true);
+}
+
+// --------------------------------------------------------------------
+// Animation loop
+function animate() {
+  if (isanim) {
+    for (let i = 0; i < ndAngles.length; i++) {
+      ndAngles[i] += ndSpeeds[i];
+    }
+    generate();
+  }
+  requestAnimationFrame(animate);
+}
+
+// --------------------------------------------------------------------
+// Event listeners
+dimNInput.addEventListener('change', resizeMatrix);
+
+projSlider.oninput = () => {
+  projDist = parseFloat(projSlider.value);
+  projVal.textContent = projDist;
+  generate();
+};
+
+d3Slider.oninput = () => {
+  perspDist = parseFloat(d3Slider.value);
+  d3Val.textContent = perspDist;
+  draw();
+};
+
+blendSelect.addEventListener('change', (e) => {
+  blendMode = BlendModes[e.target.value] || BlendModes.alpha;
+  draw();
+});
+
+rkSlider.addEventListener('input', e => { rk = +e.target.value; rkVal.textContent = rk; generate(); });
+gkSlider.addEventListener('input', e => { gk = +e.target.value; gkVal.textContent = gk; generate(); });
+bkSlider.addEventListener('input', e => { bk = +e.target.value; bkVal.textContent = bk; generate(); });
+lllSlider.addEventListener('input', e => { lll = +e.target.value; lllVal.textContent = lll; generate(); });
+aSlider.addEventListener('input', e => { aa = +e.target.value; aVal.textContent = aa; draw(); });
+
+// Track which ND rotation plane is active
+let activeNDPlane = -1;  // -1 means normal 3D rotation
+
+// Keyboard handlers to set active plane
+document.addEventListener('keydown', (e) => {
+  const key = e.key.toLowerCase();
+  const planeMap = {
+    'z': 0, 'x': 1, 'c': 2, 'v': 3, 'b': 4, 'n': 5, 'm': 6
+  };
+  
+  if (key in planeMap) {
+ //   e.preventDefault();
+    activeNDPlane = planeMap[key];
+  }
+});
+
+
+// Modified mouse handler
+canvas.onmousemove = e => {
+  if (e.buttons) {
+    if (activeNDPlane >= 0) {
+      // Control ND rotation angles
+      const base = activeNDPlane*2+3;// * 2;
+      const speed = 0.01;
+      
+      // Mouse X affects first angle, mouse Y affects second angle
+      if (base < ndAngles.length) {
+        ndAngles[base] += e.movementX * speed;
+        if (base + 1 < ndAngles.length) {
+          ndAngles[base + 1] += e.movementY * speed;
+        }
+        generate();  // regenerate with new ND rotation
+      }
+    } else {
+      // Normal 3D rotation of the projected object
+      rotY += e.movementX * 0.01;
+      rotX += e.movementY * 0.01;
+      draw();
+    }
+  }
+};
+
+
+
+canvas.onwheel = e => {
+  e.preventDefault();
+  zoom *= Math.exp(-e.deltaY * 0.001);
+  draw();
+};
+
+// Distance rank toggles
+const toggleBtn = document.getElementById('toggleDistances');
+const distanceDiv = document.getElementById('distanceControls');
+toggleBtn.addEventListener('click', () => {
+  distanceDiv.style.display = distanceDiv.style.display === 'none' ? 'block' : 'none';
+});
+
+for (let i = 0; i < 10; i++) {
+  let label = document.createElement('label');
+  label.style.display = 'block';
+  let cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.checked = (i === 0);
+  cb.addEventListener('change', () => {
+    mmm[i] = cb.checked ? 1 : 0;
+    generate();
+  });
+  label.appendChild(cb);
+  label.appendChild(document.createTextNode(' distance rank ' + i));
+  distanceDiv.appendChild(label);
+}
+
+window.anim = () => { isanim = !isanim; };
+window.animf = () => { isface = !isface; generate(); };
+window.anime = () => { isedge = !isedge; generate(); };
+window.resett = () => {
+edgeCache = new Map();
+  faceCacheMap = new Map();
+  generate();
+};
+
+// Initialise
+resizeMatrix();
+animate();
+
+
+
+
+
+function resizeMatrix() {
+  N = parseInt(dimNInput.value, 10) || 4;
+  if (N < 2) N = 2;
+  if (N > 10) N = 10;
+  dimNInput.value = N;
+
+  let html = '<table>';
+  for (let i = 0; i < N; i++) {
+    html += '<tr>';
+    for (let j = 0; j < N; j++) {
+      let val = (i === j) ? 1 : (i === j+1 || j === i+1) ? 3 : 2;
+      html += `<td><input id="m${i}${j}" value="${val}"></td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</table>';
+  matrixDiv.innerHTML = html;
+
+  html = 'Decoration<br>';
+  for (let i = 0; i < N; i++) {
+    let val = (i === 0) ? 1 : 0;
+    html += `<input id="d${i}" value="${val}" style="width:45px">`;
+  }
+  decoDiv.innerHTML = html;
+
+  initNDRotations();
+  generate();
+}
+
+
+
+
+
+</script>
+
+</body>
+</html>

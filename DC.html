@@ -278,9 +278,114 @@ background-color: #eeeeee;
     box-sizing: border-box;
 }
 
-.popup-button:hover {
-    background-color: #e0e0e0;
+
+
+.custom-select .options {
+  position: fixed;
+
+  /* position inside left 40% region */
+  left: 25%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  width: 40%;
+  max-height: 60vh;
+
+  overflow-y: auto;
+
+  display: none;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  padding: 10px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+
+  z-index: 1000;
+  box-sizing: border-box;
 }
+
+.custom-select.open .options {
+  display: flex;
+}
+
+/* Show when open */
+.custom-select.open .options {
+  display: flex;
+}
+
+/* Each tile = 70x70 box */
+.custom-select .option {
+  position: relative;
+
+  width: 70px;
+  height: 70px;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #f8f8f8;
+  cursor: pointer;
+  overflow: hidden;
+  text-align: center;
+
+  transition: background 0.15s ease;
+}
+
+/* Preview image / canvas */
+.custom-select .option .preview {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+}
+
+/* Text over bottom 20px */
+.custom-select .option .label {
+  position: absolute;
+  bottom: 0;
+
+  width: 100%;
+  height: 20px;
+
+  font-size: 10px;
+  line-height: 20px;
+  text-align: center;
+
+  background: rgba(255,255,255,0.7);
+}
+
+/* Dark mode */
+.dark-mode .custom-select .options {
+  background: #111;
+  border-color: #333;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+}
+
+.dark-mode .custom-select .option {
+  background: #222;
+  border-color: #333;
+  color: #fff;
+}
+
+.dark-mode .custom-select .option .label {
+  background: rgba(0,0,0,0.6);
+}
+.preview {
+  width: 50px;
+  height: 50px;
+  border: 1px solid #ccc;
+}
+
 @media (max-width: 600px) {
     .popup-content {
         max-width: 95vw;
@@ -753,70 +858,273 @@ Colors based on imag^2/real and real^2/imag.
 </div>
     <div class="form-group">
         <label for="color-mode">Color Mode:</label>
-        <select id="color-mode" name="color-mode">
-            <option value="hsv">HSV</option>
-            <option value="hsl">HSL</option>,
-            <option value="hsv4">HSV4</option>
-            <option value="hsl4">HSL4</option>
-            <option value="rgb">RGB</option>
-            <option value="hcl">HCL</option>
-			 <option value="ycbcr">YCbCr</option>
-			  <option value="ydbdr">YDbDr</option>
-			   <option value="ycocg">YCoCg</option>
-			    <option value="ypbpr">YPbPr</option>
-            <option value="cielch">CIELCH</option>
-	      <option value="qhsv">qHSV</option>
-            <option value="qhsl">qHSL</option>
-            <option value="phsv">pHSV</option>
-            <option value="phsl">pHSL</option>
-            <option value="phsl">pHSL</option>
-            <option value="hqv">HQV</option>
-              <option value="hsm">HSM</option>
-               <option value="hsg">HSG</option>
-                <option value="hsh">HSH</option>
-        <option value="2d">2d</option>
-		  <option value="contour">Contour</option>
-		 <option value="pcontour">Polar Contour</option>
-		 <!-- <option value="acontour">Antialias Contour</option> -->
-		   <option value="isolines">Isolines</option> 
-		   <option value="neon">Neon</option>
-            <option value="shiny">Shine</option>
-		   <option value="differ">Differ</option>
-		   <option value="purify">Purify</option>
-		   <option value="real">Real</option>
-		   <option value="imag">Imaginary</option>
-		   <option value="magnitude">Magnitude</option>
-		   <option value="magnitudeold">Magnitude 2</option>
-		   <option value="magnitudecolour">Magnitude 3</option>
-		  		   <option value="mag4">Magnitude 4</option>
-                   
-                   <option value="divergenceri">Divergence HSV</option>
-                   
-                   <option value="gradientri">gradient HSV</option>
-                   <option value="fixed1">Fixed point</option>
+        <div class="custom-select" id="colorModeSelect">
+  <div class="selected">HSV</div>
  
-                   		   <option value="realimagheat">Real Imag Map</option>
-                           
-                           
-                           <option value="trisect">Trisection</option>
-                           <option value="quadrant">Quadrant</option>
-                           <option value="hexasect">Hexasection</option>
-                           <option value="octant">Octant</option>
-                           <option value="dodecasect">Dodecasection</option>
-                           
-           <option value="griddistort">Grid Distort</option>
-           <option value="griddistorts">Grid Distort Solid</option>
-           <option value="griddistortbw">Grid Distort BW</option>
-             <option value="upperplanebw">Upper Plane BW</option>
-             <option value="unitcirclebw">Unit Circle BW</option>
-             
-              <option value="freergb">Free RGB [r,g,b]</option>
-               <option value="freehsv">Free HSV [h,s,v]</option>
-                <option value="freehsl">Free HSL [h,s,l]</option>
-               
-               
-            <option value="palette">Palette</option>
-        </select>
+
+
+ <div class="options">
+ 
+ 
+<div class="option" data-value="hsv">
+  <span class="label">HSV</span>
+  <canvas class="preview" data-mode="hsv"></canvas>
+</div>
+
+<div class="option" data-value="hsl">
+  <span class="label">HSL</span>
+  <canvas class="preview" data-mode="hsl"></canvas>
+</div>
+
+<div class="option" data-value="hsv4">
+  <span class="label">HSV4</span>
+  <canvas class="preview" data-mode="hsv4"></canvas>
+</div>
+
+<div class="option" data-value="hsl4">
+  <span class="label">HSL4</span>
+  <canvas class="preview" data-mode="hsl4"></canvas>
+</div>
+
+<div class="option" data-value="rgb">
+  <span class="label">RGB</span>
+  <canvas class="preview" data-mode="rgb"></canvas>
+</div>
+
+<div class="option" data-value="hcl">
+  <span class="label">HCL</span>
+  <canvas class="preview" data-mode="hcl"></canvas>
+</div>
+
+<div class="option" data-value="ycbcr">
+  <span class="label">YCbCr</span>
+  <canvas class="preview" data-mode="ycbcr"></canvas>
+</div>
+
+<div class="option" data-value="ydbdr">
+  <span class="label">YDbDr</span>
+  <canvas class="preview" data-mode="ydbdr"></canvas>
+</div>
+
+<div class="option" data-value="ycocg">
+  <span class="label">YCoCg</span>
+  <canvas class="preview" data-mode="ycocg"></canvas>
+</div>
+
+<div class="option" data-value="ypbpr">
+  <span class="label">YPbPr</span>
+  <canvas class="preview" data-mode="ypbpr"></canvas>
+</div>
+
+<div class="option" data-value="cielch">
+  <span class="label">CIELCH</span>
+  <canvas class="preview" data-mode="cielch"></canvas>
+</div>
+
+<div class="option" data-value="qhsv">
+  <span class="label">qHSV</span>
+  <canvas class="preview" data-mode="qhsv"></canvas>
+</div>
+
+<div class="option" data-value="qhsl">
+  <span class="label">qHSL</span>
+  <canvas class="preview" data-mode="qhsl"></canvas>
+</div>
+
+<div class="option" data-value="phsv">
+  <span class="label">pHSV</span>
+  <canvas class="preview" data-mode="phsv"></canvas>
+</div>
+
+<div class="option" data-value="phsl">
+  <span class="label">pHSL</span>
+  <canvas class="preview" data-mode="phsl"></canvas>
+</div>
+
+<div class="option" data-value="hqv">
+  <span class="label">HQV</span>
+  <canvas class="preview" data-mode="hqv"></canvas>
+</div>
+
+<div class="option" data-value="hsm">
+  <span class="label">HSM</span>
+  <canvas class="preview" data-mode="hsm"></canvas>
+</div>
+
+<div class="option" data-value="hsg">
+  <span class="label">HSG</span>
+  <canvas class="preview" data-mode="hsg"></canvas>
+</div>
+
+<div class="option" data-value="hsh">
+  <span class="label">HSH</span>
+  <canvas class="preview" data-mode="hsh"></canvas>
+</div>
+
+<div class="option" data-value="2d">
+  <span class="label">2D</span>
+  <canvas class="preview" data-mode="2d"></canvas>
+</div>
+
+<div class="option" data-value="contour">
+  <span class="label">Contour</span>
+  <canvas class="preview" data-mode="contour"></canvas>
+</div>
+
+<div class="option" data-value="pcontour">
+  <span class="label">Polar Contour</span>
+  <canvas class="preview" data-mode="pcontour"></canvas>
+</div>
+
+<div class="option" data-value="isolines">
+  <span class="label">Isolines</span>
+  <canvas class="preview" data-mode="isolines"></canvas>
+</div>
+
+<div class="option" data-value="neon">
+  <span class="label">Neon</span>
+  <canvas class="preview" data-mode="neon"></canvas>
+</div>
+
+<div class="option" data-value="shiny">
+  <span class="label">Shiny</span>
+  <canvas class="preview" data-mode="shiny"></canvas>
+</div>
+
+<div class="option" data-value="differ">
+  <span class="label">Differ</span>
+  <canvas class="preview" data-mode="differ"></canvas>
+</div>
+
+<div class="option" data-value="purify">
+  <span class="label">Purify</span>
+  <canvas class="preview" data-mode="purify"></canvas>
+</div>
+
+<div class="option" data-value="real">
+  <span class="label">Real</span>
+  <canvas class="preview" data-mode="real"></canvas>
+</div>
+
+<div class="option" data-value="imag">
+  <span class="label">Imaginary</span>
+  <canvas class="preview" data-mode="imag"></canvas>
+</div>
+
+<div class="option" data-value="magnitude">
+  <span class="label">Magnitude</span>
+  <canvas class="preview" data-mode="magnitude"></canvas>
+</div>
+
+<div class="option" data-value="magnitudeold">
+  <span class="label">Magnitude 2</span>
+  <canvas class="preview" data-mode="magnitudeold"></canvas>
+</div>
+
+<div class="option" data-value="magnitudecolour">
+  <span class="label">Magnitude 3</span>
+  <canvas class="preview" data-mode="magnitudecolour"></canvas>
+</div>
+
+<div class="option" data-value="mag4">
+  <span class="label">Magnitude 4</span>
+  <canvas class="preview" data-mode="mag4"></canvas>
+</div>
+
+<div class="option" data-value="divergenceri">
+  <span class="label">Divergence HSV</span>
+  <canvas class="preview" data-mode="divergenceri"></canvas>
+</div>
+
+<div class="option" data-value="gradientri">
+  <span class="label">Gradient HSV</span>
+  <canvas class="preview" data-mode="gradientri"></canvas>
+</div>
+
+<div class="option" data-value="fixed1">
+  <span class="label">Fixed Point</span>
+  <canvas class="preview" data-mode="fixed1"></canvas>
+</div>
+
+<div class="option" data-value="realimagheat">
+  <span class="label">Real Imag Map</span>
+  <canvas class="preview" data-mode="realimagheat"></canvas>
+</div>
+
+<div class="option" data-value="trisect">
+  <span class="label">Trisection</span>
+  <canvas class="preview" data-mode="trisect"></canvas>
+</div>
+
+<div class="option" data-value="quadrant">
+  <span class="label">Quadrant</span>
+  <canvas class="preview" data-mode="quadrant"></canvas>
+</div>
+
+<div class="option" data-value="hexasect">
+  <span class="label">Hexasection</span>
+  <canvas class="preview" data-mode="hexasect"></canvas>
+</div>
+
+<div class="option" data-value="octant">
+  <span class="label">Octant</span>
+  <canvas class="preview" data-mode="octant"></canvas>
+</div>
+
+<div class="option" data-value="dodecasect">
+  <span class="label">Dodecasection</span>
+  <canvas class="preview" data-mode="dodecasect"></canvas>
+</div>
+
+<div class="option" data-value="griddistort">
+  <span class="label">Grid Distort</span>
+  <canvas class="preview" data-mode="griddistort"></canvas>
+</div>
+
+<div class="option" data-value="griddistorts">
+  <span class="label">Grid Distort Solid</span>
+  <canvas class="preview" data-mode="griddistorts"></canvas>
+</div>
+
+<div class="option" data-value="griddistortbw">
+  <span class="label">Grid Distort BW</span>
+  <canvas class="preview" data-mode="griddistortbw"></canvas>
+</div>
+
+<div class="option" data-value="upperplanebw">
+  <span class="label">Upper Plane BW</span>
+  <canvas class="preview" data-mode="upperplanebw"></canvas>
+</div>
+
+<div class="option" data-value="unitcirclebw">
+  <span class="label">Unit Circle BW</span>
+  <canvas class="preview" data-mode="unitcirclebw"></canvas>
+</div>
+
+<div class="option" data-value="freergb">
+  <span class="label">Free RGB [r,g,b]</span>
+  <canvas class="preview" data-mode="freergb"></canvas>
+</div>
+
+<div class="option" data-value="freehsv">
+  <span class="label">Free HSV [h,s,v]</span>
+  <canvas class="preview" data-mode="freehsv"></canvas>
+</div>
+
+<div class="option" data-value="freehsl">
+  <span class="label">Free HSL [h,s,l]</span>
+  <canvas class="preview" data-mode="freehsl"></canvas>
+</div>
+
+<div class="option" data-value="palette">
+  <span class="label">Palette</span>
+  <canvas class="preview" data-mode="palette"></canvas>
+</div>
+
+  </div>
+</div>
+
+<input type="hidden" id="color-mode" value="hsv">
     </div>
     <div id="palette-group" class="form-group" style="display: none;">
         <label for="palette-file">Select Palette BMP (360x100):</label>
@@ -872,6 +1180,8 @@ Colors based on imag^2/real and real^2/imag.
      <button id="createMeshButtonsphd">Create Spherical Density</button>
           <button id="createMeshButtond">Create Density</button>
 <!-- <button id="createMeshButtongnm">Create Gnomonic Mesh and Animate</button> --->
+     <button onclick="renderfullBMP()">Generate Full</button>
+
 
     <label for="frames">#of frames gif</label>
  <input type="range" id="frames" name="#of frames for gif" min="1" max="360" value="30">
@@ -1092,7 +1402,7 @@ Colors based on imag^2/real and real^2/imag.
 	*/
     
     
-    Error.stackTraceLimit = 100;
+    Error.stackTraceLimit = 500;
     
         let paletteImageData = null;
 	const scene = new THREE.Scene();
@@ -1131,6 +1441,91 @@ page = math.mod(page+1,4);
 
 camera.position.set(0, 20, -5);
 camera.lookAt(0, 0, -5);
+const select = document.getElementById("colorModeSelect");
+const selected = select.querySelector(".selected");
+const options = select.querySelectorAll(".option");
+const hiddenInput = document.getElementById("color-mode");
+
+selected.addEventListener("click", () => {
+  select.classList.toggle("open");
+});
+
+options.forEach(option => {
+  option.addEventListener("click", () => {
+    const value = option.dataset.value;
+    const label = option.querySelector(".label").textContent;
+
+    selected.textContent = label;
+    hiddenInput.value = value;
+
+    select.classList.remove("open");
+hiddenInput.value = value;
+hiddenInput.dispatchEvent(
+    new CustomEvent('colorModeChanged', {
+        detail: { value }
+    })
+);
+renderBMP();
+
+    //renderBMP(); // auto refresh on selection change
+  });
+});
+
+// Close when clicking outside
+document.addEventListener("click", (e) => {
+  if (!select.contains(e.target)) {
+    select.classList.remove("open");
+  }
+});
+
+
+function renderColorPreviews() {
+    document.querySelectorAll(".preview").forEach(canvas => {
+
+        const mode = canvas.parentElement.dataset.value;
+
+        canvas.width = 50;
+        canvas.height = 50;
+
+        const ctx = canvas.getContext("2d");
+        const imageData = ctx.createImageData(50, 50);
+        const data = imageData.data;
+
+        // Identity function f(x)=x
+        for (let x = 0; x < 50; x++) {
+            for (let y = 0; y < 50; y++) {
+
+                const u = (x / 50) * 2 - 1;
+                const v = (y / 50) * 2 - 1;
+
+                const z = math.complex(u, v);
+                const fz = z; // identity
+                const F = q=>mul(q,exp(mul(q,pi())))
+                const color = complexToColor(
+                    fz,
+                    F(fz),
+                    "x",
+                    mode,
+                    100,
+                    100,
+                    paletteImageData,
+                    0.05,
+                    derv(F,fz)
+                );
+
+                const idx = (y * 50 + x) * 4;
+                data[idx] = color[0];
+                data[idx + 1] = color[1];
+                data[idx + 2] = color[2];
+                data[idx + 3] = 255;
+            }
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+    });
+}
+renderColorPreviews()
+
 
 function createAndAnimateMesh() {
 gridSize = document.getElementById('bmp-width').value;
@@ -2165,6 +2560,7 @@ function plotGraph(point1, point2) {
 
 document.addEventListener('DOMContentLoaded', () => { 
   document.getElementById('graphControls').style.display = 'none'; 
+  
 });
 
 
@@ -2177,11 +2573,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+const colorModeInput = document.getElementById('color-mode');
 
+colorModeInput.addEventListener('colorModeChanged', function (e) {
+    const value = e.detail.value;
 
+    const paletteGroup = document.getElementById('palette-group');
+    const contourGroup = document.getElementById('contour-group');
 
+    if (value === 'palette') {
+        paletteGroup.style.display = 'block';
+    } else {
+        paletteGroup.style.display = 'none';
+    }
 
+    if (
+        value === 'contour' ||
+        value === 'pcontour' ||
+        value === 'acontour'
+    ) {
+        contourGroup.style.display = 'block';
+    } else {
+        contourGroup.style.display = 'none';
+    }
+});
 
+colorModeInput.dispatchEvent(
+    new CustomEvent('colorModeChanged', {
+        detail: { value: colorModeInput.value }
+    })
+);
+/*
         document.getElementById('color-mode').addEventListener('change', function() {
             if (this.value === 'palette') {
                 document.getElementById('palette-group').style.display = 'block';
@@ -2194,7 +2616,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('contour-group').style.display = 'none';
             }
         });
-        
+        */
         document.getElementById('palette-file').addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (file) {
@@ -2321,18 +2743,243 @@ const xxx = math.complex(xre,xim);
 
 
 
+async function renderfullBMP() {
+    const width = parseInt(document.getElementById('bmp-width').value);
+    const height = parseInt(document.getElementById('bmp-height').value);
+    const minReal = parseFloat(document.getElementById('min-real').value);
+    const maxReal = parseFloat(document.getElementById('max-real').value);
+    const minImag = parseFloat(document.getElementById('min-imag').value);
+    const maxImag = parseFloat(document.getElementById('max-imag').value);
+    const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+    const lightness = parseInt(document.getElementById('lightness').value);
+    const funcStr = document.getElementById('function').value.trim();
+    const thick = parseFloat(document.getElementById('thick').value);
+
+    const canvas = document.getElementById('bmpCanvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.createImageData(width, height);
+    const data = imageData.data;
+
+    const reStep = (2) / width;
+    const imStep = (2) / height;
+
+    const reValues = new Float64Array(width);
+    const imValues = new Float64Array(height);
+
+    for (let x = 0; x < width; x++) reValues[x] =  atanh(-1 + x * reStep)**3*(maxReal - minReal)*2;
+    for (let y = 0; y < height; y++) imValues[y] = atanh(1 - y *  imStep)**3*(maxImag - minImag)*2;
+//console.log(reValues)
+    const memoValues = new Array(width).fill(0);
+ const funcTree = teth.parse(teth.tokenize(funcStr));
+    // Draw in blocks of lines to avoid blocking UI but stay fast
+    const blockSize = 10; // can tweak for performance
+    for (let yStart = 0; yStart < height; yStart += blockSize) {
+        const yEnd = Math.min(yStart + blockSize, height);
+        for (let x = 0; x < width; x++) {
+            const re = reValues[x];
+            let memo = memoValues[x];
+
+            for (let y = yStart; y < yEnd; y++) {
+                const im = imValues[y];
+                const complexValue = math.complex(re, im);
+                //const q = math.exp(math.multiply(math.complex(0, Math.PI), complexValue));
+
+                const funcValue = teth.evaluateTree(funcTree, { x: complexValue ,xx:re,yy:im });
+                const color = complexToColor(
+                    complexValue,
+                    funcValue,
+                    magnitudeToLightnessExpr,
+                    colorMode,
+                    saturationChroma,
+                    lightness,
+                    paletteImageData,
+                    thick,
+                    math.divide(math.subtract(funcValue, memo), imStep)
+                );
+
+                const index = (y * width + x) * 4;
+                data[index] = color[0];
+                data[index + 1] = color[1];
+                data[index + 2] = color[2];
+                data[index + 3] = 255;
+
+                memo = funcValue;
+            }
+
+            memoValues[x] = memo; // save for next block
+        }
+     //       ctx.putImageData(imageData, 0, 0);
+   // ctx.putImageData(imageData, 0, 0);
+   // await new Promise(requestAnimationFrame);
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    scaleCanvas();
+}
 
 
 
 
 
 
+let cachedFunctioninps = null;
+let cachedFunctionValues = null;
+let cachedGrid = null;
+let cachedFuncParams = null;
 
+async function computeFunctionValues() {
+    const width = parseInt(document.getElementById('bmp-width').value);
+    const height = parseInt(document.getElementById('bmp-height').value);
+    const minReal = parseFloat(document.getElementById('min-real').value);
+    const maxReal = parseFloat(document.getElementById('max-real').value);
+    const minImag = parseFloat(document.getElementById('min-imag').value);
+    const maxImag = parseFloat(document.getElementById('max-imag').value);
+    const funcStr = document.getElementById('function').value.trim();
 
+    const funcTree = teth.parse(teth.tokenize(funcStr));
 
+    const reStep = (maxReal - minReal) / width;
+    const imStep = (maxImag - minImag) / height;
 
+    const values = new Array(width);
+  const  valuess= new Array(width);
+    for (let x = 0; x < width; x++) {
+        values[x] = new Array(height);
+        valuess[x] = new Array(height);
+        const re = minReal + x * reStep;
+
+        for (let y = 0; y < height; y++) {
+            const im = maxImag - y * imStep;
+            const z = math.complex(re, im);
+
+            values[x][y] = teth.evaluateTree(funcTree, {
+                x: z,
+                xx: re,
+                yy: im
+            });
+            valuess[x][y] = z
+        }
+    }
+ cachedFunctioninps = valuess;
+    cachedFunctionValues = values;
+    cachedGrid = { width, height };
+    cachedFuncParams = { minReal, maxReal, minImag, maxImag, funcStr };
+}
+
+function renderFromCache() {
+    if (!cachedFunctionValues) return;
+
+    const canvas = document.getElementById('bmpCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const width = cachedGrid.width;
+    const height = cachedGrid.height;
+
+    canvas.width = width;
+    canvas.height = height;
+
+    const magnitudeToLightnessExpr =
+        document.getElementById('magnitude-to-lightness').value.trim();
+
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+    const lightness = parseInt(document.getElementById('lightness').value);
+    const thick = parseFloat(document.getElementById('thick').value);
+
+    const imageData = ctx.createImageData(width, height);
+    const data = imageData.data;
+
+    for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+
+            const funcValue = cachedFunctionValues[x][y];
+//console.log(cachedFunctioninps[x][y])
+const fff= cachedFunctioninps[x][y]
+            const color = complexToColor(
+               fff,
+                funcValue,
+                magnitudeToLightnessExpr,
+                colorMode,
+                saturationChroma,
+                lightness,
+                paletteImageData,
+                thick,
+                (x==0 || y==0)?0:div(sub(cachedFunctionValues[x][y],cachedFunctionValues[x-1][y]),sub(cachedFunctioninps[x][y],cachedFunctioninps[x-1][y]))
+            );
+            
+         //   if(!(x==0 || y==0))console.log(div(sub(cachedFunctionValues[x][y],cachedFunctionValues[x-1][y-1]),sub(cachedFunctioninps[x][y],cachedFunctioninps[x-1][y-1])))
+
+            const idx = (y * width + x) * 4;
+            data[idx] = color[0];
+            data[idx + 1] = color[1];
+            data[idx + 2] = color[2];
+            data[idx + 3] = 255;
+        }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    scaleCanvas();
+}
 
 async function renderBMP() {
+
+    const width = parseInt(document.getElementById('bmp-width').value);
+    const height = parseInt(document.getElementById('bmp-height').value);
+    const minReal = parseFloat(document.getElementById('min-real').value);
+    const maxReal = parseFloat(document.getElementById('max-real').value);
+    const minImag = parseFloat(document.getElementById('min-imag').value);
+    const maxImag = parseFloat(document.getElementById('max-imag').value);
+    const funcStr = document.getElementById('function').value.trim();
+
+    const needRecompute =
+        !cachedFunctionValues ||
+        !cachedGrid ||
+        cachedGrid.width !== width ||
+        cachedGrid.height !== height ||
+        !cachedFuncParams ||
+        cachedFuncParams.funcStr !== funcStr ||
+        cachedFuncParams.minReal !== minReal ||
+        cachedFuncParams.maxReal !== maxReal ||
+        cachedFuncParams.minImag !== minImag ||
+        cachedFuncParams.maxImag !== maxImag;
+
+    if (needRecompute) {
+        await computeFunctionValues();
+    }
+
+    renderFromCache();
+}
+
+function attachColorListeners() {
+    const ids = [
+        "magnitude-to-lightness",
+        "color-mode",
+        "saturation-chroma",
+        "lightness",
+        "thick"
+    ];
+
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        el.addEventListener("input", () => {
+            renderFromCache();
+        });
+
+        el.addEventListener("change", () => {
+            renderFromCache();
+        });
+    });
+}
+attachColorListeners()
+
+
+async function renderBMPo() {
     const width = parseInt(document.getElementById('bmp-width').value);
     const height = parseInt(document.getElementById('bmp-height').value);
     const minReal = parseFloat(document.getElementById('min-real').value);

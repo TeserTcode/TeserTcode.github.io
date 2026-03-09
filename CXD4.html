@@ -1,0 +1,853 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>4D Coxeter Renderer</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+<script src="clrspc.js"></script>
+<script src="polyhedra.js"></script>
+<script src="mthfnc.js"></script>
+
+<style>
+body{font-family:Arial;margin:10px}
+input{width:45px}
+canvas{border:1px solid black;width:700px;height:700px}
+table{border-collapse:collapse}
+td{padding:2px}
+input[type=range] {
+    width: 400px;  /* adjust length as desired */
+    margin: 5px 0;
+}
+label {
+    display: block;
+    margin-top: 10px;
+    font-family: Arial, sans-serif;
+}
+</style>
+</head>
+
+<body>
+
+<h3>4D Coxeter Matrix</h3>
+
+<table>
+<tr>
+<td><input id="m00" value="1"></td>
+<td><input id="m01" value="3"></td>
+<td><input id="m02" value="2"></td>
+<td><input id="m03" value="2"></td>
+</tr>
+<tr>
+<td><input id="m10" value="3"></td>
+<td><input id="m11" value="1"></td>
+<td><input id="m12" value="3"></td>
+<td><input id="m13" value="2"></td>
+</tr>
+<tr>
+<td><input id="m20" value="2"></td>
+<td><input id="m21" value="3"></td>
+<td><input id="m22" value="1"></td>
+<td><input id="m23" value="3"></td>
+</tr>
+<tr>
+<td><input id="m30" value="2"></td>
+<td><input id="m31" value="2"></td>
+<td><input id="m32" value="3"></td>
+<td><input id="m33" value="1"></td>
+</tr>
+</table>
+
+Decoration
+<input id="d0" value="1">
+<input id="d1" value="0">
+<input id="d2" value="0">
+<input id="d3" value="0">
+
+<button onclick="generate()">Generate</button>
+<button onclick="anim()">Stop/Start</button>
+<button onclick="animf()">Face/Unface</button>
+<button onclick="anime()">Edge/Unedge</button>
+<button onclick="resett()">Reset Memory</button>
+<div style="display:flex; align-items:center; gap:10px;">
+    <label for="d3Slider">dd3:</label>
+    <input type="range" id="d3Slider" min="1" max="100" value="26">
+    <span id="d3Val">26</span>
+</div>
+
+<div style="display:flex; align-items:center; gap:10px;">
+    <label for="d4Slider">d4:</label>
+    <input type="range" id="d4Slider" min="1" max="50" value="14">
+    <span id="d4Val">14</span>
+</div>
+
+<select id="blendModeSelect">
+  <option value="alpha">Alpha</option>
+  <option value="additive">Additive</option>
+  <option value="subtractive">Subtractive</option>
+  <option value="multiplicative" selected>Multiplicative</option>
+  <option value="opaque">Opaque</option>
+  <option value="screen">Screen</option>
+  <option value="darken">Darken</option>
+  <option value="lighten">Lighten</option>
+  <option value="reverseSubtract">Reverse Subtract</option>
+  <option value="standardSubtract">Subtract</option>
+
+  <label for="bgColorPicker">Background Color:</label>
+<input type="color" id="bgColorPicker" value="#ffffff">
+</select><div style="display:flex; align-items:center; gap:10px;">
+  <label>RG: <span id="rgVal">100</span></label>
+  <input type="range" id="rkSlider" min="1" max="200" value="100">
+</div>
+<div style="display:flex; align-items:center; gap:10px;">
+  <label>BK: <span id="bkVal">100</span></label>
+  <input type="range" id="bkSlider" min="1" max="200" value="100">
+</div>
+<div style="display:flex; align-items:center; gap:10px;">
+  <label>GK: <span id="gkVal">100</span></label>
+  <input type="range" id="gkSlider" min="1" max="200" value="100">
+</div>
+<div style="display:flex; align-items:center; gap:10px;">
+  <label>LLL: <span id="lllVal">2</span></label>
+  <input type="range" id="lllSlider" min="0" max="5" step="0.1" value="2">
+</div>
+<div style="display:flex; align-items:center; gap:10px;">
+  <label>a: <span id="aVal">0.5</span></label>
+  <input type="range" id="aSlider" min="0" max="1" step="0.01" value="0.5">
+</div>
+<button id="toggleDistances">Show / Hide Distance Controls</button>
+<div id="distanceControls"></div>
+<div id="distanceControls"></div>
+<br>
+
+<canvas id="canvas" width="700" height="700"></canvas>
+
+<script>
+const toggleBtn = document.getElementById("toggleDistances");
+const distanceDiv = document.getElementById("distanceControls");
+const bgPicker = document.getElementById("bgColorPicker");
+toggleBtn.addEventListener("click", () => {
+    if(distanceDiv.style.display === "none"){
+        distanceDiv.style.display = "block";
+    } else {
+        distanceDiv.style.display = "none";
+    }
+});
+
+distanceDiv.style.display = "none";
+let isanim=1;
+function anim(){isanim=!isanim}
+
+let isface=1;
+function animf(){isface=!isface}
+let isedge=1;
+function anime(){isedge=!isedge}
+
+let mmm = [1,0,0,0,0,0,0,0,0,0]//new Array(10).fill(0); 
+
+/* ---------- globals ---------- */
+
+let rk=91
+let gk=53
+let bk=37
+let lll=3
+let aa=0.5
+const rkSlider = document.getElementById("rkSlider");
+const rkVal = document.getElementById("rkVal");
+rkSlider.addEventListener("input", e=>{
+    rk = +e.target.value;
+    rkVal.textContent = rk;
+    upload(edgeBuffer); // redraw with new value
+});
+
+
+const aSlider = document.getElementById("aSlider");
+const aVal = document.getElementById("aVal");
+aSlider.addEventListener("input", e=>{
+    aa = +e.target.value;
+    aVal.textContent = aa;
+    upload(edgeBuffer); // redraw with new value
+});
+
+// GK slider
+const gkSlider = document.getElementById("gkSlider");
+const gkVal = document.getElementById("gkVal");
+gkSlider.addEventListener("input", e=>{
+    gk = +e.target.value;
+    gkVal.textContent = gk;
+    upload(edgeBuffer);
+});
+
+// BK slider
+const bkSlider = document.getElementById("bkSlider");
+const bkVal = document.getElementById("bkVal");
+bkSlider.addEventListener("input", e=>{
+    bk = +e.target.value;
+    bkVal.textContent = bk;
+    upload(edgeBuffer);
+});
+
+// LLL slider
+const lllSlider = document.getElementById("lllSlider");
+const lllVal = document.getElementById("lllVal");
+lllSlider.addEventListener("input", e=>{
+    lll = +e.target.value;
+    lllVal.textContent = lll;
+    upload(edgeBuffer);
+});
+document.getElementById("blendModeSelect").addEventListener("change", (e)=>{
+    const val = e.target.value;
+    blendMode = BlendModes[val] || BlendModes.alpha;
+    draw(); // redraw with new blending
+});
+
+let canvas=document.getElementById("canvas")
+let gl=canvas.getContext("webgl2")
+
+let triProgram
+let edgeProgram
+
+let triVAO
+let edgeVAO
+
+let triCount=0
+let edgeCount=0
+
+let verts4=[]
+let verts=[]
+let faces=[]
+
+let rotX=0
+let rotY=0
+let zoom=1
+
+let rxw=0
+let ryw=0
+let rzw=0
+
+let dd3 = 26;
+let d4 = 14;
+
+const d3Slider = document.getElementById("d3Slider");
+const d4Slider = document.getElementById("d4Slider");
+const d3Val = document.getElementById("d3Val");
+const d4Val = document.getElementById("d4Val");
+
+d3Slider.oninput = () => {
+    dd3 = parseFloat(d3Slider.value);
+    d3Val.textContent = dd3;
+    draw();      // redraw with new d3
+};
+
+d4Slider.oninput = () => {
+    d4 = parseFloat(d4Slider.value);
+    d4Val.textContent = d4;
+    generate();  // regenerate vertices and faces using new d4
+};
+
+/* ---------- shaders ---------- */
+
+const vs=`#version 300 es
+in vec3 a_pos;
+in vec3 a_normal;
+in vec3 a_color;
+
+uniform float rx;
+uniform float ry;
+uniform float zoom;
+uniform float d;
+uniform float aspect;
+uniform float aa;
+
+out vec3 v_color;
+out vec3 v_normal;
+
+vec3 rotX(vec3 p,float a){
+float c=cos(a),s=sin(a);
+return vec3(p.x,p.y*c-p.z*s,p.y*s+p.z*c);
+}
+
+vec3 rotY(vec3 p,float a){
+float c=cos(a),s=sin(a);
+return vec3(p.x*c+p.z*s,p.y,-p.x*s+p.z*c);
+}
+
+void main(){
+
+vec3 p=a_pos;
+p=rotX(p,rx);
+p=rotY(p,ry);
+
+float s=zoom*2.0/(d-p.z);
+
+gl_Position=vec4((p.x*s)/aspect,p.y*s,(2.0*p.z)/d,1.0);
+
+v_color=a_color;
+v_normal=a_normal;
+}
+`
+
+const fs=`#version 300 es
+precision highp float;
+uniform float aa;
+in vec3 v_color;
+in vec3 v_normal;
+
+out vec4 o;
+
+void main(){
+
+vec3 L=normalize(vec3(0.6,0.7,0.4));
+float lam=abs(dot(normalize(v_normal),L));
+
+float i=(1.0-aa)+aa*lam;
+
+o=vec4(v_color*i,1.0);
+
+}
+`
+
+const edgeVS=`#version 300 es
+in vec3 a_pos;
+
+uniform float rx;
+uniform float ry;
+uniform float zoom;
+uniform float d;
+uniform float aspect;
+//uniform float aa;
+
+vec3 rotX(vec3 p,float a){
+float c=cos(a),s=sin(a);
+return vec3(p.x,p.y*c-p.z*s,p.y*s+p.z*c);
+}
+
+vec3 rotY(vec3 p,float a){
+float c=cos(a),s=sin(a);
+return vec3(p.x*c+p.z*s,p.y,-p.x*s+p.z*c);
+}
+
+void main(){
+
+vec3 p=a_pos;
+
+p=rotX(p,rx);
+p=rotY(p,ry);
+
+float s=zoom*2.0/(d-p.z);
+
+gl_Position=vec4((p.x*s)/aspect,p.y*s,(2.0*p.z)/d,1.0);
+
+}
+`
+
+const edgeFS=`#version 300 es
+precision highp float;
+out vec4 o;
+void main(){o=vec4(0.05,0.05,0.05,1);}
+`
+
+/* ---------- GL helpers ---------- */
+
+function shader(type,src){
+let s=gl.createShader(type)
+gl.shaderSource(s,src)
+gl.compileShader(s)
+return s
+}
+
+function program(v,f){
+let p=gl.createProgram()
+gl.attachShader(p,shader(gl.VERTEX_SHADER,v))
+gl.attachShader(p,shader(gl.FRAGMENT_SHADER,f))
+gl.linkProgram(p)
+return p
+}
+
+/* ---------- 4D rotation ---------- */
+
+function rotate4(v,a,b,t){
+
+let c=Math.cos(t)
+let s=Math.sin(t)
+
+let x=v[a]
+let y=v[b]
+
+v[a]=x*c-y*s
+v[b]=x*s+y*c
+
+return v
+}
+
+/* ---------- 4D → 3D projection ---------- */
+
+function project4(v){
+
+let w=v[3]
+let s=d4/(d4-w)
+
+return[
+v[0]*s,
+v[1]*s,
+v[2]*s
+]
+
+}
+
+
+
+/* ---------- edge detection (4D distance) ---------- */
+
+/* ---------- edge detection (4D distance) ---------- */
+function buildEdges(V4){
+
+    const edges = [];
+    const edgeIndices = [];
+    const n = V4.length;
+
+    const pairs = [];
+
+    // compute all pair distances
+    for(let i=0;i<n;i++){
+        for(let j=i+1;j<n;j++){
+            const dx=V4[i][0]-V4[j][0];
+            const dy=V4[i][1]-V4[j][1];
+            const dz=V4[i][2]-V4[j][2];
+            const dw=V4[i][3]-V4[j][3];
+            const d=Math.sqrt(dx*dx+dy*dy+dz*dz+dw*dw);
+            pairs.push({i,j,d});
+        }
+    }
+
+    // collect unique distances
+    const distList = [...new Set(pairs.map(p=>floor(p.d*1000)/1000))];
+    distList.sort((a,b)=>a-b);
+  //  console.log(distList)
+    const eps = distList[0]*0.01;
+
+    // build edges depending on mmm
+    for(let p of pairs){
+
+        for(let m=0;m<Math.min(10,distList.length);m++){
+
+            if(mmm[m] !== 1) continue;
+
+            if(Math.abs(p.d - distList[m]) < eps){
+                edgeIndices.push([p.i,p.j]);
+                edges.push(...project4(V4[p.i]), ...project4(V4[p.j]));
+                break;
+            }
+
+        }
+
+    }
+
+    return {edges:new Float32Array(edges), edgeIndices};
+}
+
+
+
+
+
+
+
+
+
+
+// Global cache map
+let faceCacheMap = new Map();
+const faceCache = new WeakMap(); // cache per edgeIndices object
+function resett(){
+_coxeterVertexCache = new Map();
+faceCacheMap = new Map();
+edgeIndices=[]
+}
+function makeFaceFinder(edgeIndices, maxFaces=50000){
+
+    if(!isface)return x=>[]
+
+    // Create a deterministic key for this edgeIndices array
+    // Sort each edge and join all edges into a string
+    const key = edgeIndices
+        .map(([a,b]) => a < b ? `${a},${b}` : `${b},${a}`)
+        .sort()
+        .join(';');
+
+    // If cached, return immediately
+    if(faceCacheMap.has(key)) return faceCacheMap.get(key);
+
+    // Build adjacency once
+    const adj = {};
+    edgeIndices.forEach(([a,b])=>{
+        if(!adj[a]) adj[a]=[];
+        if(!adj[b]) adj[b]=[];
+        adj[a].push(b);
+        adj[b].push(a);
+    });
+
+    // Helper: check shared edges using set for speed
+    function sharedEdges(f1,f2){
+        let count = 0;
+        const edges1 = new Set();
+        for(let i=0;i<f1.length;i++){
+            const a=f1[i], b=f1[(i+1)%f1.length];
+            edges1.add(a<b ? `${a},${b}` : `${b},${a}`);
+        }
+        for(let i=0;i<f2.length;i++){
+            const a=f2[i], b=f2[(i+1)%f2.length];
+            if(edges1.has(a<b ? `${a},${b}` : `${b},${a}`)){
+                count++;
+                if(count>1) return count;
+            }
+        }
+        return count;
+    }
+
+    // --- Precompute faces using only indices ---
+    const faces = [];
+    const n = Object.keys(adj).length;
+
+    // Step 1: triangles only
+    for(let i=0;i<n;i++){
+        for(let j of adj[i]){
+            if(j<=i) continue;
+            for(let k of adj[j]){
+                if(k<=i || k===j) continue;
+                if(adj[i].includes(k)){
+                    const tri = [i,j,k];
+                    let ok = true;
+                    for(const f of faces) if(sharedEdges(f,tri)>1){ ok=false; break; }
+                    if(ok) faces.push(tri);
+                    if(faces.length>=maxFaces) break;
+                }
+            }
+            if(faces.length>=maxFaces) break;
+        }
+        if(faces.length>=maxFaces) break;
+    }
+ let size = 4;
+    while(size <= 50 && faces.length < maxFaces){
+        let newFaces = 0;
+        for(const [a,b] of edgeIndices){
+            const queue = [[a,b]];
+            const visited = new Set([a,b]);
+            while(queue.length){
+                const path = queue.shift();
+                const last = path[path.length-1];
+                for(const nxt of adj[last]){
+                    if(nxt===path[0] && path.length>=size){
+                        const candidate = [...path];
+                        let ok=true;
+                        for(const f of faces) if(sharedEdges(f,candidate)>1){ ok=false; break; }
+                        if(ok){
+                            faces.push(candidate);
+                            newFaces++;
+                            if(faces.length>=maxFaces) break;
+                        }
+                        continue;
+                    }
+                    if(visited.has(nxt)) continue;
+                    visited.add(nxt);
+                    queue.push([...path,nxt]);
+                }
+                if(faces.length>=maxFaces) break;
+            }
+            if(faces.length>=maxFaces) break;
+        }
+        if(newFaces===0) break;
+        size++;
+    }
+    console.log("Faces precomputed:", faces.length);
+
+    // --- O(1) computeFaces function ---
+    const computeFaces = function(V){
+        if(typeof isface!=="undefined" && isface===0) return [];
+        // Map indices to vertices
+        return faces
+        return faces.map(face => face.map(idx => V[idx]));
+    };
+
+    // Cache this computeFaces for this edgeIndices
+   faceCacheMap.set(key, computeFaces);
+
+    
+    
+    return computeFaces;
+}
+
+
+
+
+
+
+function generate(){
+    // --- 1. Read Coxeter matrix & D ---
+    let M=[
+        [+m00.value,+m01.value,+m02.value,+m03.value],
+        [+m10.value,+m11.value,+m12.value,+m13.value],
+        [+m20.value,+m21.value,+m22.value,+m23.value],
+        [+m30.value,+m31.value,+m32.value,+m33.value]
+    ];
+   // console.log(M)
+    let D=[+d0.value,+d1.value,+d2.value,+d3.value];
+
+    // --- 2. Generate 4D vertices ---
+    verts4 = normalizevertices(verticesfromcoxeter(M,D));
+
+    // --- 3. Precompute edges & faces if vertex count changed ---
+    if(!window.edgeIndices || window.edgeIndices.length !== verts4.length){
+        const {edgeIndices} = buildEdges(verts4);
+        window.edgeIndices = edgeIndices;
+
+        // Precompute all faces once using indices
+        window.computeFaces = makeFaceFinder(edgeIndices);
+    }
+
+    // --- 4. Rotate vertices in 4D ---
+    let verts4_rotated = verts4.map(v=>{
+        let p = [...v];
+        p = rotate4(p,0,3,rxw);
+        p = rotate4(p,1,3,ryw);
+        p = rotate4(p,2,3,rzw);
+        return p;
+    });
+
+    // --- 5. Project to 3D ---
+    verts = verts4_rotated.map(project4);
+
+    // --- 6. Build edge buffer ---
+    let edgeBuf = [];
+    for(const [a,b] of window.edgeIndices){
+        edgeBuf.push(...verts[a]);
+        edgeBuf.push(...verts[b]);
+    }
+
+    // --- 7. Compute faces (O(1) using precomputed indices) ---
+    faces = window.computeFaces(verts4_rotated);
+
+    // --- 8. Upload to GL ---
+    upload(new Float32Array(edgeBuf));
+}
+let blendMode = { src: gl.DST_COLOR, dst: gl.ZERO };
+
+// Optional: predefined modes
+const BlendModes = {
+   alpha:          { src: gl.SRC_ALPHA, dst: gl.ONE_MINUS_SRC_ALPHA, eq: gl.FUNC_ADD },       // standard transparency
+    additive:       { src: gl.SRC_ALPHA, dst: gl.ONE, eq: gl.FUNC_ADD },                        // brightening
+    subtractive:    { src: gl.ONE, dst: gl.ONE, eq: gl.FUNC_REVERSE_SUBTRACT },                 // subtract source from framebuffer
+    multiplicative: { src: gl.DST_COLOR, dst: gl.ZERO, eq: gl.FUNC_ADD },                        // multiply
+    opaque:         { src: gl.ONE, dst: gl.ZERO, eq: gl.FUNC_ADD },                              // no blending
+    screen:         { src: gl.ONE_MINUS_DST_COLOR, dst: gl.ONE, eq: gl.FUNC_ADD },              // screen blend
+    darken:         { src: gl.ONE, dst: gl.ONE, eq: gl.FUNC_MIN },                               // take darker value
+    lighten:        { src: gl.ONE, dst: gl.ONE, eq: gl.FUNC_MAX },                               // take lighter value
+    reverseSubtract:{ src: gl.ONE, dst: gl.ONE, eq: gl.FUNC_REVERSE_SUBTRACT },                 // dst - src
+    standardSubtract:{ src: gl.ONE, dst: gl.ONE, eq: gl.FUNC_SUBTRACT } 
+};
+/* ---------- upload ---------- */
+/* ---------- upload ---------- */
+/* ---------- upload ---------- */
+function upload(edgeBuffer){
+    triProgram = program(vs, fs);
+    edgeProgram = program(edgeVS, edgeFS);
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(blendMode.src, blendMode.dst);
+    gl.enable(gl.DEPTH_TEST);
+
+    triVAO = gl.createVertexArray();
+    edgeVAO = gl.createVertexArray();
+
+    let pos = [], norm = [], col = [];
+
+    for(let f of faces){
+        let faceVerts = f.map(idx => verts[idx]);
+        let center = [0,0,0];
+        faceVerts.forEach(v => { center[0]+=v[0]; center[1]+=v[1]; center[2]+=v[2]; });
+        center = center.map(c => c/faceVerts.length);
+
+        let v0 = faceVerts[0], v1 = faceVerts[1], v2 = faceVerts[2];
+        let n = math.cross(math.subtract(v1,v0), math.subtract(v2,v0));
+        if(math.norm(n) < 1e-6) continue;
+        n = math.divide(n, math.norm(n));
+
+        let e1 = math.divide(math.subtract(v0,center), math.norm(math.subtract(v0,center)));
+        let e2 = math.cross(n,e1);
+
+        let sortedIndices = [...f].sort((a,b)=>{
+            let pa = math.subtract(verts[a], center);
+            let pb = math.subtract(verts[b], center);
+            let angleA = Math.atan2(math.dot(pa,e2), math.dot(pa,e1));
+            let angleB = Math.atan2(math.dot(pb,e2), math.dot(pb,e1));
+            return angleA - angleB;
+        });
+
+        for(let i=1; i<sortedIndices.length-1; i++){
+            let p0 = verts[sortedIndices[0]];
+            let p1 = verts[sortedIndices[i]];
+            let p2 = verts[sortedIndices[i+1]];
+            pos.push(...p0, ...p1, ...p2);
+            norm.push(...n, ...n, ...n);
+
+            let k = f.length;
+            let color = [
+                mul(((k*rk)%255)/255+0.1,lll),
+                mul(((k*gk)%255)/255+0.1,lll),
+                mul(((k*bk)%255)/255+0.1,lll),
+                0.5
+            ];
+            col.push(...color, ...color, ...color);
+        }
+    }
+
+    triCount = pos.length / 3;
+
+    // VAO and buffers setup (same as before)
+    gl.bindVertexArray(triVAO);
+
+    let b = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, b);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(pos), gl.STATIC_DRAW);
+    let loc = gl.getAttribLocation(triProgram, "a_pos");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 3, gl.FLOAT, false, 0, 0);
+
+    b = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, b);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(norm), gl.STATIC_DRAW);
+    loc = gl.getAttribLocation(triProgram, "a_normal");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 3, gl.FLOAT, false, 0, 0);
+
+    b = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, b);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(col), gl.STATIC_DRAW);
+    loc = gl.getAttribLocation(triProgram, "a_color");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 4, gl.FLOAT, false, 0, 0);
+
+    // edges
+    if(isedge){
+    edgeCount = edgeBuffer.length / 3;
+    gl.bindVertexArray(edgeVAO);
+    let edgeBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, edgeBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, edgeBuffer, gl.STATIC_DRAW);
+    let loca = gl.getAttribLocation(edgeProgram, "a_pos");
+    gl.enableVertexAttribArray(loca);
+    gl.vertexAttribPointer(loca, 3, gl.FLOAT, false, 0, 0);
+    }
+    draw();
+}
+
+/* ---------- draw ---------- */
+function draw(){
+    gl.viewport(0,0,canvas.width,canvas.height);
+     const hex = bgPicker.value;
+    const r = parseInt(hex.substr(1,2),16)/255;
+    const g = parseInt(hex.substr(3,2),16)/255;
+    const b = parseInt(hex.substr(5,2),16)/255;
+
+    gl.clearColor(r, g, b, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+
+    // Draw edges first (opaque)
+    gl.depthMask(true);
+    gl.useProgram(edgeProgram);
+    gl.bindVertexArray(edgeVAO);
+    gl.uniform1f(gl.getUniformLocation(edgeProgram,"rx"),rotX);
+    gl.uniform1f(gl.getUniformLocation(edgeProgram,"ry"),rotY);
+    gl.uniform1f(gl.getUniformLocation(edgeProgram,"zoom"),zoom);
+    gl.uniform1f(gl.getUniformLocation(edgeProgram,"d"),dd3);
+    gl.uniform1f(gl.getUniformLocation(edgeProgram,"aspect"),canvas.width/canvas.height);
+   // gl.uniform1f(gl.getUniformLocation(edgeProgram,"aa"),aa);
+    gl.drawArrays(gl.LINES,0,edgeCount);
+
+    // Draw faces (transparent)
+   if(blendMode != BlendModes.opaque) {
+    gl.depthMask(false);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(blendMode.src, blendMode.dst);
+    if(blendMode.eq !== undefined) gl.blendEquation(blendMode.eq);
+}
+    gl.enable(gl.BLEND);
+    gl.blendFunc(blendMode.src, blendMode.dst);
+    gl.useProgram(triProgram);
+    gl.bindVertexArray(triVAO);
+    gl.uniform1f(gl.getUniformLocation(triProgram,"rx"),rotX);
+    gl.uniform1f(gl.getUniformLocation(triProgram,"ry"),rotY);
+    gl.uniform1f(gl.getUniformLocation(triProgram,"zoom"),zoom);
+    gl.uniform1f(gl.getUniformLocation(triProgram,"d"),dd3);
+    gl.uniform1f(gl.getUniformLocation(triProgram,"aspect"),canvas.width/canvas.height);
+    gl.uniform1f(gl.getUniformLocation(triProgram,"aa"),aa);
+    gl.drawArrays(gl.TRIANGLES,0,triCount);
+    gl.depthMask(true);
+}
+/* ---------- animation ---------- */
+
+function animate(){
+if(isanim){
+rxw+=0.01
+ryw+=0.013
+rzw+=0.017
+
+generate()}
+
+else {
+
+rxw=0
+ryw=0
+rzw=0
+
+}
+
+requestAnimationFrame(animate)
+
+}
+
+canvas.onmousemove=e=>{
+if(e.buttons){
+rotY+=e.movementX*0.01
+rotX+=e.movementY*0.01
+draw()
+}
+}
+
+canvas.onwheel=e=>{
+e.preventDefault()
+zoom*=Math.exp(-e.deltaY*0.001)
+draw()
+}
+const container = document.getElementById("distanceControls");
+
+for(let i=0;i<10;i++){
+
+    const label = document.createElement("label");
+    label.style.display = "block";
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = false;
+    if(i==0)cb.checked = true;
+
+    cb.addEventListener("change",()=>{
+        mmm[i] = cb.checked ? 1 : 0;
+       generate()
+    });
+
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(" distance rank " + i));
+
+    container.appendChild(label);
+}
+
+
+
+generate()
+animate()
+
+
+
+</script>
+</body>
+</html>
