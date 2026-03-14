@@ -631,6 +631,190 @@ function generate_kruskals() {
 
 
 
+function generate_sidewinder() {
+    generate_fill();
+    for (let y = 1; y < N; y += 2) {
+        let run = [];
+        for (let x = 1; x < N; x += 2) {
+            grid[y][x] = 0;
+            run.push({x,y});
+            let atEast = x + 2 >= N;
+            let atNorth = y - 2 <= 0;
+            if (atEast || (!atNorth && Math.random() < 0.5)) {
+                let member = run[Math.floor(Math.random() * run.length)];
+                if (member.y - 2 > 0) grid[member.y-1][member.x] = 0;
+                run = [];
+            } else {
+                if (x + 2 < N) grid[y][x+1] = 0;
+                 drawGrid();
+            }
+        }
+    }
+    playerPos = {x:1,y:1};
+    finishPos = {x:N-1,y:N-1};
+    grid[playerPos.y][playerPos.x] = 0;
+    grid[finishPos.y][finishPos.x] = 0;
+    canvas.width = (N+1)*tileSize;
+    canvas.height = (N+1)*tileSize;
+    drawGrid();
+}
+
+function generate_ellers() {
+    generate_fill();
+  let sets = [], nextSet = 1;
+    for (let y = 1; y < N; y += 2) {
+        for (let x = 1; x < N; x += 2) {
+            if (!sets[x]) sets[x] = nextSet++;
+            grid[y][x] = 0;
+        }
+        if (y + 2 >= N) {
+            // last row: join all different sets horizontally
+            for (let x = 1; x < N-2; x += 2) if (sets[x] != sets[x+2]) {
+                let old = sets[x+2];
+                for (let i = 1; i < N; i += 2) if (sets[i]==old) sets[i]=sets[x];
+                grid[y][x+1]=0;
+            }
+            break;
+        }
+        // horizontal joins
+        for (let x = 1; x < N-2; x += 2) {
+            if (Math.random()<0.5 && sets[x] != sets[x+2]) {
+                let old = sets[x+2];
+                for (let i = 1; i < N; i += 2) if (sets[i]==old) sets[i]=sets[x];
+                grid[y][x+1]=0;
+            }
+        }
+        // vertical connections
+        let setMembers = {};
+        for (let x = 1; x < N; x += 2) {
+            if (!setMembers[sets[x]]) setMembers[sets[x]]=[];
+            setMembers[sets[x]].push(x);
+        }
+        for (let s in setMembers) {
+            let arr = setMembers[s], n = Math.max(1, Math.floor(Math.random()*arr.length));
+            let chosen=[];
+            while(chosen.length<n) {
+                let i=arr[Math.floor(Math.random()*arr.length)];
+                if(!chosen.includes(i)) chosen.push(i);
+            }
+            for(let x of chosen) grid[y+1][x]=0;
+        }
+        for (let x = 1; x < N; x += 2) if(grid[y+1][x]==1) sets[x]=0;
+    }
+    playerPos={x:1,y:1};
+    finishPos={x:N-1,y:N-1};
+    grid[playerPos.y][playerPos.x]=0;
+    grid[finishPos.y][finishPos.x]=0;
+    canvas.width=(N+1)*tileSize;
+    canvas.height=(N+1)*tileSize;
+    drawGrid();
+}
+function generate_hunt() {
+    generate_fill();
+ for(let y=1;y<N;y+=2) for(let x=1;x<N;x+=2) grid[y][x]=0;
+    let visited = Array.from({length:N},()=>Array(N).fill(0));
+    let cx=1,cy=1; visited[cy][cx]=1;
+    let dirs=[[0,-2],[2,0],[0,2],[-2,0]];
+    while(1){
+        let moves=[];
+        for(let [dx,dy] of dirs){
+            let nx=cx+dx,ny=cy+dy;
+            if(nx>0 && nx<N && ny>0 && ny<N && !visited[ny][nx]) moves.push([nx,ny]);
+        }
+        if(moves.length){
+            let [nx,ny]=moves[Math.floor(Math.random()*moves.length)];
+            grid[(cy+ny)/2|(0)][(cx+nx)/2|(0)]=0;
+            cx=nx; cy=ny; visited[cy][cx]=1;
+        } else {
+            let found=false;
+            for(let y=1;y<N;y+=2){
+                for(let x=1;x<N;x+=2){
+                    if(!visited[y][x]){
+                        let neigh=[];
+                        for(let [dx,dy] of dirs){
+                            let nx=x+dx,ny=y+dy;
+                            if(nx>0 && nx<N && ny>0 && ny<N && visited[ny][nx]) neigh.push([nx,ny]);
+                        }
+                        if(neigh.length){
+                            let [nx,ny]=neigh[Math.floor(Math.random()*neigh.length)];
+                            grid[(y+ny)/2|(0)][(x+nx)/2|(0)]=0;
+                            cx=x; cy=y; visited[cy][cx]=1;
+                            found=true; break;
+                        }
+                    }
+                }
+                if(found) break;
+            }
+            if(!found) break;
+        }
+    }
+    playerPos={x:1,y:1};
+    finishPos={x:N-1,y:N-1};
+    grid[playerPos.y][playerPos.x]=0;
+    grid[finishPos.y][finishPos.x]=0;
+    canvas.width=(N+1)*tileSize;
+    canvas.height=(N+1)*tileSize;
+    drawGrid();
+}
+
+function generate_blob(){
+    generate_fill();
+  for (let y = 0; y < N; y++) {
+        for (let x = 0; x < N; x++) {
+            grid[y][x] = (x%2==0 && y%2==0) ? 1 : 0;
+        }
+    }
+    let control = [];
+    for (let y = 0; y < N; y++) {
+        for (let x = 0; x < N; x++) {
+            if ((x+y)%2==1) control.push({x,y});
+        }
+    }
+    for (let c of control) {
+        if (Math.random()<0.5) {
+            if (c.x>0 && c.x%2==1 && c.y%2==0) grid[c.y][c.x] = 1; // horizontal fill
+            if (c.y>0 && c.y%2==1 && c.x%2==0) grid[c.y][c.x] = 1; // vertical fill
+        }
+    }
+    playerPos={x:1,y:1};
+    finishPos={x:N-1,y:N-1};
+    grid[playerPos.y][playerPos.x]=0;
+    grid[finishPos.y][finishPos.x]=0;
+    canvas.width=(N+1)*tileSize;
+    canvas.height=(N+1)*tileSize;
+    drawGrid();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         function generateGrid(wallProbability) {
             grid = Array.from({ length: N + 2 }, () => Array(N + 2).fill(1));
 

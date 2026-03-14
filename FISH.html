@@ -2,167 +2,460 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Fish Clade Browser (Multi-DB)</title>
+<title>Visual Fish Clade Browser (Enhanced Async Wiki)</title>
 <style>
-  body { font-family: sans-serif; margin: 20px; }
-  button, select { margin: 5px; padding: 5px; }
-  .section { margin-top: 20px; }
-  .info { border: 1px solid #ccc; padding: 10px; margin-top: 10px; }
-  img { max-width: 150px; margin: 5px; border: 1px solid #ddd; }
+body { font-family: sans-serif; margin: 20px; background:#f5f5f5; }
+h1 { margin-bottom: 10px; }
+.clade-level { margin-top: 20px; display:flex; flex-wrap:wrap; gap:15px; }
+.clade-card {
+  width: 160px;
+  text-align:center;
+  border:1px solid #ccc;
+  padding:5px;
+  background:white;
+  cursor:pointer;
+  transition: transform 0.2s;
+  position:relative;
+}
+.clade-card:hover { transform: scale(1.05); border-color:#4ea3ff; }
+.clade-card img { width:100%; height:100px; object-fit:cover; border-bottom:1px solid #ccc; }
+.info-panel { 
+  margin-top: 20px; 
+  padding:15px; 
+  border:1px solid #ccc; 
+  background:white; 
+  max-width:800px;
+  border-radius: 5px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+button.qmark { 
+  margin-left:5px; 
+  cursor:pointer; 
+  font-weight:bold; 
+  background:#4ea3ff; 
+  color:white; 
+  border:none; 
+  border-radius:50%; 
+  width:20px; 
+  height:20px;
+}
+.snippet-img { max-width:300px; margin:10px 0; border:1px solid #ccc; border-radius:3px; }
+.links { font-size: 0.9em; margin-top: 10px; padding-top:10px; border-top:1px solid #eee; }
+.links a { 
+  margin-right:15px; 
+  padding:5px 10px; 
+  background:#f0f8ff; 
+  border-radius:3px; 
+  text-decoration:none; 
+  color:#0066cc;
+}
+.links a:hover { background:#e1f0ff; }
+.info-section { margin: 15px 0; padding:10px; background:#f9f9f9; border-left:3px solid #4ea3ff; }
+.scientific-name { color:#666; font-style:italic; margin:5px 0; }
+.data-source { font-size:0.8em; color:#888; margin-top:5px; }
+.loading { color:#666; font-style:italic; }
+.error { color:#cc0000; }
+.taxonomy-info { font-size:0.9em; color:#444; background:#f0f0f0; padding:8px; margin:5px 0; }
+.species-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:10px; margin:15px 0; }
+.species-item { padding:8px; border:1px solid #ddd; background:white; cursor:pointer; }
+.species-item:hover { background:#f0f8ff; }
+.back-button { 
+  background:#6c757d; 
+  color:white; 
+  border:none; 
+  padding:5px 10px; 
+  border-radius:3px; 
+  cursor:pointer;
+  margin-right:10px;
+}
+.back-button:hover { background:#5a6268; }
 </style>
 </head>
 <body>
-<h1>🐟 Fish Clade Browser (Open Tree of Life + Databases)</h1>
-
+<h1>🐟 Visual Fish Clade Browser (Enhanced)</h1>
 <button id="startBtn">Start with Fish</button>
-<div id="selectors"></div>
-<div id="speciesInfo" class="info"></div>
+<button class="back-button" onclick="goBack()" style="display:none;">← Back</button>
+<div id="browser"></div>
+<div id="infoPanel" class="info-panel"></div>
 
 <script>
-const startClades = [
-  "Myxini",              // Hagfish
-  "Petromyzontiformes",  // Lampreys
-  "Chondrichthyes",      // Cartilaginous fishes
-  "Actinopterygii",      // Ray-finned fishes
-  "Sarcopterygii"        // Lobe-finned fishes
-];
-
+const startClades = ["Myxini","Petromyzontiformes","Chondrichthyes","Actinopterygii","Sarcopterygii"];
 let lineage = [];
+let history = [];
 
-document.getElementById("startBtn").addEventListener("click", () => {
+// Start the browser
+function startBrowser() {
   lineage = [];
-  document.getElementById("selectors").innerHTML = "";
-  document.getElementById("speciesInfo").innerHTML = "";
-  addCladeSelector(startClades, "Clade");
-});
-
-function addCladeSelector(names, label) {
-  const container = document.getElementById("selectors");
-  const wrapper = document.createElement("div");
-  wrapper.className = "section";
-
-  const sel = document.createElement("select");
-  const opt0 = document.createElement("option");
-  opt0.textContent = `-- Select ${label} --`;
-  opt0.value = "";
-  sel.appendChild(opt0);
-
-  names.forEach(n => {
-    const opt = document.createElement("option");
-    opt.value = n;
-    opt.textContent = n;
-    sel.appendChild(opt);
-  });
-
-  sel.addEventListener("change", async () => {
-    if (!sel.value) return;
-    // reset lower levels
-    wrapper.nextAll?.forEach(el => el.remove());
-    document.getElementById("speciesInfo").innerHTML = "";
-
-    const chosenName = sel.value;
-    const ottId = await resolveOTT(chosenName);
-    if (!ottId) {
-      alert("Could not resolve taxon: " + chosenName);
-      return;
-    }
-    const taxon = await getTaxonInfo(ottId);
-    lineage.push({ name: chosenName, id: ottId, rank: taxon.rank });
-
-    if (taxon.rank === "species" || !taxon.children || taxon.children.length === 0) {
-      showSpeciesInfo(chosenName);
-    } else {
-      const childNames = taxon.children.map(c => c.unique_name || c.name);
-      addCladeSelector(childNames, taxon.rank || "Taxon");
-    }
-  });
-
-  wrapper.appendChild(sel);
-  container.appendChild(wrapper);
+  history = [];
+  document.getElementById("browser").innerHTML = "";
+  document.getElementById("infoPanel").innerHTML = "";
+  updateBackButton();
+  addCladeLevel(startClades, "Major Fish Clades");
 }
 
-// --- OTL API ---
-async function resolveOTT(name) {
-  const res = await fetch("https://api.opentreeoflife.org/v3/tnrs/match_names", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ names: [name] })
-  });
-  const data = await res.json();
+// Fetch comprehensive information from multiple sources
+async function fetchComprehensiveInfo(name) {
+  const info = {
+    name: name,
+    wikipedia: null,
+    gbif: null,
+    bold: null,
+    eol: null,
+    taxonomy: null
+  };
+
+  // 1. Try Wikipedia first
   try {
-    return data.results[0].matches[0].taxon.ott_id;
+    const wikiRes = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name)}`);
+    if (wikiRes.ok) {
+      const data = await wikiRes.json();
+      info.wikipedia = {
+        title: data.title,
+        extract: data.extract,
+        image: data.thumbnail?.source || "",
+        url: data.content_urls?.desktop?.page || ""
+      };
+    }
+  } catch (e) {
+    console.log("Wikipedia fetch failed:", e);
+  }
+
+  // 2. If no Wikipedia or name looks like a scientific identifier, try other sources
+  if (!info.wikipedia || name.includes(" sp.") || /[A-Z]{3,}:[A-Z0-9]+/.test(name)) {
+    // Try GBIF (Global Biodiversity Information Facility)
+    try {
+      const gbifRes = await fetch(`https://api.gbif.org/v1/species/match?name=${encodeURIComponent(name)}`);
+      if (gbifRes.ok) {
+        const gbifData = await gbifRes.json();
+        if (gbifData.usageKey) {
+          info.gbif = {
+            key: gbifData.usageKey,
+            scientificName: gbifData.scientificName,
+            kingdom: gbifData.kingdom,
+            phylum: gbifData.phylum,
+            class: gbifData.class,
+            order: gbifData.order,
+            family: gbifData.family,
+            genus: gbifData.genus,
+            rank: gbifData.rank,
+            status: gbifData.status,
+            url: `https://www.gbif.org/species/${gbifData.usageKey}`
+          };
+        }
+      }
+    } catch (e) {
+      console.log("GBIF fetch failed:", e);
+    }
+
+    // 3. Try BOLD Systems (for barcode data)
+    if (name.includes("BOLD:")) {
+      const boldId = name.split("BOLD:")[1]?.trim();
+      if (boldId) {
+        try {
+          const boldRes = await fetch(`https://api.boldsystems.org/index.php/API_Tax/TaxonData?taxon=${boldId}&format=json`);
+          if (boldRes.ok) {
+            const boldData = await boldRes.json();
+            if (boldData.taxon && boldData.taxon.length > 0) {
+              const taxon = boldData.taxon[0];
+              info.bold = {
+                taxonID: taxon.taxonid,
+                taxonName: taxon.taxon_name,
+                taxonRank: taxon.taxon_rank,
+                specimenRecords: taxon.specimenrecords,
+                barcodeRecords: taxon.barcoderecords,
+                url: `http://www.boldsystems.org/index.php/Taxbrowser_Taxonpage?taxid=${taxon.taxonid}`
+              };
+            }
+          }
+        } catch (e) {
+          console.log("BOLD fetch failed:", e);
+        }
+      }
+    }
+
+    // 4. Try Encyclopedia of Life
+    try {
+      const eolRes = await fetch(`https://eol.org/api/search/1.0.json?q=${encodeURIComponent(name)}&exact=true`);
+      if (eolRes.ok) {
+        const eolData = await eolRes.json();
+        if (eolData.results && eolData.results.length > 0) {
+          const result = eolData.results[0];
+          info.eol = {
+            id: result.id,
+            title: result.title,
+            content: result.content,
+            url: `https://eol.org/pages/${result.id}`
+          };
+        }
+      }
+    } catch (e) {
+      console.log("EOL fetch failed:", e);
+    }
+  }
+
+  return info;
+}
+
+// Display comprehensive information
+function displayComprehensiveInfo(info) {
+  const infoPanel = document.getElementById("infoPanel");
+  let html = `<h3>${info.name}</h3>`;
+
+  // Add taxonomy info if available
+  if (info.taxonomy) {
+    html += `<div class="taxonomy-info">
+      <strong>Taxonomy:</strong> 
+      ${info.taxonomy.rank ? `${info.taxonomy.rank}: ` : ''}
+      ${info.taxonomy.unique_name || info.name}
+      ${info.taxonomy.parent ? `<br>Parent: ${info.taxonomy.parent}` : ''}
+    </div>`;
+  }
+
+  // Wikipedia info
+  if (info.wikipedia) {
+    html += `<div class="info-section">
+      <h4>Wikipedia</h4>
+      <p>${info.wikipedia.extract}</p>
+      ${info.wikipedia.image ? `<img class="snippet-img" src="${info.wikipedia.image}" alt="${info.wikipedia.title}">` : ""}
+      <div class="data-source">Source: Wikipedia</div>
+    </div>`;
+  }
+
+  // GBIF info
+  if (info.gbif) {
+    html += `<div class="info-section">
+      <h4>GBIF Taxonomy</h4>
+      <p class="scientific-name">${info.gbif.scientificName}</p>
+      <p><strong>Rank:</strong> ${info.gbif.rank || 'Unknown'}</p>
+      <p><strong>Status:</strong> ${info.gbif.status || 'Unknown'}</p>
+      ${info.gbif.kingdom ? `<p><strong>Kingdom:</strong> ${info.gbif.kingdom}</p>` : ''}
+      ${info.gbif.phylum ? `<p><strong>Phylum:</strong> ${info.gbif.phylum}</p>` : ''}
+      ${info.gbif.class ? `<p><strong>Class:</strong> ${info.gbif.class}</p>` : ''}
+      ${info.gbif.order ? `<p><strong>Order:</strong> ${info.gbif.order}</p>` : ''}
+      <div class="data-source">Source: GBIF</div>
+    </div>`;
+  }
+
+  // BOLD info
+  if (info.bold) {
+    html += `<div class="info-section">
+      <h4>BOLD Systems</h4>
+      <p><strong>Taxon:</strong> ${info.bold.taxonName}</p>
+      <p><strong>Rank:</strong> ${info.bold.taxonRank}</p>
+      <p><strong>Specimen Records:</strong> ${info.bold.specimenRecords || 0}</p>
+      <p><strong>Barcode Records:</strong> ${info.bold.barcodeRecords || 0}</p>
+      <div class="data-source">Source: Barcode of Life Data System</div>
+    </div>`;
+  }
+
+  // EOL info
+  if (info.eol) {
+    html += `<div class="info-section">
+      <h4>Encyclopedia of Life</h4>
+      <p>${info.eol.content || 'Information available'}</p>
+      <div class="data-source">Source: Encyclopedia of Life</div>
+    </div>`;
+  }
+
+  // Links section
+  html += `<div class="links">
+    ${info.wikipedia?.url ? `<a target="_blank" href="${info.wikipedia.url}">Wikipedia</a>` : ''}
+    ${info.gbif?.url ? `<a target="_blank" href="${info.gbif.url}">GBIF</a>` : ''}
+    ${info.bold?.url ? `<a target="_blank" href="${info.bold.url}">BOLD Systems</a>` : ''}
+    ${info.eol?.url ? `<a target="_blank" href="${info.eol.url}">Encyclopedia of Life</a>` : ''}
+    <a target="_blank" href="https://www.google.com/search?q=${encodeURIComponent(info.name)}+fish">Google Search</a>
+    <a target="_blank" href="https://scholar.google.com/scholar?q=${encodeURIComponent(info.name)}">Google Scholar</a>
+  </div>`;
+
+  // If no information was found
+  if (!info.wikipedia && !info.gbif && !info.bold && !info.eol) {
+    html += `<div class="info-section">
+      <p class="error">No detailed information found for "${info.name}". This may be a rare or newly discovered species.</p>
+      <p>Try searching with these scientific databases:</p>
+      <div class="links">
+        <a target="_blank" href="https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?name=${encodeURIComponent(info.name)}">NCBI Taxonomy</a>
+        <a target="_blank" href="https://www.catalogueoflife.org/data/search?q=${encodeURIComponent(info.name)}">Catalogue of Life</a>
+        <a target="_blank" href="https://www.marinespecies.org/aphia.php?p=taxlist&tName=${encodeURIComponent(info.name)}">WoRMS (Marine Species)</a>
+      </div>
+    </div>`;
+  }
+
+  infoPanel.innerHTML = html;
+}
+
+// Add a clade level with clickable cards
+async function addCladeLevel(names, label) {
+  const browserDiv = document.getElementById("browser");
+  const levelDiv = document.createElement("div");
+  levelDiv.className = "clade-level";
+  browserDiv.appendChild(levelDiv);
+
+  // Create card for each clade
+  names.forEach(async (name) => {
+    const card = document.createElement("div");
+    card.className = "clade-card";
+    card.innerHTML = `<b>${name}</b> <button class="qmark">?</button>`;
+    levelDiv.appendChild(card);
+
+    // Get comprehensive info
+    const info = await fetchComprehensiveInfo(name);
+    
+    // Set image (prioritize Wikipedia, then other sources)
+    const img = document.createElement("img");
+    if (info.wikipedia?.image) {
+      img.src = info.wikipedia.image;
+    } else if (info.eol?.image) {
+      img.src = info.eol.image;
+    } else {
+      img.src = "https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg";
+    }
+    img.alt = name;
+    img.onerror = function() {
+      this.src = "https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg";
+    };
+    card.insertBefore(img, card.firstChild);
+
+    // ? button shows inline info
+    const qBtn = card.querySelector(".qmark");
+    qBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const infoPanel = document.getElementById("infoPanel");
+      infoPanel.innerHTML = `<div class="loading">Loading information for ${name}...</div>`;
+      
+      const detailedInfo = await fetchComprehensiveInfo(name);
+      displayComprehensiveInfo(detailedInfo);
+    });
+
+    // Clicking card loads children
+    card.addEventListener("click", async () => {
+      const infoPanel = document.getElementById("infoPanel");
+      infoPanel.innerHTML = `<div class="loading">Loading children of ${name}...</div>`;
+      
+      // Save current state to history
+      history.push({
+        lineage: [...lineage],
+        browserContent: document.getElementById("browser").innerHTML
+      });
+      
+      const ottId = await resolveOTT(name);
+      if (!ottId) { 
+        infoPanel.innerHTML = `<div class="error">Could not resolve taxonomy for: ${name}</div>`;
+        // Show what info we do have
+        const info = await fetchComprehensiveInfo(name);
+        displayComprehensiveInfo(info);
+        return; 
+      }
+      
+      const taxon = await getTaxonInfo(ottId);
+      lineage.push({ name, id: ottId, rank: taxon.rank });
+      
+      // Get taxonomy info for display
+      const comprehensiveInfo = await fetchComprehensiveInfo(name);
+      comprehensiveInfo.taxonomy = {
+        rank: taxon.rank,
+        unique_name: taxon.unique_name || name,
+        parent: taxon.parent || null
+      };
+
+      // Remove lower levels
+      while (levelDiv.nextSibling) levelDiv.nextSibling.remove();
+
+      if (!taxon.children || taxon.children.length === 0 || taxon.rank === "species") {
+        // For species or terminal nodes, show detailed info
+        displayComprehensiveInfo(comprehensiveInfo);
+        
+        // Also try to get related species
+        if (taxon.siblings && taxon.siblings.length > 0) {
+          infoPanel.innerHTML += `<h4>Related Species:</h4><div class="species-grid">`;
+          taxon.siblings.slice(0, 10).forEach(sibling => {
+            infoPanel.innerHTML += `<div class="species-item" onclick="showSpeciesInfo('${sibling.unique_name || sibling.name}')">
+              ${sibling.unique_name || sibling.name}
+            </div>`;
+          });
+          infoPanel.innerHTML += `</div>`;
+        }
+      } else {
+        // Display info about current level
+        displayComprehensiveInfo(comprehensiveInfo);
+        
+        // Show children
+        const childNames = taxon.children.map(c => c.unique_name || c.name);
+        addCladeLevel(childNames, taxon.rank || "Taxon");
+      }
+      
+      updateBackButton();
+    });
+  });
+}
+
+// Show species info
+async function showSpeciesInfo(name) {
+  const infoPanel = document.getElementById("infoPanel");
+  infoPanel.innerHTML = `<div class="loading">Loading information for ${name}...</div>`;
+  
+  const info = await fetchComprehensiveInfo(name);
+  displayComprehensiveInfo(info);
+}
+
+// --- OpenTree helpers ---
+async function resolveOTT(name) {
+  try {
+    const res = await fetch("https://api.opentreeoflife.org/v3/tnrs/match_names", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({names:[name]})
+    });
+    const data = await res.json();
+    return data.results?.[0]?.matches?.[0]?.taxon?.ott_id || null;
   } catch {
     return null;
   }
 }
 
 async function getTaxonInfo(ottId) {
-  const res = await fetch("https://api.opentreeoflife.org/v3/taxonomy/taxon_info", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ ott_id: ottId, include_children: true })
-  });
-  return await res.json();
-}
-
-// --- Species Info ---
-async function showSpeciesInfo(name) {
-  const infoDiv = document.getElementById("speciesInfo");
-  infoDiv.innerHTML = `<h3>Species: ${name}</h3><p>Loading...</p>`;
-
-  let html = `<h3>${name}</h3>`;
-
-  // FishBase
   try {
-    const res = await fetch(`https://fishbase.ropensci.org/species?Genus=${encodeURIComponent(name.split(" ")[0])}&Species=${encodeURIComponent(name.split(" ")[1]||"")}`);
-    const data = await res.json();
-    const record = data.data?.[0];
-    if (record) {
-      html += `<p><b>FishBase:</b> Length ${record.Length} cm, Env ${record.DemersPelag || ""}</p>`;
-    } else {
-      html += `<p><b>FishBase:</b> Not found</p>`;
-    }
-  } catch { html += `<p><b>FishBase:</b> Error</p>`; }
-
-  // WoRMS
-  try {
-    const res = await fetch(`https://www.marinespecies.org/rest/AphiaRecordsByName/${encodeURIComponent(name)}?like=false&marine_only=true`);
-    const worms = await res.json();
-    if (worms && worms.length > 0) {
-      html += `<p><b>WoRMS AphiaID:</b> ${worms[0].AphiaID}, Status: ${worms[0].status}</p>`;
-    } else {
-      html += `<p><b>WoRMS:</b> Not found</p>`;
-    }
-  } catch { html += `<p><b>WoRMS:</b> Error</p>`; }
-
-  // LarvalBase
-  html += `<p><a href="https://www.larvalbase.org/search.php?Genus=${encodeURIComponent(name.split(" ")[0])}&Species=${encodeURIComponent(name.split(" ")[1]||"")}" target="_blank">🔗 LarvalBase</a></p>`;
-
-  // Eschmeyer Catalog (link only)
-  html += `<p><a href="https://researcharchive.calacademy.org/research/ichthyology/catalog/fishcatmain.asp" target="_blank">🔗 Eschmeyer's Catalog of Fishes (search manually)</a></p>`;
-
-  // Pelagic Trait DB
-  html += `<p><a href="https://www.seanoe.org/data/00612/72451/" target="_blank">🔗 Pelagic Species Trait Database</a></p>`;
-
-  // Google Images (Custom Search API - requires key)
-  html += `<div><b>Images:</b><br>`;
-  const apiKey = "YOUR_GOOGLE_API_KEY"; // <-- replace
-  const cx = "YOUR_SEARCH_ENGINE_ID";   // <-- replace
-  try {
-    const res = await fetch(`https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(name)}&cx=${cx}&key=${apiKey}&searchType=image&num=5`);
-    const imgs = await res.json();
-    if (imgs.items) {
-      imgs.items.forEach(img => {
-        html += `<img src="${img.link}" alt="${name}">`;
-      });
-    }
+    const res = await fetch("https://api.opentreeoflife.org/v3/taxonomy/taxon_info", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ott_id:ottId, include_children:true})
+    });
+    return await res.json();
   } catch {
-    html += `<p>(Images require Google API key)</p>`;
+    return { children: [], rank: "unknown" };
   }
-  html += `</div>`;
-
-  infoDiv.innerHTML = html;
 }
+
+// --- Navigation functions ---
+function goBack() {
+  if (history.length === 0) return;
+  
+  const previousState = history.pop();
+  lineage = previousState.lineage;
+  document.getElementById("browser").innerHTML = previousState.browserContent;
+  document.getElementById("infoPanel").innerHTML = "<p>Navigated back.</p>";
+  updateBackButton();
+}
+
+function updateBackButton() {
+  const backBtn = document.querySelector('.back-button');
+  backBtn.style.display = history.length > 0 ? 'inline-block' : 'none';
+}
+
+// --- Initialize ---
+document.getElementById("startBtn").addEventListener("click", startBrowser);
+
+// Add some instructions
+document.getElementById("infoPanel").innerHTML = `
+  <h3>Welcome to the Enhanced Fish Clade Browser</h3>
+  <p>Click "Start with Fish" to begin exploring fish taxonomy.</p>
+  <p>Features:</p>
+  <ul>
+    <li><strong>Click cards</strong> to navigate down the taxonomic tree</li>
+    <li><strong>Click ? buttons</strong> to see information without navigating</li>
+    <li>Information is fetched from multiple sources: Wikipedia, GBIF, BOLD Systems, and Encyclopedia of Life</li>
+    <li>Special handling for scientific names and BOLD identifiers (e.g., "Elasmobranchii sp. BOLD:AAC6405")</li>
+  </ul>
+`;
 </script>
 </body>
 </html>

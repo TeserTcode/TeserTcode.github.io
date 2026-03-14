@@ -167,6 +167,8 @@ int main() {
               << " - empty_files.txt\n"
               << " - unlisted_files.txt\n"
               << " - unlisted_empty_files.txt\n";
-
+              int aaa;
+	std::cin>>aaa;
+	std::cout<<aaa;
     return 0;
 }

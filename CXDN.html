@@ -49,12 +49,15 @@ label { display:block; margin-top:10px }
   <input id="cdString" type="text" style="width:400px" placeholder="e.g. x3o3o3o *c3o">
   <button onclick="parseCDString()">Apply String</button>
 </label>
-
+<div>
+<input id="vef" type="text" style="width:400px" placeholder="VEF">
+</div>
 <label>Presets:
   <select id="presets" onchange="applyPreset(this.value)">
     <option value="">-- Select a Preset --</option>
 	<option value="">-- 2D --</option>
 	<option value="x3o">Triangle</option>
+	<option value="x5/2o">Pentagram</option>
 	<option value="x7o">Septagon</option>
 	<option value="">-- 3D --</option>
     <option value="x3o3o">Tetrahedron</option>
@@ -75,6 +78,17 @@ label { display:block; margin-top:10px }
 	<option value="x5x3x">Great Rhombicosidodecahedron</option>
 	<option value="s4s3s">Snub Cube</option>
 	<option value="s5s3s">Snub Dodecahedron</option>
+	
+	
+	<option value="x5o5/2o">Great Dodecahedron</option>
+	<option value="x5/2o5o">Small Stellated Dodecahedron</option>
+	<option value="x3o5/2o">Great Icosahedron</option>
+	<option value="x5/2o3o">Great Stellated Dodecahedron</option>
+	
+	<option value="o3x5/2o">Great Icosidodecahedron</option>
+	<!--<option value="x5/3x5/3o5/2*a">Great dodecahemidodecahedron</option>-->
+	
+	
 	<option value="">-- 4D --</option>
 	<option value="x3o3o3o">Pentachoron</option>
 	<option value="o3x3o3o">Rectified pentachoron</option>
@@ -196,7 +210,8 @@ label { display:block; margin-top:10px }
 <button onclick="anim()">Stop/Start</button>
 <button onclick="animf()">Face/Unface</button>
 <button onclick="anime()">Edge/Unedge</button>
-<button onclick="resett()">Reset Memory</button>
+<button onclick="animv()">Vertex/Unvertex</button>
+<button onclick="resett()">Reset Memory (mandatory for star polytopes)</button>
 
 <div style="display:flex; align-items:center; gap:10px;">
   <label for="projSlider">Projection distance (focus):</label>
@@ -222,7 +237,12 @@ label { display:block; margin-top:10px }
   <option value="reverseSubtract">Reverse Subtract</option>
   <option value="standardSubtract">Subtract</option>
 </select>
-
+<select id="projectionSelect">
+  <option value="1">Orthographic</option>
+  <option value="2">Perspective (last coord)</option>
+  <option value="3">Average-depth perspective</option>
+  <option value="4">Weighted collapse</option>
+</select>
 <label>Background Color:
   <input type="color" id="bgColorPicker" value="#ffffff">
 </label>
@@ -241,11 +261,11 @@ label { display:block; margin-top:10px }
 </div>
 <div style="display:flex; align-items:center; gap:10px;">
   <label>LLL: <span id="lllVal">2</span></label><br>
-  <input type="range" id="lllSlider" min="0" max="10" step="0.01" value="2">
+  <input type="range" id="lllSlider" min="0" max="5" step="0.01" value="2">
 </div>
 <div style="display:flex; align-items:center; gap:10px;">
   <label>a: <span id="aVal">0.5</span></label><br>
-  <input type="range" id="aSlider" min="0" max="1" step="0.001" value="0.5">
+  <input type="range" id="aSlider" min="-2" max="3" step="0.001" value="0.5">
 </div>
 
 <button id="toggleDistances">Show / Hide Distance Controls</button>
@@ -267,6 +287,7 @@ let computeFaces = null;
 let isanim = 1;
 let isface = 1;
 let isedge = 1;
+let isvert = 1;
 let mmm = new Array(10).fill(0);  // distance rank toggles (first 10)
 mmm[0] = 1;                       // shortest distance on by default
 
@@ -274,7 +295,7 @@ let rotX = 0, rotY = 0;           // 3D rotation (mouse)
 let zoom = 1;
 let projDist = 14;                // projection distance (focus)
 let perspDist = 26;               // perspective distance for 3D display
-
+let facecount=0;
 // Higher‑dimensional rotation angles – one per coordinate plane (i,j)
 let ndAngles = [];
 let ndSpeeds = [];
@@ -308,27 +329,35 @@ let rk = 91, gk = 60, bk = 37, lll = 2, aa = 0.5;
 let triProgram = null, edgeProgram = null;
 let triVAO = null, edgeVAO = null;
 let triCount = 0, edgeCount = 0;
-
+let vertVAO = null;
+let vertCount = 0;
 // Blending modes
 const BlendModes = {
   alpha:          { src: gl.SRC_ALPHA, dst: gl.ONE_MINUS_SRC_ALPHA, eq: gl.FUNC_ADD },
   additive:       { src: gl.SRC_ALPHA, dst: gl.ONE, eq: gl.FUNC_ADD },
-  subtractive:    { src: gl.ONE, dst: gl.ONE, eq: gl.FUNC_REVERSE_SUBTRACT },
+  subtractive:    { src: gl.ONE, dst: gl.ONE, eq: gl.FUNC_SUBTRACT },
   multiplicative: { src: gl.DST_COLOR, dst: gl.ZERO, eq: gl.FUNC_ADD },
   opaque:         { src: gl.ONE, dst: gl.ZERO, eq: gl.FUNC_ADD },
   screen:         { src: gl.ONE_MINUS_DST_COLOR, dst: gl.ONE, eq: gl.FUNC_ADD },
-  darken:         { src: gl.ONE, dst: gl.ONE, eq: gl.FUNC_MIN },
+  darken:         { src: gl.DST_COLOR, dst: gl.ZERO, eq: gl.FUNC_MIN },
   lighten:        { src: gl.ONE, dst: gl.ONE, eq: gl.FUNC_MAX },
   reverseSubtract:{ src: gl.ONE, dst: gl.ONE, eq: gl.FUNC_REVERSE_SUBTRACT },
   standardSubtract:{ src: gl.ONE, dst: gl.ONE, eq: gl.FUNC_SUBTRACT }
 };
 let blendMode = BlendModes.multiplicative;
 
-
+function sleep(){
+  return new Promise(r => setTimeout(r,0));
+}
 function applyPreset(val) {
     if(!val) return;
     document.getElementById('cdString').value = val;
     parseCDString();
+}
+function applyvef() {
+
+    document.getElementById('vef').value = "V: "+vertCount+" E: "+leng(edgeIndices)+" F:"+facecount;
+
 }
 function parseCDString() {
     const str = document.getElementById('cdString').value.trim().toLowerCase();
@@ -538,6 +567,7 @@ void main(){
 
 const vsEdge = `#version 300 es
 in vec3 a_pos;
+
 uniform float rx;
 uniform float ry;
 uniform float zoom;
@@ -546,6 +576,7 @@ uniform float aspect;
 vec3 rotX(vec3 p,float a){ float c=cos(a),s=sin(a); return vec3(p.x, p.y*c-p.z*s, p.y*s+p.z*c); }
 vec3 rotY(vec3 p,float a){ float c=cos(a),s=sin(a); return vec3(p.x*c+p.z*s, p.y, -p.x*s+p.z*c); }
 void main(){
+gl_PointSize = 5.0;
   vec3 p = rotX(rotY(a_pos, ry), rx);
   float s = zoom*2.0/(d-p.z);
   gl_Position = vec4((p.x*s)/aspect, p.y*s, (2.0*p.z)/d, 1.0);
@@ -592,91 +623,220 @@ function rotateND(p, angles) {
 
 // --------------------------------------------------------------------
 // ND perspective projection to 3D
+// Global projection mode: 'perspective' (default) or 'orthographic'
+let projectMode = 1;
+document.getElementById("projectionSelect").addEventListener("change", function () {
+  projectMode = parseInt(this.value);
+  generate(); // or draw()
+});
 function projectND(p) {
   if (!Array.isArray(p) || p.length < N) return [0,0,0];
-  if (N === 3) return [p[0], p[1], p[2]];
-  let depthCoord = p[N-1];
-  let denom = projDist - depthCoord;
-  let s = (denom === 0) ? 1e6 : projDist / denom;
-  let x = (N > 0) ? p[0] : 0;
-  let y = (N > 1) ? p[1] : 0;
-  let z = (N > 2) ? p[2] : 0;
-  return [x * s, y * s, z * s];
+
+  if (projectMode == 1) {
+    // Orthographic
+    return [p[0] || 0, p[1] || 0, p[2] || 0];
+
+  } else if (projectMode == 2) {
+    // Perspective using last coordinate
+    if (N === 3) return [p[0], p[1], p[2]];
+    let depthCoord = p[N-1];
+    let denom = projDist - depthCoord;
+    let s = (denom === 0) ? 1e6 : projDist / denom;
+
+    let x = (N > 0) ? p[0] : 0;
+    let y = (N > 1) ? p[1] : 0;
+    let z = (N > 2) ? p[2] : 0;
+
+    return [x * s, y * s, z * s];
+
+  } else if (projectMode == 3) {
+    // Average depth perspective (uses mean of higher dimensions)
+    if (N <= 3) return [p[0] || 0, p[1] || 0, p[2] || 0];
+
+    let depth = 0;
+    for (let i = 3; i < N; i++) depth += p[i];
+    depth /= (N - 3);
+
+    let denom = projDist - depth;
+    let s = (denom === 0) ? 1e6 : projDist / denom;
+
+    return [
+      (p[0] || 0) * s,
+      (p[1] || 0) * s,
+      (p[2] || 0) * s
+    ];
+
+  } else if (projectMode == 4) {
+    // Weighted collapse of higher dimensions into xyz
+    let x = p[0] || 0;
+    let y = p[1] || 0;
+    let z = p[2] || 0;
+
+    for (let i = 3; i < N; i++) {
+      let w = 1 / (i + 1);
+      x += (p[i] || 0) * w;
+      y += (p[i] || 0) * w * 0.7;
+      z += (p[i] || 0) * w * 0.5;
+    }
+
+    return [x, y, z];
+  }
+
+  return [0,0,0];
 }
 
 // --------------------------------------------------------------------
 // Edge detection
 let edgeCache = new Map();
+
 function buildEdges(V) {
 
-  const vertKey = V.length + ":" + N;   // fast key (safe because verticesfromcoxeter is deterministic)
+	
+function bandCoord(v){
+  let s = 0;
+  for(let i=0;i<N;i++) s += v[i]*bandDir[i];
+  return s;
+}
+
+let bandDir = new Array(N).fill(0);
+bandDir[0] = 1;        // band along x direction
+
+let bandOffset = 0;    // move the slice
+let bandWidth = 0.5;   // thickness
+
+
+  if(!isface && !isedge) return [[]];
+
+  const vertKey = V.length + ":" + N;
   const maskKey = mmm.join('');
   const key = vertKey + "|" + maskKey;
 
-  if (edgeCache.has(key)) {
-    return edgeCache.get(key);
-  }
+  if (edgeCache.has(key)) return edgeCache.get(key);
 
   const n = V.length;
-  const pairs = [];
-  const edges = [];
-  const edgeIndices = [];
 
-  for (let i = 0; i < n; i++) {
-    for (let j = i+1; j < n; j++) {
-
-      let d2 = 0;
-      for (let k = 0; k < N; k++) {
-        const diff = V[i][k] - V[j][k];
+  // --- estimate smallest distance ---
+  let minD = Infinity;
+  for (let i=0;i<Math.min(n,50);i++){
+    for (let j=i+1;j<Math.min(n,50);j++){
+      let d2=0;
+      for(let k=0;k<N;k++){
+        const diff = V[i][k]-V[j][k];
         d2 += diff*diff;
       }
-
-      pairs.push({i, j, d: Math.sqrt(d2)});
+      const d = Math.sqrt(d2);
+      if (d>0 && d<minD) minD=d;
     }
   }
 
-  const distList = [...new Set(pairs.map(p => Math.floor(p.d*1000)/1000))];
-  distList.sort((a,b)=>a-b);
+  const cellSize = minD*1.2;
 
-  const eps = distList[0] * 0.01;
+  // --- build spatial grid ---
+  const grid = new Map();
 
-  for (let p of pairs) {
+  function cellKey(v){
+    return v.map(x=>Math.floor(x/cellSize)).join(",");
+  }
 
-    for (let m = 0; m < Math.min(10, distList.length); m++) {
+  for(let i=0;i<n;i++){
+    const k = cellKey(V[i]);
+    if(!grid.has(k)) grid.set(k,[]);
+    grid.get(k).push(i);
+  }
 
-      if (mmm[m] !== 1) continue;
+  const edges=[];
+  const edgeIndices=[];
 
-      if (Math.abs(p.d - distList[m]) < eps) {
-
-        edgeIndices.push([p.i, p.j]);
-
-        const a = projectND(V[p.i]);
-        const b = projectND(V[p.j]);
-
-        edges.push(...a, ...b);
-        break;
+  function neighbors(coord){
+    const out=[];
+    function rec(d,arr){
+      if(d===coord.length){
+        out.push(arr.join(","));
+        return;
+      }
+      for(let t=-1;t<=1;t++){
+        arr[d]=coord[d]+t;
+        rec(d+1,arr);
       }
     }
+    rec(0,new Array(coord.length));
+    return out;
   }
 
-  const result = {
-    edges: new Float32Array(edges),
+  for(let i=0;i<n;i++){
+
+    const base = V[i].map(x=>Math.floor(x/cellSize));
+
+    for(const nk of neighbors(base)){
+
+      const cell = grid.get(nk);
+      if(!cell) continue;
+
+      for(const j of cell){
+
+        if(j<=i) continue;
+
+        let d2=0;
+        for(let k=0;k<N;k++){
+          const diff = V[i][k]-V[j][k];
+          d2+=diff*diff;
+        }
+
+        const d=Math.sqrt(d2);
+
+        for(let m=0;m<Math.min(10,mmm.length);m++){
+
+          if(mmm[m]!==1) continue;
+
+          if(Math.abs(d-minD*(m+1))<minD*0.2){
+
+            edgeIndices.push([i,j]);
+
+            const a=projectND(V[i]);
+            const b=projectND(V[j]);
+
+            edges.push(...a,...b);
+            break;
+          }
+        }
+
+      }
+    }
+
+  }
+
+  const result={
+    edges:new Float32Array(edges),
     edgeIndices
   };
 
-  edgeCache.set(key, result);
-
-  //console.log(`Edge indices count: ${edgeIndices.length}`);
-
+  edgeCache.set(key,result);
   return result;
 }
-
 // --------------------------------------------------------------------
-// Face finding
+
+//  if (!isface) return () => [];
+
+// Face findinglet faceCacheMap = new Map();
+
+
+
+
+
+
+
+
+
+
+
 let faceCacheMap = new Map();
 
-function makeFaceFinder(edgeIndices, maxFaces = 50000) {
+function sleep() {
+  return new Promise(r => setTimeout(r, 0));
+}
+function makeFaceFinder(edgeIndices,V, maxFaces = 50000) {
   if (!isface) return () => [];
+  if(leng(edgeIndices>300))return makeFaceFinder2(edgeIndices,V)
 const arr = edgeIndices.map(([a,b])=>{
     if(a>b){let t=a;a=b;b=t}
     return a*100000+b
@@ -775,6 +935,386 @@ const key = arr.join(',')
   faceCacheMap.set(key, computeFaces);
   return computeFaces;
 }
+function makeFaceFinder2(edgeIndices, vertices = null, maxFaces = 3000000, sizes = [3,4,5,6,8,10]) {
+  // If no geometry, we can't do planarity checks, so we fall back to combinatorial search.
+  const useGeometry = Array.isArray(vertices) && vertices.length > 0;
+
+  // ----- Normalise edges for caching -----
+  const arr = edgeIndices.map(([a, b]) => {
+    if (a > b) { let t = a; a = b; b = t; }
+    return a * 100000 + b;
+  });
+  arr.sort((x, y) => x - y);
+  const key = arr.join(',');
+  if (faceCacheMap.has(key)) return faceCacheMap.get(key);
+
+  // ----- Build adjacency lists and sets -----
+  const adj = {};
+  edgeIndices.forEach(([a, b]) => {
+    if (!adj[a]) adj[a] = [];
+    if (!adj[b]) adj[b] = [];
+    adj[a].push(b);
+    adj[b].push(a);
+  });
+
+  const adjSet = {};
+  for (let v in adj) {
+    adjSet[v] = new Set(adj[v]);
+  }
+
+  // ----- Your fast triangle finder (unchanged) -----
+  let faceCount = 0;
+  const faces = [];
+  const cycleSet = new Set(); // stores canonical keys to avoid duplicates
+
+  // Triangles
+  if (sizes.includes(3)) {
+    const verticesList = Object.keys(adj).map(Number).sort((x, y) => x - y);
+    for (let u of verticesList) {
+      const neighbors = adj[u].sort((x, y) => x - y);
+      for (let i = 0; i < neighbors.length; i++) {
+        const v = neighbors[i];
+        if (v <= u) continue;
+        for (let j = i + 1; j < neighbors.length; j++) {
+          const w = neighbors[j];
+          if (w <= v) continue;
+          if (adjSet[v].has(w)) {
+            const tri = [u, v, w];
+            const triKey = tri.slice().sort((x,y)=>x-y).join(',');
+            if (!cycleSet.has(triKey)) {
+              faces.push(tri);
+              cycleSet.add(triKey);
+              faceCount++;
+              if (faceCount % 10000 === 0) {
+                console.log(`Found ${faceCount} faces...`);
+                sleep();
+              }
+              if (faces.length >= maxFaces) break;
+            }
+          }
+        }
+        if (faces.length >= maxFaces) break;
+      }
+      if (faces.length >= maxFaces) break;
+    }
+  }
+
+  // If we already reached maxFaces, return early
+  if (faces.length >= maxFaces) {
+    const computeFaces = function(Vrot) {
+      return faces.map(face => face.map(idx => Vrot[idx]));
+    };
+    faceCacheMap.set(key, computeFaces);
+    return computeFaces;
+  }
+
+  // ----- Helper functions for face validity -----
+  function sharedEdges(f1, f2) {
+    let count = 0;
+    const edges1 = new Set();
+    for (let i = 0; i < f1.length; i++) {
+      let a = f1[i], b = f1[(i+1)%f1.length];
+      edges1.add(a < b ? `${a},${b}` : `${b},${a}`);
+    }
+    for (let i = 0; i < f2.length; i++) {
+      let a = f2[i], b = f2[(i+1)%f2.length];
+      if (edges1.has(a < b ? `${a},${b}` : `${b},${a}`)) {
+        count++;
+        if (count > 1) return count;
+      }
+    }
+    return count;
+  }
+
+  function isChordless(cycle) {
+    const n = cycle.length;
+    for (let i = 0; i < n; i++) {
+      const a = cycle[i];
+      for (let j = i + 2; j < n; j++) {
+        if (i === 0 && j === n-1) continue; // skip closing edge
+        const b = cycle[j];
+        if (adjSet[a].has(b)) return false;
+      }
+    }
+    return true;
+  }
+
+  // ----- N‑dimensional geometry helpers (Gram determinants) -----
+  function dot(a, b) {
+    return a.reduce((sum, ai, i) => sum + ai * b[i], 0);
+  }
+  function subtract(a, b) {
+    return a.map((ai, i) => ai - b[i]);
+  }
+  function add(a, b) {
+    return a.map((ai, i) => ai + b[i]);
+  }
+  function scale(s, v) {
+    return v.map(x => s * x);
+  }
+  function areCollinear(i, j, k, tol = 1e-10) {
+    const a = vertices[i], b = vertices[j], c = vertices[k];
+    const v1 = subtract(b, a);
+    const v2 = subtract(c, a);
+    const det = dot(v1, v1) * dot(v2, v2) - dot(v1, v2) * dot(v1, v2);
+    return Math.abs(det) < tol;
+  }
+
+  function gramDet3(v1, v2, v3) {
+    const dot11 = dot(v1, v1);
+    const dot12 = dot(v1, v2);
+    const dot13 = dot(v1, v3);
+    const dot22 = dot(v2, v2);
+    const dot23 = dot(v2, v3);
+    const dot33 = dot(v3, v3);
+    return dot11 * dot22 * dot33
+         + 2 * dot12 * dot13 * dot23
+         - dot11 * dot23 * dot23
+         - dot22 * dot13 * dot13
+         - dot33 * dot12 * dot12;
+  }
+
+  function pointInPlane(p, base, v1, v2, tol = 1e-10) {
+    const w = subtract(p, base);
+    const det = gramDet3(v1, v2, w);
+    return Math.abs(det) < tol;
+  }
+
+  // ----- Robust supporting hyperplane test (pure geometry) -----
+  function isSupportingFace(cycle) {
+    if (!useGeometry) return true; // no geometry → accept all cycles
+
+    // 1. Find three non‑collinear points in the cycle
+    let p0 = null, p1 = null, p2 = null;
+    for (let i = 0; i < cycle.length; i++) {
+      for (let j = i+1; j < cycle.length; j++) {
+        for (let k = j+1; k < cycle.length; k++) {
+          if (!areCollinear(cycle[i], cycle[j], cycle[k], 1e-8)) {
+            p0 = vertices[cycle[i]];
+            p1 = vertices[cycle[j]];
+            p2 = vertices[cycle[k]];
+            break;
+          }
+        }
+        if (p0) break;
+      }
+      if (p0) break;
+    }
+    if (!p0) return false; // degenerate cycle (all collinear) – not a proper face
+
+    // 2. Build orthonormal basis for the plane
+    let v1 = subtract(p1, p0);
+    let v2 = subtract(p2, p0);
+    let u1 = v1.slice();
+    const norm1 = Math.sqrt(dot(u1, u1));
+    if (norm1 < 1e-12) return false;
+    u1 = u1.map(x => x / norm1);
+
+    let u2 = subtract(v2, scale(dot(v2, u1), u1));
+    const norm2 = Math.sqrt(dot(u2, u2));
+    if (norm2 < 1e-12) return false;
+    u2 = u2.map(x => x / norm2);
+
+    // 3. Find a vector orthogonal to the plane
+    const dim = vertices[0].length;
+    let n = null;
+    // Try standard basis vectors until we find one not in the plane
+    for (let i = 0; i < dim; i++) {
+      let e = new Array(dim).fill(0);
+      e[i] = 1;
+      let proj = add(scale(dot(e, u1), u1), scale(dot(e, u2), u2));
+      let candidate = subtract(e, proj);
+      if (Math.sqrt(dot(candidate, candidate)) > 1e-8) {
+        n = candidate;
+        break;
+      }
+    }
+    // If all basis vectors are in the plane (shouldn't happen in dim>2), try a random vector
+    if (!n) {
+      let r = new Array(dim).fill(1).map(() => Math.random());
+      let proj = add(scale(dot(r, u1), u1), scale(dot(r, u2), u2));
+      n = subtract(r, proj);
+      if (Math.sqrt(dot(n, n)) < 1e-8) return false;
+    }
+    // Normalize
+    const normN = Math.sqrt(dot(n, n));
+    n = n.map(x => x / normN);
+
+    // 4. Compute signed distances to the plane
+    // Plane equation: n·(x - p0) = 0
+    const signedDist = (idx) => dot(n, subtract(vertices[idx], p0));
+
+    // Tolerance – scale by typical coordinate magnitude
+    const coordScale = Math.sqrt(dot(p0, p0)) + 1.0;
+    const tol = 1e-8 * coordScale;
+
+    // Check cycle vertices are on the plane
+    for (let idx of cycle) {
+      if (Math.abs(signedDist(idx)) > tol) return false;
+    }
+
+    // Check all other vertices lie on one side
+    let hasPositive = false, hasNegative = false;
+    for (let idx = 0; idx < vertices.length; idx++) {
+      if (cycle.includes(idx)) continue;
+      const d = signedDist(idx);
+      if (d > tol) hasPositive = true;
+      if (d < -tol) hasNegative = true;
+      if (hasPositive && hasNegative) return false;
+    }
+    return true;
+  }
+
+  // ----- BFS for larger cycles (sizes 4,5,6,8,10) -----
+  const largerSizes = sizes.filter(s => s > 3);
+  if (largerSizes.length > 0) {
+    const maxSize = Math.max(...largerSizes);
+    // Process each directed edge once (canonical order)
+    const edgeList = edgeIndices.map(([a,b]) => a < b ? [a,b] : [b,a]);
+    edgeList.sort(([a1,b1], [a2,b2]) => a1 - a2 || b1 - b2);
+
+    for (let [startA, startB] of edgeList) {
+      // Queue entry: { path, basis1, basis2, base }
+      // basis1, basis2, base are defined after we have three non‑collinear points
+      let queue = [{ path: [startA, startB], basis1: null, basis2: null, base: null }];
+
+      while (queue.length) {
+        const { path, basis1, basis2, base } = queue.shift();
+        const last = path[path.length - 1];
+
+        for (let nxt of adj[last]) {
+          // Avoid immediate backtrack
+          if (nxt === path[path.length - 2]) continue;
+
+          // Check if we close a cycle
+          if (nxt === path[0] && path.length >= 3) {
+            const cycleLen = path.length;
+            if (!largerSizes.includes(cycleLen)) continue;
+
+            // Planarity check (BFS-level pruning)
+            if (useGeometry && basis1) {
+              if (!pointInPlane(vertices[nxt], base, basis1, basis2)) continue;
+            }
+
+            // Chordless check
+            if (!isChordless(path)) continue;
+
+            // Supporting hyperplane test
+            if (!isSupportingFace(path)) continue;
+
+            // Deduplicate
+            const cycleKey = path.slice().sort((x,y)=>x-y).join(',');
+            if (cycleSet.has(cycleKey)) continue;
+
+            // Edge‑sharing constraint with existing faces
+            let ok = true;
+            for (let f of faces) {
+              if (sharedEdges(f, path) > 1) {
+                ok = false;
+                break;
+              }
+            }
+            if (ok) {
+              faces.push(path.slice());
+              cycleSet.add(cycleKey);
+              faceCount++;
+              if (faceCount % 10000 === 0) {
+                console.log(`Found ${faceCount} faces...`);
+                sleep();
+              }
+              if (faces.length >= maxFaces) break;
+            }
+            continue;
+          }
+
+          // Stop if path would exceed max size
+          if (path.length + 1 > maxSize) continue;
+
+          // Avoid revisiting vertices in current path
+          if (path.includes(nxt)) continue;
+
+          // Geometry pruning for the new vertex
+          let newBasis1 = basis1, newBasis2 = basis2, newBase = base;
+
+          if (useGeometry) {
+            if (basis1) {
+              // Plane already defined – nxt must lie in it
+              if (!pointInPlane(vertices[nxt], base, basis1, basis2)) continue;
+            } else {
+              // Try to establish a plane if we now have three points
+              if (path.length >= 2) {
+                if (!areCollinear(path[0], path[1], nxt, 1e-10)) {
+                  const p0 = vertices[path[0]];
+                  newBasis1 = subtract(vertices[path[1]], p0);
+                  newBasis2 = subtract(vertices[nxt], p0);
+                  newBase = p0;
+                }
+                // else remain collinear – keep null
+              }
+            }
+          }
+
+          queue.push({
+            path: [...path, nxt],
+            basis1: newBasis1,
+            basis2: newBasis2,
+            base: newBase
+          });
+        }
+        if (faces.length >= maxFaces) break;
+      }
+      if (faces.length >= maxFaces) break;
+    }
+  }
+
+  // ----- Final output function -----
+  const computeFaces = function(Vrot) {
+    // If geometry was used during search, we assume Vrot is consistent.
+    // Otherwise, just map indices to coordinates.
+    return faces.map(face => face.map(idx => Vrot[idx]));
+  };
+
+  faceCacheMap.set(key, computeFaces);
+  return computeFaces;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+  // triangles
+  for (let i = 0; i < n; i++) {
+    for (let j of adj[i]) {
+      if (j <= i) continue;
+      for (let k of adj[j]) {
+        if (k <= i || k === j) continue;
+        if (adj[i].includes(k)) {
+          const tri = [i,j,k];
+          let ok = true;
+          for (let f of faces) if (sharedEdges(f,tri)>1) { ok=false; break; }
+          if (ok) faces.push(tri);
+          if (faces.length>=maxFaces) break;
+        }
+      }
+      if (faces.length>=maxFaces) break;
+    }
+    if (faces.length>=maxFaces) break;
+  }
+  console.log(`Found ${faces.length} triangles`);
+*/
 
 // --------------------------------------------------------------------
 // Main generation
@@ -799,11 +1339,11 @@ function generate() {
 
   // Generate N‑D vertices (external library)
   vertsND = verticesfromcoxeter(M, D);
-
+	
   // Build edges & faces
   const { edges: edgeBuf, edgeIndices: newEdges } = buildEdges(vertsND);
   edgeIndices = newEdges;
-  computeFaces = makeFaceFinder(edgeIndices);
+  computeFaces = makeFaceFinder(edgeIndices,vertsND);
 
   // Apply ND rotation
   let rotatedND = vertsND.map(v => rotateND(v, ndAngles));
@@ -813,32 +1353,45 @@ function generate() {
 
   // Re‑build edge buffer with projected vertices
   let edgeBufProj = [];
+  if(isedge)
   for (let [a,b] of edgeIndices) {
     if (a >= verts3D.length || b >= verts3D.length) continue;
     edgeBufProj.push(...verts3D[a], ...verts3D[b]);
   }
 
-  // Compute faces (using rotated vertices)
-  faces = computeFaces(rotatedND);
- // console.log('Faces from computeFaces:', faces.length);
+  if (triBatches.length) {
+    triBatches.forEach(b => gl.deleteVertexArray(b.vao));
+    triBatches = [];
+  }
 
-  // Upload to WebGL
+  // Compute faces (existing)
+  faces = computeFaces(rotatedND);
+
+  // Upload (now asynchronous)
   upload(new Float32Array(edgeBufProj));
+  applyvef(); // if needed
+  
+  
 }
 
 // --------------------------------------------------------------------
-// WebGL upload with diagnostics
-  
+// Cache for triangulation results
+const triangulationCache = new Map();
+// Global storage for triangle batches
+let triBatches = []; // each element: { vao, count, blendMode? }
 
+// Modified upload function (now async via setTimeout)
 function upload(edgeBuffer) {
   const newEdgeProg = createProgram(vsEdge, fsEdge);
-const newTriProg = createProgram(vsTri, fsTri);
+  const newTriProg = createProgram(vsTri, fsTri);
+  
   if (!newTriProg || !newEdgeProg) {
     console.warn('Shader compilation failed, keeping previous programs');
     draw();
     return;
   }
 
+  // Delete old programs and VAOs
   if (triProgram) gl.deleteProgram(triProgram);
   if (edgeProgram) gl.deleteProgram(edgeProgram);
   triProgram = newTriProg;
@@ -847,104 +1400,23 @@ const newTriProg = createProgram(vsTri, fsTri);
   gl.enable(gl.BLEND);
   gl.blendFunc(blendMode.src, blendMode.dst);
   gl.enable(gl.DEPTH_TEST);
+  gl.disable(gl.CULL_FACE);
+  
+  // Delete old triangle VAOs
+  if (triBatches.length) {
+    triBatches.forEach(b => gl.deleteVertexArray(b.vao));
+    triBatches = [];
+  }
+  if (triVAO) gl.deleteVertexArray(triVAO); // old single VAO
+  triVAO = null; // not used anymore
 
-  if (triVAO) gl.deleteVertexArray(triVAO);
+  // Setup edge VAO (unchanged)
   if (edgeVAO) gl.deleteVertexArray(edgeVAO);
-  triVAO = gl.createVertexArray();
   edgeVAO = gl.createVertexArray();
-
-  // --- Build triangle data ---
-  let pos = [], norm = [], col = [];
-  let validFaceCount = 0;
-//console.log(faces)
-  for (let f of faces) {
-  let faceVerts=vectormap(x=>projectND(x),f)
- // console.log(faceVerts)
-   //let faceVerts = f.map(idx => verts3D[idx]) //.filter(v => v !== undefined);
-   if (faceVerts.length < 3) continue;
-    validFaceCount++;
-
-    let center = [0,0,0];
-    faceVerts.forEach(v => {
-      center[0] += v[0];
-      center[1] += v[1];
-      center[2] += v[2];
-    });
-    center = center.map(c => c / faceVerts.length);
-
-    let v0 = faceVerts[0], v1 = faceVerts[1], v2 = faceVerts[2];
-    let n = math.cross(math.subtract(v1,v0), math.subtract(v2,v0));
-    if (math.norm(n) < 1e-6) continue;
-    n = math.divide(n, math.norm(n));
-
-    let e1 = math.divide(math.subtract(v0,center), math.norm(math.subtract(v0,center)));
-    let e2 = math.cross(n, e1);
-
-    let sortedVerts = [...faceVerts].sort((a,b) => {
-      let pa = math.subtract(a, center);
-      let pb = math.subtract(b, center);
-      let angleA = Math.atan2(math.dot(pa,e2), math.dot(pa,e1));
-      let angleB = Math.atan2(math.dot(pb,e2), math.dot(pb,e1));
-      return angleA - angleB;
-    });
-
-    for (let i = 1; i < sortedVerts.length-1; i++) {
-      let p0 = sortedVerts[0];
-      let p1 = sortedVerts[i];
-      let p2 = sortedVerts[i+1];
-      pos.push(...p0, ...p1, ...p2);
-      norm.push(...n, ...n, ...n);
-
-      let k = f.length;
-      let color = [
-        ((k * rk) % 255)/255 + 0.1,
-        ((k * gk) % 255)/255 + 0.1,
-        ((k * bk) % 255)/255 + 0.1,
-        0.5
-      ].map(v => v * lll);
-      col.push(...color, ...color, ...color);
-    }
-  }
-
-  triCount = pos.length / 3;
-  //console.log(`Valid faces with ≥3 vertices: ${validFaceCount}, triangle count: ${triCount}`);
-
-  // --- Setup triangle VAO ---
-  gl.bindVertexArray(triVAO);
-
-  let loc = gl.getAttribLocation(triProgram, "a_pos");
-  if (loc !== -1 && pos.length) {
-    let buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(pos), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(loc);
-    gl.vertexAttribPointer(loc, 3, gl.FLOAT, false, 0, 0);
-  }
-
-  loc = gl.getAttribLocation(triProgram, "a_normal");
-  if (loc !== -1 && norm.length) {
-    let buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(norm), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(loc);
-    gl.vertexAttribPointer(loc, 3, gl.FLOAT, false, 0, 0);
-  }
-
-  loc = gl.getAttribLocation(triProgram, "a_color");
-  if (loc !== -1 && col.length) {
-    let buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(col), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(loc);
-    gl.vertexAttribPointer(loc, 4, gl.FLOAT, false, 0, 0);
-  }
-
-  // --- Setup edge VAO ---
-  if (isedge) {
-    edgeCount = edgeBuffer.length / 3;
-    gl.bindVertexArray(edgeVAO);
-    loc = gl.getAttribLocation(edgeProgram, "a_pos");
-    if (loc !== -1 && edgeBuffer.length) {
+  gl.bindVertexArray(edgeVAO);
+  if (isedge && edgeBuffer.length) {
+    let loc = gl.getAttribLocation(edgeProgram, "a_pos");
+    if (loc !== -1) {
       let buf = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, buf);
       gl.bufferData(gl.ARRAY_BUFFER, edgeBuffer, gl.STATIC_DRAW);
@@ -952,17 +1424,155 @@ const newTriProg = createProgram(vsTri, fsTri);
       gl.vertexAttribPointer(loc, 3, gl.FLOAT, false, 0, 0);
     }
   }
+  edgeCount = edgeBuffer.length / 3;
 
-  gl.bindVertexArray(null);
-  draw();
+  // Setup vertex VAO (unchanged)
+  let vertBuffer = [];
+  for (let v of verts3D) {
+    vertBuffer.push(v[0], v[1], v[2]);
+  }
+  vertCount = vertBuffer.length / 3;
+  if (vertVAO) gl.deleteVertexArray(vertVAO);
+  vertVAO = gl.createVertexArray();
+  gl.bindVertexArray(vertVAO);
+  let locv = gl.getAttribLocation(edgeProgram, "a_pos");
+  if (locv !== -1 && vertBuffer.length) {
+    let buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertBuffer), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(locv);
+    gl.vertexAttribPointer(locv, 3, gl.FLOAT, false, 0, 0);
+  }
+
+  // Start asynchronous batch processing of faces
+  const BATCH_SIZE = 10000; // faces per batch
+  let faceIndex = 0;
+  const totalFaces = faces.length;
+
+  function processNextBatch() {
+    if (faceIndex >= totalFaces) {
+      // All batches done – draw once more to ensure final image
+      draw();
+      return;
+    }
+
+    const batchEnd = Math.min(faceIndex + BATCH_SIZE, totalFaces);
+    const batchFaces = faces.slice(faceIndex, batchEnd);
+
+    // Build triangle data for this batch
+    let pos = [], norm = [], col = [];
+
+    for (let f of batchFaces) {
+      let faceVerts = vectormap(x => projectND(x), f);
+      if (faceVerts.length < 3) continue;
+
+      // Compute center
+      let center = [0, 0, 0];
+      faceVerts.forEach(v => {
+        center[0] += v[0];
+        center[1] += v[1];
+        center[2] += v[2];
+      });
+      center = center.map(c => c / faceVerts.length);
+
+      // Compute normal (Newell method)
+      let normal = [0, 0, 0];
+      for (let i = 0; i < faceVerts.length; i++) {
+        let current = faceVerts[i];
+        let next = faceVerts[(i + 1) % faceVerts.length];
+        normal[0] += (current[1] - next[1]) * (current[2] + next[2]);
+        normal[1] += (current[2] - next[2]) * (current[0] + next[0]);
+        normal[2] += (current[0] - next[0]) * (current[1] + next[1]);
+      }
+      let len = Math.sqrt(normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2]);
+      if (len > 1e-6) {
+        normal = normal.map(c => c / len);
+      } else {
+        normal = [0, 0, 1];
+      }
+
+      // Generate triangles
+      for (let i = 0; i < faceVerts.length; i++) {
+        let a = faceVerts[i];
+        let b = faceVerts[(i + 1) % faceVerts.length];
+        // Triangle: center, a, b
+        pos.push(...center, ...a, ...b);
+        norm.push(...normal, ...normal, ...normal);
+
+        // Color (same as original)
+        let k = f.length;
+        let color = [
+          ((k * (rk || 1) + center[0] * 1) % 255) / 255 + 0.1,
+          ((k * (gk || 2) + center[1] * 1) % 255) / 255 + 0.1,
+          ((k * (bk || 3) + center[2] * 1) % 255) / 255 + 0.1,
+          0.5
+        ].map(v => v * (lll || 1));
+        col.push(...color, ...color, ...color);
+      }
+    }
+
+    // Create VAO for this batch
+    const vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
+
+    // Positions
+    let loc = gl.getAttribLocation(triProgram, "a_pos");
+    if (loc !== -1 && pos.length) {
+      let buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(pos), gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, 3, gl.FLOAT, false, 0, 0);
+    }
+
+    // Normals
+    loc = gl.getAttribLocation(triProgram, "a_normal");
+    if (loc !== -1 && norm.length) {
+      let buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(norm), gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, 3, gl.FLOAT, false, 0, 0);
+    }
+
+    // Colors
+    loc = gl.getAttribLocation(triProgram, "a_color");
+    if (loc !== -1 && col.length) {
+      let buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(col), gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, 4, gl.FLOAT, false, 0, 0);
+    }
+
+    gl.bindVertexArray(null);
+
+    // Store batch info
+    triBatches.push({
+      vao: vao,
+      count: pos.length / 3 // number of vertices (3 per triangle)
+    });
+
+    // Update progress (optional)
+    faceIndex = batchEnd;
+   if(totalFaces>BATCH_SIZE) console.log(`Processed ${faceIndex} / ${totalFaces} faces`);
+
+    // Draw current state (so user sees incremental rendering)
+    draw();
+
+    // Schedule next batch (yield to browser)
+    setTimeout(processNextBatch, 0);
+  }
+
+  // Start first batch
+  processNextBatch();
 }
 
-// --------------------------------------------------------------------
-// Drawing
+// Modified draw function – iterates over all triangle batches
 function draw() {
   if (!triProgram || !edgeProgram) return;
 
-  gl.viewport(0,0,canvas.width,canvas.height);
+  gl.viewport(0, 0, canvas.width, canvas.height);
   const hex = bgPicker.value;
   const r = parseInt(hex.substr(1,2),16)/255;
   const g = parseInt(hex.substr(3,2),16)/255;
@@ -981,34 +1591,59 @@ function draw() {
   gl.uniform1f(gl.getUniformLocation(edgeProgram,"aspect"), canvas.width/canvas.height);
   if (edgeCount) gl.drawArrays(gl.LINES, 0, edgeCount);
 
-  // Faces
-  if (blendMode != BlendModes.opaque) {
-    gl.depthMask(false);
+  // Faces – draw all batches
+  if (blendMode === BlendModes.opaque) {
+    gl.disable(gl.BLEND);
+    gl.depthMask(true);
+    gl.blendEquation(gl.FUNC_ADD);
+  } else {
     gl.enable(gl.BLEND);
+    gl.depthMask(false);
     gl.blendFunc(blendMode.src, blendMode.dst);
-    if (blendMode.eq !== undefined) gl.blendEquation(blendMode.eq);
+    gl.blendEquation(blendMode.eq ?? gl.FUNC_ADD);
   }
+
   gl.useProgram(triProgram);
-  gl.bindVertexArray(triVAO);
-  gl.uniform1f(gl.getUniformLocation(triProgram,"rx"), rotX);
-  gl.uniform1f(gl.getUniformLocation(triProgram,"ry"), rotY);
-  gl.uniform1f(gl.getUniformLocation(triProgram,"zoom"), zoom);
-  gl.uniform1f(gl.getUniformLocation(triProgram,"d"), perspDist);
-  gl.uniform1f(gl.getUniformLocation(triProgram,"aspect"), canvas.width/canvas.height);
-  gl.uniform1f(gl.getUniformLocation(triProgram,"aa"), aa);
-  if (triCount) gl.drawArrays(gl.TRIANGLES, 0, triCount);
+  for (let batch of triBatches) {
+    gl.bindVertexArray(batch.vao);
+    gl.uniform1f(gl.getUniformLocation(triProgram,"rx"), rotX);
+    gl.uniform1f(gl.getUniformLocation(triProgram,"ry"), rotY);
+    gl.uniform1f(gl.getUniformLocation(triProgram,"zoom"), zoom);
+    gl.uniform1f(gl.getUniformLocation(triProgram,"d"), perspDist);
+    gl.uniform1f(gl.getUniformLocation(triProgram,"aspect"), canvas.width/canvas.height);
+    gl.uniform1f(gl.getUniformLocation(triProgram,"aa"), aa);
+    if (batch.count) gl.drawArrays(gl.TRIANGLES, 0, batch.count);
+  }
+
+  // Vertices (points)
+  gl.useProgram(edgeProgram);
+  gl.bindVertexArray(vertVAO);
+  gl.uniform1f(gl.getUniformLocation(edgeProgram,"rx"), rotX);
+  gl.uniform1f(gl.getUniformLocation(edgeProgram,"ry"), rotY);
+  gl.uniform1f(gl.getUniformLocation(edgeProgram,"zoom"), zoom);
+  gl.uniform1f(gl.getUniformLocation(edgeProgram,"d"), perspDist);
+  gl.uniform1f(gl.getUniformLocation(edgeProgram,"aspect"), canvas.width/canvas.height);
+  if (vertCount && isvert) gl.drawArrays(gl.POINTS, 0, vertCount);
 
   gl.depthMask(true);
 }
 
+
+
 // --------------------------------------------------------------------
 // Animation loop
+let isisanim=0;
 function animate() {
   if (isanim) {
+  isisanim=1
     for (let i = 0; i < ndAngles.length; i++) {
-      ndAngles[i] += ndSpeeds[i];
+      ndAngles[i] += ndSpeeds[i]/3;
     }
     generate();
+  }else{
+  if(isisanim)
+  initNDRotations()
+  isisanim=0
   }
   requestAnimationFrame(animate);
 }
@@ -1047,12 +1682,13 @@ let activeNDPlane = -1;  // -1 means normal 3D rotation
 document.addEventListener('keydown', (e) => {
   const key = e.key.toLowerCase();
   const planeMap = {
-    'z': 0, 'x': 1, 'c': 2, 'v': 3, 'b': 4, 'n': 5, 'm': 6
+    'z': 0, 'x': 1, 'c': 2, 'v': 3, 'b': 4, 'n': 5, 'm': 6,
+	'a': 7, 's': 8, 'd': 9, 'f': 10, 'g': 11, 'h': 12, 'j': 13
   };
   
   if (key in planeMap) {
  //   e.preventDefault();
-    activeNDPlane = planeMap[key];
+    activeNDPlane = planeMap[key]-1;
   }
 });
 
@@ -1062,7 +1698,7 @@ canvas.onmousemove = e => {
   if (e.buttons) {
     if (activeNDPlane >= 0) {
       // Control ND rotation angles
-      const base = activeNDPlane*2+3;// * 2;
+      const base = activeNDPlane*2;// * 2;
       const speed = 0.01;
       
       // Mouse X affects first angle, mouse Y affects second angle
@@ -1115,10 +1751,11 @@ for (let i = 0; i < 10; i++) {
 window.anim = () => { isanim = !isanim; };
 window.animf = () => { isface = !isface; generate(); };
 window.anime = () => { isedge = !isedge; generate(); };
+window.animv = () => { isvert = !isvert; generate(); };
 window.resett = () => {
 edgeCache = new Map();
   faceCacheMap = new Map();
-  generate();
+  applyNomAndGenerate();
 };
 
 // Initialise
@@ -1158,7 +1795,42 @@ function resizeMatrix() {
   generate();
 }
 
+function applyNomAndGenerate() {
+    const N = parseInt(dimNInput.value, 10) || 4;
 
+    // 1. Save current matrix
+    const originalMatrix = [];
+    for (let i = 0; i < N; i++) {
+        originalMatrix[i] = [];
+        for (let j = 0; j < N; j++) {
+            const el = document.getElementById(`m${i}${j}`);
+            originalMatrix[i][j] = el ? el.value : '';
+        }
+    }
+
+    // 2. Apply nom() to each element
+    for (let i = 0; i < N; i++) {
+        for (let j = 0; j < N; j++) {
+            const el = document.getElementById(`m${i}${j}`);
+            if (el) el.value = getnom(el.value-0.00001);
+        }
+    }
+
+    // 3. Generate with nom() applied
+    generate();
+	//return;
+//console.log(23)
+    // 4. Restore original matrix
+    for (let i = 0; i < N; i++) {
+        for (let j = 0; j < N; j++) {
+            const el = document.getElementById(`m${i}${j}`);
+            if (el) el.value = originalMatrix[i][j];
+        }
+    }
+
+    // 5. Generate with original matrix
+    generate();
+}
 
 
 

@@ -1,322 +1,295 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Icosahedron with 5 Cubes - A5 Symmetry</title>
-    <style>
-        body { 
-            margin: 0; 
-            overflow: hidden; 
-            font-family: Arial, sans-serif;
-        }
-        #container {
-            display: flex;
-            width: 100vw;
-            height: 100vh;
-        }
-        #left-panel {
-            flex: 3;
-            position: relative;
-        }
-        #right-panel {
-            flex: 1;
-            background: #f0f0f0;
-            padding: 10px;
-            overflow-y: auto;
-        }
-        #canvas-container {
-            width: 100%;
-            height: 100%;
-        }
-        .control-panel {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(255,255,255,0.9);
-            padding: 10px;
-            border-radius: 5px;
-        }
-        .state-button {
-            display: block;
-            width: 100%;
-            margin: 5px 0;
-            padding: 8px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-        .state-button:hover {
-            background: #45a049;
-        }
-        .corner-markers {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            background: rgba(255,255,255,0.9);
-            padding: 10px;
-            border-radius: 5px;
-        }
-        .marker {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            margin: 2px;
-            border: 1px solid #000;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Dodecahedron 60 Rotations with Cubes</title>
+  <style>
+    body { margin:0; font-family:system-ui,sans-serif; display:flex; height:100vh; background:#111; color:#eee }
+    #left { flex:1; border-right:2px solid #333 }
+    #right { width:360px; padding:8px; overflow:auto; display:grid; grid-template-columns:repeat(3,1fr); gap:6px }
+    button { background:#222; color:#eee; border:1px solid #444; border-radius:6px; padding:6px; cursor:pointer; font-size:12px }
+    button:hover { background:#333 }
+    canvas { width:100%; height:100%; background:#000 }
+  </style>
 </head>
 <body>
-    <div id="container">
-        <div id="left-panel">
-            <div id="canvas-container"></div>
-            <div class="control-panel">
-                <button onclick="startRotation()">Start Rotation</button>
-                <button onclick="stopRotation()">Stop Rotation</button>
-            </div>
-            <div class="corner-markers" id="corner-markers">
-                <div>Corner Cube Colors:</div>
-            </div>
-        </div>
-        <div id="right-panel">
-            <h3>A5 Group Elements (60 states)</h3>
-            <div id="state-buttons"></div>
-        </div>
-    </div>
+<div id="left"><canvas id="cv"></canvas></div>
+<div id="right"></div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script>
-        // Golden ratio
-        const phi = (1 + Math.sqrt(5)) / 2;
-        
-        // Icosahedron vertices (12 vertices)
-        const icosahedronVertices = [
-            [0, 1, phi], [0, 1, -phi], [0, -1, phi], [0, -1, -phi],
-            [1, phi, 0], [1, -phi, 0], [-1, phi, 0], [-1, -phi, 0],
-            [phi, 0, 1], [phi, 0, -1], [-phi, 0, 1], [-phi, 0, -1]
-        ];
+<script>
+// ================= Math utils =================
+const TAU = 2*Math.PI
+function matMul(A,B){return A.map((r,i)=>B[0].map((_,j)=>r.reduce((s,_,k)=>s+A[i][k]*B[k][j],0)))}
+function matVec(M,v){return [M[0][0]*v[0]+M[0][1]*v[1]+M[0][2]*v[2],M[1][0]*v[0]+M[1][1]*v[1]+M[1][2]*v[2],M[2][0]*v[0]+M[2][1]*v[1]+M[2][2]*v[2]]}
+function norm(v){const n=Math.hypot(...v); return v.map(x=>x/n)}
+function cross(a,b){return [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}
+function dot(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]}
+function rotAxis(axis,ang){
+  const [x,y,z]=norm(axis); const c=Math.cos(ang), s=Math.sin(ang), t=1-c
+  return [
+    [t*x*x+c,   t*x*y-s*z, t*x*z+s*y],
+    [t*x*y+s*z, t*y*y+c,   t*y*z-s*x],
+    [t*x*z-s*y, t*y*z+s*x, t*z*z+c]
+  ]
+}
+function matKey(M){return M.flat().map(x=>(x+20).toFixed(2)).join(',')}
 
-        // Cube definitions (each cube uses 8 vertices from the icosahedron)
-        // These are the 5 cubes inscribed in the icosahedron
-        const cubeConfigurations = [
-            {
-                name: "Cube 1 (Red)",
-                color: 0xff4444,
-                vertices: [0, 2, 5, 7, 8, 10, 1, 3] // Example indices - adjust based on actual cube vertices
-            },
-            {
-                name: "Cube 2 (Green)", 
-                color: 0x44ff44,
-                vertices: [1, 3, 4, 6, 9, 11, 0, 2]
-            },
-            {
-                name: "Cube 3 (Blue)",
-                color: 0x4444ff, 
-                vertices: [4, 6, 8, 10, 1, 3, 5, 7]
-            },
-            {
-                name: "Cube 4 (Pink)",
-                color: 0xff44ff,
-                vertices: [5, 7, 9, 11, 0, 2, 4, 6]
-            },
-            {
-                name: "Cube 5 (Yellow)",
-                color: 0xffff44,
-                vertices: [8, 10, 1, 3, 5, 7, 9, 11]
-            }
-        ];
+// ================= Dodecahedron =================
+const phi = (1 + Math.sqrt(5)) / 2
+const a = 1/phi, b = 1, c = phi
+let V = [
+  [-b,-b,-b], [-b,-b,b], [-b,b,-b], [-b,b,b],
+  [b,-b,-b], [b,-b,b], [b,b,-b], [b,b,b],
+  [0, -a, -c], [0, -a, c], [0, a, -c], [0, a, c],
+  [-a, -c, 0], [-a, c, 0], [a, -c, 0], [a, c, 0],
+  [-c, 0, -a], [c, 0, -a], [-c, 0, a], [c, 0, a]
+].map(norm)
 
-        // Scene setup
-        let scene, camera, renderer;
-        let icosahedron, cubes = [];
-        let isRotating = true;
-        let rotationSpeed = 0.005;
-        
-        // Selected corners to show cube colors (5 vertices of icosahedron)
-        const cornerIndices = [0, 4, 8, 1, 6]; // Example corner indices
-        const cornerMarkers = [];
+// edges
+let edges=[]
+for(let i=0;i<V.length;i++)for(let j=i+1;j<V.length;j++){
+  const d=Math.hypot(V[i][0]-V[j][0], V[i][1]-V[j][1], V[i][2]-V[j][2])
+  if(d<1.2) edges.push([i,j])
+}
 
-        init();
-        createStateButtons();
-        animate();
+// ================= Cube groups =================
+const cubeGroups = {
+  red:   [3,7,1,5,0,2,6,4],
+  blue:  [10,13,0,18,17,14,7,9],
+  green: [15,3,10,16,19,9,12,4],
+  purple:[13,6,11,19,16,8,1,14],
+  orange:[17,8,15,2,12,5,11,18]
+}
+let cubeActive = {red:true, blue:true, green:true, purple:true, orange:true}
 
-        function init() {
-            // Scene
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x222222);
+// ================= True 60 rotations =================
+let rotations=[]
+for(let i=0;i<V.length;i++){
+  const axis=V[i]
+  for(let k=0;k<3;k++){
+    const angle=TAU/3*k
+    rotations.push(rotAxis(axis,angle))
+  }
+}
+function det3(M){return M[0][0]*(M[1][1]*M[2][2]-M[1][2]*M[2][1])-M[0][1]*(M[1][0]*M[2][2]-M[1][2]*M[2][0])+M[0][2]*(M[1][0]*M[2][1]-M[1][1]*M[2][0])}
+function isProperRotation(M,eps=1e-2){return Math.abs(det3(M)-1)<eps}
+function filterRotations(rotations){
+  const seen=new Set(), filtered=[]
+  for(let R of rotations){
+    if(!isProperRotation(R)) continue
+    const key=matKey(R)
+    if(!seen.has(key)){seen.add(key); filtered.push(R)}
+  }
+  return filtered
+}
+function composeRot(A,B){return matMul(A,B)}
+function generateFullRotations(basic){
+  let rotations=[], seen=new Set()
+  function addIfNew(R){
+    const key=matKey(R)
+    if(!seen.has(key)){rotations.push(R); seen.add(key); return true}
+    return false
+  }
+  for(let R of basic) addIfNew(R)
+  let i=0
+  while(i<rotations.length){
+    const R1=rotations[i]
+    for(let R2 of rotations){
+      addIfNew(composeRot(R1,R2))
+      addIfNew(composeRot(R2,R1))
+    }
+    i++
+  }
+  return rotations
+}
+rotations = generateFullRotations(rotations)
+rotations = filterRotations(rotations)
 
-            // Camera
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth * 0.75 / window.innerHeight, 0.1, 1000);
-            camera.position.z = 5;
+// ================= UI =================
+const right = document.getElementById('right')
 
-            // Renderer
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth * 0.75, window.innerHeight);
-            document.getElementById('canvas-container').appendChild(renderer.domElement);
+// Cube toggle buttons
+Object.keys(cubeGroups).forEach(name=>{
+  const b=document.createElement('button')
+  b.textContent=name
+  b.onclick=()=>{ cubeActive[name]=!cubeActive[name] }
+  right.appendChild(b)
+})
+const cubeCode = {red:'R', blue:'B', green:'G', purple:'P', orange:'O'}
+const cubeNames = ['red','blue','green','purple','orange']
 
-            // Lighting
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-            
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(1, 1, 1);
-            scene.add(directionalLight);
+const vertexPairs = [
+  [13,17], [2,6], [16,15], [11,13], [2,8]
+];
 
-            // Create icosahedron (cyan, 50% transparent)
-            const icosaGeometry = new THREE.IcosahedronGeometry(1, 0);
-            const icosaMaterial = new THREE.MeshPhongMaterial({
-                color: 0x00ffff,
-                transparent: true,
-                opacity: 0.5,
-                wireframe: false
-            });
-            icosahedron = new THREE.Mesh(icosaGeometry, icosaMaterial);
-            scene.add(icosahedron);
 
-            // Create wireframe for icosahedron
-            const wireframeGeometry = new THREE.IcosahedronGeometry(1.001, 0);
-            const wireframeMaterial = new THREE.MeshBasicMaterial({
-                color: 0x006666,
-                wireframe: true
-            });
-            const wireframe = new THREE.Mesh(wireframeGeometry, wireframeMaterial);
-            scene.add(wireframe);
+function addRotationButtons() {
+  right.querySelectorAll('.rotBtn')?.forEach(b => b.remove());
 
-            // Create 5 cubes
-            createCubes();
-
-            // Create corner markers
-            createCornerMarkers();
-
-            // Handle window resize
-            window.addEventListener('resize', onWindowResize);
+  rotations.forEach((R,i) => {
+    const Vrot = V.map(v => matVec(R,v));
+    
+    const pairColors = vertexPairs.map(([v1,v2]) => {
+      let color = '-';
+      for(let name of cubeNames){
+        if(!cubeActive[name]) continue;
+        const arr = cubeGroups[name];
+        const Arot = arr.map(v => V[v].map(x => Math.round(x*1000)));
+        const check1 = Arot.some(p => p[0] === Math.round(Vrot[v1][0]*1000) &&
+                                       p[1] === Math.round(Vrot[v1][1]*1000) &&
+                                       p[2] === Math.round(Vrot[v1][2]*1000));
+        const check2 = Arot.some(p => p[0] === Math.round(Vrot[v2][0]*1000) &&
+                                       p[1] === Math.round(Vrot[v2][1]*1000) &&
+                                       p[2] === Math.round(Vrot[v2][2]*1000));
+        if(check1 && check2){
+          color = cubeCode[name];
+          break;
         }
+      }
+      return color;
+    });
 
-        function createCubes() {
-            cubeConfigurations.forEach((config, index) => {
-                // Create cube geometry from the 8 vertices
-                const cubeGeometry = new THREE.BufferGeometry();
-                const vertices = [];
-                
-                // Get the actual vertex positions for this cube
-                config.vertices.forEach(vertexIndex => {
-                    const vertex = icosahedronVertices[vertexIndex];
-                    vertices.push(vertex[0], vertex[1], vertex[2]);
-                });
-                
-                // Define faces for the cube (simplified - you'd need proper face indices)
-                const indices = [
-                    0,1,2, 0,2,3, 4,5,6, 4,6,7, // Example indices
-                    0,4,5, 0,5,1, 2,6,7, 2,7,3,
-                    0,3,7, 0,7,4, 1,5,6, 1,6,2
-                ];
-                
-                cubeGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-                cubeGeometry.setIndex(indices);
-                cubeGeometry.computeVertexNormals();
 
-                const cubeMaterial = new THREE.MeshPhongMaterial({
-                    color: config.color,
-                    transparent: true,
-                    opacity: 0.5,
-                    side: THREE.DoubleSide
-                });
 
-                const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-                scene.add(cube);
-                cubes.push(cube);
-            });
-        }
 
-        function createCornerMarkers() {
-            const markerContainer = document.getElementById('corner-markers');
-            cornerIndices.forEach((cornerIndex, i) => {
-                const markerDiv = document.createElement('div');
-                markerDiv.className = 'marker';
-                markerDiv.style.backgroundColor = '#ffffff';
-                markerDiv.id = `corner-${i}`;
-                markerDiv.title = `Corner ${cornerIndex}`;
-                markerContainer.appendChild(markerDiv);
-                cornerMarkers.push(markerDiv);
-            });
-            updateCornerMarkers();
-        }
+    const btnText = 'R'+i+':' + pairColors.join('');
+    const ab = document.createElement('button');
+    ab.className = 'rotBtn';
+    ab.textContent = btnText;
+    ab.onclick = () => animateTo(R);
+    right.appendChild(ab);
+  });
+}
+addRotationButtons()
 
-        function updateCornerMarkers() {
-            // This function would determine which cubes touch each corner
-            // For now, just cycle through cube colors for demonstration
-            cornerIndices.forEach((cornerIndex, i) => {
-                const cubeIndex = (Math.floor(Date.now() / 1000) + i) % 5;
-                const color = cubeConfigurations[cubeIndex].color;
-                const marker = document.getElementById(`corner-${i}`);
-                marker.style.backgroundColor = `#${color.toString(16).padStart(6, '0')}`;
-            });
-        }
+// ================= Rendering =================
+const canvas=document.getElementById('cv')
+const ctx=canvas.getContext('2d')
+function resize(){canvas.width=canvas.clientWidth; canvas.height=canvas.clientHeight}
+window.onresize=resize; resize()
 
-        function createStateButtons() {
-            const container = document.getElementById('state-buttons');
-            
-            // Create buttons for different A5 states
-            for (let i = 0; i < 12; i++) { // Showing first 12 for example
-                const button = document.createElement('button');
-                button.className = 'state-button';
-                button.textContent = `State ${i + 1}`;
-                button.onclick = () => setIcosahedronState(i);
-                container.appendChild(button);
-            }
-        }
+let current=[[1,0,0],[0,1,0],[0,0,1]]
+let target=null, t0=0
 
-        function setIcosahedronState(stateIndex) {
-            stopRotation();
-            
-            // Apply different rotations based on state
-            const angleX = (stateIndex * Math.PI / 6) % (2 * Math.PI);
-            const angleY = (stateIndex * Math.PI / 8) % (2 * Math.PI);
-            const angleZ = (stateIndex * Math.PI / 10) % (2 * Math.PI);
-            
-            icosahedron.rotation.x = angleX;
-            icosahedron.rotation.y = angleY;
-            icosahedron.rotation.z = angleZ;
-            
-            // Rotate cubes to match
-            cubes.forEach((cube, i) => {
-                cube.rotation.x = angleX;
-                cube.rotation.y = angleY;
-                cube.rotation.z = angleZ;
-            });
-        }
+function project(v){const s=220; return [canvas.width/2+s*v[0]/(v[2]+3), canvas.height/2-s*v[1]/(v[2]+3)]}
 
-        function startRotation() {
-            isRotating = true;
-        }
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height)
+  const P = V.map(v => matVec(current, v))
 
-        function stopRotation() {
-            isRotating = false;
-        }
+  // draw edges
+  edges.forEach(([i,j])=>{
+    const edgeColors = Object.entries(cubeGroups)
+      .filter(([name,arr]) => cubeActive[name] && arr.includes(i) && arr.includes(j))
+    if(edgeColors.length === 0) return
+    const colorMap = {red:'red', blue:'blue', green:'green', purple:'purple', orange:'orange'}
+    ctx.strokeStyle = colorMap[edgeColors[0][0]]
+    ctx.beginPath()
+    const a = project(P[i]), b = project(P[j])
+    ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1])
+    ctx.stroke()
+  })
 
-        function onWindowResize() {
-            camera.aspect = (window.innerWidth * 0.75) / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth * 0.75, window.innerHeight);
-        }
+  // draw vertices
+  P.forEach((p,i)=>{
+    let vColor = null
+    for(let [name,arr] of Object.entries(cubeGroups)){
+      if(cubeActive[name] && arr.includes(i)){ vColor = name; break }
+    }
+    ctx.fillStyle = vColor || '#888'
+    const [x,y] = project(p)
+    ctx.beginPath(); ctx.arc(x,y,5,0,TAU); ctx.fill()
 
-        function animate() {
-            requestAnimationFrame(animate);
+    // draw vertex number
+    ctx.fillStyle = '#fff'
+    ctx.font = '12px sans-serif'
+    ctx.fillText(i, x + 6, y - 6)
+  })
+}
 
-            if (isRotating) {
-                icosahedron.rotation.x += rotationSpeed;
-                icosahedron.rotation.y += rotationSpeed * 1.1;
-                
-                cubes.forEach(cube => {
-                    cube.rotation.x = icosahedron.rotation.x;
-                    cube.rotation.y = icosahedron.rotation.y;
-                });
-                
-                updateCornerMarkers();
-            }
+function matToQuat(M){
+  const m = M.flat()
+  const trace = m[0]+m[4]+m[8]
+  let w,x,y,z
+  if(trace>0){
+    const S = Math.sqrt(trace+1.0)*2
+    w = 0.25*S
+    x = (m[7]-m[5])/S
+    y = (m[2]-m[6])/S
+    z = (m[3]-m[1])/S
+  } else if(m[0]>m[4] && m[0]>m[8]){
+    const S = Math.sqrt(1+m[0]-m[4]-m[8])*2
+    w = (m[7]-m[5])/S
+    x = 0.25*S
+    y = (m[1]+m[3])/S
+    z = (m[2]+m[6])/S
+  } else if(m[4]>m[8]){
+    const S = Math.sqrt(1+m[4]-m[0]-m[8])*2
+    w = (m[2]-m[6])/S
+    x = (m[1]+m[3])/S
+    y = 0.25*S
+    z = (m[5]+m[7])/S
+  } else {
+    const S = Math.sqrt(1+m[8]-m[0]-m[4])*2
+    w = (m[3]-m[1])/S
+    x = (m[2]+m[6])/S
+    y = (m[5]+m[7])/S
+    z = 0.25*S
+  }
+  return [w,x,y,z]
+}
 
-            renderer.render(scene, camera);
-        }
-    </script>
+function quatToMat(q){
+  const [w,x,y,z] = q
+  return [
+    [1-2*y*y-2*z*z, 2*x*y-2*z*w,   2*x*z+2*y*w],
+    [2*x*y+2*z*w,   1-2*x*x-2*z*z, 2*y*z-2*x*w],
+    [2*x*z-2*y*w,   2*y*z+2*x*w,   1-2*x*x-2*y*y]
+  ]
+}
+
+function quatSlerp(q0,q1,t){
+  let [w0,x0,y0,z0]=q0
+  let [w1,x1,y1,z1]=q1
+  let dot = w0*w1+x0*x1+y0*y1+z0*z1
+  if(dot<0){ dot=-dot; w1=-w1;x1=-x1;y1=-y1;z1=-z1 }
+  if(dot>0.9995){
+    let w=w0+t*(w1-w0), x=x0+t*(x1-x0), y=y0+t*(y1-y0), z=z0+t*(z1-z0)
+    const n = Math.hypot(w,x,y,z)
+    return [w/n,x/n,y/n,z/n]
+  }
+  const theta0 = Math.acos(dot)
+  const theta = theta0*t
+  const sinTheta = Math.sin(theta)
+  const sinTheta0 = Math.sin(theta0)
+  const s0 = Math.cos(theta)-dot*sinTheta/sinTheta0
+  const s1 = sinTheta/sinTheta0
+  return [
+    w0*s0+w1*s1, x0*s0+x1*s1, y0*s0+y1*s1, z0*s0+z1*s1
+  ]
+}
+
+let currentQuat = [1,0,0,0]
+
+function animateTo(R){
+  target = R
+  t0 = performance.now()
+  currentQuat = matToQuat(current)
+}
+
+function tick(t){
+  if(target){
+    const u=Math.min((t-t0)/600,1)
+    const a=u*u*(3-2*u)
+    const targetQuat = matToQuat(target)
+    const q = quatSlerp(currentQuat, targetQuat, a)
+    current = quatToMat(q)
+    if(u>=1){ current=target; target=null }
+  }
+  draw()
+  requestAnimationFrame(tick)
+}
+requestAnimationFrame(tick)
+</script>
 </body>
 </html>

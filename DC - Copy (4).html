@@ -1,0 +1,4115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complex Domain Coloring</title>
+    <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+    <style>
+          body {
+background-color: #bbd;
+            font-family: Cambria math, serif;
+            margin: 5px;
+            text-align: center;
+
+        }
+      
+        input, button {
+            margin: 5px;
+            padding: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 1px;
+ font-size: 16px;
+        }
+        h2 {
+             box-shadow:  gray 0px 0px 60px -6px; 
+        }
+ h1 {
+             box-shadow:  #222 0px 0px 60px -6px; 
+        }
+        #canvasContainer {
+ padding: 10px;
+            width: 300px;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+         position: fixed;
+ right:calc(25% - 160px);top:160px;
+
+
+        }
+		#graphContainera {
+ padding: 10px;
+            width: 300px;
+            height: 300px;
+           
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+  margin-right: auto;
+  right:calc(25% - 00px);top:160px;
+  display:none;
+ 
+position: fixed;
+        }
+				#graphContainerb {
+left:calc(75% - 200px);top:160px;
+  display:none;
+ 
+position: fixed;
+        }
+			#graphContainer {
+ padding: 10px;
+            width: 300px;
+            height: 300px;
+           
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+  margin-right: auto;
+  right:calc(25% - 160px);top:160px;
+  display:none;
+ 
+position: fixed;
+        }	
+ 
+.split {
+  height: 100%;
+  width: 50%;
+  position: fixed;
+  z-index: 1;
+  overflow-x: hidden;
+  padding-top: 20px;
+
+}
+
+.gold{
+   border-left: 5px gold;
+}
+
+.left {
+  left: 0;
+ border: 5px solid #000;
+background-color: #eee;
+ border-top: 10px solid black;
+box-shadow: inset gray 0px 0px 60px -6px; 
+
+
+}
+
+.right {
+  right: 0;
+ border: 5px solid #000;
+background-color: #eeeeee;
+ border-top: 10px solid  black;
+ box-shadow: inset gray 0px 0px 60px -6px; 
+
+
+
+}
+        .color-input {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ddd;
+            cursor: pointer;
+        }
+        .palette-container {
+            display: grid;
+            gap: 3px;
+        }
+		   #autocomplete-list {
+      position: absolute;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      max-height: 150px;
+      overflow-y: auto;
+      background-color: white;
+      z-index: 1000;
+    }
+
+    #autocomplete-list div {
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    #autocomplete-list div:hover {
+      background-color: #e9e9e9;
+    }
+.preset-button {
+        appearance: none; /* Removes defa
+        background-color: #ddd;
+        color: white; /* Text color */
+        border: none;
+        border: 1px solid #888;
+      border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        text-align: center;
+        display: inline-block;
+        border-radius: 5px; /* Rounded corners */
+        width: 20px; /* Square-ish size */
+        height: 20px; /* Square-ish size */
+    }
+
+    .preset-button:hover {
+    background-color: #888;
+        font-size: 16px;
+    }
+    
+    
+    
+    .code-bubble {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  font-family: monospace;
+  white-space: pre-wrap;
+  z-index: 1000;
+  max-width: 400px;
+  overflow: auto;
+}
+    
+    
+    
+   .dark-mode #autocomplete-list {
+    background-color: #000;  /* Black background for autocomplete list */
+    color: #688;  /* White text in autocomplete list */
+    border: 1px solid #444;  /* Dark border for autocomplete list */
+}
+    
+    body.dark-mode {
+    background-color: #000;
+       color: #000;
+    }
+.dark-mode input, .dark-mode textarea, .dark-mode button, .dark-mode select{
+    background-color: #333;  /* Dark background for input in dark mode */
+    color: #fff;  /* White text for input */
+    box-shadow:  #005555 0px 0px 10px -6px;
+    border: 1px solid #444;  /* Darker border for input */
+}
+      .dark-mode .left, .dark-mode .right {
+            background-color: #121212;
+            border-color: #033;
+            box-shadow: inset #005555 0px 0px 60px -6px;
+            color: #ddd;
+            
+        }
+
+        .dark-mode h1, .dark-mode h2 {
+        box-shadow: inset #005555 0px 0px 60px -6px;
+        font-family: 'UnifrakturCook', cursive;
+        background-color: #000;
+            color: #fff;
+        }
+
+        #darkModeToggle {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 10px;
+            cursor: pointer;
+            background-color: #444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        #darkModeToggle:hover {
+            background-color: #666;
+        }
+        
+    select optgroup[label] {
+    font-weight: bold;
+    color: black;
+  }
+
+
+.popup-container {
+    position: relative;
+    /* Add dimensions to contain the absolute button */
+    width: 100%;
+    height: 100%;
+}
+
+.popup-button {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Safe positioning values */
+    top: 20px;
+    right: 20px;
+    z-index: 1001; /* Above the popup */
+}
+
+.popup-content {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    font-family: monospace;
+    white-space: pre-wrap;
+    z-index: 1000;
+    max-width: 80vw; /* Responsive width */
+    max-height: 80vh; /* Responsive height */
+    overflow: auto;
+    color: #000;
+    /* Ensure popup stays on screen */
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.popup-button:hover {
+    background-color: #e0e0e0;
+}
+@media (max-width: 600px) {
+    .popup-content {
+        max-width: 95vw;
+        max-height: 90vh;
+    }
+}
+,
+
+    </style>
+
+</head>
+<body>
+    <h1>Complex Domain Coloring</h1>
+    
+     <button id="darkModeToggle">Dark Mode</button>
+        <div class="popup-container">
+        <button class="popup-button">?</button>
+        <div class="popup-content">
+1 - Output Types
+
+1.1 - domain
+Generic output for domain colourings.
+- Size/quality can be changed with bmp width and height.
+- Alternative generator methods: generategif, generatemapping, and generate inverse are also under this.
+
+1.2 - graphing
+Graphs the function in 2D.
+- Red = real part, Blue = imaginary part.
+- start locations and end location define a line in the complex domain.
+- maximum parameter:
+  - Positive → sets the maximum height of the graph.
+  - 0 → automatically sets maximum.
+  - Negative → directly sets the max output range (positive values take maximum value, and maximum’s minimum).
+
+1.2.1 - polar graph
+Checkbox at the right makes it a polar graph.
+- Moving along a contour: imaginary parts set y-axis, real part sets real axis.
+- To make parametric: use f(x)+i*g(x).
+
+1.3 - numerical
+Input the number for substituting x → get result.
+
+1.4 - heightmap
+- Use capslock ON for movement:
+  - WASDZX → move (Z/X = up/down, W/S = forward/backward).
+  - QE, CV, RF → rotate.
+- Click reset camera to reset movement.
+
+1.4.0.1
+T (capital) changes heightmap from magnitude → real part → imaginary part (cycles every 3).
+
+1.4.1
+maximum height parameter:
+- Set to 0 → height always = 1.
+
+1.4.2
+download stl → downloads mesh as STL.
+⚠ Mesh might be large or have NaN values, loading STLs may be slow.
+
+1.4.3
+download objects → downloads as .gltf (Three.js format).
+
+1.4.4 - create gif
+Creates a GIF rotating around the mesh. Options:
+1. default - circular path looking down (sqrt2).
+2. close - smaller orbit (1).
+3. ortho - camera orbits flat plane (z=0), no tilt.
+4. zero - camera at origin, spins in place.
+5. zeroup - camera at origin, spins while angled up.
+6. topdown - rotates around Z-axis, looking down.
+7. flyover - camera moves in a straight line past origin.
+8. spherical - 45° up view, circle path (z=0, r=0.9).
+
+1.4.5
+Buttons at bottom left change the mesh directly (not the camera) — useful for GIFs.
+
+
+2 - Image Generation
+
+2.0
+Variables:
+- x, z can be used.
+- q → nome inputs.
+- t → period ratio τ.
+  - modulartransformqt = div(log(q), I, pi())
+  - modulartransformtq(t) = exp(mul(pi(), I, t))
+  - Note: t cannot be used when making GIFs.
+
+2.01
+Shortcuts for autocomplete:
+  _: All functions,
+  #: Total functions count,
+  :: Random functions,
+  ?: Show help for all prefixes,
+  L: Long functions (>100 characters),
+  LL: Longer functions (>200 characters),
+  LLL: Sort by length,
+  S: Single-parameter functions,
+  D: Double-parameter functions
+
+2.1 - generate
+Generates domain coloring on the domain canvas.
+
+2.2 - generate inverse
+Colors as initial point and draws at output complex number (inverse).
+- Faster than newtoninv('sin(x)', x) but you cannot get values.
+
+2.3 - generate mapping
+For conformal maps (e.g., Schwarz triangle function).
+- Similar to generate inverse, but only draws gridlines.
+
+2.4 - generate gifs
+Uses variable t moving from 0 to 1.
+- Suggestion: use sin(pi*t) for easing.
+- Cannot use t for period ratio when doing this.
+
+2.5 - mesh generation
+Under toggle mesh:
+- Heightmap generated from magnitude of output.
+- Use maximum height in heightmap area to limit height.
+
+2.5.1 - create mesh
+Creates heightmap.
+
+2.5.2 - create spherical mesh
+Uses spherical coordinates (θ, φ).
+- F(θ, φ) = f(θ + φ*i).
+- Should have periods 2π in both real and imaginary axis.
+
+2.5.3 - create stereographic mesh
+For functions such as stereopcube (stereographic projection).
+
+2.5.4 - create toroidal mesh
+- Function should have period 1 in both imaginary and real axes.
+- For functions like cm, use unwarp(x, w1, w2) where w1, w2 are periods.
+  - Example: cm(unwarp(5*x, 5.29991625, exp(2*pi*i/3)*5.29991625)).
+
+2.5.5 - cylindric mesh
+- Function should be periodic along the real axis with period 1.
+
+
+3 - Color Modes
+
+3.1 - contour
+Draws lines where f(x) components get close to an integer.
+
+3.1.2 - pcontour
+Polar contour (uses arg & mag instead of re & im).
+
+3.1.3 - acountour
+Antialias contour (slow, minimal advantages).
+
+3.2 - HSV
+Value from magnitude-to-lightness function plus other methods below.
+
+3.3 - HSL
+3.4 - HCL
+3.5 - LCH
+Cylindrical version of CIELAB color space.
+
+3.6 - YCbCr
+Real part → blue, Imag part → red.
+
+3.7 - YDbDr
+Same as YCbCr.
+
+3.8 - YCoCg
+Real part → orange, Imag part → green.
+
+3.9 - YPbPr
+Blue and red again.
+
+3.10 - real
+Colors based on real part of output.
+
+3.11 - image
+Colors based on imaginary part.
+
+3.12 - 2d
+Technical; used to save function for use in other software.
+
+3.13 - palette
+User can choose palette by loading 360×100 BMP or selecting colors.
+
+3.14 - freeRGB
+[r, g, b] from magnitude-to-lightness. Example:
+[mag(x), sqr(x), log(1+re(x)^2)]
+
+3.15 - freeHSV
+[h, s, v]. Example:
+[360+arg(z)/pi*180, 100, log(x+1)*100]
+
+3.16 - freeHSL
+[h, s, l]. Example:
+[360+arg(z)/pi*180, 100, (x+1)/x*100]
+
+3.17 - isolines
+Draws lines of equal magnitude.
+
+3.18 - dynamic
+Changes with time (good for GIFs).
+
+3.19 - magnitudeold (Magnitude 2)
+Colors by magnitude.
+
+3.20 - magnitude (Magnitude)
+Colors by magnitude.
+
+3.21 - magnitudecolour (Magnitude 3)
+Colors by magnitude.
+
+3.22 - magnitude4 (Magnitude 4)
+Colors by magnitude.
+
+3.23 - neon
+Brighter where f(x) components get close to an integer.
+
+3.24 - differ
+Based on difference between means of real and imaginary parts.
+
+3.25 - purify
+"Cool" effect.
+
+3.26 - quadrant
+Colors depending only on angle — colors quadrants.
+
+3.27 - upperplanebw
+Imag > 0 → white, else black.
+
+3.28 - unitcirclebw
+Inside unit circle → white, else black.
+
+3.29 - trisect
+Similar to quadrant but 3 colors.
+
+3.30 - hexasect
+Similar to quadrant but 6 colors.
+
+3.31 - octant
+Similar to quadrant but 8 colors.
+
+3.32 - dodecant
+Similar to quadrant but 12 colors.
+
+3.33 - griddistort
+Checkerboard (smooth).
+
+3.34 - griddistorts
+Checkerboard (unsmooth).
+
+3.35 - griddistortbw
+Checkerboard (black and white).
+
+3.36 - realimagheat
+Colors based on imag^2/real and real^2/imag.
+        </div>
+    </div>
+
+<div class="split left">
+<div class="form-group">
+    <label for="function">Function (e.g., '2^x'):</label>
+     <textarea id="function" rows="1" cols="40" name="function">2^x</textarea>
+  <div id="autocomplete-list" style="display: none;"></div>
+  
+      <select id="function-presets" class="preset-button">
+        <option value="">.....Presets</option>
+        <option value="sin(x)">Sinus: sin(x)</option>
+        <option value="zeta(x)">Riemann zeta: zeta(x)</option>
+        <option value="gamma(x)">Gamma: gamma(x)</option>
+        <option value="barnesg(x)">Barnes G: barnesg(x)</option>
+        <option value="superfactorial(x)">Superfactorial: superfactorial(x)</option>
+        <option value="tetr(x)">Tetration: tetr(x)</option>
+        <option value="pent(x)">Pentation: pent(x)</option>
+        <option value="hepts2(x)">Sqrt2 Heptation: hepts2(x)</option>
+       <option value=" meijerg([0.5],[0.25],[2],[5/3,7/3],x)+accuracy(40)">MeijerG: G[0.5;0.25;2;5/3,7/3|x]</option>
+     <option value=" foxh([[0.5,0.8],[1,2]],[[0.33],[0.76]],[[-1.23],[0.12]],[[0.1],[0.64]],x))"> FoxH example</option>
+        <option value="schwarztriangle(1/3,1/3,1/3,x)">Schwarz Triangle 1/3</option>
+        <!--<option value="cbrt(x)*hypg21(1/3,2/3,4/3,x)/hypg21(0,1/3,2/3,x)">Schwarz Triangle 1/3</option> -->
+        <option value="cm(unwarp(5*x,5.29991625,exp(2*pi*i/3)*5.29991625))">Dixon cm unwarp example</option>
+        
+        <option value="jacobipineiro2orthopoly(3,re(x),1,2,im(x))">Jacobi Pineiro Multiple Orthogonal Polynomial 2</option>
+        <option value="sphericalharmonicoscillator(2,1,0,r,re(x),im(x))">Spherical Oscilator Density</option>
+        <option value="re(sphericalharmonic(3,2,re(x),im(x)))))">Spherical harmonic</option>
+        
+        <option value="stereopicosahedron(x)">Stereographic projection of icosahedron: stereopicosahedron(x)</option>
+        <option value="polynomial([polynomial([log(intg(cos,x)+intge("sin(x)",x)*i)^2],pow(2,pow(1.5,2))),derv('sin(x)',x^2)],sinc(x))^2">Very long test function</option>
+   
+   <option value="5*x^5+4*x^4-3*x^2+x-8">Real Coeff Polynomial</option>
+<option value="5*i*x^5+(2*i+1)*x^3-(-i+3)*x^2+(i-5)*x+2*i">Complex Coeff Polynomial</option>
+<option value="x^3+x^2*2+x-5">Real Coeff Polynomial 3</option>
+<option value="(x-2*i)*(x+3)*(x-2*i+1)+1">Complex Coeff Polynomial 3</option>
+
+   
+   </select>
+  
+     
+  
+</div>
+    <div class="form-group">
+        <label for="min-real">Min Real:</label>
+        <input type="number" id="min-real" name="min-real" step="any" value="-7" required>
+        <label for="max-real">Max Real:</label>
+        <input type="number" id="max-real" name="max-real" step="any" value="7" required>
+    </div>
+    <div class="form-group">
+        <label for="min-imag">Min Imaginary:</label>
+        <input type="number" id="min-imag" name="min-imag" step="any" value="-7" required>
+        <label for="max-imag">Max Imaginary:</label>
+        <input type="number" id="max-imag" name="max-imag" step="any" value="7" required>
+    </div>
+    <div class="form-group">
+        <label for="bmp-width">BMP Width:</label>
+        <input type="number" id="bmp-width" name="bmp-width" step="1" value="100" required>
+        <label for="bmp-height">BMP Height:</label>
+        <input type="number" id="bmp-height" name="bmp-height" step="1" value="100" required>
+    </div>
+<div class="form-group">
+    <label for="magnitude-to-lightness">Magnitude to Lightness Conversion:</label>
+    <input type="text" id="magnitude-to-lightness" name="magnitude-to-lightness" value="log(1+x)" required>
+    
+    
+    
+    
+    <select id="lightness-presets" class="preset-button">
+  <option value="">.....Presets</option>
+<!--0.1+2*((log10(x+1)/3)^0.43275)/(1+(log10(x+1)/3)^0.43275) -->
+  <optgroup label="Standards">
+      <option value="log(1+x)">Logarithmic: log(1+x)</option>
+    <option value="((x/3)^0.43275)/(1+(x/3)^0.43275)">SageMat</option>
+    <option value="(log(x+1)/(5+log(x+1)))^4*2">Modified Logarithmic Fraction</option>
+    <option value="(2/3)-modc(log(x),1)/3">Log Contour Soft</option>
+    <option value="1-modc(log(x),1)/2">Log Contour</option>
+     <option value="modc(log(x),1)">Log Contour Hard</option>
+     <option value="1-10^-x">Exponential: 1-10^-x</option>
+  </optgroup>
+
+  <optgroup label="Powers">
+    <option value="x">Linear: x</option>
+    <option value="x^0.1">Tenth Root: x^0.1</option>
+    <option value="sqrt(x)">Square Root: sqrt(x)</option>
+    <option value="cbrt(x)">Cube Root: cbrt(x)</option>
+    <option value="x^2">Quadratic: x²</option>
+    <option value="x^3">Cubic: x³</option>
+  </optgroup>
+  
+
+
+  <optgroup label="Logarithmic">
+    <option value="log(1+x) / (1 + log(1+x))">Logarithmic Fraction: log(1+x) / (1 + log(1+x))</option>
+    <option value="log(1 + x^2)">Log Squared: log(1 + x²)</option>
+    <option value="asinh(x)">Inverse Sinh: asinh(x)</option>
+    <option value="acosh(x+1)">Inverse Cosh: acosh(x+1)</option>
+    <option value="atan(x)">Arctangent: atan(x)</option>
+    <option value="asin(x/(1+x))">Arctangent: asin(x/(1+x))</option>
+
+  </optgroup>
+
+  <optgroup label="Exponential">
+  <option value="gompertz(1,x)">Gompertz: gompertz(1,x)</option>
+  <option value="1-e^-x^2">Gaussian: 1-e^-x^2</option>
+    <option value="exp(x) - 1">Exponential: exp(x) - 1</option>
+    <option value="1 - exp(-x)">Exp Falloff: 1 - exp(-x)</option>
+    <option value="tanh(x)">Hyperbolic Tangent: tanh(x)</option>
+    <option value="2*sigm(x)-1">Sigmoid: sigm(x)</option>
+    <option value="x * sigm(x)">Swish: x * sigm(x)</option>
+    <option value="ln(1 + e^x)">Softplus: ln(1 + exp(x))</option>
+   <option value=" sin(0.5*pi*x/(1+x))">Finite sin</option>
+  <option value="1-sinc(0.5*pi*x/(1+x))">Finite sinc</option>
+ <option value="1-cos(0.5*pi*x/(1+x))">Finite cos</option>
+<option value="mag(tetr((log(1+x)/2)/2/e/5-1+0.01*i))*4">Tetration</option>
+ <option value="mag(tetr((x/(1+x)*2)*2/e-1+0.01*i))">Finite Tetration</option>
+ </optgroup>
+
+  <optgroup label="Fractions">
+    <option value="x / (1 + sqrt(x))">Root Fraction: x / (1 + sqrt(x))</option>
+    <option value="x / (1 + x)">Reciprocal: 1 / (1 + x)</option>
+    <option value="1 / (1 + x^2)">Inverse Square: 1 / (1 + x²)</option>
+    <option value="x / (1 + x^2)">Inverse Quadratic: x / (1 + x²)</option>
+    <option value="(x^0.5) / (1 + x^0.5)">Smooth Root: (x^0.5)/(1+x^0.5)</option>
+    <option value="x / (1 + x)">Fractional: x / (1 + x)</option>
+  </optgroup>
+
+  <optgroup label="Specials">
+    <option value="gamma(x)">Gamma: gamma(x)</option>
+    <option value="lambertw(x)">Lambert W: lambertw(x)</option>
+    <option value="dilog(x)">Dilog Li₂: dilog(x)</option>
+    <option value="1/zeta(1 + x)">Riemann Zeta: 1/ζ(1+x)</option>
+  </optgroup>
+
+
+  <optgroup label="Periodics">
+  <option value="0.5+sin(x*10)/3">Contour Sine</option>
+    <option value="sin(x)">Sine: sin(x)</option>
+    <option value="cos(x)">Cosine: cos(x)</option>
+    <option value="sin(x^0.5)">Sine Root: sin(sqrt(x))</option>
+    <option value="modc(x,1)">Fractional Part: modc(x,1)</option>
+  </optgroup>
+
+  <optgroup label="Weird">
+    <option value="floor(x*10)/10">Floor: floor(x*10)/10</option>
+    <option value="cantor(x)">Cantor: cantor(x)</option>
+      <option value="minkowskiquestionmark(x)">Minkowski?: minkowski?(x)</option>
+  </optgroup>
+  
+  <optgroup label="Polynomials">
+    <option value="x">Linear: x</option>
+    <option value="smoothstep(minc(1,x))">Safe Smoothstep</option>
+    <option value="smootherstep(minc(1,x))">Safe Smootherstep</option>
+    <option value="smootheststep(minc(1,x))">Safe Smootheststep</option>
+    <option value="smoothstep(x)">Smoothstep: smoothstep(x)</option>
+    <option value="smootherstep(x)">Smootherstep: smootherstep(x)</option>
+    <option value="smootheststep(x)">Smootheststep: smootheststep(x)</option>
+</optgroup>
+
+<optgroup label="Free">
+    <option value="[360+arg(z)/pi*180,100,log(x+1)*100]">F-HSV: x</option>
+</optgroup>
+
+<optgroup label="Exotic">
+    <option value="mag(re(z))+mag(im(z))">Chebyshev</option>
+    <option value="maxc(mag(re(z)),mag(im(z)))">Taxicab</option>
+    
+     <option value="log(1+mag(re(z))+mag(im(z)))">Log Chebyshev</option>
+    <option value="log(1+maxc(mag(re(z)),mag(im(z))))">Log Taxicab</option>
+<!--mobiustransform(1,0,1,1,x)-->
+     <option value="mobiustransform(1,0,1,1,mag(re(z))+mag(im(z)))">Fractional Chebyshev</option>
+    <option value="mobiustransform(1,0,1,1,maxc(mag(re(z)),mag(im(z))))">fractional Taxicab</option>
+
+<option value="mag(re(z))">Real Magnitude</option>
+<option value="log(1+mag(re(z)))">Log Real Magnitude</option>
+<option value="mobiustransform(1,0,1,1,mag(re(z)))">Fractional Real Magnitude</option>
+
+<option value="mag(im(z))">Imag Magnitude</option>
+<option value="log(1+mag(im(z)))">Log Imag Magnitude</option>
+<option value="mobiustransform(1,0,1,1,mag(im(z)))">Fractional Imag Magnitude</option>
+
+<option value="mag(mag(re(z))-mag(im(z)))">Difference Magnitude</option>
+<option value="log(1+mag(mag(re(z))-mag(im(z))))">Log Difference Magnitude</option>
+<option value="mobiustransform(1,0,1,1,mag(mag(re(z))-mag(im(z))))">Fractional Difference Magnitude</option>
+
+<option value="mag(re(z))*mag(im(z))">Product Magnitude</option>
+<option value="log(1+mag(re(z))*mag(im(z)))">Log Product Magnitude</option>
+<option value="mobiustransform(1,0,1,1,mag(re(z))*mag(im(z)))">Fractional Product Magnitude</option>
+
+<option value="sqr(tan(arg(z)))">Tangent Angle</option>
+<option value="log(1+sqr(tan(arg(z))))">Log Tangent Angle</option>
+<option value="mobiustransform(1,0,1,1,sqr(tan(arg(z))))">Fractional Tangent Angle</option>
+
+<option value="sqr(cot(arg(z)))">Cotangent Angle</option>
+<option value="log(1+sqr(cot(arg(z))))">Log Cotangent Angle</option>
+<option value="mobiustransform(1,0,1,1,sqr(cot(arg(z))))">Fractional Cotangent Angle</option>
+
+
+<option value="sqr(sin(arg(z)))">Sine Angle</option>
+<option value="log(1+sqr(sin(arg(z))))">Log Sine Angle</option>
+<option value="mobiustransform(1,0,1,1,sqr(sin(arg(z))))">Fractional Sine Angle</option>
+
+<option value="sqr(cos(arg(z)))">Cosine Angle</option>
+<option value="log(1+sqr(cos(arg(z))))">Log Cosine Angle</option>
+<option value="mobiustransform(1,0,1,1,sqr(cos(arg(z))))">Fractional Cosine Angle</option>
+
+
+
+</optgroup>
+</select>
+    
+    
+    
+    
+</div>
+    <div class="form-group">
+        <label for="color-mode">Color Mode:</label>
+        <select id="color-mode" name="color-mode">
+            <option value="hsv">HSV</option>
+            <option value="hsl">HSL</option>,
+            <option value="hsv4">HSV4</option>
+            <option value="hsl4">HSL4</option>
+            <option value="rgb">RGB</option>
+            <option value="hcl">HCL</option>
+			 <option value="ycbcr">YCbCr</option>
+			  <option value="ydbdr">YDbDr</option>
+			   <option value="ycocg">YCoCg</option>
+			    <option value="ypbpr">YPbPr</option>
+            <option value="cielch">CIELCH</option>
+	      <option value="qhsv">qHSV</option>
+            <option value="qhsl">qHSL</option>
+            <option value="phsv">pHSV</option>
+            <option value="phsl">pHSL</option>
+            <option value="phsl">pHSL</option>
+            <option value="hqv">HQV</option>
+              <option value="hsm">HSM</option>
+               <option value="hsg">HSG</option>
+                <option value="hsh">HSH</option>
+        <option value="2d">2d</option>
+		  <option value="contour">Contour</option>
+		 <option value="pcontour">Polar Contour</option>
+		 <!-- <option value="acontour">Antialias Contour</option> -->
+		   <option value="isolines">Isolines</option> 
+		   <option value="neon">Neon</option>
+            <option value="shiny">Shine</option>
+		   <option value="differ">Differ</option>
+		   <option value="purify">Purify</option>
+		   <option value="real">Real</option>
+		   <option value="imag">Imaginary</option>
+		   <option value="magnitude">Magnitude</option>
+		   <option value="magnitudeold">Magnitude 2</option>
+		   <option value="magnitudecolour">Magnitude 3</option>
+		  		   <option value="mag4">Magnitude 4</option>
+                   
+                   <option value="divergenceri">Divergence HSV</option>
+                   
+                   <option value="gradientri">gradient HSV</option>
+                   <option value="fixed1">Fixed point</option>
+ 
+                   		   <option value="realimagheat">Real Imag Map</option>
+                           
+                           
+                           <option value="trisect">Trisection</option>
+                           <option value="quadrant">Quadrant</option>
+                           <option value="hexasect">Hexasection</option>
+                           <option value="octant">Octant</option>
+                           <option value="dodecasect">Dodecasection</option>
+                           
+           <option value="griddistort">Grid Distort</option>
+           <option value="griddistorts">Grid Distort Solid</option>
+           <option value="griddistortbw">Grid Distort BW</option>
+             <option value="upperplanebw">Upper Plane BW</option>
+             <option value="unitcirclebw">Unit Circle BW</option>
+             
+              <option value="freergb">Free RGB [r,g,b]</option>
+               <option value="freehsv">Free HSV [h,s,v]</option>
+                <option value="freehsl">Free HSL [h,s,l]</option>
+               
+               
+            <option value="palette">Palette</option>
+        </select>
+    </div>
+    <div id="palette-group" class="form-group" style="display: none;">
+        <label for="palette-file">Select Palette BMP (360x100):</label>
+        <input type="file" id="palette-file">
+        <div>
+            <label for="rows">Rows:</label>
+            <input type="number" id="rows" name="rows" min="1" value="3">
+            <label for="columns">Columns:</label>
+            <input type="number" id="columns" name="columns" min="1" value="3">
+            <button onclick="generatePaletteInputs()">Generate Inputs</button>
+        </div>
+        <div id="palette-generator" class="palette-container"></div>
+        <button onclick="generatePalette()">Generate Palette</button>
+    </div>
+	<div id="contour-group" class="form-group" style="display: none;">
+	 <label for="thicl">Thickness:</label>
+        <input type="range" id="thick" name="thick" min="0" max="1" value="0.1" step="0.01">
+	</div>
+    <div class="form-group">
+        <label for="saturation-chroma">Saturation/Chroma:</label>
+        <input type="range" id="saturation-chroma" name="saturation-chroma" min="0" max="100" value="100">
+    </div>
+    <div class="form-group">
+        <label for="lightness">Lightness:</label>
+        <input type="range" id="lightness" name="lightness" min="0" max="100" value="100">
+    </div>
+    <div class="form-group">
+        <label for="hue">Hue:</label>
+        <input type="range" id="hue" name="hue" min="0" max="360" value="0">
+	
+
+	<div class="button-group">
+    <button id="btn-negative-positive">-+</button>
+    <button id="btn-zero-positive">0+</button>
+    <button id="btn-negative-one-positive-one">1</button>
+   <!--  <button id="btn-negative-one-positive-one3">3</button>-->
+   <!-- <button id="btn-negative-one-positive-one5">5</button>-->
+    <button id="btn-negative-one-positive-one7">7</button>
+   <!--  <button id="btn-negative-one-positive-one10">10</button> -->
+</div>
+<button onclick="toggleMeshButtons()">Toggle Mesh Options</button>
+
+<div id="meshButtons" style="display:none; margin-top:10px;">
+
+
+  <button id="createMeshButton">Create Mesh</button>
+    <button id="createMeshButtonsph">Create Spherical Mesh</button>
+    <button id="createMeshButtonstr">Create Stereographic Mesh</button>
+    <button id="createMeshButtontor">Create Toroidal Mesh</button>
+     <button id="createMeshButtoncyl">Create Cylindrical Mesh</button>
+     <button id="createAndAnimate4D">Create 4D Mesh</button>
+     
+     <button id="createMeshButtonsphd">Create Spherical Density</button>
+          <button id="createMeshButtond">Create Density</button>
+<!-- <button id="createMeshButtongnm">Create Gnomonic Mesh and Animate</button> --->
+     <button onclick="renderfullBMP()">Generate Full</button>
+
+
+    <label for="frames">#of frames gif</label>
+ <input type="range" id="frames" name="#of frames for gif" min="1" max="360" value="30">
+<label for="framesd">ms delay gif</label> 
+ <input type="range" id="framesd" name="delay ms for gif" min="1" max="1000" value="100">
+   
+
+
+</div>
+	</div>
+    
+    <button onclick="renderBMP()">Generate</button>
+    <button onclick="renderBMPadaptive()">Generate Adaptive</button>
+	 <button onclick="renderBMPinv()">Generate Inverse</button>
+<button onclick="renderBMPmap()">Generate Mapping</button>
+
+<button id="domaingifbtn">Generate Gif</button></div>
+
+
+   <div class="split right">
+       <div id="canvasContainer">
+        <canvas id="bmpCanvas" width="320" height="320"></canvas>
+    </div>
+<div id="graphContainera" style="text-align: center;">
+    <div>
+        <canvas id="graphCanvasa" width="320" height="320"></canvas>
+    </div>
+    <div style="margin-top: 10px;"> <!-- This div will appear below the canvas -->
+        <label for="max-height">Maximum Height:</label>
+        <input type="number" id="max-height" value="100" step="0.1">
+        <button id="downloadBtn">Download Object</button>
+        <button id="downloadSTLBtn">Download STL</button>
+        <button id="captureGIFBtn">Create GIF</button>
+        <select id="gifModeSelect">
+  <option value="default">Default</option>
+  <option value="close">Close</option>
+  <option value="ortho">Ortho</option>
+  <option value="zero">Zero</option>
+  <option value="zeroup">Zero Up</option>
+    <option value="topdown">Top Down</option>
+  <option value="flyover">Flyover</option>
+  <option value="spherical">Spherical</option>
+
+</select>
+<div style="position: fixed; bottom: 10px; left: 10px; font-size: 10px;">
+  <!-- Size -->
+  <button id="scaleUpBtn">↑ Size</button>
+  <button id="scaleDownBtn">↓ Size</button><br>
+
+  <!-- Rotation -->
+  <button id="rotateXPosBtn">+X</button>
+  <button id="rotateXNegBtn">−X</button>
+  <button id="rotateYPosBtn">+Y</button>
+  <button id="rotateYNegBtn">−Y</button>
+  <button id="rotateZPosBtn">+Z</button>
+  <button id="rotateZNegBtn">−Z</button>
+</div>
+
+    <!--    <button id="createGifBtn">Create GIF</button> -->
+
+        <button id="resetCameraBtn">Reset Camera</button>
+
+
+    </div>
+</div>
+<div id="graphContainerb" style="text-align: center;">
+    <div>
+      <textarea id="outputBoxa" rows="4" cols="50" placeholder="Output will appear here..."></textarea>
+	<div>
+		<label for="numericalxre">x = </label>
+        <input type="number" id="numericalxre" name="numericalxre" step="1" value="0" required>
+        <label for="bmp-height"> + </label>
+        <input type="numericalxim" id="numericalxim" name="numericalxim" step="1" value="0" required>
+	
+	</div>
+     <button onclick="numerate2()">Calculate</button>
+	<button onclick="numerate()">Calculate Math.js</button>
+   
+	</div>
+</div>
+    <div id="graphContainer">
+        <canvas id="graphCanvas" width="320" height="320"></canvas>
+		  <div><div id="coordinate-container"></div></div><br>
+    <input type="checkbox" id="parametricMode">
+    <br>
+    
+    
+    
+    
+    
+    
+<div id="graphControls" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: black; border: 2px solid #333; padding: 8px; z-index: 1000; font-family: Arial, sans-serif; font-size: 12px; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); display: none;">
+  <div style="margin-bottom: 5px; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 3px; display: flex; justify-content: space-between; align-items: center;">
+    <span>Graph Controls</span>
+    <button onclick="toggleControls()" style="background: #666; color: white; border: none; padding: 2px 6px; cursor: pointer;">X</button>
+  </div>
+  
+  <div style="display: grid; grid-template-columns: repeat(4, auto); gap: 3px; align-items: center;">
+    <label><input type="checkbox" id="showGrid" checked> Grid</label>
+    <label><input type="checkbox" id="showAxes" checked> Axes</label>
+    <label><input type="checkbox" id="showLabels" checked> Labels</label>
+    <label><input type="checkbox" id="fillCurve" checked> Fill</label>
+    
+    <label>LineW:<input type="number" id="lineWidth" value="2" min="1" max="10" step="0.5" style="width:35px"></label>
+    <label>Samples:<input type="number" id="numSamples" value="100" min="10" max="5000" style="width:45px"></label>
+    <label>Max:<input type="number" id="maximum" value="0" step="0.1" style="width:40px"></label>
+    
+    <label>X Scale:
+      <select id="xScaleMode" style="width:50px">
+  <option value="linear" selected>L</option>
+  <option value="log">log</option>
+  <option value="sqrt">√</option>
+  <option value="exp">exp</option>
+  <option value="sqr">x²</option>
+  <option value="w">W</option>
+  <option value="zex">zex</option>
+  
+  <option value="tanh">tanh</option>
+  <option value="sigmoid">σ</option>
+  <option value="asinh">asinh</option>
+  <option value="atan">atan</option>
+  
+  <option value="gauss">gauss</option>
+  <option value="lnln">lnln</option>
+  <option value="expexp">expexp</option>
+  
+  <option value="inv">x/S</option>
+  <option value="recip">1/</option>
+      </select>
+    </label>
+    <label>Y Scale:
+      <select id="yScaleMode" style="width:50px">
+  <option value="linear" selected>L</option>
+  <option value="log">log</option>
+  <option value="sqrt">√</option>
+  <option value="exp">exp</option>
+  <option value="sqr">x²</option>
+  <option value="w">W</option>
+  <option value="zex">zex</option>
+  
+  <option value="tanh">tanh</option>
+  <option value="sigmoid">σ</option>
+  <option value="asinh">asinh</option>
+  <option value="atan">atan</option>
+  
+  <option value="gauss">gauss</option>
+  <option value="lnln">lnln</option>
+  <option value="expexp">expexp</option>
+  
+  <option value="inv">x/S</option>
+  <option value="recip">1/</option>
+</select>
+      </select>
+    </label>
+    <label>Grid:
+      <select id="gridScale" style="width:60px">
+        <option value="decimal">Decimal</option>
+        <option value="integer">Integer</option>
+        <option value="power2">Power2</option>
+      </select>
+    </label>
+    <label>BG:<input type="color" id="bgColor" value="#000000" style="width:30px"></label>
+    <label>Re:<input type="color" id="realColor" value="#ff0000" style="width:30px"></label>
+    
+    <label>Im:<input type="color" id="imagColor" value="#0000ff" style="width:30px"></label>
+    <label>Grid:<input type="color" id="gridColor" value="#cccccc" style="width:30px"></label>
+    <label>Axis:<input type="color" id="axisColor" value="#ffffff" style="width:30px"></label>
+    <button id="savePNG" style="grid-column: span 2;">Save PNG</button>
+  </div>
+</div>
+
+<button onclick="toggleControls()" style="position: fixed; top: 150px; right: 10%; z-index: 999; background: #333; color: white; border: none; padding: 5px 10px; cursor: pointer;">Controls</button>
+    
+    
+    
+    
+    </div>
+<button onclick="change()" style="position: fixed; top: 70%; right: 25%;">></button>
+<button onclick="change(1)" style="position: fixed; top: 75%; right: 20%;">Domain</button>
+<button onclick="change(2)" style="position: fixed; top: 75%; right: 30%;">Graphing</button>
+<button onclick="change(3)" style="position: fixed; top: 80%; right: 20%;">Heightmap</button>
+
+<button onclick="change(4)" style="position: fixed; top: 80%; right: 30%;">Numerical</button>
+
+
+
+<!-- <button onclick="change(3)" style="position: fixed; top: 80%; right: 20%;">Heightmap</button> --> 
+<!-- <button onclick="change(4)" style="position: fixed; top: 80%; right: 30%;">Spherical</button> --> 
+
+   </canvas></div></div>
+   
+       <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+
+<script src="clrspc.js"></script>
+<script src="polyhedra.js"></script>
+<script src="mthfnc.js"></script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/exporters/GLTFExporter.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/exporters/STLExporter.min.js"></script> 
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ccapture.js@1.1.0/build/CCapture.all.min.js"></script>
+
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/exporters/STLExporter.js"></script>
+
+
+<script>
+
+    /*
+"X.X...XXX...X.....X........X.X...XXX...XXX...X.X..."
+"X.X...X.....X.....X........X.X...X.....X.X...X.X..."
+"XXX...XXX...X.....X........XXX...XXX...XXX...XXX..."
+"X.X...X.....X.....X.........X....X.....X.X...X.X..."
+"X.X...XXX...XXX...XXX.......X....XXX...X.X...X.X..."
+	*/
+    
+    
+    Error.stackTraceLimit = 100;
+    
+        let paletteImageData = null;
+	const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(300,300);
+document.body.appendChild(renderer.domElement);
+document.getElementById('graphContainera').appendChild(renderer.domElement);
+const autocompleteList = document.getElementById("autocomplete-list");
+// Create geometry and material placeholders
+let mesh;
+let geometry;
+let material;
+let gridSize = 100;  // Resolution of the grid
+let page=0;
+let negmag =0;
+function change(a){
+if(a)
+page = a-1;
+else
+page = math.mod(page+1,4);
+ const canvasa = document.getElementById('canvasContainer');
+  const canvasb = document.getElementById('graphContainer');
+   const canvasc = document.getElementById('graphContainera');
+   const canvasd = document.getElementById('graphContainerb');
+ canvasa.style.display = `none`;
+  canvasb.style.display = `none`;
+   canvasc.style.display = `none`;
+   canvasd.style.display = `none`;
+ 
+ if(page==0) canvasa.style.display = `flex`;
+  if(page==1){ canvasb.style.display = `flex`;}
+   if(page==2) canvasc.style.display = `flex`;
+   if(page==3) canvasd.style.display = `flex`;
+}
+
+camera.position.set(0, 20, -5);
+camera.lookAt(0, 0, -5);
+
+function createAndAnimateMesh() {
+gridSize = document.getElementById('bmp-width').value;
+ const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+            const colorMode = document.getElementById('color-mode').value;
+            const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+            const lightness = parseInt(document.getElementById('lightness').value);
+            const hue = parseInt(document.getElementById('hue').value);
+
+            const funcStr = document.getElementById('function').value.trim();
+  const maxHeight = parseFloat(document.getElementById('max-height').value);
+let thick = parseFloat(document.getElementById('thick').value);
+    if (mesh) {
+        scene.remove(mesh);
+        geometry.dispose();
+        material.dispose();
+    }
+
+    geometry = new THREE.PlaneGeometry(10, 10, gridSize, gridSize);
+   material = new THREE.MeshBasicMaterial({ 
+    vertexColors: true, 
+    wireframe: false,
+    side: THREE.DoubleSide  // This makes the material visible from both sides
+});
+    mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+     function updateMesh() {
+        const positions = geometry.attributes.position.array;
+        const numVertices = positions.length / 3;
+
+        const colors = new Float32Array(numVertices * 3);  // Create color array
+
+        for (let i = 0; i < numVertices; i++) {
+            const x = positions[i * 3];
+            const y = positions[i * 3 + 1];
+
+             let z = math.complex(x, y);
+z =  teth.evaluate(document.getElementById('function').value, { x: z });
+            const zMagnitude = math.min(maxHeight,math.abs(z));
+			if(negmag==1)
+			{positions[i * 3 + 2] = -z.re;
+			}else if(negmag==2){
+			positions[i * 3 + 2] = -z.im;
+			}else{
+			positions[i * 3 + 2] = -zMagnitude;
+           } positions[i * 3 + 1] = -y;  // Set height to |z|
+
+            
+            const color = complexToColor(math.complex(x, y), z, magnitudeToLightnessExpr, colorMode, saturationChroma, lightness, paletteImageData,thick, 1);
+
+           colors[i * 3] = color[0] / 255;
+            colors[i * 3 + 1] = color[1] / 255;
+            colors[i * 3 + 2] = color[2] / 255;
+        }
+
+        geometry.attributes.position.needsUpdate = true;  // Notify Three.js that position has changed
+        geometry.computeVertexNormals();
+
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));  // Apply color array
+        geometry.attributes.color.needsUpdate = true;
+    }
+
+    function animateMesh() {
+        
+        requestAnimationFrame(animateMesh);
+        renderer.render(scene, camera);
+    }
+updateMesh();
+    animateMesh();
+}
+function createAndAnimate4DMesh() {
+    gridSize = document.getElementById('bmp-width').value;
+    const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+    const lightness = parseInt(document.getElementById('lightness').value);
+    const hue = parseInt(document.getElementById('hue').value);
+
+    const funcStr = document.getElementById('function').value.trim();
+    const maxHeight = parseFloat(document.getElementById('max-height').value);
+    let thick = parseFloat(document.getElementById('thick').value);
+    
+    if (mesh) {
+        scene.remove(mesh);
+        geometry.dispose();
+        material.dispose();
+    }
+
+    // Create base geometry
+    geometry = new THREE.PlaneGeometry(10, 10, gridSize, gridSize);
+    material = new THREE.MeshBasicMaterial({ 
+        vertexColors: true, 
+        wireframe: false,
+        side: THREE.DoubleSide
+    });
+    mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    function updateMesh() {
+        const positions = geometry.attributes.position.array;
+        const numVertices = positions.length / 3;
+        const colors = new Float32Array(numVertices * 3);
+        const scales = new Float32Array(numVertices); // Store scale factors for each vertex
+
+        for (let i = 0; i < numVertices; i++) {
+            const x = positions[i * 3];
+            const y = positions[i * 3 + 1];
+
+            // Evaluate 4D function (returns complex number where re=z, im=w)
+            let z = math.complex(x, y);
+            z = teth.evaluate(funcStr, { x: z });
+            
+            // Extract z and w components
+            const zValue = z.re;  // z-coordinate (height)
+            const wValue = z.im;  // w-coordinate (scale factor)
+            
+            // Apply z-coordinate as height (clamped to maxHeight)
+            positions[i * 3 + 2] = -Math.min(maxHeight, Math.abs(zValue));
+            
+            // Store scale factor based on w-coordinate
+            scales[i] = 0.5 + 0.5 * Math.tanh(wValue); // Scale between 0 and 1 using tanh
+            
+            // Create color based on 4D position (x,y,z,w)
+            const color = complexTo4DColor(
+                math.complex(x, y), 
+                z, 
+                magnitudeToLightnessExpr, 
+                colorMode, 
+                saturationChroma, 
+                lightness, 
+                paletteImageData,
+                thick,
+                scales[i]  // Include scale in color calculation
+            );
+
+            colors[i * 3] = color[0] / 255;
+            colors[i * 3 + 1] = color[1] / 255;
+            colors[i * 3 + 2] = color[2] / 255;
+        }
+
+        // Apply scale transformation to vertices
+        for (let i = 0; i < numVertices; i++) {
+            const scale = scales[i];
+            positions[i * 3] *= scale;  // Scale x
+            positions[i * 3 + 1] *= scale;  // Scale y
+            // z is already set as height
+        }
+
+        geometry.attributes.position.needsUpdate = true;
+        geometry.computeVertexNormals();
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        geometry.attributes.color.needsUpdate = true;
+    }
+
+    function animateMesh() {
+        requestAnimationFrame(animateMesh);
+        renderer.render(scene, camera);
+    }
+
+    updateMesh();
+    animateMesh();
+}
+
+// Helper function for 4D coloring
+function complexTo4DColor(position, value, magnitudeExpr, colorMode, saturation, lightness, palette, thickness, scale) {
+    // You can modify this to incorporate the 4th dimension (scale) into the color
+    const x = position.re;
+    const y = position.im;
+    const z = value.re;
+    const w = value.im;
+  const maxHeight = parseFloat(document.getElementById('max-height').value);   
+    // Example: Use HSV where Hue = arg(z), Saturation = |w|, Value = |z|
+    const magnitude = math.abs(value);
+    const angle = math.arg(value);
+    
+    // Convert to RGB
+    let hue = (angle + Math.PI) / (2 * Math.PI); // Normalize to 0-1
+    let sat = math.min(1, math.abs(w) / 2); // Use w for saturation
+    let val = math.min(1, magnitude / maxHeight); // Use magnitude for value
+    
+    // Convert HSV to RGB
+    let rgb = hsvToRgb4(hue, sat, val);
+    
+    return [rgb.r * 255, rgb.g * 255, rgb.b * 255];
+}
+
+// Standard HSV to RGB conversion
+function hsvToRgb4(h, s, v) {
+    let r, g, b;
+    let i = Math.floor(h * 6);
+    let f = h * 6 - i;
+    let p = v * (1 - s);
+    let q = v * (1 - f * s);
+    let t = v * (1 - (1 - f) * s);
+
+    switch (i % 6) {
+        case 0: r = v, g = t, b = p; break;
+        case 1: r = q, g = v, b = p; break;
+        case 2: r = p, g = v, b = t; break;
+        case 3: r = p, g = q, b = v; break;
+        case 4: r = t, g = p, b = v; break;
+        case 5: r = v, g = p, b = q; break;
+    }
+
+    return { r: r * 255, g: g * 255, b: b * 255 };
+}
+function createAndAnimateMeshSPH() {
+    const gridSize = document.getElementById('bmp-width').value;
+    const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+    const lightness = parseInt(document.getElementById('lightness').value);
+    const hue = parseInt(document.getElementById('hue').value);
+
+    const funcStr = document.getElementById('function').value.trim();
+    const maxHeight = parseFloat(document.getElementById('max-height').value);
+
+    if (mesh) {
+        scene.remove(mesh);
+        geometry.dispose();
+        material.dispose();
+    }
+
+    geometry = new THREE.SphereGeometry(5, gridSize, gridSize); // Adjust radius and grid size as needed
+    material = new THREE.MeshBasicMaterial({ vertexColors: true, wireframe: false });
+    mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    function updateMesh() {
+        const positions = geometry.attributes.position.array;
+        const numVertices = positions.length / 3;
+
+        const colors = new Float32Array(numVertices * 3);  // Create color array
+
+        for (let i = 0; i < numVertices; i++) {
+            const x = positions[i * 3];
+            const y = positions[i * 3 + 1];
+            const z = positions[i * 3 + 2];
+
+            const r = Math.sqrt(x * x + y * y + z * z);
+            const theta = Math.acos(z / r);  // Theta is the polar angle from the z-axis
+            const phi = Math.atan2(y, x);    // Phi is the azimuthal angle in the xy-plane
+
+            let sphericalInput = math.complex(theta, phi);  // Construct complex number with theta and phi
+            sphericalInput = teth.evaluate(funcStr, { x: sphericalInput });  // Evaluate user-provided function
+
+            const zMagnitude = (maxHeight === 0) ? 1 : math.min(maxHeight, math.abs(sphericalInput));
+
+
+           const newRadius = zMagnitude;
+
+            positions[i * 3] = newRadius * Math.sin(theta) * Math.cos(phi);  // Update X
+            positions[i * 3 + 1] = newRadius * Math.sin(theta) * Math.sin(phi);  // Update Y
+            positions[i * 3 + 2] = newRadius * Math.cos(theta);  // Update Z
+
+            const color = complexToColor( math.complex(x, y),sphericalInput, magnitudeToLightnessExpr, colorMode, saturationChroma, lightness, paletteImageData,  0.1, 1 );
+
+             colors[i * 3] = color[0] / 255;
+            colors[i * 3 + 1] = color[1] / 255;
+            colors[i * 3 + 2] = color[2] / 255;
+        }
+
+        geometry.attributes.position.needsUpdate = true;
+        geometry.computeVertexNormals();
+
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));  // Apply color array
+        geometry.attributes.color.needsUpdate = true;
+    }
+
+    function animateMesh() {
+        requestAnimationFrame(animateMesh);
+        renderer.render(scene, camera);
+    }
+
+    updateMesh();  // Initial update of the mesh
+    animateMesh();
+}
+
+
+
+
+function createAndAnimateMeshGNM() {
+    const gridSize = document.getElementById('bmp-width').value;
+    const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+    const lightness = parseInt(document.getElementById('lightness').value);
+    const hue = parseInt(document.getElementById('hue').value);
+
+    const funcStr = document.getElementById('function').value.trim();
+    const maxHeight = parseFloat(document.getElementById('max-height').value);
+
+    if (mesh) {
+        scene.remove(mesh);
+        geometry.dispose();
+        material.dispose();
+    }
+
+    // Create a flat plane for gnomonic projection
+    geometry = new THREE.PlaneGeometry(10, 10, gridSize, gridSize);
+    material = new THREE.MeshBasicMaterial({ vertexColors: true, wireframe: false });
+    mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    function updateMesh() {
+        const positions = geometry.attributes.position.array;
+        const numVertices = positions.length / 3;
+
+        const colors = new Float32Array(numVertices * 3);
+
+        for (let i = 0; i < numVertices; i++) {
+            const x = positions[i * 3];
+            const y = positions[i * 3 + 1];
+            
+            // Gnomonic projection: map plane to sphere
+            const r = Math.sqrt(x*x + y*y);
+            const theta = r;  // In gnomonic, theta = r
+            const phi = Math.atan2(y, x);
+
+            let gnomonicInput = math.complex(theta, phi);
+            gnomonicInput = teth.evaluate(funcStr, { x: gnomonicInput });
+
+           const zMagnitude = (maxHeight === 0) ? 1 : math.min(maxHeight, math.abs(gnomonicInput));
+
+            const newRadius = zMagnitude;
+
+            // Project back to plane with new radius
+            positions[i * 3] = newRadius * Math.cos(phi) * Math.tan(theta);
+            positions[i * 3 + 1] = newRadius * Math.sin(phi) * Math.tan(theta);
+            positions[i * 3 + 2] = 0;  // Keep it on the plane
+
+            const color = complexToColor(math.complex(x, y), gnomonicInput, magnitudeToLightnessExpr, 
+                                       colorMode, saturationChroma, lightness, paletteImageData, 0.1, 1);
+
+            colors[i * 3] = color[0] / 255;
+            colors[i * 3 + 1] = color[1] / 255;
+            colors[i * 3 + 2] = color[2] / 255;
+        }
+
+        geometry.attributes.position.needsUpdate = true;
+        geometry.computeVertexNormals();
+
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        geometry.attributes.color.needsUpdate = true;
+    }
+
+    function animateMesh() {
+        requestAnimationFrame(animateMesh);
+        renderer.render(scene, camera);
+    }
+
+    updateMesh();
+    animateMesh();
+}
+
+function createAndAnimateMeshSTR() {
+    const gridSize = document.getElementById('bmp-width').value;
+    const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+    const lightness = parseInt(document.getElementById('lightness').value);
+    const hue = parseInt(document.getElementById('hue').value);
+
+    const funcStr = document.getElementById('function').value.trim();
+    const maxHeight = parseFloat(document.getElementById('max-height').value);
+
+    if (mesh) {
+        scene.remove(mesh);
+        geometry.dispose();
+        material.dispose();
+    }
+
+    // Create a sphere for stereographic projection
+    geometry = new THREE.SphereGeometry(5, gridSize, gridSize);
+    material = new THREE.MeshBasicMaterial({ vertexColors: true, wireframe: false });
+    mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    function updateMesh() {
+        const positions = geometry.attributes.position.array;
+        const numVertices = positions.length / 3;
+
+        const colors = new Float32Array(numVertices * 3);
+
+        for (let i = 0; i < numVertices; i++) {
+            const x = positions[i * 3];
+            const y = positions[i * 3 + 1];
+            const z = positions[i * 3 + 2];
+
+            // Stereographic projection: map sphere to plane
+            const X = x / (1 - z);
+            const Y = y / (1 - z);
+
+            let stereographicInput = math.complex(X, Y);
+            stereographicInput = teth.evaluate(funcStr, { x: stereographicInput });
+
+           const zMagnitude = (maxHeight === 0) ? 1 : math.min(maxHeight, math.abs(stereographicInput));
+
+            const newRadius = zMagnitude;
+
+            // Project back to sphere with new radius
+            const denom = 1 + X*X + Y*Y;
+            positions[i * 3] = 2 * newRadius * X / denom;
+            positions[i * 3 + 1] = 2 * newRadius * Y / denom;
+            positions[i * 3 + 2] = newRadius * (-1 + X*X + Y*Y) / denom;
+
+            const color = complexToColor(math.complex(X, Y), stereographicInput, magnitudeToLightnessExpr, 
+                                       colorMode, saturationChroma, lightness, paletteImageData, 0.1, 1);
+
+            colors[i * 3] = color[0] / 255;
+            colors[i * 3 + 1] = color[1] / 255;
+            colors[i * 3 + 2] = color[2] / 255;
+        }
+
+        geometry.attributes.position.needsUpdate = true;
+        geometry.computeVertexNormals();
+
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        geometry.attributes.color.needsUpdate = true;
+    }
+
+    function animateMesh() {
+        requestAnimationFrame(animateMesh);
+        renderer.render(scene, camera);
+    }
+
+    updateMesh();
+    animateMesh();
+}
+
+function createAndAnimateMeshCYL() {
+    const gridSize = document.getElementById('bmp-width').value;
+    const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+    const lightness = parseInt(document.getElementById('lightness').value);
+    const hue = parseInt(document.getElementById('hue').value);
+
+    const funcStr = document.getElementById('function').value.trim();
+    const maxHeight = parseFloat(document.getElementById('max-height').value);
+   
+
+    if (mesh) {
+        scene.remove(mesh);
+        geometry.dispose();
+        material.dispose();
+    }
+
+    // Create cylinder geometry
+    const radius = 1/(2*Math.PI); // Radius to match the torus scale
+    const height = bign * radius; // Scale height based on bign
+    geometry = new THREE.CylinderGeometry(radius, radius, height, gridSize, gridSize, true);
+     material = new THREE.MeshBasicMaterial({ 
+        vertexColors: true, 
+        wireframe: false,
+        side: THREE.DoubleSide  // This makes the material visible from both sides
+    });
+    mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    function updateMesh() {
+        const positions = geometry.attributes.position.array;
+        const numVertices = positions.length / 3;
+
+        const colors = new Float32Array(numVertices * 3);
+
+        for (let i = 0; i < numVertices; i++) {
+            const x = positions[i * 3];
+            const y = positions[i * 3 + 1];
+            const z = positions[i * 3 + 2];
+
+            // Convert cartesian to cylindrical coordinates
+            const r = Math.sqrt(x*x + z*z);
+            const phi = Math.atan2(z, x);  // Angle around the cylinder
+            const yNorm = (y + height/2) / height - 0.5; // Normalize y to [0,1]
+            
+            // Map to complex plane: real part from angle, imaginary from height
+            const u = phi / (2*Math.PI);  // Normalize angle to [0,1]
+            const v = yNorm * bign;       // Scale height to [0,bign]
+            
+            let cylindricalInput = math.complex(u, v);
+            cylindricalInput = teth.evaluate(funcStr, { x: cylindricalInput });
+
+            //const magnitude = math.min(maxHeight, math.abs(cylindricalInput));
+             const magnitude = (maxHeight === 0) ? 1 : math.min(maxHeight, math.abs(cylindricalInput));
+            // Apply the magnitude to the radius
+            const newRadius = radius * magnitude;
+            
+            // Convert back to cartesian coordinates with modified radius
+            const newX = newRadius * Math.cos(phi);
+            const newY = y/newRadius ; // Keep height unchanged
+            const newZ = newRadius * Math.sin(phi);
+            
+            positions[i * 3] = newX;
+            positions[i * 3 + 1] = newY;
+            positions[i * 3 + 2] = newZ;
+
+            const color = complexToColor(math.complex(u, v), cylindricalInput, magnitudeToLightnessExpr, 
+                                      colorMode, saturationChroma, lightness, paletteImageData, 0.1, 1);
+
+            colors[i * 3] = color[0] / 255;
+            colors[i * 3 + 1] = color[1] / 255;
+            colors[i * 3 + 2] = color[2] / 255;
+        }
+
+        geometry.attributes.position.needsUpdate = true;
+        geometry.computeVertexNormals();
+
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        geometry.attributes.color.needsUpdate = true;
+    }
+
+    function animateMesh() {
+        requestAnimationFrame(animateMesh);
+        renderer.render(scene, camera);
+    }
+
+    updateMesh();
+    animateMesh();
+}
+function createAndAnimateMeshTOR() {
+    const gridSize = document.getElementById('bmp-width').value;
+    const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+    const lightness = parseInt(document.getElementById('lightness').value);
+    const hue = parseInt(document.getElementById('hue').value);
+
+    const funcStr = document.getElementById('function').value.trim();
+    const maxHeight = parseFloat(document.getElementById('max-height').value);
+
+    if (mesh) {
+        scene.remove(mesh);
+        geometry.dispose();
+        material.dispose();
+    }
+
+    // Create a torus geometry with the specified radii
+    const majorRadius = 1/Math.PI;
+    const minorRadius = 1/(2*Math.PI);
+    geometry = new THREE.TorusGeometry(majorRadius, minorRadius, gridSize, gridSize);
+     material = new THREE.MeshBasicMaterial({ 
+        vertexColors: true, 
+        wireframe: false,
+        side: THREE.DoubleSide  // This makes the material visible from both sides
+    });
+    mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    function updateMesh() {
+        const positions = geometry.attributes.position.array;
+        const numVertices = positions.length / 3;
+
+        const colors = new Float32Array(numVertices * 3);
+
+        for (let i = 0; i < numVertices; i++) {
+            const x = positions[i * 3];
+            const y = positions[i * 3 + 1];
+            const z = positions[i * 3 + 2];
+
+            // Convert cartesian to toroidal coordinates
+            const xy = Math.sqrt(x*x + y*y);
+            const phi = Math.atan2(y, x);  // Major circle angle
+            const theta = Math.atan2(z, xy - majorRadius);  // Minor circle angle
+            
+            // Map angles to complex plane [0,1] + [0i,1i]
+            const u = phi / (2*Math.PI);  // Normalize to [0,1]
+            const v = theta / (2*Math.PI); // Normalize to [0,1]
+            
+            let toroidalInput = math.complex(u, v);
+            toroidalInput = teth.evaluate(funcStr, { x: toroidalInput });
+
+           // const magnitude = math.min(maxHeight, math.abs(toroidalInput));
+            const magnitude = (maxHeight === 0) ? 1 : math.min(maxHeight, math.abs(toroidalInput));
+            // Apply the magnitude to the minor radius
+            const newMinorRadius = minorRadius * magnitude;
+            
+            // Convert back to cartesian coordinates with modified radius
+            const newX = (majorRadius + newMinorRadius * Math.cos(theta)) * Math.cos(phi);
+            const newY = (majorRadius + newMinorRadius * Math.cos(theta)) * Math.sin(phi);
+            const newZ = newMinorRadius * Math.sin(theta);
+            
+            positions[i * 3] = newX;
+            positions[i * 3 + 1] = newY;
+            positions[i * 3 + 2] = newZ;
+
+            const color = complexToColor(math.complex(u, v), toroidalInput, magnitudeToLightnessExpr, 
+                                      colorMode, saturationChroma, lightness, paletteImageData, 0.1, 1);
+
+            colors[i * 3] = color[0] / 255;
+            colors[i * 3 + 1] = color[1] / 255;
+            colors[i * 3 + 2] = color[2] / 255;
+        }
+
+        geometry.attributes.position.needsUpdate = true;
+        geometry.computeVertexNormals();
+
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        geometry.attributes.color.needsUpdate = true;
+    }
+
+    function animateMesh() {
+        requestAnimationFrame(animateMesh);
+        renderer.render(scene, camera);
+    }
+
+    updateMesh();
+    animateMesh();
+}
+
+
+document.getElementById('createMeshButton').addEventListener('click', () => {
+    createAndAnimateMesh();
+});
+document.getElementById('createMeshButtonsph').addEventListener('click', () => {
+    createAndAnimateMeshSPH();
+});
+/*document.getElementById('createMeshButtongnm').addEventListener('click', () => {
+    createAndAnimateMeshGNM();
+});*/
+
+document.getElementById('createMeshButtonstr').addEventListener('click', () => {
+    createAndAnimateMeshSTR();
+});
+document.getElementById('createMeshButtontor').addEventListener('click', () => {
+    createAndAnimateMeshTOR();
+});
+document.getElementById('createMeshButtoncyl').addEventListener('click', () => {
+    createAndAnimateMeshCYL();
+});
+document.getElementById('createAndAnimate4D').addEventListener('click', () => {
+    createAndAnimate4DMesh();
+});
+document.getElementById('createMeshButtonsphd').addEventListener('click', () => {
+    createAndAnimateMeshSPHD();
+});
+document.getElementById('createMeshButtond').addEventListener('click', () => {
+    createAndAnimateMeshD();
+});
+let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+let rotateLeft = false, rotateRight = false, rotateUp = false, rotateDown = false, rotateUpc = false, rotateDownc = false, moveUp = false, moveDown = false;
+const moveSpeed = 0.1, rotateSpeed = 0.02, acceleration = 0.05;
+
+let velocity = new THREE.Vector3();
+let rotationVelocity = new THREE.Vector3();
+
+document.addEventListener('keydown', (event) => {
+    switch (event.key) {
+        case 'W': moveForward = true; break;
+        case 'S': moveBackward = true; break;
+        case 'A': moveLeft = true; break;
+        case 'D': moveRight = true; break;
+        case 'Q': rotateLeft = true; break;
+        case 'E': rotateRight = true; break;
+        case 'R': rotateUp = true; break;
+        case 'F': rotateDown = true; break;
+        case 'C': rotateUpc = true; break;
+        case 'V': rotateDownc = true; break;
+        case 'Z': moveUp = true; break;
+        case 'X': moveDown = true; break;
+        case 'T': negmag = math.mod(negmag + 1, 3); break;
+    }
+});
+
+document.addEventListener('keyup', (event) => {
+    switch (event.key) {
+        case 'W': moveForward = false; break;
+        case 'S': moveBackward = false; break;
+        case 'A': moveLeft = false; break;
+        case 'D': moveRight = false; break;
+        case 'Q': rotateLeft = false; break;
+        case 'E': rotateRight = false; break;
+        case 'R': rotateUp = false; break;
+        case 'F': rotateDown = false; break;
+        case 'C': rotateUpc = false; break;
+        case 'V': rotateDownc = false; break;
+        case 'Z': moveUp = false; break;
+        case 'X': moveDown = false; break;
+    }
+});
+
+function updateCamera() {
+    velocity.set(0, 0, 0);
+    rotationVelocity.set(0, 0, 0);
+    
+    if (moveForward) velocity.z -= moveSpeed;
+    if (moveBackward) velocity.z += moveSpeed;
+    if (moveLeft) velocity.x -= moveSpeed;
+    if (moveRight) velocity.x += moveSpeed;
+    if (moveUp) velocity.y -= moveSpeed;
+    if (moveDown) velocity.y += moveSpeed;
+
+    camera.position.add(velocity.applyQuaternion(camera.quaternion));
+
+     if (rotateLeft) rotationVelocity.y += rotateSpeed;
+    if (rotateRight) rotationVelocity.y -= rotateSpeed;
+    if (rotateUp) rotationVelocity.x += rotateSpeed;
+    if (rotateDown) rotationVelocity.x -= rotateSpeed;
+    if (rotateUpc) rotationVelocity.z += rotateSpeed;
+    if (rotateDownc) rotationVelocity.z -= rotateSpeed;
+
+    let quaternion = new THREE.Quaternion();
+    quaternion.setFromEuler(new THREE.Euler(rotationVelocity.x, rotationVelocity.y, rotationVelocity.z, 'XYZ'));
+    camera.quaternion.multiplyQuaternions(quaternion, camera.quaternion);
+}
+function animate() {
+    requestAnimationFrame(animate);
+    updateCamera();
+    renderer.render(scene, camera);
+}
+
+animate();	
+let maximum =100000000;
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    let clickCount = 0;
+    let firstPoint = { real: 0, imag: 0 };
+    let secondPoint = { real: 0, imag: 0 };
+    const container = document.getElementById('coordinate-container');
+
+
+	    function initializeCoordinateBoxes() {
+        if (!container) {
+            console.error('Coordinate container not found');
+            return;
+        }
+
+
+        if (container.children.length === 0) {
+            const labels = ['Start Real', 'Start Imaginary', 'End Real', 'End Imaginary','maxa'];
+            labels.forEach(label => {
+                const coordBox = document.createElement('div');
+                coordBox.classList.add('coordinate-box');
+
+                const pointLabel = document.createElement('label');
+                pointLabel.textContent = label + ': ';
+                coordBox.appendChild(pointLabel);
+
+            
+                const inputBox = document.createElement('input');
+                inputBox.type = 'number';
+                inputBox.step = 'any';
+				inputBox.value = '0';
+                inputBox.classList.add(label.includes('Start') ? 'start-input' : 'end-input');
+                inputBox.addEventListener('input', updateGraph);
+                coordBox.appendChild(inputBox);
+
+                container.appendChild(coordBox);
+            });
+        }
+    }	
+   
+ initializeCoordinateBoxes();
+
+
+
+    function updateGraph() {
+        const startInputs = document.querySelectorAll('.start-input');
+        const endInputs = document.querySelectorAll('.end-input');
+
+        firstPoint = { real: parseFloat(startInputs[0].value), imag: parseFloat(startInputs[1].value) };
+        secondPoint = { real: parseFloat(endInputs[0].value), imag: parseFloat(endInputs[1].value) };
+maximum = parseFloat(endInputs[2].value);
+        plotGraph(firstPoint, secondPoint);
+    }
+
+    document.getElementById('bmpCanvas').addEventListener('click', function(event) {
+        const rect = this.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+
+		
+        const canvasWidth = this.width;
+        const canvasHeight = this.height;
+
+        const minReal = parseFloat(document.getElementById('min-real').value);
+        const maxReal = parseFloat(document.getElementById('max-real').value);
+        const minImag = parseFloat(document.getElementById('min-imag').value);
+        const maxImag = parseFloat(document.getElementById('max-imag').value);
+        const bmpheight = parseFloat(document.getElementById('bmp-height').value);
+        const bmpwidth = parseFloat(document.getElementById('bmp-width').value);
+
+        const real = minReal + (x / (canvasWidth / bmpwidth * 300)) * (maxReal - minReal);
+        const imag = minImag + (y / (canvasHeight / bmpheight * 300)) * (maxImag - minImag);
+
+
+        initializeCoordinateBoxes();
+maximum = document.querySelectorAll('.end-input')[2];
+        if (clickCount === 0) {
+            document.querySelectorAll('.start-input')[0].value = real;
+            document.querySelectorAll('.start-input')[1].value = imag;
+            clickCount++;
+        } else if (clickCount === 1) {
+            document.querySelectorAll('.end-input')[0].value = real;
+            document.querySelectorAll('.end-input')[1].value = imag;
+            plotGraph(firstPoint, secondPoint);
+			updateGraph();
+            clickCount = 0;
+        }
+    });
+}); 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function toggleControls() { 
+  const controls = document.getElementById('graphControls'); 
+  controls.style.display = controls.style.display === 'none' ? 'block' : 'none'; 
+}
+
+function applyScale(value, scaleMode) { 
+  if (value === 0) return 0; 
+  switch (scaleMode) { 
+    case 'log': return Math.sign(value) * Math.log1p(Math.abs(value)); 
+    case 'sqrt': return Math.sign(value) * Math.sqrt(Math.abs(value)); 
+    case 'exp': return Math.sign(value) * (exp(Math.abs(value)-1)); 
+    case 'sqr': return Math.sign(value) * sqr(Math.abs(value)); 
+    
+    case 'w': return Math.sign(value) * lambertw(Math.abs(value)); 
+     case 'zex': return Math.sign(value) * zex(Math.abs(value)); 
+     
+     case 'tanh': return Math.tanh(value);
+    case 'sigmoid': return 1 / (1 + Math.exp(-value));
+    case 'asinh': return Math.asinh(value);
+    case 'atan': return Math.atan(value);
+    
+    case 'gauss': return Math.sign(value) * (1 - Math.exp(-value * value));
+    case 'lnln': return Math.sign(value) * Math.log1p(Math.log1p(Math.abs(value)));
+    case 'expexp': return Math.sign(value) * (exp(exp(value)-1)-1);
+    
+    case 'inv': return Math.sign(value) / (1 + Math.abs(value));
+    case 'recip': return value / (1 + value * value);
+    
+
+    
+    default: return value; 
+  }
+}
+
+function plotGraph(point1, point2) { 
+  const get = id => document.getElementById(id);
+  const ctrls = {
+    height: parseFloat(get('bmp-height').value),
+    width: parseFloat(get('bmp-width').value),
+    bgColor: get('bgColor').value, 
+    realColor: get('realColor').value, 
+    imagColor: get('imagColor').value, 
+    axisColor: get('axisColor').value, 
+    gridColor: get('gridColor').value, 
+    lineWidth: parseFloat(get('lineWidth').value), 
+    numSamples: parseInt(get('numSamples').value), 
+    xScaleMode: get('xScaleMode').value, 
+    yScaleMode: get('yScaleMode').value, 
+    gridScale: get('gridScale').value, 
+    showGrid: get('showGrid').checked, 
+    showAxes: get('showAxes').checked, 
+    showLabels: get('showLabels').checked, 
+    fillCurve: get('fillCurve').checked, 
+    parametricMode: get('parametricMode').checked,
+    maximum: maximum
+  };
+
+  const canvas = get('graphCanvas'); 
+  const ctx = canvas.getContext('2d'); 
+  const scale = 3;
+  canvas.width = ctrls.width * scale; 
+  canvas.height = ctrls.height * scale; 
+  ctx.fillStyle = ctrls.bgColor; 
+  ctx.fillRect(0, 0, canvas.width, canvas.height); 
+
+  const real = [], imag = [], domain = []; 
+  for (let i = 0; i <= ctrls.numSamples; i++) {
+    const t = i / ctrls.numSamples;
+    const x_real = point1.real + t * (point2.real - point1.real); 
+    const x_imag = point1.imag + t * (point2.imag - point1.imag); 
+    let z = math.complex(applyScale(x_real, ctrls.xScaleMode), applyScale(x_imag, ctrls.xScaleMode)); 
+ try {
+      const fn =math.complex(teth.evaluate(get('function').value, { x: z })); 
+      if (!isFinite(fn.re) || !isFinite(fn.im)) throw new Error(); 
+  real.push(applyScale(re(fn),ctrls.yScaleMode)); imag.push(applyScale(im(fn),ctrls.yScaleMode)); domain.push(x_real); 
+ //console.log(applyScale(re(fn),ctrs.yScaleMode))
+  } catch (e) {console.log(e)
+      real.push(null); imag.push(null); domain.push(null); 
+    }
+  }
+
+  const getRange = arr => {
+    const valid = arr.filter(v => v !== null);
+    return valid.length ? [Math.min(...valid), Math.max(...valid)] : [-1, 1]; 
+  };
+
+  let minX, maxX, minY, maxY;
+  if (ctrls.parametricMode) { 
+    [minX, maxX] = getRange(real); 
+    [minY, maxY] = getRange(imag); 
+  } else {
+    [minX, maxX] = getRange(domain); 
+    [minY, maxY] = getRange([...real, ...imag]); 
+  }
+
+  if (ctrls.maximum !== 0) {
+    const m = ctrls.maximum;
+    if (m > 0) { 
+        maxY = Math.min(maxY, m); minY = Math.max(minY, -m); 
+        if (ctrls.parametricMode) { maxX = Math.min(maxX, m); minX = Math.max(minX, -m); } 
+    } else {
+        maxY = -m; minY = m; 
+        if (ctrls.parametricMode) { maxX = -m; minX = m; } 
+    }
+  }
+  
+  if (maxX === minX) { maxX++; minX--; } 
+  if (maxY === minY) { maxY++; minY--; } 
+
+  const toCanvasX = val => ((val - minX) / (maxX - minX)) * canvas.width; 
+  const toCanvasY = val => canvas.height - ((val - minY) / (maxY - minY)) * canvas.height; 
+
+  const generateGridLines = (min, max, gridScale) => {
+    const lines = [];
+    if (gridScale === 'integer') { 
+        for (let i = Math.ceil(min); i <= Math.floor(max); i++) lines.push(i); 
+    } else if (gridScale === 'power2') { 
+        const minP = Math.ceil(Math.log2(Math.max(1e-9, Math.abs(min))));
+        const maxP = Math.floor(Math.log2(Math.max(1e-9, Math.abs(max)))); 
+        for (let p = minP; p <= maxP; p++) { 
+            const val = 2 ** p;
+            if (val >= min && val <= max) lines.push(val); 
+            if (-val >= min && -val <= max) lines.push(-val); 
+        }
+        if (0 >= min && 0 <= max) lines.push(0); 
+    } else {
+        const range = max - min; if (range === 0) return [];
+        const step = 10 ** Math.floor(Math.log10(range)) / 2; 
+        for (let v = Math.ceil(min / step) * step; v <= Math.floor(max / step) * step; v += step) { 
+            if (v >= min && v <= max) lines.push(v); 
+        }
+    }
+    return lines.sort((a, b) => a - b); 
+  };
+
+  const drawLine = (x1, y1, x2, y2) => { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }; 
+
+  if (ctrls.showGrid) { 
+    ctx.strokeStyle = ctrls.gridColor; ctx.lineWidth = 0.5; 
+    generateGridLines(minX, maxX, ctrls.gridScale).forEach(v => drawLine(toCanvasX(v), 0, toCanvasX(v), canvas.height)); 
+    generateGridLines(minY, maxY, ctrls.gridScale).forEach(v => drawLine(0, toCanvasY(v), canvas.width, toCanvasY(v))); 
+  }
+
+  if (ctrls.showAxes) { 
+    ctx.strokeStyle = ctrls.axisColor; ctx.lineWidth = 1; 
+    if (minY <= 0 && maxY >= 0) drawLine(0, toCanvasY(0), canvas.width, toCanvasY(0)); 
+    if (minX <= 0 && maxX >= 0) drawLine(toCanvasX(0), 0, toCanvasX(0), canvas.height); 
+  }
+  
+  ctx.lineWidth = ctrls.lineWidth;
+  const drawCurve = (xData, yData, color) => {
+    ctx.strokeStyle = color; ctx.beginPath(); 
+    let first = true;
+    xData.forEach((val, i) => {
+      if (val === null || yData[i] === null) { first = true; return; } 
+      const x = toCanvasX(val), y = toCanvasY(yData[i]); 
+      first ? ctx.moveTo(x, y) : ctx.lineTo(x, y); 
+      first = false;
+    });
+    ctx.stroke();
+  };
+
+  ctrls.parametricMode ? drawCurve(real, imag, ctrls.realColor) 
+                      : (drawCurve(domain, real, ctrls.realColor), drawCurve(domain, imag, ctrls.imagColor));
+
+  if (ctrls.fillCurve) {
+    ctx.globalAlpha = 0.2; 
+    const fillShape = (xData, yData, color) => {
+      ctx.fillStyle = color; ctx.beginPath(); 
+      const points = [];
+      xData.forEach((val, i) => { if (val !== null && yData[i] !== null) points.push({x: toCanvasX(val), y: toCanvasY(yData[i])}); }); 
+      if (!points.length) return;
+      ctx.moveTo(points[0].x, points[0].y); 
+      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y); 
+      
+      if (ctrls.parametricMode) {
+        ctx.lineTo(toCanvasX(0), toCanvasY(0)); 
+      } else {
+        const y0 = toCanvasY(0); 
+        for (let i = xData.length - 1; i >= 0; i--) {
+            if (xData[i] !== null && yData[i] !== null) ctx.lineTo(toCanvasX(xData[i]), y0); 
+        }
+      }
+      ctx.closePath(); ctx.fill();
+    };
+
+    ctrls.parametricMode ? fillShape(real, imag, ctrls.realColor)
+                         : (fillShape(domain, real, ctrls.realColor), fillShape(domain, imag, ctrls.imagColor));
+    ctx.globalAlpha = 1; 
+  }
+
+  if (ctrls.showLabels) { 
+    ctx.fillStyle = ctrls.axisColor; ctx.font = "10px monospace"; 
+    const label = (text, x, y, align = "center") => { ctx.textAlign = align; ctx.fillText(text, x, y); }; 
+    label(minX.toFixed(2), 20, canvas.height - 5); 
+    label(maxX.toFixed(2), canvas.width - 20, canvas.height - 5); 
+    label(minY.toFixed(2), 5, canvas.height - 20, "left"); 
+    label(maxY.toFixed(2), 5, 15, "left"); 
+    if (minX < 0 && maxX > 0) label("0", toCanvasX(0) + 8, canvas.height - 5); 
+    if (minY < 0 && maxY > 0) label("0", 5, toCanvasY(0) - 5, "left"); 
+  }
+
+  get('savePNG').onclick = () => { 
+    const a = document.createElement('a');
+    a.download = 'graph.png'; 
+    a.href = canvas.toDataURL('image/png'); 
+    a.click();
+  };
+}
+
+document.addEventListener('DOMContentLoaded', () => { 
+  document.getElementById('graphControls').style.display = 'none'; 
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        document.getElementById('color-mode').addEventListener('change', function() {
+            if (this.value === 'palette') {
+                document.getElementById('palette-group').style.display = 'block';
+            } else {
+                document.getElementById('palette-group').style.display = 'none';
+            }
+			if (this.value === 'contour'||this.value === 'pcontour'||this.value === 'acontour') {
+                document.getElementById('contour-group').style.display = 'block';
+            } else {
+                document.getElementById('contour-group').style.display = 'none';
+            }
+        });
+        
+        document.getElementById('palette-file').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+                        paletteImageData = ctx.getImageData(0, 0, img.width, img.height).data;
+                    }
+                    img.src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+function generateRandomColor() {
+
+    return '#' + Math.floor(Math.random() * 0xFFFFFF).toString(16).padStart(6, '0');
+}
+
+function generatePaletteInputs() {
+    const rows = parseInt(document.getElementById('rows').value);
+    const columns = parseInt(document.getElementById('columns').value);
+    const paletteGenerator = document.getElementById('palette-generator');
+    paletteGenerator.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+    paletteGenerator.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+    paletteGenerator.innerHTML = '';
+    for (let i = 0; i < rows * columns; i++) {
+        const colorInput = document.createElement('input');
+        colorInput.type = 'color';
+        colorInput.className = 'color-input';
+        colorInput.id = `color-${i + 1}`;
+        colorInput.value = generateRandomColor();
+        paletteGenerator.appendChild(colorInput);
+    }
+}
+
+
+function generatePalette() {
+    const rows = parseInt(document.getElementById('rows').value);
+    const columns = parseInt(document.getElementById('columns').value);
+    const colors = [];
+    
+    for (let i = 1; i <= rows * columns; i++) {
+        const colorInput = document.getElementById(`color-${i}`);
+        colors.push(colorInput.value);
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 360;
+    canvas.height = 100;
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.createImageData(canvas.width, canvas.height);
+
+    const width = canvas.width;
+    const height = canvas.height;
+    const rowHeight = height / (rows - 1);
+    const columnWidth = width / columns;
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const row = Math.floor(y / rowHeight);
+            const column = Math.floor(x / columnWidth);
+            const rowFraction = (y % rowHeight) / rowHeight;
+            const columnFraction = (x % columnWidth) / columnWidth;
+            const color1 = hexToRgb(colors[row * columns + column]);
+            const color2 = hexToRgb(colors[row * columns + (column + 1) % columns]);
+            const color3 = hexToRgb(colors[(row + 1) % rows * columns + column]);
+            const color4 = hexToRgb(colors[(row + 1) % rows * columns + (column + 1) % columns]);
+
+            const colorHorizontal1 = interpolateColor(color1, color2, columnFraction);
+            const colorHorizontal2 = interpolateColor(color3, color4, columnFraction);
+            const finalColor = interpolateColor(colorHorizontal1, colorHorizontal2, rowFraction);
+
+            const index = ((y -0) * width + x) * 4;
+            imageData.data[index] = finalColor[0];     // Red
+            imageData.data[index + 1] = finalColor[1]; // Green
+            imageData.data[index + 2] = finalColor[2]; // Blue
+            imageData.data[index + 3] = 255;           // Alpha
+        }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    
+    paletteImageData = ctx.getImageData(0, 0, 360, 100).data;
+
+     const existingCanvas = document.querySelector('canvas.preview');
+    if (existingCanvas) {
+        document.body.removeChild(existingCanvas);
+    }
+    canvas.className = 'preview'; // Add a class for identifying the preview canvas
+    document.body.appendChild(canvas);
+}
+
+  function numerate() {
+		
+          
+            const xre = parseFloat(document.getElementById('numericalxre').value);
+              const xim = parseFloat(document.getElementById('numericalxim').value);
+const xxx = math.complex(xre,xim);
+            const funcStr = document.getElementById('function').value.trim();
+ const funcValue = math.evaluate(funcStr, { x: xxx});
+  document.getElementById("outputBoxa").value = funcValue;
+ 
+}
+  function numerate2() {
+		
+          
+            const xre = parseFloat(document.getElementById('numericalxre').value);
+              const xim = parseFloat(document.getElementById('numericalxim').value);
+const xxx = math.complex(xre,xim);
+            const funcStr = document.getElementById('function').value.trim();
+ const funcValue = teth.evaluate(funcStr, { x: xxx});
+  document.getElementById("outputBoxa").value = funcValue;
+ 
+}
+
+
+
+
+
+
+async function renderfullBMP() {
+    const width = parseInt(document.getElementById('bmp-width').value);
+    const height = parseInt(document.getElementById('bmp-height').value);
+    const minReal = parseFloat(document.getElementById('min-real').value);
+    const maxReal = parseFloat(document.getElementById('max-real').value);
+    const minImag = parseFloat(document.getElementById('min-imag').value);
+    const maxImag = parseFloat(document.getElementById('max-imag').value);
+    const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+    const lightness = parseInt(document.getElementById('lightness').value);
+    const funcStr = document.getElementById('function').value.trim();
+    const thick = parseFloat(document.getElementById('thick').value);
+
+    const canvas = document.getElementById('bmpCanvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.createImageData(width, height);
+    const data = imageData.data;
+
+    const reStep = (2) / width;
+    const imStep = (2) / height;
+
+    const reValues = new Float64Array(width);
+    const imValues = new Float64Array(height);
+
+    for (let x = 0; x < width; x++) reValues[x] =  atanh(-1 + x * reStep)**3*(maxReal - minReal)*2;
+    for (let y = 0; y < height; y++) imValues[y] = atanh(1 - y *  imStep)**3*(maxImag - minImag)*2;
+//console.log(reValues)
+    const memoValues = new Array(width).fill(0);
+ const funcTree = teth.parse(teth.tokenize(funcStr));
+    // Draw in blocks of lines to avoid blocking UI but stay fast
+    const blockSize = 10; // can tweak for performance
+    for (let yStart = 0; yStart < height; yStart += blockSize) {
+        const yEnd = Math.min(yStart + blockSize, height);
+        for (let x = 0; x < width; x++) {
+            const re = reValues[x];
+            let memo = memoValues[x];
+
+            for (let y = yStart; y < yEnd; y++) {
+                const im = imValues[y];
+                const complexValue = math.complex(re, im);
+                //const q = math.exp(math.multiply(math.complex(0, Math.PI), complexValue));
+
+                const funcValue = teth.evaluateTree(funcTree, { x: complexValue ,xx:re,yy:im });
+                const color = complexToColor(
+                    complexValue,
+                    funcValue,
+                    magnitudeToLightnessExpr,
+                    colorMode,
+                    saturationChroma,
+                    lightness,
+                    paletteImageData,
+                    thick,
+                    math.divide(math.subtract(funcValue, memo), imStep)
+                );
+
+                const index = (y * width + x) * 4;
+                data[index] = color[0];
+                data[index + 1] = color[1];
+                data[index + 2] = color[2];
+                data[index + 3] = 255;
+
+                memo = funcValue;
+            }
+
+            memoValues[x] = memo; // save for next block
+        }
+     //       ctx.putImageData(imageData, 0, 0);
+   // ctx.putImageData(imageData, 0, 0);
+   // await new Promise(requestAnimationFrame);
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    scaleCanvas();
+}
+
+
+
+
+
+
+
+let cachedFunctionValues = null;
+let cachedGrid = null;
+let cachedFuncParams = null;
+
+async function computeFunctionValues() {
+    const width = parseInt(document.getElementById('bmp-width').value);
+    const height = parseInt(document.getElementById('bmp-height').value);
+    const minReal = parseFloat(document.getElementById('min-real').value);
+    const maxReal = parseFloat(document.getElementById('max-real').value);
+    const minImag = parseFloat(document.getElementById('min-imag').value);
+    const maxImag = parseFloat(document.getElementById('max-imag').value);
+    const funcStr = document.getElementById('function').value.trim();
+
+    const funcTree = teth.parse(teth.tokenize(funcStr));
+
+    const reStep = (maxReal - minReal) / width;
+    const imStep = (maxImag - minImag) / height;
+
+    const values = new Array(width);
+
+    for (let x = 0; x < width; x++) {
+        values[x] = new Array(height);
+        const re = minReal + x * reStep;
+
+        for (let y = 0; y < height; y++) {
+            const im = maxImag - y * imStep;
+            const z = math.complex(re, im);
+
+            values[x][y] = teth.evaluateTree(funcTree, {
+                x: z,
+                xx: re,
+                yy: im
+            });
+        }
+    }
+
+    cachedFunctionValues = values;
+    cachedGrid = { width, height };
+    cachedFuncParams = { minReal, maxReal, minImag, maxImag, funcStr };
+}
+
+function renderFromCache() {
+    if (!cachedFunctionValues) return;
+
+    const canvas = document.getElementById('bmpCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const width = cachedGrid.width;
+    const height = cachedGrid.height;
+
+    canvas.width = width;
+    canvas.height = height;
+
+    const magnitudeToLightnessExpr =
+        document.getElementById('magnitude-to-lightness').value.trim();
+
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+    const lightness = parseInt(document.getElementById('lightness').value);
+    const thick = parseFloat(document.getElementById('thick').value);
+
+    const imageData = ctx.createImageData(width, height);
+    const data = imageData.data;
+
+    for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+
+            const funcValue = cachedFunctionValues[x][y];
+
+            const color = complexToColor(
+                funcValue,
+                funcValue,
+                magnitudeToLightnessExpr,
+                colorMode,
+                saturationChroma,
+                lightness,
+                paletteImageData,
+                thick,
+                0
+            );
+
+            const idx = (y * width + x) * 4;
+            data[idx] = color[0];
+            data[idx + 1] = color[1];
+            data[idx + 2] = color[2];
+            data[idx + 3] = 255;
+        }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    scaleCanvas();
+}
+
+async function renderBMP() {
+
+    const width = parseInt(document.getElementById('bmp-width').value);
+    const height = parseInt(document.getElementById('bmp-height').value);
+    const minReal = parseFloat(document.getElementById('min-real').value);
+    const maxReal = parseFloat(document.getElementById('max-real').value);
+    const minImag = parseFloat(document.getElementById('min-imag').value);
+    const maxImag = parseFloat(document.getElementById('max-imag').value);
+    const funcStr = document.getElementById('function').value.trim();
+
+    const needRecompute =
+        !cachedFunctionValues ||
+        !cachedGrid ||
+        cachedGrid.width !== width ||
+        cachedGrid.height !== height ||
+        !cachedFuncParams ||
+        cachedFuncParams.funcStr !== funcStr ||
+        cachedFuncParams.minReal !== minReal ||
+        cachedFuncParams.maxReal !== maxReal ||
+        cachedFuncParams.minImag !== minImag ||
+        cachedFuncParams.maxImag !== maxImag;
+
+    if (needRecompute) {
+        await computeFunctionValues();
+    }
+
+    renderFromCache();
+}
+
+function attachColorListeners() {
+    const ids = [
+        "magnitude-to-lightness",
+        "color-mode",
+        "saturation-chroma",
+        "lightness",
+        "thick"
+    ];
+
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        el.addEventListener("input", () => {
+            renderFromCache();
+        });
+
+        el.addEventListener("change", () => {
+            renderFromCache();
+        });
+    });
+}
+attachColorListeners()
+
+
+async function renderBMPo() {
+    const width = parseInt(document.getElementById('bmp-width').value);
+    const height = parseInt(document.getElementById('bmp-height').value);
+    const minReal = parseFloat(document.getElementById('min-real').value);
+    const maxReal = parseFloat(document.getElementById('max-real').value);
+    const minImag = parseFloat(document.getElementById('min-imag').value);
+    const maxImag = parseFloat(document.getElementById('max-imag').value);
+    const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+    const lightness = parseInt(document.getElementById('lightness').value);
+    const funcStr = document.getElementById('function').value.trim();
+    const thick = parseFloat(document.getElementById('thick').value);
+
+    const canvas = document.getElementById('bmpCanvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.createImageData(width, height);
+    const data = imageData.data;
+
+    const reStep = (maxReal - minReal) / width;
+    const imStep = (maxImag - minImag) / height;
+
+    const reValues = new Float64Array(width);
+    const imValues = new Float64Array(height);
+
+    for (let x = 0; x < width; x++) reValues[x] = minReal + x * reStep;
+    for (let y = 0; y < height; y++) imValues[y] = maxImag - y * imStep;
+
+    const memoValues = new Array(width).fill(0);
+ const funcTree = teth.parse(teth.tokenize(funcStr));
+    // Draw in blocks of lines to avoid blocking UI but stay fast
+    const blockSize = 10; // can tweak for performance
+    for (let yStart = 0; yStart < height; yStart += blockSize) {
+        const yEnd = Math.min(yStart + blockSize, height);
+        for (let x = 0; x < width; x++) {
+            const re = reValues[x];
+            let memo = memoValues[x];
+
+            for (let y = yStart; y < yEnd; y++) {
+                const im = imValues[y];
+                const complexValue = math.complex(re, im);
+                //const q = math.exp(math.multiply(math.complex(0, Math.PI), complexValue));
+
+                const funcValue = teth.evaluateTree(funcTree, { x: complexValue ,xx:re,yy:im });
+                const color = complexToColor(
+                    complexValue,
+                    funcValue,
+                    magnitudeToLightnessExpr,
+                    colorMode,
+                    saturationChroma,
+                    lightness,
+                    paletteImageData,
+                    thick,
+                    math.divide(math.subtract(funcValue, memo), imStep)
+                );
+
+                const index = (y * width + x) * 4;
+                data[index] = color[0];
+                data[index + 1] = color[1];
+                data[index + 2] = color[2];
+                data[index + 3] = 255;
+
+                memo = funcValue;
+            }
+
+            memoValues[x] = memo; // save for next block
+        }
+     //       ctx.putImageData(imageData, 0, 0);
+   // ctx.putImageData(imageData, 0, 0);
+   // await new Promise(requestAnimationFrame);
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    scaleCanvas();
+}
+
+
+async function renderBMPadaptive() {
+
+    const minReal = parseFloat(document.getElementById('min-real').value);
+    const maxReal = parseFloat(document.getElementById('max-real').value);
+    const minImag = parseFloat(document.getElementById('min-imag').value);
+    const maxImag = parseFloat(document.getElementById('max-imag').value);
+    const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+    const lightness = parseInt(document.getElementById('lightness').value);
+    const funcStr = document.getElementById('function').value.trim();
+    const thick = parseFloat(document.getElementById('thick').value);
+
+    const canvas = document.getElementById('bmpCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const funcTree = teth.parse(teth.tokenize(funcStr));
+
+    /* ---------- 1. BENCHMARK 9 PIXELS ---------- */
+
+    const testW = 100, testH = 100;
+    const reStepT = (maxReal - minReal) / testW;
+    const imStepT = (maxImag - minImag) / testH;
+
+    const pts = [
+        [0,0],[99,0],[0,99],[99,99],
+        [50,0],[50,99],[0,50],[99,50],
+        [50,50]
+    ];
+
+    const t0 = performance.now();
+
+    for (const [x,y] of pts) {
+        const re = minReal + x * reStepT;
+        const im = maxImag - y * imStepT;
+        const z = math.complex(re,im);
+        const q = math.exp(math.multiply(math.complex(0,Math.PI),z));
+        const f = teth.evaluateTree(funcTree,{x:z,q,xx:re,yy:im});
+        complexToColor(z,f,magnitudeToLightnessExpr,colorMode,saturationChroma,lightness,paletteImageData,thick,f);
+    }
+
+    const ms = performance.now() - t0;
+    const timePerPixel = ms / 9;
+    const maxPixels = Math.floor(1000 / timePerPixel);
+
+    let h = Math.floor(Math.sqrt(maxPixels))*2;
+    let w = h;
+
+    /* ---------- 2. RENDER LOW RES ---------- */
+
+    canvas.width = w;
+    canvas.height = h;
+
+    const img = ctx.createImageData(w,h);
+    const d = img.data;
+
+    const reStep = (maxReal - minReal) / w;
+    const imStep = (maxImag - minImag) / h;
+
+    for (let y=0;y<h;y++){
+        const im = maxImag - y * imStep;
+        for (let x=0;x<w;x++){
+            const re = minReal + x * reStep;
+            const z = math.complex(re,im);
+            const q = math.exp(math.multiply(math.complex(0,Math.PI),z));
+            const f = teth.evaluateTree(funcTree,{x:z,q,xx:re,yy:im});
+            const c = complexToColor(z,f,magnitudeToLightnessExpr,colorMode,saturationChroma,lightness,paletteImageData,thick,f);
+            const i = (y*w+x)*4;
+            d[i]=c[0]; d[i+1]=c[1]; d[i+2]=c[2]; d[i+3]=255;
+        }
+    }
+
+    ctx.putImageData(img,0,0);
+
+    /* ---------- 3. DOUBLE SIZE + INTERPOLATE ---------- */
+
+    const w2 = w*2, h2 = h*2;
+    const img2 = ctx.createImageData(w2,h2);
+    const d2 = img2.data;
+
+    for (let y=0;y<h2;y++){
+        const y0 = Math.floor(y/2);
+        const y1 = Math.min(y0+1,h-1);
+        const fy = (y%2)*0.5;
+
+        for (let x=0;x<w2;x++){
+            const x0 = Math.floor(x/2);
+            const x1 = Math.min(x0+1,w-1);
+            const fx = (x%2)*0.5;
+
+            for (let c=0;c<3;c++){
+                const p00 = d[(y0*w+x0)*4+c];
+                const p10 = d[(y0*w+x1)*4+c];
+                const p01 = d[(y1*w+x0)*4+c];
+                const p11 = d[(y1*w+x1)*4+c];
+
+                d2[(y*w2+x)*4+c] =
+                    p00*(1-fx)*(1-fy) +
+                    p10*fx*(1-fy) +
+                    p01*(1-fx)*fy +
+                    p11*fx*fy;
+            }
+            d2[(y*w2+x)*4+3]=255;
+        }
+    }
+
+    canvas.width = w2;
+    canvas.height = h2;
+    ctx.putImageData(img2,0,0);
+    scaleCanvas();
+}
+
+
+
+
+
+
+//const fastFunc = tethf.compile(funcStr, ["x"]);
+
+        /*    for (let x = 0; x < width; x++) {
+			let memo = 0;
+                for (let y = 0; y < height; y++) {
+				 
+                    const re = minReal + x * reStep;
+                    const im = maxImag - y * imStep;
+
+                    let color = [0, 0, 0];
+                    try {
+					const complexValue = math.complex(re, im);
+                   // const funcValue = teth.evaluate(funcStr,  { x: complexValue , z: complexValue ,xx: re ,yy: im ,q:exp(mul(I,pi(),complexValue)),t:modulartransformqt(complexValue) });
+                     //  const funcValue = teth.evaluate(funcStr, { x: complexValue , z: complexValue ,xx: re ,yy: im ,q:exp(mul(I,pi(),complexValue)) });
+                        const funcValue = teth.evaluate(funcStr, { x: complexValue, q:exp(mul(I,pi(),complexValue)) });
+				//console.log(funcValue);
+	
+    
+
+// Now you can call it quickly with variable values
+//const funcValue = fastFunc({x:complexValue});
+                
+                
+                
+						color = complexToColor(complexValue, funcValue, magnitudeToLightnessExpr, colorMode, saturationChroma, lightness, paletteImageData,thick, math.divide(math.subtract(funcValue,memo),imStep));
+                memo = funcValue;
+				} catch (e) {
+                        console.error('Error evaluating function or applying color transformation:', e);
+                    }
+					
+                    const index = (y * width + x) * 4;
+                    imageData.data[index] = color[0];
+                    imageData.data[index + 1] = color[1];
+                    imageData.data[index + 2] = color[2];
+                    imageData.data[index + 3] = 255;
+                }
+                
+            }*/
+            
+            
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+function createAndAnimateMeshSPHD() {
+    // Cancel any previous animation loop
+    if (window._sphdAnimId) {
+        cancelAnimationFrame(window._sphdAnimId);
+        window._sphdAnimId = null;
+    }
+
+    const numSamples = parseInt(document.getElementById('bmp-width').value) ** 2 * 20; // more points for cloudiness
+    const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+    const lightness = parseInt(document.getElementById('lightness').value);
+    const hue = parseInt(document.getElementById('hue').value);
+
+    const funcStr = document.getElementById('function').value.trim();
+    const maxRadius = parseFloat(document.getElementById('max-height').value);
+
+    // Clean up previous mesh/material/geometry if present
+    try {
+        if (mesh) {
+            if (mesh.material) {
+                // dispose any texture map first
+                if (mesh.material.map) {
+                    mesh.material.map.dispose();
+                }
+                mesh.material.dispose();
+            }
+            if (geometry) geometry.dispose();
+            scene.remove(mesh);
+            mesh = null;
+        }
+    } catch (e) {
+        // ignore disposal errors
+        console.warn('dispose warning', e);
+    }
+
+    const positions = [];
+    const colors = [];
+
+    // density multiplier — tune for more/less cloudiness
+    const densityMultiplier = 1.5;
+    const jitter = 0.05; // small position jitter to avoid "perfect" look
+
+    for (let i = 0; i < numSamples; i++) {
+        // Random spherical coordinates
+        const theta = Math.acos(2 * Math.random() - 1);
+        const phi = 2 * Math.PI * Math.random();
+        const r = maxRadius * Math.sqrt(Math.random());
+
+        // build spherical input as complex (keeps your existing code's interface)
+        const sphericalInput = math.complex(theta, phi);
+        const density = teth.evaluate(funcStr, { x: sphericalInput, r: r });
+        const densVal = Math.abs(density);
+
+        // Acceptance test: slightly more generous to increase cloud density
+        if (Math.random() < Math.min(1, densVal * densityMultiplier)) {
+            const x = (r * Math.sin(theta) * Math.cos(phi)) + (Math.random() - 0.5) * jitter;
+            const y = (r * Math.sin(theta) * Math.sin(phi)) + (Math.random() - 0.5) * jitter;
+            const z = (r * Math.cos(theta)) + (Math.random() - 0.5) * jitter;
+
+            positions.push(x, y, z);
+
+            const col = complexToColor(
+                math.complex(theta, phi),
+                density,
+                magnitudeToLightnessExpr,
+                colorMode,
+                saturationChroma,
+                lightness,
+                paletteImageData,
+                0.1,
+                1
+            );
+            colors.push(col[0] / 255, col[1] / 255, col[2] / 255);
+        }
+    }
+
+    geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+    // --- Create a soft circular sprite dynamically with canvas (no external file / no CORS) ---
+    const spriteSize = 128; // texture size (power of two recommended)
+    const cvs = document.createElement('canvas');
+    cvs.width = cvs.height = spriteSize;
+    const ctx = cvs.getContext('2d');
+
+    // radial gradient: center opaque, fades to transparent near edges
+    const cx = spriteSize / 2;
+    const cy = spriteSize / 2;
+    const maxR = spriteSize / 2;
+    const grad = ctx.createRadialGradient(cx, cy, spriteSize * 0.05, cx, cy, maxR);
+    grad.addColorStop(0.0, 'rgba(255,255,255,1.0)');
+    grad.addColorStop(0.45, 'rgba(255,255,255,0.85)');
+    grad.addColorStop(0.7, 'rgba(255,255,255,0.35)');
+    grad.addColorStop(1.0, 'rgba(255,255,255,0.0)');
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, spriteSize, spriteSize);
+
+    // Create a THREE texture from the canvas
+    const spriteTexture = new THREE.CanvasTexture(cvs);
+    spriteTexture.needsUpdate = true;
+    spriteTexture.minFilter = THREE.LinearMipMapLinearFilter;
+    spriteTexture.magFilter = THREE.LinearFilter;
+    spriteTexture.generateMipmaps = true;
+
+    // Points material tuned for soft, cloud-like look
+    material = new THREE.PointsMaterial({
+        size: 1.6,                  // increase for cloudier dots (tweak)
+        map: spriteTexture,
+        transparent: true,
+        opacity: 0.34,
+        vertexColors: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        sizeAttenuation: true,
+        alphaTest: 0.01
+    });
+
+    mesh = new THREE.Points(geometry, material);
+    scene.add(mesh);
+
+    // Simple slow rotation to visually emphasize the volumetric effect (optional)
+    // Remove or tweak if you already have separate controls for rotation
+    let rotateSpeed = 0.0008;
+
+renderer.render(scene, camera);
+}
+
+
+function createAndAnimateMeshD() {
+    // Cancel any previous animation loop
+    if (window._meshDAnimId) {
+        cancelAnimationFrame(window._meshDAnimId);
+        window._meshDAnimId = null;
+    }
+
+    const numSamples = parseInt(document.getElementById('bmp-width').value) ** 3 * 4; // controls density in 3D grid
+    const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+    const lightness = parseInt(document.getElementById('lightness').value);
+    const hue = parseInt(document.getElementById('hue').value);
+
+    const funcStr = document.getElementById('function').value.trim();
+    const maxRadius = parseFloat(document.getElementById('max-height').value);
+
+    // Clean up previous mesh/material/geometry if present
+    try {
+        if (mesh) {
+            if (mesh.material) {
+                if (mesh.material.map) mesh.material.map.dispose();
+                mesh.material.dispose();
+            }
+            if (geometry) geometry.dispose();
+            scene.remove(mesh);
+            mesh = null;
+        }
+    } catch (e) {
+        console.warn('dispose warning', e);
+    }
+
+    const positions = [];
+    const colors = [];
+
+    const densityMultiplier = 1.5;
+    const jitter = 0.05;
+
+    for (let i = 0; i < numSamples; i++) {
+        // Random point in cube [-1, 1]³ scaled to maxRadius
+        let x = (Math.random() * 2 - 1) * maxRadius;
+        let y = (Math.random() * 2 - 1) * maxRadius;
+        let z = (Math.random() * 2 - 1) * maxRadius;
+
+        // Optional: reject points outside a sphere of radius maxRadius (for spherical boundary)
+        if (Math.sqrt(x*x + y*y + z*z) > maxRadius) continue;
+
+        // Evaluate function directly with Cartesian coords
+        const density = teth.evaluate(funcStr, { x: x, y: y, z: z });
+        const densVal = Math.abs(density);
+
+        if (Math.random() < Math.min(1, densVal * densityMultiplier)) {
+            // Add jitter for more natural clouds
+            x += (Math.random() - 0.5) * jitter;
+            y += (Math.random() - 0.5) * jitter;
+            z += (Math.random() - 0.5) * jitter;
+
+            positions.push(x, y, z);
+
+            // Convert to color (still using theta, phi from this cartesian point for consistency)
+            const theta = Math.acos(z / Math.sqrt(x*x + y*y + z*z));
+            const phi = Math.atan2(y, x);
+            const col = complexToColor(
+                math.complex(theta, phi),
+                density,
+                magnitudeToLightnessExpr,
+                colorMode,
+                saturationChroma,
+                lightness,
+                paletteImageData,
+                0.1,
+                1
+            );
+            colors.push(col[0] / 255, col[1] / 255, col[2] / 255);
+        }
+    }
+
+    geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+    // --- Create radial gradient sprite ---
+    const spriteSize = 128;
+    const cvs = document.createElement('canvas');
+    cvs.width = cvs.height = spriteSize;
+    const ctx = cvs.getContext('2d');
+
+    const cx = spriteSize / 2;
+    const cy = spriteSize / 2;
+    const maxR = spriteSize / 2;
+    const grad = ctx.createRadialGradient(cx, cy, spriteSize * 0.05, cx, cy, maxR);
+    grad.addColorStop(0.0, 'rgba(255,255,255,1.0)');
+    grad.addColorStop(0.45, 'rgba(255,255,255,0.85)');
+    grad.addColorStop(0.7, 'rgba(255,255,255,0.35)');
+    grad.addColorStop(1.0, 'rgba(255,255,255,0.0)');
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, spriteSize, spriteSize);
+
+    const spriteTexture = new THREE.CanvasTexture(cvs);
+    spriteTexture.needsUpdate = true;
+    spriteTexture.minFilter = THREE.LinearMipMapLinearFilter;
+    spriteTexture.magFilter = THREE.LinearFilter;
+    spriteTexture.generateMipmaps = true;
+
+    material = new THREE.PointsMaterial({
+        size: 1.6,
+        map: spriteTexture,
+        transparent: true,
+        opacity: 0.34,
+        vertexColors: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        sizeAttenuation: true,
+        alphaTest: 0.01
+    });
+
+    mesh = new THREE.Points(geometry, material);
+    scene.add(mesh);
+
+    renderer.render(scene, camera);
+}
+      
+        
+        
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+function renderBMPt(t) {
+		
+            const width = parseInt(document.getElementById('bmp-width').value);
+            const height = parseInt(document.getElementById('bmp-height').value);
+            const minReal = parseFloat(document.getElementById('min-real').value);
+            const maxReal = parseFloat(document.getElementById('max-real').value);
+            const minImag = parseFloat(document.getElementById('min-imag').value);
+            const maxImag = parseFloat(document.getElementById('max-imag').value);
+            const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+            const colorMode = document.getElementById('color-mode').value;
+            const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+            const lightness = parseInt(document.getElementById('lightness').value);
+            const hue = parseInt(document.getElementById('hue').value);
+
+            const funcStr = document.getElementById('function').value.trim();
+            const canvas = document.getElementById('bmpCanvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            const imageData = ctx.createImageData(width, height);
+
+            const reStep = (maxReal - minReal) / width;
+            const imStep = (maxImag - minImag) / height;
+			let thick = parseFloat(document.getElementById('thick').value);
+
+
+
+            for (let x = 0; x < width; x++) {
+			let memo = 0;
+                for (let y = 0; y < height; y++) {
+				 
+                    const re = minReal + x * reStep;
+                    const im = maxImag - y * imStep;
+
+                    let color = [0, 0, 0];
+                    try {
+					const complexValue = math.complex(re, im);
+                    const funcValue = teth.evaluate(funcStr,  { t:t,x: complexValue , z: complexValue ,xx: re ,yy: im ,q:exp(mul(I,pi(),complexValue)) });
+                     //  const funcValue = teth.evaluate(funcStr, { x: complexValue , z: complexValue ,xx: re ,yy: im ,q:exp(mul(I,pi(),complexValue)) });
+                  //        const funcValue = teth.evaluate(funcStr, { x: complexValue, q:exp(mul(I,pi(),complexValue)) });
+				//console.log(funcValue);
+				
+						color = complexToColor(complexValue, funcValue, magnitudeToLightnessExpr, colorMode, saturationChroma, lightness, paletteImageData,thick, math.divide(math.subtract(funcValue,memo),imStep));
+                memo = funcValue;
+				} catch (e) {
+                        console.error('Error evaluating function or applying color transformation:', e);
+                    }
+					
+                    const index = (y * width + x) * 4;
+                    imageData.data[index] = color[0];
+                    imageData.data[index + 1] = color[1];
+                    imageData.data[index + 2] = color[2];
+                    imageData.data[index + 3] = 255;
+                }
+                
+            }
+            ctx.putImageData(imageData, 0, 0);
+			
+;
+ scaleCanvas();
+        }
+async function renderBMPmap() {
+    const width = parseInt(document.getElementById('bmp-width').value)*10;
+    const height = parseInt(document.getElementById('bmp-height').value)*10;
+    const minReal = parseFloat(document.getElementById('min-real').value);
+    const maxReal = parseFloat(document.getElementById('max-real').value);
+    const minImag = parseFloat(document.getElementById('min-imag').value);
+    const maxImag = parseFloat(document.getElementById('max-imag').value);
+    const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = 100;
+    const exrtr = parseInt(document.getElementById('hue').value)/100+1;
+    const lightness = Math.max(30, Math.min(70, parseInt(document.getElementById('lightness').value)));
+    const thick = Math.max(0.5, Math.min(5, parseInt(document.getElementById('saturation-chroma').value)/20));
+    const funcStr = document.getElementById('function').value.trim();
+
+    const SPARSITY_FACTOR = 1;
+    const PHI = (1 + Math.sqrt(5)) / 2;
+
+    const canvas = document.getElementById('bmpCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = width; canvas.height = height;
+    ctx.fillStyle = 'white'; ctx.fillRect(0, 0, width, height);
+
+    const toCanvasX = (re) => width * (re - minReal) / (maxReal - minReal);
+    const toCanvasY = (im) => height * (1 - (im - minImag) / (maxImag - minImag));
+
+    // High quality x=0 and y=0 axes in black (less thick)
+    ctx.beginPath();
+    for (let x = minReal; x <= maxReal; x += (maxReal - minReal)/1000) {
+        const z = math.complex(x, 0);
+        const fz = teth.evaluate(funcStr, {
+            x: z, z: z, xx: x, yy: 0,
+            q: math.exp(math.multiply(math.i, math.pi, z)),
+            t: modulartransformqt(z)
+        });
+        const canvasX = toCanvasX(fz.re), canvasY = toCanvasY(fz.im);
+        x === minReal ? ctx.moveTo(canvasX, canvasY) : ctx.lineTo(canvasX, canvasY);
+    }
+    ctx.strokeStyle = 'black'; ctx.lineWidth = thick * 2; ctx.stroke();
+
+    ctx.beginPath();
+    for (let y = minImag; y <= maxImag; y += (maxImag - minImag)/1000) {
+        const z = math.complex(0, y);
+        const fz = teth.evaluate(funcStr, {
+            x: z, z: z, xx: 0, yy: y,
+            q: math.exp(math.multiply(math.i, math.pi, z)),
+            t: modulartransformqt(z)
+        });
+        const canvasX = toCanvasX(fz.re), canvasY = toCanvasY(fz.im);
+        y === minImag ? ctx.moveTo(canvasX, canvasY) : ctx.lineTo(canvasX, canvasY);
+    }
+    ctx.strokeStyle = 'black'; ctx.lineWidth = thick * 2; ctx.stroke();
+
+    // Grey x=±100 and y=±100 lines
+    ctx.beginPath();
+    for (let x = minReal; x <= maxReal; x += (maxReal - minReal)/1000) {
+        const z = math.complex(x, 100);
+        const fz = teth.evaluate(funcStr, {
+            x: z, z: z, xx: x, yy: 100,
+            q: math.exp(math.multiply(math.i, math.pi, z)),
+            t: modulartransformqt(z)
+        });
+        const canvasX = toCanvasX(fz.re), canvasY = toCanvasY(fz.im);
+        x === minReal ? ctx.moveTo(canvasX, canvasY) : ctx.lineTo(canvasX, canvasY);
+    }
+    ctx.strokeStyle = '#888'; ctx.lineWidth = thick; ctx.stroke();
+
+    ctx.beginPath();
+    for (let x = minReal; x <= maxReal; x += (maxReal - minReal)/1000) {
+        const z = math.complex(x, -100);
+        const fz = teth.evaluate(funcStr, {
+            x: z, z: z, xx: x, yy: -100,
+            q: math.exp(math.multiply(math.i, math.pi, z)),
+            t: modulartransformqt(z)
+        });
+        const canvasX = toCanvasX(fz.re), canvasY = toCanvasY(fz.im);
+        x === minReal ? ctx.moveTo(canvasX, canvasY) : ctx.lineTo(canvasX, canvasY);
+    }
+    ctx.strokeStyle = '#888'; ctx.lineWidth = thick; ctx.stroke();
+
+    ctx.beginPath();
+    for (let y = minImag; y <= maxImag; y += (maxImag - minImag)/1000) {
+        const z = math.complex(100, y);
+        const fz = teth.evaluate(funcStr, {
+            x: z, z: z, xx: 100, yy: y,
+            q: math.exp(math.multiply(math.i, math.pi, z)),
+            t: modulartransformqt(z)
+        });
+        const canvasX = toCanvasX(fz.re), canvasY = toCanvasY(fz.im);
+        y === minImag ? ctx.moveTo(canvasX, canvasY) : ctx.lineTo(canvasX, canvasY);
+    }
+    ctx.strokeStyle = '#888'; ctx.lineWidth = thick; ctx.stroke();
+
+    ctx.beginPath();
+    for (let y = minImag; y <= maxImag; y += (maxImag - minImag)/1000) {
+        const z = math.complex(-100, y);
+        const fz = teth.evaluate(funcStr, {
+            x: z, z: z, xx: -100, yy: y,
+            q: math.exp(math.multiply(math.i, math.pi, z)),
+            t: modulartransformqt(z)
+        });
+        const canvasX = toCanvasX(fz.re), canvasY = toCanvasY(fz.im);
+        y === minImag ? ctx.moveTo(canvasX, canvasY) : ctx.lineTo(canvasX, canvasY);
+    }
+    ctx.strokeStyle = '#888'; ctx.lineWidth = thick; ctx.stroke();
+
+    const maxGap = Math.max(width, height) / 20;
+    
+    const generatePhiCoords = (center, rangeScale) => {
+        const coords = new Set();
+        coords.add(center);
+        
+        for (let n = 1; n <= 10; n++) {
+            const phiPower = Math.pow(PHI, n * SPARSITY_FACTOR);
+            coords.add(center + rangeScale / phiPower);
+            coords.add(center + rangeScale * phiPower);
+            coords.add(center - rangeScale / phiPower);
+            coords.add(center - rangeScale * phiPower);
+        }
+        
+        return Array.from(coords).sort((a, b) => a - b);
+    };
+
+    const generateDenseSampling = (sparseCoords) => {
+        const denseCoords = [];
+        for (let i = 0; i < sparseCoords.length - 1; i++) {
+            const start = sparseCoords[i];
+            const end = sparseCoords[i + 1];
+            const step = (end - start) / (10 - SPARSITY_FACTOR * 2);
+            denseCoords.push(start);
+            for (let j = 1; j < (10 - SPARSITY_FACTOR * 2); j++) {
+                denseCoords.push(start + j * step);
+            }
+        }
+        if (sparseCoords.length > 0) denseCoords.push(sparseCoords[sparseCoords.length - 1]);
+        return denseCoords;
+    };
+
+    const drawPath = (path, isPeripheral) => {
+        if (path.length < 2) return;
+        ctx.beginPath();
+        ctx.moveTo(path[0].x, path[0].y);
+        for (let i = 1; i < path.length; i++) ctx.lineTo(path[i].x, path[i].y);
+        const midPoint = path[Math.floor(path.length / 2)];
+        const sat = isPeripheral ? saturationChroma / 2 : saturationChroma;
+        const color = complexToColor(midPoint.z, midPoint.z, magnitudeToLightnessExpr, colorMode, 
+            sat, lightness, null, thick, math.complex(0, 0));
+        ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.7)`;
+        ctx.lineWidth = thick;
+        ctx.stroke();
+    };
+
+    const drawLines = (isHorizontal) => {
+        const rangeScale = isHorizontal ? (maxReal - minReal) : (maxImag - minImag);
+        const center = 0;
+        const fixedParams = generatePhiCoords(center, rangeScale * exrtr);
+        
+        for (const fixedParam of fixedParams) {
+            let previousPoint = null;
+            let currentPath = [];
+            const isPeripheral = Math.abs(fixedParam) > rangeScale * 0.1;
+            
+            const sparseVaryingParams = generatePhiCoords(center, rangeScale * exrtr);
+            const varyingParams = generateDenseSampling(sparseVaryingParams);
+            
+            for (const varyingParam of varyingParams) {
+                const x = isHorizontal ? varyingParam : fixedParam;
+                const y = isHorizontal ? fixedParam : varyingParam;
+                
+                try {
+                    const z = math.complex(x, y);
+                    const fz = teth.evaluate(funcStr, {
+                        x: z, z: z, xx: x, yy: y,
+                        q: math.exp(math.multiply(math.i, math.pi, z)),
+                        t: modulartransformqt(z)
+                    });
+                    
+                    const canvasX = toCanvasX(fz.re), canvasY = toCanvasY(fz.im);
+                    const isDrawable = canvasX > -width * 5 && canvasX < width * 6 && 
+                                     canvasY > -height * 5 && canvasY < height * 6;
+                    
+                    if (isDrawable) {
+                        const currentPoint = {x: canvasX, y: canvasY, z: z};
+                        if (previousPoint && Math.hypot(currentPoint.x - previousPoint.x, currentPoint.y - previousPoint.y) > maxGap) {
+                            if (currentPath.length > 1) drawPath(currentPath, isPeripheral);
+                            currentPath = [currentPoint];
+                        } else currentPath.push(currentPoint);
+                        previousPoint = currentPoint;
+                    } else if (currentPath.length > 1) {
+                        drawPath(currentPath, isPeripheral);
+                        currentPath = [];
+                    }
+                } catch (e) {
+                    if (currentPath.length > 1) drawPath(currentPath, isPeripheral);
+                    currentPath = [];
+                }
+            }
+            if (currentPath.length > 1) drawPath(currentPath, isPeripheral);
+        }
+    };
+
+    drawLines(true);
+    drawLines(false);
+    scaleCanvas();
+}
+        
+function renderBMPinv() {
+    const width = parseInt(document.getElementById('bmp-width').value);
+    const height = parseInt(document.getElementById('bmp-height').value);
+    const minReal = parseFloat(document.getElementById('min-real').value);
+    const maxReal = parseFloat(document.getElementById('max-real').value);
+    const minImag = parseFloat(document.getElementById('min-imag').value);
+    const maxImag = parseFloat(document.getElementById('max-imag').value);
+    const magnitudeToLightnessExpr = document.getElementById('magnitude-to-lightness').value.trim();
+    const colorMode = document.getElementById('color-mode').value;
+    const saturationChroma = parseInt(document.getElementById('saturation-chroma').value);
+    const lightness = parseInt(document.getElementById('lightness').value);
+    const hue = parseInt(document.getElementById('hue').value);
+
+    const funcStr = document.getElementById('function').value.trim();
+    const canvas = document.getElementById('bmpCanvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.createImageData(width, height);
+let thick = parseFloat(document.getElementById('thick').value);
+    const reStep = (maxReal - minReal) / width;
+    const imStep = (maxImag - minImag) / height;
+
+    for (let x = 0; x < width*2; x++) {
+        let memo = 0;
+        for (let y = 0; y < height*2; y++) {
+            const re = minReal + x * reStep/2;
+            const im = maxImag - y * imStep/2;
+
+            let color = [0, 0, 0];
+            try {
+                const complexValue = math.complex(re, im);
+                const funcValue = teth.evaluate(funcStr, { x: complexValue , z: complexValue ,xx: re ,yy: im ,q:exp(mul(I,pi(),complexValue)) ,t:modulartransformqt(complexValue)});
+                
+                // Use input values (complexValue) for coloring
+                // Use input values (complexValue) for coloring
+                color = complexToColor(funcValue ,complexValue, magnitudeToLightnessExpr, colorMode, saturationChroma, lightness, paletteImageData, thick, math.divide(math.subtract(funcValue, memo), imStep));
+                memo = funcValue;
+                
+                // Calculate output-based positions
+                const outputX = Math.round(((funcValue.re - minReal) / (maxReal - minReal)) * width);
+                const outputY = Math.round(((maxImag - funcValue.im) / (maxImag - minImag)) * height);
+
+                // Ensure positions are within bounds
+                if (outputX >= 0 && outputX < width && outputY >= 0 && outputY < height) {
+                    const index = (outputY * width + outputX) * 4;
+                    imageData.data[index] = color[0];
+                    imageData.data[index + 1] = color[1];
+                    imageData.data[index + 2] = color[2];
+                    imageData.data[index + 3] = 255;  
+                    
+             
+                }
+
+            } catch (e) {
+                console.error('Error evaluating function or applying color transformation:', e);
+            }
+        }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    scaleCanvas();
+}
+
+       
+ document.getElementById('btn-negative-positive').addEventListener('click', function() {
+        const maxReal = parseFloat(document.getElementById('max-real').value);
+        document.getElementById('min-real').value = -maxReal;
+        document.getElementById('max-real').value = maxReal;
+        document.getElementById('min-imag').value = -maxReal;
+        document.getElementById('max-imag').value = maxReal;
+    });
+
+    // Button 2: Set minimums to 0 and maximums to positive (based on max real)
+    document.getElementById('btn-zero-positive').addEventListener('click', function() {
+        const maxReal = parseFloat(document.getElementById('max-real').value);
+        document.getElementById('min-real').value = 0;
+        document.getElementById('max-real').value = maxReal;
+        document.getElementById('min-imag').value = 0;
+        document.getElementById('max-imag').value = maxReal;
+    });
+
+    // Button 3: Set minimums to -1 and maximums to 1
+    document.getElementById('btn-negative-one-positive-one').addEventListener('click', function() {
+        document.getElementById('min-real').value = -1;
+        document.getElementById('max-real').value = 1;
+        document.getElementById('min-imag').value = -1;
+        document.getElementById('max-imag').value = 1;
+    });
+    /*
+        document.getElementById('btn-negative-one-positive-one3').addEventListener('click', function() {
+        document.getElementById('min-real').value = -3;
+        document.getElementById('max-real').value = 3;
+        document.getElementById('min-imag').value = -3;
+        document.getElementById('max-imag').value = 3;
+    });
+        document.getElementById('btn-negative-one-positive-one5').addEventListener('click', function() {
+        document.getElementById('min-real').value = -5;
+        document.getElementById('max-real').value = 5;
+        document.getElementById('min-imag').value = -5;
+        document.getElementById('max-imag').value = 5;
+    });*/
+        document.getElementById('btn-negative-one-positive-one7').addEventListener('click', function() {
+        document.getElementById('min-real').value = -7;
+        document.getElementById('max-real').value = 7;
+        document.getElementById('min-imag').value = -7;
+        document.getElementById('max-imag').value = 7;
+    });/*
+        document.getElementById('btn-negative-one-positive-one10').addEventListener('click', function() {
+        document.getElementById('min-real').value = -10;
+        document.getElementById('max-real').value = 10;
+        document.getElementById('min-imag').value = -10;
+        document.getElementById('max-imag').value = 10;
+    });*/
+ const canvas = document.getElementById('bmpCanvas');
+
+        const container = document.getElementById('canvasContainer');
+
+        function scaleCanvas(k=1) {
+            const widthScale = container.clientWidth / (canvas.width);
+            const heightScale = container.clientHeight / (canvas.height);
+            const scale = Math.min(k*widthScale, k*heightScale);
+            canvas.style.transform = `scale(${scale})`;
+        }
+		
+		
+		const textarea = document.getElementById("function");
+
+//const textarea = document.getElementById("function");
+//const autocompleteList = document.getElementById("autocomplete-list");
+//const textarea = document.getElementById("function");
+//const autocompleteList = document.getElementById("autocomplete-list");
+
+
+
+
+
+let selectedIndex = -1;
+let hoverTimer;
+const prefixHelp = {
+  "_": "All functions",
+  "#": "Total functions count",
+  ":": "Random functions",
+  "?": "Show help for all prefixes",
+  "L": "Long functions (>100 characters)",
+  "LL": "Longer functions (>200 characters)",
+  "LLL": "Sort by length",
+  "S": "Single-parameter functions",
+  "D": "Double-parameter functions"
+};
+
+textarea.addEventListener("input", (e) => {
+  const cursorPosition = textarea.selectionStart;
+  const text = textarea.value;
+
+  const prefixMatch = /[a-zA-Z0-9_#@:!?$>*~&%]+$/;
+  const match = text.slice(0, cursorPosition).match(prefixMatch);
+  let prefix = match ? match[0] : "";
+
+  autocompleteList.innerHTML = "";
+  selectedIndex = -1;
+
+  if (!prefix) {
+    autocompleteList.style.display = "none";
+    return;
+  }
+
+  let suggestions = [];
+
+  if (prefix === "_") {
+    suggestions = allFunctionsNames;
+  } else if (prefix === "#") {
+    const suggestionDiv = document.createElement("div");
+    suggestionDiv.textContent = `Total Functions: ${allFunctionsNames.length}`;
+    autocompleteList.appendChild(suggestionDiv);
+    autocompleteList.style.display = "block";
+    return;
+  } else if (prefix === ":") {
+    suggestions = allFunctionsNames.sort(() => Math.random() - 0.5).slice(0, 10);
+  } else if (prefix === "?") {
+    // Show help for all prefixes
+    const helpDiv = document.createElement("div");
+    helpDiv.className = "help-text";
+    helpDiv.innerHTML = Object.entries(prefixHelp)
+      .map(([key, value]) => `<strong>${key}</strong>: ${value}`)
+      .join("<br>");
+    autocompleteList.appendChild(helpDiv);
+    autocompleteList.style.display = "block";
+    return;
+  } else if (prefix === "L") {
+    suggestions = allFunctionsNames.filter(name => 
+      allFunctions[name].toString().length > 100
+    );
+  } else if (prefix === "LL") {
+    suggestions = allFunctionsNames.filter(name => 
+      allFunctions[name].toString().length > 200
+    );
+  } else if (prefix === "LLL") {
+    suggestions = [...allFunctionsNames].sort((a, b) => 
+      allFunctions[b].toString().length - allFunctions[a].toString().length
+    );
+  } else if (prefix === "S") {
+    suggestions = allFunctionsNames.filter(name => {
+      const params = getParamNames(allFunctions[name]);
+      return params && params.length === 1;
+    });
+  } else if (prefix === "D") {
+    suggestions = allFunctionsNames.filter(name => {
+      const params = getParamNames(allFunctions[name]);
+      return params && params.length === 2;
+    });
+  } else {
+    let searchTerms = [prefix];
+    if (prefix.includes("arc") || prefix.includes("inv")) {
+      searchTerms.push(prefix.replace(/arc/g, "inv"), prefix.replace(/inv/g, "arc"));
+    }
+
+    suggestions = allFunctionsNames
+      .filter((name) => searchTerms.some(term => name.includes(term)))
+      .sort((a, b) => {
+        const aStarts = searchTerms.some(term => a.startsWith(term));
+        const bStarts = searchTerms.some(term => b.startsWith(term));
+        if (aStarts && !bStarts) return -1;
+        if (!aStarts && bStarts) return 1;
+        return a.length - b.length;
+      });
+  }
+
+  if (suggestions.length === 0) {
+    autocompleteList.style.display = "none";
+    return;
+  }
+
+  autocompleteList.style.display = "block";
+  autocompleteList.style.left = `${textarea.offsetLeft}px`;
+  autocompleteList.style.top = `${textarea.offsetTop + textarea.offsetHeight}px`;
+  autocompleteList.style.width = `${textarea.offsetWidth}px`;
+  autocompleteList.style.maxHeight = "50vh"; // 50% of viewport height
+  autocompleteList.style.overflowY = "auto";
+
+  suggestions.forEach((suggestion, index) => {
+    const params = getParamNames(allFunctions[suggestion]) || [];
+    const paramsText = params.length > 0 ? `(${params.join(", ")})` : "()";
+
+    const suggestionDiv = document.createElement("div");
+    suggestionDiv.textContent = `${suggestion} ${paramsText}`;
+    suggestionDiv.dataset.index = index;
+
+    suggestionDiv.addEventListener("click", () => {
+      insertSuggestion(suggestion);
+    });
+
+    suggestionDiv.addEventListener("mouseenter", () => {
+      hoverTimer = setTimeout(() => {
+        showFunctionCode(suggestion, suggestionDiv);
+      }, 1000);
+    });
+
+    suggestionDiv.addEventListener("mouseleave", () => {
+      clearTimeout(hoverTimer);
+      hideFunctionCode();
+    });
+
+    autocompleteList.appendChild(suggestionDiv);
+  });
+});
+textarea.addEventListener("keydown", (e) => {
+    hideFunctionCode();
+  const items = autocompleteList.children;
+  if (items.length === 0) return;
+
+  if (e.key === "ArrowDown") {
+    selectedIndex = (selectedIndex + 1) % items.length;
+    updateSelection();
+    e.preventDefault();
+  } else if (e.key === "ArrowUp") {
+    selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+    updateSelection();
+    e.preventDefault();
+  } else if (e.key === "Shift" && selectedIndex >= 0) {
+    insertSuggestion(items[selectedIndex].textContent.split(" ")[0]);
+    e.preventDefault();
+  }
+});
+
+function updateSelection() {
+    hideFunctionCode();
+  const items = autocompleteList.children;
+  Array.from(items).forEach((item, index) => {
+    item.style.background = index === selectedIndex ? "#ddd" : "white";
+  });
+}
+
+function insertSuggestion(suggestion) {
+  const cursorPosition = textarea.selectionStart;
+  const text = textarea.value;
+  const prefixMatch = /[a-zA-Z0-9_#@:!?$>*~&%]+$/;
+  const beforeCursor = text.slice(0, cursorPosition);
+  const afterCursor = text.slice(cursorPosition);
+  const updatedBeforeCursor = beforeCursor.replace(prefixMatch, suggestion);
+  textarea.value = updatedBeforeCursor + afterCursor;
+  textarea.selectionStart = textarea.selectionEnd = updatedBeforeCursor.length;
+  autocompleteList.style.display = "none";
+
+  // Add to recent functions
+  if (!recentFunctions.includes(suggestion)) {
+    recentFunctions.unshift(suggestion);
+    if (recentFunctions.length > maxRecent) recentFunctions.pop();
+  }
+}
+
+function showFunctionCode(functionName, element) {
+  const functionCode = allFunctions[functionName];
+  if (functionCode) {
+    const codeBubble = document.createElement("div");
+    codeBubble.className = "code-bubble";
+    codeBubble.textContent = functionCode;
+    document.body.appendChild(codeBubble);
+
+    const rect = element.getBoundingClientRect();
+    codeBubble.style.position = "absolute";
+    codeBubble.style.left = `${rect.left}px`;
+    codeBubble.style.top = `${rect.bottom}px`;
+  }
+}
+
+function hideFunctionCode() {
+  const codeBubble = document.querySelector(".code-bubble");
+  if (codeBubble) {
+    codeBubble.remove();
+  }
+}
+
+document.addEventListener("click", (e) => {
+  // optional: ignore clicks inside the bubble itself
+  if (!e.target.closest(".code-bubble")) {
+    hideFunctionCode();
+  }
+});
+
+    textarea.addEventListener("blur", () => {
+      setTimeout(() => (autocompleteList.style.display = "none"), 200);
+    });
+document.addEventListener("keydown", function(event) {
+    // Check if the Enter key is pressed
+    if (event.key === "Enter") {
+        renderBMP();
+    }
+});
+ document.getElementById('lightness-presets').addEventListener('change', function() {
+        if (this.value) {
+            document.getElementById('magnitude-to-lightness').value = this.value;
+        }
+    });
+       document.getElementById('darkModeToggle').addEventListener('click', function () {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode') ? 'enabled' : 'disabled');
+        });
+
+        // Load dark mode state from localStorage
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            document.body.classList.add('dark-mode');
+        }
+        
+        
+         document.getElementById('function-presets').addEventListener('change', function() {
+        if (this.value) {
+            document.getElementById('function').value = this.value;
+        }
+    });
+    function toggleMeshButtons() {
+    const meshDiv = document.getElementById("meshButtons");
+    meshDiv.style.display = (meshDiv.style.display === "none" || meshDiv.style.display === "") ? "block" : "none";
+}document.getElementById('downloadBtn').addEventListener('click', () => {
+  const exporter = new THREE.GLTFExporter();
+  
+  // Get the first object in the scene
+  const object = scene.children.find(obj => obj.type !== 'AmbientLight' && obj.type !== 'DirectionalLight');
+  
+  exporter.parse(object, function (result) {
+    const output = JSON.stringify(result, null, 2);
+    const blob = new Blob([output], { type: 'application/json' });
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'scene_object.gltf';
+    link.click();
+  }, { binary: false });
+});document.getElementById('downloadSTLBtn').addEventListener('click', () => {
+  const exporter = new STLExporter();
+
+  const object = scene.children.find(obj => obj.type !== 'AmbientLight' && obj.type !== 'DirectionalLight');
+
+  const result = exporter.parse(object);
+  const blob = new Blob([result], { type: 'text/plain' });
+
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'scene_object.stl';
+  link.click();
+});
+// Reset Camera Position
+document.getElementById('resetCameraBtn').addEventListener('click', () => {
+  camera.position.set(0, 20, -5);
+  camera.lookAt(0, 0, -5);
+  camera.updateProjectionMatrix();
+});
+
+
+document.getElementById('downloadSTLBtn').addEventListener('click', function() {
+    // Get all meshes from the scene
+    const meshes = [];
+    scene.traverse(function(object) {
+        if (object.isMesh) {
+            meshes.push(object);
+        }
+    });
+
+    if (meshes.length === 0) {
+        alert('No meshes found in the scene!');
+        return;
+    }
+
+    // Create exporter instance
+    const exporter = new THREE.STLExporter();
+
+    // For multiple meshes, we can either export them as one combined STL
+    // or create separate files. Here we'll combine them.
+    
+    // Clone the scene to avoid modifying the original
+    const tempScene = new THREE.Scene();
+    meshes.forEach(mesh => {
+        tempScene.add(mesh.clone());
+    });
+
+    // Export the combined scene
+    const stlString = exporter.parse(tempScene);
+
+    // Create download link
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(new Blob([stlString], {type: 'text/plain'}));
+    link.download = 'scene_export.stl';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+});
+
+
+
+
+
+const workerScript = `
+ // gif.worker.js 0.2.0 - https://github.com/jnordberg/gif.js
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){var NeuQuant=require("./TypedNeuQuant.js");var LZWEncoder=require("./LZWEncoder.js");function ByteArray(){this.page=-1;this.pages=[];this.newPage()}ByteArray.pageSize=4096;ByteArray.charMap={};for(var i=0;i<256;i++)ByteArray.charMap[i]=String.fromCharCode(i);ByteArray.prototype.newPage=function(){this.pages[++this.page]=new Uint8Array(ByteArray.pageSize);this.cursor=0};ByteArray.prototype.getData=function(){var rv="";for(var p=0;p<this.pages.length;p++){for(var i=0;i<ByteArray.pageSize;i++){rv+=ByteArray.charMap[this.pages[p][i]]}}return rv};ByteArray.prototype.writeByte=function(val){if(this.cursor>=ByteArray.pageSize)this.newPage();this.pages[this.page][this.cursor++]=val};ByteArray.prototype.writeUTFBytes=function(string){for(var l=string.length,i=0;i<l;i++)this.writeByte(string.charCodeAt(i))};ByteArray.prototype.writeBytes=function(array,offset,length){for(var l=length||array.length,i=offset||0;i<l;i++)this.writeByte(array[i])};function GIFEncoder(width,height){this.width=~~width;this.height=~~height;this.transparent=null;this.transIndex=0;this.repeat=-1;this.delay=0;this.image=null;this.pixels=null;this.indexedPixels=null;this.colorDepth=null;this.colorTab=null;this.neuQuant=null;this.usedEntry=new Array;this.palSize=7;this.dispose=-1;this.firstFrame=true;this.sample=10;this.dither=false;this.globalPalette=false;this.out=new ByteArray}GIFEncoder.prototype.setDelay=function(milliseconds){this.delay=Math.round(milliseconds/10)};GIFEncoder.prototype.setFrameRate=function(fps){this.delay=Math.round(100/fps)};GIFEncoder.prototype.setDispose=function(disposalCode){if(disposalCode>=0)this.dispose=disposalCode};GIFEncoder.prototype.setRepeat=function(repeat){this.repeat=repeat};GIFEncoder.prototype.setTransparent=function(color){this.transparent=color};GIFEncoder.prototype.addFrame=function(imageData){this.image=imageData;this.colorTab=this.globalPalette&&this.globalPalette.slice?this.globalPalette:null;this.getImagePixels();this.analyzePixels();if(this.globalPalette===true)this.globalPalette=this.colorTab;if(this.firstFrame){this.writeLSD();this.writePalette();if(this.repeat>=0){this.writeNetscapeExt()}}this.writeGraphicCtrlExt();this.writeImageDesc();if(!this.firstFrame&&!this.globalPalette)this.writePalette();this.writePixels();this.firstFrame=false};GIFEncoder.prototype.finish=function(){this.out.writeByte(59)};GIFEncoder.prototype.setQuality=function(quality){if(quality<1)quality=1;this.sample=quality};GIFEncoder.prototype.setDither=function(dither){if(dither===true)dither="FloydSteinberg";this.dither=dither};GIFEncoder.prototype.setGlobalPalette=function(palette){this.globalPalette=palette};GIFEncoder.prototype.getGlobalPalette=function(){return this.globalPalette&&this.globalPalette.slice&&this.globalPalette.slice(0)||this.globalPalette};GIFEncoder.prototype.writeHeader=function(){this.out.writeUTFBytes("GIF89a")};GIFEncoder.prototype.analyzePixels=function(){if(!this.colorTab){this.neuQuant=new NeuQuant(this.pixels,this.sample);this.neuQuant.buildColormap();this.colorTab=this.neuQuant.getColormap()}if(this.dither){this.ditherPixels(this.dither.replace("-serpentine",""),this.dither.match(/-serpentine/)!==null)}else{this.indexPixels()}this.pixels=null;this.colorDepth=8;this.palSize=7;if(this.transparent!==null){this.transIndex=this.findClosest(this.transparent,true)}};GIFEncoder.prototype.indexPixels=function(imgq){var nPix=this.pixels.length/3;this.indexedPixels=new Uint8Array(nPix);var k=0;for(var j=0;j<nPix;j++){var index=this.findClosestRGB(this.pixels[k++]&255,this.pixels[k++]&255,this.pixels[k++]&255);this.usedEntry[index]=true;this.indexedPixels[j]=index}};GIFEncoder.prototype.ditherPixels=function(kernel,serpentine){var kernels={FalseFloydSteinberg:[[3/8,1,0],[3/8,0,1],[2/8,1,1]],FloydSteinberg:[[7/16,1,0],[3/16,-1,1],[5/16,0,1],[1/16,1,1]],Stucki:[[8/42,1,0],[4/42,2,0],[2/42,-2,1],[4/42,-1,1],[8/42,0,1],[4/42,1,1],[2/42,2,1],[1/42,-2,2],[2/42,-1,2],[4/42,0,2],[2/42,1,2],[1/42,2,2]],Atkinson:[[1/8,1,0],[1/8,2,0],[1/8,-1,1],[1/8,0,1],[1/8,1,1],[1/8,0,2]]};if(!kernel||!kernels[kernel]){throw"Unknown dithering kernel: "+kernel}var ds=kernels[kernel];var index=0,height=this.height,width=this.width,data=this.pixels;var direction=serpentine?-1:1;this.indexedPixels=new Uint8Array(this.pixels.length/3);for(var y=0;y<height;y++){if(serpentine)direction=direction*-1;for(var x=direction==1?0:width-1,xend=direction==1?width:0;x!==xend;x+=direction){index=y*width+x;var idx=index*3;var r1=data[idx];var g1=data[idx+1];var b1=data[idx+2];idx=this.findClosestRGB(r1,g1,b1);this.usedEntry[idx]=true;this.indexedPixels[index]=idx;idx*=3;var r2=this.colorTab[idx];var g2=this.colorTab[idx+1];var b2=this.colorTab[idx+2];var er=r1-r2;var eg=g1-g2;var eb=b1-b2;for(var i=direction==1?0:ds.length-1,end=direction==1?ds.length:0;i!==end;i+=direction){var x1=ds[i][1];var y1=ds[i][2];if(x1+x>=0&&x1+x<width&&y1+y>=0&&y1+y<height){var d=ds[i][0];idx=index+x1+y1*width;idx*=3;data[idx]=Math.max(0,Math.min(255,data[idx]+er*d));data[idx+1]=Math.max(0,Math.min(255,data[idx+1]+eg*d));data[idx+2]=Math.max(0,Math.min(255,data[idx+2]+eb*d))}}}}};GIFEncoder.prototype.findClosest=function(c,used){return this.findClosestRGB((c&16711680)>>16,(c&65280)>>8,c&255,used)};GIFEncoder.prototype.findClosestRGB=function(r,g,b,used){if(this.colorTab===null)return-1;if(this.neuQuant&&!used){return this.neuQuant.lookupRGB(r,g,b)}var c=b|g<<8|r<<16;var minpos=0;var dmin=256*256*256;var len=this.colorTab.length;for(var i=0,index=0;i<len;index++){var dr=r-(this.colorTab[i++]&255);var dg=g-(this.colorTab[i++]&255);var db=b-(this.colorTab[i++]&255);var d=dr*dr+dg*dg+db*db;if((!used||this.usedEntry[index])&&d<dmin){dmin=d;minpos=index}}return minpos};GIFEncoder.prototype.getImagePixels=function(){var w=this.width;var h=this.height;this.pixels=new Uint8Array(w*h*3);var data=this.image;var srcPos=0;var count=0;for(var i=0;i<h;i++){for(var j=0;j<w;j++){this.pixels[count++]=data[srcPos++];this.pixels[count++]=data[srcPos++];this.pixels[count++]=data[srcPos++];srcPos++}}};GIFEncoder.prototype.writeGraphicCtrlExt=function(){this.out.writeByte(33);this.out.writeByte(249);this.out.writeByte(4);var transp,disp;if(this.transparent===null){transp=0;disp=0}else{transp=1;disp=2}if(this.dispose>=0){disp=dispose&7}disp<<=2;this.out.writeByte(0|disp|0|transp);this.writeShort(this.delay);this.out.writeByte(this.transIndex);this.out.writeByte(0)};GIFEncoder.prototype.writeImageDesc=function(){this.out.writeByte(44);this.writeShort(0);this.writeShort(0);this.writeShort(this.width);this.writeShort(this.height);if(this.firstFrame||this.globalPalette){this.out.writeByte(0)}else{this.out.writeByte(128|0|0|0|this.palSize)}};GIFEncoder.prototype.writeLSD=function(){this.writeShort(this.width);this.writeShort(this.height);this.out.writeByte(128|112|0|this.palSize);this.out.writeByte(0);this.out.writeByte(0)};GIFEncoder.prototype.writeNetscapeExt=function(){this.out.writeByte(33);this.out.writeByte(255);this.out.writeByte(11);this.out.writeUTFBytes("NETSCAPE2.0");this.out.writeByte(3);this.out.writeByte(1);this.writeShort(this.repeat);this.out.writeByte(0)};GIFEncoder.prototype.writePalette=function(){this.out.writeBytes(this.colorTab);var n=3*256-this.colorTab.length;for(var i=0;i<n;i++)this.out.writeByte(0)};GIFEncoder.prototype.writeShort=function(pValue){this.out.writeByte(pValue&255);this.out.writeByte(pValue>>8&255)};GIFEncoder.prototype.writePixels=function(){var enc=new LZWEncoder(this.width,this.height,this.indexedPixels,this.colorDepth);enc.encode(this.out)};GIFEncoder.prototype.stream=function(){return this.out};module.exports=GIFEncoder},{"./LZWEncoder.js":2,"./TypedNeuQuant.js":3}],2:[function(require,module,exports){var EOF=-1;var BITS=12;var HSIZE=5003;var masks=[0,1,3,7,15,31,63,127,255,511,1023,2047,4095,8191,16383,32767,65535];function LZWEncoder(width,height,pixels,colorDepth){var initCodeSize=Math.max(2,colorDepth);var accum=new Uint8Array(256);var htab=new Int32Array(HSIZE);var codetab=new Int32Array(HSIZE);var cur_accum,cur_bits=0;var a_count;var free_ent=0;var maxcode;var clear_flg=false;var g_init_bits,ClearCode,EOFCode;function char_out(c,outs){accum[a_count++]=c;if(a_count>=254)flush_char(outs)}function cl_block(outs){cl_hash(HSIZE);free_ent=ClearCode+2;clear_flg=true;output(ClearCode,outs)}function cl_hash(hsize){for(var i=0;i<hsize;++i)htab[i]=-1}function compress(init_bits,outs){var fcode,c,i,ent,disp,hsize_reg,hshift;g_init_bits=init_bits;clear_flg=false;n_bits=g_init_bits;maxcode=MAXCODE(n_bits);ClearCode=1<<init_bits-1;EOFCode=ClearCode+1;free_ent=ClearCode+2;a_count=0;ent=nextPixel();hshift=0;for(fcode=HSIZE;fcode<65536;fcode*=2)++hshift;hshift=8-hshift;hsize_reg=HSIZE;cl_hash(hsize_reg);output(ClearCode,outs);outer_loop:while((c=nextPixel())!=EOF){fcode=(c<<BITS)+ent;i=c<<hshift^ent;if(htab[i]===fcode){ent=codetab[i];continue}else if(htab[i]>=0){disp=hsize_reg-i;if(i===0)disp=1;do{if((i-=disp)<0)i+=hsize_reg;if(htab[i]===fcode){ent=codetab[i];continue outer_loop}}while(htab[i]>=0)}output(ent,outs);ent=c;if(free_ent<1<<BITS){codetab[i]=free_ent++;htab[i]=fcode}else{cl_block(outs)}}output(ent,outs);output(EOFCode,outs)}function encode(outs){outs.writeByte(initCodeSize);remaining=width*height;curPixel=0;compress(initCodeSize+1,outs);outs.writeByte(0)}function flush_char(outs){if(a_count>0){outs.writeByte(a_count);outs.writeBytes(accum,0,a_count);a_count=0}}function MAXCODE(n_bits){return(1<<n_bits)-1}function nextPixel(){if(remaining===0)return EOF;--remaining;var pix=pixels[curPixel++];return pix&255}function output(code,outs){cur_accum&=masks[cur_bits];if(cur_bits>0)cur_accum|=code<<cur_bits;else cur_accum=code;cur_bits+=n_bits;while(cur_bits>=8){char_out(cur_accum&255,outs);cur_accum>>=8;cur_bits-=8}if(free_ent>maxcode||clear_flg){if(clear_flg){maxcode=MAXCODE(n_bits=g_init_bits);clear_flg=false}else{++n_bits;if(n_bits==BITS)maxcode=1<<BITS;else maxcode=MAXCODE(n_bits)}}if(code==EOFCode){while(cur_bits>0){char_out(cur_accum&255,outs);cur_accum>>=8;cur_bits-=8}flush_char(outs)}}this.encode=encode}module.exports=LZWEncoder},{}],3:[function(require,module,exports){var ncycles=100;var netsize=256;var maxnetpos=netsize-1;var netbiasshift=4;var intbiasshift=16;var intbias=1<<intbiasshift;var gammashift=10;var gamma=1<<gammashift;var betashift=10;var beta=intbias>>betashift;var betagamma=intbias<<gammashift-betashift;var initrad=netsize>>3;var radiusbiasshift=6;var radiusbias=1<<radiusbiasshift;var initradius=initrad*radiusbias;var radiusdec=30;var alphabiasshift=10;var initalpha=1<<alphabiasshift;var alphadec;var radbiasshift=8;var radbias=1<<radbiasshift;var alpharadbshift=alphabiasshift+radbiasshift;var alpharadbias=1<<alpharadbshift;var prime1=499;var prime2=491;var prime3=487;var prime4=503;var minpicturebytes=3*prime4;function NeuQuant(pixels,samplefac){var network;var netindex;var bias;var freq;var radpower;function init(){network=[];netindex=new Int32Array(256);bias=new Int32Array(netsize);freq=new Int32Array(netsize);radpower=new Int32Array(netsize>>3);var i,v;for(i=0;i<netsize;i++){v=(i<<netbiasshift+8)/netsize;network[i]=new Float64Array([v,v,v,0]);freq[i]=intbias/netsize;bias[i]=0}}function unbiasnet(){for(var i=0;i<netsize;i++){network[i][0]>>=netbiasshift;network[i][1]>>=netbiasshift;network[i][2]>>=netbiasshift;network[i][3]=i}}function altersingle(alpha,i,b,g,r){network[i][0]-=alpha*(network[i][0]-b)/initalpha;network[i][1]-=alpha*(network[i][1]-g)/initalpha;network[i][2]-=alpha*(network[i][2]-r)/initalpha}function alterneigh(radius,i,b,g,r){var lo=Math.abs(i-radius);var hi=Math.min(i+radius,netsize);var j=i+1;var k=i-1;var m=1;var p,a;while(j<hi||k>lo){a=radpower[m++];if(j<hi){p=network[j++];p[0]-=a*(p[0]-b)/alpharadbias;p[1]-=a*(p[1]-g)/alpharadbias;p[2]-=a*(p[2]-r)/alpharadbias}if(k>lo){p=network[k--];p[0]-=a*(p[0]-b)/alpharadbias;p[1]-=a*(p[1]-g)/alpharadbias;p[2]-=a*(p[2]-r)/alpharadbias}}}function contest(b,g,r){var bestd=~(1<<31);var bestbiasd=bestd;var bestpos=-1;var bestbiaspos=bestpos;var i,n,dist,biasdist,betafreq;for(i=0;i<netsize;i++){n=network[i];dist=Math.abs(n[0]-b)+Math.abs(n[1]-g)+Math.abs(n[2]-r);if(dist<bestd){bestd=dist;bestpos=i}biasdist=dist-(bias[i]>>intbiasshift-netbiasshift);if(biasdist<bestbiasd){bestbiasd=biasdist;bestbiaspos=i}betafreq=freq[i]>>betashift;freq[i]-=betafreq;bias[i]+=betafreq<<gammashift}freq[bestpos]+=beta;bias[bestpos]-=betagamma;return bestbiaspos}function inxbuild(){var i,j,p,q,smallpos,smallval,previouscol=0,startpos=0;for(i=0;i<netsize;i++){p=network[i];smallpos=i;smallval=p[1];for(j=i+1;j<netsize;j++){q=network[j];if(q[1]<smallval){smallpos=j;smallval=q[1]}}q=network[smallpos];if(i!=smallpos){j=q[0];q[0]=p[0];p[0]=j;j=q[1];q[1]=p[1];p[1]=j;j=q[2];q[2]=p[2];p[2]=j;j=q[3];q[3]=p[3];p[3]=j}if(smallval!=previouscol){netindex[previouscol]=startpos+i>>1;for(j=previouscol+1;j<smallval;j++)netindex[j]=i;previouscol=smallval;startpos=i}}netindex[previouscol]=startpos+maxnetpos>>1;for(j=previouscol+1;j<256;j++)netindex[j]=maxnetpos}function inxsearch(b,g,r){var a,p,dist;var bestd=1e3;var best=-1;var i=netindex[g];var j=i-1;while(i<netsize||j>=0){if(i<netsize){p=network[i];dist=p[1]-g;if(dist>=bestd)i=netsize;else{i++;if(dist<0)dist=-dist;a=p[0]-b;if(a<0)a=-a;dist+=a;if(dist<bestd){a=p[2]-r;if(a<0)a=-a;dist+=a;if(dist<bestd){bestd=dist;best=p[3]}}}}if(j>=0){p=network[j];dist=g-p[1];if(dist>=bestd)j=-1;else{j--;if(dist<0)dist=-dist;a=p[0]-b;if(a<0)a=-a;dist+=a;if(dist<bestd){a=p[2]-r;if(a<0)a=-a;dist+=a;if(dist<bestd){bestd=dist;best=p[3]}}}}}return best}function learn(){var i;var lengthcount=pixels.length;var alphadec=30+(samplefac-1)/3;var samplepixels=lengthcount/(3*samplefac);var delta=~~(samplepixels/ncycles);var alpha=initalpha;var radius=initradius;var rad=radius>>radiusbiasshift;if(rad<=1)rad=0;for(i=0;i<rad;i++)radpower[i]=alpha*((rad*rad-i*i)*radbias/(rad*rad));var step;if(lengthcount<minpicturebytes){samplefac=1;step=3}else if(lengthcount%prime1!==0){step=3*prime1}else if(lengthcount%prime2!==0){step=3*prime2}else if(lengthcount%prime3!==0){step=3*prime3}else{step=3*prime4}var b,g,r,j;var pix=0;i=0;while(i<samplepixels){b=(pixels[pix]&255)<<netbiasshift;g=(pixels[pix+1]&255)<<netbiasshift;r=(pixels[pix+2]&255)<<netbiasshift;j=contest(b,g,r);altersingle(alpha,j,b,g,r);if(rad!==0)alterneigh(rad,j,b,g,r);pix+=step;if(pix>=lengthcount)pix-=lengthcount;i++;if(delta===0)delta=1;if(i%delta===0){alpha-=alpha/alphadec;radius-=radius/radiusdec;rad=radius>>radiusbiasshift;if(rad<=1)rad=0;for(j=0;j<rad;j++)radpower[j]=alpha*((rad*rad-j*j)*radbias/(rad*rad))}}}function buildColormap(){init();learn();unbiasnet();inxbuild()}this.buildColormap=buildColormap;function getColormap(){var map=[];var index=[];for(var i=0;i<netsize;i++)index[network[i][3]]=i;var k=0;for(var l=0;l<netsize;l++){var j=index[l];map[k++]=network[j][0];map[k++]=network[j][1];map[k++]=network[j][2]}return map}this.getColormap=getColormap;this.lookupRGB=inxsearch}module.exports=NeuQuant},{}],4:[function(require,module,exports){var GIFEncoder,renderFrame;GIFEncoder=require("./GIFEncoder.js");renderFrame=function(frame){var encoder,page,stream,transfer;encoder=new GIFEncoder(frame.width,frame.height);if(frame.index===0){encoder.writeHeader()}else{encoder.firstFrame=false}encoder.setTransparent(frame.transparent);encoder.setRepeat(frame.repeat);encoder.setDelay(frame.delay);encoder.setQuality(frame.quality);encoder.setDither(frame.dither);encoder.setGlobalPalette(frame.globalPalette);encoder.addFrame(frame.data);if(frame.last){encoder.finish()}if(frame.globalPalette===true){frame.globalPalette=encoder.getGlobalPalette()}stream=encoder.stream();frame.data=stream.pages;frame.cursor=stream.cursor;frame.pageSize=stream.constructor.pageSize;if(frame.canTransfer){transfer=function(){var i,len,ref,results;ref=frame.data;results=[];for(i=0,len=ref.length;i<len;i++){page=ref[i];results.push(page.buffer)}return results}();return self.postMessage(frame,transfer)}else{return self.postMessage(frame)}};self.onmessage=function(event){return renderFrame(event.data)}},{"./GIFEncoder.js":1}]},{},[4]);
+//# sourceMappingURL=gif.worker.js.map
+`;
+
+// Create blob URL for the worker
+const workerBlob = new Blob([workerScript], {type: 'application/javascript'});
+const workerUrl = URL.createObjectURL(workerBlob);
+document.getElementById('captureGIFBtn').addEventListener('click', async function () {
+    const mode = document.getElementById('gifModeSelect').value;
+    const frames = [];
+    const totalFrames = parseInt(document.getElementById('frames').value);
+    //const totalFrames = 30;
+    const delay = parseInt(document.getElementById('framesd').value);;
+
+    const originalPosition = camera.position.clone();
+    const originalRotation = camera.rotation.clone();
+
+    for (let i = 0; i < totalFrames; i++) {
+        const angle = (i / totalFrames) * Math.PI * 2;
+
+        switch (mode) {
+            case 'close':
+                camera.position.set(
+                    Math.cos(angle),
+                    1,
+                    Math.sin(angle)
+                );
+                camera.lookAt(0, 0, 0);
+                break;
+
+            case 'ortho':
+                camera.position.set(
+                    Math.cos(angle),
+                    0,
+                    Math.sin(angle)
+                );
+                camera.lookAt(0, 0, 0);
+                break;
+
+            case 'zero':
+                camera.position.set(0, 0, 0);
+                camera.rotation.set(0, angle, 0);
+                break;
+
+            case 'zeroup':
+                camera.position.set(0, 0, 0);
+                camera.rotation.set(-Math.PI / 4, angle, 0);
+                break;
+
+            case 'topdown':
+                camera.position.set(
+                    Math.cos(angle),
+                    Math.sin(angle),
+                    5
+                );
+                camera.lookAt(0, 0, 0);
+                break;
+
+            case 'flyover':
+                const t = i / totalFrames;
+                camera.position.set(-2 + 4 * t, 1, 2);
+                camera.lookAt(0, 0, 0);
+                break;
+case 'spherical':
+    {
+        const radius = 0.9;
+        camera.position.set(
+            radius * Math.cos(angle),
+            0,
+            radius * Math.sin(angle)
+        );
+        // Look up 45 degrees (elevated lookAt point)
+        camera.lookAt(0, 0.5, 0);
+    }
+    break;
+            case 'default':
+            default:
+                camera.position.set(
+                    Math.sqrt(2) * Math.cos(angle),
+                    Math.sqrt(2),
+                    Math.sqrt(2) * Math.sin(angle)
+                );
+                camera.lookAt(0, 0, 0);
+                break;
+        }
+
+        renderer.render(scene, camera);
+
+        const canvas = await html2canvas(renderer.domElement);
+        frames.push({
+            image: canvas,
+            delay: delay
+        });
+
+        await new Promise(resolve => setTimeout(resolve, delay));
+    }
+
+    // Restore original camera state
+    camera.position.copy(originalPosition);
+    camera.rotation.copy(originalRotation);
+
+    const gif = new GIF({
+        workers: 2,
+        quality: 1,
+        width: frames[0].image.width,
+        height: frames[0].image.height,
+        workerScript: workerUrl // Make sure this is defined elsewhere
+    });
+
+    frames.forEach(frame => {
+        gif.addFrame(frame.image, { delay: frame.delay });
+    });
+
+    gif.on('finished', function (blob) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `scene_${mode}.gif`;
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    gif.render();
+});
+
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const popupButton = document.querySelector('.popup-button');
+            const popupContent = document.querySelector('.popup-content');
+            
+            // Toggle popup when button is clicked
+            popupButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                popupContent.style.display = popupContent.style.display === 'block' ? 'none' : 'block';
+            });
+            
+            // Close popup when clicking outside
+            document.addEventListener('click', function() {
+                popupContent.style.display = 'none';
+            });
+        });
+
+//Domain
+
+
+
+document.getElementById('domaingifbtn').addEventListener('click', async function() {
+    const canvas = document.getElementById('bmpCanvas');
+  
+
+    const frames = [];
+     const totalFrames = parseInt(document.getElementById('frames').value);
+    //const totalFrames = 30;
+    const delay = parseInt(document.getElementById('framesd').value);;
+    
+    // Store original camera state
+    const originalPosition = camera.position.clone();
+    const originalRotation = camera.rotation.clone();
+    
+ const SCALE = 4; // each original pixel becomes 4x4
+
+for (let i = 0; i < totalFrames; i++) {
+    renderBMPt(i / totalFrames);
+
+    const frameCanvas = document.createElement('canvas');
+    frameCanvas.width = canvas.width * SCALE;
+    frameCanvas.height = canvas.height * SCALE;
+    const ctx = frameCanvas.getContext('2d');
+
+    // Draw the original canvas scaled up, no smoothing
+    ctx.imageSmoothingEnabled = false; 
+    ctx.drawImage(
+        canvas, 
+        0, 0, canvas.width, canvas.height,  // source
+        0, 0, canvas.width * SCALE, canvas.height * SCALE // destination
+    );
+
+    frames.push({
+        image: frameCanvas,
+        delay: delay
+    });
+
+    await new Promise(resolve => setTimeout(resolve, delay));
+}
+
+    
+    // Restore camera
+    camera.position.copy(originalPosition);
+    camera.rotation.copy(originalRotation);
+    
+    // Create GIF using gif.js
+    const gif = new GIF({
+        workers: 2,
+        quality: 1,
+        width: frames[0].image.width,
+        height: frames[0].image.height,
+        workerScript: workerUrl
+    });
+    
+    frames.forEach(frame => {
+        gif.addFrame(frame.image, {delay: frame.delay});
+    });
+    
+    gif.on('finished', function(blob) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'scene_rotation.gif';
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+    
+    gif.render();
+});
+
+
+
+// Floyd–Steinberg dither function
+function floydSteinbergDither(imageData, width, height) {
+    const data = imageData.data;
+
+    function clamp(v) {
+        return Math.max(0, Math.min(255, v));
+    }
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const idx = (y * width + x) * 4;
+
+            const oldR = data[idx];
+            const oldG = data[idx + 1];
+            const oldB = data[idx + 2];
+
+            // quantize to 8-bit
+            const newR = Math.round(oldR / 255) * 255;
+            const newG = Math.round(oldG / 255) * 255;
+            const newB = Math.round(oldB / 255) * 255;
+
+            const errR = oldR - newR;
+            const errG = oldG - newG;
+            const errB = oldB - newB;
+
+            data[idx] = newR;
+            data[idx + 1] = newG;
+            data[idx + 2] = newB;
+
+            // distribute error
+            if (x + 1 < width) {
+                const i = (y * width + (x + 1)) * 4;
+                data[i] += errR * 7 / 16;
+                data[i + 1] += errG * 7 / 16;
+                data[i + 2] += errB * 7 / 16;
+            }
+            if (x - 1 >= 0 && y + 1 < height) {
+                const i = ((y + 1) * width + (x - 1)) * 4;
+                data[i] += errR * 3 / 16;
+                data[i + 1] += errG * 3 / 16;
+                data[i + 2] += errB * 3 / 16;
+            }
+            if (y + 1 < height) {
+                const i = ((y + 1) * width + x) * 4;
+                data[i] += errR * 5 / 16;
+                data[i + 1] += errG * 5 / 16;
+                data[i + 2] += errB * 5 / 16;
+            }
+            if (x + 1 < width && y + 1 < height) {
+                const i = ((y + 1) * width + (x + 1)) * 4;
+                data[i] += errR * 1 / 16;
+                data[i + 1] += errG * 1 / 16;
+                data[i + 2] += errB * 1 / 16;
+            }
+        }
+    }
+
+    return imageData;
+}
+
+
+
+
+
+document.getElementById('scaleUpBtn').addEventListener('click', () => {
+    mesh.scale.multiplyScalar(1.1);
+});
+
+document.getElementById('scaleDownBtn').addEventListener('click', () => {
+    mesh.scale.multiplyScalar(0.9);
+});
+
+document.getElementById('rotateXPosBtn').addEventListener('click', () => {
+    mesh.rotation.x += 0.1;
+});
+
+document.getElementById('rotateXNegBtn').addEventListener('click', () => {
+    mesh.rotation.x -= 0.1;
+});
+
+document.getElementById('rotateYPosBtn').addEventListener('click', () => {
+    mesh.rotation.y += 0.1;
+});
+
+document.getElementById('rotateYNegBtn').addEventListener('click', () => {
+    mesh.rotation.y -= 0.1;
+});
+
+document.getElementById('rotateZPosBtn').addEventListener('click', () => {
+    mesh.rotation.z += 0.1;
+});
+
+document.getElementById('rotateZNegBtn').addEventListener('click', () => {
+    mesh.rotation.z -= 0.1;
+});
+
+</script>
+
+
+
+    </script>
+</body>
+</html>

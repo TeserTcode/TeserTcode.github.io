@@ -903,7 +903,9 @@ function reflect(v,root){
 
 
 function verticesfromseed(seed,roots,dec,max=100000,eps=1e-6){
-
+  //  max = 5000
+//console.log(seed,roots,dec)
+//return verticesfromseedtiling(seed,roots,dec,1000)
     function key(v){
         return v.map(x=>round(div(x,eps))).join(",")
     }
@@ -948,6 +950,54 @@ function verticesfromseed(seed,roots,dec,max=100000,eps=1e-6){
 
     return verts
 }
+/*
+function verticesfromseed(seed,roots,dec,max=100000,eps=1e-6){
+//console.log(seed,roots,dec)
+//return verticesfromseedtiling(seed,roots,dec,1000)
+    function key(v){
+        return v.map(x=>round(div(x,eps))).join(",")
+    }
+
+    let verts=[]
+    let queue=[]
+    let seen=new Set()
+
+    function add(v){
+        let k=key(v)
+        if(seen.has(k)) return false
+        seen.add(k)
+        verts.push(v)
+        queue.push(v)
+        return true
+    }
+
+    add(seed)
+
+    while(queue.length && verts.length<max){
+
+        let v=queue.pop()
+
+        for(let i=0;i<roots.length;i++){
+            if(dec[i]!=2){
+                let w=reflect(v,roots[i])
+                w=w.map(x=>Math.abs(x)<eps?0:x)
+                add(w)
+            }
+        
+            if(dec[i]===2){
+                for(let j=0;j<roots.length;j++){
+                    if(i===j) continue
+                    let w=reflect(reflect(v,roots[i]),roots[j])
+                    w=w.map(x=>Math.abs(x)<eps?0:x)
+                    add(w)
+                }
+            }
+
+        }
+    }
+
+    return verts
+}*/
 
 /*og
 function verticesfromseed(seed,roots,max=100000,eps = 1e-6) {
@@ -1009,6 +1059,11 @@ function seedfromdecoration(dec,roots){
             for(let j = 0; j < n; j++)
                 v[j] += weights[i][j]
         }
+        
+        /*    else{
+                 for(let j = 0; j < n; j++)
+                v[j] += weights[i][j]*dec[i]
+            }*/
     }
 
     return vectormap(x=>inftozero(x,0),v)
@@ -1054,7 +1109,9 @@ function verticesfromcoxeter(M, V) {
   //  console.log(C);
 
     const seed = seedfromdecoration(V, C);
-    const verts = verticesfromseed(seed, C,V);
+    //verticesfromseedtiling
+   // const verts = verticesfromseedtiling(M, C,V);
+     const verts = verticesfromseed(seed, C,V);
 
   //  console.log(verts);
 
@@ -6389,6 +6446,7 @@ function thomeaeisenstein(x, epsilon = 1e-2){
 	return div(1,getdenomeinstein(x,epsilon));
 }
 function getnom(x, epsilons = 1e-2) {
+    if(Number.isInteger(x))return x
     let a = math.complex(1);
     let b = math.complex(1);
     const yy = cabs(x);
@@ -19342,6 +19400,37 @@ function jinvariant(z) {
     return div(numerator, denominator);
 }
 
+//https://en.wikipedia.org/wiki/Ramanujan%E2%80%93Sato_series
+function jstarinvariant(x){let t=jinvariant(x);return div(add(sqrt(t),sqrt(sub(t,1728))),sub(sqrt(t),sqrt(sub(t,1728))))}
+function ramanujansatos1a(k){return mul(ncr(mul(2,k),k),ncr(mul(3,k),k),ncr(mul(6,k),mul(3,k)))}
+function ramanujansatos1b(k){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,mul(ramanujansatos1a(j),ncr(add(k,j),sub(k,j)),pow(-432,sub(k,j))));return fi;}
+
+function ramanujansatoj2a(t){return sqr(add(pow(div(dedekindeta(mul(1,t)),dedekindeta(mul(2,t))),12),mul(2,2,2,2,2,2,pow(div(dedekindeta(mul(2,t)),dedekindeta(t)),12))))}
+function ramanujansatoj2b(t){return pow(div(dedekindeta(mul(1,t)),dedekindeta(mul(2,t))),24)}
+
+function ramanujansatos2a(k){return mul(ncr(mul(2,k),k),ncr(mul(2,k),k),ncr(mul(4,k),mul(2,k)))}
+function ramanujansatos2b(k){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,mul(ramanujansatos2a(j),ncr(add(k,j),sub(k,j)),pow(-64,sub(k,j))));return fi;}
+
+function ramanujansatoj3a(t){return sqr(add(pow(div(dedekindeta(mul(1,t)),dedekindeta(mul(3,t))),6),mul(3,3,3,pow(div(dedekindeta(mul(3,t)),dedekindeta(t)),12))))}
+function ramanujansatoj3b(t){return pow(div(dedekindeta(mul(1,t)),dedekindeta(mul(3,t))),12)}
+
+function ramanujansatos3a(k){return mul(ncr(mul(2,k),k),ncr(mul(2,k),k),ncr(mul(3,k),mul(1,k)))}
+function ramanujansatos3b(k){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,mul(ramanujansatos3a(j),ncr(add(k,j),sub(k,j)),pow(-27,sub(k,j))));return fi;}
+
+function ramanujansatoj4a(t){return sqr(add(pow(div(dedekindeta(mul(1,t)),dedekindeta(mul(4,t))),4),mul(4,4,pow(div(dedekindeta(mul(4,t)),dedekindeta(t)),12))))}
+function ramanujansatoj4c(t){return pow(div(dedekindeta(mul(1,t)),dedekindeta(mul(4,t))),8)}
+
+function ramanujansatos4a(k){return mul(ncr(mul(2,k),k),ncr(mul(2,k),k),ncr(mul(2,k),mul(1,k)))}
+function ramanujansatos4c(k){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,mul(ramanujansatos4a(j),ncr(add(k,j),sub(k,j)),pow(-16,sub(k,j))));return fi;}
+
+
+function ramanujansatoj5a(t){return sqr(add(pow(div(dedekindeta(mul(1,t)),dedekindeta(mul(5,t))),6),mul(5,5,5,pow(div(dedekindeta(mul(5,t)),dedekindeta(t)),6))))}
+function ramanujansatoj5b(t){return pow(div(dedekindeta(mul(1,t)),dedekindeta(mul(5,t))),12)}
+
+function ramanujansatos5a(k){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,mul(ncr(k,j),ncr(k,j),ncr(add(k,j),j)));return mul(fi,ncr(mul(2,k),k));}
+function ramanujansatos5b(k){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,mul(ncr(k,j),ncr(k,j),ncr(k,j),ncr(sub(mul(4,k),mul(5,j)),mul(3,k)),pow(-1,add(k,j))));return fi;}
+
+
 
 //https://en.wikipedia.org/wiki/Mock_modular_form
 function apelllerchtheta(v,t){
@@ -24240,7 +24329,7 @@ function zetazero(n){
 
 
 
-function primecounting(z,m=bign){
+function primecounting(z,m=bign){//FIX ADD
     let fi=sub(riemannr(z),div(1,log(z)),div(atan(div(pi(),log(z))),pi(),-1))
     for(let n=1;n<=m;n++){
       //  let R=riemannr(pow(z,zetazero(n)))
@@ -24252,9 +24341,24 @@ function primecounting(z,m=bign){
 //FIX
 
 
-
-
-
+function primepsi(x){
+    let fi=0;
+    for(let i=1;i<30;i++)
+        fi=add(fi,div(add(cos(mul(zetazeroim(i),log(x))),mul(2,zetazeroim(i),sin(mul(zetazeroim(i),log(x))))),add(0.25,sqr(zetazeroim(i)))))
+    return sub(x,mul(fi,sqrt(x)),div(log(sub(1,div(1,x,x))),2),log(mul(2,pi())))
+}
+function primepsialt(x){
+    let fi=0;
+    for(let i=1;i<30;i++)
+        fi=add(fi,div(add(mul(2,zetazeroim(i),sin(mul(zetazeroim(i),log(x))))),add(0.25,sqr(zetazeroim(i)))))
+    return sub(x,mul(fi,sqrt(x)),div(log(sub(1,div(1,x,x))),2),log(mul(2,pi())))
+}
+function primepsialtsl(x,k=10){
+    let fi=0;
+    for(let i=1;i<k;i++)
+        fi=add(fi,div(add(mul(2,zetazeroim(i),fakesin(mul(zetazeroim(i),log(x))))),add(0.25,sqr(zetazeroim(i)))))
+    return sub(x,mul(fi,sqrt(x)),div(log(sub(1,div(1,x,x))),2),log(mul(2,pi())))
+}
 
 
 

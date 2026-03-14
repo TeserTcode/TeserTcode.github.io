@@ -1,391 +1,229 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electrical Circuit Simulator</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 20px;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(40, 20px);
-            grid-template-rows: repeat(20, 20px);
-            gap: 1px;
-            margin-bottom: 20px;
-        }
-        .cell {
-            width: 20px;
-            height: 20px;
-            border: 1px solid #ccc;
-            background-size: cover;
-            cursor: pointer;
-            position: relative;
-        }
-        .cell:hover::after {
-            content: attr(data-info);
-            position: absolute;
-            top: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 2px 5px;
-            border-radius: 3px;
-            font-size: 12px;
-            white-space: nowrap;
-        }
-        .controls {
-            margin-bottom: 20px;
-        }
-        .controls select, .controls input, .controls button {
-            margin-right: 10px;
-        }
-        .info {
-            margin-top: 20px;
-            font-size: 14px;
-        }
-    </style>
+<meta charset="UTF-8" />
+<title>Grid Electric Simulator</title>
+<style>
+body { margin:0; font-family:sans-serif; background:#eee; display:flex; height:100vh; }
+#ui { width:300px; background:#f8f8f8; border-right:1px solid #ccc; padding:10px; box-sizing:border-box; overflow:auto; }
+#ui h2 { margin:6px 0; font-size:16px; }
+#ui label { display:block; font-size:13px; margin-top:6px; }
+#ui input, #ui select { width:100%; }
+#canvasWrap { flex:1; display:flex; justify-content:center; align-items:center; }
+canvas { background:white; image-rendering: pixelated; }
+</style>
 </head>
 <body>
-    <div class="controls">
-        <select id="component-select">
-            <option value="air">Air</option>
-            <option value="wire">Wire</option>
-            <option value="resistor">Resistor</option>
-            <option value="batteryp">Battery Plus</option>
-            <option value="batterym">Battery Minus</option>
-            <option value="batterya">Alternating Current</option>
-            <option value="batterys">Square Wave</option>
-            <option value="batteryw">Triangle Wave</option>
-            <option value="batteryz">Sawtooth Wave</option>
-            <option value="bulb">Bulb</option>
-            <option value="read">Read</option>
-        </select>
-        <select id="premade-circuits">
-            <option value="custom">Custom Circuit</option>
-            <option value="battery-resistor">Battery + Resistor</option>
-            <option value="battery-bulb">Battery + Bulb</option>
-            <option value="parallel">Parallel Circuit</option>
-            <option value="series">Series Circuit</option>
-        </select>
-        <input type="number" id="tickrate" placeholder="Tickrate (ms)" value="100">
-        <button id="start-simulate">Start Simulation</button>
-        <button id="reset-simulation">Reset Simulation</button>
-    </div>
-    <div class="grid" id="grid"></div>
-    <div class="info" id="info">Click on a cell to read voltage (V) and current (I).</div>
+<div id="ui">
+  <h2>Brush</h2>
+  <select id="brush">
+    <option value="air">Air</option>
+    <option value="wire">Wire</option>
+    <option value="resistor">Resistor</option>
+    <option value="bulb">Bulb</option>
+    <option value="battery+">Battery +</option>
+    <option value="battery-">Battery - (GND)</option>
+    <option value="batteryA">Battery (Sine)</option>
+    <option value="batteryS">Battery (Square)</option>
+    <option value="batteryZ">Battery (Sawtooth)</option>
+    <option value="batteryW">Battery (Triangle)</option>
+    <option value="inductor">Inductor</option>
+    <option value="capacitor">Capacitor</option>
+    <option value="diodeUp">Diode ↑</option>
+    <option value="diodeDown">Diode ↓</option>
+    <option value="diodeLeft">Diode ←</option>
+    <option value="diodeRight">Diode →</option>
+    <option value="gnd">GND</option>
+  </select>
 
-    <script>
-        const gridElement = document.getElementById('grid');
-        const componentSelect = document.getElementById('component-select');
-        const premadeCircuits = document.getElementById('premade-circuits');
-        const tickrateInput = document.getElementById('tickrate');
-        const startSimulateButton = document.getElementById('start-simulate');
-        const resetSimulationButton = document.getElementById('reset-simulation');
-        const infoElement = document.getElementById('info');
+  <label>Resistance (Ω)</label>
+  <input id="resistance" type="number" value="10" />
 
-        const gridSize = { rows: 20, cols: 40 };
-        const components = {
-            air: { image: 'air.png', resistance: 999999, conductivity: 1 / 999999 },
-            wire: { image: 'wire.png', resistance: 0.01, conductivity: 1 / 0.01 },
-            resistor: { image: 'resistor.png', resistance: 10, conductivity: 1 / 10 },
-            batteryp: { image: 'batteryp.png', voltage: 5, resistance: 999999, conductivity: 10 },
-            batterym: { image: 'batterym.png', voltage: -5, resistance: 999999, conductivity: 10 },
-            batterya: { image: 'batterya.png', voltage: 0, resistance: 999999, conductivity: 10 }, // AC
-            batterys: { image: 'batterys.png', voltage: 0, resistance: 999999, conductivity: 10 }, // Square wave
-            batteryw: { image: 'batteryw.png', voltage: 0, resistance: 999999, conductivity: 10 }, // Triangle wave
-            batteryz: { image: 'batteryz.png', voltage: 0, resistance: 999999, conductivity: 10 }, // Sawtooth wave
-            bulb: { image: 'bulboff.png', resistance: 10, conductivity: 1 / 10 }, // Bulb (off by default)
-            read: { image: 'air.png', resistance: 999999, conductivity: 1 / 999999 },
-        };
+  <label>Battery Voltage (V)</label>
+  <input id="voltage" type="number" value="5" />
 
-        const bulbThreshold = 1; // Power threshold to turn on the bulb
+  <label>Battery Max Current (A)</label>
+  <input id="maxcurrent" type="number" value="1" />
 
-        let grid = []; // Stores component types
-        let V = []; // Stores voltage values
-        let I = []; // Stores current vectors (as objects with x and y components)
-        let simulationInterval = null;
-        let simulationTime = 0; // Track simulation time for waveforms
+  <label>Bulb Nominal Current (A)</label>
+  <input id="bulbI" type="number" value="0.2" />
 
-        // Initialize grid, voltage, and current arrays
-        function createGrid() {
-            for (let row = 0; row < gridSize.rows; row++) {
-                let rowArray = [];
-                let VRow = [];
-                let IRow = [];
-                for (let col = 0; col < gridSize.cols; col++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'cell';
-                    cell.dataset.row = row;
-                    cell.dataset.col = col;
-                    cell.dataset.component = 'air';
-                    cell.style.backgroundImage = `url(${components.air.image})`;
-                    cell.addEventListener('click', () => handleCellClick(row, col));
-                    gridElement.appendChild(cell);
-                    rowArray.push('air');
-                    VRow.push(0);
-                    IRow.push({ x: 0, y: 0 }); // Initialize current as a vector
-                }
-                grid.push(rowArray);
-                V.push(VRow);
-                I.push(IRow);
-            }
-        }
+  <label>Background</label>
+  <select id="bgmode">
+    <option value="white">White</option>
+    <option value="V">Voltage (RGB)</option>
+    <option value="A">Current (RGB)</option>
+  </select>
 
-        // Handle cell click (place component or read values)
-        function handleCellClick(row, col) {
-            const selectedComponent = componentSelect.value;
-            if (selectedComponent === 'read') {
-                readCellInfo(row, col); // Read values without placing anything
-            } else {
-                placeComponent(row, col); // Place the selected component
-            }
-        }
+  <label><input type="checkbox" id="cornersConnect"> Connect Corners</label>
+  <label><input type="checkbox" id="trueNodal" checked> True Nodal Analysis</label>
+</div>
 
-        // Place a component on the grid
-        function placeComponent(row, col) {
-            const selectedComponent = componentSelect.value;
-            const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
-            cell.dataset.component = selectedComponent;
-            cell.style.backgroundImage = `url(${components[selectedComponent].image})`;
-            grid[row][col] = selectedComponent;
-        }
+<div id="canvasWrap">
+  <canvas id="cv" width="800" height="800"></canvas>
+</div>
 
-        // Read voltage and current at a specific cell
-        function readCellInfo(row, col) {
-            const voltage = V[row][col].toFixed(2);
-            const currentMagnitude = Math.sqrt(I[row][col].x ** 2 + I[row][col].y ** 2).toFixed(2);
-            infoElement.textContent = `Cell (${row}, ${col}): V = ${voltage}, I = ${currentMagnitude}`;
-        }
+<script>
+const W=40,H=40;
+const cv=document.getElementById('cv');
+const ctx=cv.getContext('2d');
+const S=cv.width/W;
+const AIR_OHM=1e9;
 
-        // Generate waveform voltages
-        function generateWaveform(component, time) {
-            const frequency = 1; // Frequency in Hz
-            const amplitude = 5; // Amplitude of the waveform
+const imgs={};
+['air','wire','resistor','bulbon','bulboff','battery+','battery-',
+'inductor','capacitor','diodeUp','diodeDown','diodeLeft','diodeRight','gnd'].forEach(n=>{
+  const i=new Image(); i.src=`./electric/${n}.png`; imgs[n]=i;
+});
 
-            switch (component) {
-                case 'batterya': // Alternating current (sine wave)
-                    return amplitude * Math.sin(2 * Math.PI * frequency * time);
-                case 'batterys': // Square wave
-                    return amplitude * (Math.sin(2 * Math.PI * frequency * time) > 0 ? 1 : -1);
-                case 'batteryw': // Triangle wave
-                    return (2 * amplitude / Math.PI) * Math.asin(Math.sin(2 * Math.PI * frequency * time));
-                case 'batteryz': // Sawtooth wave
-                    return 2 * amplitude * (time * frequency - Math.floor(time * frequency + 0.5));
-                default:
-                    return 0;
-            }
-        }
+const grid=Array.from({length:H},()=>Array.from({length:W},()=>({
+  type:'air', R:AIR_OHM, V:0, I:0, maxI:Infinity, srcV:0, waveform:null, freq:60
+})));
 
-        // Simulate voltage and current
-        function simulate() {
-            simulationTime += tickrateInput.value / 1000; // Update simulation time in seconds
+function cellOhm(c){
+  if(c.type==='air') return AIR_OHM;
+  if(c.type==='wire') return 1e-6;
+  if(c.type==='resistor') return c.R;
+  if(c.type==='bulb') return 10;
+  if(c.type==='inductor') return 1e-3; // small for DC
+  if(c.type==='capacitor') return 1e9; // open for DC
+  return 1e-6;
+}
 
-            // Create a copy of the current array to avoid overwriting during calculation
-            const I_new = JSON.parse(JSON.stringify(I));
+cv.addEventListener('mousedown',e=>{
+  const r=cv.getBoundingClientRect();
+  const x=Math.floor((e.clientX-r.left)/S);
+  const y=Math.floor((e.clientY-r.top)/S);
+  if(x<0||y<0||x>=W||y>=H) return;
+  const b=document.getElementById('brush').value;
+  const c=grid[y][x];
+  c.type=b;
+  c.R=parseFloat(resistance.value);
+  c.srcV=(b==='battery+'?parseFloat(voltage.value):(b==='battery-'?-parseFloat(voltage.value):0));
+  c.maxI=parseFloat(maxcurrent.value);
+  if(b==='batteryA') c.waveform='sin';
+  if(b==='batteryS') c.waveform='square';
+  if(b==='batteryZ') c.waveform='saw';
+  if(b==='batteryW') c.waveform='triangle';
+});
 
-            // Calculate currents based on voltage differences
-            for (let row = 0; row < gridSize.rows; row++) {
-                for (let col = 0; col < gridSize.cols; col++) {
-                    const component = grid[row][col];
-                    if (component === 'wire' || component === 'resistor' || component === 'bulb') {
-                        const neighbors = [
-                            { row: row - 1, col, dx: 0, dy: -1 }, // Top
-                            { row: row + 1, col, dx: 0, dy: 1 },  // Bottom
-                            { row, col: col - 1, dx: -1, dy: 0 }, // Left
-                            { row, col: col + 1, dx: 1, dy: 0 }  // Right
-                        ];
+cv.addEventListener('contextmenu',e=>{
+  e.preventDefault();
+  const r=cv.getBoundingClientRect();
+  const x=Math.floor((e.clientX-r.left)/S);
+  const y=Math.floor((e.clientY-r.top)/S);
+  if(x<0||y<0||x>=W||y>=H) return;
+  const tool=prompt("Enter component type for this cell");
+  if(tool && imgs[tool]) grid[y][x].type=tool;
+});
 
-                        let I_x = 0;
-                        let I_y = 0;
+function solve(){
+  const t=performance.now()/1000;
+  const neighbors=[[1,0],[-1,0],[0,1],[0,-1]];
+  if(document.getElementById('cornersConnect').checked){
+    neighbors.push([1,1],[1,-1],[-1,1],[-1,-1]);
+  }
 
-                        neighbors.forEach(n => {
-                            if (n.row >= 0 && n.row < gridSize.rows && n.col >= 0 && n.col < gridSize.cols) {
-                                const neighborComponent = grid[n.row][n.col];
-                                const ΔV = V[row][col] - V[n.row][n.col];
-                                const R = components[component].resistance + components[neighborComponent].resistance;
-                                const I_flow = ΔV / R; // Current flow between cells
+  // waveform update
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const c=grid[y][x];
+    if(c.waveform){
+      const amp=parseFloat(voltage.value);
+      const f=c.freq;
+      if(c.waveform==='sin') c.V=amp*Math.sin(2*Math.PI*f*t);
+      if(c.waveform==='square') c.V=amp*(Math.sin(2*Math.PI*f*t)>=0?1:-1);
+      if(c.waveform==='saw') c.V=amp*2*(t*f - Math.floor(t*f+0.5));
+      if(c.waveform==='triangle') c.V=amp*2*Math.abs(2*(t*f - Math.floor(t*f+0.5)))-amp;
+    }
+  }
 
-                                // Add to the current vector components
-                                I_x += I_flow * n.dx;
-                                I_y += I_flow * n.dy;
-                            }
-                        });
-
-                        // Update the current vector
-                        I_new[row][col].x = I_x;
-                        I_new[row][col].y = I_y;
-                    }
-                }
-            }
-
-            // Update the current array
-            for (let row = 0; row < gridSize.rows; row++) {
-                for (let col = 0; col < gridSize.cols; col++) {
-                    I[row][col] = I_new[row][col];
-                }
-            }
-
-            // Update voltages based on weighted averages
-            for (let row = 0; row < gridSize.rows; row++) {
-                for (let col = 0; col < gridSize.cols; col++) {
-                    const component = grid[row][col];
-                    if (component === 'batteryp') {
-                        V[row][col] = components.batteryp.voltage;
-                    } else if (component === 'batterym') {
-                        V[row][col] = components.batterym.voltage;
-                    } else if (component === 'batterya' || component === 'batterys' || component === 'batteryw' || component === 'batteryz') {
-                        // Update voltage for waveform generators
-                        V[row][col] = generateWaveform(component, simulationTime);
-                    } else if (component === 'wire' || component === 'resistor' || component === 'bulb') {
-                        const neighbors = [
-                            { row: row - 1, col, weight: components[grid[row - 1]?.[col]]?.conductivity || 0 }, // Top
-                            { row: row + 1, col, weight: components[grid[row + 1]?.[col]]?.conductivity || 0 }, // Bottom
-                            { row, col: col - 1, weight: components[grid[row]?.[col - 1]]?.conductivity || 0 }, // Left
-                            { row, col: col + 1, weight: components[grid[row]?.[col + 1]]?.conductivity || 0 }  // Right
-                        ];
-                        let totalWeight = 0;
-                        let weightedSum = 0;
-                        neighbors.forEach(n => {
-                            if (n.row >= 0 && n.row < gridSize.rows && n.col >= 0 && n.col < gridSize.cols) {
-                                weightedSum += V[n.row][n.col] * n.weight;
-                                totalWeight += n.weight;
-                            }
-                        });
-                        if (totalWeight > 0) {
-                            V[row][col] = weightedSum / totalWeight;
-                        }
-                    }
-                }
-            }
-
-            // Update cell colors and bulb states based on voltage and current magnitude
-            for (let row = 0; row < gridSize.rows; row++) {
-                for (let col = 0; col < gridSize.cols; col++) {
-                    const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
-                    const voltageColor = Math.min(200, Math.max(50, 125 + V[row][col] * 30));
-                    const currentMagnitude = Math.sqrt(I[row][col].x ** 2 + I[row][col].y ** 2);
-                    const currentColor = Math.min(200, Math.max(50, 125 + currentMagnitude * 30));
-                    cell.style.backgroundColor = `rgb(${voltageColor}, 0, ${currentColor})`;
-                    cell.dataset.info = `V: ${V[row][col].toFixed(2)}, I: ${currentMagnitude.toFixed(2)}`;
-
-                    // Update bulb state
-                    if (grid[row][col] === 'bulb') {
-                        const neighbors = [
-                            { row: row - 1, col }, // Top
-                            { row: row + 1, col }, // Bottom
-                            { row, col: col - 1 }, // Left
-                            { row, col: col + 1 }  // Right
-                        ];
-                        let maxΔV = 0;
-                        neighbors.forEach(n => {
-                            if (n.row >= 0 && n.row < gridSize.rows && n.col >= 0 && n.col < gridSize.cols) {
-                                const ΔV = Math.abs(V[row][col] - V[n.row][n.col]);
-                                if (ΔV > maxΔV) {
-                                    maxΔV = ΔV;
-                                }
-                            }
-                        });
-
-                        const I_bulb = maxΔV / components.bulb.resistance; // Current through bulb
-                        const P_bulb = I_bulb ** 2 * components.bulb.resistance; // Power dissipated by bulb
-
-                        if (P_bulb > bulbThreshold) {
-                            cell.style.backgroundImage = `url(bulbon.png)`;
-                        } else {
-                            cell.style.backgroundImage = `url(bulboff.png)`;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Reset simulation
-        function resetSimulation() {
-            for (let row = 0; row < gridSize.rows; row++) {
-                for (let col = 0; col < gridSize.cols; col++) {
-                    const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
-                    cell.dataset.component = 'air';
-                    cell.style.backgroundImage = `url(${components.air.image})`;
-                    grid[row][col] = 'air';
-                    V[row][col] = 0;
-                    I[row][col] = { x: 0, y: 0 };
-                }
-            }
-            simulationTime = 0; // Reset simulation time
-            infoElement.textContent = "Simulation reset. Click on a cell to read voltage (V) and current (I).";
-        }
-
-        // Load premade circuits
-        function loadPremadeCircuit(circuit) {
-            resetSimulation();
-            switch (circuit) {
-                case 'battery-resistor':
-                    placeComponent(10, 10, 'batteryp');
-                    placeComponent(10, 11, 'wire');
-                    placeComponent(10, 12, 'resistor');
-                    placeComponent(10, 13, 'wire');
-                    placeComponent(10, 14, 'batterym');
-                    break;
-                case 'battery-bulb':
-                    placeComponent(10, 10, 'batteryp');
-                    placeComponent(10, 11, 'wire');
-                    placeComponent(10, 12, 'bulb');
-                    placeComponent(10, 13, 'wire');
-                    placeComponent(10, 14, 'batterym');
-                    break;
-                case 'parallel':
-                    placeComponent(10, 10, 'batteryp');
-                    placeComponent(10, 11, 'wire');
-                    placeComponent(10, 12, 'resistor');
-                    placeComponent(11, 12, 'wire');
-                    placeComponent(11, 11, 'resistor');
-                    placeComponent(11, 10, 'wire');
-                    placeComponent(11, 9, 'batterym');
-                    break;
-                case 'series':
-                    placeComponent(10, 10, 'batteryp');
-                    placeComponent(10, 11, 'wire');
-                    placeComponent(10, 12, 'resistor');
-                    placeComponent(10, 13, 'wire');
-                    placeComponent(10, 14, 'resistor');
-                    placeComponent(10, 15, 'wire');
-                    placeComponent(10, 16, 'batterym');
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        // Start/stop simulation
-        startSimulateButton.addEventListener('click', () => {
-            if (simulationInterval) {
-                clearInterval(simulationInterval);
-                simulationInterval = null;
-                startSimulateButton.textContent = 'Start Simulation';
-            } else {
-                const tickrate = parseInt(tickrateInput.value, 10);
-                simulationInterval = setInterval(simulate, tickrate);
-                startSimulateButton.textContent = 'Stop Simulation';
-            }
+  if(document.getElementById('trueNodal').checked){
+    // simple nodal relaxation
+    for(let it=0;it<40;it++){
+      for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+        const c=grid[y][x];
+        if(c.srcV!==0 || c.waveform) continue;
+        let sumV=0,sumW=0;
+        neighbors.forEach(([dx,dy])=>{
+          const nx=x+dx,ny=y+dy;
+          if(nx<0||ny<0||nx>=W||ny>=H) return;
+          const n=grid[ny][nx],R=Math.min(cellOhm(c),cellOhm(n)),w=1/R;
+          sumV+=n.V*w; sumW+=w;
         });
-
-        // Reset simulation
-        resetSimulationButton.addEventListener('click', resetSimulation);
-
-        // Load premade circuit
-        premadeCircuits.addEventListener('change', (e) => {
-            loadPremadeCircuit(e.target.value);
+        if(sumW>0) c.V=sumV/sumW;
+      }
+    }
+  } else {
+    // fallback relaxation
+    for(let it=0;it<40;it++){
+      for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+        const c=grid[y][x];
+        if(c.srcV!==0) continue;
+        let sumV=0,sumW=0;
+        neighbors.forEach(([dx,dy])=>{
+          const nx=x+dx,ny=y+dy;
+          if(nx<0||ny<0||nx>=W||ny>=H) return;
+          const n=grid[ny][nx],R=Math.min(cellOhm(c),cellOhm(n)),w=1/R;
+          sumV+=n.V*w; sumW+=w;
         });
+        if(sumW>0) c.V=sumV/sumW;
+      }
+    }
+  }
 
-        // Initialize the grid
-        createGrid();
-    </script>
+  // current calculation
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    let I=0; const c=grid[y][x];
+    neighbors.forEach(([dx,dy])=>{
+      const nx=x+dx,ny=y+dy;
+      if(nx<0||ny<0||nx>=W||ny>=H) return;
+      const n=grid[ny][nx],R=Math.min(cellOhm(c),cellOhm(n));
+      I+=Math.abs((c.V-n.V)/R);
+    });
+    c.I=I;
+  }
+}
+
+function draw(){
+  solve();
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const bg=document.getElementById('bgmode').value;
+
+  // autoscale
+  let minV=Infinity,maxV=-Infinity,minI=Infinity,maxI=-Infinity;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const c=grid[y][x];
+    if(c.V<minV) minV=c.V; if(c.V>maxV) maxV=c.V;
+    if(c.I<minI) minI=c.I; if(c.I>maxI) maxI=c.I;
+  }
+  const scaleV=v=>Math.floor(255*(v-minV)/(maxV-minV+1e-6));
+  const scaleI=i=>Math.floor(255*(i-minI)/(maxI-minI+1e-6));
+
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const c=grid[y][x];
+    if(bg!=='white'){
+      let r=0,g=0,b=0;
+      if(bg==='V'){ r=scaleV(c.V); b=scaleV(-c.V); }
+      if(bg==='A'){ g=scaleI(c.I); }
+      ctx.fillStyle=`rgb(${r|0},${g|0},${b|0})`;
+      ctx.fillRect(x*S,y*S,S,S);
+    }
+
+    let img=imgs[c.type];
+    if(c.type==='bulb'){
+      const t=Math.min(1,c.I/parseFloat(bulbI.value));
+      if(c.I>parseFloat(bulbI.value)*1.5) img=imgs['bulboff'];
+      ctx.globalAlpha=t;
+      ctx.drawImage(imgs['bulbon'],x*S,y*S,S,S);
+      ctx.globalAlpha=1-t;
+      ctx.drawImage(imgs['bulboff'],x*S,y*S,S,S);
+      ctx.globalAlpha=1;
+    } else if(img) ctx.drawImage(img,x*S,y*S,S,S);
+  }
+  requestAnimationFrame(draw);
+}
+
+draw();
+</script>
 </body>
 </html>

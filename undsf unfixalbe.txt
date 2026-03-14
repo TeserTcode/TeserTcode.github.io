@@ -1,0 +1,310 @@
+
+/*
+function jonespoly(bw,t){
+  bw = simplifyBraidWord(bw)
+  console.log(bw)
+  if(leng(bw)==0) return 1 // unknot
+  if(leng(bw)==1){
+    let s = signum(g(bw,0))
+    return 1// single crossing treated as -1 (can multiply by t^±0.5 if desired)
+  }
+  let x = g(bw,0), rest = bw.slice(1)
+  let Lminus = [-x].concat(rest)
+  let L0 = rest
+  let Vminus =  jonespoly(Lminus,t)
+  let V0 =  jonespoly(L0,t)
+  console.log(bw,t*t*Vminus + t*(Math.sqrt(t)-1/Math.sqrt(t))*V0)
+  return t*Vminus + t*(Math.sqrt(t)-1/Math.sqrt(t))*V0
+}*/
+
+
+
+function modulardirection(n, x, k) {
+    let forward = (x - n + k) % k;
+    let backward = (n - x + k) % k;
+
+    if (forward < backward) return +1;
+    if (backward < forward) return -1;
+    return 0; // equidistant
+}
+
+//milnor mp AADD ADD ADD
+function kauffmanbracket(bw,a){
+
+
+
+//at n [q1,-n] [-n,q2] [w1,n] [n,w2] -> [q1,-n] [n,q2] [w1,n] [-n,w2] A
+//at n [q1,-n] [-n,q2] [w1,n] [n,w2] -> [-n,q1] [q2,n] [w1,-n] [n,w2] B
+   //     if(g(g(P,i),1)==-n)Pr[i]=[-n,g(g(P,i),0)]
+   //     if(g(g(P,i),0)==-n)Pr[i]=[g(g(P,i),1),n]
+   //     if(g(g(P,i),1)==n)Pr[i]=[g(g(P,i),0),-n]
+    
+    // if(g(g(P,i),1)==-n)Pr[i]=[g(g(P,i),0),n]
+        
+   //  if(g(g(P,i),1)==n)Pr[i]=[g(g(P,i),0),-n]
+   
+          
+      //  if(g(g(P,i),0)==-n)Pr[i]=[n,g(g(P,i),1)]
+        
+      //  if(g(g(P,i),0)==n)Pr[i]=[-n,g(g(P,i),1)]
+   
+
+
+
+
+//return vectorize(bw)
+//return rehab([[1,2],[4,2],[5,6],[5,6],[4,1]])
+//return rehab(bsmooth(rehab(bsmooth(pairize(vectorize(bw)),1)),2))
+//kauffmanbracket([1,1,1],8)
+//return asmooth(pairize(vectorize(bw)),1)
+//return bsmooth(pairize(vectorize(bw)),1)
+
+
+
+let fi=0
+let Pp
+for(let i=0;i<exp2(div(leng(pairize(vectorizebw(bw))),2));i++){
+let P=pairize(vectorizebw(bw))
+let eqx=0
+let pl=0
+let plll=0;
+//console.log(P)
+for(let j=0;j<div(leng(P),2);j++){
+   // for(let j=div(leng(P),2)-1;j>=0;j--){
+       
+       
+       
+    Pp=rearray(P)
+    
+  //  P=pairize(vectorize(bw))
+    
+    let p1=0,p2=0,a1=0,a2=0;
+     let n=add(j,1)
+    for(let ii=0;ii<leng(P);ii++){
+
+   if(g(g(P,ii),0)==-n)p1=g(g(P,ii),1)
+   if(g(g(P,ii),1)==-n)a1=g(g(P,ii),0)
+   if(g(g(P,ii),0)==n)p2=g(g(P,ii),1)
+   if(g(g(P,ii),1)==n)a2=g(g(P,ii),0)
+    }   
+let k = leng(P) / 2;
+   let p1a=mag(p1),p2a=mag(p2),a1a=mag(a1),a2a=mag(a2);
+  let m1 = modulardirection(n, p1a, k);
+let n1 = modulardirection(n, a1a, k);
+let m2 = modulardirection(n, p2a, k);
+let n2 = modulardirection(n, a2a, k);
+    //    console.log(pl)
+   // console.log(p1,a1,p2,a2,"A",m1,n1,m2,n2)
+  //  pl=m1==n2
+  //  pl=j==0
+  //  pl=1-pl
+
+   // pl=n1==m2
+    // pl=1-(j==2);
+   //pl=1-j%2
+  //  console.log(pl)
+   
+   
+let pll=add(mul(m1,1),mul(n1,10),mul(m2,100),mul(n2,1000))
+    
+    //let pl=(m1==n1)!=(m2==n2);
+
+    if(pl==0 )
+         P=(getnthbit(add(i,0),j)==1)?(/*B*/bsmooth(P,add(j,1))):(/*A*/asmooth(P,add(j,1)));
+     //   P=(getnthbit(add(i,1),j)==1)?(/*B*/bsmooth(P,add(j,1))):(/*A*/asmooth(P,add(j,1)));
+    else P=(getnthbit(add(i,0),j)==0)?(/*B*/bsmooth(P,add(j,1))):(/*A*/asmooth(P,add(j,1)));
+   // P=orehab(rehab(P),Pp,add(j,1))
+   // P=rehab(P)
+   //  if(getnthbit(add(i,0),j)!=pl)pl=1-pl
+ //  pl=((plll)!=(pll) ^pl) && (plll!=0)
+    plll=pll
+   if(getnthbit(add(i,0),j)==1)pl=1
+ P=rehab(P)
+ //  console.log(j,getnthbit(add(i,0),j),P)
+       eqx=add(eqx,1,mul(-2,getnthbit(i,j)))
+   // eqx=add(eqx,1,mul(-2,1-getnthbit(i,j)))
+   // console.log(getnthbit(i,j),eqx)
+   //console.log(countloops(P))
+   //console.log(P,countloops(P))
+}
+//console.log(getnthbit(i,0),getnthbit(i,1),getnthbit(i,2),countloops(P))
+//console.log("nig")
+console.log("a^",re(eqx),"*","(-a^2-a^-2)^",sub(countloops(P),1))
+fi=add(fi,mul(pow(sub(0,sqr(a),div(1,sqr(a))),sub(countloops(P),1)),pow(a,eqx)))
+}
+
+return fi;
+
+
+}
+function jonespoly(bw,x){return jonespolypv(pairize(vectorizebw(bw)),x)}
+
+
+function jonespolypv(P,x,i=1){
+    
+
+
+    if(leng(P)==2 && g(g(P,0),0)==g(g(P,0),1))return sub(0,add(sqrt(x),div(1,sqrt(x))))
+    if(leng(P)<3)return 1
+
+ /*  for (let k = 0; k < P.length; k++) {
+        let [a, b] = P[k];
+        if (a === b) {
+            //console.log("N")
+            let newP = P.slice();
+            newP.splice(k, 1);
+            return mul(
+                jonespolypv(newP, x, i),
+                sub(0, sqrt(x), div(1, sqrt(x)))
+            );
+        }
+    }*/
+    
+//simplifypairized(pairize(vectorizebw([1,1,1,2,-2])))
+    P=simplifypairized((P));
+      let L0=simplifypairized(rehab(asmooth(P,i)))
+    
+ // console.log(99,L0,rehab(asmooth(P,i)))
+  
+    let Lm=simplifypairized(rehab(csmooth(P,i)))
+    
+      
+
+i=1+re(modc(add(i,0),ceil(div(leng(P),2))))
+i=1
+
+//onsole.log(P,jonespolypv(L0,x,i))
+
+
+  //  console.log(P,i,countloops(P))
+return add(mul(jonespolypv(Lm,x,i),x,x),mul(sub(pow(x,1.5),pow(x,0.5)),jonespolypv(L0,x,i)))   
+ 
+
+ return sub(mul(sub(pow(x,0.5),pow(x,1.5)),jonespolypv(L0,x)),mul(x,x,jonespolypv(Lm,x)))
+    //(st-1/st)V0=V+/t-tV-
+    //V+/t = (1/st-st)V0 - tV-
+    //V+ = (t^0.5 - t^1.5)V0 - t^2V-
+    
+    
+    
+}
+
+
+
+
+
+
+function simplifypairized(pairs) {//FIX this
+
+    function signum(x) { return x > 0 ? 1 : x < 0 ? -1 : 0; }
+
+    let changed = true;
+
+    while (changed) {
+        changed = false;
+
+        // --- R1 and R2 ---
+        for (let i = 0; i < pairs.length - 2; i++) {
+
+            let [q, a] = pairs[i];
+            let [b, c] = pairs[i+1];
+            let [d, r] = pairs[i+2];
+
+            if (a === b && b === -c && c === d) {
+                pairs.splice(i, 3, [q, r]);
+                changed = true;
+                break;
+            }
+            if (a === -b && b === -c && c === -d) {
+
+                let n = -a;
+                let m = -c;
+
+                let exists = false;
+
+                for (let j = 0; j < pairs.length; j++) {
+                    if (j === i || j === i+1 || j === i+2) continue;
+
+                    let [x,y] = pairs[j];
+                    if (
+                        (x === n && y === m) ||
+                        (x === m && y === n)
+                    ) {
+                        exists = true;
+                        break;
+                    }
+                }
+
+                if (exists) {
+                    pairs.splice(i, 3, [q, r]);
+                    changed = true;
+                    break;
+                }
+            }
+            
+    for (let i = 0; i < pairs.length; i++) {
+        let [a, b] = pairs[i];
+
+        for (let j = i + 1; j < pairs.length; j++) {
+            let [c, d] = pairs[j];
+
+            // check if [a,b] and [-a,-b]
+            if (c === -a && d === -b && signum(a)==signum(b)) {
+        //    console.log(a,b,c,d)
+                // remove both
+                pairs.splice(j, 1);
+                pairs.splice(i, 1);
+
+                // merge strand b into a
+                for (let k = 0; k < pairs.length; k++) {
+                    let [x, y] = pairs[k];
+
+                    if (x === b) x = a;
+                    if (x === -b) x = -a;
+
+                    if (y === b) y = a;
+                    if (y === -b) y = -a;
+
+                    pairs[k] = [x, y];
+                }
+
+                changed = true;
+                    break;
+            }
+        }
+    }
+        if (changed) break; // restart outer loop after R4
+        }
+
+      /*  if(changed==0){
+              for(let i=0;i<pairs.length-2;i++){
+            let [q,a] = pairs[i];
+            let [b,c] = pairs[i+1];
+            let [d,r] = pairs[i+2];
+
+            // Check safe braid triangle: 3 distinct strands
+            let strands = [a,b,c,d].map(Math.abs);
+            let unique = [...new Set(strands)];
+
+            if(unique.length === 3){
+                // perform R3-like slide
+                pairs[i]   = [q,b];
+                pairs[i+1] = [a,c];
+                pairs[i+2] = [d,r];
+
+                changed = 1; // mark that we made a change
+                break; // only do one R3 per iteration
+            }
+        }
+        }*/
+
+
+
+
+
+
+    }
+
+    return pairs;
+}
+

@@ -1,220 +1,533 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Periodic Table 10x18</title>
-    <style>
-        table {
-            border-collapse: collapse;
-            width: 80%;
-            height: 80vh;
-            margin: 0 auto;
-            position: relative; /* Ensure positioning context for overlay */
-        }
-        td {
-            height: 40px;
-            width: 40px;
-            border: 1px solid #000;
-            text-align: center;
-            vertical-align: middle;
-            padding: 10px;
-            font-size: 12px;
-            position: relative;
-            cursor: pointer;
-        }
-        td.existing {
-            background-color: #d4f1f4;
-            border: 3px solid #000;
-        }
-        td.not-existing {
-            background-color: #0000;
-            border: 0px solid #0000;
-            color: #0000;
-            visibility: hidden;
-        }
-        td.type-1 { background-color: #ffebcd; } /* Rare Earth Metals */
-        td.type-2 { background-color: #f0e68c; } /* Earth Metals */
-        td.type-3 { background-color: #d3ffd3; } /* Transition Metals */
-        td.type-4 { background-color: #f5deb3; } /* Semi-metals */
-        td.type-5 { background-color: #ffb6c1; } /* Halogens */
-        td.type-6 { background-color: #e0ffff; } /* Noble Gases */
-        td.type-7 { background-color: #f08080; } /* Actinides */
-        td.type-8 { background-color: #d3d3d3; } /* Lanthanides */
-        td.type-9 { background-color: #f5f5f5; } /* Nonmetals */
-        td.type-10 { background-color: #fafad2; } /* Post-transition Metals */
-        
-        .atomic-number {
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            font-size: 10px;
-        }
-		.atomic-numbera {
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            font-size: 20px;
-        }
-        .symbol {
-            font-size: 30px;
-            margin-top: 0px;
-        }
-		.symbola {
-            font-size: 60px;
-            margin-top: 0px;
-        }
-        .full-name {
-            position: absolute;
-            bottom: 5px;
-            left: 0;
-            width: 100%;
-            font-size: 12px;
-        }
-.full-namea {
-           position: absolute;
-            bottom: 10px;
-            left: 0;
-            width: 100%;
-            font-size: 24px;
-        }
-		.full-nameas {
-           position: absolute;
-            bottom: 40px;
-            left: 0;
-            width: 100%;
-            font-size: 12px;
-        }
-        #elementName {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 24px;
-            font-weight: bold;
-			display:none;
-			}
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Enhanced Periodic Table — Compact View</title>
+<style>
+  :root {
+    --tile-size: 52px; /* base tile size, will be enforced square by JS */
+  }
+  html,body { height:100%; margin:0; font-family: Arial, sans-serif; background:#ffffff; color:#000; }
 
-        /* Style for the overlay div */
-        #overlay {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            width: 150px;
-            height: 150px; /* Adjust height based on content */
-            background-color: rgba(255, 255, 255, 0.9);
-            border: 2px solid #000;
-            z-index: 10; /* Ensure it is above the table */
-            text-align: center;
-            padding: 20px;
-            box-sizing: border-box;
-            font-size: 18px;
-            display: block; /* Always visible */
-        }
-        #overlay-info {
-            display: block; /* Hide type information initially */
-            margin-top: 20px;
-            font-size: 10px;
-            line-height: 50%;
-            text-align: left;
-            border-top: 1px solid #ddd;
-            padding-top: 0px;
-        }
-    </style>
+  /* Controls: button bottom-left, panel bottom-right */
+  .controls-button {
+    position: fixed;
+    left: 10px;
+    bottom: 10px;
+    z-index: 1100;
+    background:#fff;
+    border:1px solid #000;
+    padding:6px 8px;
+    cursor:pointer;
+    user-select:none;
+  }
+
+  .controls-panel {
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    z-index: 1100;
+    width: 260px;
+    max-height: 72vh;
+    overflow:auto;
+    background:#fff;
+    border:1px solid #000;
+    padding:8px;
+    box-sizing:border-box;
+    display:none;
+    font-size:13px;
+  }
+  .controls-panel label { display:block; margin:6px 0; cursor:pointer; }
+
+  table { border-collapse: collapse; margin: 18px auto; }
+  td {
+    width: var(--tile-size);
+    height: var(--tile-size);
+    border:1px solid #000;
+    text-align:center;
+    vertical-align:middle;
+    position:relative;
+    padding:0;
+    box-sizing:border-box;
+    cursor:pointer;
+    user-select:none;
+  }
+  td.not-existing { border:0; visibility:hidden; width:var(--tile-size); height:var(--tile-size); }
+
+  .atomic-number { position:absolute; top:2px; left:4px; font-size:10px; line-height:1; }
+  .symbol { font-size:16px; line-height:1; font-weight:700; }
+  .full-name { position:absolute; bottom:2px; width:100%; left:0; font-size:8px; }
+
+  /* zoom square on hover of transition metals (absolute, sits above table) */
+  #zoomBox {
+    position: absolute;
+    pointer-events: none;
+    display: none;
+    z-index: 1200;
+    border:2px solid #000;
+    box-sizing: border-box;
+    padding:4px;
+    background: #fff; /* will be overwritten to match tile */
+    width: var(--tile-size);
+    height: var(--tile-size);
+    overflow:hidden;
+    font-family: Arial, sans-serif;
+    line-height:1;
+  }
+  /* compact contents inside zoom box */
+  .zb-number { position:absolute; top:2px; left:4px; font-size:9px; }
+  .zb-mass { position:absolute; top:2px; right:4px; font-size:8px; text-align:right; }
+  .zb-symbol { display:block; width:100%; text-align:center; font-size:20px; font-weight:700; margin-top:6px; }
+  .zb-config { display:block; width:100%; text-align:center; font-size:9px; margin-top:2px; }
+  .zb-cat { position:absolute; bottom:4px; left:4px; right:4px; font-size:8px; text-align:center; }
+
+  /* 100x100 overlay (click) — kept available */
+  .overlay {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 100px;
+    border:2px solid #000;
+    box-sizing:border-box;
+    padding:2px;
+    z-index: 1150;
+    overflow:hidden;
+    background:#fff;
+    display:block;
+    font-size:10px;
+  }
+  .overlay .title { text-align:center; font-size:22px; font-weight:700; margin:0; }
+  .overlay .sub { text-align:center; font-size:8px; margin:2px 0 4px 0; }
+  .overlay .tiny { font-size:7px; }
+
+  /* compact responsive guard for small screens */
+  @media (max-width:520px){
+    :root{ --tile-size: 42px; }
+  }
+</style>
 </head>
 <body>
-    <table id="periodicTable"></table>
-    <div id="elementName"></div>
-    <div id="overlay">
-        <div id="elementDetails"></div>
-        <div id="overlay-info">
-                  </div>
+
+<button class="controls-button" id="toggleControls">Options</button>
+
+<div class="controls-panel" id="controlsPanel" aria-hidden="true">
+  <label><input type="checkbox" id="hideCn"> Hide Cn</label>
+  <label><input type="checkbox" id="flUuq"> Rename Fl → Uuq</label>
+  <label><input type="checkbox" id="colorByDatabase" checked> Color by database (use custom groups)</label>
+  <label><input type="checkbox" id="specialColors"> Highlight special groups (alt)</label>
+  <hr>
+ 
+</div>
+
+<table id="periodicTable" role="grid" aria-label="Periodic table"></table>
+
+<!-- zoom box (hover for transition metals) -->
+<div id="zoomBox" aria-hidden="true">
+  <div class="zb-number"></div>
+  <div class="zb-mass"></div>
+  <div class="zb-symbol"></div>
+  <div class="zb-config"></div>
+  <div class="zb-cat"></div>
+</div>
+
+<!-- 100x100 overlay shown on click (kept compact) -->
+<div class="overlay" id="overlay">Click an element</div>
+
+<script src="element.js"></script>
+<script>
+
+const table = document.getElementById('periodicTable');
+const overlay = document.getElementById('overlay');
+const zoomBox = document.getElementById('zoomBox');
+const controlsPanel = document.getElementById('controlsPanel');
+const toggleControls = document.getElementById('toggleControls');
+
+toggleControls.addEventListener('click', ()=> {
+  const visible = controlsPanel.style.display === 'block';
+  controlsPanel.style.display = visible ? 'none' : 'block';
+  controlsPanel.setAttribute('aria-hidden', visible ? 'true' : 'false');
+});
+
+/* symbol arrays for DB coloring (user-specified groups) */
+const REFACTORY = new Set(['Ti','V','Cr','Zr','Nb','Ho','Hf','Ta','W'].map(s=>s.toUpperCase()));
+const PLATINUM = new Set(['Ru','Rh','Pd','Os','Ir','Pt'].map(s=>s.toUpperCase()));
+const PRECIOUS = new Set(['Cu','Ag','Au','Hg','Re'].map(s=>s.toUpperCase()));
+const IRON_G = new Set(['Fe','Co','Ni'].map(s=>s.toUpperCase()));
+const SEMIMETAL_SET = new Set(['At','Ts'].map(s=>s.toUpperCase()));
+const H_SET = new Set(['H']);
+
+/* colors chosen (classical dense palette) */
+const COLORS = {
+  refactory:'#aaaadd',
+  platinum:'#aadddd',
+  precious:'#33dddd',
+  iron:'#9999ee',
+  semimetal:'#d3ffd3',
+  ametal:'#fafad2',
+  default_transition:'#ccccff',
+  default_post:'#cccccc',
+  default_nonmetal:'#ffffcc',
+  default_other:'#eeeeee'
+};
+
+/* mapping when NOT using DB color (fallback categories) */
+const DEFAULT_MAPPING = {
+  'alkali metal': '#ff9999',
+  'unknown, but predicted to be an alkali metal': '#ddbbbb',
+  'alkaline earth metal': '#ffcc99',
+  'transition metal': '#ccccff',
+  'unknown, probably transition metal': '#ddddee',
+  'post-transition metal': '#cccccc',
+  'unknown, probably post-transition metal': '#eeeeee',
+  'metalloid': '#ccffcc',
+  'polyatomic nonmetal': '#ffffaa',
+  'diatomic nonmetal': '#ffffcc',
+  'halogen': '#ffccff',
+  'noble gas': '#99ffff',
+  'unknown, predicted to be noble gas': '#77bbbb',
+  'lanthanide':'#ffddcc',
+  'actinide':'#ffccdd',
+  'unknown': '#eee'
+};
+
+function forceTileSquares() {
+  // ensure CSS var matches tile width; then set heights accordingly
+  const sampleTd = table.querySelector('td:not(.not-existing)');
+  if(!sampleTd) return;
+  const w = sampleTd.getBoundingClientRect().width;
+  document.documentElement.style.setProperty('--tile-size', Math.round(w) + 'px');
+  // set explicit heights to be precise for older browsers
+  Array.from(table.querySelectorAll('td')).forEach(td=>{
+    td.style.height = td.offsetWidth + 'px';
+  });
+}
+
+/* Determine background color for element based on options */
+function mapCategoryToColor(el){
+  const sym = (el.symbol || '').toUpperCase();
+
+  // normalize category overrides
+  let effectiveCategory = el.category || 'unknown';
+  if (SEMIMETAL_SET.has(sym)) effectiveCategory = 'semimetal';
+  else if (H_SET.has(sym)) effectiveCategory = 'ametal';
+  else if (el.period === 7 && (el.category === 'unknown' || !el.category))
+    effectiveCategory = 'transition metal';
+
+  const colorByDB = document.getElementById('colorByDatabase').checked;
+
+  if (colorByDB) {
+    // ---- strict predefined groups ----
+    if (REFACTORY.has(sym)) return COLORS.refactory;
+    if (PLATINUM.has(sym))  return COLORS.platinum;
+    if (PRECIOUS.has(sym))  return COLORS.precious;
+    if (IRON_G.has(sym))    return COLORS.iron;
+    if (SEMIMETAL_SET.has(sym)) return COLORS.semimetal;
+    if (H_SET.has(sym))     return COLORS.ametal;
+
+    // ---- FALLBACK: default category coloring ----
+    return DEFAULT_MAPPING[effectiveCategory] || DEFAULT_MAPPING.unknown;
+  }
+
+  // ---- default mode only ----
+  return DEFAULT_MAPPING[effectiveCategory] || DEFAULT_MAPPING.unknown;
+}
+
+
+/* Build compact zoom content (no headers). The zoom box is square and placed on top of the tile. */
+function showZoomBoxOver(td, el){
+  const rect = td.getBoundingClientRect();
+  const size = Math.round(rect.width); // square
+  zoomBox.style.width = size + 'px';
+  zoomBox.style.height = size + 'px';
+  zoomBox.style.left = (window.scrollX + rect.left) + 'px';
+  zoomBox.style.top = (window.scrollY + rect.top) + 'px';
+  zoomBox.style.background = mapCategoryToColor(el);
+  zoomBox.style.display = 'block';
+
+  // compact content: number top-left, mass top-right, symbol large center, config below, category bottom
+  const num = el.number ?? '';
+  const mass = (el.atomic_mass !== undefined && el.atomic_mass !== null) ? el.atomic_mass : (el.half_life ? el.half_life : '-');
+  const cfg = el.electron_configuration_semantic || (el.electron_configuration || '') ;
+  const cat = el.category || '';
+
+  zoomBox.querySelector('.zb-number').textContent = num;
+  zoomBox.querySelector('.zb-mass').textContent = (el.atomic_mass ? el.atomic_mass : (el.half_life ? el.half_life : '-'));
+  zoomBox.querySelector('.zb-symbol').textContent = el.symbol || '';
+  // electron config may be long; make it single-line truncated if needed
+  const cfgDisplay = (cfg || '-').toString().replace(/\s+/g,' ');
+  zoomBox.querySelector('.zb-config').textContent = cfgDisplay.length > 36 ? cfgDisplay.slice(0,36) + '…' : cfgDisplay;
+  zoomBox.querySelector('.zb-cat').textContent = cat;
+}
+
+/* Hide zoom box */
+function hideZoomBox(){
+  zoomBox.style.display = 'none';
+}
+
+/* Click overlay (100x100) — kept compact and dense */
+function showOverlay(el){
+  overlay.style.background = mapCategoryToColor(el);
+let  typus=el.block;
+const sym = (el.symbol || '').toUpperCase();
+console.log(sym)
+    if (REFACTORY.has(sym)) typus+=" refactory";
+else if (PLATINUM.has(sym))  typus+=" platinum";
+else if (PRECIOUS.has(sym))  typus+=" precious";
+else if (IRON_G.has(sym))    typus+=" iron";
+else if (SEMIMETAL_SET.has(sym)) typus+=" semimetal";
+else  if (H_SET.has(sym))     typus+=" ametal";
+else typus+=" "+el.category
+typus = (typus || "").replace(
+  /unknown,(?:\s*probably|\s*predicted to be|\s*but predicted to be an)\s*/gi,
+  "U-P-"
+);
+
+typus = (typus || "").replace(
+  "transition",
+  "trans"
+);
+typus = (typus || "").replace(
+  "nonmetal",
+  "ametal"
+);
+
+G=["IA alkali","IIA alkaline earth","IIIB scandium","IVB titanium","VB vanadium","VIB chromium","VIIB manganese","VIIIB iron","VIIIB cobalt","VIIIB nickel","IB coinage","IIB volatile","IIIA icosagen","IVA pnictogen","VA chalcogen","VIA halogen","VII A","VIIIA aerogen"]
+const gro=G[el.group]
+
+
+  const shellsHTML = (el.shells || [])
+    .map(s => `<div>${s}</div>`)
+    .join('');
+
+  const ionHTML = (el.ionization_energies || [])
+    .slice(0,4)
+    .map(v => `<div>${v}</div>`)
+    .join('');
+
+  const cpk = el["cpk-hex"] ? `#${el["cpk-hex"]}` : null;
+
+  overlay.innerHTML = `
+    <!-- Symbol -->
+    <div style="
+      position:absolute;
+      top:6px;
+      left:6px;
+      font-size:22px;
+      font-weight:bold;
+    ">
+      ${el.symbol || ''}
     </div>
 
-    <script>
-        const rows = 10; // 10 main + 2 for Lanthanides and Actinides
-        const cols = 18;
-        // List of elements in a 10x18 grid format with type information
-        const elements = [
-               [1, 'H', 'Hydrogen', 9], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [2, 'He', 'Helium', 6],
-            [3, 'Li', 'Lithium', 3], [4, 'Be', 'Beryllium', 2], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0],
-            [5, 'B', 'Boron', 4],[6, 'C', 'Carbon', 9],[7, 'N', 'Nitrogen', 9],[8, 'O', 'Oxygen', 9],[9, 'F', 'Fluorine', 5], [10, 'Ne', 'Neon', 6],
-            [11, 'Na', 'Sodium', 3], [12, 'Mg', 'Magnesium', 2], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [0,'0','0', 0], [13, 'Al', 'Aluminum', 10], [14, 'Si', 'Silicon', 4], [15, 'P', 'Phosphorus', 9],[16, 'S', 'Sulfur', 9],[17, 'Cl', 'Chlorine', 5], [18, 'Ar', 'Argon', 6],
-            [19, 'K', 'Potassium', 3], [20, 'Ca', 'Calcium', 2], [21, 'Sc', 'Scandium', 1], [22, 'Ti', 'Titanium', 1], [23, 'V', 'Vanadium', 1], [24, 'Cr', 'Chromium', 1], [25, 'Mn', 'Manganese', 1], [26, 'Fe', 'Iron', 1], [27, 'Co', 'Cobalt', 1], [28, 'Ni', 'Nickel', 1], [29, 'Cu', 'Copper', 1], [30, 'Zn', 'Zinc', 1],
-            [31, 'Ga', 'Gallium', 10], [32, 'Ge', 'Germanium', 4], [33, 'As', 'Arsenic', 4],[34, 'Se', 'Selenium', 9],[35, 'Br', 'Bromine', 5], [36, 'Kr', 'Krypton', 6],
-            [37, 'Rb', 'Rubidium', 3], [38, 'Sr', 'Strontium', 2], [39, 'Y', 'Yttrium', 1], [40, 'Zr', 'Zirconium', 1], [41, 'Nb', 'Niobium', 1], [42, 'Mo', 'Molybdenum', 1], [43, 'Tc', 'Technetium', 1], [44, 'Ru', 'Ruthenium', 1], [45, 'Rh', 'Rhodium', 1], [46, 'Pd', 'Palladium', 1], [47, 'Ag', 'Silver', 1], [48, 'Cd', 'Cadmium', 1],
-            [49, 'In', 'Indium', 10], [50, 'Sn', 'Tin', 10], [51, 'Sb', 'Antimony', 4],[52, 'Te', 'Tellurium', 4],[53, 'I', 'Iodine', 5], [54, 'Xe', 'Xenon', 6],
-            [55, 'Cs', 'Cesium', 3], [56, 'Ba', 'Barium', 2], [0,'0','0', 0],
-            [72, 'Hf', 'Hafnium', 1], [73, 'Ta', 'Tantalum', 1], [74, 'W', 'Tungsten', 1], [75, 'Re', 'Rhenium', 1], [76, 'Os', 'Osmium', 1], [77, 'Ir', 'Iridium', 1], [78, 'Pt', 'Platinum', 1], [79, 'Au', 'Gold', 1], [80, 'Hg', 'Mercury', 1],
-            [81, 'Tl', 'Thallium', 10], [82, 'Pb', 'Lead', 10], [83, 'Bi', 'Bismuth', 10], [84, 'Po', 'Polonium', 10], [85, 'At', 'Astatine', 5], [86, 'Rn', 'Radon', 6],
-            [87, 'Fr', 'Francium', 3], [88, 'Ra', 'Radium', 2], [0,'0','0', 0],
-            [104, 'Rf', 'Rutherfordium', 1], [105, 'Db', 'Dubnium', 1], [106, 'Sg', 'Seaborgium', 1], [107, 'Bh', 'Bohrium', 1], [108, 'Hs', 'Hassium', 1], [109, 'Mt', 'Meitnerium', 1], [110, 'Ds', 'Darmstadtium', 1], [111, 'Rg', 'Roentgenium', 1], [0,'0','0', 0],
-            [113, 'Nh', 'Nihonium', 10], [114, 'Uuq', 'Ununquadium', 10], [115, 'Mc', 'Moscovium', 10], [116, 'Lv', 'Livermorium', 10], [117, 'Ts', 'Tennessine', 5], [118, 'Og', 'Oganesson', 6],
-              [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],[0,'0','0', 0], [0,'0','0', 0],
-            [57, 'La', 'Lanthanum', 8], [58, 'Ce', 'Cerium', 8], [59, 'Pr', 'Praseodymium', 8], [60, 'Nd', 'Neodymium', 8], [61, 'Pm', 'Promethium', 8], [62, 'Sm', 'Samarium', 8], [63, 'Eu', 'Europium', 8], [64, 'Gd', 'Gadolinium', 8], [65, 'Tb', 'Terbium', 8], [66, 'Dy', 'Dysprosium', 8], [67, 'Ho', 'Holmium', 8], [68, 'Er', 'Erbium', 8], [69, 'Tm', 'Thulium', 8], [70, 'Yb', 'Ytterbium', 8], [71, 'Lu', 'Lutetium', 8],
-               [0,'0','0', 0],[0,'0','0', 0], [0,'0','0', 0],[89, 'Ac', 'Actinium', 7], [90, 'Th', 'Thorium', 7], [91, 'Pa', 'Protactinium', 7], [92, 'U', 'Uranium', 7], [93, 'Np', 'Neptunium', 7], [94, 'Pu', 'Plutonium', 7], [95, 'Am', 'Americium', 7], [96, 'Cm', 'Curium', 7], [97, 'Bk', 'Berkelium', 7], [98, 'Cf', 'Californium', 7], [99, 'Es', 'Einsteinium', 7], [100, 'Fm', 'Fermium', 7], [101, 'Md', 'Mendelevium', 7], [102, 'No', 'Nobelium', 7], [103, 'Lr', 'Lawrencium', 7],
-			    [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],  [0,'0','0', 0],[0,'0','0', 0], [0,'0','0', 0]
-        ];
-        const table = document.getElementById('periodicTable');
-        const overlay = document.getElementById('overlay');
-        const overlayInfo = document.getElementById('overlay-info');
-        const elementDetails = document.getElementById('elementDetails');
-        const elementName = document.getElementById('elementName');
+    <!-- Name -->
+    <div style="
+      position:absolute;
+      top:30px;
+      left:6px;
+      font-size:8px;
+    ">
+      ${el.name || ''}
+    </div>
+    <!-- icant care anymore-->
+    <div style="
+      position:absolute;
+      top:36px;
+      left:6px;
+      font-size:8px;
+    ">
+      ${typus || ''}
+    </div>
 
-        for (let row = 0; row < rows; row++) {
-            const tr = document.createElement('tr');
-            for (let col = 0; col < cols; col++) {
-                const td = document.createElement('td');
-                const element = elements[row * cols + col];
+    <!-- Atomic mass -->
+    <div style="
+      position:absolute;
+      top:4px;
+      right:6px;
+      font-size:7px;
+      text-align:right;
+    ">
+      ${el.atomic_mass ?? '-'}
+    </div>
 
-                if (element) {
-                    td.className = 'type-' + (element[3] || 0); // Assign class based on type
-                    td.innerHTML = 
-                        `<div class="atomic-number">${element[0]}</div>
-                         <div class="symbol">${element[1]}</div>
-                         <div class="full-name">${element[2]}</div>`;
-                   td.onclick = function() {
-    // Get the element data (assumed to be in the format [atomicNumber, symbol, fullName, type])
-    const atomicNumber = element[0];
-    const symbol = element[1];
-    const fullName = element[2];
-    const type = element[3];
-    const typenam = typename(type);
+    <!-- Shells (right edge) -->
+    <div style="
+      position:absolute;
+      top:20px;
+      right:4px;
+      font-size:8px;
+      line-height:1.05;
+      text-align:right;
+    ">
+      ${shellsHTML || '-'}
+    </div>
 
-    // Update the HTML content
-    elementDetails.innerHTML = `
-        <div class="atomic-numbera">${atomicNumber}</div>
-        <div class="symbola">${symbol}</div>
-        <div class="full-namea">${fullName}</div>
-        <div  class="full-nameas">${typenam}</div>
-        
+    <!-- Properties left -->
+    <div style="
+      position:absolute;
+      top:44px;
+      left:6px;
+      font-size:7px;
+      line-height:1.15;
+    ">
+      χ ${el.electronegativity_pauling ?? '-'}<br>
+      EA ${el.electron_affinity ?? '-'}<br>
+      ρ ${el.density ?? '-'}<br>
+      Cp ${el.molar_heat ?? '-'}
+    </div>
+
+    <!-- Ionization energies -->
+    <div style="
+      position:absolute;
+      top:46px;
+      right:24px;
+      font-size:7px;
+      line-height:1.05;
+      text-align:right;
+    ">
+      ${ionHTML || '-'}
+    </div>
+
+    <!-- CPK color -->
+  <!--  <div style="
+      position:absolute;
+      bottom:65px;
+      left:65px;
+      font-size:7px;
+      display:flex;
+      align-items:center;
+      gap:4px;
+    ">
+      <div style="
+        width:8px;
+        height:8px;
+        background:${cpk || 'transparent'};
+        border:1px solid #0004;
+      "></div>
+     
+    </div> ---!>
+
+    <!-- Gro -->
+    <div style="
+      position:absolute;
+      bottom:12px;
+      left:6px;
+      right:6px;
+      font-size:7px;
+      line-height:1.1;
+    ">
+      ${gro || '-'}
+    </div>
+     <!-- Electron configuration -->
+    <div style="
+      position:absolute;
+      bottom:2px;
+      left:6px;
+      right:6px;
+      font-size:7px;
+      line-height:1.1;
+    ">
+      ${el.electron_configuration_semantic || '-'}
+    </div>
+  `;
+}
+
+
+/* Generate table from elementData */
+function generateTable(){
+  // clear
+  table.innerHTML = '';
+  // layout assumptions: 10 rows, 18 columns (same as original)
+  const rows = 10, cols = 18;
+  for(let r=0;r<rows;r++){
+    const tr = document.createElement('tr');
+    for(let c=0;c<cols;c++){
+      const td = document.createElement('td');
+      td.className = 'not-existing';
+      tr.appendChild(td);
+    }
+    table.appendChild(tr);
+  }
+
+  // clone elements so we can safely mutate temporary properties
+  let elements = (elementData && elementData.elements) ? elementData.elements.slice() : [];
+
+  // apply hide/rename toggles
+  if(document.getElementById('hideCn').checked){
+    elements = elements.filter(e => e.symbol !== 'Cn');
+  }
+  if(document.getElementById('flUuq').checked){
+    elements.forEach(e => { if(e.symbol === 'Fl') e.symbol = 'Uuq'; });
+     elements.forEach(e => { if(e.name === 'Flerovium') e.name = 'Ununquadium'; });
+  }
+
+  // Place elements
+  elements.forEach(el => {
+    // safety guard: require xpos/ypos
+    if(!Number.isInteger(el.xpos) || !Number.isInteger(el.ypos)) return;
+    const rowIndex = el.ypos - 1;
+    const colIndex = el.xpos - 1;
+    if(!table.rows[rowIndex]) return;
+    const td = table.rows[rowIndex].cells[colIndex];
+    if(!td) return;
+
+    td.classList.remove('not-existing');
+    td.style.background = mapCategoryToColor(el);
+
+    td.innerHTML = `
+      <div class="atomic-number">${el.number ?? ''}</div>
+      <div class="symbol">${el.symbol ?? ''}</div>
+      <div class="full-name">${el.name ?? ''}</div>
     `;
 
-    elementName.innerHTML = `${symbol} - ${fullName}`;
-    overlayInfo.style.display = 'none'; // Hide type information
-};
-                }
-                if (element[3] === 0) {
-                    td.className = "not-existing";
-                } 
-                tr.appendChild(td);
-            }
-            table.appendChild(tr);
-        }
-function typename(type){
-const elementTypes = [
-    'Unreal', // 0
-    'Trans Metal', // 1
-    'Earth Metal', // 2
-    'Alkali Metal', // 3
-    'Metalloid', // 4
-    'Halogen', // 5
-    'Noble Gas', // 6
-    'Actinide', // 7
-    'Lanthanide', // 8
-    'Ametal', // 9
-    'other metal', // 10
-];
- return elementTypes[type];
+    // zoom square behavior for transition metals (and elements whose effective category is transition via our override)
+    const effectiveCategory = (() => {
+      const s = (el.symbol||'').toUpperCase();
+      if(SEMIMETAL_SET.has(s)) return 'semimetal';
+      if(H_SET.has(s)) return 'ametal';
+      if(el.period === 7 && (el.category === 'unknown' || !el.category)) return 'transition metal';
+      return el.category || 'unknown';
+    })();
+
+    if(effectiveCategory === 'transition metal'){
+      td.addEventListener('mouseenter', (ev) => {
+        showZoomBoxOver(td, el);
+      });
+      td.addEventListener('mouseleave', hideZoomBox);
+      // keep click small overlay as well
+      td.addEventListener('click', ()=> showOverlay(el));
+    } else {
+      // non-transition: normal click shows overlay
+      td.addEventListener('click', ()=> showOverlay(el));
+    }
+  });
+
+  // enforce square heights after DOM inserted
+  forceTileSquares();
 }
-    </script>
+
+/* auto-update on option changes */
+['hideCn','flUuq','colorByDatabase','specialColors'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('change', generateTable);
+});
+
+/* reposition/hide zoom box on scroll/resize */
+window.addEventListener('scroll', hideZoomBox);
+window.addEventListener('resize', ()=>{
+  hideZoomBox();
+  // re-enforce square tiles on resize (small debounce)
+  clearTimeout(window._tileResizeTimer);
+  window._tileResizeTimer = setTimeout(forceTileSquares, 80);
+});
+
+/* initial render */
+if(typeof elementData === 'undefined' || !Array.isArray(elementData.elements)){
+  table.innerHTML = '<tr><td>element.js not loaded or invalid (elementData.elements missing)</td></tr>';
+} else {
+  generateTable();
+}
+</script>
 </body>
 </html>

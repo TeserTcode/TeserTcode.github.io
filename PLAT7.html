@@ -312,9 +312,9 @@
         const l = Math.sqrt(v[0]**2 + v[1]**2 + v[2]**2); 
         return [v[0]/l, v[1]/l, v[2]/l]; 
     }
-    function getIcosaVertices() {let phi=(1+Math.sqrt(5))/2;
+    function getIcosaVertices() {let phi=(1+Math.sqrt(5))/4;
      //  const phi = (1 + Math.sqrt(5))/4;
-            const vertices = [];
+            let vertices = [];
             // All cyclic permutations of (0, ±1/2, ±phi)
        
                 const signs = [[1,1], [1,-1], [-1,1], [-1,-1]];
@@ -326,11 +326,12 @@
                     vertices.push([coords[1], coords[2], coords[0]]);
                 }
             
+         //   console.log(vertices)
             return vertices;
     }
-    function getDodecaNormals() {let phi=(1+Math.sqrt(5))/2;
+    function getDodecaNormals() {let phi=(1+Math.sqrt(5))/4;
      //   const phi = (1 + Math.sqrt(5))/4;
-            const vertices = [];
+            let vertices = [];
             
             // All sign changes of (±phi, ±phi, ±phi)
             for (const x of [-phi, phi]) {
@@ -357,7 +358,7 @@
     dualsMap.set("tetrahedron", { vertices: [[1,1,1], [1,-1,-1], [-1,1,-1], [-1,-1,1]] });
     dualsMap.set("octahedron", { vertices: [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]] });
     dualsMap.set("cube", { vertices: [[1,1,1],[-1,1,1],[1,-1,1],[-1,-1,1],[1,1,-1],[-1,1,-1],[1,-1,-1],[-1,-1,-1]] });
-    dualsMap.set("icosahedronn", { vertices: getIcosaVertices() });
+    dualsMap.set("icosahedron", { vertices: getIcosaVertices() });
     dualsMap.set("dodecahedron", { vertices: getDodecaNormals() });
     
     // Final Stereographic Function

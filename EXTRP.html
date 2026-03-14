@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Data Extrapolator</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
     <style>
@@ -71,7 +70,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Advanced Data Extrapolator</h1>
+    
         
         <div class="input-area">
             <label for="dataInput">Enter data points as [[x,y],[x1,y1],...]:</label>
@@ -83,9 +82,16 @@
                 <button class="example-btn" data-example="[[0,10],[1,8],[2,6],[3,4],[4,2],[5,0],[6,-2]]">Linear Descending</button>
                 <button class="example-btn" data-example="[[0,1],[1,0],[2,1],[3,0],[4,1],[5,0],[6,1],[7,0],[8,1]]">Oscillating</button>
             </div>
-        </div>
-        
-        <div class="controls">
+            
+             <label>Points: <input type="number" id="numPoints" value="10" min="10"></label>
+            <label>Noise σ: <input type="number" id="noiseSigma" value="0.2" step="0.01"></label>
+      
+
+
+
+      </div>
+      
+        <div class="controls">  
             <div>
                 <label for="extrapolationType">Extrapolation Method:</label>
                 <select id="extrapolationType">
@@ -899,6 +905,80 @@
         }
 
         // Event listeners
+        
+        function gaussianNoise(sigma=1){
+  let u=0,v=0;
+  while(u===0) u=Math.random();
+  while(v===0) v=Math.random();
+  return sigma*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+}
+
+// Signal generator
+function generateSignal(type, n, sigma){
+  const data = [];
+  let brown = 0;
+  for(let i=0;i<n;i++){
+    let x = i/(n-1)*10;
+    let y;
+    switch(type){
+      case "linear": y = x + gaussianNoise(sigma); break;
+      case "quadratic": y = x*x + gaussianNoise(sigma); break;
+      case "logarithmic": y = Math.log(x+1) + gaussianNoise(sigma); break;
+      case "sinusoidal": y = Math.sin(x) + gaussianNoise(sigma); break;
+      case "white": y = gaussianNoise(sigma); break;
+      case "brownian": brown += gaussianNoise(sigma); y = brown; break;
+    }
+    data.push([x,y]);
+  }
+  return data;
+}
+
+        
+        
+        
+        document.getElementById("generateRandomBtn").addEventListener("click",()=>{
+  const n = parseInt(document.getElementById("numPoints").value);
+  const sigma = parseFloat(document.getElementById("noiseSigma").value);
+  const types = ["linear","quadratic","logarithmic","sinusoidal","white","brownian"];
+  const type = types[Math.floor(Math.random()*types.length)];
+  const data = generateSignal(type,n,sigma);
+
+  // create new button
+  const btn = document.createElement("button");
+  btn.className = "example-btn";
+  btn.dataset.example = JSON.stringify(data);
+  btn.textContent = `Random ${type.charAt(0).toUpperCase()+type.slice(1)}`;
+  examplesDiv.appendChild(btn);
+
+});
+        
+   function createSignalButtons(){
+    const types = ["linear","quadratic","logarithmic","sinusoidal","white","brownian","exponential","sigmaIdeal"];
+    const examplesDiv = document.querySelector(".examples");
+
+    types.forEach(type=>{
+        const btn = document.createElement("button");
+        btn.className = "example-btn";
+        btn.textContent = type.charAt(0).toUpperCase()+type.slice(1)+" pert";
+        btn.addEventListener("click", ()=>{
+            const n = parseInt(document.getElementById("numPoints").value);
+            const sigma = parseFloat(document.getElementById("noiseSigma").value);
+            const data = generateSignal(type, n, sigma);
+            document.getElementById("dataInput").value = JSON.stringify(data);
+            updateChart(); // call your chart update
+        });
+        examplesDiv.appendChild(btn);
+    });
+}
+
+// Initialize buttons
+createSignalButtons();     
+        
+        
+        
+        
+        
+        
         document.getElementById('updateBtn').addEventListener('click', updateChart);
         
         // Initial chart update

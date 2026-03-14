@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+       <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+
+<script src="clrspc.js"></script>
+<script src="polyhedra.js"></script>
+<script src="mthfnc.js"></script>
+
+<script>
+
+let current="latticesquare";
+let mode=0; //0 normal 1 dual 2 both
+
+function getpoints(){
+if(!window[current]) return {normal:[],dual:[]};
+
+let pts=window[current]();
+let d=window.latticedual ? window.latticedual(pts) : [];
+d=vectormap(x=>x[0],d)
+if(mode===0) return {normal:pts,dual:[]};
+if(mode===1) return {normal:[],dual:d};
+return {normal:pts,dual:d};
+}
+
+function draw(){
+let canvas=document.getElementById("c");
+let ctx=canvas.getContext("2d");
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+let data=getpoints();
+console.log(smallestDistance(data.normal))
+ctx.save();
+ctx.translate(canvas.width/2,canvas.height/2);
+ctx.scale(20,-20);
+
+ctx.fillStyle="black";
+for(let p of data.normal){
+ctx.beginPath();
+ctx.arc(p.re,p.im,0.1,0,Math.PI*2);
+ctx.fill();
+}
+
+ctx.fillStyle="red";
+for(let p of data.dual){
+ctx.beginPath();
+ctx.arc(p.re,p.im,0.1,0,Math.PI*2);
+ctx.fill();
+}
+
+ctx.restore();
+}
+
+function setlat(name){
+current=name;
+draw();
+}
+
+function toggleMode(){
+mode=(mode+1)%3;
+draw();
+}
+
+window.onload=draw;
+
+</script>
+</head>
+<body>
+
+<div>
+<button onclick="setlat('latticesquare')">square</button>
+<button onclick="setlat('latticetriangular')">triangular</button>
+<button onclick="setlat('latticehexagonal')">hexagonal</button>
+<button onclick="setlat('latticetrihexagonal')">trihex</button>
+<button onclick="setlat('latticesnubsquare')">snumsquare</button>
+<button onclick="setlat('latticetruncatedsquare')">trunc square</button>
+<button onclick="setlat('latticetruncatedhexagonal')">trunc hex</button>
+<button onclick="setlat('latticerhombitrihexagonal')">rhombi</button>
+<button onclick="setlat('latticetruncatedtrihexagonal')">trunc trihex</button>
+<button onclick="setlat('latticesnubhexagonal')">snub hex</button>
+<button onclick="setlat('latticeelongatedtriangular')">elong tri</button>
+<button onclick="toggleMode()">toggle view (normal / dual / both)</button>
+</div>
+
+<canvas id="c" width="800" height="800" style="border:1px solid black"></canvas>
+
+<script>
+
+</script>
+
+</body>
+</html>

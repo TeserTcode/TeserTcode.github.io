@@ -31,7 +31,7 @@ Wave:
 <option value="5">abs(sin)</option>
 <option value="6">triangle</option>
 <option value="7">saw</option>
-<option value="8">tanh(sin)</option>
+<option value="8">tan(sin)</option>
 <option value="9">sin(x+sin3x)</option>
 <option value="10">sin·cos irrational</option>
 <option value="11">fract chaos</option>
@@ -126,7 +126,7 @@ float fp(float x){
   if(wave==5) return cos(x)*sign(sin(x));
   if(wave==6) return 2.0/3.14159265*sign(cos(x));
   if(wave==7) return 1.0/3.14159265;
-  if(wave==8) return cos(x)*(1.0-pow(tanh(sin(x)),2.0));
+  if(wave==8) return cos(x)*(1.0-pow(tan(sin(x)),2.0));
   return cos(x);
 }
 
@@ -267,6 +267,6 @@ pc.onmousemove=e=>{
 
 render();
 </script>
-
+2^x
 </body>
 </html>
