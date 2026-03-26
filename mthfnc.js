@@ -854,102 +854,6 @@ function dpenroseq(x){return stereoprojectraw(x,"dpenroserhombi",0,0,"ortho400o8
 
 
 
-
-
-function gramfromcoxeter(M){
-    let n = M.length
-    let G = Array.from({length:n},()=>Array(n).fill(0))
-    for(let i=0;i<n;i++){
-        for(let j=0;j<n;j++){
-            if(i===j) G[i][j]=1
-            else G[i][j] = -Math.cos(Math.PI/M[i][j])
-        }
-    }
-    return G
-}
-function cholesky(G){
-    let n=G.length
-    let L=Array.from({length:n},()=>Array(n).fill(0))
-
-    for(let i=0;i<n;i++){
-        for(let j=0;j<=i;j++){
-            let s=0
-            for(let k=0;k<j;k++) s+=L[i][k]*L[j][k]
-
-            if(i===j) L[i][j]=Math.sqrt(G[i][i]-s)
-            else L[i][j]=(G[i][j]-s)/L[j][j]
-        }
-    }
-    return matrixmap(x=>inftozero(x,0),L)
-    return L
-}
-function reflect(v,root){
-    let dot=0
-    let rr=0
-
-    for(let i=0;i<v.length;i++){
-        dot+=v[i]*root[i]
-        rr+=root[i]*root[i]
-    }
-
-    let k=2*dot/rr
-
-    let r=[]
-    for(let i=0;i<v.length;i++)
-        r.push(v[i]-k*root[i])
-
-    return r
-}
-
-
-function verticesfromseed(seed,roots,dec,max=100000,eps=1e-6){
-  //  max = 5000
-//console.log(seed,roots,dec)
-//return verticesfromseedtiling(seed,roots,dec,1000)
-    function key(v){
-        return v.map(x=>round(div(x,eps))).join(",")
-    }
-
-    let verts=[]
-    let queue=[]
-    let seen=new Set()
-
-    function add(v){
-        let k=key(v)
-        if(seen.has(k)) return false
-        seen.add(k)
-        verts.push(v)
-        queue.push(v)
-        return true
-    }
-
-    add(seed)
-
-    while(queue.length && verts.length<max){
-
-        let v=queue.pop()
-
-        for(let i=0;i<roots.length;i++){
-            if(dec[i]!=2){
-                let w=reflect(v,roots[i])
-                w=w.map(x=>Math.abs(x)<eps?0:x)
-                add(w)
-            }
-        
-            if(dec[i]===2){
-                for(let j=0;j<roots.length;j++){
-                    if(i===j) continue
-                    let w=reflect(reflect(v,roots[i]),roots[j])
-                    w=w.map(x=>Math.abs(x)<eps?0:x)
-                    add(w)
-                }
-            }
-
-        }
-    }
-
-    return verts
-}
 /*
 function verticesfromseed(seed,roots,dec,max=100000,eps=1e-6){
 //console.log(seed,roots,dec)
@@ -1043,6 +947,123 @@ console.log("L",seed,roots)
 
 
 
+function spectraldecomposition(G, eps=1e-10){
+    // assumes you have an eigen solver:
+    // eig(G) -> {values: [...], vectors: matrix columns}
+    let {values, vectors} = eig(G)
+
+    let n = values.length
+
+    // build sqrt(Λ) but ignore near-zero eigenvalues
+    let L = Array.from({length:n},()=>Array(n).fill(0))
+
+    for(let i=0;i<n;i++){
+        if(values[i] > eps){
+            L[i][i] = Math.sqrt(values[i])
+        } else {
+            L[i][i] = 0
+        }
+    }
+
+    // C = Q * sqrt(Λ)
+    return matrixmultiply(vectors, L)
+}
+
+function gramfromcoxeter(M){
+    let n = M.length
+    let G = Array.from({length:n},()=>Array(n).fill(0))
+    for(let i=0;i<n;i++){
+        for(let j=0;j<n;j++){
+            if(i===j) G[i][j]=1
+            else G[i][j] = -Math.cos(Math.PI/M[i][j])
+        }
+    }
+    return G
+}
+function cholesky(G){
+    let n=G.length
+    let L=Array.from({length:n},()=>Array(n).fill(0))
+
+    for(let i=0;i<n;i++){
+        for(let j=0;j<=i;j++){
+            let s=0
+            for(let k=0;k<j;k++) s+=L[i][k]*L[j][k]
+
+            if(i===j) L[i][j]=Math.sqrt(G[i][i]-s)
+            else L[i][j]=(G[i][j]-s)/L[j][j]
+        }
+    }
+    return matrixmap(x=>inftozero(x,0),L)
+    return L
+}
+function reflect(v,root){
+    let dot=0
+    let rr=0
+
+    for(let i=0;i<v.length;i++){
+        dot+=v[i]*root[i]
+        rr+=root[i]*root[i]
+    }
+
+    let k=2*dot/rr
+
+    let r=[]
+    for(let i=0;i<v.length;i++)
+        r.push(v[i]-k*root[i])
+
+    return r
+}
+
+
+function verticesfromseed(seed,roots,dec,max=1000000000,eps=1e-6){
+  //  max = 5000
+//console.log(seed,roots,dec)a
+//return verticesfromseedtiling(seed,roots,dec,1000)
+    function key(v){
+        return v.map(x=>round(div(x,eps))).join(",")
+    }
+
+    let verts=[]
+    let queue=[]
+    let seen=new Set()
+
+    function add(v){
+        let k=key(v)
+        if(seen.has(k)) return false
+        seen.add(k)
+        verts.push(v)
+        queue.push(v)
+        return true
+    }
+
+    add(seed)
+
+    while(queue.length && verts.length<max){
+
+        let v=queue.pop()
+
+        for(let i=0;i<roots.length;i++){
+            if(dec[i]!=2){
+                let w=reflect(v,roots[i])
+                w=w.map(x=>Math.abs(x)<eps?0:x)
+                add(w)
+            }
+        
+            if(dec[i]===2){
+                for(let j=0;j<roots.length;j++){
+                    if(i===j) continue
+                    let w=reflect(reflect(v,roots[i]),roots[j])
+                    w=w.map(x=>Math.abs(x)<eps?0:x)
+                    add(w)
+                }
+            }
+
+        }
+    }
+
+    return verts
+}
+
 
 
 function seedfromdecoration(dec,roots){
@@ -1121,6 +1142,63 @@ function verticesfromcoxeter(M, V) {
 }
 
 
+function edgesfromcoxeter(M, dec, eps = 1e-6) {
+    const verts = verticesfromcoxeter(M, dec)
+    const G = gramfromcoxeter(M)
+    const roots = cholesky(G)
+
+    function key(v){
+        return v.map(x => Math.round(x/eps)).join(",")
+    }
+
+    // build lookup
+    let indexMap = new Map()
+    for(let i = 0; i < verts.length; i++){
+        indexMap.set(key(verts[i]), i)
+    }
+
+    let edges = []
+    let edgeSet = new Set()
+
+    function addEdge(a, b){
+        if(a === b) return
+        let k = a < b ? a + "," + b : b + "," + a
+        if(edgeSet.has(k)) return
+        edgeSet.add(k)
+        edges.push([a, b])
+    }
+
+    for(let i = 0; i < verts.length; i++){
+        let v = verts[i]
+
+        for(let j = 0; j < roots.length; j++){
+
+            // --- EDGE GENERATOR CONDITION ---
+            // Only mirrors that generate edges
+            if(dec[j] !== 1) continue
+
+            let w = reflect(v, roots[j])
+            w = w.map(x => Math.abs(x) < eps ? 0 : x)
+
+            let k = key(w)
+            if(indexMap.has(k)){
+                let idx = indexMap.get(k)
+                addEdge(i, idx)
+            }
+        }
+    }
+
+    return edges
+}
+
+
+
+
+
+// complexverticesfromcoxeter([[2,3],[3,2]], [1,1], [2,2])
+
+
+
 
 
 
@@ -1139,7 +1217,56 @@ console.log(verticesfromseed(seedfromdecoration(V,cholesky(gramfromcoxeter(M))),
 */
 /*
 function edgesfromcoxeter(vertices, roots, eps=1e-6){
-       let edges = []
+      
+const base=V[i].map(x=>Math.floor(x/cellSize));
+
+for(const nk of neighbors(base)){
+
+const cell=grid.get(nk);
+if(!cell) continue;
+
+for(const j of cell){
+
+if(j<=i) continue;
+
+let d2=0;
+
+for(let k=0;k<N;k++){
+const diff=V[i][k]-V[j][k];
+d2+=diff*diff;
+}
+
+const d=Math.sqrt(d2);
+
+
+
+for(let m=0;m<Math.min(10,mmm.length);m++){
+
+if(mmm[m]!==1) continue;
+
+const target=dvals[m];
+if(!target) continue;
+
+const tolEdge=Math.max(target*0.08,1e-6);
+
+if(Math.abs(d-target)<tolEdge){
+
+edgeIndices.push([i,j]);
+
+const a=projectND(V[i]);
+const b=projectND(V[j]);
+
+edges.push(...a,...b);
+break;
+}
+}
+
+}
+}
+
+}
+
+ let edges = []
 
     for(let i=0;i<vertices.length;i++){
         for(let j=i+1;j<vertices.length;j++){
@@ -10572,7 +10699,23 @@ function desitterscalefactor(t,k=0,H0=1){return add(exp(mul(H0,t)),mul(k,exp(sub
 function antidesitterscalefactor(t,k=0,H0=1){return add(sin(mul(H0,t)),mul(k,cos(sub(0,mul(H0,t)))))}
 function plankp(z){return div(15,pi(),pi(),pi(),pi(),z,z,z,z,z,sub(exp(div(1,z)),1))}
 function plankb(l,t,kb=1,h=1,c=1){return div(mul(2,h,c,c),l,l,l,l,l,sub(exp(div(mul(h,c),l,kb,t)),1))}
+function lorentzbeta(v,c=1){return div(v,c)}
 
+function lorentzrapidity(v,c=1){
+  return atanh(div(v,c))
+}
+
+function lorentzenergy(m,v,c=1){
+  return mul(m,c,c,lorentzfactor(v,c))
+}
+
+function lorentzmomentum(m,v,c=1){
+  return mul(m,v,lorentzfactor(v,c))
+}
+
+function invariantmass(E,p,c=1){
+  return sqrt(sub(sqr(div(E,c)),sqr(p)))
+}
 
 
 
@@ -10838,7 +10981,7 @@ function tocomp(value) {
 }
 
 function conj(value) {
-    return math.complex(value).conjugate();
+    return add(re(value),mul(-1,I,im(value)));
 }
 
 
@@ -11603,6 +11746,7 @@ function sabs(b) {
 }
 
 function norm(b) {
+    return add(sqr(im(b)),sqr(re(b)))
     return re(mul(b, conj(b)));
 }
 
@@ -19429,6 +19573,70 @@ function ramanujansatoj5b(t){return pow(div(dedekindeta(mul(1,t)),dedekindeta(mu
 
 function ramanujansatos5a(k){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,mul(ncr(k,j),ncr(k,j),ncr(add(k,j),j)));return mul(fi,ncr(mul(2,k),k));}
 function ramanujansatos5b(k){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,mul(ncr(k,j),ncr(k,j),ncr(k,j),ncr(sub(mul(4,k),mul(5,j)),mul(3,k)),pow(-1,add(k,j))));return fi;}
+
+function ramanujansatoj6a(t){let j=ramanujansatoj6b(t);return sqr(sub(j,div(1,j)))}
+function ramanujansatoj6b(t){return pow(div(mul(dedekindeta(2,t),dedekindeta(3,t)),dedekindeta(mul(1,t)),dedekindeta(mul(6,t))),12)}
+function ramanujansatoj6c(t){return pow(div(mul(dedekindeta(1,t),dedekindeta(3,t)),dedekindeta(mul(2,t)),dedekindeta(mul(6,t))),6)}
+function ramanujansatoj6d(t){return pow(div(mul(dedekindeta(1,t),dedekindeta(2,t)),dedekindeta(mul(3,t)),dedekindeta(mul(6,t))),4)}
+function ramanujansatoj6e(t){return pow(div(mul(dedekindeta(2,t),dedekindeta(3,t)),dedekindeta(mul(1,t)),dedekindeta(mul(6,t))),3)}
+
+function franelnumber(k){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,cum(ncr(k,j)));return mul(1,fi)}
+function ramanujansatoa1(k){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,cum(ncr(k,j)));return mul(ncr(mul(2,k),k),fi)}
+function ramanujansatoa2(k){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,mul(ncr(k,j),ncr(k,j),ncr(mul(2,j),j)));return mul(ncr(mul(2,k),k),fi)}
+function ramanujansatoa3(k){let fi=0;for(let j=0;j<bign;j++)for(let m=0;m<j;m++)fi=mul(ncr(k,j),pow(-8,sub(k,j)),cum(ncr(j,m)));return mul(ncr(mul(2,k),k),fi)}
+function ramanujansatoa2p(k){let fi=0;for(let j=0;j<bign;j++)for(let m=0;m<j;m++)fi=mul(ncr(k,j),pow(-1,sub(k,j)),cum(ncr(j,m)));return mul(ncr(mul(2,k),k),fi)}
+function ramanujansatoa3p(k){let fi=0;for(let j=0;j<bign;j++)for(let m=0;m<j;m++)fi=mul(ncr(k,j),pow(8,sub(k,j)),cum(ncr(j,m)));return mul(ncr(mul(2,k),k),fi)}
+
+function ramanujansatos6b(k){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,mul(ncr(k,j),ncr(k,j),ncr(add(k,j),j),ncr(add(k,j),j)));return mul(1,fi)}
+function ramanujansatos6c(k){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,mul(ncr(k,j),ncr(k,j),ncr(add(k,k,mul(-2,j)),sub(k,j)),ncr(add(j,j),j)));return mul(pow(-1,k),fi)}
+function ramanujansatos6d(k){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,mul(pow(-1,sub(k,j)),pow(3,sub(k,j,j,j)),ncr(add(j,j),j),ncr(add(j,j,j),j),ncr(k,add(j,j,j)),ncr(add(k,j),j)));return mul(1,fi)}
+
+//ADD APERYLIKERS  https://oeis.org/A002895
+function aperynumber(k){return ramanujansatos6b(k)}
+function dombnumber(k){return ramanujansatos6c(k)}
+function almkvistzudilinnumber(k){return ramanujansatos6c(k)}
+
+function ramanujansatoj7a(t){return sqr(add(sqr(div(dedekindeta(t),dedekindeta(mul(7,t)))),mul(7,sqr(div(dedekindeta(mul(7,t)),dedekindeta(t))))))}
+function ramanujansatoj7b(t){return pow(div(dedekindeta(mul(1,t)),dedekindeta(mul(5,t))),12)}
+
+function ramanujansatos7a(k){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,mul(ncr(k,j),ncr(k,j),ncr(add(j,j),k),ncr(add(k,j),j)));return mul(fi,ncr(mul(2,k),k));}
+
+function ramanujansatoj4b(t){return add(pow(div(dedekindeta(mul(2,t)),dedekindeta(mul(4,t))),12),mul(2,2,2,2,2,2,pow(div(dedekindeta(mul(4,t)),dedekindeta(mul(2,t))),12)))}
+function ramanujansatoj4d(t){return pow(div(dedekindeta(mul(2,t)),dedekindeta(mul(4,t))),12)}
+function ramanujansatoj8a(t){return pow(div(mul(dedekindeta(mul(2,t)),dedekindeta(mul(4,t))),dedekindeta(mul(1,t)),dedekindeta(mul(8,t))),8)}
+function ramanujansatoj8ap(t){return pow(div(mul(dedekindeta(mul(1,t)),dedekindeta(mul(4,t)),dedekindeta(mul(4,t))),dedekindeta(mul(2,t)),dedekindeta(mul(2,t)),dedekindeta(mul(8,t))),8)}
+function ramanujansatoj8b(t){return pow(div(mul(dedekindeta(mul(4,t)),dedekindeta(mul(4,t))),dedekindeta(mul(2,t)),dedekindeta(mul(8,t))),12)}
+function ramanujansatoj8e(t){return pow(div(mul(dedekindeta(mul(4,t)),dedekindeta(mul(4,t)),dedekindeta(mul(4,t))),dedekindeta(mul(2,t)),dedekindeta(mul(8,t)),dedekindeta(mul(8,t))),4)}
+
+function ramanujansatos4b(k){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,mul(pow(4,sub(k,j,j)),ncr(k,add(j,j)),ncr(add(j,j),j),ncr(add(j,j),j)));return mul(1,fi)}
+function ramanujansatos4d(k){return cum(ncr(mul(2,k),k))}
+function ramanujansatos8a(k){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,sqr(mul(ncr(k,j),ncr(add(j,j),k))));return mul(1,fi)}
+function ramanujansatos8b(k){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,mul(ncr(add(j,j),j),ncr(add(j,j),j),ncr(sub(add(k,k),j,j,j,j),sub(k,j,j))));return mul(1,fi)}
+
+
+function ramanujansatoj3c(t){return add(-6,pow(div(mul(dedekindeta(mul(1,t)),dedekindeta(mul(9,t))),dedekindeta(mul(3,t)),dedekindeta(mul(3,t))),-6),mul(-27,pow(div(mul(dedekindeta(mul(1,t)),dedekindeta(mul(9,t))),dedekindeta(mul(3,t)),dedekindeta(mul(3,t))),6)))}
+function ramanujansatoj9a(t){return pow(div(mul(dedekindeta(mul(1,t)),dedekindeta(mul(9,t))),dedekindeta(mul(3,t)),dedekindeta(mul(3,t))),-6)}
+
+function ramanujansatos3c(k){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,mul(pow(-3,sub(k,j,j,j)),ncr(k,j),ncr(sub(k,j),j),ncr(sub(k,j,j),j)));return mul(ncr(add(k,k),k),fi)}
+function ramanujansatos9a(k){let fi=0;for(let j=0;j<bign;j++)for(let m=0;m<j;m++)fi=add(fi,mul(ncr(k,j),ncr(k,j),ncr(k,m),ncr(j,m),ncr(add(j,m),k)));return mul(ncr(add(k,k),k),fi)}
+
+
+function ramanujansatoj10a(t){let j=ramanujansatoj10b(t);return sqr(sub(j,div(1,j)))}
+function ramanujansatoj10b(t){return pow(div(mul(dedekindeta(mul(1,t)),dedekindeta(mul(5,t))),dedekindeta(mul(10,t)),dedekindeta(mul(2,t))),4)}
+function ramanujansatoj10c(t){return pow(div(mul(dedekindeta(mul(1,t)),dedekindeta(mul(2,t))),dedekindeta(mul(10,t)),dedekindeta(mul(5,t))),2)}
+function ramanujansatoj10d(t){return pow(div(mul(dedekindeta(mul(2,t)),dedekindeta(mul(5,t))),dedekindeta(mul(10,t)),dedekindeta(mul(1,t))),6)}
+function ramanujansatoj10e(t){return pow(div(mul(dedekindeta(mul(2,t)),pow(dedekindeta(mul(5,t)),5)),pow(dedekindeta(mul(10,t)),5),dedekindeta(mul(1,t))),1)}
+
+function ramanujansatob1(k){let fi=0;for(let j=0;j<bign;j++)fi=add(fi,mul(pow(ncr(k,j),4)));return mul(1,fi)}
+function ramanujansato2(k){let fi=0;for(let j=0;j<bign;j++)for(let m=0;m<j;m++)fi=add(fi,div(mul(ncr(k,j),pow(ncr(k,j),4)),ncr(add(j,j),j)));return mul(ncr(add(k,k),k),fi)}
+function ramanujansato3(k){let fi=0;for(let j=0;j<bign;j++)for(let m=0;m<j;m++)fi=add(fi,div(mul(pow(-4,sub(k,j)),ncr(k,j),pow(ncr(k,j),4)),ncr(add(j,j),j)));return mul(ncr(add(k,k),k),fi)}
+function ramanujansato2p(k){let fi=0;for(let j=0;j<bign;j++)for(let m=0;m<j;m++)fi=add(fi,div(mul(pow(-1,sub(k,j)),ncr(k,j),pow(ncr(k,j),4)),ncr(add(j,j),j)));return mul(ncr(add(k,k),k),fi)}
+function ramanujansato3p(k){let fi=0;for(let j=0;j<bign;j++)for(let m=0;m<j;m++)fi=add(fi,div(mul(pow(4,sub(k,j)),ncr(k,j),pow(ncr(k,j),4)),ncr(add(j,j),j)));return mul(ncr(add(k,k),k),fi)}
+
+function ramanujansatof(t){return div(mul(dedekindeta(mul(3,t)),dedekindeta(mul(33,t))),dedekindeta(mul(1,t)),dedekindeta(mul(11,t)))}
+
+function ramanujansatoj11a(t){let f=ramanujansatof(t);return add(cum(add(1,f,f,f)),sqr(add(div(1,f),mul(3,sqrt(f)))))}
+
 
 
 
@@ -32174,7 +32382,7 @@ function hypergeometrici1lambda(E,V,F,P,a,z,t,p,d,c,n){
 let fi=0;
 for(let u=0;u<bign;u++)
 for(let k=0;k<=u;k++)
-fi=add(fi,div(mul(hypergeımetriclambda(E,V,F,P,k,a),pow(z,sub(u,k)),pow(t,add(u,mul(k,add(c,n,-1))))),factorial(sub(u,k))))
+fi=add(fi,div(mul(hypergeometriclambda(E,V,F,P,k,a),pow(z,sub(u,k)),pow(t,add(u,mul(k,add(c,n,-1))))),factorial(sub(u,k))))
 return mul(fi,exp(mul(-1,z,t)),pow(t,add(p,d,-1)))
 }
 
@@ -32188,7 +32396,7 @@ function hypergeometrici1theta(E,F,a,z,t,p,d,c,n){
 let fi=0;
 for(let u=0;u<bign;u++)
 for(let k=0;k<=u;k++)
-fi=add(fi,div(mul(hypergeımetrictheta(E,F,k,a),pow(z,sub(u,k)),pow(t,add(u,mul(k,add(c,n,-1))))),factorial(sub(u,k))))
+fi=add(fi,div(mul(hypergeometrictheta(E,F,k,a),pow(z,sub(u,k)),pow(t,add(u,mul(k,add(c,n,-1))))),factorial(sub(u,k))))
 return mul(fi,exp(mul(-1,z,t)),pow(t,add(p,d,-1)))
 }
 
@@ -34070,6 +34278,11 @@ function incompleteweyrich(r,k,x,z){return integral(weyrichd,0,x,[r,k,z])}
 //https://mathworld.wolfram.com/RayleighFunction.html
 function rayleigh(n,v){let fi=0;for(let k=1;k<bign;k++)fi=add(fi,pow(besseljzero(v,k),mul(-2,n)));return fi;}
 function braidrayleigh(n,v){let fi=0;for(let k=1;k<bign;k++)fi=add(fi,pow(besseljzero(k,v),mul(-2,n)));return fi;}
+
+
+function generalizedstefanboltzmann(d,c=1,h=1,kb=1){return mul(div(pow(kb,add(d,1)),pow(h,d)),pow(div(2,c),sub(d,1)),pow(sqrt(pi()),sub(d,2)),d,sub(d,1),zeta(add(d,1)),gamma(div(d,2)))}
+
+
 
 //https://mathworld.wolfram.com/WatsonsTheorem.html
 //https://mathworld.wolfram.com/WhipplesIdentity.html
@@ -39323,11 +39536,11 @@ function resolventkernel(func, x, t, lambda, maxTerms = 5, a = -1, b = 1) {
 
   let currentK = (u, v) => func(u, v);
   let Rval = 0;
-  let powλ = 1;
+  let powl = 1;
 
   for (let n = 1; n <= maxTerms; n++) {
-    Rval = add(Rval, mul(powλ, currentK(x, t)));
-    powλ = mul(powλ, lambda);
+    Rval = add(Rval, mul(powl, currentK(x, t)));
+    powl = mul(powl, lambda);
     const prevK = currentK;
     currentK = (u, v) => integrate(s => mul(func(u, s), prevK(s, v)), a, b);
   }

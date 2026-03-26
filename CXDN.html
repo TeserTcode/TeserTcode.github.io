@@ -59,6 +59,10 @@ label { display:block; margin-top:10px }
 	<option value="x3o">Triangle</option>
 	<option value="x5/2o">Pentagram</option>
 	<option value="x7o">Septagon</option>
+    
+    
+    <option value="x4x4x">Square Tiling</option>
+    
 	<option value="">-- 3D --</option>
     <option value="x3o3o">Tetrahedron</option>
 	<option value="o3x3o">Octahedron</option>
@@ -242,6 +246,7 @@ label { display:block; margin-top:10px }
   <option value="2">Perspective (last coord)</option>
   <option value="3">Average-depth perspective</option>
   <option value="4">Weighted collapse</option>
+  
 </select>
 <label>Background Color:
   <input type="color" id="bgColorPicker" value="#ffffff">
@@ -260,6 +265,10 @@ label { display:block; margin-top:10px }
   <input type="range" id="gkSlider" min="1" max="200" value="37">
 </div>
 <div style="display:flex; align-items:center; gap:10px;">
+  <label>KK: <span id="kkkVal">37</span></label><br>
+  <input type="range" id="kkkSlider" min="0" max="50"step="0.01 value="1">
+</div>
+<div style="display:flex; align-items:center; gap:10px;">
   <label>LLL: <span id="lllVal">2</span></label><br>
   <input type="range" id="lllSlider" min="0" max="5" step="0.01" value="2">
 </div>
@@ -270,6 +279,9 @@ label { display:block; margin-top:10px }
 
 <button id="toggleDistances">Show / Hide Distance Controls</button>
 <div id="distanceControls" style="display:none"></div>
+
+<button id="toggleDistancesa">Show / Hide Face Controls</button>
+<div id="switches" style="display:none"></div>
 
 <br>
 <canvas id="canvas" width="700" height="700"></canvas>
@@ -289,7 +301,7 @@ let isface = 1;
 let isedge = 1;
 let isvert = 1;
 let mmm = new Array(10).fill(0);  // distance rank toggles (first 10)
-mmm[0] = 1;                       // shortest distance on by default
+//mmm[0] = 1;                       // shortest distance on by default
 
 let rotX = 0, rotY = 0;           // 3D rotation (mouse)
 let zoom = 1;
@@ -313,17 +325,19 @@ const gl = canvas.getContext('webgl2');
 const bgPicker = document.getElementById('bgColorPicker');
 const blendSelect = document.getElementById('blendModeSelect');
 const rkSlider = document.getElementById('rkSlider');
+const kkkSlider = document.getElementById('kkkSlider');
 const gkSlider = document.getElementById('gkSlider');
 const bkSlider = document.getElementById('bkSlider');
 const lllSlider = document.getElementById('lllSlider');
 const aSlider = document.getElementById('aSlider');
 const rkVal = document.getElementById('rkVal');
+const kkkVal = document.getElementById('kkkVal');
 const gkVal = document.getElementById('gkVal');
 const bkVal = document.getElementById('bkVal');
 const lllVal = document.getElementById('lllVal');
 const aVal = document.getElementById('aVal');
 
-let rk = 91, gk = 60, bk = 37, lll = 2, aa = 0.5;
+let rk = 91, gk = 60, bk = 37, lll = 2, aa = 0.5,kkk=1;
 
 // WebGL objects
 let triProgram = null, edgeProgram = null;
@@ -680,138 +694,248 @@ function projectND(p) {
     }
 
     return [x, y, z];
+  } else if (projectMode >= 5 && projectMode <= 9) {
+    // Stereographic projections from N-D to 3D
+    // projectMode 5: project from last coordinate onto first 3 coords
+    let denom = 1 - (p[N-1] || 0);
+    denom = (denom === 0) ? 1e6 : 1 / denom;
+    return [
+      (p[0] || 0) * denom,
+      (p[1] || 0) * denom,
+      (p[2] || 0) * denom
+    ];
+
+  } else if (projectMode == 6) {
+    // Stereographic from second-last coordinate
+    let denom = 1 - (p[N-2] || 0);
+    denom = (denom === 0) ? 1e6 : 1 / denom;
+    return [
+      (p[0] || 0) * denom,
+      (p[1] || 0) * denom,
+      (p[2] || 0) * denom
+    ];
+
+  } else if (projectMode == 7) {
+    // Stereographic using sum of all higher dims
+    let sum = 0;
+    for (let i = 3; i < N; i++) sum += p[i] || 0;
+    let denom = 1 - sum / (N - 3);
+    denom = (denom === 0) ? 1e6 : 1 / denom;
+    return [
+      (p[0] || 0) * denom,
+      (p[1] || 0) * denom,
+      (p[2] || 0) * denom
+    ];
+
+  } else if (projectMode == 8) {
+    // Stereographic with weighted sum of higher dims
+    let sum = 0;
+    for (let i = 3; i < N; i++) sum += (p[i] || 0) / (i + 1);
+    let denom = 1 - sum;
+    denom = (denom === 0) ? 1e6 : 1 / denom;
+    return [
+      (p[0] || 0) * denom,
+      (p[1] || 0) * denom,
+      (p[2] || 0) * denom
+    ];
+
+  } else if (projectMode == 9) {
+    // Stereographic with max of higher dims
+    let max = 0;
+    for (let i = 3; i < N; i++) if ((p[i] || 0) > max) max = p[i];
+    let denom = 1 - max;
+    denom = (denom === 0) ? 1e6 : 1 / denom;
+    return [
+      (p[0] || 0) * denom,
+      (p[1] || 0) * denom,
+      (p[2] || 0) * denom
+    ];
   }
 
   return [0,0,0];
 }
 
 // --------------------------------------------------------------------
-// Edge detection
+// Edge detectionlet edgeCache = new Map();
 let edgeCache = new Map();
 
-function buildEdges(V) {
+function buildEdges(V, M, D, isdist1 = 0){
 
-	
-function bandCoord(v){
-  let s = 0;
-  for(let i=0;i<N;i++) s += v[i]*bandDir[i];
-  return s;
-}
+    if(!isface && !isedge) return [[]];
+    if(re(gsum(mmm))<0.5)isdist1=1;
+   // console.log(isdist1)
+    const vertKey = V.length + ":" + N;
+    const maskKey = mmm.join('');
+    const key = vertKey + "|" + maskKey + "|" + isdist1;
 
-let bandDir = new Array(N).fill(0);
-bandDir[0] = 1;        // band along x direction
+    if(edgeCache.has(key)) return edgeCache.get(key);
 
-let bandOffset = 0;    // move the slice
-let bandWidth = 0.5;   // thickness
+    const n = V.length;
 
+    let dvals = [];
 
-  if(!isface && !isedge) return [[]];
+    /* -------------------------
+       DISTANCE MODE SWITCH
+    ------------------------- */
 
-  const vertKey = V.length + ":" + N;
-  const maskKey = mmm.join('');
-  const key = vertKey + "|" + maskKey;
+    if(isdist1 === 1){
 
-  if (edgeCache.has(key)) return edgeCache.get(key);
+        // Force distance = 1
+        dvals = [1.9999999999999998];
 
-  const n = V.length;
+    } else {
 
-  // --- estimate smallest distance ---
-  let minD = Infinity;
-  for (let i=0;i<Math.min(n,50);i++){
-    for (let j=i+1;j<Math.min(n,50);j++){
-      let d2=0;
-      for(let k=0;k<N;k++){
-        const diff = V[i][k]-V[j][k];
-        d2 += diff*diff;
-      }
-      const d = Math.sqrt(d2);
-      if (d>0 && d<minD) minD=d;
-    }
-  }
+        /* -------------------------
+           DISTANCE SAMPLING
+        ------------------------- */
 
-  const cellSize = minD*1.2;
+        let distList = [];
+        const sample = Math.min(n,250);
 
-  // --- build spatial grid ---
-  const grid = new Map();
+        for(let i=0;i<sample;i++){
+        for(let j=i+1;j<sample;j++){
 
-  function cellKey(v){
-    return v.map(x=>Math.floor(x/cellSize)).join(",");
-  }
+            let d2=0;
+            for(let k=0;k<N;k++){
+                const diff = V[i][k]-V[j][k];
+                d2 += diff*diff;
+            }
 
-  for(let i=0;i<n;i++){
-    const k = cellKey(V[i]);
-    if(!grid.has(k)) grid.set(k,[]);
-    grid.get(k).push(i);
-  }
-
-  const edges=[];
-  const edgeIndices=[];
-
-  function neighbors(coord){
-    const out=[];
-    function rec(d,arr){
-      if(d===coord.length){
-        out.push(arr.join(","));
-        return;
-      }
-      for(let t=-1;t<=1;t++){
-        arr[d]=coord[d]+t;
-        rec(d+1,arr);
-      }
-    }
-    rec(0,new Array(coord.length));
-    return out;
-  }
-
-  for(let i=0;i<n;i++){
-
-    const base = V[i].map(x=>Math.floor(x/cellSize));
-
-    for(const nk of neighbors(base)){
-
-      const cell = grid.get(nk);
-      if(!cell) continue;
-
-      for(const j of cell){
-
-        if(j<=i) continue;
-
-        let d2=0;
-        for(let k=0;k<N;k++){
-          const diff = V[i][k]-V[j][k];
-          d2+=diff*diff;
+            if(d2>1e-14) distList.push(Math.sqrt(d2));
+        }
         }
 
-        const d=Math.sqrt(d2);
+        distList.sort((a,b)=>a-b);
 
-        for(let m=0;m<Math.min(10,mmm.length);m++){
+        /* -------------------------
+           ROBUST DISTANCE CLUSTERS
+        ------------------------- */
 
-          if(mmm[m]!==1) continue;
+        let tol=1e-4;
 
-          if(Math.abs(d-minD*(m+1))<minD*0.2){
+        for(let d of distList){
 
-            edgeIndices.push([i,j]);
+            if(dvals.length===0){
+                dvals.push(d);
+                continue;
+            }
 
-            const a=projectND(V[i]);
-            const b=projectND(V[j]);
+            let last=dvals[dvals.length-1];
 
-            edges.push(...a,...b);
-            break;
-          }
+            if(Math.abs(d-last)>tol*Math.max(1,last)){
+                dvals.push(d);
+            }
+
+            if(dvals.length>=10) break;
         }
-
-      }
     }
 
-  }
+//console.log(dvals)
+    const minD = dvals[0] || 1;
+    const cellSize = minD * 5;
 
-  const result={
-    edges:new Float32Array(edges),
-    edgeIndices
-  };
+    /* -------------------------
+       SPATIAL GRID
+    ------------------------- */
 
-  edgeCache.set(key,result);
-  return result;
+    const grid=new Map();
+
+    function cellKey(v){
+        return v.map(x=>Math.floor(x/cellSize)).join(",");
+    }
+
+    for(let i=0;i<n;i++){
+        const k=cellKey(V[i]);
+        if(!grid.has(k)) grid.set(k,[]);
+        grid.get(k).push(i);
+    }
+
+    /* -------------------------
+       NEIGHBOR CELLS
+    ------------------------- */
+
+    function neighbors(coord){
+        const out=[];
+        function rec(d,arr){
+            if(d===coord.length){
+                out.push(arr.join(","));
+                return;
+            }
+            for(let t=-1;t<=1;t++){
+                arr[d]=coord[d]+t;
+                rec(d+1,arr);
+            }
+        }
+        rec(0,new Array(coord.length));
+        return out;
+    }
+
+    /* -------------------------
+       EDGE SEARCH
+    ------------------------- */
+
+    const edges=[];
+    const edgeIndices=[];
+
+    for(let i=0;i<n;i++){
+
+        const base=V[i].map(x=>Math.floor(x/cellSize));
+
+        for(const nk of neighbors(base)){
+
+            const cell=grid.get(nk);
+            if(!cell) continue;
+
+            for(const j of cell){
+
+                if(j<=i) continue;
+
+                let d2=0;
+
+                for(let k=0;k<N;k++){
+                    const diff=V[i][k]-V[j][k];
+                    d2+=diff*diff;
+                }
+
+                const d=Math.sqrt(d2);
+
+                for(let m=0;m<Math.min(10,mmm.length);m++){
+
+                    if(mmm[m]!==1 && !(m==0 && isdist1)) continue;
+
+                    const target = isdist1 ? 2 : dvals[m];
+                    if(!target) continue;
+
+                    // tighter tolerance for fixed-distance mode
+                    const tolEdge = isdist1
+                        ? 0.02
+                        : Math.max(target*0.08,1e-6);
+
+                    if(Math.abs(d-target) < tolEdge){
+
+                        edgeIndices.push([i,j]);
+
+                        const a=projectND(V[i]);
+                        const b=projectND(V[j]);
+
+                        edges.push(...a,...b);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+
+
+const result={
+edges:new Float32Array(edges),
+edgeIndices
+};
+
+edgeCache.set(key,result);
+
+return result;
 }
 // --------------------------------------------------------------------
 
@@ -824,464 +948,255 @@ let bandWidth = 0.5;   // thickness
 
 
 
-
-
-
-
-
 let faceCacheMap = new Map();
 
-function sleep() {
-  return new Promise(r => setTimeout(r, 0));
-}
-function makeFaceFinder(edgeIndices,V, maxFaces = 50000) {
-  if (!isface) return () => [];
-  if(leng(edgeIndices>300))return makeFaceFinder2(edgeIndices,V)
-const arr = edgeIndices.map(([a,b])=>{
-    if(a>b){let t=a;a=b;b=t}
-    return a*100000+b
-})
-arr.sort((x,y)=>x-y)
-const key = arr.join(',')
+function makeFaceFinder(
+  edgeIndices,
+  vertices = null,
+  maxFaces = 50000,
+  sizes = null,      // optional: set of allowed cycle lengths
+  maxSize = 30,
+  bannedLength = bannedLengths // new: array of cycle lengths to forbid (e.g., [3,4,5] bans triangles, quads, pentagons)
+) {
+  if (!edgeIndices || edgeIndices.length === 0) return () => [];
+
+  // Cache key
+  const key = edgeIndices
+    .map(([a,b]) => (a<b ? `${a},${b}` : `${b},${a}`))
+    .sort()
+    .join("|");
   if (faceCacheMap.has(key)) return faceCacheMap.get(key);
 
+  // Build adjacency
   const adj = {};
-  edgeIndices.forEach(([a,b]) => {
+  for (const [a,b] of edgeIndices) {
     if (!adj[a]) adj[a] = [];
     if (!adj[b]) adj[b] = [];
     adj[a].push(b);
     adj[b].push(a);
-  });
-
-  function sharedEdges(f1, f2) {
-    let count = 0;
-    const edges1 = new Set();
-    for (let i = 0; i < f1.length; i++) {
-      let a = f1[i], b = f1[(i+1)%f1.length];
-      edges1.add(a<b ? `${a},${b}` : `${b},${a}`);
-    }
-    for (let i = 0; i < f2.length; i++) {
-      let a = f2[i], b = f2[(i+1)%f2.length];
-      if (edges1.has(a<b ? `${a},${b}` : `${b},${a}`)) {
-        count++;
-        if (count>1) return count;
-      }
-    }
-    return count;
   }
-
-  const faces = [];
-  const n = Object.keys(adj).length;
-/*
-  // triangles
-  for (let i = 0; i < n; i++) {
-    for (let j of adj[i]) {
-      if (j <= i) continue;
-      for (let k of adj[j]) {
-        if (k <= i || k === j) continue;
-        if (adj[i].includes(k)) {
-          const tri = [i,j,k];
-          let ok = true;
-          for (let f of faces) if (sharedEdges(f,tri)>1) { ok=false; break; }
-          if (ok) faces.push(tri);
-          if (faces.length>=maxFaces) break;
-        }
-      }
-      if (faces.length>=maxFaces) break;
-    }
-    if (faces.length>=maxFaces) break;
-  }
-  console.log(`Found ${faces.length} triangles`);
-*/
-  // larger cycles
-  let size = 3;
-  while (size <= 12 && faces.length < maxFaces) {
-    let newFaces = 0;
-    for (let [a,b] of edgeIndices) {
-      let queue = [[a,b]];
-      let visited = new Set([a,b]);
-      while (queue.length) {
-        let path = queue.shift();
-        let last = path[path.length-1];
-        for (let nxt of adj[last]) {
-          if (nxt === path[0] && path.length >= size) {
-            let candidate = [...path];
-            let ok = true;
-            for (let f of faces) if (sharedEdges(f, candidate)>1) { ok=false; break; }
-            if (ok) {
-              faces.push(candidate);
-              newFaces++;
-              if (faces.length>=maxFaces) break;
-            }
-            continue;
-          }
-          if (visited.has(nxt)) continue;
-          visited.add(nxt);
-          queue.push([...path, nxt]);
-        }
-        if (faces.length>=maxFaces) break;
-      }
-      if (faces.length>=maxFaces) break;
-    }
-    if (newFaces===0) break;
-    size++;
-  }
-  console.log(`Total faces found: ${faces.length}`);
-
-  const computeFaces = function(Vrot) {
-    if (!isface) return [];
-    return faces.map(face => face.map(idx => Vrot[idx]));
-  };
-  faceCacheMap.set(key, computeFaces);
-  return computeFaces;
-}
-function makeFaceFinder2(edgeIndices, vertices = null, maxFaces = 3000000, sizes = [3,4,5,6,8,10]) {
-  // If no geometry, we can't do planarity checks, so we fall back to combinatorial search.
-  const useGeometry = Array.isArray(vertices) && vertices.length > 0;
-
-  // ----- Normalise edges for caching -----
-  const arr = edgeIndices.map(([a, b]) => {
-    if (a > b) { let t = a; a = b; b = t; }
-    return a * 100000 + b;
-  });
-  arr.sort((x, y) => x - y);
-  const key = arr.join(',');
-  if (faceCacheMap.has(key)) return faceCacheMap.get(key);
-
-  // ----- Build adjacency lists and sets -----
-  const adj = {};
-  edgeIndices.forEach(([a, b]) => {
-    if (!adj[a]) adj[a] = [];
-    if (!adj[b]) adj[b] = [];
-    adj[a].push(b);
-    adj[b].push(a);
-  });
 
   const adjSet = {};
-  for (let v in adj) {
-    adjSet[v] = new Set(adj[v]);
+  for (const v in adj) adjSet[v] = new Set(adj[v]);
+
+  const vertexList = Object.keys(adj).map(Number).sort((x,y)=>x-y);
+  if (vertexList.length===0) {
+    const empty = ()=>[];
+    faceCacheMap.set(key, empty);
+    return empty;
   }
 
-  // ----- Your fast triangle finder (unchanged) -----
-  let faceCount = 0;
-  const faces = [];
-  const cycleSet = new Set(); // stores canonical keys to avoid duplicates
+  const useGeometry = Array.isArray(vertices) && vertices.length>0;
+  const allowedSizes = sizes ? new Set(sizes) : null;
+  const bannedSet = new Set(bannedLength);
 
-  // Triangles
-  if (sizes.includes(3)) {
-    const verticesList = Object.keys(adj).map(Number).sort((x, y) => x - y);
-    for (let u of verticesList) {
-      const neighbors = adj[u].sort((x, y) => x - y);
-      for (let i = 0; i < neighbors.length; i++) {
-        const v = neighbors[i];
-        if (v <= u) continue;
-        for (let j = i + 1; j < neighbors.length; j++) {
-          const w = neighbors[j];
-          if (w <= v) continue;
-          if (adjSet[v].has(w)) {
-            const tri = [u, v, w];
-            const triKey = tri.slice().sort((x,y)=>x-y).join(',');
-            if (!cycleSet.has(triKey)) {
-              faces.push(tri);
-              cycleSet.add(triKey);
-              faceCount++;
-              if (faceCount % 10000 === 0) {
-                console.log(`Found ${faceCount} faces...`);
-                sleep();
-              }
-              if (faces.length >= maxFaces) break;
-            }
-          }
-        }
-        if (faces.length >= maxFaces) break;
-      }
-      if (faces.length >= maxFaces) break;
-    }
-  }
+  const edgeKey = (a,b) => a<b ? `${a},${b}` : `${b},${a}`;
 
-  // If we already reached maxFaces, return early
-  if (faces.length >= maxFaces) {
-    const computeFaces = function(Vrot) {
-      return faces.map(face => face.map(idx => Vrot[idx]));
-    };
-    faceCacheMap.set(key, computeFaces);
-    return computeFaces;
-  }
-
-  // ----- Helper functions for face validity -----
-  function sharedEdges(f1, f2) {
-    let count = 0;
-    const edges1 = new Set();
-    for (let i = 0; i < f1.length; i++) {
-      let a = f1[i], b = f1[(i+1)%f1.length];
-      edges1.add(a < b ? `${a},${b}` : `${b},${a}`);
-    }
-    for (let i = 0; i < f2.length; i++) {
-      let a = f2[i], b = f2[(i+1)%f2.length];
-      if (edges1.has(a < b ? `${a},${b}` : `${b},${a}`)) {
-        count++;
-        if (count > 1) return count;
-      }
-    }
-    return count;
-  }
-
-  function isChordless(cycle) {
+  function canonicalCycleKey(cycle){
     const n = cycle.length;
-    for (let i = 0; i < n; i++) {
-      const a = cycle[i];
-      for (let j = i + 2; j < n; j++) {
-        if (i === 0 && j === n-1) continue; // skip closing edge
-        const b = cycle[j];
-        if (adjSet[a].has(b)) return false;
+    if(n===0) return "";
+    function rotateToMin(arr){
+      let minPos = 0;
+      for(let i=1;i<n;i++) if(arr[i]<arr[minPos]) minPos=i;
+      return Array.from({length:n},(_,i)=>arr[(minPos+i)%n]);
+    }
+    function lexLess(a,b){
+      for(let i=0;i<a.length;i++){
+        if(a[i]<b[i]) return true;
+        if(a[i]>b[i]) return false;
+      }
+      return false;
+    }
+    const fwd = rotateToMin(cycle);
+    const rev = rotateToMin([...cycle].reverse());
+    return lexLess(fwd,rev)? fwd.join(","): rev.join(",");
+  }
+
+  function cycleEdgeKeys(cycle){
+    const s = new Set();
+    for(let i=0;i<cycle.length;i++) s.add(edgeKey(cycle[i], cycle[(i+1)%cycle.length]));
+    return s;
+  }
+
+  function isChordless(cycle){return true
+    const n=cycle.length;
+    for(let i=0;i<n;i++){
+      const a=cycle[i];
+      for(let j=i+2;j<n;j++){
+        if(i===0 && j===n-1) continue;
+        const b=cycle[j];
+        if(adjSet[a].has(b)) return false;
       }
     }
     return true;
   }
 
-  // ----- N‑dimensional geometry helpers (Gram determinants) -----
-  function dot(a, b) {
-    return a.reduce((sum, ai, i) => sum + ai * b[i], 0);
-  }
-  function subtract(a, b) {
-    return a.map((ai, i) => ai - b[i]);
-  }
-  function add(a, b) {
-    return a.map((ai, i) => ai + b[i]);
-  }
-  function scale(s, v) {
-    return v.map(x => s * x);
-  }
-  function areCollinear(i, j, k, tol = 1e-10) {
-    const a = vertices[i], b = vertices[j], c = vertices[k];
-    const v1 = subtract(b, a);
-    const v2 = subtract(c, a);
-    const det = dot(v1, v1) * dot(v2, v2) - dot(v1, v2) * dot(v1, v2);
-    return Math.abs(det) < tol;
+  function dot(a,b){return a.reduce((s,v,i)=>s+v*b[i],0);}
+  function sub(a,b){return a.map((v,i)=>v-b[i]);}
+  function norm2(v){return dot(v,v);}
+
+  function areCollinear(i,j,k,tol=1e-10){
+    const [a,b,c]=[vertices[i],vertices[j],vertices[k]];
+    const v1=sub(b,a), v2=sub(c,a);
+    const d = norm2(v1)*norm2(v2) - dot(v1,v2)**2;
+    return Math.abs(d)<tol;
   }
 
-  function gramDet3(v1, v2, v3) {
-    const dot11 = dot(v1, v1);
-    const dot12 = dot(v1, v2);
-    const dot13 = dot(v1, v3);
-    const dot22 = dot(v2, v2);
-    const dot23 = dot(v2, v3);
-    const dot33 = dot(v3, v3);
-    return dot11 * dot22 * dot33
-         + 2 * dot12 * dot13 * dot23
-         - dot11 * dot23 * dot23
-         - dot22 * dot13 * dot13
-         - dot33 * dot12 * dot12;
+  function pointInPlane(p,base,v1,v2,tol=1e-10){
+    const w=sub(p,base);
+    const a11=dot(v1,v1), a12=dot(v1,v2), a13=dot(v1,w);
+    const a22=dot(v2,v2), a23=dot(v2,w), a33=dot(w,w);
+    const det = a11*a22*a33 + 2*a12*a13*a23 - a11*a23**2 - a22*a13**2 - a33*a12**2;
+    return Math.abs(det)<tol;
   }
 
-  function pointInPlane(p, base, v1, v2, tol = 1e-10) {
-    const w = subtract(p, base);
-    const det = gramDet3(v1, v2, w);
-    return Math.abs(det) < tol;
-  }
-
-  // ----- Robust supporting hyperplane test (pure geometry) -----
-  function isSupportingFace(cycle) {
-    if (!useGeometry) return true; // no geometry → accept all cycles
-
-    // 1. Find three non‑collinear points in the cycle
-    let p0 = null, p1 = null, p2 = null;
-    for (let i = 0; i < cycle.length; i++) {
-      for (let j = i+1; j < cycle.length; j++) {
-        for (let k = j+1; k < cycle.length; k++) {
-          if (!areCollinear(cycle[i], cycle[j], cycle[k], 1e-8)) {
-            p0 = vertices[cycle[i]];
-            p1 = vertices[cycle[j]];
-            p2 = vertices[cycle[k]];
+  function cycleIsCoplanar(cycle){
+    if(!useGeometry || cycle.length<=3) return true;
+    let p0=null,p1=null,p2=null;
+    for(let i=0;i<cycle.length && !p0;i++)
+      for(let j=i+1;j<cycle.length && !p0;j++)
+        for(let k=j+1;k<cycle.length;k++)
+          if(!areCollinear(cycle[i],cycle[j],cycle[k],1e-9)){
+            [p0,p1,p2] = [vertices[cycle[i]],vertices[cycle[j]],vertices[cycle[k]]];
             break;
           }
-        }
-        if (p0) break;
-      }
-      if (p0) break;
-    }
-    if (!p0) return false; // degenerate cycle (all collinear) – not a proper face
-
-    // 2. Build orthonormal basis for the plane
-    let v1 = subtract(p1, p0);
-    let v2 = subtract(p2, p0);
-    let u1 = v1.slice();
-    const norm1 = Math.sqrt(dot(u1, u1));
-    if (norm1 < 1e-12) return false;
-    u1 = u1.map(x => x / norm1);
-
-    let u2 = subtract(v2, scale(dot(v2, u1), u1));
-    const norm2 = Math.sqrt(dot(u2, u2));
-    if (norm2 < 1e-12) return false;
-    u2 = u2.map(x => x / norm2);
-
-    // 3. Find a vector orthogonal to the plane
-    const dim = vertices[0].length;
-    let n = null;
-    // Try standard basis vectors until we find one not in the plane
-    for (let i = 0; i < dim; i++) {
-      let e = new Array(dim).fill(0);
-      e[i] = 1;
-      let proj = add(scale(dot(e, u1), u1), scale(dot(e, u2), u2));
-      let candidate = subtract(e, proj);
-      if (Math.sqrt(dot(candidate, candidate)) > 1e-8) {
-        n = candidate;
-        break;
-      }
-    }
-    // If all basis vectors are in the plane (shouldn't happen in dim>2), try a random vector
-    if (!n) {
-      let r = new Array(dim).fill(1).map(() => Math.random());
-      let proj = add(scale(dot(r, u1), u1), scale(dot(r, u2), u2));
-      n = subtract(r, proj);
-      if (Math.sqrt(dot(n, n)) < 1e-8) return false;
-    }
-    // Normalize
-    const normN = Math.sqrt(dot(n, n));
-    n = n.map(x => x / normN);
-
-    // 4. Compute signed distances to the plane
-    // Plane equation: n·(x - p0) = 0
-    const signedDist = (idx) => dot(n, subtract(vertices[idx], p0));
-
-    // Tolerance – scale by typical coordinate magnitude
-    const coordScale = Math.sqrt(dot(p0, p0)) + 1.0;
-    const tol = 1e-8 * coordScale;
-
-    // Check cycle vertices are on the plane
-    for (let idx of cycle) {
-      if (Math.abs(signedDist(idx)) > tol) return false;
-    }
-
-    // Check all other vertices lie on one side
-    let hasPositive = false, hasNegative = false;
-    for (let idx = 0; idx < vertices.length; idx++) {
-      if (cycle.includes(idx)) continue;
-      const d = signedDist(idx);
-      if (d > tol) hasPositive = true;
-      if (d < -tol) hasNegative = true;
-      if (hasPositive && hasNegative) return false;
-    }
-    return true;
+    if(!p0) return false;
+    const v1=sub(p1,p0), v2=sub(p2,p0);
+    return cycle.every(idx=>pointInPlane(vertices[idx],p0,v1,v2,1e-8));
   }
 
-  // ----- BFS for larger cycles (sizes 4,5,6,8,10) -----
-  const largerSizes = sizes.filter(s => s > 3);
-  if (largerSizes.length > 0) {
-    const maxSize = Math.max(...largerSizes);
-    // Process each directed edge once (canonical order)
-    const edgeList = edgeIndices.map(([a,b]) => a < b ? [a,b] : [b,a]);
-    edgeList.sort(([a1,b1], [a2,b2]) => a1 - a2 || b1 - b2);
+  // faces bookkeeping
+  const faces=[], faceEdgeSets=[], edgeToFaceIds=new Map();
 
-    for (let [startA, startB] of edgeList) {
-      // Queue entry: { path, basis1, basis2, base }
-      // basis1, basis2, base are defined after we have three non‑collinear points
-      let queue = [{ path: [startA, startB], basis1: null, basis2: null, base: null }];
+  function registerFace(face, edgeSet){
+    // Check for overlapping faces
+    const overlapping = new Set();
+    for(const ek of edgeSet){
+        const ids = edgeToFaceIds.get(ek);
+        if(!ids) continue;
+        for(const id of ids) overlapping.add(id);
+    }
 
-      while (queue.length) {
-        const { path, basis1, basis2, base } = queue.shift();
-        const last = path[path.length - 1];
-
-        for (let nxt of adj[last]) {
-          // Avoid immediate backtrack
-          if (nxt === path[path.length - 2]) continue;
-
-          // Check if we close a cycle
-          if (nxt === path[0] && path.length >= 3) {
-            const cycleLen = path.length;
-            if (!largerSizes.includes(cycleLen)) continue;
-
-            // Planarity check (BFS-level pruning)
-            if (useGeometry && basis1) {
-              if (!pointInPlane(vertices[nxt], base, basis1, basis2)) continue;
-            }
-
-            // Chordless check
-            if (!isChordless(path)) continue;
-
-            // Supporting hyperplane test
-            if (!isSupportingFace(path)) continue;
-
-            // Deduplicate
-            const cycleKey = path.slice().sort((x,y)=>x-y).join(',');
-            if (cycleSet.has(cycleKey)) continue;
-
-            // Edge‑sharing constraint with existing faces
-            let ok = true;
-            for (let f of faces) {
-              if (sharedEdges(f, path) > 1) {
-                ok = false;
-                break;
-              }
-            }
-            if (ok) {
-              faces.push(path.slice());
-              cycleSet.add(cycleKey);
-              faceCount++;
-              if (faceCount % 10000 === 0) {
-                console.log(`Found ${faceCount} faces...`);
-                sleep();
-              }
-              if (faces.length >= maxFaces) break;
-            }
-            continue;
-          }
-
-          // Stop if path would exceed max size
-          if (path.length + 1 > maxSize) continue;
-
-          // Avoid revisiting vertices in current path
-          if (path.includes(nxt)) continue;
-
-          // Geometry pruning for the new vertex
-          let newBasis1 = basis1, newBasis2 = basis2, newBase = base;
-
-          if (useGeometry) {
-            if (basis1) {
-              // Plane already defined – nxt must lie in it
-              if (!pointInPlane(vertices[nxt], base, basis1, basis2)) continue;
-            } else {
-              // Try to establish a plane if we now have three points
-              if (path.length >= 2) {
-                if (!areCollinear(path[0], path[1], nxt, 1e-10)) {
-                  const p0 = vertices[path[0]];
-                  newBasis1 = subtract(vertices[path[1]], p0);
-                  newBasis2 = subtract(vertices[nxt], p0);
-                  newBase = p0;
+    let skipFace = false;
+    for(const id of overlapping){
+        const commonEdges = new Set([...edgeSet].filter(e => faceEdgeSets[id].has(e)));
+        if(commonEdges.size > 2){
+            // Delete bigger face
+            if(faces[id].length >= face.length){
+                // remove old face
+                faces[id] = null;
+                faceEdgeSets[id] = new Set();
+                // remove from edgeToFaceIds
+                for(const ek of edgeSet){
+                    if(edgeToFaceIds.has(ek)){
+                        const arr = edgeToFaceIds.get(ek);
+                        edgeToFaceIds.set(ek, arr.filter(x => x!==id));
+                    }
                 }
-                // else remain collinear – keep null
-              }
+            } else {
+                // current face is bigger, skip registration
+                skipFace = true;
             }
-          }
-
-          queue.push({
-            path: [...path, nxt],
-            basis1: newBasis1,
-            basis2: newBasis2,
-            base: newBase
-          });
         }
-        if (faces.length >= maxFaces) break;
-      }
-      if (faces.length >= maxFaces) break;
     }
-  }
 
-  // ----- Final output function -----
-  const computeFaces = function(Vrot) {
-    // If geometry was used during search, we assume Vrot is consistent.
-    // Otherwise, just map indices to coordinates.
-    return faces.map(face => face.map(idx => Vrot[idx]));
-  };
+    if(skipFace) return;
 
-  faceCacheMap.set(key, computeFaces);
-  return computeFaces;
+    // Register new face
+    const id = faces.length;
+    faces.push(face);
+    faceEdgeSets.push(edgeSet);
+    for(const ek of edgeSet){
+        if(!edgeToFaceIds.has(ek)) edgeToFaceIds.set(ek, []);
+        edgeToFaceIds.get(ek).push(id);
+    }
 }
 
+  function sharesMoreThanOneEdge(edgeSet){
+    const counts=new Map();
+    for(const ek of edgeSet){
+      const ids=edgeToFaceIds.get(ek); if(!ids) continue;
+      for(const id of ids){
+        const c = (counts.get(id)||0)+1;
+        if(c>1) return true;
+        counts.set(id,c);
+      }
+    }
+    return false;
+  }
 
+  // ---------- DFS ----------
+  const seenCycles=new Set();
+  const maxDepth = Math.max(maxSize, sizes?Math.max(...sizes):maxSize);
+  const directedEdges=[];
+  for(const [a,b] of edgeIndices){ directedEdges.push([a,b]); directedEdges.push([b,a]); }
 
+  for(const [startA,startB] of directedEdges){
+    const stack=[{path:[startA,startB],used:new Set([startA,startB]),basis1:null,basis2:null,base:null}];
 
+    while(stack.length && faces.length<maxFaces){
+      const state = stack.pop();
+      const path = state.path;
+      const used = state.used;
+      const last = path[path.length-1], prev = path[path.length-2];
 
+      for(const nxt of adj[last]){
+        if(nxt===prev) continue;
+
+        // close cycle
+        if(nxt===path[0] && path.length>=3){
+          const cycle = path.slice();
+          const len = cycle.length;
+
+          // skip banned lengths
+          if(bannedSet.has(len)) continue;
+          if(allowedSizes && !allowedSizes.has(len)) continue;
+          if(len>maxDepth) continue;
+          if(!isChordless(cycle)) continue;
+          if(!cycleIsCoplanar(cycle)) continue;
+
+          const cycleKey = canonicalCycleKey(cycle);
+          if(seenCycles.has(cycleKey)) continue;
+
+          const edgeSet = cycleEdgeKeys(cycle);
+          if(sharesMoreThanOneEdge(edgeSet)) continue;
+
+          seenCycles.add(cycleKey);
+          registerFace(cycle,edgeSet);
+          continue;
+        }
+
+        if(used.has(nxt)) continue;
+        if(path.length+1>maxDepth) continue;
+
+        let {basis1,basis2,base} = state;
+        if(useGeometry){
+          if(!basis1 && path.length>=2 && !areCollinear(path[0],path[1],nxt,1e-9)){
+            base = vertices[path[0]];
+            basis1 = sub(vertices[path[1]],base);
+            basis2 = sub(vertices[nxt],base);
+          }
+          if(basis1 && !pointInPlane(vertices[nxt],base,basis1,basis2,1e-8)) continue;
+        }
+
+        const nextUsed = new Set(used);
+        nextUsed.add(nxt);
+        stack.push({path:[...path,nxt],used:nextUsed,basis1,basis2,base});
+      }
+    }
+
+    if(faces.length>=maxFaces) break;
+  }
+
+  const computeFaces=function(Vrot){
+    if(!isface) return [];
+    if(Vrot===0) return faces;
+    return faces.map(face=>face.map(idx=>Vrot[idx]));
+  };
+
+  faceCacheMap.set(key,computeFaces);
+  return computeFaces;
+}
 
 
 
@@ -1341,7 +1256,7 @@ function generate() {
   vertsND = verticesfromcoxeter(M, D);
 	
   // Build edges & faces
-  const { edges: edgeBuf, edgeIndices: newEdges } = buildEdges(vertsND);
+  const { edges: edgeBuf, edgeIndices: newEdges } = buildEdges(vertsND,M,D);
   edgeIndices = newEdges;
   computeFaces = makeFaceFinder(edgeIndices,vertsND);
 
@@ -1502,9 +1417,9 @@ function upload(edgeBuffer) {
         // Color (same as original)
         let k = f.length;
         let color = [
-          ((k * (rk || 1) + center[0] * 1) % 255) / 255 + 0.1,
-          ((k * (gk || 2) + center[1] * 1) % 255) / 255 + 0.1,
-          ((k * (bk || 3) + center[2] * 1) % 255) / 255 + 0.1,
+         re( modpc((k * (rk || 1) + center[0] * kkk) , 255))/ 255 / 255 + 0.1,
+          re(modpc((k * (gk || 2) + center[1] * kkk) , 255))/ 255 / 255 + 0.1,
+          re(modpc((k * (bk || 3) + center[2] * kkk) , 255))/ 255 / 255 + 0.1,
           0.5
         ].map(v => v * (lll || 1));
         col.push(...color, ...color, ...color);
@@ -1670,6 +1585,7 @@ blendSelect.addEventListener('change', (e) => {
 });
 
 rkSlider.addEventListener('input', e => { rk = +e.target.value; rkVal.textContent = rk; generate(); });
+kkkSlider.addEventListener('input', e => { kkk = +e.target.value; kkkVal.textContent = kkk; generate(); });
 gkSlider.addEventListener('input', e => { gk = +e.target.value; gkVal.textContent = gk; generate(); });
 bkSlider.addEventListener('input', e => { bk = +e.target.value; bkVal.textContent = bk; generate(); });
 lllSlider.addEventListener('input', e => { lll = +e.target.value; lllVal.textContent = lll; generate(); });
@@ -1727,20 +1643,26 @@ canvas.onwheel = e => {
 };
 
 // Distance rank toggles
+let bannedLengths = [];
 const toggleBtn = document.getElementById('toggleDistances');
+const toggleaBtn = document.getElementById('toggleDistancesa');
 const distanceDiv = document.getElementById('distanceControls');
+const faceDiv = document.getElementById("switches");
+const lengths = [3,4,5,6,8,10,12];
 toggleBtn.addEventListener('click', () => {
   distanceDiv.style.display = distanceDiv.style.display === 'none' ? 'block' : 'none';
 });
-
+toggleaBtn.addEventListener('click', () => {
+  faceDiv.style.display = faceDiv.style.display === 'none' ? 'block' : 'none';
+});
 for (let i = 0; i < 10; i++) {
   let label = document.createElement('label');
   label.style.display = 'block';
   let cb = document.createElement('input');
   cb.type = 'checkbox';
-  cb.checked = (i === 0);
+  cb.checked = 0//(i === 0);
   cb.addEventListener('change', () => {
-    mmm[i] = cb.checked ? 1 : 0;
+    mmm[i] =0// cb.checked ? 1 : 0;
     generate();
   });
   label.appendChild(cb);
@@ -1757,6 +1679,22 @@ edgeCache = new Map();
   faceCacheMap = new Map();
   applyNomAndGenerate();
 };
+lengths.forEach(len => {
+  const label = document.createElement("label");
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.checked = !bannedLengths.includes(len);
+  input.className = "switch";
+  input.addEventListener("change", () => {
+    if(input.checked) bannedLengths = bannedLengths.filter(l=>l!==len);
+    else bannedLengths.push(len);
+  });
+  label.appendChild(input);
+  label.appendChild(document.createTextNode(len));
+  faceDiv.appendChild(label);
+});
+
+// --- compute button ---
 
 // Initialise
 resizeMatrix();
