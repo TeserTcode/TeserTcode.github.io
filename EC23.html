@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<input type="range" id="z" min="0.1" max="2" step="0.01" value="0.3" style="width:100%">
+<canvas id="c"></canvas>
+
+<script>
+let imgs=[],loaded=0,drag=null,oy=0
+let overlay=new Image()
+const c=document.getElementById('c'),ctx=c.getContext('2d'),z=document.getElementById('z')
+let s=parseFloat(z.value)
+function resize(){c.width=innerWidth;c.height=innerHeight;r()}
+window.onresize=resize
+
+resize()
+const paths=[231,232,233,234,235,236,237].map(n=>`./perpcaln/${n}.png`)
+
+paths.forEach((src,i)=>{
+ let im=new Image()
+ im.src=src
+ im.onload=()=>{
+  imgs[i]={im,x:0,y:c.height/2,w:im.width,h:im.height}
+  loaded++
+  if(loaded===paths.length){
+   let xx=0
+   for(let o of imgs){o.x=xx;xx+=o.w*s}
+   r()
+  }
+ }
+})
+
+overlay.src="./perpcaln/sel.png"
+function r(){
+ ctx.clearRect(0,0,c.width,c.height)
+ for(let o of imgs)ctx.drawImage(o.im,o.x,o.y,o.w*s,o.h*s)
+ if(overlay.complete)ctx.drawImage(overlay,0,0,c.width,overlay.height*s)
+}
+c.onmousedown=e=>{
+ const mx=e.clientX,my=e.clientY
+ for(let i=imgs.length-1;i>=0;i--){
+  let o=imgs[i],w=o.w*s,h=o.h*s
+  if(mx>=o.x&&mx<=o.x+w&&my>=o.y&&my<=o.y+h){drag=o;oy=my-o.y;imgs.splice(i,1);imgs.push(o);break}
+ }
+}
+c.onmousemove=e=>{if(drag){drag.y=e.clientY-oy;r()}}
+c.onmouseup=c.onmouseleave=()=>drag=null
+z.oninput=e=>{
+ s=parseFloat(z.value)
+ let xx=0
+ for(let o of imgs){o.x=xx;xx+=o.w*s}
+ r()
+}
+</script>
+
+</body>
+</html>

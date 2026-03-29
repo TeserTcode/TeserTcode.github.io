@@ -55,6 +55,27 @@ label { display:block; margin-top:10px }
 <label>Presets:
   <select id="presets" onchange="applyPreset(this.value)">
     <option value="">-- Select a Preset --</option>
+    
+    
+    <option value="">-- Test Cases --</option>
+    
+    <option value="x3o">Triangle</option>
+    <option value="x3o">Triangle</option>
+    <option value="x3o">Triangle</option>
+    <option value="x3o">Triangle</option>
+    <option value="x3o">Triangle</option>
+    <option value="x3o">Triangle</option>
+    <option value="x4/3o3x">Quasirhombicuboctahedron</option>
+    <option value="x5/3x3o5*a">Great ditrigonal dodecicosidodecahedron</option>
+
+    <option value="x3x3o3o5*a3/2*c">Small tritrigonary dishexacosidishecatonicosachoron</option>
+    
+    
+    
+    
+    
+    
+    
 	<option value="">-- 2D --</option>
 	<option value="x3o">Triangle</option>
 	<option value="x5/2o">Pentagram</option>
@@ -215,6 +236,7 @@ label { display:block; margin-top:10px }
 <button onclick="animf()">Face/Unface</button>
 <button onclick="anime()">Edge/Unedge</button>
 <button onclick="animv()">Vertex/Unvertex</button>
+<button onclick="animi()">Info/Uninfo</button>
 <button onclick="resett()">Reset Memory (mandatory for star polytopes)</button>
 
 <div style="display:flex; align-items:center; gap:10px;">
@@ -244,7 +266,9 @@ label { display:block; margin-top:10px }
 <select id="projectionSelect">
   <option value="1">Orthographic</option>
   <option value="2">Perspective (last coord)</option>
-  <option value="3">Average-depth perspective</option>
+  <option value="3">2D Orthographic</option>
+  <option value="35">Average-depth perspective</option>
+  <option value="36">Average-multiplicative-depth perspective</option>
   <option value="4">Weighted collapse</option>
   
 </select>
@@ -285,7 +309,8 @@ label { display:block; margin-top:10px }
 
 <br>
 <canvas id="canvas" width="700" height="700"></canvas>
-
+<br>
+<div id="graphProperties" style="margin-top:10px; font-family:monospace;"></div>
 <script>
 // --------------------------------------------------------------------
 // Global state
@@ -300,6 +325,7 @@ let isanim = 1;
 let isface = 1;
 let isedge = 1;
 let isvert = 1;
+let iscalc = 0;
 let mmm = new Array(10).fill(0);  // distance rank toggles (first 10)
 //mmm[0] = 1;                       // shortest distance on by default
 
@@ -311,7 +337,7 @@ let facecount=0;
 // Higher‑dimensional rotation angles – one per coordinate plane (i,j)
 let ndAngles = [];
 let ndSpeeds = [];
-
+const graphCache = new Map();
 // UI elements
 const dimNInput = document.getElementById('dimN');
 const matrixDiv = document.getElementById('matrixContainer');
@@ -372,89 +398,82 @@ function applyvef() {
 
     document.getElementById('vef').value = "V: "+vertCount+" E: "+leng(edgeIndices)+" F:"+facecount;
 
-}
-function parseCDString() {
+}function parseCDString() {
     const str = document.getElementById('cdString').value.trim().toLowerCase();
     if (!str) return;
 
+    // Extract real nodes (x, o, s)
     const realNodes = str.match(/[xos]/g) || [];
-    const dim = realNodes.length;
-    if (dim < 1) return;
+    const N = realNodes.length;
+    if (N < 1) return;
 
-    N = dim;
+    // Update dimension UI
     dimNInput.value = N;
-    resizeMatrix(); 
+    resizeMatrix();
 
-    let matrix = Array.from({ length: N }, (_, i) => 
+    // Initialize adjacency matrix: 1 on diagonal, 2 elsewhere
+    const matrix = Array.from({ length: N }, (_, i) =>
         Array.from({ length: N }, (_, j) => (i === j ? 1 : 2))
     );
-    let decorations = new Array(N).fill(0);
 
+    const decorations = new Array(N).fill(0);
     const nodeMap = "abcdefghijklmnopqrstuvwxyz";
-    let nodeIndex = -1; 
+
+    let nodeIndex = -1;      // Index of last processed real node
+    let connectionSource = -1; // Where the next node will connect from
+    let pendingValue = null;  // Numeric value to apply to next link
+
     let i = 0;
-    
-    // We need to track where the NEXT node should connect to.
-    // Usually it's the previous node, but after a * pointer, it's the pointer target.
-    let connectionSource = -1; 
-
     while (i < str.length) {
-        let char = str[i];
+        const char = str[i];
 
-        // --- CASE 1: Real Node (x, o, s) ---
+        // --- CASE 1: Real Node ---
         if (/[xos]/.test(char)) {
             nodeIndex++;
             decorations[nodeIndex] = (char === 'x' ? 1 : (char === 's' ? 2 : 0));
-            
-            // Connect to the source (either previous node or a * branch point)
+
+            // Apply pendingValue if exists, else default to 3
             if (connectionSource >= 0 && nodeIndex < N) {
-                // If a branch value wasn't already set by a number, default to 3
-                if (matrix[nodeIndex][connectionSource] === 2) {
-                    matrix[nodeIndex][connectionSource] = matrix[connectionSource][nodeIndex] = 3;
-                }
+                const val = pendingValue !== null ? pendingValue : 3;
+                matrix[connectionSource][nodeIndex] = matrix[nodeIndex][connectionSource] = val;
             }
-            
-            // By default, the next node will connect to THIS node
-            connectionSource = nodeIndex;
+
+            pendingValue = null;           // Clear after applying
+            connectionSource = nodeIndex;  // Next node connects from this by default
             i++;
         }
-        // --- CASE 2: Branch Value (3, 4, 5/2, etc.) ---
+        // --- CASE 2: Number / Branch Value ---
         else if (/[0-9]/.test(char)) {
             let start = i;
             while (i < str.length && /[0-9\/.]/.test(str[i])) i++;
-            let val = eval(str.substring(start, i));
-
-            // Set the link for the UPCOMING node
-            if (connectionSource >= 0 && nodeIndex + 1 < N) {
-                matrix[connectionSource][nodeIndex + 1] = matrix[nodeIndex + 1][connectionSource] = val;
-            }
+            pendingValue = eval(str.substring(start, i));
         }
         // --- CASE 3: Pointer / Loop (*c) ---
         else if (char === '*') {
-            i++; 
-            let targetChar = str[i];
-            let targetIdx = nodeMap.indexOf(targetChar);
+            i++;
+            const targetChar = str[i];
+            const targetIdx = nodeMap.indexOf(targetChar);
             i++;
 
             if (targetIdx >= 0 && targetIdx < N) {
-                // Update the connection source! 
-                // The NEXT node will now sprout from the targetIdx instead of the current nodeIndex.
                 connectionSource = targetIdx;
 
-                // If a branch value follows the asterisk (e.g. *c3), apply it to that future link
+                // Check if a number immediately follows the *, apply to next node
                 if (i < str.length && /[0-9]/.test(str[i])) {
                     let start = i;
                     while (i < str.length && /[0-9\/.]/.test(str[i])) i++;
-                    let val = eval(str.substring(start, i));
-                    if (nodeIndex + 1 < N) {
-                        matrix[targetIdx][nodeIndex + 1] = matrix[nodeIndex + 1][targetIdx] = val;
-                    }
+                    pendingValue = eval(str.substring(start, i));
                 }
             }
         }
         else {
-            i++;
+            i++; // Skip unrecognized characters
         }
+    }
+
+    // Edge case: if pendingValue remains after last node, apply to last link
+    if (pendingValue !== null && connectionSource >= 0 && nodeIndex >= 0) {
+        matrix[connectionSource][nodeIndex] = matrix[nodeIndex][connectionSource] = pendingValue;
     }
 
     // Sync to UI
@@ -464,6 +483,7 @@ function parseCDString() {
             document.getElementById(`m${r}${c}`).value = matrix[r][c];
         }
     }
+
     generate();
 }
 function parseBranch(b) {
@@ -547,18 +567,19 @@ function createProgram(vsSrc, fsSrc) {
 const vsTri = `#version 300 es
 in vec3 a_pos;
 in vec3 a_normal;
-in vec3 a_color;
+in vec4 a_color;
 uniform float rx;
 uniform float ry;
 uniform float zoom;
 uniform float d;
 uniform float aspect;
 uniform float aa;
-out vec3 v_color;
+out vec4 v_color;
 out vec3 v_normal;
 vec3 rotX(vec3 p,float a){ float c=cos(a),s=sin(a); return vec3(p.x, p.y*c-p.z*s, p.y*s+p.z*c); }
 vec3 rotY(vec3 p,float a){ float c=cos(a),s=sin(a); return vec3(p.x*c+p.z*s, p.y, -p.x*s+p.z*c); }
 void main(){
+
   vec3 p = rotX(rotY(a_pos, ry), rx);
   float s = zoom*2.0/(d-p.z);
   gl_Position = vec4((p.x*s)/aspect, p.y*s, (2.0*p.z)/d, 1.0);
@@ -569,14 +590,14 @@ void main(){
 const fsTri = `#version 300 es
 precision highp float;
 uniform float aa;
-in vec3 v_color;
+in vec4 v_color;
 in vec3 v_normal;
 out vec4 o;
-void main(){
-  vec3 L = normalize(vec3(0.6,0.7,0.4));
-  float lam = abs(dot(normalize(v_normal),L));
-  float i = (1.0-aa) + aa*lam;
-  o = vec4(v_color*i, 1.0);
+void main() {
+    vec3 L = normalize(vec3(0.6,0.7,0.4));
+    float lam = abs(dot(normalize(v_normal), L));
+    float i = (1.0 - aa) + aa * lam;
+    o = vec4(v_color.rgb * i, v_color.a);   // use original alpha
 }`;
 
 const vsEdge = `#version 300 es
@@ -668,6 +689,41 @@ function projectND(p) {
     if (N <= 3) return [p[0] || 0, p[1] || 0, p[2] || 0];
 
     let depth = 0;
+    for (let i = 2; i < N; i++) depth += p[i];
+    depth /= (N - 3);
+
+    let denom = projDist - depth;
+    let s = (denom === 0) ? 1e6 : projDist / denom;
+
+    return [
+      (p[0] || 0) * 1,
+      (p[1] || 0) * 1,
+      0
+   //   (p[2] || 0) * s
+    ];
+
+  }else if (projectMode == 36) {
+    // Average depth perspective (uses mean of higher dimensions)
+    if (N <= 3) return [p[0] || 0, p[1] || 0, p[2] || 0];
+
+    let depth = 1;
+    for (let i = 0; i < N; i++) depth *= p[i];
+    depth /= (N - 3);
+
+    let denom = projDist - depth;
+    let s = (denom === 0) ? 1e6 : projDist / denom;
+
+    return [
+      (p[0] || 0) * s,
+      (p[1] || 0) * s,
+      (p[2] || 0) * s
+    ];
+
+  }else if (projectMode == 35) {
+    // Average depth perspective (uses mean of higher dimensions)
+    if (N <= 3) return [p[0] || 0, p[1] || 0, p[2] || 0];
+
+    let depth = 0;
     for (let i = 3; i < N; i++) depth += p[i];
     depth /= (N - 3);
 
@@ -680,7 +736,7 @@ function projectND(p) {
       (p[2] || 0) * s
     ];
 
-  } else if (projectMode == 4) {
+  }  else if (projectMode == 4) {
     // Weighted collapse of higher dimensions into xyz
     let x = p[0] || 0;
     let y = p[1] || 0;
@@ -777,7 +833,7 @@ function buildEdges(V, M, D, isdist1 = 0){
     /* -------------------------
        DISTANCE MODE SWITCH
     ------------------------- */
-
+ //console.log(re(gsum(mmm)))
     if(isdist1 === 1){
 
         // Force distance = 1
@@ -1233,60 +1289,76 @@ function makeFaceFinder(
 
 // --------------------------------------------------------------------
 // Main generation
-function generate() {
-  // Read matrix
-  let M = [];
-  for (let i = 0; i < N; i++) {
-    let row = [];
-    for (let j = 0; j < N; j++) {
-      let el = document.getElementById(`m${i}${j}`).value;
-      row.push(parseFloat(el) || 1);
+async function generate() {
+    // --- Read matrix ---
+    let M = [];
+    for (let i = 0; i < N; i++) {
+        let row = [];
+        for (let j = 0; j < N; j++) {
+            let el = document.getElementById(`m${i}${j}`).value;
+            row.push(parseFloat(el) || 1);
+        }
+        M.push(row);
     }
-    M.push(row);
-  }
 
-  // Read decoration
-  let D = [];
-  for (let i = 0; i < N; i++) {
-    let el = document.getElementById(`d${i}`).value;
-    D.push(parseFloat(el) || 0);
-  }
+    // --- Read decoration ---
+    let D = [];
+    for (let i = 0; i < N; i++) {
+        let el = document.getElementById(`d${i}`).value;
+        D.push(parseFloat(el) || 0);
+    }
 
-  // Generate N‑D vertices (external library)
-  vertsND = verticesfromcoxeter(M, D);
-	
-  // Build edges & faces
-  const { edges: edgeBuf, edgeIndices: newEdges } = buildEdges(vertsND,M,D);
-  edgeIndices = newEdges;
-  computeFaces = makeFaceFinder(edgeIndices,vertsND);
+    // --- Generate N‑D vertices ---
+    vertsND = verticesfromcoxeter(M, D);
 
-  // Apply ND rotation
-  let rotatedND = vertsND.map(v => rotateND(v, ndAngles));
+    // --- Build edges & faces ---
+    const { edges: edgeBuf, edgeIndices: newEdges } = buildEdges(vertsND, M, D);
+    edgeIndices = newEdges;
+    computeFaces = makeFaceFinder(edgeIndices, vertsND);
 
-  // Project to 3D
-  verts3D = rotatedND.map(projectND);
+    // --- Apply ND rotation ---
+    let rotatedND = vertsND.map(v => rotateND(v, ndAngles));
 
-  // Re‑build edge buffer with projected vertices
-  let edgeBufProj = [];
-  if(isedge)
-  for (let [a,b] of edgeIndices) {
-    if (a >= verts3D.length || b >= verts3D.length) continue;
-    edgeBufProj.push(...verts3D[a], ...verts3D[b]);
-  }
+    // --- Project to 3D ---
+    verts3D = rotatedND.map(projectND);
 
-  if (triBatches.length) {
-    triBatches.forEach(b => gl.deleteVertexArray(b.vao));
-    triBatches = [];
-  }
+    // --- Compute graph properties asynchronously ---
+    const props = await computeGraphPropertiesAsync(vertsND, edgeIndices);
 
-  // Compute faces (existing)
-  faces = computeFaces(rotatedND);
+    // --- Display graph properties ---
+    const propDiv = document.getElementById('graphProperties');
+    if (propDiv) {
+        const pairText = props.diameterPairs
+            .map(([a, b]) => `(${a}, ${b})`)
+            .join(', ');
+        propDiv.innerHTML = `
+            <strong>Graph properties:</strong><br>
+            Diameter (longest shortest path): ${props.diameter}<br>
+            Furthest vertex pairs: ${pairText || 'none'}<br>
+            Spectral gap (2nd largest eigenvalue of adjacency): ${props.spectralGap.toFixed(6)}
+        `;
+    }
 
-  // Upload (now asynchronous)
-  upload(new Float32Array(edgeBufProj));
-  applyvef(); // if needed
-  
-  
+    // --- Build projected edge buffer ---
+    let edgeBufProj = [];
+    if (isedge)
+        for (let [a,b] of edgeIndices) {
+            if (a >= verts3D.length || b >= verts3D.length) continue;
+            edgeBufProj.push(...verts3D[a], ...verts3D[b]);
+        }
+
+    // --- Clear previous triangle batches ---
+    if (triBatches.length) {
+        triBatches.forEach(b => gl.deleteVertexArray(b.vao));
+        triBatches = [];
+    }
+
+    // --- Compute faces ---
+    faces = computeFaces(rotatedND);
+
+    // --- Upload edge buffer asynchronously ---
+    await upload(new Float32Array(edgeBufProj));
+    applyvef(); // optional post-processing
 }
 
 // --------------------------------------------------------------------
@@ -1485,7 +1557,6 @@ function upload(edgeBuffer) {
 
 // Modified draw function – iterates over all triangle batches
 function draw() {
-  if (!triProgram || !edgeProgram) return;
 
   gl.viewport(0, 0, canvas.width, canvas.height);
   const hex = bgPicker.value;
@@ -1648,7 +1719,7 @@ const toggleBtn = document.getElementById('toggleDistances');
 const toggleaBtn = document.getElementById('toggleDistancesa');
 const distanceDiv = document.getElementById('distanceControls');
 const faceDiv = document.getElementById("switches");
-const lengths = [3,4,5,6,8,10,12];
+const lengths = [3,4,5,6,8,10];//14,16,18,2
 toggleBtn.addEventListener('click', () => {
   distanceDiv.style.display = distanceDiv.style.display === 'none' ? 'block' : 'none';
 });
@@ -1662,7 +1733,7 @@ for (let i = 0; i < 10; i++) {
   cb.type = 'checkbox';
   cb.checked = 0//(i === 0);
   cb.addEventListener('change', () => {
-    mmm[i] =0// cb.checked ? 1 : 0;
+    mmm[i] = cb.checked ? 1 : 0;
     generate();
   });
   label.appendChild(cb);
@@ -1674,6 +1745,7 @@ window.anim = () => { isanim = !isanim; };
 window.animf = () => { isface = !isface; generate(); };
 window.anime = () => { isedge = !isedge; generate(); };
 window.animv = () => { isvert = !isvert; generate(); };
+window.animi = () => { iscalc = !iscalc; generate(); };
 window.resett = () => {
 edgeCache = new Map();
   faceCacheMap = new Map();
@@ -1699,6 +1771,207 @@ lengths.forEach(len => {
 // Initialise
 resizeMatrix();
 animate();
+
+
+
+
+
+
+
+// --- Async graph properties computation with caching ---
+
+
+async function computeGraphPropertiesAsync(vertices, edges) {
+if(!iscalc)return;
+    const n = vertices.length;
+    if (n === 0) return { diameter: 0, diameterPairs: null, spectralGap: 0, Degree: 0 };
+
+    const key = n + '|' + edges.map(e => e.join(',')).sort().join(';');
+    if (graphCache.has(key)) return graphCache.get(key);
+
+    // --- Adjacency list ---
+    const adj = Array.from({ length: n }, () => []);
+    for (const [u, v] of edges) {
+        adj[u].push(v);
+        adj[v].push(u);
+    }
+
+
+
+//Girth
+
+
+let girth = Infinity;
+
+    for (let start = 0; start < adj.length; start++) {
+        let dist = Array(adj.length).fill(-1);
+        let parent = Array(adj.length).fill(-1);
+
+        let q = [start];
+        dist[start] = 0;
+
+        while (q.length) {
+            let u = q.shift();
+            for (let v of adj[u]) {
+                if (dist[v] === -1) {
+                    dist[v] = dist[u] + 1;
+                    parent[v] = u;
+                    q.push(v);
+                } else if (parent[u] !== v) {
+                    girth = Math.min(girth, dist[u] + dist[v] + 1);
+                }
+            }
+        }
+    }
+
+
+    // --- BFS for diameter ---
+    const dist = Array(n).fill(-1);
+    dist[0] = 0;
+    const queue = [0];
+    let head = 0;
+    while (head < queue.length) {
+        const u = queue[head++];
+        for (const v of adj[u]) {
+            if (dist[v] === -1) {
+                dist[v] = dist[u] + 1;
+                queue.push(v);
+            }
+        }
+        if (head % 1000 === 0) await new Promise(r => setTimeout(r, 0));
+    }
+    const diameter = Math.max(...dist);
+    const furthestVertices = [];
+    dist.forEach((d, i) => { if (d === diameter) furthestVertices.push(i); });
+    const diameterPairs = furthestVertices.map(v => [0, v]);
+
+    // --- Dense adjacency matrix ---
+    const adjSparse = math.sparse();
+    for (const [i, j] of edges) {
+        adjSparse.set([i, j], 1);
+        adjSparse.set([j, i], 1);
+    }
+    const A = adjSparse.toArray();
+
+   let spectralGap = 0;
+let Degree = 0;
+
+try {
+    await new Promise(r => setTimeout(r, 0));
+
+    const ev = math.eigs(A); // get all eigenvalues
+    let vals = Array.isArray(ev.values) ? ev.values : ev.values._data;
+
+    // sort by magnitude descending
+    vals.sort((a, b) => mag(b) - mag(a));
+
+    // largest eigenvalue (degree for regular graph)
+    Degree = mag(vals[0]);
+
+    // find second DISTINCT magnitude
+    let firstMag = mag(vals[0]);
+    let second = vals.find(v => Math.abs(mag(v) - firstMag) > 1e-10);
+    spectralGap = (second);
+
+
+} catch (err) {
+    console.warn("Eigenvalue computation failed:", err);
+}
+
+    const result = { diameter, diameterPairs, spectralGap, Degree, girth };
+    graphCache.set(key, result);
+    return result;
+}
+
+// --- Main generate function ---
+async function generate() {
+    // --- Read matrix ---
+    let M = [];
+    for (let i = 0; i < N; i++) {
+        let row = [];
+        for (let j = 0; j < N; j++) {
+            let el = document.getElementById(`m${i}${j}`).value;
+            row.push(parseFloat(el) || 1);
+        }
+        M.push(row);
+    }
+
+    // --- Read decoration ---
+    let D = [];
+    for (let i = 0; i < N; i++) {
+        let el = document.getElementById(`d${i}`).value;
+        D.push(parseFloat(el) || 0);
+    }
+
+    // --- Generate N-D vertices ---
+    vertsND = verticesfromcoxeter(M, D);
+
+    // --- Build edges & faces ---
+    const { edges: edgeBuf, edgeIndices: newEdges } = buildEdges(vertsND, M, D);
+    edgeIndices = newEdges;
+    computeFaces = makeFaceFinder(edgeIndices, vertsND);
+
+    // --- Apply ND rotation ---
+    let rotatedND = vertsND.map(v => rotateND(v, ndAngles));
+
+    // --- Project to 3D ---
+    verts3D = rotatedND.map(projectND);
+
+    // --- Compute graph properties asynchronously ---
+    if(iscalc){
+    const props = await computeGraphPropertiesAsync(vertsND, edgeIndices);
+
+    // --- Display graph properties ---
+    const propDiv = document.getElementById('graphProperties');
+    
+    if (propDiv) {
+        const pairText = props.diameterPairs
+            .map(([a, b]) => `(${a}, ${b})`)
+            .join(', ');
+            const d = props.Degree;
+    const L2 = (props.spectralGap); 
+    const ramBound = 2 * Math.sqrt(d - 1);
+    const isRamanujan = L2 <= ramBound;
+        propDiv.innerHTML = `
+            <strong>Graph properties:</strong><br>
+             Vertices : ${leng(vertsND)}<br>
+              Edges : ${leng(edgeIndices)}<br>
+               Faces (dont trust):  ${leng(faces)}<br>
+            Diameter (longest shortest path): ${props.diameter}<br>
+            Furthest vertex pairs: ${pairText || 'none'}<br>
+             Girth : ${props.girth}<br>
+            Degree (1nd largest eigenvalue of adjacency): ${props.Degree.toFixed()}<br>
+            L2 (2nd largest eigenvalue of adjacency): ${props.spectralGap.toFixed(6)}
+            Ramanujan (positive yes): ${(ramBound - L2).toFixed(6)} ${isRamanujan ? 'YES' : 'NO'}
+        `;
+    }}
+
+    // --- Build projected edge buffer ---
+    let edgeBufProj = [];
+    if (isedge)
+        for (let [a, b] of edgeIndices) {
+            if (a >= verts3D.length || b >= verts3D.length) continue;
+            edgeBufProj.push(...verts3D[a], ...verts3D[b]);
+        }
+
+    // --- Clear previous triangle batches ---
+    if (triBatches.length) {
+        triBatches.forEach(b => gl.deleteVertexArray(b.vao));
+        triBatches = [];
+    }
+
+    // --- Compute faces ---
+    faces = computeFaces(rotatedND);
+
+    // --- Upload edge buffer asynchronously ---
+    await upload(new Float32Array(edgeBufProj));
+    applyvef(); // optional post-processing
+}
+
+
+
+
+
 
 
 
