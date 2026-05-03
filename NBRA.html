@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>roman numeral converter</title>
+    <script src="nbfroman.js"></script>
+</head>
+<body>
+
+<h3>roman numeral converter</h3>
+
+<input id="input" type="text" size="60" placeholder="Enter expression or Roman numeral expression">
+<br><br>
+<button onclick="tocn(true)">Calc to Roman</button>
+<button onclick="tocn(false)">Calc to Arabic</button>
+<br><br>
+<button onclick="toRoman()">Conv to Roman</button>
+<button onclick="toArabic()">Conv to Arabic</button>
+<br><br>
+<button onclick="format()">Calc Overline Roman</button>
+<button onclick="format2()">Conv Overline Roman</button>
+<p>Output:</p>
+<pre id="output"></pre>
+
+<script>
+function tocn(a) {
+    const exp = document.getElementById("input").value;
+        const result = calculate(exp, a);
+        document.getElementById("output").textContent = result;
+}
+function toRoman() {
+    const exp = document.getElementById("input").value;
+        const result = roman(exp);
+        document.getElementById("output").textContent = result;
+}
+
+function toArabic() {
+    const exp = document.getElementById("input").value;
+        const result = arabic(exp);
+        document.getElementById("output").textContent = result;
+}
+
+function format() {
+    const exp = document.getElementById("input").value;
+        const result = format_roman(calculate(exp,1));
+        document.getElementById("output").textContent = result;
+
+}
+function format2() {
+    const exp = document.getElementById("input").value;
+        const result = format_roman(roman(exp));
+        document.getElementById("output").textContent = result;
+
+}
+</script>
+
+</body>
+</html>
