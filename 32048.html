@@ -160,17 +160,24 @@
             align-items: center;
         }
 
-        /* Overlay */
+        /* Overlays */
         #gameOverOverlay {
             display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.85); color: red; font-size: 8vw; font-weight: bold;
             text-align: center; line-height: 100vh; z-index: 9999; pointer-events: none;
             text-shadow: 0 0 20px darkred, 4px 4px 0px black;
         }
+        #gameWinOverlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.85); color: #00ff00; font-size: 8vw; font-weight: bold;
+            text-align: center; line-height: 100vh; z-index: 9999; pointer-events: none;
+            text-shadow: 0 0 20px darkgreen, 4px 4px 0px black;
+        }
     </style>
 </head>
 <body>
 <div id="gameOverOverlay">ULTRA MEGA SKILL ISSUE</div>
+<div id="gameWinOverlay">ULTRA MEGA SKILL</div>
 
 <h1>2048 10k Edition</h1>
 <div id="eventMessage"></div>
@@ -209,9 +216,8 @@
     <div class="settings-option"><label>DIFFICULTY</label><input type="number" id="diffInput" value="2" min="1"></div>
     <div class="settings-option"><label>EVENT TYPE</label>
         <select id="eventTypeInput">
-		 <option selected value="upgrade">UPGRADE</option>
+            <option selected value="upgrade">UPGRADE</option>
             <option value="explode">EXPLODE</option>
-           
         </select>
     </div>
     <div class="settings-option"><label>AUTO SPEED (ms)</label><input type="number" id="autoSpeedInput" value="150" min="1"></div>
@@ -229,7 +235,9 @@
     let autoPlay = false, autoInterval = null, autoSpeed = 150;
 
     const els = {
-        grid: document.getElementById('gameGrid'), overlay: document.getElementById('gameOverOverlay'),
+        grid: document.getElementById('gameGrid'), 
+        overlay: document.getElementById('gameOverOverlay'),
+        winOverlay: document.getElementById('gameWinOverlay'),
         score: document.getElementById('scoreVal'), high: document.getElementById('highVal'),
         lvl: document.getElementById('levelVal'), diff: document.getElementById('diffVal'),
         stats: document.getElementById('statsPanel'), autoBtn: document.getElementById('autoPlayBtn')
@@ -324,7 +332,6 @@
         }
         
         if (events.length > 0) {
-            // Apply logic immediately so state is ready for the next move without blocking
             events.forEach(e => {
                 if (e.type === 'explode') board[e.r][e.c] = 0;
                 else if (e.type === 'upgrade') {
@@ -334,13 +341,15 @@
             });
             spawnRandomTile(); 
             drawBoard(events); 
-            checkDeath();
+            checkState();
         } else {
-            spawnRandomTile(); drawBoard(); checkDeath();
+            spawnRandomTile(); drawBoard(); checkState();
         }
     }
 
     function moveAndMerge(dir) {
+        if (els.overlay.style.display === 'block' || els.winOverlay.style.display === 'block') return;
+
         let rots = {'r':0, 'u':1, 'l':2, 'd':3}[dir];
         for(let r=0; r<rots; r++) board = rotate(board);
         
@@ -363,13 +372,21 @@
         if(moved) handleEvents();
     }
 
-    function checkDeath() { if(isGameOver()) els.overlay.style.display = 'block'; }
+    function checkState() {
+        if (currentLevel >= 10000) {
+            els.winOverlay.style.display = 'block';
+            if (autoPlay) toggleAutoPlay();
+        } else if (isGameOver()) {
+            els.overlay.style.display = 'block';
+            if (autoPlay) toggleAutoPlay();
+        }
+    }
 
     function resetGame(startLvl, diff, rows, cols) {
         if(autoPlay) toggleAutoPlay();
         gameRows = rows; gameCols = cols; currentLevel = startLvl; difficulty = diff;
         board = Array(gameRows).fill().map(()=>Array(gameCols).fill(0));
-        scoreTally = {}; els.overlay.style.display = 'none';
+        scoreTally = {}; els.overlay.style.display = 'none'; els.winOverlay.style.display = 'none';
         spawnRandomTile(); spawnRandomTile(); drawBoard();
     }
 
@@ -392,7 +409,7 @@
         if(s) {
             let d = JSON.parse(s); board = d.board; scoreTally = d.scoreTally; currentLevel = d.currentLevel;
             difficulty = d.difficulty; gameRows = d.gameRows; gameCols = d.gameCols; eventType = d.eventType || 'explode';
-            els.overlay.style.display = 'none'; drawBoard();
+            els.overlay.style.display = 'none'; els.winOverlay.style.display = 'none'; drawBoard(); checkState();
         }
     });
 
