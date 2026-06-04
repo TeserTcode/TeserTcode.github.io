@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>2048 10k Edition</title>
+    <style>
+        body {
+            text-align: center;
+            background: url('32048_background.png') no-repeat center center fixed;
+            background-size: 100vw 100vh;
+            transition: all 0.5s;
+            filter: none;
+            font-family: Arial, sans-serif;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+        }
+        /* Visual Effects */
+        .event-effect { animation: eventPulse 1s; }
+        .invert-effect { filter: invert(1); }
+        .blur-effect { filter: blur(2px); }
+        .sepia-effect { filter: sepia(1); }
+        .hue-effect { filter: hue-rotate(90deg); }
+        .contrast-effect { filter: contrast(200%); }
+        @keyframes eventPulse {
+            0% { background-color: rgba(255,255,255,0); }
+            50% { background-color: rgba(255,255,255,0.3); }
+            100% { background-color: rgba(255,255,255,0); }
+        }
+        table {
+            border-collapse: collapse;
+            margin: 20px auto;
+            box-shadow: 0 0 20px 5px #34d9d6; /* Glow effect */
+        }
+        .main-buttons button, #toggleSettingsButton {
+            background: #34d9d6;
+            background-image: linear-gradient(to bottom, #34d9d6, #2bb85a);
+            border-radius: 26px;
+            font-family: Georgia;
+            color: #000000;
+            font-size: 28px;
+            padding: 15px 30px;
+            text-decoration: none;
+            margin: 10px;
+            border: none;
+            cursor: pointer;
+        }
+        #eventMessage {
+            font-size: 30px;
+            color: gold;
+            text-shadow: 2px 2px 4px #000;
+            margin: 20px;
+            height: 40px;
+        }
+        td {
+            padding: 0;
+            line-height: 0;
+            position: relative;
+        }
+        h1 {
+            font-size: 50px;
+            font-family: "Comic Sans MS";
+            color:purple;
+            transition: all 0.5s;
+            margin-top: 0;
+        }
+        img {
+            border: 5px solid black;
+            width: 128px;
+            height: 128px;
+            transition: all 0.1s ease;
+        }
+        .exploding, .upgrading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            animation: var(--animation-name) var(--explosion-duration) steps(4) forwards;
+            background-size: cover;
+        }
+        @keyframes explode {
+            0% { background-image: url('explosion1.png'); } 25% { background-image: url('explosion2.png'); }
+            50% { background-image: url('explosion3.png'); } 75% { background-image: url('explosion4.png'); }
+            100% { opacity: 0; }
+        }
+        @keyframes upgrade {
+            0% { background-image: url('upgrade1.png'); } 25% { background-image: url('upgrade2.png'); }
+            50% { background-image: url('upgrade3.png'); } 75% { background-image: url('upgrade4.png'); }
+            100% { opacity: 0; }
+        }
+        .stats-display {
+            display: block; /* Initially visible */
+            transition: all 0.5s;
+        }
+        .stats-display.hidden {
+            display: none;
+        }
+        #score, #highscore, #difficulty, #level, #phase, #explosionDuration {
+            display: inline-block;
+            width: 256px;
+            margin: 10px 0;
+            font-size: 24px;
+            background-image: linear-gradient(to bottom, #00ffdd, #00ddff);
+            border-radius: 0px;
+            box-shadow: 0px 1px 3px #666666;
+            font-family: Arial;
+            color: #000000;
+            padding: 10px 5px;
+            border: solid #000000 2px;
+            text-decoration: none;
+        }
+        #error-message, #error-message2 {
+            display: none; color: red; font-weight: bold; font-size: 20px;
+        }
+        #error-message2 { font-size: 50px; }
+
+        /* Settings Menu */
+        #settingsMenu {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 500px;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #34d9d6;
+            border-radius: 15px;
+            padding: 20px;
+            z-index: 100;
+            display: none; /* Initially hidden */
+        }
+        #settingsMenu h2 { margin-top: 0; }
+        .settings-option { margin: 15px 0; display: flex; justify-content: space-between; align-items: center; }
+        .settings-option label { font-size: 18px; }
+        .settings-option input[type="checkbox"] { width: 25px; height: 25px; }
+        .settings-option input, .settings-option select { width: 100px; font-size: 18px; padding: 5px; }
+        .settings-option button { font-size: 18px; padding: 5px 10px; background:#34d9d6; cursor:pointer; font-weight:bold; }
+
+        /* Mobile Controls */
+        #mobileControls {
+            margin-top: 20px;
+        }
+        #mobileControls button {
+            width: 70px;
+            height: 70px;
+            font-size: 24px;
+            margin: 5px;
+            background: #34d9d6;
+            color: black;
+            border: 2px solid black;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        #mobileControls div {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Overlay */
+        #gameOverOverlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.85); color: red; font-size: 8vw; font-weight: bold;
+            text-align: center; line-height: 100vh; z-index: 9999; pointer-events: none;
+            text-shadow: 0 0 20px darkred, 4px 4px 0px black;
+        }
+    </style>
+</head>
+<body>
+<div id="gameOverOverlay">ULTRA MEGA SKILL ISSUE</div>
+
+<h1>2048 10k Edition</h1>
+<div id="eventMessage"></div>
+
+<div class="stats-display" id="statsPanel">
+    <div id="score">SCORE: <span id="scoreVal">0</span></div>
+    <div id="highscore">HIGH: <span id="highVal">0</span></div>
+    <div id="level">LVL: <span id="levelVal">-10000</span></div>
+    <div id="difficulty">DIFF: <span id="diffVal">2</span></div>
+</div>
+
+<table id="gameGrid"></table>
+
+<div class="main-buttons">
+    <button id="retryBtn">RETRY</button>
+    <button id="autoPlayBtn">AUTO OFF</button>
+    <button id="settingsBtn">SETTINGS</button>
+    <button id="saveBtn">SAVE</button>
+    <button id="loadBtn">LOAD</button>
+</div>
+
+<div id="mobileControls">
+    <div><button id="moveUp">↑</button></div>
+    <div>
+        <button id="moveLeft">←</button>
+        <button id="moveDown">↓</button>
+        <button id="moveRight">→</button>
+    </div>
+</div>
+
+<div id="settingsMenu">
+    <h2>MATRIX CONSOLE</h2>
+    <div class="settings-option"><label>COLS (M)</label><input type="number" id="colsInput" value="4" min="2" max="10"></div>
+    <div class="settings-option"><label>ROWS (N)</label><input type="number" id="rowsInput" value="4" min="2" max="10"></div>
+    <div class="settings-option"><label>START LEVEL</label><input type="number" id="startLevelInput" value="-10000" step="1"></div>
+    <div class="settings-option"><label>DIFFICULTY</label><input type="number" id="diffInput" value="2" min="1"></div>
+    <div class="settings-option"><label>EVENT TYPE</label>
+        <select id="eventTypeInput">
+		 <option selected value="upgrade">UPGRADE</option>
+            <option value="explode">EXPLODE</option>
+           
+        </select>
+    </div>
+    <div class="settings-option"><label>AUTO SPEED (ms)</label><input type="number" id="autoSpeedInput" value="150" min="1"></div>
+    <div class="settings-option"><label>SHOW STATS</label><input type="checkbox" id="showStatsToggle" checked></div>
+    <div class="settings-option">
+        <button id="applySettingsBtn">APPLY & RESTART</button>
+        <button id="closeSettingsBtn">CLOSE</button>
+    </div>
+</div>
+
+<script>
+    let gameRows = 4, gameCols = 4, board = [], scoreTally = {};
+    let highscoreTally = localStorage.getItem('10k_high_tally') ? JSON.parse(localStorage.getItem('10k_high_tally')) : {};
+    let difficulty = 2, currentLevel = -10000, eventType = 'upgrade';
+    let autoPlay = false, autoInterval = null, autoSpeed = 150;
+
+    const els = {
+        grid: document.getElementById('gameGrid'), overlay: document.getElementById('gameOverOverlay'),
+        score: document.getElementById('scoreVal'), high: document.getElementById('highVal'),
+        lvl: document.getElementById('levelVal'), diff: document.getElementById('diffVal'),
+        stats: document.getElementById('statsPanel'), autoBtn: document.getElementById('autoPlayBtn')
+    };
+
+    function getTileSrc(exp) { return exp === 0 ? 'compressed/e.png' : `compressed/${Math.min(10000, Math.max(-10000, exp))}.png`; }
+
+    function addScore(exp) {
+        let e = exp;
+        while(scoreTally[e]) { scoreTally[e] = 0; e++; }
+        scoreTally[e] = 1;
+    }
+
+    function getScoreString(tally) {
+        let keys = Object.keys(tally).filter(k => tally[k] === 1).map(Number).sort((a,b) => b-a);
+        if(!keys.length) return "0";
+        let maxE = keys[0], sum = 0;
+        for(let i=0; i<53; i++) if(tally[maxE - i]) sum += Math.pow(2, -i);
+        let log10V = Math.log10(sum) + maxE * Math.log10(2), B = Math.floor(log10V), A = Math.pow(10, log10V - B);
+        return (B < 4 && B > -4) ? (A * Math.pow(10, B)).toFixed(0) : A.toFixed(2) + "e" + B;
+    }
+
+    function updateUI() {
+        els.score.innerText = getScoreString(scoreTally);
+        if (getScoreString(scoreTally) !== "0" && JSON.stringify(scoreTally) !== JSON.stringify(highscoreTally)) {
+            highscoreTally = JSON.parse(JSON.stringify(scoreTally));
+            localStorage.setItem('10k_high_tally', JSON.stringify(highscoreTally));
+        }
+        els.high.innerText = getScoreString(highscoreTally);
+        els.lvl.innerText = currentLevel; els.diff.innerText = difficulty;
+    }
+
+    function drawBoard(activeEvents = []) {
+        els.grid.innerHTML = '';
+        for (let r=0; r<gameRows; r++) {
+            const tr = document.createElement('tr');
+            for (let c=0; c<gameCols; c++) {
+                const td = document.createElement('td'), img = document.createElement('img');
+                img.src = getTileSrc(board[r][c]); td.appendChild(img);
+                
+                let ev = activeEvents.find(e => e.r === r && e.c === c);
+                if (ev) {
+                    const anim = document.createElement('div');
+                    anim.className = ev.type === 'explode' ? 'exploding' : 'upgrading';
+                    anim.style.setProperty('--animation-name', ev.type);
+                    anim.style.setProperty('--explosion-duration', '0.4s');
+                    td.appendChild(anim);
+                }
+                tr.appendChild(td);
+            }
+            els.grid.appendChild(tr);
+        }
+        updateUI();
+    }
+
+    function spawnRandomTile() {
+        let empty = [];
+        for (let i=0; i<gameRows; i++) for(let j=0; j<gameCols; j++) if(board[i][j] === 0) empty.push({i,j});
+        if(!empty.length) return false;
+        const {i, j} = empty[Math.floor(Math.random() * empty.length)];
+        let val = currentLevel - difficulty + (Math.random() < 0.2 ? 1 : 0);
+        board[i][j] = Math.min(10000, Math.max(-10000, val));
+        if (board[i][j] > currentLevel) currentLevel = board[i][j];
+        return true;
+    }
+
+    function isGameOver() {
+        for(let i=0; i<gameRows; i++) {
+            for(let j=0; j<gameCols; j++) {
+                if(board[i][j] === 0) return false;
+                if(j+1<gameCols && board[i][j] === board[i][j+1]) return false;
+                if(i+1<gameRows && board[i][j] === board[i+1][j]) return false;
+            }
+        }
+        return true;
+    }
+
+    function rotate(b) {
+        let R = b.length, C = b[0].length, n = Array(C).fill().map(()=>Array(R).fill(0));
+        for(let r=0; r<R; r++) for(let c=0; c<C; c++) n[c][R-1-r] = b[r][c];
+        return n;
+    }
+
+    function handleEvents() {
+        let events = [];
+        for(let r=0; r<gameRows; r++) {
+            for(let c=0; c<gameCols; c++) {
+                if(board[r][c] !== 0 && board[r][c] <= currentLevel - difficulty) {
+                    events.push({r, c, type: eventType});
+                }
+            }
+        }
+        
+        if (events.length > 0) {
+            // Apply logic immediately so state is ready for the next move without blocking
+            events.forEach(e => {
+                if (e.type === 'explode') board[e.r][e.c] = 0;
+                else if (e.type === 'upgrade') {
+                    board[e.r][e.c]++; 
+                    if(board[e.r][e.c] > currentLevel) currentLevel = board[e.r][e.c];
+                }
+            });
+            spawnRandomTile(); 
+            drawBoard(events); 
+            checkDeath();
+        } else {
+            spawnRandomTile(); drawBoard(); checkDeath();
+        }
+    }
+
+    function moveAndMerge(dir) {
+        let rots = {'r':0, 'u':1, 'l':2, 'd':3}[dir];
+        for(let r=0; r<rots; r++) board = rotate(board);
+        
+        let moved = false, R = board.length, C = board[0].length;
+        for(let i=0; i<R; i++) {
+            let row = board[i], f = row.filter(v => v !== 0);
+            for(let k=f.length-1; k>0; k--) {
+                if(f[k] === f[k-1]) {
+                    f[k]++; addScore(f[k]);
+                    if(f[k] > currentLevel) currentLevel = f[k];
+                    f[k-1] = 0; moved = true;
+                }
+            }
+            let nr = f.filter(v => v !== 0);
+            while(nr.length < C) nr.unshift(0);
+            if(row.join(',') !== nr.join(',')) moved = true;
+            board[i] = nr;
+        }
+        for(let r=0; r<(4-rots)%4; r++) board = rotate(board);
+        if(moved) handleEvents();
+    }
+
+    function checkDeath() { if(isGameOver()) els.overlay.style.display = 'block'; }
+
+    function resetGame(startLvl, diff, rows, cols) {
+        if(autoPlay) toggleAutoPlay();
+        gameRows = rows; gameCols = cols; currentLevel = startLvl; difficulty = diff;
+        board = Array(gameRows).fill().map(()=>Array(gameCols).fill(0));
+        scoreTally = {}; els.overlay.style.display = 'none';
+        spawnRandomTile(); spawnRandomTile(); drawBoard();
+    }
+
+    function toggleAutoPlay() {
+        autoPlay = !autoPlay;
+        if(autoPlay) {
+            els.autoBtn.innerText = "AUTO ON"; els.autoBtn.style.background = "#ff4444";
+            autoInterval = setInterval(() => { moveAndMerge(['u','d','l','r'][Math.floor(Math.random()*4)]); }, autoSpeed);
+        } else {
+            els.autoBtn.innerText = "AUTO OFF"; els.autoBtn.style.background = "#34d9d6";
+            clearInterval(autoInterval);
+        }
+    }
+
+    document.getElementById('saveBtn').addEventListener('click', () => {
+        localStorage.setItem('10k_save', JSON.stringify({ board, scoreTally, currentLevel, difficulty, gameRows, gameCols, eventType }));
+    });
+    document.getElementById('loadBtn').addEventListener('click', () => {
+        let s = localStorage.getItem('10k_save');
+        if(s) {
+            let d = JSON.parse(s); board = d.board; scoreTally = d.scoreTally; currentLevel = d.currentLevel;
+            difficulty = d.difficulty; gameRows = d.gameRows; gameCols = d.gameCols; eventType = d.eventType || 'explode';
+            els.overlay.style.display = 'none'; drawBoard();
+        }
+    });
+
+    document.getElementById('settingsBtn').addEventListener('click', () => {
+        document.getElementById('colsInput').value = gameCols; document.getElementById('rowsInput').value = gameRows;
+        document.getElementById('startLevelInput').value = currentLevel; document.getElementById('diffInput').value = difficulty;
+        document.getElementById('eventTypeInput').value = eventType; document.getElementById('autoSpeedInput').value = autoSpeed;
+        document.getElementById('showStatsToggle').checked = els.stats.style.display !== 'none';
+        document.getElementById('settingsMenu').style.display = 'block';
+    });
+    
+    document.getElementById('closeSettingsBtn').addEventListener('click', () => document.getElementById('settingsMenu').style.display = 'none');
+    document.getElementById('applySettingsBtn').addEventListener('click', () => {
+        let nc = Math.max(2, Math.min(10, parseInt(document.getElementById('colsInput').value) || 4));
+        let nr = Math.max(2, Math.min(10, parseInt(document.getElementById('rowsInput').value) || 4));
+        let ns = Math.max(-10000, Math.min(10000, parseInt(document.getElementById('startLevelInput').value) || -10000));
+        autoSpeed = Math.max(50, parseInt(document.getElementById('autoSpeedInput').value) || 150);
+        eventType = document.getElementById('eventTypeInput').value;
+        els.stats.style.display = document.getElementById('showStatsToggle').checked ? 'block' : 'none';
+        document.getElementById('settingsMenu').style.display = 'none';
+        resetGame(ns, Math.max(1, parseInt(document.getElementById('diffInput').value) || 2), nr, nc);
+        if(autoPlay) { toggleAutoPlay(); toggleAutoPlay(); } // restart loop with new speed
+    });
+
+    ['moveUp','moveDown','moveLeft','moveRight'].forEach(id => document.getElementById(id).addEventListener('click', () => moveAndMerge(id.replace('move','').charAt(0).toLowerCase())));
+    document.getElementById('retryBtn').addEventListener('click', ()=> resetGame(currentLevel, difficulty, gameRows, gameCols));
+    els.autoBtn.addEventListener('click', toggleAutoPlay);
+    window.addEventListener('keydown', e => {
+        if(document.getElementById('settingsMenu').style.display === 'block') return;
+        const keys = {'ArrowUp':'u', 'ArrowDown':'d', 'ArrowLeft':'l', 'ArrowRight':'r'};
+        if(keys[e.key]) { e.preventDefault(); moveAndMerge(keys[e.key]); }
+    });
+
+    resetGame(-10000, 2, 4, 4);
+</script>
+</body>
+</html>

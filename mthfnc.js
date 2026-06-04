@@ -5912,12 +5912,161 @@ function integralold(func, initial, end, input, N = bign) {
  //soninei(1,2,x)
 //fresnels(x)
 // Static cache for Gauss-Legendre constants
+
+
+function integral(func, initial, end, input, N = bign){
+//(func,initial,end, input, tol = 0.0001/bign/bign,N0 = bign, maxDepth = bign){
+//	return  integralgauss(func, initial, end, input, N = bign)
+if(norm(sub(initial,end))<4)
+return integralclenshawcurtis(func, initial, end, input,N,N)
+	return integraltanhsinh(func, initial, end, input,0.001,floor(N/6))
+}
+
 const _gaussLegendreCache = new Map();
 const GAUSS_CACHE = new Map();
 
+function integralclenshawcurtis(func, initial, end, input, N = bign)
+{
+    if (N < 2) N = 2;
+    if (N & 1) N++;
 
+    const half = div(sub(end, initial), math.complex(2,0));
+    const mid  = div(add(end, initial), math.complex(2,0));
 
-function integral(func, initial, end, input, N = bign) {
+    let sumRe = 0;
+    let sumIm = 0;
+
+    for(let k=0;k<=N;k++)
+    {
+        const theta = Math.PI * k / N;
+        const x = Math.cos(theta);
+
+        let w = 0;
+
+        for(let j=0;j<=N/2;j++)
+        {
+            let c;
+
+            if(j===0 || (j===N/2 && (N%2===0)))
+                c = 1;
+            else
+                c = 2;
+
+            const denom = 1 - 4*j*j;
+
+            w += c * Math.cos(2*j*theta) / denom;
+        }
+
+        w *= 2/N;
+
+        const xi = add(
+            mid,
+            mul(half, math.complex(x,0))
+        );
+
+        const fx = func(xi,input);
+
+        sumRe += w * fx.re;
+        sumIm += w * fx.im;
+    }
+
+    return mul(
+        half,
+        math.complex(sumRe,sumIm)
+    );
+}
+function integraltanhsinh(func, initial, end, input,
+    tol = 0.00001/bign/bign,
+    maxDepth = bign,
+    h = 0.25)
+{
+    function tanhSinhInterval(a, b)
+    {
+        const half = div(sub(b, a), math.complex(2,0));
+        const mid  = div(add(a, b), math.complex(2,0));
+
+        let sum = math.complex(0,0);
+
+        for(let k = 0;; k++)
+        {
+            const t = k * h;
+
+            const sh = Math.sinh(t);
+            const ch = Math.cosh(t);
+
+            const u = (Math.PI/2) * sh;
+
+            const x0 = Math.tanh(u);
+
+            const dxdt =
+                (Math.PI/2) *
+                ch /
+                (Math.cosh(u) * Math.cosh(u));
+
+            const weight = dxdt * h;
+
+            if(weight < 1e-16 && k > 10)
+                break;
+
+            if(k === 0)
+            {
+                const x = add(mid,
+                    mul(half, math.complex(x0,0)));
+
+                sum = add(sum,
+                    mul(math.complex(weight,0),
+                        func(x,input)));
+            }
+            else
+            {
+                const xp = add(mid,
+                    mul(half, math.complex(x0,0)));
+
+                const xm = add(mid,
+                    mul(half, math.complex(-x0,0)));
+
+                const fp = func(xp,input);
+                const fm = func(xm,input);
+
+                sum = add(sum,
+                    mul(math.complex(weight,0),
+                        add(fp,fm)));
+            }
+        }
+
+        return mul(half,sum);
+    }
+
+    function adaptive(a,b,depth)
+    {
+        const whole = tanhSinhInterval(a,b);
+
+        const mid = div(
+            add(a,b),
+            math.complex(2,0)
+        );
+
+        const left  = tanhSinhInterval(a,mid);
+        const right = tanhSinhInterval(mid,b);
+
+        const split = add(left,right);
+
+        const err = abs(
+            sub(split,whole)
+        );
+
+        if(depth <= 0 || err < tol)
+            return split;
+
+        return add(
+            adaptive(a,mid,depth-1),
+            adaptive(mid,b,depth-1)
+        );
+    }
+
+    return adaptive(initial,end,maxDepth);
+}
+function integralgauss(func, initial, end, input, N = bign) {
 function gaussLegendreNodesWeightsHigh(n) {
     if (GAUSS_CACHE.has(n)) return GAUSS_CACHE.get(n);
 
@@ -6797,6 +6946,18 @@ function asechc(z) {
 if (n > 1) primeCount++;
 return primeCount % 2 === 0 ? 1 : -1;
 }
+
+function mobiusinversemellind(x,t){
+	return div(pow(t,x),zeta(x),2,pi(),I,exp(mul(1,0.01,sqr(im(x)))))
+	
+}//!!!
+function mobiusinversemellin(n,c=2,t=10){
+	return integral(mobiusinversemellind,sub(c,mul(t,I)),add(c,mul(t,I)),n)
+	
+}
+
+
+
 function gaussianmobius(c){let a=re(c);let b=im(c);
 let N=add(mul(a,a),mul(b,b));
 if(N==1)return 1;
@@ -12172,7 +12333,17 @@ function sechcdf(x){
 	function bernoullialt(n){
     
 return div(mul(-4,n),div(mul(pow(-1,n),pow(mul(2,pi()),mul(2,n))),gamma(mul(2,n)),zeta(mul(2,n))))
-    }  function bernoulli(n){
+    }  
+	function bernoulli(n){
+if(mag(sub(re(n),floor(re(n))))<1e-5){
+let ni=Math.round(re(n)),fi=0
+for(let k=0;k<=ni;k++){
+let fd=0
+for(let j=0;j<=k;j++) fd+=ncr(k,j)*Math.pow(-1,j)*Math.pow(j,ni)
+fi+=fd/(k+1)}
+return fi}
+return mul(-1,mul(n,zeta(sub(1,n))))}
+	/*function bernoulli(n){
       //  return bernoullipoly(n,1)
         return mul(-1,n,zeta(sub(1,n)))
            if(0 && mag(floor(n)-n)+mag(re(n)-n)<1e-5){
@@ -12192,7 +12363,7 @@ return div(mul(-4,n),div(mul(pow(-1,n),pow(mul(2,pi()),mul(2,n))),gamma(mul(2,n)
            // return mul(-1,x,zeta(sub(1,x)))
     return mul(4,n,pow(-1,add(n,1)),integral(bernoullid,0,sqrt(bign)*3,n,bign*3))};
     
-    
+    */
 	function genocchi(x){return mul(2,sub(1,pow(2,x)),bernoulli(x));}
 	function eulerzigzag(x){return mul(pow(-1,div(sub(x,1),2)),div(mul(pow(2,add(x,1)),sub(pow(2,add(x,1)),1),bernoulli(add(x,1))),add(x,1)))}
 	function eulernum(x){return div(eulerzigzag(x),pow(-1,div(x,2)))}
@@ -16359,6 +16530,82 @@ return sabs(stirling(add(j,1),sub(j,i)))
 }
 function zeta(x) {
 if(x==0)return -1/2
+
+if(re(x)>1){
+let s=0,n=20
+for(let k=1;k<n;k++) s=add(s,div(1,pow(k,x)))
+let t1=mul(pow(n,sub(1,x)),div(1,sub(x,1)))
+let t2=mul(0.5,div(1,pow(n,x)))
+let sr=0
+for(let k=1;k<=5;k++){
+let b=bernoulli(2*k),f=1
+for(let j=0;j<2*k-1;j++) f=mul(f,add(x,j))
+let term=mul(div(b,factorial(2*k)),mul(f,pow(n,sub(1,add(x,mul(2,k))))))
+sr=add(sr,term)}
+return add(s,add(t1,add(t2,sr)))}
+let xr=sub(1,x),s=0,n=20
+for(let k=1;k<n;k++) s=add(s,div(1,pow(k,xr)))
+let t1=mul(pow(n,sub(1,xr)),div(1,sub(xr,1)))
+let t2=mul(0.5,div(1,pow(n,xr)))
+let sr=0
+for(let k=1;k<=5;k++){
+let b=bernoulli(2*k),f=1
+for(let j=0;j<2*k-1;j++) f=mul(f,add(xr,j))
+let term=mul(div(b,factorial(2*k)),mul(f,pow(n,sub(1,add(xr,mul(2,k))))))
+sr=add(sr,term)}
+let zr=add(s,add(t1,add(t2,sr)))
+return mul(pow(2,x),mul(pow(pi(),sub(x,1)),mul(sin(mul(div(pi(),2),x)),mul(gamma(xr),zr))))
+/*
+    let sumd = complex(0, 0);
+
+    for (let n = 1; n < bign; n++) {
+        let term = div(pow(-1, n - 1), pow(n, s));
+        sumd = add(sumd, term);
+
+        // crude convergence acceleration (Aitken-like damping)
+        if (n > 3) {
+            let prev = div(pow(-1, n - 2), pow(n - 1, s));
+            let delta = sub(term, prev);
+
+            let accel = sub(term, div(mul(delta, delta), sub(term, mul(2, delta))));
+            sum3 = add(sumd, mul(accel, 0.1)); // light correction
+        }
+
+        if (mag(term) < 1e-12) break;
+    }
+
+    let denomd = sub(1, pow(2, sub(1, s)));
+    return div(sumd, denomd);
+*/
+/*
+    let fi = complex(0, 0);
+
+    for (let n = 0; n < bign; n++) {
+        let inner = complex(0, 0);
+
+        for (let k = 0; k <= n; k++) {
+            // binomial(n,k)
+            let bin = ncr(n, k);
+
+            // (k+1)^(-s)
+            let term = div(
+                pow(-1, k),
+                pow(k + 1, s)
+            );
+
+            inner = add(inner, mul(bin, term));
+        }
+
+        let outer = div(inner, pow(2, n + 1));
+        fi = add(fi, outer);
+
+        if (mag(outer) < 1e-10) break;
+    }
+
+    let denom = sub(1, pow(2, sub(1, s)));
+return div(fi, denom);
+*/
+/*
 if(re(x)>8){
 let s=0
 for(let n=1;n<bign;n++){
@@ -16378,7 +16625,7 @@ let term=div(inner,pow(2,add(n,1)))
 fi=add(fi,term)
 if(mag(term)<1e-7)break}
 return div(fi,sub(1,pow(2,sub(1,x))))
-
+*/
 
 
 /*
@@ -16573,6 +16820,43 @@ function lerchtranscendentdr(t,A){
 	let z=g(A,0);let s=g(A,1);let a=g(A,2);
 	return div(sin(sub(mul(s,atan(t)),mul(t,a,log(z)))),pow(add(1,sqr(t)),div(s,2)),sub(exp(mul(2,pi(),a,t)),1))
 }
+
+
+function lerchtranscendentalt2(z,s,a){
+
+let N=20
+let sum=0
+
+for(let k=0;k<N;k++)
+sum=add(sum,div(pow(z,k),pow(add(a,k),s)))
+
+let A=add(a,N)
+
+let term1=div(pow(z,N),mul(sub(s,1),pow(A,sub(s,1))))
+let term2=mul(0.5,div(pow(z,N),pow(A,s)))
+
+let bern=0
+
+for(let m=1;m<=4;m++){
+
+let B=bernoulli(2*m)
+
+let poch=1
+for(let j=0;j<2*m-1;j++)
+poch=mul(poch,add(s,j))
+
+let term=mul(
+div(B,factorial(2*m)),
+mul(poch,
+mul(pow(z,N),
+pow(A,sub(sub(1,mul(2,m)),s))))
+)
+
+bern=add(bern,term)
+}
+
+return add(sum,add(term1,sub(term2,bern)))
+}
 function lerchtranscendent(z,s,a){
 //console.log(a)
 //case z C,s C,a C
@@ -16609,7 +16893,7 @@ return add(mul(pow(z,m),lerchtranscendent(z,s,sub(a,m))),fii)
 //if(re(z)<-1)return div(add(mul(exp(mul(I,pi(),s,0.5)),  lerchtranscendent(exp(mul(-2,I,a,pi())),s,div(log(z),2,pi(),I)))  ,mul(exp(sub(mul(I,pi(),a,2),div(mul(I,pi(),s),2))),lerchtranscendent(exp(mul(2,I,a,pi())),s,sub(1,div(log(z),2,pi(),I))))),div(mul(pow(mul(2,pi()),s),pow(z,a)),gamma(s)))
 
 //lipschitz but i change the path with no more hope left
-
+//if(mag(z)<0.9)return lerchtranscendentalt2(z,s,a)
 
 if(2*re(s)<im(s)){
 const II1=integral(lerchtranscendentpd,0,I,[z,s,a],bign*4)
@@ -16665,10 +16949,20 @@ return div(fi,sub(1,z));
 
 
 
+//https://hal.science/hal-04466012v1/file/Furtherexpansionformulasforaclassofgeneralized.pdf
 
+function generalizedhurwitzlerch(p,q,m,n,z,s,a){
+	let fi=0;
+	for(let k=0;k<bign;k++){fi=add(fi,div(poch(m,mul(p,k)),poch(n,mul(q,k)),pow(add(a,k),s)))}
+	return fi;
+}
 
-
-
+function hurwitzlerch(m,z,s,a){
+	let p=1;let q=1;let n=1;
+	let fi=0;
+	for(let k=0;k<bign;k++){fi=add(fi,div(poch(m,mul(p,k)),poch(n,mul(q,k)),pow(add(a,k),s)))}
+	return fi;
+}
 
 
 
@@ -20850,7 +21144,7 @@ function  touchardpoly(n,x){
 	return mul(exp(sub(0,x)),fi);
 }
 
-function hurwitzzeta(z,a){
+function hurwitzzetaold(z,a){
       let fi=math.complex(0,0)
 	for(let n=0;n<bign;n++){
 		let num =math.complex(0,0);
@@ -20860,6 +21154,58 @@ function hurwitzzeta(z,a){
 	}
 	return div(fi,sub(z,1));
 }
+
+function hurwitzzeta(x,a){
+
+    let N=20
+
+    let sum=0
+    for(let k=0;k<N;k++){
+        let t=div(1,pow(add(a,k),x))
+        sum=add(sum,t)
+    }
+
+    let A=add(a,N)
+
+    let term1=div(
+        pow(A,sub(1,x)),
+        sub(x,1)
+    )
+
+    let term2=mul(
+        0.5,
+        div(1,pow(A,x))
+    )
+
+    let rem=0
+
+    for(let m=1;m<=5;m++){
+
+        let B=bernoulli(2*m)
+
+        let poch=1
+        for(let j=0;j<2*m-1;j++)
+            poch=mul(poch,add(x,j))
+
+        let term=
+            mul(
+                div(B,factorial(2*m)),
+                mul(
+                    poch,
+                    pow(A,sub(sub(1,mul(2,m)),x))
+                )
+            )
+
+        rem=add(rem,term)
+    }
+
+    return add(sum,add(term1,add(term2,rem)))
+}
+
+
+
+
+
 function hyperfactorial(x) {
 	return kfunc(add(x,1));
 }
@@ -27002,8 +27348,12 @@ function pearsonincgamma(r,l){
 		fi=add(fi,div(mul(exp(sub(0,l)),pow(l,i)),factorial(i)));
 return fi;
 }
-function incgamma(a,x){return integral(incgammad,x,bign,a,bign*2);}
-function lincgamma(a,x){return integral(incgammad,0,x,a,bign*2);}
+
+function incgammalimiting(s,z){let fi=0;for(let k=0;k<bign;k++){fi=add(fi,div(pow(z,k),factorial(add(s,k))))}return div(fi,exp(z))}
+
+
+function incgamma(a,x){return mul(pow(x,a),gamma(a),incgammalimiting(a,x))}//return integral(incgammad,x,bign,a,bign*2);}
+function lincgamma(a,x){return sub(gamma(a),mul(pow(x,a),gamma(a),incgammalimiting(a,x)))}//return integral(incgammad,0,x,a,bign*2);}
 function linggammalimit(a,x){return div(lincgamma(a,x),gamma(a),pow(x,a))}
 function reglincgamma(a,x){return div(lincgamma(a,x),gamma(a))}
 function regincgamma(a,x){return div(incgamma(a,x),gamma(a))}
@@ -30614,47 +30964,57 @@ function meijergr(A,B,C,D,z,r=1){
 	}
 	return mul(fi,pow(pi(),sub(leng(C),1)));
 }
-//  (0.5*meijergalt(x^2,[0.5,1,1],[0.5,0],1,2))-atan(x)
-function meijerg(A,B,C,D,z,cz=0){//cz is radius   f this s
-   // if(mag(z)<cz)return meijergr(A,B,C,D,z,1)
-     //  console.log(z)
-let fi = math.complex(0,0);
-   let fid=123
-   //let lf=0
-//(0.5*meijergalt(x^2,[0.5,1],[0.5,0],1,2,2,2,0))-atan(x)
-if(leng(A)==0 || leng(A)+leng(B)<leng(C)+leng(D) || (leng(A)+leng(B)==leng(C)+leng(D) && mag(z)<1))
-//if(mag(z)<1)
- 
-for(let h=0;h<leng(C);h++)
-for(let k=0;k<bign*3 && mag(sub(fi,fid))>0.01;k++)
-{	let num = math.complex(1,0);
-let Bh = div(add(g(C,h),k),1);
-for(let i=0;i<leng(A);i++)        num=mul(num,gamma(add(sub(1,g(A,i)),Bh)));
-for(let i=0;i<leng(D);i++)		  num=div(num,gamma(add(sub(1,g(D,i)),Bh)));
-for(let i=0;i<leng(B);i++)		  num=div(num,gamma(sub(      g(B,i),Bh)));
-for(let i=0;i<leng(C);i++)if(i!=h)num=mul(num,gamma(sub(      g(C,i),Bh)));
-	fid=fi;//lf=k;
-    fi=add(fi,inftozero(div(mul(num,pow(-1,k),pow(div(z),Bh)),factorial(k),1)));
-    //fi=add(fi,inftozero(div(mul(num,pow(-1,k),pow(div(z),Bh)),factorial(k),1)));
-}
-else
-for(let h=0;h<leng(A);h++)
-for(let k=0;k<bign*3 && mag(sub(fi,fid))>0.01;k++)
-{ 	//return meijergr(A,B,C,D,z,1)
-let num = math.complex(1,0);
-let Ah = div(sub(add(1,k),g(A,h)),1);
-for(let i=0;i<leng(A);i++)if(i!=h)num=mul(num,gamma(sub(1,g(A,i),Ah)));
-for(let i=0;i<leng(D);i++)		  num=div(num,gamma(sub(1,g(D,i),Ah)));
-for(let i=0;i<leng(B);i++)	  	  num=div(num,gamma(add(  g(B,i),Ah)));
-for(let i=0;i<leng(C);i++)		  num=mul(num,gamma(add(  g(C,i),Ah)));
-	fid=fi;//lf=k;
-    //fi=add(fi,mul(inftozero(div(mul(num,pow(-1,k),pow(div(1,z),Ah)),factorial(k),1)),add(k,2)));
-    fi=add(fi,inftozero(div(mul(num,pow(-1,k),pow(div(1,z),Ah)),factorial(k),1)));
-}
 
-//fi=div(fi,lf)	
-return fi;
+//  (0.5*meijergalt(x^2,[0.5,1],[0.5,0],1,2))-atan(x)
+function meijerg(A, B, C, D, z, cz = 0) {
+    let fi = math.complex(0, 0);
+    let fid = 123;
+    let bign = 50; 
+    if (leng(A) == 0 || leng(A) + leng(B) < leng(C) + leng(D) || (leng(A) + leng(B) == leng(C) + leng(D) && mag(z) < 1)) {
+        for (let h = 0; h < leng(C); h++) {
+            fid = 123; 
+            for (let k = 0; k < bign * 3 && mag(sub(fi, fid)) > 0.001; k++) {
+                let num = math.complex(1, 0);
+                let Bh = div(add(g(C, h), k), 1);
+                
+                for (let i = 0; i < leng(A); i++) num = mul(num, gamma(add(sub(1, g(A, i)), Bh)));
+                for (let i = 0; i < leng(D); i++) num = div(num, gamma(add(sub(1, g(D, i)), Bh)));
+                for (let i = 0; i < leng(B); i++) num = div(num, gamma(sub(g(B, i), Bh)));
+                for (let i = 0; i < leng(C); i++) if (i != h) num = mul(num, gamma(sub(g(C, i), Bh)));
+                
+                fid = fi;
+                fi = add(fi, inftozero(div(mul(num, pow(-1, k), pow(z, Bh)), factorial(k), 1)));
+				console.log(fi)
+            }
+        }
+    } 
+    else {
+        let fim = math.complex(0, 0);
+        
+        for (let h = 0; h < leng(A); h++) {
+            let ps = math.complex(0, 0);
+            fid = 123;
+            
+            for (let k = 0; k < bign * 3 && mag(sub(ps, fid)) > 0.001; k++) {
+                let num = math.complex(1, 0);
+                let Ah = add(sub(1, g(A, h)), k); 
+                
+                for (let i = 0; i < leng(A); i++) if (i != h) num = mul(num, gamma(sub(1, g(A, i), Ah)));
+                for (let i = 0; i < leng(D); i++) num = div(num, gamma(sub(1, g(D, i), Ah)));
+                for (let i = 0; i < leng(B); i++) num = div(num, gamma(add(g(B, i), Ah)));
+                for (let i = 0; i < leng(C); i++) num = mul(num, gamma(add(g(C, i), Ah)));
+                
+                fid = ps;
+                let term = inftozero(div(mul(num, pow(-1, k), pow(div(1, z), Ah)), factorial(k), 1));
+                ps = add(ps, term);
+            }
+            fim = add(fim, ps);
+        }
+        fi = mul(1, fim); 
+    }
     
+    return fi;
+}
     
     /*
 	let fi =math.complex(0,0);
@@ -30675,7 +31035,7 @@ return fi;
 	reghypergeometric(E,F,mul(pow(-1,sub(sub(leng(B),leng(C)),leng(A))),pow(z,div(1,r))))));
 	}
 	return mul(fi,pow(pi(),sub(leng(C),1))); */
-}
+
 function meijergalt(z,A,B,m,n,p=leng(A),q=leng(B),r=0){
 	let E = [];let F = [];let G = [];let H = [];
 	for(let i=0;i<n;i++)E.push(g(A,i));
