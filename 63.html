@@ -1,0 +1,53 @@
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="interface.css" />
+    </head>
+    <body>
+        <button onclick="stufffunction()">get stuff</button>
+        <br>
+        stuff: <span id="stuffaa">0</span>
+        <br>
+        <button onclick="stuffbetterer()">purchase a Stuff Betterer for <span id="stuffcosf">44</span> stuff</button>
+        <br>
+        Stuff Betterers: <span id="stuffbb">0</span> multiplying stuff gain by x<span id="a">1</span>
+        <br>
+        <button onclick="superstuffs()">purchase a ğSuperstuff for <span id="stuffcosf2">2183</span> stuff</button>
+        <br>
+        ğSuperstuffs: <span id="stuffcc">0</span> increasing the efefect of Stuff Betters by <span id="b">0</span>%
+        <script>
+            var stuff = 222900009;
+            function stufffunction(){
+                stuff = stuff + 1 + stuff2*(1+stuff3/2);
+                document.getElementById("stuffaa").innerHTML = stuff;
+            };
+            
+            var stuff2 = 0;
+            function stuffbetterer(){
+                var stuffcost = Math.floor(44.16*Math.pow(1.7637,stuff2));
+                if(stuff >= stuffcost){
+                    stuff2 = stuff2 + 1;                                   
+                    stuff = stuff - stuffcost;                         
+                    document.getElementById('stuffbb').innerHTML = stuff2; 
+                    document.getElementById('stuffaa').innerHTML = stuff;
+                    document.getElementById('a').innerHTML = stuff2*(1+stuff3/2);
+                };
+                var nextcost = Math.floor(44.16*Math.pow(1.7637,stuff2));
+                document.getElementById('stuffcosf').innerHTML = nextcost;
+            };
+            var stuff3 = 0;
+            function superstuffs(){
+                var stuff3cost = 2183*Math.pow(3,stuff3);
+                if(stuff >= stuff3cost){
+                    stuff3 = stuff3 + 1;                                   
+                    stuff = stuff - stuff3cost;                         
+                    document.getElementById('stuffcc').innerHTML = stuff3; 
+                    document.getElementById('stuffaa').innerHTML = stuff;
+                    document.getElementById('b').innerHTML = stuff3*50;
+                };
+                var next2cost = 2183*Math.pow(3,stuff3);
+                document.getElementById('stuffcosf2').innerHTML = next2cost;
+                
+            }
+        </script>
+    </body>
+</html>

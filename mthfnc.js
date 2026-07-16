@@ -65,8 +65,7 @@ function evale(func, ...inputs) {
 }
 
 
-
-
+let masses={H:1.008,He:4.002602,Li:6.94,Be:9.0121831,B:10.81,C:12.011,N:14.007,O:15.999,F:18.998403163,Ne:20.1797,Na:22.98976928,Mg:24.305,Al:26.9815385,Si:28.085,P:30.973761998,S:32.06,Cl:35.45,Ar:39.948,K:39.0983,Ca:40.078,Sc:44.955908,Ti:47.867,V:50.9415,Cr:51.9961,Mn:54.938044,Fe:55.845,Co:58.933194,Ni:58.6934,Cu:63.546,Zn:65.38,Ga:69.723,Ge:72.630,As:74.921595,Se:78.971,Br:79.904,Kr:83.798,Rb:85.4678,Sr:87.62,Y:88.90584,Zr:91.224,Nb:92.90637,Mo:95.95,Tc:98,Ru:101.07,Rh:102.9055,Pd:106.42,Ag:107.8682,Cd:112.414,In:114.818,Sn:118.71,Sb:121.76,Te:127.60,I:126.90447,Xe:131.293,Cs:132.90545196,Ba:137.327,La:138.90547,Ce:140.116,Pr:140.90766,Nd:144.242,Pm:145,Sm:150.36,Eu:151.964,Gd:157.25,Tb:158.92535,Dy:162.5,Ho:164.93033,Er:167.259,Tm:168.93422,Yb:173.045,Lu:174.9668,Hf:178.49,Ta:180.94788,W:183.84,Re:186.207,Os:190.23,Ir:192.217,Pt:195.084,Au:196.966569,Hg:200.592,Tl:204.38,Pb:207.2,Bi:208.9804,Po:209,At:210,Rn:222,Fr:223,Ra:226,Ac:227,Th:232.0377,Pa:231.03588,U:238.02891,Np:237,Pu:244,Am:243,Cm:247,Bk:247,Cf:251,Es:252,Fm:257,Md:258,No:259,Lr:266,Rf:267,Db:268,Sg:269,Bh:270,Hs:277,Mt:278,Ds:281,Rg:282,Cn:285,Nh:286,Fl:289,Mc:290,Lv:293,Ts:294,Og:294};
 function retry (func,x,n){
 	let fi=math.complex(0,0);
 	for(let i=0;i<n;i++)
@@ -3009,7 +3008,7 @@ function tobinary(n) {
     let res = intpart + (fracpart ? '.' + fracpart : '')
     return n < 0 ? '-' + res : res
 }
-
+function neg(x){return sub(0,x)}
 function frombinary(s) {
     let neg = s[0] === '-'
     if (neg) s = s.slice(1)
@@ -3118,10 +3117,10 @@ function nconversec(a,b){return add(nconverser(re(a),re(b)),mul(I,nconverser(im(
 
 
 
+function sussurvery(A){return mul(2.5,gsum(A))}//https://uxplanet.org/easily-calculate-sus-score-a464d753e5aa?gi=f045a2a7a831
 
-
-
-
+function sus(x)//source:kuvina
+{return gcd(sub(x,1),totient(x))}
 
 
 function bifunction(func,func2,x){
@@ -5917,9 +5916,11 @@ function integralold(func, initial, end, input, N = bign) {
 function integral(func, initial, end, input, N = bign){
 //(func,initial,end, input, tol = 0.0001/bign/bign,N0 = bign, maxDepth = bign){
 //	return  integralgauss(func, initial, end, input, N = bign)
-if(norm(sub(initial,end))<4)
+//if(norm(sub(initial,end))<4)
+//if (re(end)<0)//div(mag(sub(initial,end)),bign*2
+	//return  integralgauss(func, initial, end, input, N = bign)
 return integralclenshawcurtis(func, initial, end, input,N,N)
-	return integraltanhsinh(func, initial, end, input,0.001,floor(N/6))
+//	return integraltanhsinh(func, initial, end, input,0.1,floor(N/4),0.25)
 }
 
 const _gaussLegendreCache = new Map();
@@ -6005,7 +6006,7 @@ function integraltanhsinh(func, initial, end, input,
 
             const weight = dxdt * h;
 
-            if(weight < 1e-16 && k > 10)
+            if(weight < 1e-10 && k > 5)
                 break;
 
             if(k === 0)
@@ -6040,7 +6041,7 @@ function integraltanhsinh(func, initial, end, input,
     function adaptive(a,b,depth)
     {
         const whole = tanhSinhInterval(a,b);
-
+		//return whole
         const mid = div(
             add(a,b),
             math.complex(2,0)
@@ -6572,12 +6573,2265 @@ function expandpss(P,n){return expandbms(P,n)}
 
 
 
+//tensor stuff
+
+
+
+function tensor(shape, data) {
+    if (!Array.isArray(data)) data = [data];
+    if (shape.length === 0) return data[0];
+    if (shape.length === 1) {
+        return data.slice(0, shape[0]);
+    }
+    const totalSize = shape.reduce((a,b) => a*b, 1);
+
+    
+    function build(dim, offset) {
+        if (dim === shape.length - 1) {
+            return data.slice(offset, offset + shape[dim]);
+        }
+        const result = [];
+        const step = shape.slice(dim+1).reduce((a,b) => a*b, 1);
+        for (let i = 0; i < shape[dim]; i++) {
+            result.push(build(dim+1, offset + i*step));
+        }
+        return result;
+    }
+    return build(0, 0);
+}
+
+function tensorshape(T) {
+    if (!Array.isArray(T)) return [];
+    const shape = [leng(T)];
+    let current = T;
+    while (Array.isArray(current[0])) {
+        shape.push(leng(current[0]));
+        current = current[0];
+    }
+    return shape;
+}
+
+function tensorsize(T) {
+    return tensorshape(T).reduce((a,b) => a*b, 1);
+}
+
+function tensorflatten(T, result = []) {
+    if (!Array.isArray(T)) { result.push(T); return result; }
+    for (let i = 0; i < leng(T); i++) {
+        tensorflatten(T[i], result);
+    }
+    return result;
+}
+
+function tensorreshape(T, newShape) {
+    const flat = tensorflatten(T);
+    const total = leng(flat);
+    const newTotal = newShape.reduce((a,b) => a*b, 1);
+
+    return tensor(newShape, flat);
+}
+
+function tensorscalar(T, s) {
+    if (!Array.isArray(T)) return mul(T, s);
+    return T.map(x => tensorscalar(x, s));
+}
+
+function tensoradd(A, B) {
+    if (!Array.isArray(A) && !Array.isArray(B)) return add(A, B);
+    if (!Array.isArray(A)) return B.map(x => tensoradd(A, x));
+    if (!Array.isArray(B)) return A.map(x => tensoradd(x, B));
+  
+    return A.map((x, i) => tensoradd(x, B[i]));
+}
+
+function tensorsub(A, B) {
+    if (!Array.isArray(A) && !Array.isArray(B)) return sub(A, B);
+    if (!Array.isArray(A)) return B.map(x => tensorsub(A, x));
+    if (!Array.isArray(B)) return A.map(x => tensorsub(x, B));
+
+    return A.map((x, i) => tensorsub(x, B[i]));
+}
+
+function tensorcontract(A, B, axes = []) {
+    const shapeA = tensorshape(A);
+    const shapeB = tensorshape(B);
+    
+    if (axes.length === 0) {
+        axes = [[leng(shapeA) - 1, 0]];
+    }
+    
+    const axesA = axes.map(a => a[0]);
+    const axesB = axes.map(a => a[1]);
+    
+    for (let i = 0; i < leng(axes); i++) {
+        if (shapeA[axesA[i]] !== shapeB[axesB[i]]) {
+
+        }
+    }
+    
+    const freeA = shapeA.map((_, i) => i).filter(i => !axesA.includes(i));
+    const freeB = shapeB.map((_, i) => i).filter(i => !axesB.includes(i));
+    
+    const flatA = tensorflatten(A);
+    const flatB = tensorflatten(B);
+    
+    const stridesA = getstrides(shapeA);
+    const stridesB = getstrides(shapeB);
+    
+    const resultShape = [...freeA.map(i => shapeA[i]), ...freeB.map(i => shapeB[i])];
+    const resultSize = resultShape.reduce((a,b) => a*b, 1);
+    const result = new Array(resultSize).fill(math.complex(0,0));
+    
+    const flatIndicesA = getflatindices(shapeA);
+    const flatIndicesB = getflatindices(shapeB);
+    
+    for (let i = 0; i < leng(flatA); i++) {
+        const idxA = flatIndicesA[i];
+        for (let j = 0; j < leng(flatB); j++) {
+            const idxB = flatIndicesB[j];
+            
+            let match = true;
+            for (let k = 0; k < leng(axes); k++) {
+                if (idxA[axesA[k]] !== idxB[axesB[k]]) {
+                    match = false;
+                    break;
+                }
+            }
+            if (!match) continue;
+            
+            let resIdx = 0;
+            let pos = 0;
+            for (const f of freeA) {
+                resIdx += idxA[f] * resultShape.slice(pos).reduce((a,b) => a*b, 1);
+                pos++;
+            }
+            for (const f of freeB) {
+                resIdx += idxB[f] * resultShape.slice(pos).reduce((a,b) => a*b, 1);
+                pos++;
+            }
+            
+            result[resIdx] = add(result[resIdx], mul(flatA[i], flatB[j]));
+        }
+    }
+    
+    return tensor(resultShape, result);
+}
+
+function getstrides(shape) {
+    const strides = new Array(leng(shape));
+    let s = 1;
+    for (let i = leng(shape) - 1; i >= 0; i--) {
+        strides[i] = s;
+        s *= shape[i];
+    }
+    return strides;
+}
+
+function getflatindices(shape) {
+    const total = shape.reduce((a,b) => a*b, 1);
+    const result = [];
+    for (let i = 0; i < total; i++) {
+        const idx = [];
+        let temp = i;
+        for (let j = leng(shape) - 1; j >= 0; j--) {
+            idx[j] = temp % shape[j];
+            temp = Math.floor(temp / shape[j]);
+        }
+        result.push(idx);
+    }
+    return result;
+}
+
+function tensordot(A, B) {
+    const shapeA = tensorshape(A);
+    const shapeB = tensorshape(B);
+    return tensorcontract(A, B, [[leng(shapeA) - 1, 0]]);
+}
+
+function tensorinner(A, B) {
+    const flatA = tensorflatten(A);
+    const flatB = tensorflatten(B);
+
+    let sum = math.complex(0,0);
+    for (let i = 0; i < leng(flatA); i++) {
+        sum = add(sum, mul(flatA[i], conj(flatB[i])));
+    }
+    return sum;
+}
+
+function tensorouter(A, B) {
+    const flatA = tensorflatten(A);
+    const flatB = tensorflatten(B);
+    const shape = [leng(flatA), leng(flatB)];
+    const data = [];
+    for (let i = 0; i < leng(flatA); i++) {
+        for (let j = 0; j < leng(flatB); j++) {
+            data.push(mul(flatA[i], flatB[j]));
+        }
+    }
+    return tensor(shape, data);
+}
+
+function tensortrace(T, axis1 = 0, axis2 = 1) {
+    const shape = tensorshape(T);
+
+    const flat = tensorflatten(T);
+    const result = [];
+    const newShape = shape.filter((_, i) => i !== axis1 && i !== axis2);
+    
+    const indices = getflatindices(shape);
+    const traceMap = new Map();
+    
+    for (let i = 0; i < leng(flat); i++) {
+        const idx = indices[i];
+        if (idx[axis1] !== idx[axis2]) continue;
+        const key = idx.filter((_, j) => j !== axis1 && j !== axis2).join(',');
+        if (!traceMap.has(key)) traceMap.set(key, math.complex(0,0));
+        traceMap.set(key, add(traceMap.get(key), flat[i]));
+    }
+    
+    const data = Array.from(traceMap.values());
+    if (leng(newShape) === 0) return data[0] || math.complex(0,0);
+    return tensor(newShape, data);
+}
+
+function tensortranspose(T, perm) {
+    const shape = tensorshape(T);
+    if (!perm) perm = shape.map((_, i) => leng(shape) - 1 - i);
+
+    
+    const newShape = perm.map(i => shape[i]);
+    const flat = tensorflatten(T);
+    const newStrides = getstrides(newShape);
+    const total = leng(flat);
+    const result = new Array(total);
+    const indices = getflatindices(shape);
+    
+    for (let i = 0; i < total; i++) {
+        const idx = indices[i];
+        const newIdx = perm.map(p => idx[p]);
+        let pos = 0;
+        for (let j = 0; j < leng(newIdx); j++) {
+            pos += newIdx[j] * newStrides[j];
+        }
+        result[pos] = flat[i];
+    }
+    
+    return tensor(newShape, result);
+}
+
+function tensordiag(T, k = 0) {
+    const shape = tensorshape(T);
+
+    const n = shape[0];
+    const m = shape[1];
+    const flat = tensorflatten(T);
+    const size = Math.min(n - k, m);
+    if (size <= 0) return [];
+    const result = [];
+    const strides = getstrides(shape);
+    for (let i = 0; i < size; i++) {
+        result.push(flat[(i + k) * strides[0] + i * strides[1]]);
+    }
+    return result;
+}
+
+function tensordiagembed(v, k = 0) {
+    if (!Array.isArray(v)) v = [v];
+    const n = leng(v) + Math.abs(k);
+    const m = n;
+    const data = new Array(n*m).fill(math.complex(0,0));
+    const strides = getstrides([n, m]);
+    for (let i = 0; i < leng(v); i++) {
+        const row = i + (k > 0 ? k : 0);
+        const col = i + (k < 0 ? -k : 0);
+        data[row * strides[0] + col * strides[1]] = v[i];
+    }
+    return tensor([n, m], data);
+}
+
+function tensorkronecker(A, B) {
+    const shapeA = tensorshape(A);
+    const shapeB = tensorshape(B);
+
+    
+    const flatA = tensorflatten(A);
+    const flatB = tensorflatten(B);
+    const n = shapeA[0] * shapeB[0];
+    const m = shapeA[1] * shapeB[1];
+    const data = new Array(n*m).fill(math.complex(0,0));
+    
+    for (let i = 0; i < shapeA[0]; i++) {
+        for (let j = 0; j < shapeA[1]; j++) {
+            const a = flatA[i * shapeA[1] + j];
+            for (let k = 0; k < shapeB[0]; k++) {
+                for (let l = 0; l < shapeB[1]; l++) {
+                    const b = flatB[k * shapeB[1] + l];
+                    const row = i * shapeB[0] + k;
+                    const col = j * shapeB[1] + l;
+                    data[row * m + col] = mul(a, b);
+                }
+            }
+        }
+    }
+    return tensor([n, m], data);
+}
+
+function tensorzeros(shape) {
+    const total = shape.reduce((a,b) => a*b, 1);
+    const data = new Array(total).fill(math.complex(0,0));
+    return tensor(shape, data);
+}
+
+function tensorones(shape) {
+    const total = shape.reduce((a,b) => a*b, 1);
+    const data = new Array(total).fill(math.complex(1,0));
+    return tensor(shape, data);
+}
+
+function tensoreye(n) {
+    const data = new Array(n*n).fill(math.complex(0,0));
+    for (let i = 0; i < n; i++) {
+        data[i*n + i] = math.complex(1,0);
+    }
+    return tensor([n, n], data);
+}
+
+function tensorconstant(shape, c = 1) {
+    const total = shape.reduce((a,b) => a*b, 1);
+    const data = new Array(total).fill(math.complex(c,0));
+    return tensor(shape, data);
+}
+
+function tensorfull(shape, fillValue) {
+    const total = shape.reduce((a,b) => a*b, 1);
+    const data = new Array(total).fill(fillValue);
+    return tensor(shape, data);
+}
+
+function tensoridentity(n) {
+    return tensoreye(n);
+}
+
+function tensorhilbert(n) {
+    const data = [];
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+            data.push(math.complex(div(1, i+j+1), 0));
+        }
+    }
+    return tensor([n, n], data);
+}
+
+function tensorlehmermatrix(n) {
+    const data = [];
+    for (let i = 1; i <= n; i++) {
+        for (let j = 1; j <= n; j++) {
+            data.push(math.complex((i<j ? div(i,j) : div(j,i)), 0));
+        }
+    }
+    return tensor([n, n], data);
+}
+
+function tensortoeplitz(c, r) {
+    if (!Array.isArray(r)) r = c;
+    const n = leng(c);
+    const m = leng(r);
+    const data = [];
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < m; j++) {
+            const idx = j - i;
+            if (idx < 0) data.push(c[-idx]);
+            else data.push(r[idx]);
+        }
+    }
+    return tensor([n, m], data);
+}
+
+function tensorhankel(c, r) {
+    if (!Array.isArray(r)) r = new Array(leng(c)).fill(c[leng(c)-1]);
+    const n = leng(c);
+    const m = leng(r);
+    const data = [];
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < m; j++) {
+            const idx = i + j;
+            if (idx < leng(c)) data.push(c[idx]);
+            else data.push(r[idx - leng(c) + 1]);
+        }
+    }
+    return tensor([n, m], data);
+}
+
+function tensorcirculant(v) {
+    const n = leng(v);
+    const data = [];
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+            data.push(v[(j - i + n) % n]);
+        }
+    }
+    return tensor([n, n], data);
+}
+
+function tensorfourier(n) {
+    const data = [];
+    const omega = math.exp(mul(-2*Math.PI*math.I, div(1, n)));
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+            data.push(pow(omega, i*j));
+        }
+    }
+    return tensor([n, n], data);
+}
+
+function tensorhadamard(n) {
+    if (n === 0) return tensor([[1]]);
+    const H = tensorhadamard(n-1);
+    const flatH = tensorflatten(H);
+    const size = leng(flatH);
+    const newSize = size * 2;
+    const data = [];
+    for (let i = 0; i < size; i++) {
+        for (let j = 0; j < size; j++) {
+            data.push(flatH[i*size + j]);
+        }
+        for (let j = 0; j < size; j++) {
+            data.push(flatH[i*size + j]);
+        }
+    }
+    for (let i = 0; i < size; i++) {
+        for (let j = 0; j < size; j++) {
+            data.push(flatH[i*size + j]);
+        }
+        for (let j = 0; j < size; j++) {
+            data.push(mul(-1, flatH[i*size + j]));
+        }
+    }
+    return tensor([newSize, newSize], data);
+}
+
+function tensorpaulix() {
+    return tensor([[math.complex(0,0), math.complex(1,0)], [math.complex(1,0), math.complex(0,0)]]);
+}
+
+function tensorpauliy() {
+    return tensor([[math.complex(0,0), math.complex(0,-1)], [math.complex(0,1), math.complex(0,0)]]);
+}
+
+function tensorpauliz() {
+    return tensor([[math.complex(1,0), math.complex(0,0)], [math.complex(0,0), math.complex(-1,0)]]);
+}
+
+function tensorgellmann(n) {
+    const matrices = [];
+    const size = n;
+    
+    for (let i = 0; i < n; i++) {
+        for (let j = i+1; j < n; j++) {
+            const data = new Array(n*n).fill(math.complex(0,0));
+            data[i*n + j] = math.complex(1,0);
+            data[j*n + i] = math.complex(1,0);
+            matrices.push(tensor([n, n], data));
+        }
+    }
+    
+    for (let i = 0; i < n; i++) {
+        for (let j = i+1; j < n; j++) {
+            const data = new Array(n*n).fill(math.complex(0,0));
+            data[i*n + j] = math.complex(0,-1);
+            data[j*n + i] = math.complex(0,1);
+            matrices.push(tensor([n, n], data));
+        }
+    }
+    
+    for (let i = 0; i < n-1; i++) {
+        const data = new Array(n*n).fill(math.complex(0,0));
+        const diag = [];
+        for (let k = 0; k < n; k++) {
+            if (k === i) diag.push(math.complex(1,0));
+            else if (k === i+1) diag.push(math.complex(-1,0));
+            else diag.push(math.complex(0,0));
+        }
+        const norm = Math.sqrt(div(2, (i+1)*(i+2)));
+        for (let k = 0; k < n; k++) {
+            data[k*n + k] = mul(diag[k], norm);
+        }
+        matrices.push(tensor([n, n], data));
+    }
+    
+    return matrices;
+}
+
+function tensorlevi_civita(n) {
+    if (n === 2) return tensor([[math.complex(0,0), math.complex(1,0)], [math.complex(-1,0), math.complex(0,0)]]);
+    if (n === 3) {
+        const data = new Array(27).fill(math.complex(0,0));
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                for (let k = 0; k < 3; k++) {
+                    let val = 0;
+                    if (i === 0 && j === 1 && k === 2) val = 1;
+                    else if (i === 1 && j === 2 && k === 0) val = 1;
+                    else if (i === 2 && j === 0 && k === 1) val = 1;
+                    else if (i === 2 && j === 1 && k === 0) val = -1;
+                    else if (i === 0 && j === 2 && k === 1) val = -1;
+                    else if (i === 1 && j === 0 && k === 2) val = -1;
+                    data[i*9 + j*3 + k] = math.complex(val,0);
+                }
+            }
+        }
+        return tensor([3,3,3], data);
+    }
+    const shape = new Array(n).fill(n);
+    const total = Math.pow(n, n);
+    const data = new Array(total).fill(math.complex(0,0));
+    const indices = getflatindices(shape);
+    for (let idx of indices) {
+        const set = new Set(idx);
+        if (set.size !== n) continue;
+        let inversions = 0;
+        for (let i = 0; i < n; i++) {
+            for (let j = i+1; j < n; j++) {
+                if (idx[i] > idx[j]) inversions++;
+            }
+        }
+        const val = (inversions % 2 === 0) ? 1 : -1;
+        let pos = 0;
+        const strides = getstrides(shape);
+        for (let i = 0; i < n; i++) pos += idx[i] * strides[i];
+        data[pos] = math.complex(val,0);
+    }
+    return tensor(shape, data);
+}
+
+function tensorminkowski() {
+    return tensor([
+        [math.complex(-1,0), math.complex(0,0), math.complex(0,0), math.complex(0,0)],
+        [math.complex(0,0), math.complex(1,0), math.complex(0,0), math.complex(0,0)],
+        [math.complex(0,0), math.complex(0,0), math.complex(1,0), math.complex(0,0)],
+        [math.complex(0,0), math.complex(0,0), math.complex(0,0), math.complex(1,0)]
+    ]);
+}
+
+function tensoreuclideanmetric(n) {
+    const data = new Array(n*n).fill(math.complex(0,0));
+    for (let i = 0; i < n; i++) data[i*n + i] = math.complex(1,0);
+    return tensor([n, n], data);
+}
+
+function tensorrandomnormal(shape, mean = 0, std = 1) {
+    const total = shape.reduce((a,b) => a*b, 1);
+    const data = [];
+    for (let i = 0; i < total; i++) {
+        const u1 = Math.random();
+        const u2 = Math.random();
+        const z = mul(Math.sqrt(mul(-2, Math.log(u1))), Math.cos(mul(2, mul(Math.PI, u2))));
+        data.push(math.complex(add(mean, mul(std, z)), 0));
+    }
+    return tensor(shape, data);
+}
+
+function tensorrandomuniform(shape, min = 0, max = 1) {
+    const total = shape.reduce((a,b) => a*b, 1);
+    const data = [];
+    for (let i = 0; i < total; i++) {
+        data.push(math.complex(add(min, mul(sub(max, min), Math.random())), 0));
+    }
+    return tensor(shape, data);
+}
+
+function tensorrandomcomplex(shape) {
+    const total = shape.reduce((a,b) => a*b, 1);
+    const data = [];
+    for (let i = 0; i < total; i++) {
+        data.push(math.complex(sub(mul(2, Math.random()), 1), sub(mul(2, Math.random()), 1)));
+    }
+    return tensor(shape, data);
+}
+
+function tensorrandomorthogonal(n) {
+    const A = tensorrandomnormal([n, n]);
+    const flatA = tensorflatten(A);
+    const Q = [];
+    const vectors = [];
+    for (let i = 0; i < n; i++) {
+        const v = [];
+        for (let j = 0; j < n; j++) v.push(flatA[j*n + i]);
+        for (let k = 0; k < leng(vectors); k++) {
+            const dot = tensorinner(v, vectors[k]);
+            for (let j = 0; j < n; j++) v[j] = sub(v[j], mul(dot, vectors[k][j]));
+        }
+        const norm = Math.sqrt(tensorinner(v, v));
+        if (norm > 1e-10) {
+            for (let j = 0; j < n; j++) v[j] = div(v[j], norm);
+        } else {
+            for (let j = 0; j < n; j++) v[j] = math.complex(sub(mul(2, Math.random()), 1), 0);
+        }
+        vectors.push(v);
+        for (let j = 0; j < n; j++) Q.push(v[j]);
+    }
+    return tensor([n, n], Q);
+}
+
+function tensorrandomunitary(n) {
+    const A = tensorrandomcomplex([n, n]);
+    const flatA = tensorflatten(A);
+    const Q = [];
+    const vectors = [];
+    for (let i = 0; i < n; i++) {
+        const v = [];
+        for (let j = 0; j < n; j++) v.push(flatA[j*n + i]);
+        for (let k = 0; k < leng(vectors); k++) {
+            const dot = tensorinner(v, vectors[k]);
+            for (let j = 0; j < n; j++) v[j] = sub(v[j], mul(dot, vectors[k][j]));
+        }
+        const norm = Math.sqrt(tensorinner(v, v));
+        if (norm > 1e-10) {
+            for (let j = 0; j < n; j++) v[j] = div(v[j], norm);
+        } else {
+            for (let j = 0; j < n; j++) v[j] = math.complex(sub(mul(2, Math.random()), 1), sub(mul(2, Math.random()), 1));
+        }
+        vectors.push(v);
+        for (let j = 0; j < n; j++) Q.push(v[j]);
+    }
+    return tensor([n, n], Q);
+}
+
+function tensorrandomrank(shape, rank) {
+    const ndim = leng(shape);
+    const factors = [];
+    for (let d = 0; d < ndim; d++) {
+        const factorShape = [shape[d], rank];
+        factors.push(tensorrandomcomplex(factorShape));
+    }
+    let result = factors[0];
+    for (let d = 1; d < ndim; d++) {
+        const currentShape = tensorshape(result);
+        result = tensorcontract(result, factors[d], [[leng(currentShape) - 1, 0]]);
+    }
+    return result;
+}
 
 
 
 
 
+function kretschmann(gfunc, x) {
+    const R = riemanntensor(gfunc, x);
+    const ga = metrictensor(gfunc, x);
+    const invg = inversemetric(g, x);
+    const flatR = tensorflatten(R);
+    const flatG = tensorflatten(ga);
+    const flatInv = tensorflatten(invg);
+    let K = 0;
+    const n = leng(x);
+    for (let i = 0; i < n; i++)
+        for (let j = 0; j < n; j++)
+            for (let k = 0; k < n; k++)
+                for (let l = 0; l < n; l++)
+                    for (let a = 0; a < n; a++)
+                        for (let b = 0; b < n; b++)
+                            for (let c = 0; c < n; c++)
+                                for (let d = 0; d < n; d++) {
+                                    const R1 = evale(R[i][j][k][l], {x: x});
+                                    const R2 = evale(R[a][b][c][d], {x: x});
+                                    const g1 = flatG[i*n + a];
+                                    const g2 = flatG[j*n + b];
+                                    const g3 = flatG[k*n + c];
+                                    const g4 = flatG[l*n + d];
+                                    K = add(K, mul(mul(mul(mul(R1, R2), g1), g2), mul(g3, g4)));
+                                }
+    return K;
+}
 
+function riccisquared(gfunc, x) {
+    const Ric = riccitensor(gfunc, x);
+    const g = metrictensor(gfunc, x);
+    const invg = inversemetric(g, x);
+    const flatRic = tensorflatten(Ric);
+    const flatInv = tensorflatten(invg);
+    let R2 = 0;
+    const n = leng(x);
+    for (let i = 0; i < n; i++)
+        for (let j = 0; j < n; j++)
+            for (let k = 0; k < n; k++)
+                for (let l = 0; l < n; l++) {
+                    const Ric1 = evale(Ric[i][j], {x: x});
+                    const Ric2 = evale(Ric[k][l], {x: x});
+                    R2 = add(R2, mul(mul(Ric1, Ric2), mul(flatInv[i*n + k], flatInv[j*n + l])));
+                }
+    return R2;
+}
+function eulerinvariant(metricfunc, x) {
+    const R = ricciscalar(metricfunc, x);
+    const R2 = riccisquared(metricfunc, x);
+    const K = kretschmann(metricfunc, x);
+    return sub(add(K, mul(-4, R2)), mul(R, R));
+}
+
+function chernpontryagin(metricfunc, x) {
+    const n = leng(x);
+    const R = riemanntensor(metricfunc, x);
+    const met = metrictensor(metricfunc, x);
+    const invmet = inversemetric(met, x);
+    const flatMet = tensorflatten(met);
+    const flatInv = tensorflatten(invmet);
+    let CP = 0;
+    for (let i = 0; i < n; i++)
+        for (let j = 0; j < n; j++)
+            for (let k = 0; k < n; k++)
+                for (let l = 0; l < n; l++) {
+                    // Dual Riemann: *R^μνρσ = 1/2 ε^μν_αβ R^αβ_ρσ
+                    const Rval = evale(R[i][j][k][l], {x: x});
+                    // Simplified - full implementation needs Levi-Civita
+                    CP = add(CP, mul(Rval, Rval));
+                }
+    return CP;
+}
+
+// ============================================================
+// ENERGY CONDITIONS
+// ============================================================
+
+function nullenergycondition(T, k) {
+    let sum = 0;
+    const n = leng(T);
+    for (let i = 0; i < n; i++)
+        for (let j = 0; j < n; j++)
+            sum = add(sum, mul(mul(T[i][j], k[i]), k[j]));
+    return sum;
+}
+
+function weakenergycondition(T, v) {
+    let sum = 0;
+    const n = leng(T);
+    for (let i = 0; i < n; i++)
+        for (let j = 0; j < n; j++)
+            sum = add(sum, mul(mul(T[i][j], v[i]), v[j]));
+    return sum;
+}
+
+function dominantenergycondition(T, v) {
+    const n = leng(T);
+    let result = [];
+    for (let mu = 0; mu < n; mu++) {
+        let sum = 0;
+        for (let nu = 0; nu < n; nu++)
+            sum = add(sum, mul(T[mu][nu], v[nu]));
+        result.push(sum);
+    }
+    return result;
+}
+
+function strongenergycondition(T, v) {
+    const n = leng(T);
+    const trace = 0;
+    for (let i = 0; i < n; i++) trace = add(trace, T[i][i]);
+    let sum = 0;
+    for (let i = 0; i < n; i++)
+        for (let j = 0; j < n; j++)
+            sum = add(sum, mul(mul(sub(T[i][j], mul(0.5, mul(trace, delta(i, j, n)))), v[i]), v[j]));
+    return sum;
+}
+
+function delta(i, j, n) {
+    return (i === j) ? 1 : 0;
+}
+//these stuff
+
+function symmeterize(T) {
+    if (!Array.isArray(T)) return T;
+    if (T.length === 0) return T;
+    const n = T.length;
+    const result = Array.from({length: n}, () => Array(n).fill(0));
+    for (let i = 0; i < n; i++)
+        for (let j = 0; j < n; j++)
+            result[i][j] = mul(0.5, add(T[i][j], T[j][i]));
+    return result;
+}
+
+function antisymmeterize(T) {
+    if (!Array.isArray(T)) return T;
+    if (T.length === 0) return T;
+    const n = T.length;
+    const result = Array.from({length: n}, () => Array(n).fill(0));
+    for (let i = 0; i < n; i++)
+        for (let j = 0; j < n; j++)
+            result[i][j] = mul(0.5, sub(T[i][j], T[j][i]));
+    return result;
+}
+
+function traceless(T) {
+    const n = T.length;
+    let trace = 0;
+    for (let i = 0; i < n; i++) trace = add(trace, T[i][i]);
+    const result = T.map(row => row.slice());
+    for (let i = 0; i < n; i++)
+        result[i][i] = sub(result[i][i], mul(trace, div(1, n)));
+    return result;
+}
+
+function liebracket(X, Y, x) {
+    const n = leng(x);
+    const result = [];
+    const eps = 1e-7;
+    for (let mu = 0; mu < n; mu++) {
+        let sum = 0;
+        for (let nu = 0; nu < n; nu++) {
+            const xp = x.slice();
+            xp[nu] = add(xp[nu], eps);
+            const xm = x.slice();
+            xm[nu] = sub(xm[nu], eps);
+            const dX = div(sub(evale(X[mu], {x: xp}), evale(X[mu], {x: xm})), mul(2, eps));
+            const dY = div(sub(evale(Y[mu], {x: xp}), evale(Y[mu], {x: xm})), mul(2, eps));
+            sum = add(sum, sub(mul(evale(X[nu], {x: x}), dY), mul(evale(Y[nu], {x: x}), dX)));
+        }
+        result.push(sum);
+    }
+    return result;
+}
+
+function liederivative(T, X, x) {
+    const n = leng(x);
+    const eps = 1e-7;
+    const result = T.map(row => row.slice());
+    // L_X T = X^μ ∂_μ T + (∂_ν X^μ) T^ν_... + ...
+    // Simplified for scalar or vector
+    if (!Array.isArray(T[0])) {
+        // Vector field
+        for (let mu = 0; mu < n; mu++) {
+            let sum = 0;
+            for (let nu = 0; nu < n; nu++) {
+                const xp = x.slice();
+                xp[nu] = add(xp[nu], eps);
+                const xm = x.slice();
+                xm[nu] = sub(xm[nu], eps);
+                const dX = div(sub(evale(X[mu], {x: xp}), evale(X[mu], {x: xm})), mul(2, eps));
+                const dT = div(sub(evale(T[mu], {x: xp}), evale(T[mu], {x: xm})), mul(2, eps));
+                sum = add(sum, add(mul(evale(X[nu], {x: x}), dT), mul(dX, evale(T[nu], {x: x}))));
+            }
+            result[mu] = sum;
+        }
+        return result;
+    }
+    return result;
+}
+
+//killing
+
+function killingequation(metricfunc, x, xi) {
+    const n = leng(x);
+    const eps = 1e-7;
+    const result = Array.from({length: n}, () => Array(n).fill(0));
+    for (let mu = 0; mu < n; mu++) {
+        for (let nu = 0; nu < n; nu++) {
+            const xp = x.slice();
+            xp[mu] = add(xp[mu], eps);
+            const xm = x.slice();
+            xm[mu] = sub(xm[mu], eps);
+            const dxi_nu = div(sub(evale(xi[nu], {x: xp}), evale(xi[nu], {x: xm})), mul(2, eps));
+            const xp2 = x.slice();
+            xp2[nu] = add(xp2[nu], eps);
+            const xm2 = x.slice();
+            xm2[nu] = sub(xm2[nu], eps);
+            const dxi_mu = div(sub(evale(xi[mu], {x: xp2}), evale(xi[mu], {x: xm2})), mul(2, eps));
+            result[mu][nu] = add(dxi_nu, dxi_mu);
+        }
+    }
+    return result;
+}
+
+function killingvectors(metricfunc, x) {
+    // Find Killing vectors by solving Killing equation
+    // Returns approximate Killing vectors
+    const n = leng(x);
+    const vectors = [];
+    // Check coordinate vector fields
+    for (let a = 0; a < n; a++) {
+        const xi = Array(n).fill(0);
+        xi[a] = 1;
+        const K = killingequation(metricfunc, x, xi);
+        let isKilling = true;
+        for (let i = 0; i < n && isKilling; i++)
+            for (let j = 0; j < n && isKilling; j++)
+                if (Math.abs(K[i][j]) > 1e-6) isKilling = false;
+        if (isKilling) vectors.push({vector: xi, t: 'c'});
+    }
+    return vectors;
+}
+function bianchi1(R, x) {
+    const n = leng(R);
+    let sum = 0;
+    for (let mu = 0; mu < n; mu++)
+        for (let nu = 0; nu < n; nu++)
+            for (let rho = 0; rho < n; rho++)
+                for (let sigma = 0; sigma < n; sigma++) {
+                    const term1 = evale(R[mu][nu][rho][sigma], {x: x});
+                    const term2 = evale(R[mu][rho][sigma][nu], {x: x});
+                    const term3 = evale(R[mu][sigma][nu][rho], {x: x});
+                    sum = add(sum, add(term1, add(term2, term3)));
+                }
+    return sum;
+}
+
+function contractedbianchi(metricfunc, x) {
+    const Gt = einsteintensor(metricfunc, x);
+    const n = leng(x);
+    const eps = 1e-7;
+    let sum = 0;
+    for (let mu = 0; mu < n; mu++) {
+        const xp = x.slice();
+        xp[mu] = add(xp[mu], eps);
+        const xm = x.slice();
+        xm[mu] = sub(xm[mu], eps);
+        const dG = div(sub(evale(Gt[mu][mu], {x: xp}), evale(Gt[mu][mu], {x: xm})), mul(2, eps));
+        sum = add(sum, dG);
+    }
+    return sum;
+}
+function weylscalars(metricfunc, x) {
+    const W = weyltensor(metricfunc, x);
+    const met = metrictensor(metricfunc, x);
+    const invmet = inversemetric(met, x);
+    const flatW = tensorflatten(W);
+    const flatInv = tensorflatten(invmet);
+    const n = leng(x);
+    const scalars = [];
+    // Ψ0 = W_{abcd} l^a m^b l^c m^d
+    // Ψ1 = W_{abcd} l^a n^b l^c m^d
+    // Ψ2 = W_{abcd} l^a m^b m^c n^d
+    // Ψ3 = W_{abcd} n^a l^b n^c m^d
+    // Ψ4 = W_{abcd} n^a m^b n^c m^d
+    // Simplified - just returns norms
+    let norm = 0;
+    for (let i = 0; i < n; i++)
+        for (let j = 0; j < n; j++)
+            for (let k = 0; k < n; k++)
+                for (let l = 0; l < n; l++) {
+                    const Wval = evale(W[i][j][k][l], {x: x});
+                    norm = add(norm, mul(Wval, Wval));
+                }
+    scalars.push(norm);
+    return scalars;
+}
+function inducedmetric(metricfunc, x, normal) {
+    const n = leng(x);
+    const met = metrictensor(metricfunc, x);
+    const flatMet = tensorflatten(met);
+    const result = Array.from({length: n-1}, () => Array(n-1).fill(0));
+    for (let i = 0; i < n-1; i++)
+        for (let j = 0; j < n-1; j++) {
+            let sum = 0;
+            for (let a = 0; a < n; a++)
+                for (let b = 0; b < n; b++)
+                    sum = add(sum, mul(mul(flatMet[a*n + b], tangent[i][a]), tangent[j][b]));
+            result[i][j] = sum;
+        }
+    return result;
+}
+
+function extrinsiccurvature(metricfunc, x, normal) {
+    const n = leng(x);
+    const eps = 1e-7;
+    const K = Array.from({length: n-1}, () => Array(n-1).fill(0));
+    for (let i = 0; i < n-1; i++)
+        for (let j = 0; j < n-1; j++) {
+            let sum = 0;
+            for (let mu = 0; mu < n; mu++) {
+                const xp = x.slice();
+                xp[mu] = add(xp[mu], eps);
+                const xm = x.slice();
+                xm[mu] = sub(xm[mu], eps);
+                const dn = div(sub(evale(normal[mu], {x: xp}), evale(normal[mu], {x: xm})), mul(2, eps));
+                sum = add(sum, mul(dn, tangent[i][mu]));
+            }
+            K[i][j] = mul(-1, sum);
+        }
+    return K;
+}
+
+function exteriorproduct(A, B) {
+    if (!Array.isArray(A) || !Array.isArray(B)) return mul(A, B);
+    const n = A.length;
+    const m = B.length;
+    const result = [];
+    for (let i = 0; i < n; i++)
+        for (let j = 0; j < m; j++)
+            result.push(mul(A[i], B[j]));
+    return result;
+}
+
+function exteriorderivative(form, x) {
+    const n = leng(x);
+    const eps = 1e-7;
+    const result = [];
+    if (!Array.isArray(form)) {
+        // Scalar function
+        for (let i = 0; i < n; i++) {
+            const xp = x.slice();
+            xp[i] = add(xp[i], eps);
+            const xm = x.slice();
+            xm[i] = sub(xm[i], eps);
+            result.push(div(sub(evale(form, {x: xp}), evale(form, {x: xm})), mul(2, eps)));
+        }
+        return result;
+    }
+    // 1-form or higher
+    for (let i = 0; i < n; i++) {
+        const row = [];
+        for (let j = i+1; j < n; j++) {
+            const xp_i = x.slice();
+            xp_i[i] = add(xp_i[i], eps);
+            const xp_j = x.slice();
+            xp_j[j] = add(xp_j[j], eps);
+            const val_i = evale(form[j], {x: xp_i});
+            const val_j = evale(form[i], {x: xp_j});
+            row.push(sub(div(sub(val_i, evale(form[j], {x: x})), eps),
+                         div(sub(val_j, evale(form[i], {x: x})), eps)));
+        }
+        if (row.length > 0) result.push(row);
+    }
+    return result;
+}
+function codifferential(form, metricfunc, x) {
+    const dform = exteriorderivative(form, x);
+    return hodgedual(dform, metricfunc, x);
+}
+
+function laplacebeltrami(form, metricfunc, x) {
+    const dform = exteriorderivative(form, x);
+    const deltaform = codifferential(form, metricfunc, x);
+    // Δ = dδ + δd
+    return add(exteriorderivative(deltaform, x), codifferential(dform, metricfunc, x));
+}
+function causaltype(metricfunc, x, v) {
+    const met = metrictensor(metricfunc, x);
+    const flatMet = tensorflatten(met);
+    const n = leng(x);
+    let norm = 0;
+    for (let i = 0; i < n; i++)
+        for (let j = 0; j < n; j++)
+            norm = add(norm, mul(mul(flatMet[i*n + j], v[i]), v[j]));
+    const re = norm.re || norm;
+    if (re < -1e-6) return -1;
+    if (re > 1e-6) return 1;
+    return 0;
+}
+
+function lightcone(metricfunc, x) {
+    // Find null directions
+    const n = leng(x);
+    const nullvectors = [];
+    // Simplified - checks coordinate directions
+    for (let a = 0; a < n; a++) {
+        const v = Array(n).fill(0);
+        v[a] = 1;
+        if (causaltype(metricfunc, x, v) === 'null')
+            nullvectors.push(v);
+    }
+    return nullvectors;
+}
+
+function hubbleparameter(a, t) {
+    const eps = 1e-7;
+    const ap = evale(a, {t: add(t, eps)});
+    const am = evale(a, {t: sub(t, eps)});
+    const at = evale(a, {t: t});
+    return div(div(sub(ap, am), mul(2, eps)), at);
+}
+
+function decelerationparameter(a, t) {
+    const H = hubbleparameter(a, t);
+    const eps = 1e-7;
+    const Hp = hubbleparameter(a, add(t, eps));
+    const Hm = hubbleparameter(a, sub(t, eps));
+    const dH = div(sub(Hp, Hm), mul(2, eps));
+    return mul(-1, add(1, div(dH, mul(H, H))));
+}
+
+function jerkparameter(a, t) {
+    const q = decelerationparameter(a, t);
+    const eps = 1e-7;
+    const qp = decelerationparameter(a, add(t, eps));
+    const qm = decelerationparameter(a, sub(t, eps));
+    const dq = div(sub(qp, qm), mul(2, eps));
+    const H = hubbleparameter(a, t);
+    return add(q, mul(2, mul(q, q)), div(dq, H));
+}
+
+function friedmannequations(a, rho, P, t) {
+    const H = hubbleparameter(a, t);
+    const k = 0; // curvature parameter
+    const G = 1;
+    const c = 1;
+    // H^2 = (8πG/3)ρ - k/a^2
+    const rho_t = evale(rho, {t: t});
+    const left1 = mul(H, H);
+    const right1 = sub(mul(div(8, 3), mul(pi(), mul(G, rho_t))), div(k, mul(evale(a, {t: t}), evale(a, {t: t}))));
+    const eq1 = sub(left1, right1);
+    // \dot{H} + H^2 = -(4πG/3)(ρ + 3P)
+    const P_t = evale(P, {t: t});
+    const eps = 1e-7;
+    const Hp = hubbleparameter(a, add(t, eps));
+    const Hm = hubbleparameter(a, sub(t, eps));
+    const dH = div(sub(Hp, Hm), mul(2, eps));
+    const left2 = add(dH, mul(H, H));
+    const right2 = mul(-div(4, 3), mul(pi(), mul(G, add(rho_t, mul(3, P_t)))));
+    const eq2 = sub(left2, right2);
+    return {eq1: eq1, eq2: eq2};
+}
+
+function conformalkilling(metricfunc, x, xi) {
+    const n = leng(x);
+    const eps = 1e-7;
+    const K = killingequation(metricfunc, x, xi);
+    // Check if K_μν = λ g_μν
+    const met = metrictensor(metricfunc, x);
+    const flatMet = tensorflatten(met);
+    let lambda = 0;
+    let isConformal = true;
+    for (let i = 0; i < n && isConformal; i++)
+        for (let j = 0; j < n && isConformal; j++) {
+            if (i === 0 && j === 0) lambda = div(K[i][j], flatMet[i*n + j]);
+            else if (Math.abs(sub(K[i][j], mul(lambda, flatMet[i*n + j]))) > 1e-6)
+                isConformal = false;
+        }
+    return {isConformal: isConformal, lambda: lambda};
+}
+
+
+function affineparameter(metricfunc, curve, tau) {
+    // Check if curve is affinely parametrized
+    const n = leng(curve);
+    const eps = 1e-7;
+    let sum = 0;
+    for (let i = 0; i < n; i++) {
+        const xp = curve.map((p, j) => j === i ? add(p, eps) : p);
+        const xm = curve.map((p, j) => j === i ? sub(p, eps) : p);
+        const dxp = evale(curve[i], {x: add(tau, eps)}) - evale(curve[i], {x: tau});
+        const dxm = evale(curve[i], {x: tau}) - evale(curve[i], {x: sub(tau, eps)});
+        sum = add(sum, sub(dxp, dxm));
+    }
+    return sum;
+}
+
+function singularitytype(metricfunc, x) {
+    const K = kretschmann(metricfunc, x);
+    const R = ricciscalar(metricfunc, x);
+    const met = metrictensor(metricfunc, x);
+    const det = metricdeterminant(metricfunc, x);
+    
+    if (Math.abs(K) > 1e6) return -1;//curv
+    if (Math.abs(det) < 1e-6) return 1;//coord
+    return 0;//null
+}
+
+//stuff for metrics
+
+function metrictensor(gfunc, x) {
+    const n = leng(x);
+    const result = [];
+    for (let i = 0; i < n; i++) {
+        result[i] = [];
+        for (let j = 0; j < n; j++) {
+            result[i][j] = evale(gfunc, {i: i, j: j, x: x});
+        }
+    }
+    return result;
+}
+
+function inversemetric(metric, x) {
+    const n = leng(metric);
+    const flat = tensorflatten(metric);
+    const mat = [];
+    for (let i = 0; i < n; i++) {
+        mat[i] = [];
+        for (let j = 0; j < n; j++) {
+            mat[i][j] = flat[i*n + j];
+        }
+    }
+    const inv = matrixinverse(mat);
+    return tensor([n, n], inv);
+}
+
+function christoffelsymbols(gfunc, x, eps) {
+    if (eps === undefined) eps = 1e-6;
+    const n = leng(x);
+    const metric = metrictensor(gfunc, x);
+    const invg = inversemetric(metric, x);
+    const flatInv = tensorflatten(invg);
+    const Gamma = [];
+    
+    // Precompute metric derivatives at x
+    const dg = [];
+    for (let i = 0; i < n; i++) {
+        dg[i] = [];
+        for (let j = 0; j < n; j++) {
+            dg[i][j] = [];
+            for (let k = 0; k < n; k++) {
+                const xp = x.slice();
+                xp[k] = add(xp[k], eps);
+                const xm = x.slice();
+                xm[k] = sub(xm[k], eps);
+                dg[i][j][k] = div(sub(
+                    evale(gfunc, {i: i, j: j, x: xp}),
+                    evale(gfunc, {i: i, j: j, x: xm})
+                ), mul(2, eps));
+            }
+        }
+    }
+    
+    for (let i = 0; i < n; i++) {
+        Gamma[i] = [];
+        for (let j = 0; j < n; j++) {
+            Gamma[i][j] = [];
+            for (let k = 0; k < n; k++) {
+                Gamma[i][j][k] = function() {
+                    let sum = math.complex(0,0);
+                    for (let l = 0; l < n; l++) {
+                        const term = mul(flatInv[i*n + l], add(sub(dg[l][j][k], dg[j][k][l]), dg[k][l][j]));
+                        sum = add(sum, mul(0.5, term));
+                    }
+                    return sum;
+                };
+            }
+        }
+    }
+    return Gamma;
+}
+function riemanntensor(gfunc, x, eps) {
+    if (eps === undefined) eps = 1e-6;
+    const n = leng(x);
+    const Gamma = christoffelsymbols(gfunc, x, eps);
+    const R = [];
+    
+    // Precompute derivative of Christoffel symbols
+    const dGamma = [];
+    for (let mu = 0; mu < n; mu++) {
+        dGamma[mu] = [];
+        for (let i = 0; i < n; i++) {
+            dGamma[mu][i] = [];
+            for (let j = 0; j < n; j++) {
+                dGamma[mu][i][j] = [];
+                for (let k = 0; k < n; k++) {
+                    const xp = x.slice();
+                    xp[mu] = add(xp[mu], eps);
+                    const xm = x.slice();
+                    xm[mu] = sub(xm[mu], eps);
+                    const Gammap = christoffelsymbols(gfunc, xp, eps);
+                    const Gammam = christoffelsymbols(gfunc, xm, eps);
+                    dGamma[mu][i][j][k] = div(sub(
+                        evale(Gammap[i][j][k], {x: xp}),
+                        evale(Gammam[i][j][k], {x: xm})
+                    ), mul(2, eps));
+                }
+            }
+        }
+    }
+    
+    // R^i_{jkl} = ∂_k Γ^i_{jl} - ∂_l Γ^i_{jk} + Γ^i_{mk} Γ^m_{jl} - Γ^i_{ml} Γ^m_{jk}
+    for (let i = 0; i < n; i++) {
+        R[i] = [];
+        for (let j = 0; j < n; j++) {
+            R[i][j] = [];
+            for (let k = 0; k < n; k++) {
+                R[i][j][k] = [];
+                for (let l = 0; l < n; l++) {
+                    R[i][j][k][l] = function() {
+                        const term1 = sub(
+                            dGamma[k][i][j][l],
+                            dGamma[l][i][j][k]
+                        );
+                        let term2 = math.complex(0,0);
+                        for (let m = 0; m < n; m++) {
+                            term2 = add(term2, sub(
+                                mul(evale(Gamma[i][m][k], {x: x}), evale(Gamma[m][j][l], {x: x})),
+                                mul(evale(Gamma[i][m][l], {x: x}), evale(Gamma[m][j][k], {x: x}))
+                            ));
+                        }
+                        return add(term1, term2);
+                    };
+                }
+            }
+        }
+    }
+    return R;
+}
+
+function riccitensor(gfunc, x, eps) {
+    if (eps === undefined) eps = 1e-6;
+    const n = leng(x);
+    const R = riemanntensor(gfunc, x, eps);
+    const Ric = [];
+    // Ric_{ij} = R^k_{ikj} = g^{km} R_{mikj}
+    for (let i = 0; i < n; i++) {
+        Ric[i] = [];
+        for (let j = 0; j < n; j++) {
+            Ric[i][j] = function(xp) {
+                const Rp = riemanntensor(gfunc, xp, eps);
+                let sum = math.complex(0,0);
+                for (let k = 0; k < n; k++) {
+                    sum = add(sum, evale(Rp[k][i][k][j], {x: xp}));
+                }
+                return sum;
+            };
+        }
+    }
+    return Ric;
+}
+
+function ricciscalar(gfunc, x, eps) {
+    if (eps === undefined) eps = 1e-6;
+    const n = leng(x);
+    const Ric = riccitensor(gfunc, x, eps);
+    const metric = metrictensor(gfunc, x);
+    const invg = inversemetric(metric, x);
+    const flatInv = tensorflatten(invg);
+    let scalar = math.complex(0,0);
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+            scalar = add(scalar, mul(flatInv[i*n + j], evale(Ric[i][j], {x: x})));
+        }
+    }
+    return scalar;
+}
+
+function einsteintensor(gfunc, x, eps) {
+    if (eps === undefined) eps = 1e-6;
+    const n = leng(x);
+    const Ric = riccitensor(gfunc, x, eps);
+    const S = ricciscalar(gfunc, x, eps);
+    const metric = metrictensor(gfunc, x);
+    const flatMetric = tensorflatten(metric);
+    // G_{ij} = R_{ij} - (1/2) R g_{ij}
+    const G = [];
+    for (let i = 0; i < n; i++) {
+        G[i] = [];
+        for (let j = 0; j < n; j++) {
+            G[i][j] = function(xp) {
+                const Ricp = riccitensor(gfunc, xp, eps);
+                const Sp = ricciscalar(gfunc, xp, eps);
+                const metricp = metrictensor(gfunc, xp);
+                const flatMetricp = tensorflatten(metricp);
+                const rij = evale(Ricp[i][j], {x: xp});
+                const gij = flatMetricp[i*n + j];
+                return sub(rij, mul(0.5, mul(Sp, gij)));
+            };
+        }
+    }
+    return G;
+}
+
+function einsteintensor(gfunc, x, eps) {
+    if (eps === undefined) eps = 1e-6;
+    const n = leng(x);
+    const Ric = riccitensor(gfunc, x, eps);
+    const S = ricciscalar(gfunc, x, eps);
+    const metric = metrictensor(gfunc, x);
+    const invg = inversemetric(metric, x);
+    const flatInv = tensorflatten(invg);
+    const flatRic = tensorflatten(Ric);
+    
+    const G = [];
+    for (let i = 0; i < n; i++) {
+        G[i] = [];
+        for (let j = 0; j < n; j++) {
+            G[i][j] = function() {
+                const gij = flatInv[i*n + j];
+                const rij = evale(Ric[i][j], {x: x});
+                return sub(rij, mul(0.5, mul(S, gij)));
+            };
+        }
+    }
+    return G;
+}
+
+
+function addvec(x, idx, eps) {
+    const result = x.slice();
+    result[idx] = add(result[idx], eps);
+    return result;
+}
+
+function subvec(x, idx, eps) {
+    const result = x.slice();
+    result[idx] = sub(result[idx], eps);
+    return result;
+}
+
+
+function riccitensor(gfunc, x, eps) {
+    if (eps === undefined) eps = 1e-7;
+    const n = leng(x);
+    const R = riemanntensor(gfunc, x, eps);
+    const Ric = [];
+    for (let i = 0; i < n; i++) {
+        Ric[i] = [];
+        for (let j = 0; j < n; j++) {
+            Ric[i][j] = function(xp) {
+                let sum = math.complex(0,0);
+                const Rp = riemanntensor(gfunc, xp, eps);
+                for (let k = 0; k < n; k++) {
+                    sum = add(sum, evale(Rp[k][i][k][j], {x: xp}));
+                }
+                return sum;
+            };
+        }
+    }
+    return Ric;
+}
+
+function ricciscalar(gfunc, x, eps) {
+    if (eps === undefined) eps = 1e-7;
+    const n = leng(x);
+    const Ric = riccitensor(gfunc, x, eps);
+    const metric = metrictensor(gfunc, x);
+    const invg = inversemetric(metric, x);
+    const flatInv = tensorflatten(invg);
+    let scalar = math.complex(0,0);
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+            scalar = add(scalar, mul(flatInv[i*n + j], evale(Ric[i][j], {x: x})));
+        }
+    }
+    return scalar;
+}
+
+function weyltensor(gfunc, x, eps) {
+    if (eps === undefined) eps = 1e-7;
+    const n = leng(x);
+    const R = riemanntensor(gfunc, x, eps);
+    const Ric = riccitensor(gfunc, x, eps);
+    const S = ricciscalar(gfunc, x, eps);
+    const metric = metrictensor(gfunc, x);
+    const invg = inversemetric(metric, x);
+    const flatInv = tensorflatten(invg);
+    const flatRic = tensorflatten(Ric);
+    
+    const W = [];
+    for (let i = 0; i < n; i++) {
+        W[i] = [];
+        for (let j = 0; j < n; j++) {
+            W[i][j] = [];
+            for (let k = 0; k < n; k++) {
+                W[i][j][k] = [];
+                for (let l = 0; l < n; l++) {
+                    W[i][j][k][l] = function(xp) {
+                        const Rp = riemanntensor(gfunc, xp, eps);
+                        const Ricp = riccitensor(gfunc, xp, eps);
+                        const Sp = ricciscalar(gfunc, xp, eps);
+                        const metricp = metrictensor(gfunc, xp);
+                        const invgp = inversemetric(metricp, xp);
+                        const flatInvp = tensorflatten(invgp);
+                        const flatRicp = tensorflatten(Ricp);
+                        
+                        let term = evale(Rp[i][j][k][l], {x: xp});
+                        
+                        const factor1 = div(1, sub(n, 2));
+                        const t1 = sub(
+                            mul(flatInvp[i*n + k], flatRicp[j*n + l]),
+                            mul(flatInvp[i*n + l], flatRicp[j*n + k])
+                        );
+                        const t2 = sub(
+                            mul(flatInvp[j*n + k], flatRicp[i*n + l]),
+                            mul(flatInvp[j*n + l], flatRicp[i*n + k])
+                        );
+                        term = sub(term, mul(factor1, add(t1, t2)));
+                        
+                        const factor2 = div(1, mul(sub(n, 1), sub(n, 2)));
+                        const t3 = sub(
+                            mul(flatInvp[i*n + k], flatInvp[j*n + l]),
+                            mul(flatInvp[i*n + l], flatInvp[j*n + k])
+                        );
+                        term = add(term, mul(factor2, mul(Sp, t3)));
+                        
+                        return term;
+                    };
+                }
+            }
+        }
+    }
+    return W;
+}
+
+function einsteintensor(gfunc, x, eps) {
+    if (eps === undefined) eps = 1e-7;
+    const n = leng(x);
+    const Ric = riccitensor(gfunc, x, eps);
+    const S = ricciscalar(gfunc, x, eps);
+    const metric = metrictensor(gfunc, x);
+    const invg = inversemetric(metric, x);
+    const flatInv = tensorflatten(invg);
+    
+    const G = [];
+    for (let i = 0; i < n; i++) {
+        G[i] = [];
+        for (let j = 0; j < n; j++) {
+            G[i][j] = function(xp) {
+                const Ricp = riccitensor(gfunc, xp, eps);
+                const Sp = ricciscalar(gfunc, xp, eps);
+                const metricp = metrictensor(gfunc, xp);
+                const invgp = inversemetric(metricp, xp);
+                const flatInvp = tensorflatten(invgp);
+                return sub(evale(Ricp[i][j], {x: xp}), mul(0.5, mul(Sp, flatInvp[i*n + j])));
+            };
+        }
+    }
+    return G;
+}
+
+function geodesicequation(gfunc, x, v, tau, steps, eps) {
+    if (steps === undefined) steps = 100;
+    if (eps === undefined) eps = 1e-7;
+    const n = leng(x);
+    let pos = x.slice();
+    let vel = v.slice();
+    const dt = div(tau, steps);
+    
+    for (let step = 0; step < steps; step++) {
+        const Gamma = christoffelsymbols(gfunc, pos, eps);
+        
+        const k1 = [];
+        const k1v = [];
+        for (let i = 0; i < n; i++) {
+            k1[i] = mul(vel[i], dt);
+            let acc = math.complex(0,0);
+            for (let j = 0; j < n; j++) {
+                for (let k = 0; k < n; k++) {
+                    acc = sub(acc, mul(evale(Gamma[i][j][k], {x: pos}), mul(vel[j], vel[k])));
+                }
+            }
+            k1v[i] = mul(acc, dt);
+        }
+        
+        const pos2 = pos.map((p, i) => add(p, mul(0.5, k1[i])));
+        const vel2 = vel.map((v, i) => add(v, mul(0.5, k1v[i])));
+        const Gamma2 = christoffelsymbols(gfunc, pos2, eps);
+        
+        const k2 = [];
+        const k2v = [];
+        for (let i = 0; i < n; i++) {
+            k2[i] = mul(vel2[i], dt);
+            let acc = math.complex(0,0);
+            for (let j = 0; j < n; j++) {
+                for (let k = 0; k < n; k++) {
+                    acc = sub(acc, mul(evale(Gamma2[i][j][k], {x: pos2}), mul(vel2[j], vel2[k])));
+                }
+            }
+            k2v[i] = mul(acc, dt);
+        }
+        
+        const pos3 = pos.map((p, i) => add(p, mul(0.5, k2[i])));
+        const vel3 = vel.map((v, i) => add(v, mul(0.5, k2v[i])));
+        const Gamma3 = christoffelsymbols(gfunc, pos3, eps);
+        
+        const k3 = [];
+        const k3v = [];
+        for (let i = 0; i < n; i++) {
+            k3[i] = mul(vel3[i], dt);
+            let acc = math.complex(0,0);
+            for (let j = 0; j < n; j++) {
+                for (let k = 0; k < n; k++) {
+                    acc = sub(acc, mul(evale(Gamma3[i][j][k], {x: pos3}), mul(vel3[j], vel3[k])));
+                }
+            }
+            k3v[i] = mul(acc, dt);
+        }
+        
+        const pos4 = pos.map((p, i) => add(p, k3[i]));
+        const vel4 = vel.map((v, i) => add(v, k3v[i]));
+        const Gamma4 = christoffelsymbols(gfunc, pos4, eps);
+        
+        const k4 = [];
+        const k4v = [];
+        for (let i = 0; i < n; i++) {
+            k4[i] = mul(vel4[i], dt);
+            let acc = math.complex(0,0);
+            for (let j = 0; j < n; j++) {
+                for (let k = 0; k < n; k++) {
+                    acc = sub(acc, mul(evale(Gamma4[i][j][k], {x: pos4}), mul(vel4[j], vel4[k])));
+                }
+            }
+            k4v[i] = mul(acc, dt);
+        }
+        
+        for (let i = 0; i < n; i++) {
+            pos[i] = add(pos[i], div(add(k1[i], mul(2, k2[i]), mul(2, k3[i]), k4[i]), 6));
+            vel[i] = add(vel[i], div(add(k1v[i], mul(2, k2v[i]), mul(2, k3v[i]), k4v[i]), 6));
+        }
+    }
+    
+    return { position: pos, velocity: vel };
+}
+
+function covariantscalar(V, gfunc, x, eps) {
+    if (eps === undefined) eps = 1e-7;
+    const n = leng(x);
+    const metric = metrictensor(gfunc, x);
+    const invg = inversemetric(metric, x);
+    const flatInv = tensorflatten(invg);
+    const flatV = tensorflatten(V);
+    let sum = math.complex(0,0);
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+            sum = add(sum, mul(flatInv[i*n + j], mul(flatV[i], flatV[j])));
+        }
+    }
+    return sum;
+}
+
+function covariantderivative(Tfunc, gfunc, x, eps) {
+    if (eps === undefined) eps = 1e-7;
+    const n = leng(x);
+    const Gamma = christoffelsymbols(gfunc, x, eps);
+    const T = evale(Tfunc, {x: x});
+    const flatT = tensorflatten(T);
+    const shape = tensorshape(T);
+    const ndim = leng(shape);
+    const totalSize = leng(flatT);
+    
+    function partial(mu, idx) {
+        const xp = addvec(x, mu, eps);
+        const Tp = evale(Tfunc, {x: xp});
+        const xm = subvec(x, mu, eps);
+        const Tm = evale(Tfunc, {x: xm});
+        const flatTp = tensorflatten(Tp);
+        const flatTm = tensorflatten(Tm);
+        return div(sub(flatTp[idx], flatTm[idx]), mul(2, eps));
+    }
+    
+    const resultFlat = new Array(n * totalSize).fill(math.complex(0,0));
+    
+    for (let mu = 0; mu < n; mu++) {
+        for (let idx = 0; idx < totalSize; idx++) {
+            const pidx = getflatindices(shape)[idx];
+            let val = partial(mu, idx);
+            
+            for (let a = 0; a < ndim; a++) {
+                if (a < leng(shape) - ndim) {
+                    for (let rho = 0; rho < n; rho++) {
+                        const newIdx = pidx.slice();
+                        newIdx[a] = rho;
+                        const pos = flatIndex(newIdx, shape);
+                        val = add(val, mul(evale(Gamma[a][mu][rho], {x: x}), flatT[pos]));
+                    }
+                }
+            }
+            
+            for (let a = ndim; a < 2*ndim; a++) {
+                for (let rho = 0; rho < n; rho++) {
+                    const newIdx = pidx.slice();
+                    newIdx[a] = rho;
+                    const pos = flatIndex(newIdx, shape);
+                    val = sub(val, mul(evale(Gamma[rho][mu][a - ndim], {x: x}), flatT[pos]));
+                }
+            }
+            
+            resultFlat[mu * totalSize + idx] = val;
+        }
+    }
+    
+    const resultShape = [n].concat(shape);
+    return tensor(resultShape, resultFlat);
+}
+
+function flatIndex(idx, shape) {
+    let pos = 0;
+    let stride = 1;
+    for (let i = leng(shape) - 1; i >= 0; i--) {
+        pos += idx[i] * stride;
+        stride *= shape[i];
+    }
+    return pos;
+}
+
+function metriccompatibility(gfunc, x, eps) {
+    if (eps === undefined) eps = 1e-7;
+    const n = leng(x);
+    const Gamma = christoffelsymbols(gfunc, x, eps);
+    const metric = metrictensor(gfunc, x);
+    const flatG = tensorflatten(metric);
+    let maxError = math.complex(0,0);
+    
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+            for (let k = 0; k < n; k++) {
+                const gp = div(sub(
+                    evale(gfunc, {i: i, j: j, x: addvec(x, k, eps)}),
+                    evale(gfunc, {i: i, j: j, x: subvec(x, k, eps)})
+                ), mul(2, eps));
+                let sum = math.complex(0,0);
+                for (let l = 0; l < n; l++) {
+                    sum = add(sum, sub(
+                        mul(evale(Gamma[l][i][k], {x: x}), flatG[l*n + j]),
+                        mul(evale(Gamma[l][j][k], {x: x}), flatG[i*n + l])
+                    ));
+                }
+                const error = sub(gp, sum);
+                if (mag(error) > mag(maxError)) maxError = error;
+            }
+        }
+    }
+    return maxError;
+}
+
+function paralleltransport(Tfunc, gfunc, x, v, tau, steps, eps) {
+    if (steps === undefined) steps = 100;
+    if (eps === undefined) eps = 1e-7;
+    const n = leng(x);
+    let tensor = evale(Tfunc, {x: x});
+    let pos = x.slice();
+    const dt = div(tau, steps);
+    
+    for (let step = 0; step < steps; step++) {
+        const Gamma = christoffelsymbols(gfunc, pos, eps);
+        const flatT = tensorflatten(tensor);
+        const shape = tensorshape(tensor);
+        const ndim = leng(shape);
+        const totalSize = leng(flatT);
+        const newFlat = flatT.slice();
+        
+        for (let i = 0; i < totalSize; i++) {
+            const idx = getflatindices(shape)[i];
+            let delta = math.complex(0,0);
+            
+            for (let a = 0; a < ndim; a++) {
+                if (a < leng(shape) - ndim) {
+                    for (let rho = 0; rho < n; rho++) {
+                        const newIdx = idx.slice();
+                        newIdx[a] = rho;
+                        const pos2 = flatIndex(newIdx, shape);
+                        let sum = math.complex(0,0);
+                        for (let mu = 0; mu < n; mu++) {
+                            sum = add(sum, mul(v[mu], evale(Gamma[a][mu][rho], {x: pos})));
+                        }
+                        delta = sub(delta, mul(sum, flatT[pos2]));
+                    }
+                }
+            }
+            
+            for (let a = ndim; a < 2*ndim; a++) {
+                for (let rho = 0; rho < n; rho++) {
+                    const newIdx = idx.slice();
+                    newIdx[a] = rho;
+                    const pos2 = flatIndex(newIdx, shape);
+                    let sum = math.complex(0,0);
+                    for (let mu = 0; mu < n; mu++) {
+                        sum = add(sum, mul(v[mu], evale(Gamma[rho][mu][a - ndim], {x: pos})));
+                    }
+                    delta = add(delta, mul(sum, flatT[pos2]));
+                }
+            }
+            
+            newFlat[i] = add(newFlat[i], mul(delta, dt));
+        }
+        
+        tensor = tensor(shape, newFlat);
+        for (let i = 0; i < n; i++) {
+            pos[i] = add(pos[i], mul(v[i], dt));
+        }
+    }
+    
+    return tensor;
+}
+
+function geodesicdeviation(gfunc, x, v, w, tau, steps, eps) {
+    if (steps === undefined) steps = 100;
+    if (eps === undefined) eps = 1e-7;
+    const n = leng(x);
+    let pos = x.slice();
+    let vel = v.slice();
+    let dev = w.slice();
+    const dt = div(tau, steps);
+    
+    for (let step = 0; step < steps; step++) {
+        const Gamma = christoffelsymbols(gfunc, pos, eps);
+        const R = riemanntensor(gfunc, pos, eps);
+        
+        const k1 = [];
+        const k1v = [];
+        const k1d = [];
+        for (let i = 0; i < n; i++) {
+            k1[i] = mul(vel[i], dt);
+            let acc = math.complex(0,0);
+            for (let j = 0; j < n; j++) {
+                for (let k = 0; k < n; k++) {
+                    acc = sub(acc, mul(evale(Gamma[i][j][k], {x: pos}), mul(vel[j], vel[k])));
+                }
+            }
+            k1v[i] = mul(acc, dt);
+            
+            let devacc = math.complex(0,0);
+            for (let j = 0; j < n; j++) {
+                for (let k = 0; k < n; k++) {
+                    for (let l = 0; l < n; l++) {
+                        devacc = add(devacc, mul(evale(R[i][j][k][l], {x: pos}), mul(vel[j], mul(dev[k], vel[l]))));
+                    }
+                }
+            }
+            k1d[i] = mul(devacc, dt);
+        }
+        
+        const pos2 = pos.map((p, i) => add(p, mul(0.5, k1[i])));
+        const vel2 = vel.map((v, i) => add(v, mul(0.5, k1v[i])));
+        const dev2 = dev.map((d, i) => add(d, mul(0.5, k1d[i])));
+        const Gamma2 = christoffelsymbols(gfunc, pos2, eps);
+        const R2 = riemanntensor(gfunc, pos2, eps);
+        
+        const k2 = [];
+        const k2v = [];
+        const k2d = [];
+        for (let i = 0; i < n; i++) {
+            k2[i] = mul(vel2[i], dt);
+            let acc = math.complex(0,0);
+            for (let j = 0; j < n; j++) {
+                for (let k = 0; k < n; k++) {
+                    acc = sub(acc, mul(evale(Gamma2[i][j][k], {x: pos2}), mul(vel2[j], vel2[k])));
+                }
+            }
+            k2v[i] = mul(acc, dt);
+            
+            let devacc = math.complex(0,0);
+            for (let j = 0; j < n; j++) {
+                for (let k = 0; k < n; k++) {
+                    for (let l = 0; l < n; l++) {
+                        devacc = add(devacc, mul(evale(R2[i][j][k][l], {x: pos2}), mul(vel2[j], mul(dev2[k], vel2[l]))));
+                    }
+                }
+            }
+            k2d[i] = mul(devacc, dt);
+        }
+        
+        const pos3 = pos.map((p, i) => add(p, mul(0.5, k2[i])));
+        const vel3 = vel.map((v, i) => add(v, mul(0.5, k2v[i])));
+        const dev3 = dev.map((d, i) => add(d, mul(0.5, k2d[i])));
+        const Gamma3 = christoffelsymbols(gfunc, pos3, eps);
+        const R3 = riemanntensor(gfunc, pos3, eps);
+        
+        const k3 = [];
+        const k3v = [];
+        const k3d = [];
+        for (let i = 0; i < n; i++) {
+            k3[i] = mul(vel3[i], dt);
+            let acc = math.complex(0,0);
+            for (let j = 0; j < n; j++) {
+                for (let k = 0; k < n; k++) {
+                    acc = sub(acc, mul(evale(Gamma3[i][j][k], {x: pos3}), mul(vel3[j], vel3[k])));
+                }
+            }
+            k3v[i] = mul(acc, dt);
+            
+            let devacc = math.complex(0,0);
+            for (let j = 0; j < n; j++) {
+                for (let k = 0; k < n; k++) {
+                    for (let l = 0; l < n; l++) {
+                        devacc = add(devacc, mul(evale(R3[i][j][k][l], {x: pos3}), mul(vel3[j], mul(dev3[k], vel3[l]))));
+                    }
+                }
+            }
+            k3d[i] = mul(devacc, dt);
+        }
+        
+        const pos4 = pos.map((p, i) => add(p, k3[i]));
+        const vel4 = vel.map((v, i) => add(v, k3v[i]));
+        const dev4 = dev.map((d, i) => add(d, k3d[i]));
+        const Gamma4 = christoffelsymbols(gfunc, pos4, eps);
+        const R4 = riemanntensor(gfunc, pos4, eps);
+        
+        const k4 = [];
+        const k4v = [];
+        const k4d = [];
+        for (let i = 0; i < n; i++) {
+            k4[i] = mul(vel4[i], dt);
+            let acc = math.complex(0,0);
+            for (let j = 0; j < n; j++) {
+                for (let k = 0; k < n; k++) {
+                    acc = sub(acc, mul(evale(Gamma4[i][j][k], {x: pos4}), mul(vel4[j], vel4[k])));
+                }
+            }
+            k4v[i] = mul(acc, dt);
+            
+            let devacc = math.complex(0,0);
+            for (let j = 0; j < n; j++) {
+                for (let k = 0; k < n; k++) {
+                    for (let l = 0; l < n; l++) {
+                        devacc = add(devacc, mul(evale(R4[i][j][k][l], {x: pos4}), mul(vel4[j], mul(dev4[k], vel4[l]))));
+                    }
+                }
+            }
+            k4d[i] = mul(devacc, dt);
+        }
+        
+        for (let i = 0; i < n; i++) {
+            pos[i] = add(pos[i], div(add(k1[i], mul(2, k2[i]), mul(2, k3[i]), k4[i]), 6));
+            vel[i] = add(vel[i], div(add(k1v[i], mul(2, k2v[i]), mul(2, k3v[i]), k4v[i]), 6));
+            dev[i] = add(dev[i], div(add(k1d[i], mul(2, k2d[i]), mul(2, k3d[i]), k4d[i]), 6));
+        }
+    }
+    
+    return { position: pos, velocity: vel, deviation: dev };
+}
+
+
+//metric and its generators
+
+
+function getIdx(i, n, j) {
+    return (typeof i === 'number') ? (i * n + j) : add(mul(i, n), j);
+}
+
+function metricsphere(r) {
+    return function(i, j, x) {
+        const theta = x[0]; // Assuming 2D Sphere coordinates: [theta, phi]
+        if (i === 0 && j === 0) return mul(r, r);
+        if (i === 1 && j === 1) return mul(r, r, mul(sin(theta), sin(theta)));
+        return 0;
+    };
+}
+
+function metricflrw(a, k) {
+    return function(i, j, x) {
+        // Standard 4-vectors: x[0]=t, x[1]=r, x[2]=theta, x[3]=phi
+        const t = x[0];
+        const r = x[1];
+        const theta = x[2];
+        const at = evale(a, {t: t});
+        const at2 = mul(at, at);
+        
+        if (i !== j) return 0;
+        if (i === 0) return -1;
+        if (i === 1) {
+            if (k === 0) return at2;
+            if (k === 1) return div(at2, sub(1, mul(r, r)));
+            if (k === -1) return div(at2, add(1, mul(r, r)));
+        }
+        if (i === 2) return mul(at2, mul(r, r));
+        if (i === 3) return mul(at2, mul(r, r), mul(sin(theta), sin(theta)));
+        
+        return 0;
+    };
+}
+
+function metricminkowski(n) {
+    return function(i, j, x) {
+        if (i !== j) return 0;
+        if (i === 0) return -1;
+        return 1;
+    };
+}
+
+function metriceuclidean(n) {
+    return function(i, j, x) {
+        if (i !== j) return 0;
+        return 1;
+    };
+}
+
+function metricschwarzschild(M) {
+    return function(i, j, x) {
+        const r = x[1];
+        const theta = x[2];
+        const f = sub(1, div(mul(2, M), r));
+        const invf = div(1, f);
+        
+        if (i !== j) return 0;
+        if (i === 0) return mul(-1, f);
+        if (i === 1) return invf;
+        if (i === 2) return mul(r, r);
+        if (i === 3) return mul(mul(r, r), mul(sin(theta), sin(theta)));
+        return 0;
+    };
+}
+
+function metrickerr(a, M) {
+    return function(i, j, x) {
+        const r = x[1];
+        const theta = x[2];
+        const s = sin(theta);
+        const c = cos(theta);
+        const Sigma = add(mul(r, r), mul(mul(a, a), mul(c, c)));
+        const Delta = add(sub(mul(r, r), mul(2, mul(M, r))), mul(a, a));
+        
+        if (i === 0 && j === 0) return mul(-1, sub(1, div(mul(2, mul(M, r)), Sigma)));
+        if (i === 0 && j === 3) return mul(-1, div(mul(4, mul(a, mul(M, mul(r, mul(s, s))))), Sigma));
+        if (i === 1 && j === 1) return div(Sigma, Delta);
+        if (i === 2 && j === 2) return Sigma;
+        if (i === 3 && j === 0) return mul(-1, div(mul(4, mul(a, mul(M, mul(r, mul(s, s))))), Sigma));
+        if (i === 3 && j === 3) {
+            const term1 = add(mul(r, r), mul(a, a));
+            const term2 = div(mul(2, mul(M, mul(r, mul(a, a)))), Sigma);
+            return mul(add(term1, term2), mul(s, s));
+        }
+        return 0;
+    };
+}
+
+function metricreissnernordstrom(M, Q) {
+    return function(i, j, x) {
+        const r = x[1];
+        const theta = x[2];
+        const f = sub(sub(1, div(mul(2, M), r)), div(mul(Q, Q), mul(r, r)));
+        const invf = div(1, f);
+        
+        if (i !== j) return 0;
+        if (i === 0) return mul(-1, f);
+        if (i === 1) return invf;
+        if (i === 2) return mul(r, r);
+        if (i === 3) return mul(mul(r, r), mul(sin(theta), sin(theta)));
+        return 0;
+    };
+}
+
+function metricantidesitter(d, L) {
+    return function(i, j, x) {
+        const r = x[1];
+        const f = add(1, div(mul(r, r), mul(L, L)));
+        const invf = div(1, f);
+        
+        if (i !== j) return 0;
+        if (i === 0) return mul(-1, f);
+        if (i === 1) return invf;
+        if (i >= 2) return mul(r, r);
+        return 0;
+    };
+}
+
+function metricdesitter(L) {
+    return function(i, j, x) {
+        const r = x[1];
+        const theta = x[2];
+        const f = sub(1, div(mul(r, r), mul(L, L)));
+        const invf = div(1, f);
+        
+        if (i !== j) return 0;
+        if (i === 0) return mul(-1, f);
+        if (i === 1) return invf;
+        if (i === 2) return mul(r, r);
+        if (i === 3) return mul(mul(r, r), mul(sin(theta), sin(theta)));
+        return 0;
+    };
+}
+
+function metricgodel(a) {
+    return function(i, j, x) {
+        const r = x[1]; // x[0]=t, x[1]=r, x[2]=phi, x[3]=z
+        const sh = sinh(r);
+        const sh2 = mul(sh, sh);
+        const ch = cosh(r);
+        
+        if (i === 0 && j === 0) return -1;
+        if (i === 0 && j === 2) return mul(-1, mul(sqrt(2), sh2));
+        if (i === 2 && j === 0) return mul(-1, mul(sqrt(2), sh2));
+        if (i === 1 && j === 1) return 1;
+        if (i === 2 && j === 2) return sub(sh2, mul(sh2, sh2));
+        if (i === 3 && j === 3) return 1;
+        return 0;
+    };
+}
+
+function metricppwave(f) {
+    return function(i, j, x) {
+        const t = x[0];
+        const z = x[1];
+        const u = sub(t, z);
+        const fu = evale(f, {u: u});
+        
+        if (i === 0 && j === 0) return add(-1, fu);
+        if (i === 0 && j === 1) return mul(-1, fu);
+        if (i === 1 && j === 0) return mul(-1, fu);
+        if (i === 1 && j === 1) return add(1, fu);
+        if (i === 2 && j === 2) return 1;
+        if (i === 3 && j === 3) return 1;
+        return 0;
+    };
+}
+
+function metricbtz(M, L, J) {
+    return function(i, j, x) {
+        const r = x[1]; // 2+1 dimensional spacetime [t, r, phi]
+        const f = add(sub(div(mul(r, r), mul(L, L)), M), div(mul(J, J), mul(4, mul(r, r))));
+        const invf = div(1, f);
+        
+        if (i === 0 && j === 0) return mul(-1, f);
+        if (i === 0 && j === 2) return mul(-1, div(J, 2));
+        if (i === 2 && j === 0) return mul(-1, div(J, 2));
+        if (i === 1 && j === 1) return invf;
+        if (i === 2 && j === 2) return mul(r, r);
+        return 0;
+    };
+}
+
+function metricschwarzschildads(M, L) {
+    return function(i, j, x) {
+        const r = x[1];
+        const theta = x[2];
+        const f = add(sub(1, div(mul(2, M), r)), div(mul(r, r), mul(L, L)));
+        const invf = div(1, f);
+        
+        if (i !== j) return 0;
+        if (i === 0) return mul(-1, f);
+        if (i === 1) return invf;
+        if (i === 2) return mul(r, r);
+        if (i === 3) return mul(mul(r, r), mul(sin(theta), sin(theta)));
+        return 0;
+    };
+}
+
+function metricchargedads(M, Q, L) {
+    return function(i, j, x) {
+        const r = x[1];
+        const theta = x[2];
+        const f = add(sub(sub(1, div(mul(2, M), r)), div(mul(Q, Q), mul(r, r))), div(mul(r, r), mul(L, L)));
+        const invf = div(1, f);
+        
+        if (i !== j) return 0;
+        if (i === 0) return mul(-1, f);
+        if (i === 1) return invf;
+        if (i === 2) return mul(r, r);
+        if (i === 3) return mul(mul(r, r), mul(sin(theta), sin(theta)));
+        return 0;
+    };
+}
+
+function metriccylindrical() {
+    return function(i, j, x) {
+        const r = x[1];
+        if (i !== j) return 0;
+        if (i === 0) return -1;
+        if (i === 1) return 1;
+        if (i === 2) return mul(r, r);
+        if (i === 3) return 1;
+        return 0;
+    };
+}
+
+function metrichyperbolic(n) {
+    return function(i, j, x) {
+        const r = x[0];
+        if (i !== j) return 0;
+        if (i === 0) return 1;
+        if (i >= 1) return mul(sinh(r), sinh(r));
+        return 0;
+    };
+}
+
+function metrictaubnut(M, L) {
+    return function(i, j, x) {
+        const r = x[1];
+        const theta = x[2];
+        const Sigma = add(mul(r, r), mul(L, L));
+        const Delta = sub(add(mul(r, r), mul(L, L)), mul(2, mul(M, r)));
+        const f = div(Delta, Sigma);
+        
+        if (i === 0 && j === 0) return mul(-1, f);
+        if (i === 0 && j === 3) return mul(-2, mul(L, mul(f, cos(theta))));
+        if (i === 3 && j === 0) return mul(-2, mul(L, mul(f, cos(theta))));
+        if (i === 1 && j === 1) return div(Sigma, Delta);
+        if (i === 2 && j === 2) return Sigma;
+        if (i === 3 && j === 3) {
+            const term1 = mul(Sigma, mul(sin(theta), sin(theta)));
+            const term2 = mul(4, mul(L, mul(L, mul(f, mul(cos(theta), cos(theta))))));
+            return sub(term1, term2);
+        }
+        return 0;
+    };
+}
+
+function metricbianchi(type, a, b, c) {
+    if (type === 1) {
+        return function(i, j, x) {
+            const at = evale(a, {t: x[0]});
+            const bt = evale(b, {t: x[0]});
+            const ct = evale(c, {t: x[0]});
+            if (i !== j) return 0;
+            if (i === 0) return -1;
+            if (i === 1) return mul(at, at);
+            if (i === 2) return mul(bt, bt);
+            if (i === 3) return mul(ct, ct);
+            return 0;
+        };
+    }
+    return metriceuclidean(4);
+}
+
+function metricdeterminant(gfunc, x) {
+    const g = metrictensor(gfunc, x);
+    const n = g.length;
+    const mat = [];
+    for (let i = 0; i < n; i++) {
+        mat[i] = [];
+        for (let j = 0; j < n; j++) {
+            mat[i][j] = g[i][j];
+        }
+    }
+    return determinant(mat);
+}
+
+function metricsignature(gfunc, x) {
+    const g = metrictensor(gfunc, x);
+    const n = g.length;
+    const mat = [];
+    for (let i = 0; i < n; i++) {
+        mat[i] = [];
+        for (let j = 0; j < n; j++) {
+            mat[i][j] = g[i][j];
+        }
+    }
+    const eig = math.eigs(mat);
+    const vals = eig.values;
+    let pos = 0;
+    let neg = 0;
+    let zero = 0;
+    for (let i = 0; i < vals.length; i++) {
+        if (math.abs(vals[i]) < 1e-10) zero++;
+        else if (math.re(vals[i]) > 0) pos++;
+        else neg++;
+    }
+    return {positive: pos, negative: neg, zero: zero, signature: pos + " + " + neg + " -"};
+}
+
+function metriclineelement(gfunc, x, dx) {
+    const n = x.length;
+    let ds2 = 0;
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+            ds2 = add(ds2, mul(gfunc(i, j, x), mul(dx[i], dx[j])));
+        }
+    }
+    return ds2;
+}
+
+function metricvolumeelement(gfunc, x) {
+    const det = metricdeterminant(gfunc, x);
+    return sqrt(abs(det));
+}
+
+function metricconnection1form(gfunc, x, mu) {
+    const n = x.length;
+    const Gamma = christoffelsymbols(gfunc, x);
+    const form = [];
+    for (let nu = 0; nu < n; nu++) {
+        form[nu] = [];
+        for (let rho = 0; rho < n; rho++) {
+            form[nu][rho] = evale(Gamma[mu][nu][rho], {x: x});
+        }
+    }
+    return form;
+}
+
+function metriccurvature2form(gfunc, x, mu, nu) {
+    const n = x.length;
+    const R = riemanntensor(gfunc, x);
+    const form = [];
+    for (let rho = 0; rho < n; rho++) {
+        form[rho] = [];
+        for (let sigma = 0; sigma < n; sigma++) {
+            form[rho][sigma] = evale(R[mu][nu][rho][sigma], {x: x});
+        }
+    }
+    return form;
+}
 
 
 
@@ -6678,16 +8932,16 @@ function getdenompolyangle(x, thet, epsilons = 1e-2) {
     let k = mag(sub(y, approx));
 
     const one = math.complex(1, 0);
-    const length = leng(thet);  // Length of the thet list
+    const length = leng(thet);  
 
     for (let asd = 0; asd < bign * bign * 2 && k > epsilons; asd++) {
-        // Base options
+
         let options = [
             { nextA: add(a, one), nextB: b },
             { nextA: a, nextB: add(b, one) }
         ];
 
-        // Additional options from each entry in `thet`
+
         for (let n = 0; n < length; n++) {
             options.push({ nextA: add(a, cis(g(thet, n))), nextB: b });
         }
@@ -6695,7 +8949,7 @@ function getdenompolyangle(x, thet, epsilons = 1e-2) {
         let bestOption = options[0];
         let minK = mag(sub(y, div(bestOption.nextA, bestOption.nextB)));
 
-        // Evaluate each option to find the one with the smallest k
+
         for (let option of options) {
             const newApprox = div(option.nextA, option.nextB);
             const newK = mag(sub(y, newApprox));
@@ -6705,7 +8959,7 @@ function getdenompolyangle(x, thet, epsilons = 1e-2) {
             }
         }
 
-        // Update `a`, `b`, `approx`, and `k` based on the best option found
+ 
         a = bestOption.nextA;
         b = bestOption.nextB;
         approx = div(a, b);
@@ -12285,6 +14539,7 @@ function sechcdf(x){
     }
     
 	function relu(x){if(math.complex(x).re<0)return 0;return x;}
+	function reluc(x){/*complex*/return div(add(x,mag(x)),2)}
 	function gelu(x){return mul(add(1,erf(div(x,sqrt(2)))),x,0.5);}
 	function elu(a,x){if(math.complex(x).re<0)return mul(a,sub(exp(x),1));return x;}
 	function selu(x,a=1.67326,l=1.0507){if(math.complex(x).re<0)return mul(l,a,sub(exp(x),1));return mul(x,l);}
@@ -13450,6 +15705,1085 @@ function incompletefirstsynchroton(z,x){return mul(z,integral(firstsynchrotond,z
 
 
 
+//geo-physo-mathematics!!
+//ADD  Müller's model (power-law Q) ) the Cole–Cole model (a general linear-solid a new general linear model
+//https://en.wikipedia.org/wiki/Azimi_Q_models
+function azimifirstalpha(w,a1,gamma){
+  return mul(a1,pow(abs(w),sub(1,gamma)))
+}
+function azimifirstphasevel(w,a1,gamma,cinf=2000){
+  return div(1,add(div(1,cinf),mul(a1,pow(abs(w),mul(-1,gamma))),cot(div(mul(pi(),gamma),2))))
+}
+function azimisecondalpha(w,a2,a3){
+  return div(mul(a2,abs(w)),add(1,mul(a3,abs(w))))
+}
+function azimisecondphasevel(w,a2,a3,cinf=2000){
+  let num=mul(-2,a2,log(mul(a3,abs(w))))
+  let den=mul(pi(),sub(1,mul(a3,a3,mul(w,w))))
+  return div(1,add(div(1,cinf),div(num,den)))
+}
+function kolskyq(w,wr,qr){
+  return div(qr,pow(div(w,wr),0.1))
+}
+function kolskyalpha(w,wr,qr,cr){
+  return div(mul(w,wr),mul(2,cr,qr))
+}
+function kolskyphasevel(w,wr,qr,cr){
+  return mul(cr,add(1,div(1,mul(pi(),qr)),log(div(w,wr))))
+}
+function azimifirstbeta(w,a1,gamma,cinf=2000){
+  return div(log(abs(w)),gamma)
+}
+function azimisecondparams(a2,a3,w){
+  return {alpha:azimisecondalpha(w,a2,a3),vel:azimisecondphasevel(w,a2,a3)}
+}
+function comparemodels(w,wr,qr,cr,a1,gamma,a2,a3,cinf1=2000,cinf2=2000){
+  let kalpha=kolskyalpha(w,wr,qr,cr)
+  let kval=kolskyphasevel(w,wr,qr,cr)
+  let a1alpha=azimifirstalpha(w,a1,gamma)
+  let a1vel=azimifirstphasevel(w,a1,gamma,cinf1)
+  let a2alpha=azimisecondalpha(w,a2,a3)
+  let a2vel=azimisecondphasevel(w,a2,a3,cinf2)
+  return {kolsky:{alpha:kalpha,vel:kval},first:{alpha:a1alpha,vel:a1vel},second:{alpha:a2alpha,vel:a2vel}}
+}
+function azimifreqrange(fmin=1,fmax=1000,n=bign*bign){
+  let freqs=[]
+  let step=div(sub(log(fmax),log(fmin)),n)
+  for(let i=0;i<=n;i++){
+    freqs.push(exp(add(log(fmin),mul(i,step))))
+  }
+  return freqs
+}
+
+//https://en.wikipedia.org/wiki/Kjartansson_constant_Q_model
+//https://en.wikipedia.org/wiki/Kolsky_Q_models
+function kjartanssonalpha(w,w0,q0){
+  let gamma=div(1,mul(pi(),q0))
+  return mul(mul(w,gamma),pow(div(w,w0),gamma))
+}
+function kjartanssonphasevel(w,w0,q0,c0){
+  let gamma=div(1,mul(pi(),q0))
+  return mul(c0,pow(div(w,w0),gamma))
+}
+function kjartanssonq(w,w0,q0){
+  return q0
+}
+function kjartanssongamma(q0){
+  return div(1,mul(pi(),q0))
+}
+function kjartanssonc0(cr,qr,wr,w){
+  let gamma=div(1,mul(pi(),qr))
+  return div(cr,pow(div(w,wr),gamma))
+}
+function kjartanssonattenuation(w,w0,q0,c0){
+  let alpha=kjartanssonalpha(w,w0,q0)
+  return mul(alpha,w)
+}
+function kjartanssoncomplexvel(w,w0,q0,c0){
+  let gamma=div(1,mul(pi(),q0))
+  let phase=div(mul(pi(),gamma),2)
+  let mag=mul(c0,pow(div(w,w0),gamma))
+  return mul(mag,exp(mul(I,phase)))
+}
+function kjartanssonmodulus(w,w0,q0,rho){
+  let v=kjartanssonphasevel(w,w0,q0,1)
+  return mul(rho,mul(v,v))
+}
+function kolskyalpha(w,wr,qr,cr){
+  return div(mul(w,wr),mul(2,cr,qr))
+}
+function kolskyphasevel(w,wr,qr,cr){
+  return mul(cr,add(1,div(1,mul(pi(),qr)),mul(-1,div(log(div(w,wr)),mul(pi(),qr)))))
+}
+function kolskyq(w,wr,qr){
+  return div(qr,pow(div(w,wr),0.1))
+}
+function kolskycomplexvel(w,wr,qr,cr){
+  let alpha=kolskyalpha(w,wr,qr,cr)
+  let vel=kolskyphasevel(w,wr,qr,cr)
+  return div(1,sub(div(1,vel),mul(I,div(alpha,w))))
+}
+function kolskyattenuation(w,wr,qr,cr){
+  return mul(w,kolskyalpha(w,wr,qr,cr))
+}
+function kolskymodulus(w,wr,qr,rho){
+  let v=kolskyphasevel(w,wr,qr,1)
+  return mul(rho,mul(v,v))
+}
+function compareqmodels(w,wr,qr,cr,w0=wr){
+  let kja=kjartanssonalpha(w,w0,qr)
+  let kjv=kjartanssonphasevel(w,w0,qr,cr)
+  let kola=kolskyalpha(w,wr,qr,cr)
+  let kolv=kolskyphasevel(w,wr,qr,cr)
+  return {kjartansson:{alpha:kja,vel:kjv},kolsky:{alpha:kola,vel:kolv}}
+}
+function qmodelparams(cr,qr,wr,w0=wr){
+  return {kjartansson:{c0:kjartanssonc0(cr,qr,wr,w0),gamma:kjartanssongamma(qr)},kolsky:{cr:cr,qr:qr,wr:wr}}
+}
+function kolskyfreqrange(fmin=1,fmax=1000,n=bign*bign){
+  let freqs=[]
+  let step=div(sub(log(fmax),log(fmin)),n)
+  for(let i=0;i<=n;i++){
+    freqs.push(exp(add(log(fmin),mul(i,step))))
+  }
+  return freqs
+}
+//https://en.wikipedia.org/wiki/Seismic_inverse_Q_filtering
+
+function invqkolsky(U,w,t,q,wr,cr){
+  let gamma=div(1,mul(pi(),q))
+  let ratio=div(w,wr)
+  let amp=exp(div(mul(mul(pow(ratio,sub(0,gamma)),abs(w)),t),mul(2,q)))
+  let phase=exp(mul(I,mul(mul(pow(ratio,sub(0,gamma)),w),t)))
+  return mul(U,amp,phase)
+}
+function fwdqkolsky(U,w,t,q,wr,cr){
+  let gamma=div(1,mul(pi(),q))
+  let ratio=div(w,wr)
+  let amp=exp(mul(-1,div(mul(mul(pow(ratio,gamma),abs(w)),t),mul(2,q))))
+  let phase=exp(mul(I,mul(mul(pow(ratio,gamma),w),t)))
+  return mul(U,amp,phase)
+}
+function invqphaseonly(U,w,t,q,wr){
+  let gamma=div(1,mul(pi(),q))
+  let ratio=div(w,wr)
+  let phase=exp(mul(I,mul(mul(pow(ratio,sub(0,gamma)),w),t)))
+  return mul(U,phase)
+}
+function fwdqphaseonly(U,w,t,q,wr){
+  let gamma=div(1,mul(pi(),q))
+  let ratio=div(w,wr)
+  let phase=exp(mul(I,mul(mul(pow(ratio,gamma),w),t)))
+  return mul(U,phase)
+}
+function invqamplitude(U,w,t,q,wr){
+  let gamma=div(1,mul(pi(),q))
+  let ratio=div(w,wr)
+  let amp=exp(div(mul(mul(pow(ratio,sub(0,gamma)),abs(w)),t),mul(2,q)))
+  return mul(U,amp)
+}
+function fwdqamplitude(U,w,t,q,wr){
+  let gamma=div(1,mul(pi(),q))
+  let ratio=div(w,wr)
+  let amp=exp(mul(-1,div(mul(mul(pow(ratio,gamma),abs(w)),t),mul(2,q))))
+  return mul(U,amp)
+}
+function qfiltertrace(trace,t,q,wr,dt,dir="inverse"){
+  let N=leng(trace)
+  let result=[]
+  for(let i=0;i<N;i++){
+    let w=mul(2,pi(),div(i,mul(N,dt)))
+    let U=g(trace,i)
+    if(dir=="inverse"){
+      result.push(invqkolsky(U,w,t,q,wr,1))
+    }else{
+      result.push(fwdqkolsky(U,w,t,q,wr,1))
+    }
+  }
+  return result
+}
+function qfilterstep(trace,dt,q,wr,dir="inverse"){
+  let N=leng(trace)
+  let output=[]
+  let U=trace
+  for(let i=0;i<N;i++){
+    let t=mul(i,dt)
+    U=qfiltertrace(U,t,q,wr,dt,dir)
+    output.push(U)
+  }
+  return output
+}
+function qfilterfrequency(U,w,t,q,wr,dir="inverse"){
+  if(dir=="inverse"){
+    return invqkolsky(U,w,t,q,wr,1)
+  }else{
+    return fwdqkolsky(U,w,t,q,wr,1)
+  }
+}
+function qfiltergain(w,t,q,wr){
+  let gamma=div(1,mul(pi(),q))
+  let ratio=div(w,wr)
+  return exp(div(mul(mul(pow(ratio,sub(0,gamma)),abs(w)),t),mul(2,q)))
+}
+function qfilterphase(w,t,q,wr){
+  let gamma=div(1,mul(pi(),q))
+  let ratio=div(w,wr)
+  return mul(mul(pow(ratio,sub(0,gamma)),w),t)
+}
+function qfilterreference(wr,qr){
+  return {wr:wr,qr:qr,gamma:div(1,mul(pi(),qr))}
+}
+function qfilterapply(trace,dt,q,wr,dir="inverse",fmax=0){
+  let N=leng(trace)
+  let result=[]
+  for(let i=0;i<N;i++){
+    let w=mul(2,pi(),div(i,mul(N,dt)))
+    if(fmax>0&&w>fmax){
+      result.push(0)
+    }else{
+      let U=g(trace,i)
+      result.push(qfilterfrequency(U,w,0,q,wr,dir))
+    }
+  }
+  return result
+}
+
+//https://en.wikipedia.org/wiki/Stabilized_inverse_Q_filtering
+function invqfamplitude(w,t,q,wr){
+  let gamma=div(1,mul(pi(),q))
+  let ratio=div(w,wr)
+  let exponent=div(mul(mul(pow(ratio,sub(0,gamma)),abs(w)),t),mul(2,q))
+  return exp(exponent)
+}
+function invqphase(w,t,q,wr){
+  let gamma=div(1,mul(pi(),q))
+  let ratio=div(w,wr)
+  let exponent=mul(mul(pow(ratio,sub(0,gamma)),w),t)
+  return exp(mul(I,exponent))
+}
+function invqfilter(U,w,t,q,wr){
+  let amp=invqfamplitude(w,t,q,wr)
+  let phase=invqphase(w,t,q,wr)
+  return mul(U,amp,phase)
+}
+function invqfilterstable(U,w,t,q,wr,fmax){
+  let amp=invqfamplitude(w,t,q,wr)
+  let phase=invqphase(w,t,q,wr)
+  let gain=mul(amp,phase)
+  if(mag(w)>fmax){
+    gain=0
+  }
+  return mul(U,gain)
+}
+function invqfilterclip(U,w,t,q,wr,maxgain=1e6){
+  let amp=invqfamplitude(w,t,q,wr)
+  let phase=invqphase(w,t,q,wr)
+  let gain=mul(amp,phase)
+  if(mag(gain)>maxgain){
+    gain=maxgain
+  }
+  return mul(U,gain)
+}
+function invqfilterlowpass(U,w,t,q,wr,fc,order=4){
+  let amp=invqfamplitude(w,t,q,wr)
+  let phase=invqphase(w,t,q,wr)
+  let gain=mul(amp,phase)
+  let lowpass=div(1,pow(add(1,div(w,fc)),order))
+  return mul(U,gain,lowpass)
+}
+function invqfilterbutterworth(U,w,t,q,wr,fc,order=4){
+  let amp=invqfamplitude(w,t,q,wr)
+  let phase=invqphase(w,t,q,wr)
+  let gain=mul(amp,phase)
+  let butter=div(1,sqrt(add(1,pow(div(w,fc),mul(2,order)))))
+  return mul(U,gain,butter)
+}
+function invqfiltergaussian(U,w,t,q,wr,fc){
+  let amp=invqfamplitude(w,t,q,wr)
+  let phase=invqphase(w,t,q,wr)
+  let gain=mul(amp,phase)
+  let gauss=exp(div(mul(-1,mul(w,w)),mul(2,mul(fc,fc))))
+  return mul(U,gain,gauss)
+}
+function invqtrace(trace,t,q,wr,dt){
+  let N=leng(trace)
+  let result=[]
+  for(let i=0;i<N;i++){
+    let w=mul(2,pi(),div(i,mul(N,dt)))
+    let U=g(trace,i)
+    result.push(invqfilter(U,w,t,q,wr))
+  }
+  return result
+}
+function invqtracestable(trace,t,q,wr,dt,fmax){
+  let N=leng(trace)
+  let result=[]
+  for(let i=0;i<N;i++){
+    let w=mul(2,pi(),div(i,mul(N,dt)))
+    let U=g(trace,i)
+    result.push(invqfilterstable(U,w,t,q,wr,fmax))
+  }
+  return result
+}
+function invqtraceclip(trace,t,q,wr,dt,maxgain=1e6){
+  let N=leng(trace)
+  let result=[]
+  for(let i=0;i<N;i++){
+    let w=mul(2,pi(),div(i,mul(N,dt)))
+    let U=g(trace,i)
+    result.push(invqfilterclip(U,w,t,q,wr,maxgain))
+  }
+  return result
+}
+function invqtracelowpass(trace,t,q,wr,dt,fc,order=4){
+  let N=leng(trace)
+  let result=[]
+  for(let i=0;i<N;i++){
+    let w=mul(2,pi(),div(i,mul(N,dt)))
+    let U=g(trace,i)
+    result.push(invqfilterlowpass(U,w,t,q,wr,fc,order))
+  }
+  return result
+}
+function invqgain(w,t,q,wr){
+  let gamma=div(1,mul(pi(),q))
+  let ratio=div(w,wr)
+  let exponent=div(mul(mul(pow(ratio,sub(0,gamma)),abs(w)),t),mul(2,q))
+  return exp(exponent)
+}
+function invqgainclip(w,t,q,wr,maxgain=1e6){
+  let gain=invqgain(w,t,q,wr)
+  if(mag(gain)>maxgain){
+    return maxgain
+  }
+  return gain
+}
+function invqgainlowpass(w,t,q,wr,fc,order=4){
+  let gain=invqgain(w,t,q,wr)
+  let lowpass=div(1,pow(add(1,div(w,fc)),order))
+  return mul(gain,lowpass)
+}
+function invqstabilitytime(w,q,wr,maxgain=1e6){
+  let gamma=div(1,mul(pi(),q))
+  let ratio=div(w,wr)
+  let numerator=mul(2,mul(q,log(maxgain)))
+  let denominator=mul(mul(pow(ratio,sub(0,gamma)),abs(w)),-1)
+  return div(numerator,denominator)
+}
+function invqnyquistgain(t,q,wr,nyquist){
+  let gamma=div(1,mul(pi(),q))
+  let ratio=div(nyquist,wr)
+  let exponent=div(mul(mul(pow(ratio,sub(0,gamma)),nyquist),t),mul(2,q))
+  return exp(exponent)
+}
+function invqfilterfrequency(U,w,t,q,wr,method="none",param=0){
+  let amp=invqfamplitude(w,t,q,wr)
+  let phase=invqphase(w,t,q,wr)
+  let gain=mul(amp,phase)
+  if(method=="clip"){
+    if(mag(gain)>param){gain=param}
+  }else if(method=="lowpass"){
+    let fc=param
+    gain=mul(gain,div(1,add(1,div(w,fc))))
+  }else if(method=="butterworth"){
+    let fc=param
+    gain=mul(gain,div(1,sqrt(add(1,pow(div(w,fc),8)))))
+  }else if(method=="gaussian"){
+    let fc=param
+    gain=mul(gain,exp(div(mul(-1,mul(w,w)),mul(2,mul(fc,fc)))))
+  }
+  return mul(U,gain)
+}
+//https://en.wikipedia.org/wiki/Shear_velocity
+function shearfriction(tao,rho){
+  return sqrt(div(tao,rho))
+}
+function shearmanning(u,n,Rh,a=1){
+  return mul(u,div(n,a),pow(mul(9.81,pow(Rh,div(-1,3))),0.5))
+}
+function sheardarcy(u,fD){
+  return mul(u,sqrt(div(fD,8)))
+}
+function shearwalltao(u,rho){
+  return mul(rho,mul(u,u))
+}
+function shearvelocityprofile(u,kappa,z,z0,d=0){
+  return div(mul(u,kappa),log(div(sub(z,d),z0)))
+}
+function shearfromtwolevels(u1,u2,z1,z2,kappa=0.41,d=0){
+  return div(mul(kappa,sub(u2,u1)),log(div(sub(z2,d),sub(z1,d))))
+}
+function shearsonicanemometer(up,wp){
+  return sqrt(sub(0,mul(up,wp)))
+}
+function shearfrictionvelocity(tao,rho){
+  return sqrt(div(tao,rho))
+}
+function shearstress(u,rho){
+  return mul(rho,mul(u,u))
+}
+function shearboundary(u,rho){
+  return sqrt(div(mul(rho,mul(u,u)),rho))
+}
+function shearroughness(u,kappa,z,d=0){
+  return exp(sub(div(mul(u,kappa),log(div(z,d))),log(z0)))
+}
+function shearlogprofile(u,kappa,z,z0,d=0){
+  return div(u,kappa,mul(log(div(sub(z,d),z0))))
+}
+function shearvelocityprofile(u,rho,z){
+  return shearfriction(tao,rho)
+}
+
+//https://en.wikipedia.org/wiki/Standard_linear_solid_Q_model
+function slsalpha(w,taur,c0,qc){
+  let num=mul(mul(w,taur),mul(w,taur))
+  let den=mul(c0,qc,taur,add(1,mul(mul(w,taur),mul(w,taur))))
+  return div(num,den)
+}
+function slsphasevel(w,taur,c0,qc){
+  let term=div(mul(mul(w,taur),mul(w,taur)),mul(qc,add(1,mul(mul(w,taur),mul(w,taur)))))
+  return div(1,mul(div(1,c0),sub(1,term)))
+}
+function slscomplexvel(w,taur,c0,qc){
+  let alpha=slsalpha(w,taur,c0,qc)
+  let vel=slsphasevel(w,taur,c0,qc)
+  return div(1,sub(div(1,vel),mul(I,div(alpha,w))))
+}
+function slsq(w,taur,qc){
+  return div(qc,add(1,mul(mul(w,taur),mul(w,taur))))
+}
+function slsrelaxationtime(w0,q0){
+  return div(1,w0)
+}
+function slsparams(c0,qc,taur){
+  return {c0:c0,qc:qc,taur:taur}
+}
+function kolskyalpha(w,cr,qr,wr){
+  return div(mul(w,wr),mul(2,cr,qr))
+}
+function kolskyphasevel(w,cr,qr,wr){
+  return div(1,mul(div(1,cr),sub(1,div(log(div(w,wr)),mul(pi(),qr)))))
+}
+function compareqmodels(w,cr,qr,wr,c0,qc,taur){
+  let kalpha=kolskyalpha(w,cr,qr,wr)
+  let kvel=kolskyphasevel(w,cr,qr,wr)
+  let salpha=slsalpha(w,taur,c0,qc)
+  let svel=slsphasevel(w,taur,c0,qc)
+  return {kolsky:{alpha:kalpha,vel:kvel},sls:{alpha:salpha,vel:svel}}
+}
+function slsfreqrange(fmin=1,fmax=1000,n=100){
+  let freqs=[]
+  let step=div(sub(log(fmax),log(fmin)),n)
+  for(let i=0;i<=n;i++){
+    freqs.push(exp(add(log(fmin),mul(i,step))))
+  }
+  return freqs
+}
+function slsplot(freqs,cr,qr,wr,c0,qc,taur){
+  let results=[]
+  for(let i=0;i<leng(freqs);i++){
+    let w=mul(2,pi(),g(freqs,i))
+    results.push(compareqmodels(w,cr,qr,wr,c0,qc,taur))
+  }
+  return results
+}
+function slsmodulus(w,taur,c0,rho){
+  let v=slsphasevel(w,taur,c0,1)
+  return mul(rho,mul(v,v))
+}
+function slsattenuation(w,taur,c0,qc){
+  return mul(w,slsalpha(w,taur,c0,qc))
+}
+function slsphasevelocity(w,taur,c0,qc){
+  return slsphasevel(w,taur,c0,qc)
+}
+function slsrelaxationfrequency(taur){
+  return div(1,mul(2,pi(),taur))
+}
+function slsqfactor(w,taur,qc){
+  return slsq(w,taur,qc)
+}
+function slsdispersion(w,taur,qc){
+  return div(mul(mul(w,taur),mul(w,taur)),mul(qc,add(1,mul(mul(w,taur),mul(w,taur)))))
+}
+function slscomplexmodulus(w,taur,c0,rho){
+  let v=slscomplexvel(w,taur,c0,1)
+  return mul(rho,mul(v,v))
+}
+
+//https://en.wikipedia.org/wiki/Seismic_refraction
+function snelllaw(v1,v2){
+  return asin(div(v1,v2))
+}
+function criticalangle(v1,v2){
+  return asin(div(v1,v2))
+}
+function traveltime2layer(h0,v0,v1,x){
+  let ic=criticalangle(v0,v1)
+  let t0=div(mul(2,h0,cos(ic)),v0)
+  return add(t0,div(x,v1))
+}
+function intercepttime2layer(h0,v0,v1){
+  let ic=criticalangle(v0,v1)
+  return div(mul(2,h0,cos(ic)),v0)
+}
+function thickness2layer(t0,v0,v1){
+  let ic=criticalangle(v0,v1)
+  return div(mul(t0,v0),mul(2,cos(ic)))
+}
+function crossoverdistance(h0,v0,v1){
+  return mul(2,h0,sqrt(div(add(v1,v0),sub(v1,v0))))
+}
+function thicknessfromcrossover(xcross,v0,v1){
+  return mul(div(xcross,2),sqrt(div(sub(v1,v0),add(v1,v0))))
+}
+function traveltimenlayer(h,v,x){
+  let t=0
+  for(let i=0;i<leng(h);i++){
+    let v1=g(v,i)
+    let v2=g(v,add(i,1))
+    let ic=criticalangle(v1,v2)
+    t=add(t,div(mul(2,g(h,i),cos(ic)),v1))
+  }
+  return add(t,div(x,g(v,sub(leng(v),1))))
+}
+function thicknessnlayer(t0,v,hprev){
+  let n=leng(v)
+  let vn=g(v,sub(n,1))
+  let vn1=g(v,sub(n,2))
+  let ic=criticalangle(vn1,vn)
+  let sum=0
+  for(let i=0;i<leng(hprev);i++){
+    let vi=g(v,i)
+    let vi1=g(v,add(i,1))
+    sum=add(sum,mul(g(hprev,i),sqrt(sub(div(1,mul(vi,vi)),div(1,mul(vi1,vi1))))))
+  }
+  return mul(div(vn,cos(ic)),sub(div(t0,2),sum))
+}
+function refractiontomography(t,x,v){
+  let n=leng(v)
+  let h=[]
+  for(let i=0;i<sub(n,1);i++){
+    h.push(thicknessnlayer(g(t,i),v,h))
+  }
+  return h
+}
+function plusminusmethod(t1,t2,tg,x){
+  let tplus=div(add(sub(t1,t2),tg),2)
+  let tminus=div(add(t1,t2),2)
+  return {plus:tplus,minus:tminus}
+}
+function generalreciprocal(t1,t2,tg,x){
+  return plusminusmethod(t1,t2,tg,x)
+}
+function seismicrefraction(v0,v1,h0,x){
+  return traveltime2layer(h0,v0,v1,x)
+}
+function layervelocity(traveltimes,offsets){
+  let n=leng(offsets)
+  let v=[]
+  for(let i=0;i<n;i++){
+    let dx=sub(g(offsets,add(i,1)),g(offsets,i))
+    let dt=sub(g(traveltimes,add(i,1)),g(traveltimes,i))
+    v.push(div(dx,dt))
+  }
+  return v
+}
+function refractionintercept(traveltimes,offsets,v){
+  let n=leng(offsets)
+  let t0=[]
+  for(let i=0;i<n;i++){
+    t0.push(sub(g(traveltimes,i),div(g(offsets,i),v)))
+  }
+  return t0
+}
+function refractorvelocity(t1,t2,x1,x2){
+  return div(sub(x2,x1),sub(t2,t1))
+}
+function directwave(t,x,v){
+  return div(x,v)
+}
+function criticaldistance(h,v0,v1){
+  return mul(2,h,sqrt(div(v1,v0)))
+}
+function refractionprofile(v,h,xmax,dx){
+  let profile=[]
+  for(let x=0;x<=xmax;x=add(x,dx)){
+    profile.push({x:x,t:traveltimenlayer(h,v,x)})
+  }
+  return profile
+}
+
+
+//https://en.wikipedia.org/wiki/Fraser_filter
+function fraserfilter(data,width=3){
+  let filtered=[]
+  let half=floor(div(width,2))
+  for(let i=0;i<leng(data);i++){
+    let sum=0
+    let count=0
+    for(let j=sub(0,half);j<=half;j++){
+      let idx=add(i,j)
+      if(idx>=0&&idx<leng(data)){
+        sum=add(sum,g(data,idx))
+        count=add(count,1)
+      }
+    }
+    filtered.push(div(sum,count))
+  }
+  return filtered
+}
+function fraserfilter2d(data,width=3,height=3){
+  let filtered=[]
+  let hw=floor(div(width,2))
+  let hh=floor(div(height,2))
+  for(let i=0;i<leng(data);i++){
+    let row=[]
+    for(let j=0;j<leng(g(data,i));j++){
+      let sum=0
+      let count=0
+      for(let di=sub(0,hw);di<=hw;di++){
+        for(let dj=sub(0,hh);dj<=hh;dj++){
+          let idx=add(i,di)
+          let idy=add(j,dj)
+          if(idx>=0&&idx<leng(data)&&idy>=0&&idy<leng(g(data,i))){
+            sum=add(sum,g(g(data,idx),idy))
+            count=add(count,1)
+          }
+        }
+      }
+      row.push(div(sum,count))
+    }
+    filtered.push(row)
+  }
+  return filtered
+}
+function fraserweighted(data,weights){
+  let filtered=[]
+  let half=floor(div(leng(weights),2))
+  for(let i=0;i<leng(data);i++){
+    let sum=0
+    let wsum=0
+    for(let j=0;j<leng(weights);j++){
+      let idx=add(i,sub(j,half))
+      if(idx>=0&&idx<leng(data)){
+        sum=add(sum,mul(g(data,idx),g(weights,j)))
+        wsum=add(wsum,g(weights,j))
+      }
+    }
+    filtered.push(div(sum,wsum))
+  }
+  return filtered
+}
+function frasergaussian(data,sigma=1,width=5){
+  let weights=[]
+  let half=floor(div(width,2))
+  let norm=0
+  for(let i=sub(0,half);i<=half;i++){
+    let w=exp(div(mul(-1,mul(i,i)),mul(2,mul(sigma,sigma))))
+    weights.push(w)
+    norm=add(norm,w)
+  }
+  for(let i=0;i<leng(weights);i++){
+    weights[i]=div(g(weights,i),norm)
+  }
+  return fraserweighted(data,weights)
+}
+function frasermedian(data,width=3){
+  let filtered=[]
+  let half=floor(div(width,2))
+  for(let i=0;i<leng(data);i++){
+    let window=[]
+    for(let j=sub(0,half);j<=half;j++){
+      let idx=add(i,j)
+      if(idx>=0&&idx<leng(data)){
+        window.push(g(data,idx))
+      }
+    }
+    window.sort((a,b)=>re(a)-re(b))
+    filtered.push(g(window,floor(div(leng(window),2))))
+  }
+  return filtered
+}
+function frasergradient(data){
+  let filtered=[]
+  for(let i=1;i<leng(data)-1;i++){
+    filtered.push(sub(g(data,add(i,1)),g(data,sub(i,1))))
+  }
+  return filtered
+}
+function fraserlaplacian(data){
+  let filtered=[]
+  for(let i=1;i<leng(data)-1;i++){
+    filtered.push(sub(add(g(data,add(i,1)),g(data,sub(i,1))),mul(2,g(data,i))))
+  }
+  return filtered
+}
+function fraserenhance(data,alpha=0.5){
+  let smooth=fraserfilter(data,3)
+  let filtered=[]
+  for(let i=0;i<leng(data);i++){
+    filtered.push(add(g(data,i),mul(alpha,sub(g(data,i),g(smooth,i)))))
+  }
+  return filtered
+}
+function fraseradaptive(data,threshold=0.1){
+  let filtered=[]
+  for(let i=0;i<leng(data);i++){
+    let left=i>0?g(data,sub(i,1)):g(data,i)
+    let right=i<leng(data)-1?g(data,add(i,1)):g(data,i)
+    let diff=sub(right,left)
+    if(mag(diff)>threshold){
+      filtered.push(g(data,i))
+    }else{
+      filtered.push(div(add(left,right),2))
+    }
+  }
+  return filtered
+}
+
+//https://en.wikipedia.org/wiki/Birch%27s_law
+//https://en.wikipedia.org/wiki/Archie's_law
+//https://en.wikipedia.org/wiki/Byerlee's_law
+
+function archielaw(rho,phi,a=1,m=2,n=2){
+  return div(mul(a,rho,rho),mul(phi,phi))
+}
+function archieresistivity(rho,phi,a=1,m=2){
+  return mul(a,rho,div(1,pow(phi,m)))
+}
+function archiformationfactor(rho,rho0=1){
+  return div(rho,rho0)
+}
+function archicementation(m,phi){
+  return div(log(archiformationfactor(rho,1)),log(div(1,phi)))
+}
+function archieporosity(rho,rho0=1,m=2){
+  return pow(div(rho,rho0),div(-1,m))
+}
+function byerleefriction(sn,mu=0.85){
+  return mul(mu,sn)
+}
+function byerleeyield(sn,mu=0.85,c=0){
+  return add(c,mul(mu,sn))
+}
+function byerleefailure(s1,s3,mu=0.85){
+  return sub(s1,add(s3,mul(mu,s3)))
+}
+function byerleecoefficient(sn,tau){
+  return div(tau,sn)
+}
+function byerleestrength(sn,cohesion=0,mu=0.85){
+  return add(cohesion,mul(mu,sn))
+}
+function byerleeratio(sn,tau){
+  return div(add(sn,tau),sub(sn,tau))
+}
+function birchlaw(vp,rho,a=0.8,b=1.2){
+  return add(mul(a,rho),b)
+}
+function birchdensity(vp,a=0.8,b=1.2){
+  return div(sub(vp,b),a)
+}
+function birchvelocity(rho,a=0.8,b=1.2){
+  return add(mul(a,rho),b)
+}
+function birchatomicweight(vp,rho,mu=1){
+  return div(mul(vp,vp),mul(rho,mu))
+}
+function birchmeanatomicweight(vp,rho,z=1){
+  return div(mul(vp,vp),mul(rho,add(z,1)))
+}
+function birchbulkmodulus(vp,vs,rho){
+  return add(mul(rho,sub(mul(vp,vp),mul(4/3,mul(vs,vs)))),0)
+}
+function birchshearmodulus(vs,rho){
+  return mul(rho,mul(vs,vs))
+}
+function birchporosity(vp,rho,vpmax=8000){
+  return sub(1,div(vp,vpmax))
+}
+function birchvpvsratio(vp,vs){
+  return div(vp,vs)
+}
+function birchpoisson(vp,vs){
+  return div(sub(mul(vp,vp),mul(2,mul(vs,vs))),mul(2,sub(mul(vp,vp),mul(vs,vs))))
+}
+function byerleereactivation(sn,mu=0.6){
+  return mul(mu,sub(sn,1000))
+}
+function byerleelaw(sigma,mu=0.75){
+  return mul(mu,sigma)
+}
+function byerleedilation(sigma,mu=0.5){
+  return mul(-0.5,log(div(sigma,mu)))
+}
+function byerleecompaction(sigma,sigma0=1){
+  return div(sigma,add(sigma0,sigma))
+}
+function archiewaterresistance(rho,phi,a=1,m=2){
+  return div(a,mul(phi,mul(rho,rho)))
+}
+function archiesaturation(rho,rho0,phi,a=1,m=2,n=2){
+  return pow(div(mul(a,rho,rho),mul(phi,phi,rho0)),div(-1,n))
+}
+function archieshale(rho,phi,sh=0.1,a=1,m=2){
+  return div(mul(a,rho,rho),mul(phi,phi),sub(1,sh))
+}
+function birchvpmantle(rho){
+  return add(mul(1.2,rho),2.5)
+}
+function birchvsmanlte(rho){
+  return add(mul(0.7,rho),0.5)
+}
+function birchdensitycrust(vp){
+  return div(sub(vp,1.2),0.8)
+}
+function birchvscore(vp,mu=0.25){
+  let nu=birchpoisson(vp,mul(vp,0.6))
+  return mul(vp,sqrt(div(sub(1,mul(2,nu)),mul(2,sub(1,nu)))))
+}
+function archietortuosity(phi,a=1,m=1.5){
+  return mul(a,pow(phi,sub(0,m)))
+}
+function byerleefault(sigma,mu=0.75,c=0){
+  return add(c,mul(mu,sigma))
+}
+function byerleebrittle(sigma,mu=0.6){
+  return mul(mu,sigma)
+}
+function byerleeductile(sigma,mu=0.2){
+  return mul(mu,sigma)
+}
+function birchisothermal(vp,rho,gamma=1.5){
+  return div(mul(vp,vp),mul(rho,gamma))
+}
+function birchadiabatic(vp,rho,gamma=2){
+  return mul(div(mul(vp,vp),rho),gamma)
+}
+function archielaw2(rho,phi,a=1,m=2){
+  return div(mul(a,rho),pow(phi,m))
+}
+function archiewater(rho,phi,a=1,m=2){
+  return div(mul(a,rho,rho),pow(phi,m))
+}
+function archiefactor(rho,phi){
+  return div(rho,pow(phi,2))
+}
+function byerleeeffectivesress(sn,pf,mu=0.85){
+  return mul(mu,sub(sn,pf))
+}
+function byerleefluidpressure(sn,tau,mu=0.85){
+  return sub(sn,div(tau,mu))
+}
+function birchcorrection(vp,rho,T=0){
+  return add(mul(0.8,rho),1.2,mul(-0.0002,T))
+}
+function birchthermal(vp,rho,T){
+  return add(mul(0.8,rho),1.2,mul(-0.0002,T))
+}
+function archielog(rho,phi,a=1,m=2){
+  return add(log(a),mul(m,log(rho)),mul(-1,m,log(phi)))
+}
+function byerleelog(sn,mu=0.85){
+  return add(log(mu),log(sn))
+}
+function birchlog(vp,rho){
+  return add(log(0.8),log(rho),log(1.2))
+}
+function meanatomicweight(isotopes,abundances){
+  let num=0
+  let den=0
+  for(let i=0;i<leng(isotopes);i++){
+    num=add(num,mul(g(isotopes,i),g(abundances,i)))
+    den=add(den,g(abundances,i))
+  }
+  return div(num,den)
+}
+function molecularweight(formula){
+  let weight=0
+  for(let i=0;i<leng(formula);i++){
+    weight=add(weight,mul(g(formula,i).mass,g(formula,i).count))
+  }
+  return weight
+}
+function molarmass(elements,counts){
+  let mass=0
+  for(let i=0;i<leng(elements);i++){
+    mass=add(mass,mul(atomicmass(g(elements,i)),g(counts,i)))
+  }
+  return mass
+}
+
+function atomicmass(element){
+  
+  return g(masses,element)
+}
+function meanmolarmass(mixture){
+  let num=0
+  let den=0
+  for(let i=0;i<leng(mixture);i++){
+    num=add(num,mul(g(mixture,i).mass,g(mixture,i).fraction))
+    den=add(den,g(mixture,i).fraction)
+  }
+  return div(num,den)
+}
+function molarmassoxide(formula,metal,oxide){
+  let mm=0
+  for(let i=0;i<leng(formula);i++){
+    mm=add(mm,mul(molarmass(g(formula,i).elements,g(formula,i).counts),g(formula,i).weight))
+  }
+  return mm
+}
+function normalizecomposition(compositions){
+  let total=0
+  for(let i=0;i<leng(compositions);i++){
+    total=add(total,g(compositions,i))
+  }
+  let norm=[]
+  for(let i=0;i<leng(compositions);i++){
+    norm.push(div(g(compositions,i),total))
+  }
+  return norm
+}
+function numberdensity(rho,mass){
+  return div(rho,mass)
+}
+function molarvolume(rho,mass){
+  return div(mass,rho)
+}
+function massfraction(element,composition){
+  let total=0
+  for(let i=0;i<leng(composition);i++){
+    total=add(total,g(composition,i))
+  }
+  return div(element,total)
+}
+function weightpercent(mass,total){
+  return mul(100,div(mass,total))
+}
+
+//https://en.wikipedia.org/wiki/Adams%E2%80%93Williamson_equation
+
+function adamswilliamson(rho,r,phi,G=6.67430e-11){
+  return mul(-1,G,massenclosed(r),rho,div(1,mul(r,r,phi)))
+}
+function phiparameter(vp,vs){
+  return sub(mul(vp,vp),mul(4/3,mul(vs,vs)))
+}
+function massenclosed(rho,r,r0=0){
+  let integrand=function(x){return mul(4,pi(),mul(x,x),rho(x))}
+  return integral(integrand,r0,r,0)
+}
+function densityprofile(phi,rho0=5500,r0=6371000){
+  return function(r){
+    return ode1rk4(
+      function(x,y){return adamswilliamson(y,x,phi(x))},
+      r,rho0,0,r0
+    )
+  }
+}
+function bulkmodulus(vp,vs,rho){
+  return mul(rho,phiparameter(vp,vs))
+}
+function bruntvaisala(g,rho,drho,dr,vp,vs){
+  return add(
+    mul(-1,div(g,rho),div(drho,dr)),
+    mul(-1,div(mul(g,g),phiparameter(vp,vs)))
+  )
+}
+function earthdensity(r){
+  let R=6371000
+  let x=div(r,R)
+  return add(mul(13000,sub(1,mul(1.5,mul(x,x)))),mul(3500,mul(x,x)))
+}
+function earthphi(r){
+  let R=6371000
+  let x=div(r,R)
+  return mul(1e8,sub(1,mul(0.7,mul(x,x))))
+}
+function adamsprofile(){
+  let rho0=earthdensity(0)
+  let R=6371000
+  let dr=1000
+  let profile=[]
+  for(let r=0;r<=R;r=add(r,dr)){
+    let rho=ode1rk4(
+      function(x,y){return mul(-1,6.674e-11,massenclosed(earthdensity,x),y,div(1,mul(x,x,earthphi(x))))},
+      r,rho0,0,R
+    )
+    profile.push({r:r,rho:rho})
+  }
+  return profile
+}
+function seismicparameter(vp,vs){
+  return phiparameter(vp,vs)
+}
+function bulkmodulusprofile(rho,phi){
+  let profile=[]
+  let R=leng(rho)-1
+  for(let i=0;i<=R;i++){
+    profile.push({r:g(rho,i).r,k:mul(g(rho,i).rho,g(phi,i).phi)})
+  }
+  return profile
+}
+function premdensity(r){
+  let R=6371000
+  let x=div(r,R)
+  if(re(x)<0.192){
+    return 13000
+  }else if(re(x)<0.546){
+    return add(12000,mul(-8000,div(sub(r,1221000),2240000)))
+  }else if(re(x)<0.895){
+    return add(5500,mul(-2800,div(sub(r,3480000),2220000)))
+  }else{
+    return add(2900,mul(-600,div(sub(r,5700000),671000)))
+  }
+}
+function premphi(r){
+  let R=6371000
+  let x=div(r,R)
+  if(re(x)<0.192){
+    return 1.1e8
+  }else if(re(x)<0.546){
+    return 9.5e7
+  }else if(re(x)<0.895){
+    return 8.2e7
+  }else{
+    return 5.0e7
+  }
+}
+function integrateadams(profilefunc,step=bign){
+  let R=6371000
+  let rho=[]
+  let r=0
+  let rho0=profilefunc(0)
+  while(re(r)<=re(R)){
+    let rhonext=ode1rk4(
+      function(x,y){return adamswilliamson(y,x,premphi(x))},
+      add(r,step),rho0,0,r
+    )
+    rho.push({r:add(r,step),rho:rhonext})
+    r=add(r,step)
+    rho0=rhonext
+  }
+  return rho
+}
+function pressuregradient(rho,r){
+  return mul(-1,rho,div(massenclosed(rho,r),mul(r,r)),6.674e-11)
+}
+function hydrostaticpressure(rho,r0=0){
+  return function(r){
+    return integral(
+      function(x){return pressuregradient(rho,x)},
+      r,6371000,0
+    )
+  }
+}
+function davies(phi,drho,dr){
+  return mul(-1,div(drho,dr),div(1,phi))
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14381,6 +17715,26 @@ function elattarvidyasagardutta(x1,x2){
         sqr(sub(add(sqr(x1),pow(x2,3)),1))
     );
 }
+
+//gen func of n^n sum n^nx^n
+function genfzd(t,x){
+	let w=lambertw(mul(-1,x,t))
+	return div(w,exp(t),add(1,w))
+}
+function genfz(x,s=0,e=bign){
+	return mul(-1,integral(genfzd,s,e,x));
+}
+
+
+
+
+
+
+
+
+
+
+
 
 function ndexp2(x1,x2){
     let s=0;
@@ -16857,6 +20211,32 @@ bern=add(bern,term)
 
 return add(sum,add(term1,sub(term2,bern)))
 }
+
+
+
+//lerchtranscendentalt3(x,x,x)
+function lerchtranscendentalt3(z,s,a){
+	let N=bign;
+	let M=2
+	
+	let S=0;
+	let i=div(mul(pow(sub(0,log(z)),sub(s,1)),incgamma(sub(1,s),mul(-1,add(a,N),log(z)))),pow(z,a))
+	let T=0.5
+	let R=0
+	
+	for(let j=0;j<N;j++)S=add(S,div(pow(z,j),pow(add(j,a),s)))
+		
+	
+	//return add(S,i)
+	
+	for(let k=1;k<=M;k++)T=add(T,div(mul(bernoulli(2*k),confluenthypergeometricu(-2*k+1,sub(-2*k+2,s),mul(-1,add(a,N),log(z)))),factorial(k*2),pow(add(a,N),2*k-1)))
+	T=mul(T,div(pow(z,N),pow(add(a,N),s)))
+	//return S
+	console.log(S,i,T)
+	return add(S,i,T,R)
+}
+
+
 function lerchtranscendent(z,s,a){
 //console.log(a)
 //case z C,s C,a C
@@ -17200,6 +20580,56 @@ function golombdickman(t){
 function dickmandebruijn(u){
 	return add(sub(1,mul(sub(1,log(sub(u,1))),log(u))),dilog(sub(1,u),div(mul(pi(),pi()),12)));
 }*/
+var dickmem={};
+
+function dickmand(x){
+	return div(dickman(sub(x,1)),x);
+}
+
+function dickman(a){
+	if(re(a)<=1)return 1;
+
+	var k=round(mul(a,100)); // 2 decimal places
+	if(dickmem[k]!==undefined)return dickmem[k];
+
+	return dickmem[k]=sub(1,integral(dickmand,1,a));
+}
+function dickmancont(a){return add(1,log(a))}//https://mathworld.wolfram.com/DickmanFunction.html
+function voltdickman(a){return dickman(div(1,a))}
+
+var dickmandgmem={};
+
+function dickmangd(t){
+	var x=div(t,sub(1,t));
+	return div(sub(G(x),dickmang(x)),t);
+}
+
+function dickmang(a){
+	if(re(a)>=0.5)return 1;
+
+	var k=round(mul(a,10000));
+	if(dickmandgmem[k]!==undefined)return dickmandgmem[k];
+
+	return dickmandgmem[k]=integral(dickmangd,0,a);
+}
+var buchmem={};
+
+function buchstab(u){
+	if(u<1)return 0;
+	if(u<=2)return div(1,u);
+
+	var k=round(mul(u,10000));
+	if(buchmem[k]!==undefined)return buchmem[k];
+
+	return buchmem[k]=div(
+		add(
+			1,
+			integral(buchstab,1,sub(u,1))
+		),
+		u
+	);
+}
+
 
 function harmonicnum(n){
 //return div(stirling(add(n,1),2),factorial(n));
@@ -21156,49 +24586,20 @@ function hurwitzzetaold(z,a){
 }
 
 function hurwitzzeta(x,a){
-
-    let N=20
-
     let sum=0
-    for(let k=0;k<N;k++){
-        let t=div(1,pow(add(a,k),x))
-        sum=add(sum,t)
-    }
-
-    let A=add(a,N)
-
-    let term1=div(
-        pow(A,sub(1,x)),
-        sub(x,1)
-    )
-
-    let term2=mul(
-        0.5,
-        div(1,pow(A,x))
-    )
-
+    for(let k=0;k<bign;k++){let t=div(1,pow(add(a,k),x))
+	sum=add(sum,t)}
+    let A=add(a,bign)
+    let term1=div(pow(A,sub(1,x)),sub(x,1))
+    let term2=mul(0.5,div(1,pow(A,x)))
     let rem=0
-
     for(let m=1;m<=5;m++){
-
         let B=bernoulli(2*m)
-
         let poch=1
         for(let j=0;j<2*m-1;j++)
             poch=mul(poch,add(x,j))
-
-        let term=
-            mul(
-                div(B,factorial(2*m)),
-                mul(
-                    poch,
-                    pow(A,sub(sub(1,mul(2,m)),x))
-                )
-            )
-
-        rem=add(rem,term)
-    }
-
+        let term=mul(div(B,factorial(2*m)),mul(poch,pow(A,sub(sub(1,mul(2,m)),x))))
+        rem=add(rem,term)}
     return add(sum,add(term1,add(term2,rem)))
 }
 
@@ -21849,16 +25250,17 @@ return fi;
 function logarithmicintegrald(t){
 	return div(1,log(t));
 }
-function lli(b) {
-return sub(ei(log(b)),1.045163)
+function li(b) {//use cli for captal version
+return ei(log(b))
     return integral(logarithmicintegrald, 2, b);
 }
-function li(b) {
+function cli(b) {
     //if(re(b)>1)
-        return ei(log(b))
+        return sub(ei(log(b)),1.045163)
         return add(1.045163,lli(b))
     return integral(logarithmicintegrald, 0, b);
 }
+
 function fresnelc(b) {
     return integral(cossqr, 0, b);
 }
@@ -27352,7 +30754,7 @@ return fi;
 function incgammalimiting(s,z){let fi=0;for(let k=0;k<bign;k++){fi=add(fi,div(pow(z,k),factorial(add(s,k))))}return div(fi,exp(z))}
 
 
-function incgamma(a,x){return mul(pow(x,a),gamma(a),incgammalimiting(a,x))}//return integral(incgammad,x,bign,a,bign*2);}
+//function incgamma(a,x){return mul(pow(x,a),gamma(a),incgammalimiting(a,x))}//return integral(incgammad,x,bign,a,bign*2);}
 function lincgamma(a,x){return sub(gamma(a),mul(pow(x,a),gamma(a),incgammalimiting(a,x)))}//return integral(incgammad,0,x,a,bign*2);}
 function linggammalimit(a,x){return div(lincgamma(a,x),gamma(a),pow(x,a))}
 function reglincgamma(a,x){return div(lincgamma(a,x),gamma(a))}
@@ -27367,6 +30769,34 @@ function gammareg(a,z){return div(incgamma(a,z),gamma(a));}
 function lgammareg(a,z){return div(lincgamma(a,z),gamma(a));}
 function ggammareg(a,x,z){return div(gincgamma(a,x,z),gamma(a));}
 
+
+function incgamma(a,x){
+    let EPS=1e-12;
+	
+    let b=add(sub(x, a), 1);
+    let C=b;
+    let D=1;
+    let f=div(C,D);
+
+    for(let i=1;i<bign;i++){
+        let an=mul(i, sub(a,i));
+        let bn=add(b, mul(2,i));
+
+        D=add(bn, mul(an, D));
+        if(D===0) D=1e-300;
+
+        C=add(bn, div(an, C));
+        if(C===0) C=1e-300;
+
+        D=div(1, D);
+        let delta=mul(C, D);
+        f=mul(f, delta);
+
+        if(abs(sub(delta,1))<EPS) break;
+    }
+    let pre=mul(pow(x,a), exp(mul(-1,x)));
+    return mul(pre, f);
+}
 
 //gcell(0.5,1,1,x)
 //ghyp(1,1,x)
@@ -27644,6 +31074,98 @@ function lyapexpre(func,x,bignc=bign){
 	}
 	return div(fi,bignc);
 }
+
+
+
+
+
+//maps and stuff
+
+//https://en.wikipedia.org/wiki/Triangular_function
+function trialt(x){return div(sub(add(mag(sub(x,mag(sub(x,1)),-1)),x),1,mag(add(x,1))),-2)}
+function tri2alt(xx){let x=mul(2,xx);return div(sub(add(mag(sub(x,mag(sub(x,1)),-1)),x),1,mag(add(x,1))),-2)}
+function tri(x){return trij0(x,1,1)}//return div(sub(add(mag(sub(x,mag(sub(x,1)),-1)),x),1,mag(add(x,1))),-2)}
+function tri2(xx){return trij0(xx,0.5,0.5)}//let x=mul(2,xx);return div(sub(add(mag(sub(x,mag(sub(x,1)),-1)),x),1,mag(add(x,1))),-2)}
+function trij0(x,a,b){return add(sub(div(reluc(add(x,a)),a),div(reluc(x),a)),div(sub(reluc(sub(x,b)),reluc(x)),b))}
+function trij(xx,aa,bb,c){let a=add(aa,c);let b=sub(bb,c);let x=sub(xx,c);return add(sub(div(reluc(add(x,a)),a),div(reluc(x),a)),div(sub(reluc(sub(x,b)),reluc(x)),b))}
+function trifourier(x,a=1){return mul(a,sqr(sinc(mul(a,x))))}
+
+//https://en.wikipedia.org/wiki/K%C3%A4ll%C3%A9n_function
+function kallen(x,y,z){return add(sqr(x),sqr(y),sqr(z),mul(-2,x,y),mul(-2,y,z),mul(-2,z,x))}
+
+//https://en.wikipedia.org/wiki/Tent_map
+function tent(x,m=1.9){return mul(0.5,m,tri2(add(x,-0.5)))}
+function tentalt(x,m=1.9){return mul(0.5,m,tri2alt(add(x,-0.5)))}
+function tentorbit(x,m=1.9,d=2){
+	let fi=0;
+	let bn=x;
+	for(let i=0;i<bign;i++){
+		fi=add(fi,div(heavysidetheta(sub(bn,0.5)),pow(d,i)))
+		bn=tent(bn,m);
+	}return fi;
+}
+function tentorbitalt(x,m=1.9,d=2){
+	let fi=0;
+	let bn=x;
+	for(let i=0;i<bign;i++){
+		fi=add(fi,div(heavysidetheta(sub(bn,0.5)),pow(d,i)))
+		bn=tentalt(bn,m);
+	}return fi;
+}
+
+function tentmap(XM){let[x,m]=XM;return[mul(m,minc(x,sub(1,x))),m]}
+function arnoldscat(XY){let [x,y]=XY;return [modc(add(x,x,y),1),modc(add(x,y),1)]}
+function arnoldscatn(XYN){let [x,y,n]=XYN;return [modc(add(x,x,y),n),modc(add(x,y),n)]}
+function arnoldscatninv(XYN){let [x,y,n]=XYN;return [modc(sub(x,y),n),modc(sub(mul(y,2),x),n)]}
+function bakerunfolded(XY){let [x,y]=XY;return[sub(mul(2,x),floor(mul(2,x))),div(add(y,floor(mul(2,x))),2)]}
+function baker(XY){let [x,y]=XY;if(re(x)<0.5)return [mul(2,x),mul(0.5,y)];return [sub(2,mul(2,x)),sub(1,mul(0.5,y))]}
+function duffing(XYAB){let [x,y,a,b]=XYAB;return [y,sub(mul(a,y),cum(y),mul(b,x)),a,b]}
+//add function dyadictransform()
+function exponentialmapc(ZC){let [x,y]=ZC;return [add(exp(x),y),y]}
+function exponentialmapl(ZL){let [x,y]=ZL;return [mul(exp(x),y),y]}
+function gaussmap(XAB){let [x,a,b]=XAB;return [add(b,exp(mul(-1,a,x,x))),a,b]}
+function gingerbreadman(XY){let [x,y]=XY;return [sub(mag(x),-1,y),x]}
+function henon(XYAB){let [x,y,a,b]=XYAB;return [sub(y,-1,mul(a,x,x)),mul(b,x),a,b]}
+function ikedac(ZCAB){let [z,c,a,b]=ZCAB;return [add(a,mul(b,z,exp(mul(i,add(c,sqr(mag(z))))))),c,a,b]}
+function ikeda(XYTU){let [x,y,t,u]=XYTU;return [add(1,mul(u,sub(mul(x,cos(t)),mul(y,sin(t))))),mul(u,add(mul(x,sin(t)),mul(y,cos(t)))),sub(0.4,div(6,add(1,sqr(x),sqr(y)))),u]}
+function rotationalmap(XT){let [x,t]=XT;return [modc(add(x,t),1),t]}//https://en.wikipedia.org/wiki/Irrational_rotation
+function rotationalcmap(XT){let [x,t]=XT;return [mul(x,exp(mul(2,pi(),I,t))),t]}
+function kaplanyorke(XYA){let [x,y,a]=XYA;return [modc(mul(2,x),1),add(mul(a,y),cos(mul(4,pi(),x))),a]}
+function kaplanyorkesafe(XYA){let [x,y,a]=XYA;return [modc(mul(2,x),0.9995),add(mul(a,y),cos(mul(4,pi(),x))),a]}
+function logisticmap(XR){let [x,r]=XR;return [mul(r,x,sub(1,x)),r]}
+function ulamlogisticmap(X){let [x]=X;return [mul(4,x,sub(1,x))]}
+function pekkalogisticmap(XL){let [x,l]=XL;return [sub(sqr(x),l),l]}
+function electriclogisticmap(XG){let [x,gg]=XG;return [mul(gg,x,sub(1,tanh(x))),gg]}
+function standardmap(XYK){let[x,y,k]=XYK;return[modc(add(x,add(y,mul(k,sin(x)))),mul(2,pi())),modc(add(y,mul(k,sin(x))),mul(2,pi())),k]}
+function standardmap01(XYK){let[x,y,k]=XYK;return[modc(add(x,modc(add(y,mul(k,sin(mul(2,pi(),x)))),1)),1),modc(add(y,mul(k,sin(mul(2,pi(),x)))),1),k]}
+function circlemap(XOK){let[x,o,k]=XOK;return[modc(add(x,o,div(mul(k,sin(mul(2,pi(),x))),mul(2,pi()))),1),o,k]}
+function tinkerbellmap(XYABCD){let[x,y,a,b,c,d]=XYABCD;return[add(sqr(x),neg(sqr(y)),mul(a,x),mul(b,y)),add(mul(2,x,y),mul(c,x),mul(d,y)),a,b,c,d]}
+function tinkerbellmap1(XY){let[x,y]=XY;return[add(sqr(x),neg(sqr(y)),mul(0.9,x),mul(-0.6013,y)),add(mul(2,x,y),mul(2,x),mul(0.5,y))]}
+function tinkerbellmap2(XY){let[x,y]=XY;return[add(sqr(x),neg(sqr(y)),mul(0.3,x),mul(0.6,y)),add(mul(2,x,y),mul(2,x),mul(0.27,y))]}
+function zaslavskiimap(XYKQW){let[x,y,k,q,w]=XYKQW,m=exp(neg(q));return[modc(add(x,m,mul(m,add(mul(w,y),mul(k,sin(x))))),mul(2,pi())),mul(m,add(y,mul(k,sin(x)))),k,q,w]}
+function zaslavskiimapstd(XY){let[x,y]=XY,m=exp(-0.2);return[modc(add(x,m,mul(m,add(y,mul(5,sin(x))))),mul(2,pi())),mul(m,add(y,mul(5,sin(x))))]}
+
+//add cml system maybe
+//add https://en.wikipedia.org/wiki/Stiff_equation
+
+function odometer(f,X,t=1,s=0,d=2,o=0.5){//f function X parameters t recursion d dyadicidy o offset
+	let fi=0;
+	let bn=X;
+	for(let i=0;i<bign;i++){
+		fi=add(fi,div(heavysidetheta(sub(getval(bn,s),o)),pow(d,i)))
+		for(let j=0;j<t;j++)bn=evale(f,bn);
+	}return fi;
+}
+
+
+
+//https://arxiv.org/html/2603.21852v2
+
+function eml(x,y){return sub(exp(x),log(y))}
+function edl(x,y){return div(exp(x),log(y))}
+function lme(x,y){return sub(log(x),exp(y))}
+function lde(x,y){return div(log(x),exp(y))}
+
 
 
 function newtonpoly(A, guess, tolerance=1e-8, maxIter=50){
@@ -30142,6 +33664,21 @@ function g(A, n ,w=0) {
         return w;
     }
 }
+function isnum(x){
+    if(typeof x==="number" && isFinite(x)) return true;
+    if(typeof x==="string" && x.trim()!=="" && !isNaN(x)) return true;
+    if(x && typeof x==="object"){
+        if(x.re!==undefined || x.im!==undefined) return true;
+        if(x.real!==undefined || x.imag!==undefined) return true;
+        if(x._data!==undefined) return true;
+        if(x.constructor && x.constructor.name==="Complex") return true;
+    }
+    return false;
+}
+function getval(a,n){
+    if(isnum(a)) return a;
+	return g(a,n);
+}
 function rearray(A, w = 0) {
     const result = [];
     const length = leng(A);
@@ -30519,7 +34056,8 @@ function hypergeometric(A,B,x,M=0){
    
 	if(leng(A)==2 && leng(B)==1 && (mag(x)>1) )return hypg21(g(A,0),g(A,1),g(B,0),x);
 
-    if( (mag(x)>1) )return mul(meijergalt(sub(0,x),vectormap(z=>sub(1,z),A),[0,...vectormap(z=>sub(1,z),B)],1,leng(A)),div(gmul(vectormap(z=>gamma(z),B)),gmul(vectormap(z=>gamma(z),A))))
+    //if( (mag(x)>1) )
+		return mul(meijergalt(sub(0,x),vectormap(z=>sub(1,z),A),[0,...vectormap(z=>sub(1,z),B)],1,leng(A)),div(gmul(vectormap(z=>gamma(z),B)),gmul(vectormap(z=>gamma(z),A))))
     const lim = bign*3//minc(bign,-smallestnegativeinteger(A,-bign));
 	let fi=math.complex(0,0);
     let fid=1213
@@ -30969,7 +34507,7 @@ function meijergr(A,B,C,D,z,r=1){
 function meijerg(A, B, C, D, z, cz = 0) {
     let fi = math.complex(0, 0);
     let fid = 123;
-    let bign = 50; 
+  //  let bign = 50; 
     if (leng(A) == 0 || leng(A) + leng(B) < leng(C) + leng(D) || (leng(A) + leng(B) == leng(C) + leng(D) && mag(z) < 1)) {
         for (let h = 0; h < leng(C); h++) {
             fid = 123; 
@@ -30984,7 +34522,7 @@ function meijerg(A, B, C, D, z, cz = 0) {
                 
                 fid = fi;
                 fi = add(fi, inftozero(div(mul(num, pow(-1, k), pow(z, Bh)), factorial(k), 1)));
-				console.log(fi)
+				//console.log(fi)
             }
         }
     } 
@@ -31396,17 +34934,6 @@ for(let j=0;j<leng(A);j++)fi=mul(fi,gamma(add(g(g(A,i),j),mul(g(g(AA,i),j),x))))
 for(let j=0;j<leng(B);j++)fi=mul(fi,gamma(sub(1,g(g(B,i),j),mul(g(g(BB,i),j),x))))
     return fi;
 }
-
-
-
-
-//https://tetrationforum.org/showthread.php?tid=1694
-function toyzeta(s){let fi=0;for(let n=1;n<bign;n++)fi=add(fi,div(1,add(pow(n,s),pow(n,sub(0,s)))));return fi;}
-
-
-
-
-
 
 
 
@@ -32621,6 +36148,8 @@ function hypergeometricpolyaleph(A,Al,Bl,C,D,Tl,Z){
 }
 
 
+
+
 //hypergeometricsfunction([],[],[3,2],[],x)
 
 //https://www.researchgate.net/publication/396016416_Generalized_S-function_and_Its_Application_to_Statistical_Distribution
@@ -32768,8 +36297,59 @@ function hypergeometricomega(m,n,P,Q,T,r,x){
 }
 
 
+//srivastavapoly([],[],[])
+//srivastavapoly([1],[1],[1])
+//srivastavapoly([1,2],[1,2],[1,2])
+//https://www.researchgate.net/file.PostFileLoader.html?id=536b8f56d11b8b32658b4619&assetKey=AS%3A273531361792004%401442226366480
+function srivastavapoly(A,B,C,D,X){
 
-function srivastavapoly(){}
+	let N = leng(X);
+	let G = new Array(N);console.log(N);
+	let fi=math.complex(0,0);
+    let W=round(mul(2,pow(bign,div(1,1+leng(X)))))
+	for(let k=0;k<pow(W,N);k++){
+		let GGG=k;
+		for(let i=0;i<N;i++){
+		G[i]=add(math.mod(GGG,W));
+		GGG=floor(GGG/W);
+		}
+	//	console.log(G);
+		
+	let den=math.complex(1,0);
+	
+	//for(let i=0;i<leng(g(C,0));i++)
+	//for(let j=0;j<leng(g(g(C,0),i));j++)
+	
+	//C=[ [,,,] , [[],[],[]] ]
+	
+	for(let j=0;j<leng(g(C,0));j++)
+	den=mul(den,poch(g(g(C,0),j),dot(G,g(g(C,1),j))))
+	
+	//D [ [ [,,,] , [,,,] ] , ..]
+	
+	for(let i=0;i<leng(D);i++)
+	for(let j=0;j<leng(g(g(D,i),0));j++)
+	den=mul(den,poch(g(g(g(D,i),0),j),mul(g(g(g(D,i),1),j),g(G,j))))		
+	
+    let sen=math.complex(1,0);
+	
+	for(let j=0;j<leng(g(A,0));j++)
+	sen=mul(sen,poch(g(g(A,0),j),dot(G,g(g(A,1),j))))
+
+	for(let i=0;i<leng(B);i++)
+	for(let j=0;j<leng(g(g(B,i),0));j++)
+	sen=mul(sen,poch(g(g(g(B,i),0),j),mul(g(g(g(B,i),1),j),g(G,j))))		
+
+		for(let i=0;i<N;i++){
+			console.log(X)
+		sen=mul(sen,pow(g(X,i),g(G,i)))
+		den=mul(den,factorial(g(G,i)))
+		}
+		fi=add(fi,div(sen,den));
+	}
+	return fi;
+
+}
 
 
 //https://ijmsa.yolasite.com/resources/60.%20General_multiple_Eulerian_integral6.pdf
@@ -34955,6 +38535,20 @@ function riamannsphmobiustransform3(a,z){return mul(riamannsphmobiustransform2(d
 function mobiustransform10inf(w1,w0,winf,z){return div(add(mul(z,winf,sub(w0,w1)),mul(w0,sub(winf,w1))),add(sub(w1,winf),mul(z,sub(w1,w0))))}
 function mobiustransform10inf2(w1,w0,winf,z){return div(sub(mul(z,winf,sub(w0,w1)),mul(w0,sub(winf,w1))),sub(sub(w1,winf),mul(z,sub(w1,w0))))}
 function mobiustransform3(w1,w2,w3,z1,z2,z3,z){return div(add(mul(add(mul(z1,w1,sub(w2,w3)),mul(-1,z2,w2,sub(w1,w3)),mul(z3,w3,sub(w1,w2))),z),mul(z1,add(mul(z3,w2,sub(w3,w1)),mul(z2,w3,sub(w1,w2)))),mul(z2,z3,w1,sub(w2,w3))),add(mul(add(mul(z1,sub(w2,w3)),mul(z2,sub(w3,w1)),mul(z3,sub(w1,w2))),z),mul(z1,z3,sub(w3,w1)),mul(z2,add(mul(z1,sub(w1,w2)),mul(z3,sub(w2,w3))))))}
+
+
+//https://en.wikipedia.org/wiki/Nevanlinna_function
+function nevanlinnad(t,A){//W is a weight of the borel measure
+return mul(evale(g(A,1),{x:t}),sub(div(1,sub(t,g(A,0))),div(t,add(1,sqr(t)))))
+}
+function nevanlinna(z,c,d,W,a=-bign,b=bign){//W is a weight of the borel measure , a b are the integral limits
+return add(c,mul(z,d),integral(nevanlinnad,a,b,[z,W]))
+}
+//https://arxiv.org/pdf/1912.03542
+function caratheodorynevanlinna(z,c,d,W,a=-bign,b=bign){//W is a weight of the borel measure , a b are the integral limits
+return mul(add(c,mul(z,d),integral(nevanlinnad,a,b,[z,W])),I)
+}
+
 
 
 function sylvestermatrix(P,Q) {
@@ -38686,6 +42280,13 @@ function lambertwb2(x){return lambertwb(2,x)}
 function superlambertw(x,a=1,N=bign/2){return  superzex(sub(0,x),a,N)}
 function superzex2(x,a=1,N=bign/2){return superfunctionf(zex2,lambertwb2,a,x,0,3,N,0,0)}
     //return superfunctionf2(zex,a,x,0,3,N,0,0)}//return superfunctionf(zex,lambertw,a,x,0,3,N,0,0)}
+	
+	function expp(x){return add(1,exp(x))}
+	function logm(x){return log(sub(x,1))}
+	
+function superexpp(x,a=0,N=bign/2){
+	const fix=math.complex(0.6050214075168555 , 1.788187807533082);
+	return superfunctionf(expp,logm,a,x,fix,3,N,fix,0)}
 
 function superfactorial(x,a=3,N=bign*1.5){return superfunctionf(factorial,arcfactorial,a,x,2,2,N,2,0)}
 function superbarnesg(x,a=5,N=bign/2){return superfunctionf(barnesg,arcbarnesg,a,x,4.54552,4.54552,N,4.54552,0)}//x≈4.54552
@@ -38981,6 +42582,9 @@ function logbnm(x,b,n=0,m=0){
 
 
 
+
+
+
 function expofactorialapprox(x){//return add(1,mul(0.575571,sub(x,1)),mul(0.151142,pow(sub(x,1),2)))}
   //  return add(1,mul(0.069474,sub(x,2)),mul(0.093728,pow(x,2)),mul(0.037104,pow(x,3)),mul(0.002836,pow(x,4)))
     
@@ -39008,7 +42612,10 @@ function ospexpofactorial(x,bignc=ceil(bign/2)*3){
 }
 function mospexpofactorial(x,bignc=ceil(bign/2)*3,k=0){
     
-    let y=expofactorialapprox(add(k,x,bignc));
+    let y=expofactorialapprox(add(k,x,bignc));//initial 
+	  //y=mul(real(x),10);
+	  y=-5;
+
  //   y = add(x,mul(5,I))
      let fi=(y)//y//expofactorialapproxi//y//expofactorialapprox(y);
     for(let i=0;i<bignc;i++){fi=logb(fi,add(x,sub(bignc,i,0)))}
@@ -39044,16 +42651,21 @@ function mmospexpofactorial(x,bignc2=bign,bignc=ceil(bign/2)*3){
    //fi=logb(add(x3,1,i),fi)
     return (fi);
 }
+
 function expofactorial(x,N1=7,N2=20){
     //expofactorial(x,3-re(modc(floor(x),3)),20)
     //if(im(x)<0)return mospexpofactorial(x)
     let xx=add(modc(x,1),0);
-    let fi=mmospexpofactorial(xx,N1,N2,0)
+    let fi=(superexpp(div(x,5)))
+	//mmospexpofactorial(xx,N1,N2,0)
     
     for(let i=0;i<floor(re(x));i++)fi=pow(add(xx,i,1),fi)
     for(let i=0;i<ceil(-re(x));i++)fi=div(log(fi),log(sub(xx,i,0)))
         return fi;
 }
+
+
+
 function rospexpofactorial(x,h=0,bigncd=ceil(bign/2)){
    let  bignc = ceil(re(x)+h);
     const y=sub(x,bignc);
@@ -40715,7 +44327,25 @@ function zerotruncatedpoissondistmean(l){return div(l,sub(1,exp(sub(0,l))))}
 function zerotruncatedpoissondistvar(l){return sub(div(add(l,mul(l,l)),sub(1,exp(sub(0,l)))),div(sqr(l),sqr(sub(1,exp(sub(0,l))))))}
 
 //Add function mixedpoissondistpmf(func,)
-
+ function mixedpoissondistpmfd(t,F){let [fun,k]=F;return div(mul(pow(t,k),evale(func,t)),exp(t),factorial(k))}
+ function mixedpoissondistpmf(func,x){ return integral(mixedpoissondistpmfd,0,bign,[func,x])}
+ function mixedpoissonmean(func){
+	return integral(t=>mul(t,evale(func,t)),0,bign);}
+ function mixedpoissonvar(func){
+ let m1=integral(t=>mul(t,evale(func,t)),0,bign);
+ let m2=integral(t=>mul(t,t,evale(func,t)),0,bign);
+ return add(m1,sub(m2,mul(m1,m1)));
+ }
+ function mixedpoissonskew(func){
+	let m1=integral(t=>mul(t,evale(func,t)),0,bign),
+		m2=integral(t=>mul(t,t,evale(func,t)),0,bign),
+		m3=integral(t=>mul(t,t,t,evale(func,t)),0,bign),
+		v=add(m1,sub(m2,mul(m1,m1)));
+	return div(
+		add(m3,mul(3,m2),m1,neg(mul(3,m1,m2)),neg(mul(3,m1,m1)),mul(2,m1,m1,m1)),
+		pow(v,1.5)
+	);
+}
 //https://www.researchgate.net/profile/J-Dorp/publication/243102729_The_Standard_Two-Sided_Power_Distribution_and_its_Properties/links/5460e2e00cf27487b4526435/The-Standard-Two-Sided-Power-Distribution-and-its-Properties.pdf?origin=publication_detail&_tp=eyJjb250ZXh0Ijp7ImZpcnN0UGFnZSI6InB1YmxpY2F0aW9uIiwicGFnZSI6InB1YmxpY2F0aW9uRG93bmxvYWQiLCJwcmV2aW91c1BhZ2UiOiJwdWJsaWNhdGlvbiJ9fQ&__cf_chl_tk=jEGT.mKHjbAnVMb0oVaQ2l4cpkAZH4OYhxQ_5BS4Nj4-1770479178-1.0.1.1-46XdyAub40hFSw0nVWbSKVm8oMCEuIL1xLOHlh8Oyis
 function asymetriclaplacepdf(m,s,k,x){return (re(x)<re(m))?(div(mul(k,exp(div(mul(s,sabs(sub(x,m))),-1,k))),s,add(1,sqr(k)))):(div(mul(k,exp(div(mul(s,k,sabs(sub(x,m))),-1))),s,add(1,sqr(k))))}
 
@@ -40886,6 +44516,8 @@ function triangulardistentropy(a,b,c){return add(0.5,log(div(sub(b,a),2)))}
 function triangulardistmgf(a,b,c,t){return div(mul(2,add(mul(sub(b,c),exp(mul(a,t))),mul(-1,sub(b,a),exp(mul(c,t))),mul(sub(c,a),exp(mul(b,t))))),sub(b,a),sub(c,a),sub(b,c),t,t)}
 function triangulardistcf(a,b,c,t){return triangulardistmgf(a,b,c,mul(I,t)) }
 function triangulardistpgf(a,b,c,z){return triangulardistmgf(a,b,c,log(z))}
+
+
 
 function trapezoidaldistpdf(a,b,c,d,x){return (re(x)<b)? div(sub(x,a),0.5,sub(add(d,c),a,b),sub(b,a)) :(re(x)<c)? div(2,sub(add(d,c),a,b)) : div(sub(d,x),0.5,sub(add(d,c),a,b),sub(d,c)) }
 function trapezoidaldistcdf(a,b,c,d,x){return (re(x)<b)? div(sqr(sub(x,a)),sub(add(d,c),a,b),sub(b,a)) :(re(x)<c)? div(sub(mul(2,x),a,b),sub(add(d,c),a,b)) : sub(1,div(sqr(sub(d,x)),sub(add(d,c),a,b),sub(d,c))) }
@@ -42078,11 +45710,35 @@ function inversechicdf(v,x){return div(incgamma(div(v,2),div(1,2,x)),gamma(div(v
 
 */
 //painleve2(x,0,0.5170,-0.064,0)
+
+
+//https://en.wikipedia.org/wiki/Tracy%E2%80%93Widom_distribution
 function tracywidomqa(x){return painleve2(x,0,0.000108347393,-0.00024742066,5)}//return mul(sqrt(div(x,-2)),add(1,div(pow(x,-3),8),mul(pow(x,-6),-73/128),mul(pow(x,-9),10657/1024)))}//painleve2(x,0,0.8945,-1,0)}//return painleve2(sub(x),0,0.5170,-0.064,0)}
 function tracywidomq(x){return painleve2(x,0,0.000108347393,-0.00024742066,5)}
 function tracywidomp(x,o){return mul(sqr(tracywidomq(x)),sub(x,o))}
 function tracywidomf(x){return exp(div(add(integral(tracywidomp,x,2,x),0),-2))}
 function tracywidome(x){return exp(div(integral(tracywidomq,x,0),-2))}
+function tracywidomphi(x){
+	function f(y,o){return mul(sub(y,o),sqr(tracywidomq(y)))}
+	return exp(div(integral(f,x,bign,x),-2))
+}
+function tracywidomphim(w){
+	return div(
+		add(
+			mul(36,sqr(w)),
+			neg(pow(w,4)),
+			neg(mul(add(mul(15,w),pow(w,3)),sqrt(add(sqr(w),6)))),
+			mul(27,sub(log(18),mul(2,log(add(w,sqrt(add(sqr(w),6)))))))
+		),
+		108
+	);
+}
+function tracywidomphip(w){
+	return add(
+		div(mul(w,sqrt(sub(sqr(w),2))),2),
+		log(div(sub(w,sqrt(sub(sqr(w),2))),sqrt(2)))
+	);
+}
 //return mul(pi(),sub(mul(ai(z),derv(gi,z)),mul(aip(z),gi(z))))//
 function tracywidom1cdf(x){return mul(tracywidome(x),tracywidomf(x))}
 function tracywidom2cdf(x){return sqr(tracywidomf(x))}
@@ -44931,12 +48587,12 @@ class FastExpressionCompiler {
         }
     }
 */
-//tokenize(expr) {
+//tokenize(expr) { look at this number
 //    const regex = /\s*([A-Za-z_][A-Za-z0-9_]*|\d*\.\d+|\d+|[()+\-*/^,])\s*/g;
  //7   return expr.match(regex).map(t => t.trim());
 //}
 /*
-toPostfix(tokens) {
+toPostfix(tokens) { 45k lines 
     const output = [];
     const stack = [];
     for (let i = 0; i < tokens.length; i++) {

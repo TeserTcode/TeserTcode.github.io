@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Metric Tensor &amp; Curvature Calculator</title>
+    <style>
+        body {
+            font-family: monospace;
+            margin: 20px;
+            background: #fff;
+            color: #000;
+        }
+        textarea,
+        input,
+        select,
+        button {
+            font-family: monospace;
+            font-size: 14px;
+            padding: 4px;
+        }
+        .row {
+            margin: 6px 0;
+        }
+        .matrix {
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre;
+            background: #f5f5f5;
+            padding: 10px;
+            border: 1px solid #ccc;
+            margin: 4px 0;
+            overflow: auto;
+            max-height: 150px;
+        }
+        .value {
+            font-family: monospace;
+        }
+        .error {
+            color: #c00;
+        }
+        .ok {
+            color: #060;
+        }
+        .card {
+            border: 1px solid #ccc;
+            padding: 12px;
+            margin: 8px 0;
+            background: #fafafa;
+        }
+        .card h3 {
+            margin: 0 0 6px 0;
+            font-size: 15px;
+        }
+        .grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .grid .card {
+            flex: 1 1 380px;
+        }
+        .label {
+            font-weight: bold;
+            display: inline-block;
+            min-width: 100px;
+        }
+        .badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border: 1px solid #ccc;
+            background: #eee;
+        }
+        .badge-ok {
+            border-color: #060;
+            background: #cfc;
+        }
+        .badge-fail {
+            border-color: #c00;
+            background: #fcc;
+        }
+        hr {
+            border: 1px solid #ddd;
+            margin: 16px 0;
+        }
+        .controls {
+            background: #f0f0f0;
+            padding: 12px;
+            border: 1px solid #ccc;
+            margin: 10px 0;
+        }
+        .controls select {
+            min-width: 120px;
+        }
+        .controls input[type="text"] {
+            min-width: 200px;
+        }
+        .inline {
+            display: inline-block;
+            margin-right: 16px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 12px 0 6px 0;
+        }
+        .coord-input {
+            display: inline-block;
+            margin: 2px 4px;
+        }
+        .coord-input label {
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .coord-input input {
+            width: 50px;
+            text-align: center;
+        }
+        .dim-select {
+            display: inline-block;
+            margin-right: 12px;
+        }
+        .dim-select label {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📐 Metric Tensor &amp; Curvature Calculator</h1>
+    <p>Interactive calculator for Riemannian metrics, Christoffel symbols, Riemann/Ricci tensors</p>
+
+    <hr>
+
+    <div id="status">⏳ Loading libraries...</div>
+
+    <!-- Controls -->
+    <div class="controls" id="controls">
+        <div class="row">
+            <div class="dim-select">
+                <label>Dimension:</label>
+                <select id="dimSelect" onchange="updateMetric()">
+                    <option value="2">2D</option>
+                    <option value="3">3D</option>
+                    <option value="4" selected>4D</option>
+                </select>
+            </div>
+            <div class="inline">
+                <label>Metric:</label>
+                <select id="metricSelect" onchange="updateMetric()">
+                    <option value="minkowski">Minkowski</option>
+                    <option value="euclidean">Euclidean</option>
+                    <option value="schwarzschild">Schwarzschild</option>
+                    <option value="flrw">FLRW</option>
+                    <option value="desitter">de Sitter</option>
+                    <option value="antidesitter">Anti-de Sitter</option>
+                    <option value="reissnernordstrom">Reissner-Nordstrom</option>
+                    <option value="btz">BTZ</option>
+                    <option value="cylindrical">Cylindrical</option>
+                    <option value="hyperbolic">Hyperbolic</option>
+                    <option value="godel">Gödel</option>
+                    <option value="sphere">Sphere</option>
+                </select>
+            </div>
+            <div class="inline" id="flrwControls" style="display:none;">
+                <label>k:</label>
+                <select id="kSelect" onchange="updateMetric()">
+                    <option value="0">Flat (0)</option>
+                    <option value="1">Closed (+1)</option>
+                    <option value="-1">Open (-1)</option>
+                </select>
+                <label>a(t):</label>
+                <input id="scaleInput" type="text" value="exp(t)" size="12" onchange="updateMetric()">
+            </div>
+            <div class="inline" id="massControls">
+                <label>M:</label>
+                <input id="massInput" type="text" value="1" size="6" onchange="updateMetric()">
+            </div>
+            <div class="inline" id="chargeControls" style="display:none;">
+                <label>Q:</label>
+                <input id="chargeInput" type="text" value="0.5" size="6" onchange="updateMetric()">
+            </div>
+            <div class="inline" id="lambdaControls" style="display:none;">
+                <label>L:</label>
+                <input id="lambdaInput" type="text" value="10" size="6" onchange="updateMetric()">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="inline">
+                <label>Coordinates:</label>
+                <span id="coordLabels"></span>
+            </div>
+            <button onclick="computeAll()">Compute</button>
+            <button onclick="resetCoords()">Reset</button>
+        </div>
+
+        <div class="row">
+            <div class="inline">
+                <label>Compute:</label>
+                <select id="computeSelect">
+                    <option value="all">All</option>
+                    <option value="metric">Metric Only</option>
+                    <option value="christoffel">Christoffel Symbols</option>
+                    <option value="riemann">Riemann Tensor</option>
+                    <option value="ricci">Ricci Tensor</option>
+                    <option value="scalar">Ricci Scalar</option>
+                    <option value="einstein">Einstein Tensor</option>
+                    <option value="geodesic">Geodesic Equation</option>
+                </select>
+            </div>
+            <div class="inline" id="geodesicControls" style="display:none;">
+                <label>Velocity:</label>
+                <input id="velInput" type="text" value="0,1,0,0" size="16">
+                <label>tau:</label>
+                <input id="tauInput" type="text" value="1" size="4">
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div id="output"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+    <script src="clrspc.js"></script>
+    <script src="polyhedra.js"></script>
+    <script src="mthfnc.js"></script>
+
+    <script>
+        // ============================================================
+        // STATE
+        // ============================================================
+        let dim = 4;
+        let coords = [0, 0, 0, 0];
+        let coordNames = ['t', 'x', 'y', 'z'];
+
+        // ============================================================
+        // WAIT FOR LIBRARIES
+        // ============================================================
+        function waitForLibs() {
+            return new Promise((resolve) => {
+                const check = () => {
+                    if (typeof metrictensor !== 'undefined' && typeof tensor !== 'undefined' &&
+                        typeof evale !== 'undefined' && typeof exp !== 'undefined' &&
+                        typeof christoffelsymbols !== 'undefined') {
+                        resolve();
+                    } else {
+                        setTimeout(check, 100);
+                    }
+                };
+                check();
+            });
+        }
+
+        // ============================================================
+        // FORMATTING
+        // ============================================================
+        function formatComplex(c) {
+            if (c === undefined || c === null) return 'undefined';
+            if (typeof c === 'number') {
+                if (Number.isInteger(c)) return c.toString();
+                return c.toFixed(6);
+            }
+            if (c.re !== undefined) {
+                const re = c.re;
+                const im = c.im;
+                if (Math.abs(im) < 1e-12) {
+                    if (Number.isInteger(re)) return re.toString();
+                    return re.toFixed(6);
+                }
+                const reStr = re.toFixed(6);
+                const imStr = Math.abs(im).toFixed(6);
+                if (im >= 0) return reStr + ' + ' + imStr + 'i';
+                return reStr + ' - ' + imStr + 'i';
+            }
+            if (Array.isArray(c)) {
+                if (c.length === 0) return '[]';
+                if (Array.isArray(c[0])) {
+                    return '[' + c.map(row => '[' + row.map(formatComplex).join(', ') + ']').join(', ') + ']';
+                }
+                return '[' + c.map(formatComplex).join(', ') + ']';
+            }
+            return String(c);
+        }
+
+        function formatMatrix(M) {
+            if (!Array.isArray(M)) return String(M);
+            if (M.length === 0) return '[]';
+            if (!Array.isArray(M[0])) return '[' + M.map(formatComplex).join(', ') + ']';
+            const rows = M.map(row => row.map(c => formatComplex(c)));
+            const widths = rows[0].map((_, i) => Math.max(...rows.map(r => r[i].length)));
+            return rows.map(row =>
+                '[' + row.map((s, i) => s.padStart(widths[i])).join(', ') + ']'
+            ).join('\n');
+        }
+
+        function formatTensor(T, name) {
+            if (!T) return 'undefined';
+            if (Array.isArray(T)) {
+                return formatMatrix(T);
+            }
+            if (typeof T === 'function') {
+                return '<span class="value">function()</span>';
+            }
+            return String(T);
+        }
+
+        function makeCard(title, content, ok = true) {
+            const badge = ok ? '<span class="badge badge-ok">OK</span>' : '<span class="badge badge-fail">FAIL</span>';
+            return '<div class="card"><h3>' + title + ' ' + badge + '</h3>' + content + '</div>';
+        }
+
+        function makeErrorCard(title, error) {
+            return makeCard(title, '<div class="error">Error: ' + error + '</div>', false);
+        }
+
+        // ============================================================
+        // METRIC FACTORIES
+        // ============================================================
+        function getMetric(name, dim, params) {
+            const M = parseFloat(params.M) || 1;
+            const Q = parseFloat(params.Q) || 0.5;
+            const L = parseFloat(params.L) || 10;
+            const k = parseInt(params.k) || 0;
+
+            switch (name) {
+                case 'minkowski':
+                    return metricminkowski(dim);
+                case 'euclidean':
+                    return metriceuclidean(dim);
+                case 'schwarzschild':
+                    if (dim < 4) return metriceuclidean(dim);
+                    return metricschwarzschild(M);
+                case 'flrw': {
+                    const scaleStr = params.scale || 'exp(t)';
+                    const scaleFunc = function(p) { return evale(scaleStr, { t: p.t, x: p.t }); };
+                    return metricflrw(scaleFunc, k);
+                }
+                case 'desitter':
+                    if (dim < 4) return metriceuclidean(dim);
+                    return metricdesitter(L);
+                case 'antidesitter':
+                    if (dim < 4) return metriceuclidean(dim);
+                    return metricantidesitter(dim, L);
+                case 'reissnernordstrom':
+                    if (dim < 4) return metriceuclidean(dim);
+                    return metricreissnernordstrom(M, Q);
+                case 'btz':
+                    if (dim < 3) return metriceuclidean(dim);
+                    return metricbtz(M, L, 0.5);
+                case 'cylindrical':
+                    if (dim < 4) return metriceuclidean(dim);
+                    return metriccylindrical();
+                case 'hyperbolic':
+                    if (dim < 2) return metriceuclidean(dim);
+                    return metrichyperbolic(dim);
+                case 'godel':
+                    if (dim < 3) return metriceuclidean(dim);
+                    return metricgodel(1);
+                case 'sphere':
+                    if (dim < 2) return metriceuclidean(dim);
+                    return metricsphere(1);
+                default:
+                    return metricminkowski(dim);
+            }
+        }
+
+        function getCoordNames(name, dim) {
+            const defaults = ['t', 'x', 'y', 'z'];
+            const sphere = ['θ', 'φ'];
+            const hyper = ['r', 'θ', 'φ'];
+            const godel = ['r', 'φ', 'z'];
+
+            if (name === 'sphere') return sphere.slice(0, dim);
+            if (name === 'hyperbolic') return hyper.slice(0, dim);
+            if (name === 'godel') return godel.slice(0, dim);
+            return defaults.slice(0, dim);
+        }
+
+        function getDefaultCoords(name, dim) {
+            if (name === 'sphere') return [1, 0];
+            if (name === 'hyperbolic') return [1, 1, 1];
+            if (name === 'godel') return [1, 1, 0];
+            if (name === 'schwarzschild') return [0, 3, 1, 0];
+            if (name === 'flrw') return [1, 1, 1, 0];
+            if (name === 'cylindrical') return [0, 2, 1, 0];
+            if (name === 'btz') return [0, 3, 1, 0];
+            return Array(dim).fill(0);
+        }
+
+        // ============================================================
+        // UI UPDATE
+        // ============================================================
+        function updateMetric() {
+            const name = document.getElementById('metricSelect').value;
+            const dim = parseInt(document.getElementById('dimSelect').value);
+
+            // Show/hide controls
+            document.getElementById('flrwControls').style.display = (name === 'flrw') ? 'inline-block' : 'none';
+            document.getElementById('chargeControls').style.display = (name === 'reissnernordstrom') ? 'inline-block' :
+            'none';
+            document.getElementById('lambdaControls').style.display =
+                (name === 'desitter' || name === 'antidesitter' || name === 'btz' || name === 'schwarzschildads' ||
+                    name === 'chargedads') ? 'inline-block' : 'none';
+            document.getElementById('massControls').style.display =
+                (name === 'schwarzschild' || name === 'reissnernordstrom' || name === 'btz') ? 'inline-block' :
+                'inline-block';
+
+            // Update coordinate labels
+            const names = getCoordNames(name, dim);
+            const defs = getDefaultCoords(name, dim);
+            let html = '';
+            for (let i = 0; i < dim; i++) {
+                const val = (coords[i] !== undefined && coords[i] !== null) ? coords[i] : (defs[i] || 0);
+                html += '<span class="coord-input"><label>' + (names[i] || 'x' + i) +
+                    ':</label><input type="text" id="coord_' + i + '" value="' + val + '" size="5"></span>';
+            }
+            document.getElementById('coordLabels').innerHTML = html;
+
+            // Store dim
+            window._currentDim = dim;
+            window._currentMetric = name;
+
+            // Auto-compute
+            computeAll();
+        }
+
+        function resetCoords() {
+            const name = document.getElementById('metricSelect').value;
+            const dim = parseInt(document.getElementById('dimSelect').value);
+            const defs = getDefaultCoords(name, dim);
+            for (let i = 0; i < dim; i++) {
+                const el = document.getElementById('coord_' + i);
+                if (el) el.value = defs[i] || 0;
+            }
+            computeAll();
+        }
+
+        function getCoords() {
+            const dim = parseInt(document.getElementById('dimSelect').value);
+            const c = [];
+            for (let i = 0; i < dim; i++) {
+                const el = document.getElementById('coord_' + i);
+                c.push(parseFloat(el ? el.value : 0) || 0);
+            }
+            return c;
+        }
+
+        function getParams() {
+            return {
+                M: document.getElementById('massInput') ? document.getElementById('massInput').value : '1',
+                Q: document.getElementById('chargeInput') ? document.getElementById('chargeInput').value : '0.5',
+                L: document.getElementById('lambdaInput') ? document.getElementById('lambdaInput').value : '10',
+                k: document.getElementById('kSelect') ? document.getElementById('kSelect').value : '0',
+                scale: document.getElementById('scaleInput') ? document.getElementById('scaleInput').value : 'exp(t)'
+            };
+        }
+
+        // ============================================================
+        // COMPUTATION
+        // ============================================================
+        function safeCompute(label, fn) {
+            try {
+                const result = fn();
+                return { success: true, result };
+            } catch (e) {
+                return { success: false, error: e.message || String(e) };
+            }
+        }
+
+        function computeAll() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<div class="row">Computing...</div>';
+
+            const name = document.getElementById('metricSelect').value;
+            const dim = parseInt(document.getElementById('dimSelect').value);
+            const x = getCoords();
+            const params = getParams();
+            const computeMode = document.getElementById('computeSelect').value;
+
+            // Get metric
+            const metricFn = getMetric(name, dim, params);
+            const names = getCoordNames(name, dim);
+
+            let html = '';
+
+            // --- Metric ---
+            const mResult = safeCompute('Metric', () => ({
+                g: metrictensor(metricFn, x),
+                det: metricdeterminant ? metricdeterminant(metricFn, x) : null,
+                sig: metricsignature ? metricsignature(metricFn, x) : null
+            }));
+
+            if (mResult.success) {
+                let content = '<div class="row"><span class="label">Coordinates:</span> ';
+                for (let i = 0; i < dim; i++) {
+                    content += (names[i] || 'x' + i) + '=' + x[i] + ' ';
+                }
+                content += '</div>';
+                if (mResult.result.det !== null) {
+                    content += '<div class="row"><span class="label">det(g):</span> ' +
+                        formatComplex(mResult.result.det) + '</div>';
+                }
+                if (mResult.result.sig) {
+                    content += '<div class="row"><span class="label">Signature:</span> ' +
+                        mResult.result.sig.positive + '+' + mResult.result.sig.negative + '- (' +
+                        (mResult.result.sig.positive + mResult.result.sig.negative + mResult.result.sig.zero) +
+                    'D)</div>';
+                }
+                content += '<div class="matrix">' + formatMatrix(mResult.result.g) + '</div>';
+                html += makeCard('Metric g_μν', content, true);
+            } else {
+                html += makeErrorCard('Metric', mResult.error);
+            }
+
+            // --- Christoffel ---
+            if (computeMode === 'all' || computeMode === 'christoffel') {
+                const cResult = safeCompute('Christoffel Symbols', () => {
+                    const Gamma = christoffelsymbols(metricFn, x);
+                    // Evaluate at point
+                    const result = [];
+                    for (let i = 0; i < dim; i++) {
+                        result[i] = [];
+                        for (let j = 0; j < dim; j++) {
+                            result[i][j] = [];
+                            for (let k = 0; k < dim; k++) {
+                                result[i][j][k] = evale(Gamma[i][j][k], { x: x });
+                            }
+                        }
+                    }
+                    return result;
+                });
+
+                if (cResult.success) {
+                    let content = '<div class="row"><span class="label">Γ^μ_νρ</span></div>';
+                    const G = cResult.result;
+                    for (let i = 0; i < Math.min(dim, 4); i++) {
+                        content += '<div class="row"><span class="label">μ=' + i + ':</span> ';
+                        for (let j = 0; j < dim; j++) {
+                            for (let k = 0; k < dim; k++) {
+                                if (G[i] && G[i][j] && G[i][j][k] !== undefined && formatComplex(G[i][j][k]) !== '0') {
+                                    content += 'Γ^' + i + '_' + j + k + '=' + formatComplex(G[i][j][k]) + ' ';
+                                }
+                            }
+                        }
+                        content += '</div>';
+                    }
+                    html += makeCard('Christoffel Symbols (non-zero)', content, true);
+                } else {
+                    html += makeErrorCard('Christoffel Symbols', cResult.error);
+                }
+            }
+
+            // --- Riemann ---
+            if (computeMode === 'all' || computeMode === 'riemann') {
+                const rResult = safeCompute('Riemann Tensor', () => {
+                    const R = riemanntensor(metricFn, x);
+                    const result = [];
+                    for (let i = 0; i < dim; i++) {
+                        result[i] = [];
+                        for (let j = 0; j < dim; j++) {
+                            result[i][j] = [];
+                            for (let k = 0; k < dim; k++) {
+                                result[i][j][k] = [];
+                                for (let l = 0; l < dim; l++) {
+                                    result[i][j][k][l] = evale(R[i][j][k][l], { x: x });
+                                }
+                            }
+                        }
+                    }
+                    return result;
+                });
+
+                if (rResult.success) {
+                    let content = '<div class="row"><span class="label">R^μ_νρσ</span></div>';
+                    const R = rResult.result;
+                    let count = 0;
+                    for (let i = 0; i < dim; i++) {
+                        for (let j = 0; j < dim; j++) {
+                            for (let k = 0; k < dim; k++) {
+                                for (let l = 0; l < dim; l++) {
+                                    if (R[i] && R[i][j] && R[i][j][k] && R[i][j][k][l] !== undefined &&
+                                        formatComplex(R[i][j][k][l]) !== '0') {
+                                        if (count < 20) {
+                                            content += '<div class="row">R^' + i + '_' + j + k + l + '=' +
+                                                formatComplex(R[i][j][k][l]) + '</div>';
+                                            count++;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (count >= 20) content += '<div class="row">... (' + count + ' non-zero components)</div>';
+                    html += makeCard('Riemann Tensor', content, true);
+                } else {
+                    html += makeErrorCard('Riemann Tensor', rResult.error);
+                }
+            }
+
+            // --- Ricci ---
+            if (computeMode === 'all' || computeMode === 'ricci') {
+                const rcResult = safeCompute('Ricci Tensor', () => {
+                    const Ric = riccitensor(metricFn, x);
+                    const result = [];
+                    for (let i = 0; i < dim; i++) {
+                        result[i] = [];
+                        for (let j = 0; j < dim; j++) {
+                            result[i][j] = evale(Ric[i][j], { x: x });
+                        }
+                    }
+                    return result;
+                });
+
+                if (rcResult.success) {
+                    let content = '<div class="row"><span class="label">R_μν</span></div>';
+                    const Ric = rcResult.result;
+                    for (let i = 0; i < dim; i++) {
+                        let row = '';
+                        for (let j = 0; j < dim; j++) {
+                            row += formatComplex(Ric[i][j]) + ' ';
+                        }
+                        content += '<div class="row">' + row + '</div>';
+                    }
+                    html += makeCard('Ricci Tensor', content, true);
+                } else {
+                    html += makeErrorCard('Ricci Tensor', rcResult.error);
+                }
+            }
+
+            // --- Ricci Scalar ---
+            if (computeMode === 'all' || computeMode === 'scalar') {
+                const sResult = safeCompute('Ricci Scalar', () => {
+                    return ricciscalar(metricFn, x);
+                });
+
+                if (sResult.success) {
+                    html += makeCard('Ricci Scalar R',
+                        '<div class="row"><span class="label">R =</span> ' +
+                        formatComplex(sResult.result) + '</div>',
+                        true
+                    );
+                } else {
+                    html += makeErrorCard('Ricci Scalar', sResult.error);
+                }
+            }
+
+            // --- Einstein ---
+            if (computeMode === 'all' || computeMode === 'einstein') {
+                const eResult = safeCompute('Einstein Tensor', () => {
+                    const Gt = einsteintensor(metricFn, x);
+                    const result = [];
+                    for (let i = 0; i < dim; i++) {
+                        result[i] = [];
+                        for (let j = 0; j < dim; j++) {
+                            result[i][j] = evale(Gt[i][j], { x: x });
+                        }
+                    }
+                    return result;
+                });
+
+                if (eResult.success) {
+                    let content = '<div class="row"><span class="label">G_μν = R_μν - ½R g_μν</span></div>';
+                    const Gt = eResult.result;
+                    for (let i = 0; i < dim; i++) {
+                        let row = '';
+                        for (let j = 0; j < dim; j++) {
+                            row += formatComplex(Gt[i][j]) + ' ';
+                        }
+                        content += '<div class="row">' + row + '</div>';
+                    }
+                    html += makeCard('Einstein Tensor', content, true);
+                } else {
+                    html += makeErrorCard('Einstein Tensor', eResult.error);
+                }
+            }
+
+            // --- Geodesic ---
+            if (computeMode === 'geodesic' || computeMode === 'all') {
+                const velStr = document.getElementById('velInput') ? document.getElementById('velInput').value : '0,1,0,0';
+                const tau = parseFloat(document.getElementById('tauInput') ? document.getElementById('tauInput').value : '1');
+                const vel = velStr.split(',').map(s => parseFloat(s.trim()) || 0);
+
+                const gResult = safeCompute('Geodesic', () => {
+                    const result = geodesicequation(metricFn, x, vel, tau, 100);
+                    return result;
+                });
+
+                if (gResult.success) {
+                    let content = '<div class="row"><span class="label">Initial position:</span> [' + x.join(', ') +
+                        ']</div>';
+                    content += '<div class="row"><span class="label">Initial velocity:</span> [' + vel.join(', ') +
+                        ']</div>';
+                    content += '<div class="row"><span class="label">τ =</span> ' + tau + '</div>';
+                    content += '<div class="row"><span class="label">Position after:</span> [' +
+                        gResult.result.position.map(formatComplex).join(', ') + ']</div>';
+                    content += '<div class="row"><span class="label">Velocity after:</span> [' +
+                        gResult.result.velocity.map(formatComplex).join(', ') + ']</div>';
+                    html += makeCard('Geodesic Evolution', content, true);
+                } else {
+                    html += makeErrorCard('Geodesic', gResult.error);
+                }
+            }
+
+            output.innerHTML = html;
+            document.getElementById('status').innerHTML = '✅ Ready - ' + name;
+        }
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        async function init() {
+            document.getElementById('status').innerHTML = '⏳ Loading libraries...';
+            try {
+                await waitForLibs();
+                document.getElementById('status').innerHTML = '✅ Libraries loaded';
+                updateMetric();
+            } catch (e) {
+                document.getElementById('status').innerHTML = '❌ Failed to load: ' + e.message;
+            }
+        }
+
+        // Setup event listeners for geodesic controls
+        document.getElementById('computeSelect').addEventListener('change', function() {
+            document.getElementById('geodesicControls').style.display =
+                (this.value === 'geodesic') ? 'inline-block' : 'none';
+            computeAll();
+        });
+
+        // Run on load
+        if (document.readyState === 'complete') {
+            init();
+        } else {
+            window.addEventListener('load', init);
+        }
+    </script>
+</body>
+</html>
