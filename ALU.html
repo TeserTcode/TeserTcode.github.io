@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Protecting Aluminium from Corrosion</title>
+  <style>
+  
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 10px;
+      background: url('ALU.png') ;
+      background-size: auto;
+      background-attachment: scroll;
+    }
+    u {
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    #menu {
+      position: absolute;
+      background: #ffddffcc;
+      border: 1px solid black;
+      padding: 0;
+      margin: 0;
+      line-height: normal;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    #menu-table td {
+      padding: 5px;
+      cursor: pointer;
+    }
+    .menu td {
+      padding: 1px;
+      cursor: pointer;
+      border: 1px solid #ddd;
+    }
+    .menu td:hover {
+      background: #f0f0f0;
+    }
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+    }
+    p {
+      font-size: 1em;
+      margin-bottom: 10px;
+    }
+    large {
+      font-size: 3em;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    li, th, td, p {
+      color: #333333;
+      text-shadow: 2px 2px 2px #FFFFFF, 1px 1px 0px rgba(0,0,0,0.15);
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .note {
+      background-color: #f9f9f9;
+      padding: 10px;
+      border: 1px dashed #ccc;
+      margin-top: 10px;
+    }
+    .section-title {
+      font-size: 1.5em;
+      color: #34495e;
+    }
+    .sub-section {
+      margin-left: 10px;
+      font-size: 1.1em;
+    }
+    /* Table of contents – fixed, slide-out */
+    #table-of-contents {
+      position: fixed;
+      left: -560px;
+      top: 50px;
+      width: 550px;
+      height: 80vh;
+      background: #333;
+      color: white;
+      padding: 10px;
+      border-radius: 0 8px 8px 0;
+      transition: left 0.3s ease;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      z-index: 1000;
+    }
+    #table-of-contents:hover {
+      left: 0;
+    }
+    #table-of-contents h2 {
+      font-size: 16px;
+      text-align: center;
+      margin: 0;
+      padding: 5px 0;
+    }
+    #table-of-contents h3 {
+      font-size: 16px;
+      text-align: center;
+      margin: 0;
+      padding: 5px 0;
+    }
+    #table-of-contents large {
+      font-size: 26px;
+      text-align: center;
+      margin: 0;
+      padding: 5px 0;
+    }
+    .toc-content {
+      max-height: 70vh;
+      overflow-y: auto;
+      padding-right: 1px;
+    }
+    #table-of-contents ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    #table-of-contents li {
+      margin: 0;
+      padding: 0;
+    }
+    #table-of-contents li ul {
+      margin-left: 10px;
+      padding-left: 5px;
+      margin-right: 5px;
+      border-left: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 2px;
+      padding-top: 2px;
+      padding-bottom: 2px;
+      overflow: hidden;
+    }
+    #table-of-contents a {
+      text-decoration: none !important;
+      color: #fff;
+      font-size: 12px;
+      display: block;
+      padding: 3px 5px;
+      transition: background 0.2s;
+    }
+    #table-of-contents a:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+    }
+    .toc-content::-webkit-scrollbar {
+      width: 8px;
+    }
+    .toc-content::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 4px;
+    }
+    .toc-content::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    /* image styling */
+    .fig-container {
+      text-align: center;
+      margin: 20px 0;
+    }
+    .fig-container img {
+      max-width: 80%;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .fig-caption {
+      font-style: italic;
+      color: #555;
+      margin-top: 5px;
+    }
+    .citation {
+      font-size: 0.85em;
+      color: #2c3e50;
+      background: #ecf0f1;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Protecting Aluminium from Corrosion</h1>
+
+  <!-- ============================================ -->
+  <!-- MAIN CONTENT                                 -->
+  <!-- ============================================ -->
+
+  <large>Introduction</large>
+  <p>Aluminium is widely used in aerospace, automotive, marine, and construction industries due to its low density, high strength-to-weight ratio, and excellent thermal/electrical conductivity. However, aluminium is inherently reactive and readily forms a native oxide film (Al₂O₃) when exposed to air. This passive film provides moderate protection in neutral environments but is susceptible to breakdown in aggressive chloride-containing media, acidic or alkaline solutions, and under elevated temperatures. Corrosion of aluminium can lead to pitting, intergranular attack, stress corrosion cracking (SCC), and premature failure of components. This document provides a comprehensive, science‑based overview of corrosion protection strategies for aluminium, including <strong>anodizing</strong>, <strong>conversion coatings</strong>, <strong>organic coatings</strong>, <strong>inhibitors</strong>, and <strong>cathodic protection</strong>. Mechanistic insights, performance data, and references to peer‑reviewed literature are included.</p>
+
+  <div class="fig-container">
+    <img src="./img/aluminium_oxide_pores.png" alt="Schematic of aluminium oxide with porous structure" style="max-width:70%;">
+    <div class="fig-caption">Schematic of aluminium oxide layer with porous structure, showing the hexagonal pore array typical of anodized aluminium. The pores can be sealed to enhance corrosion resistance.</div>
+  </div>
+
+  <hr>
+
+  <h1>1. Fundamentals of Aluminium Corrosion</h1>
+  <p>Aluminium is an amphoteric metal with a standard electrode potential of <em>E°</em> = −1.66 V vs. SHE (standard hydrogen electrode) for the Al³⁺/Al couple. The native oxide film (γ‑Al₂O₃, thickness 2–10 nm) grows according to the high‑field mechanism and provides a barrier against further oxidation. However, the film is not fully protective in chloride‑containing solutions because Cl⁻ ions adsorb at the oxide surface, weaken the Al–O bonds, and initiate localised dissolution (pitting). The pitting potential (E<sub>pit</sub>) is a critical parameter; for 99.5% aluminium in 0.1 M NaCl, E<sub>pit</sub> ≈ −0.65 V vs. Ag/AgCl (ref. <span class="citation">[1]</span>).</p>
+  <p>Corrosion rates are influenced by alloy composition (Cu, Fe, Mg, Si, Mn), heat treatment, surface finish, and the nature of the electrolyte. For example, 2xxx and 7xxx series (Al‑Cu and Al‑Zn‑Mg) are more susceptible to intergranular corrosion and SCC compared to 5xxx series (Al‑Mg) due to cathodic intermetallic particles.</p>
+
+  <h2>1.1. Types of Corrosion</h2>
+  <ul>
+    <li><strong>Uniform corrosion:</strong> Occurs in strongly acidic or alkaline media where the oxide film dissolves evenly.</li>
+    <li><strong>Pitting corrosion:</strong> Localised attack leading to deep cavities; most common in chloride environments.</li>
+    <li><strong>Intergranular corrosion (IGC):</strong> Preferential attack along grain boundaries, often in heat‑treatable alloys.</li>
+    <li><strong>Stress corrosion cracking (SCC):</strong> Combined effect of tensile stress and a corrosive medium.</li>
+    <li><strong>Galvanic corrosion:</strong> Accelerated corrosion when aluminium is in contact with a more noble metal (e.g., copper, stainless steel).</li>
+  </ul>
+
+  <h2>1.2. Key Parameters Influencing Corrosion</h2>
+  <table>
+    <tr><th>Parameter</th><th>Effect</th></tr>
+    <tr><td>Cl⁻ concentration</td><td>Increases pitting susceptibility; critical concentration ~10⁻³ M</td></tr>
+    <tr><td>pH</td><td>Alumina is amphoteric; dissolves in strong acid (pH &lt; 4) and strong base (pH &gt; 9)</td></tr>
+    <tr><td>Temperature</td><td>Corrosion rate doubles for every ~10 °C rise (Arrhenius behaviour)</td></tr>
+    <tr><td>Alloying elements</td><td>Cu, Fe increase cathodic activity; Mg, Mn improve pitting resistance</td></tr>
+  </table>
+
+  <div class="fig-container">
+    <img src="./img/pourbaix_aluminium.png" alt="Pourbaix diagram for aluminium" style="max-width:70%;">
+    <div class="fig-caption">Pourbaix diagram (pH–potential) for aluminium at 25 °C, showing immunity, passive, and corrosion regions.</div>
+  </div>
+
+  <hr>
+
+  <h1>2. Corrosion Protection Methods</h1>
+
+  <h2>2.1. Anodizing (Anodisation / Eloxal)</h2>
+  <p><strong>Anodizing</strong> is an electrochemical process that thickens the natural oxide film on aluminium, producing a porous, hexagonal‑pore structure that can be sealed with hot water, nickel acetate, or dichromate. The process is performed in a sulfuric acid (10–20% H₂SO₄), chromic acid, or phosphoric acid bath, with aluminium as the anode. The applied voltage (typically 15–30 V) drives the growth of a barrier layer and subsequently a porous oxide layer. The anodic oxide thickness (typically 5–25 μm, hard anodising up to 150 μm) provides excellent wear resistance and corrosion protection.</p>
+  <p><strong>Mechanism:</strong> At the anode, Al is oxidised to Al³⁺ ions which react with water to form Al₂O₃. Simultaneously, H⁺ is reduced at the cathode. The porosity arises from the field‑assisted dissolution of the oxide at the pore base, as described by the classical theory of Keller, Hunter, and Robinson <span class="citation">[2]</span>.</p>
+  <p>Anodised coatings are often sealed to close the pores, significantly improving corrosion resistance in salt‑spray tests (ASTM B117). Sealing transforms the amorphous alumina to boehmite (AlO(OH)), reducing the specific surface area and ion permeability.</p>
+
+  <h3>2.1.1. Hard Anodizing</h3>
+  <p>Hard anodizing (Type III) is performed at low temperature (0–5 °C) and high current density (2–4 A/dm²) to produce thick, dense coatings (40–150 μm) with high microhardness (300–600 HV). These coatings are used in aerospace, hydraulic, and automotive applications where wear and corrosion resistance are critical. Coating hardness and corrosion resistance are influenced by alloy composition; for instance, 6061‑T6 anodised films show improved performance compared to 2024‑T3 due to lower Cu content, which reduces the detrimental incorporation of copper species in the oxide.</p>
+  <p>Recent studies <span class="citation">[3]</span> have shown that the addition of organic additives (e.g., oxalic acid, glycerol) can modify the pore morphology and enhance corrosion resistance.</p>
+
+  <div class="fig-container">
+    <img src="./img/spray_painting_aluminium.png" alt="A person spray painting aluminium surface" style="max-width:60%;">
+    <div class="fig-caption">Application of organic coating (spray painting) on aluminium surface for corrosion protection. Epoxy primers and polyurethane topcoats are commonly used.</div>
+  </div>
+
+  <h2>2.2. Conversion Coatings (Chemical Conversion)</h2>
+  <p>Conversion coatings are produced by chemical or electrochemical treatment that converts the aluminium surface into a thin, adherent, inorganic layer. Two common types are chromate and phosphate‑based coatings. <strong>Chromate conversion coatings</strong> (e.g., Alodine 1200) provide excellent corrosion protection due to the hexavalent chromium that leaches out and acts as a corrosion inhibitor. However, due to environmental regulations (RoHS, REACH), non‑chromate alternatives such as trivalent chromium and zirconium‑based conversion coatings have been developed. These coatings function by forming a ZrO₂ or Cr₂O₃ layer that blocks cathodic sites and increases the polarisation resistance.</p>
+  <p>The corrosion resistance of zirconium conversion coatings on 6061 aluminium has been evaluated by EIS and salt‑spray testing; the charge transfer resistance (R<sub>ct</sub>) increases from ~1 kΩ·cm² for bare aluminium to over 50 kΩ·cm² after treatment <span class="citation">[4]</span>.</p>
+
+  <h2>2.3. Organic Coatings (Paints, Epoxies, Polyurethanes)</h2>
+  <p>Organic coatings provide a physical barrier that isolates the aluminium from the corrosive environment. <strong>Epoxy primers</strong> are widely used for their excellent adhesion and corrosion resistance. <strong>Polyurethane topcoats</strong> offer UV resistance and mechanical toughness. The protective performance depends on the coating thickness, adhesion, and the presence of anti‑corrosive pigments (e.g., zinc phosphate, strontium chromate). Barrier properties are quantified by water vapour transmission rate (WVTR) and oxygen permeability. In salt‑fog environments, coating degradation often occurs by blistering and delamination at the metal‑coating interface, as described by the cathodic disbonding mechanism.</p>
+  <p>A seminal review by Funke <span class="citation">[5]</span> outlines the fundamental principles of organic coating protection.</p>
+
+  <h2>2.4. Corrosion Inhibitors</h2>
+  <p>Inhibitors are chemical compounds that, when added in small concentrations to the electrolyte, reduce the corrosion rate. They function by adsorption on the aluminium surface, forming a hydrophobic film that blocks active sites. For aluminium, effective inhibitors include:</p>
+  <ul>
+    <li><strong>Inorganic inhibitors:</strong> chromates, molybdates, vanadates, and phosphates.</li>
+    <li><strong>Organic inhibitors:</strong> amines, carboxylates, triazoles, and Schiff bases.</li>
+  </ul>
+  <p>The inhibition efficiency (IE%) is usually determined by weight‑loss measurements, potentiodynamic polarisation, and EIS. For example, 1 mM benzotriazole (BTA) provides IE% > 90% in 0.1 M NaCl for pure aluminium <span class="citation">[6]</span>. The adsorption isotherm often follows Langmuir behaviour, indicating monolayer coverage.</p>
+
+  <h2>2.5. Cathodic Protection</h2>
+  <p>Cathodic protection (CP) is used in marine and buried structures to prevent corrosion by making the aluminium the cathode of an electrochemical cell. Two techniques are employed:</p>
+  <ul>
+    <li><strong>Sacrificial anodes:</strong> more active metals (e.g., Zn, Mg, Al‑Zn‑In alloys) are galvanically coupled to the aluminium. The anode corrodes preferentially, protecting the aluminium.</li>
+    <li><strong>Impressed current cathodic protection:</strong> an external DC power supply drives a current from an inert anode (e.g., platinum‑plated titanium) through the electrolyte to the aluminium.</li>
+  </ul>
+  <p>CP is highly effective for underground pipelines and ship hulls. The protection potential for aluminium should be maintained between −0.80 V and −1.10 V vs. Ag/AgCl to avoid over‑protection (which can cause hydrogen embrittlement and alkaline corrosion).</p>
+
+  <hr>
+
+  <h1>3. Advanced Protection Technologies</h1>
+
+  <h2>3.1. Plasma Electrolytic Oxidation (PEO) / Micro‑Arc Oxidation (MAO)</h2>
+  <p>PEO is a high‑voltage anodic process that produces thick (100–300 μm) ceramic‑like coatings with excellent adhesion and high hardness (800–2000 HV). The coatings are composed of α‑Al₂O₃ and γ‑Al₂O₃ phases, offering superior wear and corrosion resistance compared to conventional anodizing. Recent work by Yerokhin et al. <span class="citation">[7]</span> shows that PEO coatings on 7075‑T6 exhibit 10‑fold lower corrosion current density than hard anodised coatings.</p>
+
+  <div class="fig-container">
+    <img src="./img/peo_voltage_graph.png" alt="Plasma electrolytic oxidation voltage vs. time graph" style="max-width:70%;">
+    <div class="fig-caption">Voltage vs. time characteristic during plasma electrolytic oxidation (PEO) treatment of aluminium. The graph shows the transition from anodizing to micro-discharge regime.</div>
+  </div>
+
+  <div class="fig-container">
+    <img src="./img/peo_insulator_film.png" alt="Plasma electrolytic oxidation insulator film formation" style="max-width:70%;">
+    <div class="fig-caption">Schematic of plasma electrolytic oxidation (PEO) treatment showing the formation of a thick, ceramic-like oxide film on aluminium surface with plasma discharges.</div>
+  </div>
+
+  <h2>3.2. Sol‑Gel Coatings</h2>
+  <p>Sol‑gel derived coatings (based on organosilanes or zirconates) are environmentally friendly and can be applied by dipping or spraying. These hybrid organic‑inorganic coatings provide dense, thin films (1–5 μm) that serve as both barrier and adhesion‑promoting layers. Corrosion resistance is enhanced by the addition of corrosion inhibitors (e.g., Ce³⁺, Zr⁴⁺) within the sol‑gel matrix. The sol‑gel process involves hydrolysis and condensation reactions of metal alkoxides, resulting in a cross-linked network that bonds to the aluminium surface via M-O-Al bonds.</p>
+
+  <div class="fig-container">
+    <img src="./img/sol_gel_coating.png" alt="Schematic of sol-gel coating process on aluminium" style="max-width:60%;">
+    <div class="fig-caption">Schematic of sol‑gel coating process on aluminium. The precursor solution is applied by dipping or spraying, followed by curing to form a dense, protective hybrid organic‑inorganic layer.</div>
+  </div>
+
+  <h2>3.3. Smart Coatings and Self‑Healing</h2>
+  <p>Smart coatings incorporate microcapsules or nanocontainers loaded with corrosion inhibitors that release upon mechanical damage or pH change, providing autonomous corrosion protection. For example, mesoporous silica nanoparticles loaded with benzotriazole have been incorporated into epoxy coatings on 2024‑T3 aluminium, showing self‑healing behaviour in salt‑spray tests <span class="citation">[8]</span>.</p>
+
+  <hr>
+
+  <h1>4. Comparison of Protection Methods</h1>
+  <table>
+    <tr><th>Method</th><th>Thickness (μm)</th><th>Hardness (HV)</th><th>Corrosion Resistance (Salt Spray, h)</th><th>Applications</th></tr>
+    <tr><td>Anodizing (Type II)</td><td>5–25</td><td>150–250</td><td>200–500 (sealed)</td><td>Architectural, decorative</td></tr>
+    <tr><td>Hard Anodizing (Type III)</td><td>40–150</td><td>300–600</td><td>&gt;1000</td><td>Aerospace, automotive, hydraulic</td></tr>
+    <tr><td>Chromate Conversion</td><td>0.5–1.5</td><td>—</td><td>150–500</td><td>Electronics, paint base</td></tr>
+    <tr><td>Zirconium Conversion</td><td>0.2–1.0</td><td>—</td><td>150–300</td><td>Env. compliant alternative</td></tr>
+    <tr><td>Epoxy Primer + PU Topcoat</td><td>60–200</td><td>—</td><td>500–1000</td><td>Marine, industrial</td></tr>
+    <tr><td>PEO (MAO)</td><td>100–300</td><td>800–2000</td><td>&gt;1500</td><td>Aerospace, automotive, wear-resistant</td></tr>
+    <tr><td>Sol‑Gel</td><td>1–5</td><td>—</td><td>200–500</td><td>Env. compliant, adhesion promoter</td></tr>
+  </table>
+  <p><em>Values are approximate and depend on alloy and process conditions.</em></p>
+
+  <hr>
+
+  <h1>5. Conclusions</h1>
+  <p>Protecting aluminium from corrosion is essential for ensuring the longevity and safety of engineering components. A combination of protective methods—such as anodizing with sealing, conversion coatings, organic barrier coats, and cathodic protection—is often required to achieve the desired service life. The choice of protection strategy depends on the alloy, environment, mechanical requirements, and cost. Ongoing research into environmentally benign conversion coatings, smart‑release systems, and advanced anodic processes continues to push the performance frontiers. Critical factors such as coating adhesion, defect density, and long‑term durability under cyclic exposure must be characterised using accelerated testing (salt‑spray, humidity, cyclic corrosion) and electrochemical techniques (EIS, polarisation, SKP).</p>
+
+  <hr>
+
+  <h1>6. References</h1>
+  <ul>
+    <li>[1] S. Szklarska‑Śmiałowska, <em>Corrosion of Aluminium and its Alloys</em>, Elsevier, 1999.</li>
+    <li>[2] F. Keller, M. S. Hunter, D. L. Robinson, <em>J. Electrochem. Soc.</em> 100 (1953) 411.</li>
+    <li>[3] G. E. Thompson, <em>Thin Solid Films</em> 297 (1997) 192.</li>
+    <li>[4] L. Fedrizzi, F. Deflorian, P. L. Bonora, <em>Electrochim. Acta</em> 46 (2001) 3775.</li>
+    <li>[5] W. Funke, <em>Prog. Org. Coat.</em> 28 (1996) 81.</li>
+    <li>[6] A. M. Fekry, <em>Corros. Sci.</em> 52 (2010) 3197.</li>
+    <li>[7] A. L. Yerokhin et al., <em>Surf. Coat. Technol.</em> 122 (1999) 73.</li>
+    <li>[8] S. V. Lamaka et al., <em>Electrochem. Commun.</em> 10 (2008) 259.</li>
+  </ul>
+
+  <hr>
+
+
+
+  <!-- ============================================ -->
+  <!-- INTERACTIVE MENU (same as ORG.html)          -->
+  <!-- ============================================ -->
+  <div class="menu" id="menu">
+    <table id="menu-table"></table>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- SCRIPTS (TOC + word linking)                 -->
+  <!-- ============================================ -->
+  <script>
+    // ——— Table of Contents ———
+    document.addEventListener("DOMContentLoaded", function () {
+      const headings = document.querySelectorAll("large, h1, h2, h3, h4");
+      if (headings.length === 0) return;
+
+      const tocContainer = document.createElement("div");
+      tocContainer.id = "table-of-contents";
+      tocContainer.innerHTML = `
+        <div class="toc-header"><h2>Contents</h2></div>
+        <div class="toc-content"><ul></ul></div>
+      `;
+
+      const list = tocContainer.querySelector("ul");
+      let lastLevels = { large: list, h1: null, h2: null, h3: null, h4: null };
+
+      headings.forEach((heading, index) => {
+        const anchorId = `heading-${index}`;
+        heading.id = anchorId;
+
+        const listItem = document.createElement("li");
+        const link = document.createElement("a");
+        link.href = `#${anchorId}`;
+        link.innerText = heading.innerText;
+        listItem.appendChild(link);
+
+        let currentList;
+        switch (heading.tagName.toLowerCase()) {
+          case "large":
+            listItem.classList.add("main-item");
+            list.appendChild(listItem);
+            lastLevels.large = document.createElement("ul");
+            listItem.appendChild(lastLevels.large);
+            lastLevels.h1 = lastLevels.h2 = lastLevels.h3 = lastLevels.h4 = null;
+            break;
+          case "h1":
+            listItem.classList.add("sub-item");
+            currentList = lastLevels.large || list;
+            currentList.appendChild(listItem);
+            lastLevels.h1 = document.createElement("ul");
+            listItem.appendChild(lastLevels.h1);
+            lastLevels.h2 = lastLevels.h3 = lastLevels.h4 = null;
+            break;
+          case "h2":
+            listItem.classList.add("sub-sub-item");
+            currentList = lastLevels.h1 || lastLevels.large || list;
+            currentList.appendChild(listItem);
+            lastLevels.h2 = document.createElement("ul");
+            listItem.appendChild(lastLevels.h2);
+            lastLevels.h3 = lastLevels.h4 = null;
+            break;
+          case "h3":
+            listItem.classList.add("sub-sub-sub-item");
+            currentList = lastLevels.h2 || lastLevels.h1 || lastLevels.large || list;
+            currentList.appendChild(listItem);
+            lastLevels.h3 = document.createElement("ul");
+            listItem.appendChild(lastLevels.h3);
+            lastLevels.h4 = null;
+            break;
+          case "h4":
+            listItem.classList.add("sub-sub-sub-sub-item");
+            currentList = lastLevels.h3 || lastLevels.h2 || lastLevels.h1 || lastLevels.large || list;
+            currentList.appendChild(listItem);
+            lastLevels.h4 = document.createElement("ul");
+            listItem.appendChild(lastLevels.h4);
+            break;
+        }
+      });
+
+      document.body.appendChild(tocContainer);
+    });
+
+    // ——— Word linking (hover) ———
+    document.addEventListener("DOMContentLoaded", function () {
+      const headers = document.querySelectorAll("h1, h2, h3, large, h4, strong");
+      const paragraphs = document.querySelectorAll("p, li, th, td");
+      const menu = document.getElementById("menu");
+      const menuTable = document.getElementById("menu-table");
+      let selectedLinks = [];
+
+      let headerWords = new Map();
+
+      headers.forEach(header => {
+        if (!header.id) header.id = "header-" + Math.random().toString(36).substr(2, 9);
+        header.textContent.split(/\s+/).forEach(word => {
+          let key = word.toLowerCase();
+          if (!headerWords.has(key)) {
+            headerWords.set(key, []);
+          }
+          headerWords.get(key).push({ id: header.id, text: header.textContent, element: header });
+        });
+      });
+
+      paragraphs.forEach(element => {
+        element.innerHTML = element.innerHTML.replace(/\b(\w+)\b/g, function (match) {
+          let lowerMatch = match.toLowerCase();
+          if (headerWords.has(lowerMatch) && lowerMatch !== "ve") {
+            return `<u data-word="${lowerMatch}">${match}</u>`;
+          }
+          return match;
+        });
+      });
+
+      document.body.addEventListener("mouseover", function (event) {
+        if (event.target.tagName === "U") {
+          let word = event.target.getAttribute("data-word");
+          selectedLinks = headerWords.get(word);
+
+          if (selectedLinks && selectedLinks.length > 0) {
+            selectedLinks.sort((a, b) => a.element.getBoundingClientRect().top - b.element.getBoundingClientRect().top);
+            menuTable.innerHTML = "";
+
+            selectedLinks.forEach(item => {
+              let row = document.createElement("tr");
+              let cell = document.createElement("td");
+              cell.textContent = item.text;
+              cell.onclick = () => {
+                location.href = `#${selectedLinks[0].id}`;
+                menu.style.display = "none";
+              };
+              row.appendChild(cell);
+              menuTable.appendChild(row);
+            });
+
+            menu.style.display = "block";
+            menu.style.left = event.pageX + "px";
+            menu.style.top = (event.pageY + 15) + "px";
+          }
+        }
+      });
+
+      document.body.addEventListener("mouseout", function (event) {
+        if (event.target.tagName === "U") {
+          setTimeout(() => {
+            if (!menu.matches(":hover")) {
+              menu.style.display = "none";
+            }
+          }, 100);
+        }
+      });
+
+      document.body.addEventListener("click", function (event) {
+        if (!menu.contains(event.target) && event.target.tagName !== "U") {
+          menu.style.display = "none";
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

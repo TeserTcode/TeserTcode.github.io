@@ -81,6 +81,16 @@
             font-size: 1.2em;
             color: #666;
         }
+        /* folder label style - minimal, keeps existing look */
+        .folder-label {
+            grid-column: 1 / -1;
+            font-weight: bold;
+            color: #444;
+            padding: 8px 0 4px 4px;
+            border-bottom: 2px solid #ddd;
+            margin-bottom: 4px;
+            font-size: 1.1em;
+        }
     </style>
 </head>
 <body>
@@ -107,63 +117,96 @@
             });
         }
 
-        // Function to find all available images
-        async function findAvailableImages() {
-            const extensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
-            const foundImages = [];
-            
-            // First check for named images (if you still want some specific ones)
-            const namedImages = ["sudbg", "resistbg1", "logo", "inductorbg", "epic1", 
-                               "diodebg", "capacitorbg", "bgssad", "basee", "ABREbg", 
-                               "7048bg", "7024bg", "2048bg", "plantelligence", "flowers"];
-            
-            for (const name of namedImages) {
+        // Scan a folder for images with given extensions and base names
+        async function scanFolder(folderPath, extensions, baseNames) {
+            const found = [];
+            for (const name of baseNames) {
                 for (const ext of extensions) {
-                    const url = `./${name}${ext}`;
+                    const url = `${folderPath}/${name}${ext}`;
                     if (await checkImage(url)) {
-                        foundImages.push({name, url});
+                        found.push({ name: name, url: url, folder: folderPath });
                         break;
                     }
                 }
             }
-            
-            // Then check for numbered images (0-17 as in your original code)
-            for (let i = 0; i <= 17; i++) {
-                for (const ext of extensions) {
-                    const url = `./${i}${ext}`;
-                    if (await checkImage(url)) {
-                        foundImages.push({name: i.toString(), url});
-                        break;
-                    }
-                }
-            }
-            
-            return foundImages;
+            return found;
         }
 
-        // Load and display all available images
+        // Get all subfolders (by trying common folder names + numbered)
+        async function getSubfolders() {
+            const folderCandidates = new Set();
+            // Common folder names
+            const common = ['images', 'img', 'photos', 'pics', 'gallery', 'assets', 'media', 'pictures', 'sub', 'folder', 'static', 'bg', 'icons', 'thumb'];
+            for (const f of common) folderCandidates.add(f);
+            // Numbered folders 0-20
+            for (let i = 0; i <= 20; i++) folderCandidates.add(String(i));
+            // Also check root (./) as a folder
+            folderCandidates.add('.');
+
+            const existing = [];
+            const extensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
+            // Base names to check in each folder
+            const baseNames = [
+                'sudbg', 'resistbg1', 'logo', 'inductorbg', 'epic1', 
+                'diodebg', 'capacitorbg', 'bgssad', 'basee', 'ABREbg', 
+                '7048bg', '7024bg', '2048bg', 'plantelligence', 'flowers',
+                // numbered names 0-30
+                ...Array.from({length: 31}, (_, i) => String(i)),
+                // common names
+                'photo', 'img', 'image', 'pic', 'snapshot', 'DSC', 'PICT', 'gallery', 'bg', 'hero', 'thumb'
+            ];
+
+            for (const folder of folderCandidates) {
+                const path = folder === '.' ? '.' : `./${folder}`;
+                const images = await scanFolder(path, extensions, baseNames);
+                if (images.length > 0) {
+                    existing.push({ folder: folder === '.' ? 'root' : folder, path: path, images: images });
+                }
+            }
+            return existing;
+        }
+
+        // Load and display all available images from subfolders, ordered by count (least first)
         async function loadGallery() {
-            loadingDiv.textContent = "Scanning for images...";
-            const availableImages = await findAvailableImages();
+            loadingDiv.textContent = "Scanning for images in subfolders...";
             
-            if (availableImages.length === 0) {
-                loadingDiv.textContent = "No images found in the directory.";
+            const folderData = await getSubfolders();
+            
+            if (folderData.length === 0) {
+                loadingDiv.textContent = "No images found in any subfolder.";
                 return;
             }
-            
+
+            // Sort folders by image count (least first)
+            folderData.sort((a, b) => a.images.length - b.images.length);
+
             loadingDiv.style.display = "none";
-            
-            availableImages.forEach(image => {
-                const img = document.createElement("img");
-                img.src = image.url;
-                img.alt = image.name;
-                img.addEventListener('click', () => {
-                    fullscreenImage.src = img.src;
-                    filenameDiv.textContent = image.name;
-                    fullscreenOverlay.style.display = 'flex';
-                });
-                galleryDiv.appendChild(img);
-            });
+
+            // For each folder, add a label and its images
+            for (const folder of folderData) {
+                // Folder label
+                const label = document.createElement("div");
+                label.className = "folder-label";
+                label.textContent = `📁 ${folder.folder} (${folder.images.length} image${folder.images.length > 1 ? 's' : ''})`;
+                galleryDiv.appendChild(label);
+
+                // Images in this folder
+                for (const imgData of folder.images) {
+                    const img = document.createElement("img");
+                    img.src = imgData.url;
+                    img.alt = imgData.name;
+                    // Store folder info for fullscreen display
+                    img.dataset.folder = folder.folder;
+                    img.dataset.filename = imgData.name;
+                    img.addEventListener('click', () => {
+                        fullscreenImage.src = img.src;
+                        // Show filename + folder info
+                        filenameDiv.textContent = `${imgData.name}  (from: ${folder.folder})`;
+                        fullscreenOverlay.style.display = 'flex';
+                    });
+                    galleryDiv.appendChild(img);
+                }
+            }
         }
 
         fullscreenOverlay.addEventListener('click', () => {
