@@ -81,7 +81,6 @@
             font-size: 1.2em;
             color: #666;
         }
-        /* folder label style - minimal, keeps existing look */
         .folder-label {
             grid-column: 1 / -1;
             font-weight: bold;
@@ -132,20 +131,19 @@
             return found;
         }
 
-        // Get all subfolders (by trying common folder names + numbered)
+        // Get images from specific subfolders list
         async function getSubfolders() {
-            const folderCandidates = new Set();
-            // Common folder names
-            const common = ['images', 'img', 'photos', 'pics', 'gallery', 'assets', 'media', 'pictures', 'sub', 'folder', 'static', 'bg', 'icons', 'thumb'];
-            for (const f of common) folderCandidates.add(f);
-            // Numbered folders 0-20
-            for (let i = 0; i <= 20; i++) folderCandidates.add(String(i));
-            // Also check root (./) as a folder
-            folderCandidates.add('.');
+            // EXACT list of subfolder names from user
+            const folderList = [
+                "corz", "unhappy", "coxeter", "doomd", "electricfish",
+                "img", "mine", "motor", "othercal", "perpcaln",
+                "polygraph", "polygraphold", "shark", "2048tiles"
+            ];
 
             const existing = [];
             const extensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
-            // Base names to check in each folder
+            
+            // Base names to check in each folder (includes the original named ones plus numbered)
             const baseNames = [
                 'sudbg', 'resistbg1', 'logo', 'inductorbg', 'epic1', 
                 'diodebg', 'capacitorbg', 'bgssad', 'basee', 'ABREbg', 
@@ -156,11 +154,11 @@
                 'photo', 'img', 'image', 'pic', 'snapshot', 'DSC', 'PICT', 'gallery', 'bg', 'hero', 'thumb'
             ];
 
-            for (const folder of folderCandidates) {
-                const path = folder === '.' ? '.' : `./${folder}`;
+            for (const folder of folderList) {
+                const path = `./${folder}`;
                 const images = await scanFolder(path, extensions, baseNames);
                 if (images.length > 0) {
-                    existing.push({ folder: folder === '.' ? 'root' : folder, path: path, images: images });
+                    existing.push({ folder: folder, path: path, images: images });
                 }
             }
             return existing;
@@ -182,7 +180,7 @@
 
             loadingDiv.style.display = "none";
 
-            // For each folder, add a label and its images
+            // For each dfolder, add a label and its images
             for (const folder of folderData) {
                 // Folder label
                 const label = document.createElement("div");

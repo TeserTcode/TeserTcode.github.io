@@ -1,251 +1,424 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Wigner 6j Geometry Viewer</title>
-
-<style>
-body {
-    margin: 0;
-    overflow: hidden;
-    background: #0b0b0e;
-    color: #ddd;
-    font-family: monospace;
-}
-#ui {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: rgba(0,0,0,0.65);
-    padding: 10px;
-    border-radius: 8px;
-}
-#readout {
-    position: absolute;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0,0,0,0.75);
-    padding: 6px 14px;
-    border-radius: 6px;
-    font-size: 13px;
-}
-label {
-    display: block;
-    font-size: 12px;
-}
-input[type=range] {
-    width: 160px;
-}
-</style>
-
-<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
-<script src="clrspc.js"></script>
-<script src="polyhedra.js"></script>
-<script src="mthfnc.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>wigner 6j · recoupling</title>
+  <style>
+    /* minimal, no rounding, no extra colors */
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #f0f0f0;
+      font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      max-width: 840px;
+      width: 100%;
+      background: white;
+      border: 1px solid #888;
+      padding: 24px 22px 28px;
+    }
+    h1 {
+      font-weight: 400;
+      font-size: 1.8rem;
+      margin-top: 0;
+      margin-bottom: 4px;
+      border-bottom: 1px solid #aaa;
+      padding-bottom: 6px;
+    }
+    .diagram-box {
+      background: #fafafa;
+      border: 1px solid #999;
+      padding: 16px 10px 6px 10px;
+      margin: 16px 0 18px 0;
+    }
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    .slider-panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px 20px;
+      border: 1px solid #aaa;
+      padding: 14px 16px;
+      background: #f7f7f7;
+      margin: 14px 0 12px 0;
+    }
+    .slider-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .slider-item .label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      border-bottom: 1px dotted #bbb;
+      padding-bottom: 2px;
+    }
+    .slider-item .label-row .big-J {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    .slider-item .label-row .small-j {
+      font-size: 0.85rem;
+      color: #333;
+    }
+    .slider-track {
+      position: relative;
+      width: 100%;
+      height: 20px;
+      margin: 2px 0;
+      border: 1px solid #aaa;
+      background: #e0e0e0;
+    }
+    .slider-track .gradient-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      pointer-events: none;
+    }
+    input[type="range"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 2;
+    }
+    .slider-track .thumb-label {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: #222;
+      color: white;
+      padding: 0 6px;
+      z-index: 1;
+      pointer-events: none;
+      border: 1px solid #444;
+    }
+    .val-badge {
+      background: #e0e0e0;
+      padding: 0 8px;
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+    .result-area {
+      border: 1px solid #222;
+      background: #f5f5f5;
+      padding: 10px 18px;
+      margin: 18px 0 8px 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 12px 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 1.1rem;
+    }
+    .result-label {
+      font-weight: 400;
+      color: #111;
+    }
+    .result-value {
+      background: #e8e8e8;
+      padding: 2px 14px;
+      font-weight: 500;
+    }
+    .sign-indicator {
+      font-weight: 600;
+      margin-left: auto;
+      font-family: system-ui;
+    }
+    .footnote {
+      margin-top: 18px;
+      border-top: 1px solid #aaa;
+      padding-top: 14px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    .formula-box {
+      background: #ececec;
+      padding: 8px 14px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border: 1px solid #999;
+    }
+    .inline-code {
+      background: #ddd;
+      padding: 0 6px;
+      font-family: monospace;
+    }
+    .meaning-box {
+      border: 1px solid #999;
+      padding: 8px 14px;
+      background: #f7f7f7;
+      margin-top: 10px;
+    }
+  </style>
 </head>
-
 <body>
-<div id="ui"></div>
-<div id="readout"></div>
+<div class="card">
+  <h1>wigner 6j · recoupling</h1>
+
+  <!-- diagram: only '+' inside, dashed lines connect a3-b, a2-b, a1-b -->
+  <div class="diagram-box">
+    <svg viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg">
+      <!-- triangle edges (solid) -->
+      <line x1="200" y1="36" x2="70" y2="230" stroke="#333" stroke-width="1.8" />
+      <line x1="200" y1="36" x2="330" y2="230" stroke="#333" stroke-width="1.8" />
+      <line x1="70" y1="230" x2="330" y2="230" stroke="#333" stroke-width="1.8" />
+      
+      <!-- dashed lines: a3-b, a2-b, a1-b -->
+      <line x1="70" y1="230" x2="200" y2="133" stroke="#333" stroke-width="1.8" stroke-dasharray="8 6" />
+      <line x1="330" y1="230" x2="200" y2="133" stroke="#333" stroke-width="1.8" stroke-dasharray="8 6" />
+      <line x1="200" y1="36" x2="200" y2="133" stroke="#333" stroke-width="1.8" stroke-dasharray="8 6" />
+
+      <!-- nodes: only '+' inside -->
+      <circle cx="200" cy="36" r="22" fill="#fff" stroke="#222" stroke-width="2.5" />
+      <text x="200" y="44" text-anchor="middle" fill="#000" font-size="24" font-weight="600">+</text>
+
+      <circle cx="330" cy="230" r="22" fill="#fff" stroke="#222" stroke-width="2.5" />
+      <text x="330" y="238" text-anchor="middle" fill="#000" font-size="24" font-weight="600">+</text>
+
+      <circle cx="70" cy="230" r="22" fill="#fff" stroke="#222" stroke-width="2.5" />
+      <text x="70" y="238" text-anchor="middle" fill="#000" font-size="24" font-weight="600">+</text>
+
+      <circle cx="200" cy="133" r="22" fill="#fff" stroke="#222" stroke-width="2.5" />
+      <text x="200" y="141" text-anchor="middle" fill="#000" font-size="24" font-weight="600">+</text>
+
+      <!-- edge labels: capital J outside, lowercase j inside -->
+      <!-- solid edges (outer triangle) -->
+      <text x="112" y="138" fill="#000" font-size="16" font-weight="600" transform="rotate(-6,112,138)">J₁</text>
+      <text x="288" y="138" fill="#000" font-size="16" font-weight="600" transform="rotate(6,288,138)">J₂</text>
+      <text x="200" y="262" fill="#000" font-size="16" font-weight="600">J₃</text>
+      
+      <!-- dashed edges (to centre) -->
+      <text x="108" y="190" fill="#000" font-size="16" font-weight="600" transform="rotate(-18,108,190)">J₁</text>
+      <text x="292" y="190" fill="#000" font-size="16" font-weight="600" transform="rotate(18,292,190)">J₂</text>
+      <text x="210" y="88" fill="#000" font-size="16" font-weight="600">J₃</text>
+    </svg>
+  </div>
+
+  <!-- sliders in 3x2: big J on top, small j below -->
+  <div class="slider-panel">
+    <!-- row 1: J1, J2, J3 -->
+    <div class="slider-item">
+      <div class="label-row"><span class="big-J">J₁</span><span class="val-badge" id="val-J1">5.0</span></div>
+      <div class="slider-track" id="track-J1"><div class="gradient-fill" id="grad-J1"></div><input type="range" id="sl-J1" min="0" max="10" step="0.5" value="5.0"><span class="thumb-label" id="thumb-J1">5.0</span></div>
+    </div>
+    <div class="slider-item">
+      <div class="label-row"><span class="big-J">J₂</span><span class="val-badge" id="val-J2">5.0</span></div>
+      <div class="slider-track" id="track-J2"><div class="gradient-fill" id="grad-J2"></div><input type="range" id="sl-J2" min="0" max="10" step="0.5" value="5.0"><span class="thumb-label" id="thumb-J2">5.0</span></div>
+    </div>
+    <div class="slider-item">
+      <div class="label-row"><span class="big-J">J₃</span><span class="val-badge" id="val-J3">5.0</span></div>
+      <div class="slider-track" id="track-J3"><div class="gradient-fill" id="grad-J3"></div><input type="range" id="sl-J3" min="0" max="10" step="0.5" value="5.0"><span class="thumb-label" id="thumb-J3">5.0</span></div>
+    </div>
+    <!-- row 2: j1, j2, j3 (lowercase) -->
+    <div class="slider-item">
+      <div class="label-row"><span class="small-j">j₁</span><span class="val-badge" id="val-j1">5.0</span></div>
+      <div class="slider-track" id="track-j1"><div class="gradient-fill" id="grad-j1"></div><input type="range" id="sl-j1" min="0" max="10" step="0.5" value="5.0"><span class="thumb-label" id="thumb-j1">5.0</span></div>
+    </div>
+    <div class="slider-item">
+      <div class="label-row"><span class="small-j">j₂</span><span class="val-badge" id="val-j2">5.0</span></div>
+      <div class="slider-track" id="track-j2"><div class="gradient-fill" id="grad-j2"></div><input type="range" id="sl-j2" min="0" max="10" step="0.5" value="5.0"><span class="thumb-label" id="thumb-j2">5.0</span></div>
+    </div>
+    <div class="slider-item">
+      <div class="label-row"><span class="small-j">j₃</span><span class="val-badge" id="val-j3">5.0</span></div>
+      <div class="slider-track" id="track-j3"><div class="gradient-fill" id="grad-j3"></div><input type="range" id="sl-j3" min="0" max="10" step="0.5" value="5.0"><span class="thumb-label" id="thumb-j3">5.0</span></div>
+    </div>
+  </div>
+
+  <!-- result -->
+  <div class="result-area">
+    <span class="result-label">6j symbol</span>
+    <span class="result-value" id="sixj-result">0.0000  (zero)</span>
+    <span class="sign-indicator" id="sign-indicator">⚪ zero</span>
+  </div>
+
+  <!-- formula and meaning -->
+  <div class="footnote">
+    <div class="formula-box">
+      { J₁ J₂ J₃ ; j₁ j₂ j₃ } = Δ(J₁,J₂,J₃) Δ(J₁,j₂,j₃) Δ(j₁,J₂,j₃) Δ(j₁,j₂,J₃) · Σₖ (−1)ᵏ (k+1)! / [ (k−a₁)! (k−a₂)! (k−a₃)! (k−a₄)! (b₁−k)! (b₂−k)! (b₃−k)! ]
+    </div>
+    <div class="meaning-box">
+      <strong>what does 6j mean?</strong> it appears in the quantum mechanics of angular momentum. 
+      when three angular momenta are coupled, there are two natural ways to combine them: 
+      first couple J₁ and J₂ to get J₃, or first couple j₁ and j₂ to get j₃. 
+      the 6j symbol is the overlap (recoupling coefficient) between these two coupling schemes. 
+      it depends on six angular momentum quantum numbers (three big J's and three small j's) 
+      and is closely related to the racah W-coefficient. it appears in perturbation theory, 
+      in the calculation of matrix elements of tensor operators, and in the theory of 
+      spectroscopic line strengths.
+    </div>
+  </div>
+</div>
 
 <script>
-/* ================= SCENE ================= */
-
-const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x0b0b0e, 5, 18);
-
-const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 100);
-camera.position.set(3.5, 3.2, 3.5);
-
-const renderer = new THREE.WebGLRenderer({ antialias:true });
-renderer.setSize(innerWidth, innerHeight);
-renderer.setPixelRatio(devicePixelRatio);
-document.body.appendChild(renderer.domElement);
-
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-
-/* ================= LIGHTING (BRIGHT + EVEN) ================= */
-
-// strong ambient so interior never dies
-scene.add(new THREE.AmbientLight(0xffffff, 0.85));
-
-// hemispheric fill (top / bottom balance)
-const hemi = new THREE.HemisphereLight(0xffffff, 0x404060, 0.9);
-scene.add(hemi);
-
-// key lights from multiple directions
-[
-    [ 6, 6, 6 ],
-    [ -6, 4, 3 ],
-    [ 3, -6, 4 ],
-    [ -4, -3, -6 ]
-].forEach(p=>{
-    const l = new THREE.DirectionalLight(0xffffff, 0.7);
-    l.position.set(...p);
-    scene.add(l);
-});
-
-/* ================= UI ================= */
-
-const spins = [10,10,10,10,10,10];
-const names = ["j1","j2","j3","j4","j5","j6"];
-const ui = document.getElementById("ui");
-
-names.forEach((n,i)=>{
-    const lab = document.createElement("label");
-    lab.textContent = `${n} = 10`;
-    const s = document.createElement("input");
-    s.type = "range";
-    s.min = 0;
-    s.max = 10;
-    s.step = 0.5;
-    s.value = 10;
-    s.oninput = ()=>{
-        spins[i] = parseFloat(s.value);
-        lab.textContent = `${n} = ${spins[i]}`;
-        updateGeometry();
-    };
-    ui.appendChild(lab);
-    ui.appendChild(s);
-});
-
-/* ================= SHADER ================= */
-
-const material = new THREE.ShaderMaterial({
-    transparent: true,
-    side: THREE.DoubleSide,
-    uniforms: {
-        amp:   { value: 1.0 },
-        phase: { value: 0.0 }
-    },
-    vertexShader: `
-        varying vec3 vN;
-        void main(){
-            vN = normalize(normalMatrix * normal);
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
-        }
-    `,
-    fragmentShader: `
-        varying vec3 vN;
-        uniform float amp;
-        uniform float phase;
-
-        vec3 hsv2rgb(vec3 c){
-            vec3 p = abs(fract(c.xxx + vec3(0,2.0/3.0,1.0/3.0))*6.0 - 3.0);
-            return c.z * mix(vec3(1.0), clamp(p-1.0,0.0,1.0), c.y);
-        }
-
-        void main(){
-            vec3 n = gl_FrontFacing ? vN : -vN;
-
-            float light =
-                0.6 +
-                0.4 * abs(dot(n, normalize(vec3(0.2,0.6,1.0))));
-
-            vec3 base = vec3(0.95, 0.7, 0.35);
-            vec3 phaseCol = hsv2rgb(vec3(mod(phase,6.28318)/6.28318, 0.9, 1.0));
-            vec3 col = mix(base, phaseCol, 0.65);
-
-            gl_FragColor = vec4(col * light, 0.35 + 0.65*amp);
-        }
-    `
-});
-
-/* ================= GEOMETRY ================= */
-
-const geom = new THREE.BufferGeometry();
-const mesh = new THREE.Mesh(geom, material);
-scene.add(mesh);
-
-function L(j){ return Math.sqrt(j*(j+1)); }
-
-const readout = document.getElementById("readout");
-
-function sci(x){
-    if (x === 0) return "0.0e+0";
-    const e = Math.floor(Math.log10(Math.abs(x)));
-    const m = x / Math.pow(10, e);
-    return `${m.toFixed(4)}e${e>=0?"+":""}${e}`;
-}
-
-function updateGeometry(){
-    const [a,b,c,d,e,f] = spins.map(L);
-
-    const v0 = new THREE.Vector3(0,0,0);
-    const v1 = new THREE.Vector3(a,0,0);
-
-    const x2 = (b*b + a*a - c*c)/(2*a);
-    const y2 = Math.sqrt(Math.max(0,b*b - x2*x2));
-    const v2 = new THREE.Vector3(x2,y2,0);
-
-    const ex = new THREE.Vector3().subVectors(v1,v0).normalize();
-    const ey = new THREE.Vector3().subVectors(v2,v0);
-    ey.sub(ex.clone().multiplyScalar(ey.dot(ex))).normalize();
-    const ez = new THREE.Vector3().crossVectors(ex,ey);
-
-    const i = ex.dot(v2);
-    const j = ey.dot(v2);
-
-    const x = (d*d - e*e + a*a)/(2*a);
-    const y = (d*d - f*f + i*i + j*j - 2*i*x)/(2*j);
-    const z2 = d*d - x*x - y*y;
-    const z = Math.sqrt(Math.max(0,z2));
-
-    const v3 = v0.clone()
-        .add(ex.clone().multiplyScalar(x))
-        .add(ey.clone().multiplyScalar(y))
-        .add(ez.clone().multiplyScalar(z));
-
-    const verts = new Float32Array([
-        ...v0.toArray(), ...v1.toArray(), ...v2.toArray(),
-        ...v0.toArray(), ...v1.toArray(), ...v3.toArray(),
-        ...v0.toArray(), ...v2.toArray(), ...v3.toArray(),
-        ...v1.toArray(), ...v2.toArray(), ...v3.toArray()
-    ]);
-
-    geom.setAttribute("position", new THREE.BufferAttribute(verts,3));
-    geom.computeVertexNormals();
-
-    const val = wigner6j(
-        spins[0], spins[1], spins[2],
-        spins[3], spins[4], spins[5]
-    );
-
-    let re = val, im = 0;
-    if (typeof val === "object") {
-        re = val.re ?? val.real ?? 0;
-        im = val.im ?? val.imag ?? 0;
+  (function() {
+    // ----- math helpers -----
+    function factorial(n) {
+      if (n < 0) return NaN;
+      if (n === 0 || n === 1) return 1;
+      let r = 1;
+      for (let i = 2; i <= n; i++) r *= i;
+      return r;
     }
 
-    material.uniforms.amp.value   = Math.min(1, Math.hypot(re,im));
-    material.uniforms.phase.value = Math.atan2(im,re);
+    function delta(a, b, c) {
+      if (a + b < c || a + c < b || b + c < a) return 0;
+      const num = factorial(a + b - c) * factorial(a + c - b) * factorial(b + c - a);
+      const den = factorial(a + b + c + 1);
+      if (den === 0) return 0;
+      return Math.sqrt(num / den);
+    }
 
-    readout.textContent =
-        `6j = ${sci(re)} ${im>=0?"+":"-"} ${sci(Math.abs(im))} i`;
-}
+    function wigner6j(J1, J2, J3, j1, j2, j3) {
+      // triangle conditions
+      const tri = (a,b,c) => (a + b >= c && a + c >= b && b + c >= a);
+      if (!tri(J1,J2,J3) || !tri(J1,j2,j3) || !tri(j1,J2,j3) || !tri(j1,j2,J3)) {
+        return { re: 0, im: 0 };
+      }
 
-updateGeometry();
+      const a1 = J1 + J2 + J3;
+      const a2 = J1 + j2 + j3;
+      const a3 = j1 + J2 + j3;
+      const a4 = j1 + j2 + J3;
+      const b1 = J1 + J2 + j1 + j2;
+      const b2 = J1 + J3 + j1 + j3;
+      const b3 = J2 + J3 + j2 + j3;
 
-/* ================= LOOP ================= */
+      let sum = 0;
+      let kmin = Math.max(0, a1, a2, a3, a4);
+      let kmax = Math.min(b1, b2, b3);
+      for (let k = kmin; k <= kmax; k++) {
+        const d1 = factorial(k - a1);
+        const d2 = factorial(k - a2);
+        const d3 = factorial(k - a3);
+        const d4 = factorial(k - a4);
+        const d5 = factorial(b1 - k);
+        const d6 = factorial(b2 - k);
+        const d7 = factorial(b3 - k);
+        if (!isFinite(d1) || !isFinite(d2) || !isFinite(d3) || !isFinite(d4) ||
+            !isFinite(d5) || !isFinite(d6) || !isFinite(d7)) continue;
+        if (d1 === 0 || d2 === 0 || d3 === 0 || d4 === 0 || d5 === 0 || d6 === 0 || d7 === 0) continue;
+        const sign = (k % 2 === 0) ? 1 : -1;
+        const term = sign * factorial(k + 1) / (d1 * d2 * d3 * d4 * d5 * d6 * d7);
+        sum += term;
+      }
+      const prefactor = delta(J1,J2,J3) * delta(J1,j2,j3) * delta(j1,J2,j3) * delta(j1,j2,J3);
+      const val = prefactor * sum;
+      return { re: val, im: 0 };
+    }
 
-function animate(){
-    requestAnimationFrame(animate);
-    mesh.rotation.y += 0.003;
-    controls.update();
-    renderer.render(scene,camera);
-}
-animate();
+    // ----- dom refs -----
+    // order: J1, J2, J3, j1, j2, j3
+    const sliderIds = ['sl-J1','sl-J2','sl-J3','sl-j1','sl-j2','sl-j3'];
+    const valIds = ['val-J1','val-J2','val-J3','val-j1','val-j2','val-j3'];
+    const thumbIds = ['thumb-J1','thumb-J2','thumb-J3','thumb-j1','thumb-j2','thumb-j3'];
+    const gradIds = ['grad-J1','grad-J2','grad-J3','grad-j1','grad-j2','grad-j3'];
+    const trackIds = ['track-J1','track-J2','track-J3','track-j1','track-j2','track-j3'];
 
-window.addEventListener("resize",()=>{
-    camera.aspect = innerWidth/innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(innerWidth,innerHeight);
-});
+    const sliders = sliderIds.map(id => document.getElementById(id));
+    const valSpans = valIds.map(id => document.getElementById(id));
+    const thumbSpans = thumbIds.map(id => document.getElementById(id));
+    const gradDivs = gradIds.map(id => document.getElementById(id));
+    const trackDivs = trackIds.map(id => document.getElementById(id));
+
+    const resultSpan = document.getElementById('sixj-result');
+    const signIndicator = document.getElementById('sign-indicator');
+
+    // ----- update gradients and result -----
+    function updateAll() {
+      // get current values
+      const vals = sliders.map(s => parseFloat(s.value));
+      // update labels and thumbs
+      vals.forEach((v, i) => {
+        valSpans[i].textContent = v.toFixed(1);
+        thumbSpans[i].textContent = v.toFixed(1);
+        // position thumb label at center of track (it's already centered via CSS)
+      });
+
+      // compute 6j with (J1,J2,J3, j1,j2,j3)
+      const [J1, J2, J3, j1, j2, j3] = vals;
+      const { re } = wigner6j(J1, J2, J3, j1, j2, j3);
+      const value = re;
+      const eps = 1e-12;
+
+      let display, signText;
+      if (Math.abs(value) < eps) {
+        display = '0.0000  (zero)';
+        signText = '⚪ zero';
+      } else if (value > 0) {
+        display = value.toFixed(6) + '  (positive)';
+        signText = '🟢 positive';
+      } else {
+        display = value.toFixed(6) + '  (negative)';
+        signText = '🔴 negative';
+      }
+      resultSpan.textContent = display;
+      signIndicator.textContent = signText;
+
+      // ---- update each slider gradient ----
+      // for each slider, evaluate 6j over all possible values (0 to 10, step 0.5) 
+      // while keeping other 5 fixed, and color the track accordingly.
+      const allVals = vals.slice(); // copy
+      const steps = [];
+      for (let s = 0; s <= 10; s += 0.5) steps.push(s);
+
+      sliders.forEach((sl, idx) => {
+        const track = trackDivs[idx];
+        const grad = gradDivs[idx];
+        // build color map for this slider
+        const colors = [];
+        const fixedOthers = allVals.slice();
+        // we will replace fixedOthers[idx] with each step
+        for (let si = 0; si < steps.length; si++) {
+          fixedOthers[idx] = steps[si];
+          const [a, b, c, d, e, f] = fixedOthers;
+          const res = wigner6j(a, b, c, d, e, f);
+          const v = res.re;
+          let col;
+          if (Math.abs(v) < 1e-12) col = '#cccccc';
+          else if (v > 0) col = '#4caf50';
+          else col = '#f44336';
+          colors.push(col);
+        }
+        // build gradient string
+        const gradStr = colors.map((c, i) => {
+          const pct = (i / (colors.length - 1)) * 100;
+          return `${c} ${pct.toFixed(1)}%`;
+        }).join(', ');
+        grad.style.background = `linear-gradient(to right, ${gradStr})`;
+        // set track border
+        track.style.border = '1px solid #888';
+      });
+    }
+
+    sliders.forEach(s => s.addEventListener('input', updateAll));
+    updateAll();
+  })();
 </script>
 </body>
 </html>

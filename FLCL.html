@@ -1,0 +1,72 @@
+<!doctype html>
+<html><body>
+
+<div id=c></div><br>
+<input id=r type=range min=0 max=1 step=.001 value=0>
+<span id=t>1×</span>
+<button id=set>Set</button>
+<button id=now>Now</button>
+
+<script>
+P='./othercal/loc/';
+W='mon tue wed thu fri sat sun'.split(' ');
+M='jan feb mar apr may jun jul aug sep oct nov dec'.split(' ');
+
+let T=Date.now(),S=1,L=performance.now(),I=[];
+
+for(x of['a','b','c','|','d','e','f','|','g','h']){
+ if(x=='|')c.append(' | ');
+ else{
+  i=new Image(60,60);
+  i.style.border='1px solid';
+  c.append(i);
+  I.push(i);
+ }
+}
+
+q=n=>('0'+n).slice(-2);
+
+function u(){
+ d=new Date(T);
+ y=d.getFullYear()+'';
+ v=[
+  q(d.getSeconds()),
+  q(d.getMinutes()),
+  q(d.getHours()),
+  q(d.getDate()),
+  W[(d.getDay()+6)%7],
+  M[d.getMonth()],
+  y.slice(0,2),
+  y.slice(2)
+ ];
+ v.map((x,i)=>I[i].src=P+x+'.png');
+ t.innerText=S>999?S.toExponential(2)+'×':S.toFixed(S<100?1:0)+'×';
+}
+
+function f(n){
+ T+=(n-L)*S;
+ L=n;
+ u();
+ requestAnimationFrame(f);
+}
+
+r.oninput=_=>{S=31536000**r.value;u()}
+
+now.onclick=_=>T=Date.now()
+
+set.onclick=_=>{
+ d=new Date(T);
+ y=prompt('Year',d.getFullYear()); if(y==null)return;
+ m=prompt('Month',d.getMonth()+1); if(m==null)return;
+ da=prompt('Day',d.getDate()); if(da==null)return;
+ h=prompt('Hour',d.getHours()); if(h==null)return;
+ mi=prompt('Minute',d.getMinutes()); if(mi==null)return;
+ s=prompt('Second',d.getSeconds()); if(s==null)return;
+ T=new Date(y,m-1,da,h,mi,s).getTime();
+}
+
+u();
+requestAnimationFrame(f);
+</script>
+
+</body></html>

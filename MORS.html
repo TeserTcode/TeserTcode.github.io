@@ -19,17 +19,17 @@
     .small{font-size:0.9rem}
     .flex{display:flex; gap: 8px; flex-wrap: wrap; align-items: center}
     .mt-2 { margin-top: 8px; }
-    .mb-1 { margin-bottom: 4px; }
     .slider-group { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
     .slider-item { flex: 1; min-width: 150px; }
     .slider-item label { margin-top: 0; font-size: 0.85rem; }
     .morse-input-area { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
     .morse-input-area input { flex: 1; min-width: 200px; padding: 8px; font-family: monospace; font-size: 1rem; }
+    .example-hint { font-size: 0.85rem; color: #666; margin-top: 4px; }
   </style>
 </head>
 <body>
   <h1>Morse Code — Encoder / Decoder</h1>
-  <p>Hold <strong>Space</strong> or click &amp; hold the big button to send a signal. Release to stop. Press <strong>Clear</strong> to decode the recorded pattern. You can also type text to encode or paste Morse directly.</p>
+  <p>Hold <strong>Space</strong> or click &amp; hold the big button. Release to stop. Press <strong>Clear</strong> to decode.</p>
 
   <div class="panel">
     <div class="controls">
@@ -43,13 +43,13 @@
     <div class="slider-group mt-2">
       <div class="slider-item">
         <label>Unit time (ms) — dot/dash threshold</label>
-        <input id="unitRange" type="range" min="60" max="500" value="200">
-        <div class="small"><span id="unitLabel">200</span> ms</div>
+        <input id="unitRange" type="range" min="30" max="300" value="100">
+        <div class="small"><span id="unitLabel">100</span> ms</div>
       </div>
       <div class="slider-item">
-        <label>New character gap (× unit)</label>
-        <input id="charGapRange" type="range" min="1" max="5" value="3" step="0.5">
-        <div class="small"><span id="charGapLabel">3</span> × unit</div>
+        <label>New letter gap (× unit)</label>
+        <input id="charGapRange" type="range" min="1.5" max="5" value="2.5" step="0.1">
+        <div class="small"><span id="charGapLabel">2.5</span> × unit</div>
       </div>
       <div class="slider-item">
         <label>New word gap (× unit)</label>
@@ -58,7 +58,7 @@
       </div>
     </div>
 
-    <label class="small">Live timeline (press/release events)</label>
+    <label class="small">Live timeline</label>
     <div id="timeline" class="morse-visual">(no events)</div>
 
     <label class="small">Interpreted Morse (• = dot, — = dash, / = word gap)</label>
@@ -87,10 +87,11 @@
   <div class="panel">
     <label>Paste or type Morse code (use . - / and spaces)</label>
     <div class="morse-input-area">
-      <input id="morseInput" placeholder='e.g. "... --- ..." or ".--. .- ... - ."'>
+      <input id="morseInput" placeholder='e.g. "... --- ..."'>
       <button id="decodeMorseBtn" class="big-btn">Decode Morse</button>
       <button id="clearMorseBtn" class="big-btn">Clear</button>
     </div>
+    <div class="example-hint">Tip: For SOS, type "... --- ..." or "••• ——— •••"</div>
     <label class="small">Decoded result</label>
     <div id="morseDecodeResult" class="morse-visual">—</div>
   </div>
@@ -173,6 +174,7 @@
       const charGap = Number(charGapRange.value) * unit;
       const wordGap = Number(wordGapRange.value) * unit;
       
+      // Build signals array
       const signals = [];
       let i = 0;
       while (i < events.length && events[i].type !== 'down') i++;
@@ -193,32 +195,27 @@
         i += 2;
       }
 
-      // Build morse: collect dots/dashes as a string, with spaces between letters, / between words
+      // Build morse with proper gap detection
       let currentLetter = '';
       const resultParts = [];
       
       for (let j = 0; j < signals.length; j++) {
         const s = signals[j];
         if (s.press !== undefined) {
+          // Dot if press duration <= unit, dash if > unit
           currentLetter += (s.press <= unit) ? '.' : '-';
         } else if (s.gap !== undefined) {
           if (s.gap < unit) {
-            // intra-element gap: nothing
+            // Intra-element gap: do nothing
+            continue;
           } else if (s.gap < charGap) {
-            // letter gap: push current letter, start new
+            // Letter gap: push current letter, start new
             if (currentLetter) {
               resultParts.push(currentLetter);
               currentLetter = '';
             }
-          } else if (s.gap < wordGap) {
-            // word gap
-            if (currentLetter) {
-              resultParts.push(currentLetter);
-              currentLetter = '';
-            }
-            resultParts.push('/');
           } else {
-            // long gap = word gap
+            // Word gap (or longer)
             if (currentLetter) {
               resultParts.push(currentLetter);
               currentLetter = '';
@@ -231,9 +228,8 @@
         resultParts.push(currentLetter);
       }
 
-      // Build final morse string with proper spacing
+      // Build final morse string
       let morse = resultParts.join(' ');
-      // Clean up: ensure / has spaces around it
       morse = morse.replace(/\s*\/\s*/g, ' / ');
       morse = morse.replace(/\s{2,}/g, ' ').trim();
       
@@ -250,11 +246,9 @@
 
     function decodeMorseString(morse) {
       if (!morse || morse === '—') return '';
-      // Split by / for words
       const words = morse.split('/').map(w => w.trim());
       const outWords = words.map(word => {
         if (!word) return '';
-        // Split by space for letters
         const letters = word.split(' ').filter(Boolean);
         return letters.map(letter => MORSE_TO_CHAR[letter] || '?').join('');
       });
@@ -345,9 +339,7 @@
         morseDecodeResult.textContent = '(empty)';
         return;
       }
-      // Normalize: replace • with . and — with -
       let normalized = input.replace(/•/g, '.').replace(/—/g, '-');
-      // Decode
       const result = decodeMorseString(normalized);
       morseDecodeResult.textContent = result || '(no decode)';
     });
@@ -357,7 +349,6 @@
       morseDecodeResult.textContent = '—';
     });
 
-    // Also decode on Enter key in the input
     morseInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         decodeMorseBtn.click();
@@ -399,7 +390,6 @@
       const charGap = Number(charGapRange.value) * unit;
       const wordGap = Number(wordGapRange.value) * unit;
       
-      // Convert display format to actual morse: •→. , —→-
       const morse = vis.replace(/•/g, '.').replace(/—/g, '-');
       const words = morse.split('/').map(w => w.trim());
       for (let wi = 0; wi < words.length; wi++) {
@@ -435,6 +425,10 @@
     decoded.textContent = '—';
     encodedOutput.textContent = '(empty)';
     morseDecodeResult.textContent = '—';
+
+    // Example: Pre-fill with SOS
+    console.log('Tip: For SOS, set unit=100, charGap=2.5, wordGap=7');
+    console.log('Press and hold: dot(100ms) gap(50ms) dot(100ms) gap(50ms) dot(100ms) gap(300ms) dash(300ms) gap(50ms) dash(300ms) gap(50ms) dash(300ms) gap(300ms) dot(100ms) gap(50ms) dot(100ms) gap(50ms) dot(100ms)');
   </script>
 </body>
 </html>

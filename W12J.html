@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>wigner 12j · recoupling</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #f0f0f0;
+      font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      max-width: 960px;
+      width: 100%;
+      background: white;
+      border: 1px solid #888;
+      padding: 24px 22px 28px;
+    }
+    h1 {
+      font-weight: 400;
+      font-size: 1.8rem;
+      margin-top: 0;
+      margin-bottom: 4px;
+      border-bottom: 1px solid #aaa;
+      padding-bottom: 6px;
+    }
+    .diagram-box {
+      background: #fafafa;
+      border: 1px solid #999;
+      padding: 16px 10px 6px 10px;
+      margin: 16px 0 18px 0;
+    }
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-width: 550px;
+      margin: 0 auto;
+    }
+    .slider-panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 10px 16px;
+      border: 1px solid #aaa;
+      padding: 14px 16px;
+      background: #f7f7f7;
+      margin: 14px 0 12px 0;
+    }
+    .slider-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .slider-item .label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      border-bottom: 1px dotted #bbb;
+      padding-bottom: 2px;
+    }
+    .slider-item .label-row .name {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .slider-track {
+      position: relative;
+      width: 100%;
+      height: 18px;
+      margin: 2px 0;
+      border: 1px solid #aaa;
+      background: #e0e0e0;
+    }
+    .slider-track .gradient-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      pointer-events: none;
+    }
+    input[type="range"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 2;
+    }
+    .slider-track .thumb-label {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 0.65rem;
+      font-weight: 600;
+      background: #222;
+      color: white;
+      padding: 0 5px;
+      z-index: 1;
+      pointer-events: none;
+      border: 1px solid #444;
+    }
+    .val-badge {
+      background: #e0e0e0;
+      padding: 0 6px;
+      font-family: monospace;
+      font-size: 0.8rem;
+    }
+    .result-area {
+      border: 1px solid #222;
+      background: #f5f5f5;
+      padding: 10px 18px;
+      margin: 18px 0 8px 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 12px 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 1.1rem;
+    }
+    .result-value {
+      background: #e8e8e8;
+      padding: 2px 14px;
+      font-weight: 500;
+    }
+    .sign-indicator {
+      font-weight: 600;
+      margin-left: auto;
+      font-family: system-ui;
+    }
+    .footnote {
+      margin-top: 18px;
+      border-top: 1px solid #aaa;
+      padding-top: 14px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    .formula-box {
+      background: #ececec;
+      padding: 8px 14px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border: 1px solid #999;
+    }
+    .meaning-box {
+      border: 1px solid #999;
+      padding: 8px 14px;
+      background: #f7f7f7;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>wigner 12j · recoupling</h1>
+
+  <!-- diagram: points a,b,c,d,e,f,g,h with connections -->
+  <div class="diagram-box">
+    <svg viewBox="0 0 550 360" xmlns="http://www.w3.org/2000/svg">
+      <!-- define points: 
+           a (275,60), b (150,130), c (400,130), d (275,200),
+           e (120,280), f (430,280), g (210,330), h (340,330) -->
+      <!-- a -->
+      <circle cx="275" cy="60" r="20" fill="#fff" stroke="#222" stroke-width="2.5" />
+      <text x="275" y="68" text-anchor="middle" fill="#000" font-size="18" font-weight="600">a</text>
+      <!-- b -->
+      <circle cx="150" cy="130" r="20" fill="#fff" stroke="#222" stroke-width="2.5" />
+      <text x="150" y="138" text-anchor="middle" fill="#000" font-size="18" font-weight="600">b</text>
+      <!-- c -->
+      <circle cx="400" cy="130" r="20" fill="#fff" stroke="#222" stroke-width="2.5" />
+      <text x="400" y="138" text-anchor="middle" fill="#000" font-size="18" font-weight="600">c</text>
+      <!-- d -->
+      <circle cx="275" cy="200" r="20" fill="#fff" stroke="#222" stroke-width="2.5" />
+      <text x="275" y="208" text-anchor="middle" fill="#000" font-size="18" font-weight="600">d</text>
+      <!-- e -->
+      <circle cx="120" cy="280" r="20" fill="#fff" stroke="#222" stroke-width="2.5" />
+      <text x="120" y="288" text-anchor="middle" fill="#000" font-size="18" font-weight="600">e</text>
+      <!-- f -->
+      <circle cx="430" cy="280" r="20" fill="#fff" stroke="#222" stroke-width="2.5" />
+      <text x="430" y="288" text-anchor="middle" fill="#000" font-size="18" font-weight="600">f</text>
+      <!-- g -->
+      <circle cx="210" cy="330" r="20" fill="#fff" stroke="#222" stroke-width="2.5" />
+      <text x="210" y="338" text-anchor="middle" fill="#000" font-size="18" font-weight="600">g</text>
+      <!-- h -->
+      <circle cx="340" cy="330" r="20" fill="#fff" stroke="#222" stroke-width="2.5" />
+      <text x="340" y="338" text-anchor="middle" fill="#000" font-size="18" font-weight="600">h</text>
+
+      <!-- connections with labels -->
+      <!-- j135: b to a -->
+      <line x1="150" y1="130" x2="275" y2="60" stroke="#333" stroke-width="1.8" />
+      <text x="200" y="86" fill="#000" font-size="14" font-weight="600" transform="rotate(-30,200,86)">j₁₃₅</text>
+      
+      <!-- j125: d to c -->
+      <line x1="275" y1="200" x2="400" y2="130" stroke="#333" stroke-width="1.8" />
+      <text x="350" y="170" fill="#000" font-size="14" font-weight="600" transform="rotate(30,350,170)">j₁₂₅</text>
+      
+      <!-- j6: c to a -->
+      <line x1="400" y1="130" x2="275" y2="60" stroke="#333" stroke-width="1.8" />
+      <text x="350" y="86" fill="#000" font-size="14" font-weight="600" transform="rotate(-20,350,86)">j₆</text>
+      
+      <!-- j5: d to b -->
+      <line x1="275" y1="200" x2="150" y2="130" stroke="#333" stroke-width="1.8" />
+      <text x="200" y="170" fill="#000" font-size="14" font-weight="600" transform="rotate(20,200,170)">j₅</text>
+      
+      <!-- j34: c to e -->
+      <line x1="400" y1="130" x2="120" y2="280" stroke="#333" stroke-width="1.8" />
+      <text x="270" y="210" fill="#000" font-size="14" font-weight="600" transform="rotate(15,270,210)">j₃₄</text>
+      
+      <!-- j12: d to f -->
+      <line x1="275" y1="200" x2="430" y2="280" stroke="#333" stroke-width="1.8" />
+      <text x="360" y="248" fill="#000" font-size="14" font-weight="600" transform="rotate(-15,360,248)">j₁₂</text>
+      
+      <!-- j4: e to g -->
+      <line x1="120" y1="280" x2="210" y2="330" stroke="#333" stroke-width="1.8" />
+      <text x="155" y="318" fill="#000" font-size="14" font-weight="600">j₄</text>
+      
+      <!-- j3: e to h -->
+      <line x1="120" y1="280" x2="340" y2="330" stroke="#333" stroke-width="1.8" />
+      <text x="230" y="318" fill="#000" font-size="14" font-weight="600">j₃</text>
+      
+      <!-- j2: f to g -->
+      <line x1="430" y1="280" x2="210" y2="330" stroke="#333" stroke-width="1.8" />
+      <text x="330" y="318" fill="#000" font-size="14" font-weight="600">j₂</text>
+      
+      <!-- j1: f to h -->
+      <line x1="430" y1="280" x2="340" y2="330" stroke="#333" stroke-width="1.8" />
+      <text x="400" y="318" fill="#000" font-size="14" font-weight="600">j₁</text>
+      
+      <!-- j24: a to g -->
+      <line x1="275" y1="60" x2="210" y2="330" stroke="#333" stroke-width="1.8" stroke-dasharray="8 6" />
+      <text x="220" y="200" fill="#000" font-size="14" font-weight="600" transform="rotate(40,220,200)">j₂₄</text>
+      
+      <!-- j13: h to b -->
+      <line x1="340" y1="330" x2="150" y2="130" stroke="#333" stroke-width="1.8" stroke-dasharray="8 6" />
+      <text x="260" y="240" fill="#000" font-size="14" font-weight="600" transform="rotate(-40,260,240)">j₁₃</text>
+    </svg>
+  </div>
+
+  <!-- sliders: 12j in order: j1,j2,j3,j4,j5,j6,j12,j34,j125,j135,j13,j24 -->
+  <div class="slider-panel">
+    <div class="slider-item"><div class="label-row"><span class="name">j₁</span><span class="val-badge" id="val-j1">5.0</span></div><div class="slider-track" id="track-j1"><div class="gradient-fill" id="grad-j1"></div><input type="range" id="sl-j1" min="0" max="10" step="0.5" value="5.0"><span class="thumb-label" id="thumb-j1">5.0</span></div></div>
+    <div class="slider-item"><div class="label-row"><span class="name">j₂</span><span class="val-badge" id="val-j2">5.0</span></div><div class="slider-track" id="track-j2"><div class="gradient-fill" id="grad-j2"></div><input type="range" id="sl-j2" min="0" max="10" step="0.5" value="5.0"><span class="thumb-label" id="thumb-j2">5.0</span></div></div>
+    <div class="slider-item"><div class="label-row"><span class="name">j₃</span><span class="val-badge" id="val-j3">5.0</span></div><div class="slider-track" id="track-j3"><div class="gradient-fill" id="grad-j3"></div><input type="range" id="sl-j3" min="0" max="10" step="0.5" value="5.0"><span class="thumb-label" id="thumb-j3">5.0</span></div></div>
+    <div class="slider-item"><div class="label-row"><span class="name">j₄</span><span class="val-badge" id="val-j4">5.0</span></div><div class="slider-track" id="track-j4"><div class="gradient-fill" id="grad-j4"></div><input type="range" id="sl-j4" min="0" max="10" step="0.5" value="5.0"><span class="thumb-label" id="thumb-j4">5.0</span></div></div>
+    <div class="slider-item"><div class="label-row"><span class="name">j₅</span><span class="val-badge" id="val-j5">5.0</span></div><div class="slider-track" id="track-j5"><div class="gradient-fill" id="grad-j5"></div><input type="range" id="sl-j5" min="0" max="10" step="0.5" value="5.0"><span class="thumb-label" id="thumb-j5">5.0</span></div></div>
+    <div class="slider-item"><div class="label-row"><span class="name">j₆</span><span class="val-badge" id="val-j6">5.0</span></div><div class="slider-track" id="track-j6"><div class="gradient-fill" id="grad-j6"></div><input type="range" id="sl-j6" min="0" max="10" step="0.5" value="5.0"><span class="thumb-label" id="thumb-j6">5.0</span></div></div>
+    <div class="slider-item"><div class="label-row"><span class="name">j₁₂</span><span class="val-badge" id="val-j12">5.0</span></div><div class="slider-track" id="track-j12"><div class="gradient-fill" id="grad-j12"></div><input type="range" id="sl-j12" min="0" max="10" step="0.5" value="5.0"><span class="thumb-label" id="thumb-j12">5.0</span></div></div>
+    <div class="slider-item"><div class="label-row"><span class="name">j₃₄</span><span class="val-badge" id="val-j34">5.0</span></div><div class="slider-track" id="track-j34"><div class="gradient-fill" id="grad-j34"></div><input type="range" id="sl-j34" min="0" max="10" step="0.5" value="5.0"><span class="thumb-label" id="thumb-j34">5.0</span></div></div>
+    <div class="slider-item"><div class="label-row"><span class="name">j₁₂₅</span><span class="val-badge" id="val-j125">5.0</span></div><div class="slider-track" id="track-j125"><div class="gradient-fill" id="grad-j125"></div><input type="range" id="sl-j125" min="0" max="10" step="0.5" value="5.0"><span class="thumb-label" id="thumb-j125">5.0</span></div></div>
+    <div class="slider-item"><div class="label-row"><span class="name">j₁₃₅</span><span class="val-badge" id="val-j135">5.0</span></div><div class="slider-track" id="track-j135"><div class="gradient-fill" id="grad-j135"></div><input type="range" id="sl-j135" min="0" max="10" step="0.5" value="5.0"><span class="thumb-label" id="thumb-j135">5.0</span></div></div>
+    <div class="slider-item"><div class="label-row"><span class="name">j₁₃</span><span class="val-badge" id="val-j13">5.0</span></div><div class="slider-track" id="track-j13"><div class="gradient-fill" id="grad-j13"></div><input type="range" id="sl-j13" min="0" max="10" step="0.5" value="5.0"><span class="thumb-label" id="thumb-j13">5.0</span></div></div>
+    <div class="slider-item"><div class="label-row"><span class="name">j₂₄</span><span class="val-badge" id="val-j24">5.0</span></div><div class="slider-track" id="track-j24"><div class="gradient-fill" id="grad-j24"></div><input type="range" id="sl-j24" min="0" max="10" step="0.5" value="5.0"><span class="thumb-label" id="thumb-j24">5.0</span></div></div>
+  </div>
+
+  <!-- result -->
+  <div class="result-area">
+    <span>12j symbol</span>
+    <span class="result-value" id="twelvej-result">0.0000  (zero)</span>
+    <span class="sign-indicator" id="sign-indicator">⚪ zero</span>
+  </div>
+
+  <!-- formula and meaning -->
+  <div class="footnote">
+    <div class="formula-box">
+      12j = sum over x,y of (-1)^{...} (2x+1)(2y+1) * { ... } (sum over 6j and 9j symbols)
+    </div>
+    <div class="meaning-box">
+      <strong>what does 12j mean?</strong> it appears in the quantum mechanics of angular momentum 
+      when four angular momenta are coupled. the 12j symbol is a recoupling coefficient that 
+      transforms between different coupling schemes of four angular momenta. it is used in 
+      advanced atomic and nuclear physics, particularly in the theory of complex spectra 
+      and in the description of systems with four independent angular momenta.
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    // ----- math helpers (6j, 9j, 12j) -----
+    function factorial(n) {
+      if (n < 0) return NaN;
+      if (n === 0 || n === 1) return 1;
+      let r = 1;
+      for (let i = 2; i <= n; i++) r *= i;
+      return r;
+    }
+
+    function delta(a, b, c) {
+      if (a + b < c || a + c < b || b + c < a) return 0;
+      const num = factorial(a + b - c) * factorial(a + c - b) * factorial(b + c - a);
+      const den = factorial(a + b + c + 1);
+      if (den === 0) return 0;
+      return Math.sqrt(num / den);
+    }
+
+    function wigner6j(j1, j2, j3, j4, j5, j6) {
+      const tri = (a,b,c) => (a + b >= c && a + c >= b && b + c >= a);
+      if (!tri(j1,j2,j3) || !tri(j1,j5,j6) || !tri(j4,j2,j6) || !tri(j4,j5,j3)) {
+        return { re: 0, im: 0 };
+      }
+      const a1 = j1 + j2 + j3;
+      const a2 = j1 + j5 + j6;
+      const a3 = j4 + j2 + j6;
+      const a4 = j4 + j5 + j3;
+      const b1 = j1 + j2 + j4 + j5;
+      const b2 = j1 + j3 + j4 + j6;
+      const b3 = j2 + j3 + j5 + j6;
+      let sum = 0;
+      let kmin = Math.max(0, a1, a2, a3, a4);
+      let kmax = Math.min(b1, b2, b3);
+      for (let k = kmin; k <= kmax; k++) {
+        const d1 = factorial(k - a1);
+        const d2 = factorial(k - a2);
+        const d3 = factorial(k - a3);
+        const d4 = factorial(k - a4);
+        const d5 = factorial(b1 - k);
+        const d6 = factorial(b2 - k);
+        const d7 = factorial(b3 - k);
+        if (!isFinite(d1) || !isFinite(d2) || !isFinite(d3) || !isFinite(d4) ||
+            !isFinite(d5) || !isFinite(d6) || !isFinite(d7)) continue;
+        if (d1 === 0 || d2 === 0 || d3 === 0 || d4 === 0 || d5 === 0 || d6 === 0 || d7 === 0) continue;
+        const sign = (k % 2 === 0) ? 1 : -1;
+        const term = sign * factorial(k + 1) / (d1 * d2 * d3 * d4 * d5 * d6 * d7);
+        sum += term;
+      }
+      const prefactor = delta(j1,j2,j3) * delta(j1,j5,j6) * delta(j4,j2,j6) * delta(j4,j5,j3);
+      return { re: prefactor * sum, im: 0 };
+    }
+
+    // 9j via sum over x of 6j products
+    function wigner9j(j1,j2,j3, k1,k2,k3, l1,l2,l3) {
+      const tri = (a,b,c) => (a + b >= c && a + c >= b && b + c >= a);
+      if (!tri(j1,j2,j3) || !tri(k1,k2,k3) || !tri(l1,l2,l3)) return { re: 0, im: 0 };
+      if (!tri(j1,k1,l1) || !tri(j2,k2,l2) || !tri(j3,k3,l3)) return { re: 0, im: 0 };
+      let sum = 0;
+      for (let x = 0; x <= 15; x += 0.5) {
+        if (!tri(j2, j3, x)) continue;
+        if (!tri(k2, k3, x)) continue;
+        if (!tri(l2, l3, x)) continue;
+        if (!tri(j1, k1, x)) continue;
+        if (!tri(j1, l1, x)) continue;
+        if (!tri(k1, l1, x)) continue;
+        const s1 = wigner6j(j2, j3, x, k2, k3, l2);
+        const s2 = wigner6j(j1, k1, x, j3, l3, k3);
+        const s3 = wigner6j(j1, l1, x, j2, l2, k2);
+        const val = s1.re * s2.re * s3.re;
+        const sign = (2 * x % 2 === 0) ? 1 : -1;
+        sum += sign * (2 * x + 1) * val;
+      }
+      return { re: sum, im: 0 };
+    }
+
+    // 12j via sum over x,y of 9j and 6j products (standard recoupling)
+    function wigner12j(j1,j2,j3,j4,j5,j6,j12,j34,j125,j135,j13,j24) {
+      // triangle conditions for the 12j (all edges must satisfy triangles)
+      const tri = (a,b,c) => (a + b >= c && a + c >= b && b + c >= a);
+      // outer triangles
+      if (!tri(j1, j2, j12)) return { re: 0, im: 0 };
+      if (!tri(j3, j4, j34)) return { re: 0, im: 0 };
+      if (!tri(j5, j6, j125)) return { re: 0, im: 0 };
+      if (!tri(j1, j3, j135)) return { re: 0, im: 0 };
+      if (!tri(j2, j4, j24)) return { re: 0, im: 0 };
+      if (!tri(j5, j6, j13)) return { re: 0, im: 0 };
+      // additional triangles from the diagram
+      if (!tri(j12, j34, j125)) return { re: 0, im: 0 };
+      if (!tri(j135, j125, j13)) return { re: 0, im: 0 };
+      if (!tri(j13, j24, j12)) return { re: 0, im: 0 };
+      if (!tri(j34, j24, j135)) return { re: 0, im: 0 };
+      
+      let sum = 0;
+      // sum over x and y (0 to 15 step 0.5)
+      for (let x = 0; x <= 15; x += 0.5) {
+        for (let y = 0; y <= 15; y += 0.5) {
+          // triangle conditions for x and y
+          if (!tri(j1, j2, x)) continue;
+          if (!tri(j3, j4, y)) continue;
+          if (!tri(j5, j6, x)) continue;
+          if (!tri(j12, j34, x)) continue;
+          if (!tri(j135, j125, x)) continue;
+          if (!tri(j13, j24, x)) continue;
+          if (!tri(j1, j3, y)) continue;
+          if (!tri(j2, j4, y)) continue;
+          if (!tri(j135, j34, y)) continue;
+          if (!tri(j125, j12, y)) continue;
+          if (!tri(j13, j24, y)) continue;
+          
+          // compute 9j and 6j symbols
+          const s1 = wigner9j(j1, j2, x, j3, j4, y, j135, j125, j13);
+          const s2 = wigner6j(j12, j34, x, j125, j13, y);
+          const s3 = wigner6j(j1, j3, y, j2, j4, x);
+          const val = s1.re * s2.re * s3.re;
+          const sign = ((2*x + 2*y) % 2 === 0) ? 1 : -1;
+          sum += sign * (2*x + 1) * (2*y + 1) * val;
+        }
+      }
+      return { re: sum, im: 0 };
+    }
+
+    // ----- dom refs: 12 sliders in order: j1,j2,j3,j4,j5,j6,j12,j34,j125,j135,j13,j24 -----
+    const names = ['j1','j2','j3','j4','j5','j6','j12','j34','j125','j135','j13','j24'];
+    const sliderIds = names.map(n => 'sl-' + n);
+    const valIds = names.map(n => 'val-' + n);
+    const thumbIds = names.map(n => 'thumb-' + n);
+    const gradIds = names.map(n => 'grad-' + n);
+    const trackIds = names.map(n => 'track-' + n);
+
+    const sliders = sliderIds.map(id => document.getElementById(id));
+    const valSpans = valIds.map(id => document.getElementById(id));
+    const thumbSpans = thumbIds.map(id => document.getElementById(id));
+    const gradDivs = gradIds.map(id => document.getElementById(id));
+    const trackDivs = trackIds.map(id => document.getElementById(id));
+
+    const resultSpan = document.getElementById('twelvej-result');
+    const signIndicator = document.getElementById('sign-indicator');
+
+    // ----- update -----
+    function updateAll() {
+      const vals = sliders.map(s => parseFloat(s.value));
+      vals.forEach((v, i) => {
+        valSpans[i].textContent = v.toFixed(1);
+        thumbSpans[i].textContent = v.toFixed(1);
+      });
+
+      // compute 12j: order j1,j2,j3,j4,j5,j6,j12,j34,j125,j135,j13,j24
+      const [j1,j2,j3,j4,j5,j6,j12,j34,j125,j135,j13,j24] = vals;
+      const { re } = wigner12j(j1,j2,j3,j4,j5,j6,j12,j34,j125,j135,j13,j24);
+      const value = re;
+      const eps = 1e-12;
+
+      let display, signText;
+      if (Math.abs(value) < eps) {
+        display = '0.0000  (zero)';
+        signText = '⚪ zero';
+      } else if (value > 0) {
+        display = value.toFixed(6) + '  (positive)';
+        signText = '🟢 positive';
+      } else {
+        display = value.toFixed(6) + '  (negative)';
+        signText = '🔴 negative';
+      }
+      resultSpan.textContent = display;
+      signIndicator.textContent = signText;
+
+      // update gradients: for each slider, evaluate 12j over 0..10 step 0.5
+      const steps = [];
+      for (let s = 0; s <= 10; s += 0.5) steps.push(s);
+      const fixed = vals.slice();
+
+      sliders.forEach((sl, idx) => {
+        const grad = gradDivs[idx];
+        const colors = [];
+        for (let si = 0; si < steps.length; si++) {
+          fixed[idx] = steps[si];
+          const [a,b,c,d,e,f,g,h,i,j,k,l] = fixed;
+          const res = wigner12j(a,b,c,d,e,f,g,h,i,j,k,l);
+          const v = res.re;
+          let col;
+          if (Math.abs(v) < 1e-12) col = '#cccccc';
+          else if (v > 0) col = '#4caf50';
+          else col = '#f44336';
+          colors.push(col);
+        }
+        const gradStr = colors.map((c, si) => {
+          const pct = (si / (colors.length - 1)) * 100;
+          return `${c} ${pct.toFixed(1)}%`;
+        }).join(', ');
+        grad.style.background = `linear-gradient(to right, ${gradStr})`;
+      });
+    }
+
+    sliders.forEach(s => s.addEventListener('input', updateAll));
+    updateAll();
+  })();
+</script>
+</body>
+</html>

@@ -2506,6 +2506,14 @@ function div(...args) {
 }
 function exp(x){return math.exp(x);}
 function log(x){return math.log(x);}
+
+function logbranch(x, n = 0,b=eulerc()) {
+    return div(
+        add(log(x), mul(n,I,2 * Math.PI)),
+        log(b)
+    );
+}
+
 function harmadd(...args) {
     return args.reduce((acc, val) => math.divide(1,math.add(math.divide(1,acc), math.divide(1,val))));
 }
@@ -5937,7 +5945,7 @@ function integralclenshawcurtis(func, initial, end, input, N = bign)
     let sumRe = 0;
     let sumIm = 0;
 
-    for(let k=0;k<=N;k++)
+    for(let k=1;k<=N-1;k++)
     {
         const theta = Math.PI * k / N;
         const x = Math.cos(theta);
@@ -5958,7 +5966,7 @@ function integralclenshawcurtis(func, initial, end, input, N = bign)
             w += c * Math.cos(2*j*theta) / denom;
         }
 
-        w *= 2/N;
+        w *= 2/(N-2);
 
         const xi = add(
             mid,
@@ -15336,6 +15344,9 @@ function poincaremetric(a, b) {
 
 function pow(base, exponent) {
     return math.pow(base, exponent);
+}
+function powbranch(base, exponent,n) {
+    return exp(mul(exponent,logbranch(base,n)));
 }
 function oddpow(base, exponent) {
     return mul(exp(mul(I,arg(base))),mag(math.pow(base, exponent)));
@@ -26204,8 +26215,14 @@ function sin656(z){const c=cn(mul(z,pow(3,1/4),pow(2,4/3)),sin(div(pi(),12)));re
 function cos434(z){return pow(sub(1,pow(sin434(z),4)),0.25)}
 function cos656(z){return pow(sub(1,pow(sin434(z),6)),1/6)}
 
-function sin4(z){const k=squaremod(z,7.416298709205484/2);const l=mul(2,weierstrassellipticdg(k,1,0));return div((mul(2,l)),(add(sqr(l),1)))}
-function cos4(z){const l=mul(2,weierstrassellipticdg(z,1,0));return div((sub(sqr(l),1)),(add(sqr(l),1)))}
+
+//fucnt
+
+function sin4(z){return tlh(z)}
+function cos4(z){return ctlh(z)}
+
+function sin4a(z){const k=squaremod(z,7.416298709205484/2);const l=mul(2,weierstrassellipticdg(k,1,0));return div((mul(2,l)),(add(sqr(l),1)))}
+function cos4a(z){const l=mul(2,weierstrassellipticdg(z,1,0));return div((sub(sqr(l),1)),(add(sqr(l),1)))}
 function sin4lambda(z){return mul(2,weierstrassellipticdg(z,1,0))}
 
 function sp(u){return div(sqr(sm(u)),-1,cm(u))}
@@ -43600,7 +43617,16 @@ function risingfactorial(x,r){
 function fallingfactorial(x,r){
 	return div(gamma(add(x,1)),gamma(sub(x,r,-1)));
 }
-function arcregincbeta(x,a,b){return newtoninv("regincbeta(x,"+a+","+b+")",x,div(sub(a,1/3),add(a,b,-2/3)))}
+function arcregincbetaa(x,a,b){return newtoninv("regincbeta(x,"+a+","+b+")",x,div(sub(a,1/3),add(a,b,-2/3)))}
+function arcregincbeta(x,a,b,C=x){return newtoninv("regincbeta(x,"+a+","+b+")",x,C)}
+
+
+
+//
+
+
+
+
 //CGF = log(MGF) cumultant generating functiın
 //function dirichletnegativemultinomial(r,p){return  }
 
