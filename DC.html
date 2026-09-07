@@ -2869,7 +2869,202 @@ async function computeFunctionValues() {
     cachedGrid = { width, height };
     cachedFuncParams = { minReal, maxReal, minImag, maxImag, funcStr };
 }
+function expandImageBicubic(imageData, width, height ) {
 
+let scaleFactor = 5
+    // scaleFactor must be >= 1 (1 = no change, 2 = 2x, 3 = 3x, etc.)
+    const newWidth = Math.round(width * scaleFactor);
+    const newHeight = Math.round(height * scaleFactor);
+    const newData = new Uint8ClampedArray(newWidth * newHeight * 4);
+    
+    const data = imageData.data;
+    
+    // Bicubic kernel (Catmull-Rom)
+    function cubicWeight(t) {
+        const a = -0.5;
+        const t2 = t * t;
+        const t3 = t2 * t;
+        if (t < 1) return (a + 2) * t3 - (a + 3) * t2 + 1;
+        if (t < 2) return a * t3 - 5 * a * t2 + 8 * a * t - 4 * a;
+        return 0;
+    }
+    
+    function getPixel(x, y, channel) {
+        // Clamp to edges
+        const ix = Math.max(0, Math.min(width - 1, Math.floor(x)));
+        const iy = Math.max(0, Math.min(height - 1, Math.floor(y)));
+        return data[(iy * width + ix) * 4 + channel];
+    }
+    
+    function getPixelFloat(x, y, channel) {
+        // Bicubic needs fractional pixel access
+        const ix = Math.floor(x);
+        const iy = Math.floor(y);
+        const fx = x - ix;
+        const fy = y - iy;
+        
+        // Use bilinear for boundary pixels
+        if (ix < 1 || ix >= width - 2 || iy < 1 || iy >= height - 2) {
+            const x0 = Math.max(0, Math.min(width - 1, ix));
+            const x1 = Math.max(0, Math.min(width - 1, ix + 1));
+            const y0 = Math.max(0, Math.min(height - 1, iy));
+            const y1 = Math.max(0, Math.min(height - 1, iy + 1));
+            const a = getPixel(x0, y0, channel);
+            const b = getPixel(x1, y0, channel);
+            const c = getPixel(x0, y1, channel);
+            const d = getPixel(x1, y1, channel);
+            return a * (1-fx) * (1-fy) + b * fx * (1-fy) + c * (1-fx) * fy + d * fx * fy;
+        }
+        
+        const wx = [
+            cubicWeight(fx + 1),
+            cubicWeight(fx),
+            cubicWeight(1 - fx),
+            cubicWeight(2 - fx)
+        ];
+        const wy = [
+            cubicWeight(fy + 1),
+            cubicWeight(fy),
+            cubicWeight(1 - fy),
+            cubicWeight(2 - fy)
+        ];
+        
+        let result = 0;
+        for (let m = 0; m < 4; m++) {
+            for (let n = 0; n < 4; n++) {
+                const px = ix + m - 1;
+                const py = iy + n - 1;
+                const weight = wx[m] * wy[n];
+                result += getPixel(px, py, channel) * weight;
+            }
+        }
+        return Math.max(0, Math.min(255, result));
+    }
+    
+    function colorDistance(c1, c2) {
+        const dr = c1[0] - c2[0];
+        const dg = c1[1] - c2[1];
+        const db = c1[2] - c2[2];
+        return Math.sqrt(dr*dr + dg*dg + db*db);
+    }
+    
+    function sampleBicubic(x, y) {
+        const ix = Math.floor(x);
+        const iy = Math.floor(y);
+        const fx = x - ix;
+        const fy = y - iy;
+        
+        // Get surrounding pixels
+        const samples = [];
+        for (let dy = -1; dy <= 2; dy++) {
+            for (let dx = -1; dx <= 2; dx++) {
+                const px = Math.max(0, Math.min(width - 1, ix + dx));
+                const py = Math.max(0, Math.min(height - 1, iy + dy));
+                samples.push([
+                    data[(py * width + px) * 4 + 0],
+                    data[(py * width + px) * 4 + 1],
+                    data[(py * width + px) * 4 + 2]
+                ]);
+            }
+        }
+        
+        // Check for edges - look for large color differences
+        const center = samples[5]; // center pixel (1,1 in 4x4 grid)
+        let isEdge = false;
+        let edgeThreshold = 50;
+        
+        // Check if any neighboring pixel is very different from center
+        for (let i = 0; i < samples.length; i++) {
+            if (i === 5) continue;
+            if (colorDistance(center, samples[i]) > edgeThreshold) {
+                isEdge = true;
+                break;
+            }
+        }
+        
+        // On edges, use sharper interpolation (bicubic with reduced blur)
+        if (isEdge) {
+            // Use bicubic but with edge-aware weighting
+            const wx = [
+                cubicWeight(fx + 1),
+                cubicWeight(fx),
+                cubicWeight(1 - fx),
+                cubicWeight(2 - fx)
+            ];
+            const wy = [
+                cubicWeight(fy + 1),
+                cubicWeight(fy),
+                cubicWeight(1 - fy),
+                cubicWeight(2 - fy)
+            ];
+            
+            let r = 0, g = 0, b = 0;
+            let totalWeight = 0;
+            
+            for (let m = 0; m < 4; m++) {
+                for (let n = 0; n < 4; n++) {
+                    const px = Math.max(0, Math.min(width - 1, ix + m - 1));
+                    const py = Math.max(0, Math.min(height - 1, iy + n - 1));
+                    
+                    const idx = (py * width + px) * 4;
+                    const weight = wx[m] * wy[n];
+                    
+                    // Edge-aware: reduce weight for very different pixels
+                    const c = [data[idx], data[idx+1], data[idx+2]];
+                    const dist = colorDistance(center, c);
+                    let edgeWeight = 1.0;
+                    if (dist > 30) {
+                        edgeWeight = Math.max(0.1, 1.0 - (dist - 30) / 70);
+                    }
+                    
+                    const finalWeight = weight * edgeWeight;
+                    totalWeight += finalWeight;
+                    r += data[idx] * finalWeight;
+                    g += data[idx+1] * finalWeight;
+                    b += data[idx+2] * finalWeight;
+                }
+            }
+            
+            if (totalWeight > 0) {
+                return [
+                    Math.max(0, Math.min(255, Math.round(r / totalWeight))),
+                    Math.max(0, Math.min(255, Math.round(g / totalWeight))),
+                    Math.max(0, Math.min(255, Math.round(b / totalWeight)))
+                ];
+            }
+        }
+        
+        // Standard bicubic for smooth areas
+        return [
+            Math.round(getPixelFloat(x, y, 0)),
+            Math.round(getPixelFloat(x, y, 1)),
+            Math.round(getPixelFloat(x, y, 2))
+        ];
+    }
+    
+    // Fill new image
+    for (let ny = 0; ny < newHeight; ny++) {
+        for (let nx = 0; nx < newWidth; nx++) {
+            // Map to original coordinates
+            const ox = (nx + 0.5) / scaleFactor - 0.5;
+            const oy = (ny + 0.5) / scaleFactor - 0.5;
+            
+            const color = sampleBicubic(ox, oy);
+            
+            const idx = (ny * newWidth + nx) * 4;
+            newData[idx] = color[0];
+            newData[idx + 1] = color[1];
+            newData[idx + 2] = color[2];
+            newData[idx + 3] = 255;
+        }
+    }
+    
+    return {
+        data: newData,
+        width: newWidth,
+        height: newHeight
+    };
+}
 function renderFromCache() {
     if (!cachedFunctionValues) return;
 
@@ -2895,12 +3090,10 @@ function renderFromCache() {
 
     for (let x = 0; x < width; x++) {
         for (let y = 0; y < height; y++) {
-
             const funcValue = cachedFunctionValues[x][y];
-//console.log(cachedFunctioninps[x][y])
-const fff= cachedFunctioninps[x][y]
+            const fff = cachedFunctioninps[x][y];
             const color = complexToColor(
-               fff,
+                fff,
                 funcValue,
                 magnitudeToLightnessExpr,
                 colorMode,
@@ -2908,10 +3101,8 @@ const fff= cachedFunctioninps[x][y]
                 lightness,
                 paletteImageData,
                 thick,
-                (x==0 || y==0)?0:div(sub(cachedFunctionValues[x][y],cachedFunctionValues[x-1][y]),sub(cachedFunctioninps[x][y],cachedFunctioninps[x-1][y]))
+                (x==0 || y==0) ? 0 : div(sub(cachedFunctionValues[x][y], cachedFunctionValues[x-1][y]), sub(cachedFunctioninps[x][y], cachedFunctioninps[x-1][y]))
             );
-            
-         //   if(!(x==0 || y==0))console.log(div(sub(cachedFunctionValues[x][y],cachedFunctionValues[x-1][y-1]),sub(cachedFunctioninps[x][y],cachedFunctioninps[x-1][y-1])))
 
             const idx = (y * width + x) * 4;
             data[idx] = color[0];
@@ -2922,6 +3113,16 @@ const fff= cachedFunctioninps[x][y]
     }
 
     ctx.putImageData(imageData, 0, 0);
+    
+    // Expand the image 4x using bicubic interpolation
+    const expanded = expandImageBicubic(imageData, width, height);
+    
+    // Apply expanded image to canvas
+    canvas.width = expanded.width;
+    canvas.height = expanded.height;
+    const expandedImageData = new ImageData(expanded.data, expanded.width, expanded.height);
+    ctx.putImageData(expandedImageData, 0, 0);
+    
     scaleCanvas();
 }
 

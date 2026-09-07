@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Klein Gordon</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;font-family:Arial;color:#ddd}
+canvas{display:block;width:100%;height:100%;cursor:crosshair}
+
+#ui{
+    position:fixed;
+    top:8px;
+    right:8px;
+    background:#eee;
+    color:#111;
+    padding:7px;
+    border:1px solid #777;
+    font:13px Arial;
+}
+
+.row{display:flex;align-items:center;margin:2px 0}
+.row label{width:82px}
+.row input[type=range]{width:125px}
+.val{width:45px;text-align:right}
+select{width:125px}
+</style>
+</head>
+
+<body>
+
+<canvas id="c"></canvas>
+
+<div id="ui">
+
+<div class="row">
+<label>mass</label>
+<input id="mass" type="range" min="0" max="5" step=".01" value="1">
+<span class="val" id="massv">1</span>
+</div>
+
+<div class="row">
+<label>c</label>
+<input id="speed" type="range" min=".1" max="3" step=".01" value="1">
+<span class="val" id="speedv">1</span>
+</div>
+
+<div class="row">
+<label>hbar</label>
+<input id="hbar" type="range" min=".1" max="5" step=".01" value="1">
+<span class="val" id="hbarv">1</span>
+</div>
+
+<div class="row">
+<label>dt</label>
+<input id="dt" type="range" min=".001" max=".08" step=".001" value=".04">
+<span class="val" id="dtv">.04</span>
+</div>
+
+<div class="row">
+<label>amplitude</label>
+<input id="amp" type="range" min=".1" max="5" step=".01" value="1">
+<span class="val" id="ampv">1</span>
+</div>
+
+<div class="row">
+<label>disturbance</label>
+<input id="dist" type="range" min=".1" max="5" step=".01" value="1">
+<span class="val" id="distv">1</span>
+</div>
+
+<div class="row">
+<label>radius</label>
+<input id="radius" type="range" min=".1" max="3" step=".01" value=".5">
+<span class="val" id="radiusv">.5</span>
+</div>
+
+<div class="row">
+<label>color</label>
+<select id="color">
+<option value="br">blue / red</option>
+<option value="gray">grayscale</option>
+<option value="heat">heat</option>
+<option value="rainbow">rainbow</option>
+<option value="cyan">cyan / red</option>
+<option value="purple">purple / green</option>
+<option value="phase">phase</option>
+<option value="magnitude">magnitude</option>
+</select>
+</div>
+
+</div>
+
+<script>
+const canvas=document.getElementById("c")
+const ctx=canvas.getContext("2d")
+
+let nx=300,ny=300
+let xmin=-10,xmax=10
+let ymin=-10,ymax=10
+
+let dx=(xmax-xmin)/(nx-1)
+let dy=(ymax-ymin)/(ny-1)
+
+let t=0
+
+const params={
+    m:1,
+    c:1,
+    hbar:1,
+    dt:.04,
+    amp:1,
+    disturbance:1,
+    radius:.5
+}
+
+function slider(id,key){
+    let s=document.getElementById(id)
+    let v=document.getElementById(id+"v")
+
+    function update(){
+        params[key]=+s.value
+        v.textContent=s.value
+    }
+
+    s.oninput=update
+    update()
+}
+
+slider("mass","m")
+slider("speed","c")
+slider("hbar","hbar")
+slider("dt","dt")
+slider("amp","amp")
+slider("dist","disturbance")
+slider("radius","radius")
+
+let p=Array.from({length:nx},(_,i)=>Array.from({length:ny},(_,j)=>{
+    let x=xmin+i*dx
+    let y=ymin+j*dy
+    return params.amp*Math.exp(-2*(x*x+y*y))
+}))
+
+let q=Array.from({length:nx},()=>Array(ny).fill(0))
+
+function step(){
+
+    let dt=params.dt
+    let dx2=dx*dx
+    let dy2=dy*dy
+    let mu=(params.m*params.c*params.c/params.hbar)**2
+
+    let pn=p.map(a=>a.slice())
+    let qn=q.map(a=>a.slice())
+
+    for(let i=1;i<nx-1;i++)for(let j=1;j<ny-1;j++){
+
+        let lap=
+            (p[i+1][j]-2*p[i][j]+p[i-1][j])/dx2+
+            (p[i][j+1]-2*p[i][j]+p[i][j-1])/dy2
+
+        let acc=params.c*params.c*(lap-mu*p[i][j])
+
+        qn[i][j]=q[i][j]+dt*acc
+        pn[i][j]=p[i][j]+dt*qn[i][j]
+    }
+
+    p=pn
+    q=qn
+}
+
+function disturb(mx,my){
+
+    let rect=canvas.getBoundingClientRect()
+
+    let px=mx-rect.left
+    let py=my-rect.top
+
+    let x=xmin+px/rect.width*(xmax-xmin)
+    let y=ymax-py/rect.height*(ymax-ymin)
+
+    let r=params.radius
+    let a=params.disturbance
+
+    for(let i=1;i<nx-1;i++)for(let j=1;j<ny-1;j++){
+
+        let xx=xmin+i*dx
+        let yy=ymin+j*dy
+        let d2=(xx-x)**2+(yy-y)**2
+
+        p[i][j]+=a*Math.exp(-d2/(2*r*r))
+    }
+}
+
+canvas.addEventListener("pointerdown",e=>{
+    disturb(e.clientX,e.clientY)
+})
+
+function hsv(h,s,v){
+
+    h=((h%1)+1)%1
+
+    let i=Math.floor(h*6)
+    let f=h*6-i
+
+    let p=v*(1-s)
+    let q=v*(1-f*s)
+    let t=v*(1-(1-f)*s)
+
+    switch(i%6){
+        case 0:return [v,t,p]
+        case 1:return [q,v,p]
+        case 2:return [p,v,t]
+        case 3:return [p,q,v]
+        case 4:return [t,p,v]
+        case 5:return [v,p,q]
+    }
+}
+
+function colorize(v,mode){
+
+    let a=Math.abs(v)
+
+    if(mode==="gray"){
+        let x=(v+1)*.5
+        return [x*255,x*255,x*255]
+    }
+
+    if(mode==="br"){
+        if(v>=0)return [255*v,255*(1-v),0]
+        return [0,255*(1+v),-255*v]
+    }
+
+    if(mode==="heat"){
+        let x=(v+1)*.5
+        return hsv(.70-.70*x,1,.15+.85*x)
+    }
+
+    if(mode==="rainbow"){
+        return hsv((v+1)*.5,1,.9)
+    }
+
+    if(mode==="cyan"){
+        if(v>=0)return [255*v,255*v,255*v]
+        return [0,255*(-v),255]
+    }
+
+    if(mode==="purple"){
+        if(v>=0)return [255*v,100*v,255*v]
+        return [100*(-v),255*(-v),100*(-v)]
+    }
+
+    if(mode==="phase"){
+        let h=Math.atan2(v,.15)/(2*Math.PI)+.5
+        return hsv(h,1,.2+.8*a)
+    }
+
+    if(mode==="magnitude"){
+        let x=Math.min(1,a)
+        return hsv(.70-.70*x,1,.15+.85*x)
+    }
+
+    return [0,0,0]
+}
+
+let image=ctx.createImageData(nx,ny)
+
+function draw(){
+
+    let scale=0
+
+    for(let i=0;i<nx;i++)
+        for(let j=0;j<ny;j++)
+            scale=Math.max(scale,Math.abs(p[i][j]))
+
+    if(scale<1e-12)scale=1
+
+    let mode=document.getElementById("color").value
+
+    for(let i=0;i<nx;i++)for(let j=0;j<ny;j++){
+
+        let v=p[i][j]/scale
+        v=Math.max(-1,Math.min(1,v))
+
+        let col=colorize(v,mode)
+
+        let row=ny-1-j
+        let k=(row*nx+i)*4
+
+        image.data[k]=col[0]
+        image.data[k+1]=col[1]
+        image.data[k+2]=col[2]
+        image.data[k+3]=255
+    }
+
+    ctx.putImageData(image,0,0)
+
+    step()
+    t+=params.dt
+
+    requestAnimationFrame(draw)
+}
+
+function resize(){
+    canvas.width=innerWidth
+    canvas.height=innerHeight
+}
+
+addEventListener("resize",resize)
+
+resize()
+draw()
+</script>
+
+</body>
+</html>

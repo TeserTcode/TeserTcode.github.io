@@ -291,7 +291,7 @@ button:active {
 
 
 
-const levelnames=["Awaitment","Blightning","Rapidfire","Shadowed","Synclyth","Extreme Synclyth","Apocalyptic Synclyth","Horizons","Nameless","Ruth"];
+const levelnames=["Awaitment","Blightning","Rapidfire","Shadowed","Synclyth","Extreme Synclyth","Apocalyptic Synclyth","Horizons","Nameless","Ruth","Tago"];
 const levels=[
 
     // Level 1: Awaitment
@@ -1083,6 +1083,11 @@ jklfdsjklfdsjklfdsjklfds
   
   
   ],
+  
+  
+  [
+    ['S', 0.00],    [' ', 0.20],    ['L', 0.20],    [' ', 0.60],    [' ', 0.80],    ['L', 0.80],    [' ', 1.00],    ['S', 1.00],    [' ', 1.20],    ['L', 1.20],    [' ', 1.40],    ['S', 1.40],    ['F', 1.60],    ['J', 1.60],    [' ', 1.80],    ['L', 1.80],    [' ', 2.00],    ['K', 2.00],    [' ', 2.20],    ['K', 2.20],    ['J', 2.40],    [' ', 2.60],    ['K', 2.60],    ['J', 2.80],    [' ', 3.00],    ['K', 3.00],    ['J', 3.20],    ['F', 3.20],    [' ', 3.40],    ['K', 3.40],    ['J', 3.60],    ['F', 3.60],    [' ', 3.80],    ['J', 3.80],    ['F', 4.00],    ['D', 4.00],    [' ', 4.20],    ['J', 4.20],    ['F', 4.40],    ['D', 4.40],    [' ', 4.60],    ['J', 4.60],    ['S', 4.80],    [' ', 5.00],    ['J', 5.00],    ['S', 5.20],    [' ', 5.40],    ['J', 5.40],    ['D', 5.60],    [' ', 5.80],    ['J', 5.80],    ['D', 6.00],    [' ', 6.20],    ['K', 6.20],    ['F', 6.40],    [' ', 6.60],    ['S', 6.60],    [' ', 6.80],    ['J', 6.80],    [' ', 7.00],    ['F', 7.00],    [' ', 7.20],    ['L', 7.20],    [' ', 7.40],    ['K', 7.40],    [' ', 7.60],    ['J', 7.60],    [' ', 7.80],    ['F', 7.80],    [' ', 8.00],    ['D', 8.00],    [' ', 8.20],    ['S', 8.20],    [' ', 8.40],    ['D', 8.40],    [' ', 8.60],    ['S', 8.60],    [' ', 8.80],    ['L', 8.80],    ['K', 9.00],    [' ', 9.10],    ['K', 9.10],    ['J', 9.30],    [' ', 9.40],    ['J', 9.40],    ['F', 9.60],    [' ', 9.70],    ['F', 9.70],    ['J', 9.90],    [' ', 10.00],    ['F', 10.00],    ['S', 10.20],    [' ', 10.30],    ['D', 10.30],    ['S', 10.50],    [' ', 10.60],    ['J', 10.60],    ['J', 10.80],    [' ', 10.90],    ['J', 10.90],    ['F', 11.10],    [' ', 11.20],    ['L', 11.20],    ['K', 11.40],    [' ', 11.50],    ['J', 11.50],    ['K', 11.70],    [' ', 11.80],    ['L', 11.80],    ['K', 12.00],    [' ', 12.10],    ['J', 12.10],    ['K', 12.30],    [' ', 12.40],    ['L', 12.40],    [' ', 12.60],    ['K', 12.60],    [' ', 13.00],    ['J', 13.20],    [' ', 13.50],    [' ', 13.70],    ['S', 13.70],    ['J', 13.90],    ['L', 13.90],    [' ', 14.10],    ['S', 14.10],    ['L', 14.30],    [' ', 14.40],    ['S', 14.40],    ['J', 14.60],    [' ', 14.80],    ['S', 14.80],    ['L', 15.00],    [' ', 15.20],    ['S', 15.20],    ['J', 15.40],    ['L', 15.60],    [' ', 15.70],    ['S', 15.70],    [' ', 15.90],    ['S', 15.90],    ['J', 16.10],    ['L', 16.10],    [' ', 16.30],    ['D', 16.30],    ['K', 16.50],    ['D', 16.70],    ['K', 16.70],    [' ', 16.80],    ['F', 16.80],    ['J', 17.00],    ['D', 17.20],    ['K', 17.20],    [' ', 17.30],    ['S', 17.30],    ['L', 17.50],    ['D', 17.70],    ['K', 17.70],    [' ', 17.80],    ['S', 17.80],    ['L', 18.00],    ['D', 18.20],    ['K', 18.20],    [' ', 18.30],    ['S', 18.30],    ['L', 18.50],    ['D', 18.70],    ['K', 18.70],    [' ', 18.80],    ['S', 18.80],    ['L', 19.00],    ['D', 19.20],    ['K', 19.20],    [' ', 19.30],    ['S', 19.30],    ['L', 19.50],    ['D', 19.70],    ['K', 19.70],    [' ', 19.80],    ['S', 19.80],    ['L', 20.00],    ['S', 20.20],    ['L', 20.20],    [' ', 20.30],    ['S', 20.30],    ['L', 20.50],    ['S', 20.70],    ['L', 20.70]]
+  
 ];
 
         function updateLevelDisplay() {
@@ -1218,6 +1223,13 @@ class WaveGenerator {
     const periodicWave = this.audioContext.createPeriodicWave(waveform.real, waveform.imaginary);
     oscillator.setPeriodicWave(periodicWave);
 } else if (instrument === 'Ruth') {
+    // ApocalypticSynclyth (Heavily Distorted Triangle Wave)
+    gainNode.gain.setValueAtTime(3.0, this.audioContext.currentTime); // Strong distortion effect
+    oscillator.frequency.value = frequency;
+    const waveform = this.generateRuthWave(frequency); // Custom waveform for ApocalypticSynclyth
+    const periodicWave = this.audioContext.createPeriodicWave(waveform.real, waveform.imaginary);
+    oscillator.setPeriodicWave(periodicWave);
+} else if (instrument === 'Tago') {
     // ApocalypticSynclyth (Heavily Distorted Triangle Wave)
     gainNode.gain.setValueAtTime(3.0, this.audioContext.currentTime); // Strong distortion effect
     oscillator.frequency.value = frequency;
@@ -1527,6 +1539,7 @@ const levelInstruments = {
     "Horizons" : "Horizons",
     "Nameless" : "Horizons",
      "Ruth" : "Ruth",
+	  "Tago" : "Ruth",
 };
 
 
@@ -1541,6 +1554,7 @@ const levelHarmony = {
     "Horizons": harmonyIntervals.Third,
     "Nameless": harmonyIntervals.DoubleOctave,
     "Ruth": harmonyIntervals.Third,
+	"Tago": harmonyIntervals.Octave,
 };
 
 const levelScales = {
@@ -1554,6 +1568,7 @@ const levelScales = {
     "Horizons":scales.Dorian,
     "Nameless":scales.WholeTone,
     "Ruth": scales.Mixolydian,
+	 "Tago":scales.Dorian,
 };
 
 
@@ -1846,6 +1861,8 @@ const playButton = document.getElementById("playButton");
                     return "linear-gradient(to bottom, #1F1A2E, #16F13E, #0F3F60, #533F83, #E945F0)";
                 case "Ruth":
                     return "linear-gradient(to bottom,  #0F3F60, darkgreen,yellowgreen, pink, purple)";
+				case "Tago":
+                    return "linear-gradient(to bottom, #FFA07A, #FF4500, #FFFF00, #008B8B, #FFFFE0, #FFD700, #FF8C00)";
                 default:
                     return "black";
             }

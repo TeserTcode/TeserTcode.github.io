@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Rhythm Trainer</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #111;
+  color: #eee;
+  max-width: 900px;
+  margin: 25px auto;
+  padding: 0 15px;
+}
+
+h2 {
+  margin-bottom: 15px;
+}
+
+label {
+  margin-right: 10px;
+}
+
+input,
+button {
+  font: inherit;
+}
+
+button {
+  padding: 4px 9px;
+  margin: 3px;
+  cursor: pointer;
+}
+
+#controls {
+  margin-bottom: 12px;
+}
+
+#grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin: 12px 0;
+}
+
+.cell {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: #333;
+  color: #aaa;
+  border: 1px solid #555;
+}
+
+.cell.active {
+  background: #4caf50;
+  color: white;
+}
+
+#lane {
+  position: relative;
+  height: 90px;
+  background: #222;
+  border: 1px solid #444;
+  overflow: hidden;
+  margin: 15px 0;
+}
+
+#lane-center {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: white;
+  z-index: 5;
+}
+
+.lane-tick {
+  position: absolute;
+  top: 20px;
+  height: 50px;
+  width: 1px;
+  background: #555;
+}
+
+.lane-tick.beat {
+  top: 10px;
+  height: 70px;
+  width: 2px;
+  background: #aaa;
+}
+
+.lane-target {
+  position: absolute;
+  top: 25px;
+  height: 40px;
+  width: 3px;
+  margin-left: -1px;
+  background: #4caf50;
+}
+
+.lane-target.beat {
+  top: 15px;
+  height: 60px;
+}
+
+#stats {
+  margin: 12px 0;
+  line-height: 1.7;
+}
+
+#liveError {
+  font-size: 22px;
+}
+
+.small {
+  color: #999;
+  font-size: 13px;
+}
+
+#graph {
+  display: block;
+  width: 100%;
+  height: 320px;
+  background: #222;
+  border: 1px solid #444;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Rhythm Trainer</h2>
+
+<div id="controls">
+
+  <label>
+    BPM
+    <input
+      id="bpm"
+      type="number"
+      value="100"
+      min="20"
+      max="400"
+    >
+  </label>
+
+  <label>
+    Subdivision
+    <input
+      id="sub"
+      type="number"
+      value="4"
+      min="1"
+      max="32"
+    >
+  </label>
+
+  <label>
+    Pattern length
+    <input
+      id="poly"
+      type="number"
+      value="1"
+      min="1"
+      max="16"
+    >
+  </label>
+
+  <button id="build">Build</button>
+  <button id="start">Start</button>
+  <button id="stop">Stop</button>
+
+  <br>
+
+  <label>
+    <input
+      type="checkbox"
+      id="beatSound"
+      checked
+    >
+    Beat sound
+  </label>
+
+  <label>
+    <input
+      type="checkbox"
+      id="clickSound"
+    >
+    Subdivision sounds
+  </label>
+
+</div>
+
+
+<div id="grid"></div>
+
+
+<div id="lane">
+  <div id="lane-center"></div>
+</div>
+
+
+<div id="stats">
+
+  <div id="rate">
+    Expected: 400 clicks/min
+  </div>
+
+  <div id="liveError">
+    Offset: 0.0 ms
+  </div>
+
+  <div id="score">
+    Average error: 0.0 ms
+  </div>
+
+  <div id="rush">
+    Tempo: 0.0 ms
+  </div>
+
+  <div class="small">
+    Space = click.
+    Blue = early.
+    Red = late.
+    Green line = missed.
+    Pink = rushing / dragging.
+  </div>
+
+</div>
+
+
+<canvas
+  id="graph"
+  width="900"
+  height="320">
+</canvas>
+
+
+<script>
+
+let audioCtx = null;
+
+let running = false;
+
+let bpm = 100;
+let sub = 4;
+let patternLength = 1;
+
+const GRAPH_BEATS = 10;
+
+let pattern = [];
+
+let startTime = 0;
+let stepMs = 150;
+
+let nextBeat = 0;
+let timer = null;
+
+let schedule = [];
+
+let used = new Set();
+let missed = new Set();
+
+let errors = [];
+
+let clickTimes = [];
+let clickTargets = [];
+
+let tempoErrors = [];
+
+
+const $ = id =>
+  document.getElementById(id);
+
+
+/* =========================================================
+   AUDIO
+   ========================================================= */
+
+function beep(
+  frequency,
+  duration,
+  volume
+) {
+
+  if (!audioCtx)
+    return;
+
+  const oscillator =
+    audioCtx.createOscillator();
+
+  const gain =
+    audioCtx.createGain();
+
+  oscillator.frequency.value =
+    frequency;
+
+  gain.gain.value =
+    volume;
+
+  oscillator.connect(gain);
+  gain.connect(
+    audioCtx.destination
+  );
+
+  oscillator.start();
+
+  oscillator.stop(
+    audioCtx.currentTime +
+    duration
+  );
+}
+
+
+function playBeatSound() {
+
+  beep(
+    1200,
+    0.05,
+    0.25
+  );
+}
+
+
+function playSubdivisionSound() {
+
+  beep(
+    800,
+    0.035,
+    0.12
+  );
+}
+
+
+/* =========================================================
+   GRID
+   ========================================================= */
+
+function buildGrid() {
+
+  sub =
+    Math.max(
+      1,
+      +$("sub").value || 1
+    );
+
+  patternLength =
+    Math.max(
+      1,
+      +$("poly").value || 1
+    );
+
+  const count =
+    sub * patternLength;
+
+  pattern =
+    new Array(count).fill(0);
+
+  $("grid").innerHTML = "";
+
+  for (
+    let i = 0;
+    i < count;
+    i++
+  ) {
+
+    const cell =
+      document.createElement(
+        "button"
+      );
+
+    cell.className =
+      "cell";
+
+    cell.type =
+      "button";
+
+    cell.textContent =
+      i + 1;
+
+    cell.addEventListener(
+      "click",
+      () => {
+
+        pattern[i] ^= 1;
+
+        cell.classList.toggle(
+          "active",
+          !!pattern[i]
+        );
+      }
+    );
+
+    $("grid").appendChild(
+      cell
+    );
+  }
+
+  updateRate();
+}
+
+
+/* =========================================================
+   RATE
+   ========================================================= */
+
+function updateRate() {
+
+  bpm =
+    Math.max(
+      1,
+      +$("bpm").value || 100
+    );
+
+  sub =
+    Math.max(
+      1,
+      +$("sub").value || 1
+    );
+
+  const clicksPerMinute =
+    bpm * sub;
+
+  stepMs =
+    60000 /
+    clicksPerMinute;
+
+  $("rate").textContent =
+    "Expected: " +
+    clicksPerMinute.toFixed(2) +
+    " clicks/min | " +
+    stepMs.toFixed(2) +
+    " ms per subdivision";
+}
+
+
+/* =========================================================
+   START
+   ========================================================= */
+
+function start() {
+
+  stop();
+
+  updateRate();
+
+  audioCtx =
+    new (
+      window.AudioContext ||
+      window.webkitAudioContext
+    )();
+
+  audioCtx.resume();
+
+  running = true;
+
+  schedule = [];
+
+  used.clear();
+  missed.clear();
+
+  errors = [];
+
+  clickTimes = [];
+  clickTargets = [];
+
+  tempoErrors = [];
+
+  /*
+     Fixed reference time.
+  */
+
+  startTime =
+    performance.now() + 700;
+
+  nextBeat = 0;
+
+
+  /*
+     Build the complete expected timing grid.
+
+     Every target is:
+
+       startTime + index * stepMs
+  */
+
+  for (
+    let i = 0;
+    i < 10000;
+    i++
+  ) {
+
+    schedule.push(
+      startTime +
+      i * stepMs
+    );
+  }
+
+
+  timer =
+    setTimeout(
+      metronome,
+      Math.max(
+        0,
+        startTime -
+        performance.now()
+      )
+    );
+
+  requestAnimationFrame(
+    animate
+  );
+
+  drawGraph();
+}
+
+
+/* =========================================================
+   METRONOME
+   ========================================================= */
+
+function metronome() {
+
+  if (!running)
+    return;
+
+
+  const isBeat =
+    nextBeat % sub === 0;
+
+
+  /*
+     Beat sound can be independently
+     enabled/disabled.
+  */
+
+  if (
+    isBeat &&
+    $("beatSound").checked
+  ) {
+
+    playBeatSound();
+  }
+
+
+  /*
+     Subdivision sounds can independently
+     be enabled/disabled.
+
+     If enabled, ALL subdivisions sound.
+
+     The beat is not played twice:
+     beat positions are handled by the
+     beat sound above.
+  */
+
+  if (
+    !isBeat &&
+    $("clickSound").checked
+  ) {
+
+    playSubdivisionSound();
+  }
+
+
+  nextBeat++;
+
+
+  if (
+    nextBeat >=
+    schedule.length
+  ) {
+
+    stop();
+
+    return;
+  }
+
+
+  /*
+     Always schedule against the absolute
+     reference grid.
+  */
+
+  const nextTime =
+    schedule[nextBeat];
+
+  const delay =
+    nextTime -
+    performance.now();
+
+  timer =
+    setTimeout(
+      metronome,
+      Math.max(
+        0,
+        delay
+      )
+    );
+}
+
+
+/* =========================================================
+   TOP VISUALIZER
+   ========================================================= */
+
+function animate() {
+
+  if (!running)
+    return;
+
+  drawLane();
+
+  requestAnimationFrame(
+    animate
+  );
+}
+
+
+function drawLane() {
+
+  const lane =
+    $("lane");
+
+  lane
+    .querySelectorAll(
+      ".lane-tick, .lane-target"
+    )
+    .forEach(
+      element =>
+        element.remove()
+    );
+
+
+  const now =
+    performance.now();
+
+  const center =
+    lane.clientWidth / 2;
+
+
+  /*
+     Current time is the center.
+
+     Future targets are to the right.
+
+     Past targets are to the left.
+  */
+
+  const visibleTime =
+    Math.max(
+      stepMs * 8,
+      1000
+    );
+
+
+  const first =
+    Math.max(
+      0,
+      Math.floor(
+        (
+          now -
+          startTime -
+          visibleTime
+        ) /
+        stepMs
+      )
+    );
+
+
+  const last =
+    Math.min(
+      schedule.length - 1,
+      Math.ceil(
+        (
+          now -
+          startTime +
+          visibleTime
+        ) /
+        stepMs
+      )
+    );
+
+
+  for (
+    let i = first;
+    i <= last;
+    i++
+  ) {
+
+    const difference =
+      schedule[i] - now;
+
+    const x =
+      center +
+      (
+        difference /
+        visibleTime
+      ) *
+      center;
+
+
+    if (
+      x < -10 ||
+      x > lane.clientWidth + 10
+    )
+      continue;
+
+
+    const isBeat =
+      i % sub === 0;
+
+
+    const tick =
+      document.createElement(
+        "div"
+      );
+
+    tick.className =
+      "lane-tick" +
+      (
+        isBeat
+          ? " beat"
+          : ""
+      );
+
+    tick.style.left =
+      x + "px";
+
+    lane.appendChild(
+      tick
+    );
+
+
+    /*
+       Pattern selections are shown as
+       green target bars.
+    */
+
+    if (
+      pattern.length &&
+      pattern[
+        i % pattern.length
+      ]
+    ) {
+
+      const target =
+        document.createElement(
+          "div"
+        );
+
+      target.className =
+        "lane-target" +
+        (
+          isBeat
+            ? " beat"
+            : ""
+        );
+
+      target.style.left =
+        x + "px";
+
+      lane.appendChild(
+        target
+      );
+    }
+  }
+}
+
+
+/* =========================================================
+   REGISTER USER CLICK
+   ========================================================= */
+
+function registerHit() {
+
+  if (!running)
+    return;
+
+  const now =
+    performance.now();
+
+
+  /*
+     Find the closest expected click.
+
+     IMPORTANT:
+
+     This is independent for every click.
+
+     There is no accumulated error.
+  */
+
+  const estimate =
+    Math.round(
+      (
+        now -
+        startTime
+      ) /
+      stepMs
+    );
+
+
+  let bestIndex = -1;
+
+  let bestDistance =
+    Infinity;
+
+
+  const first =
+    Math.max(
+      0,
+      estimate - 4
+    );
+
+  const last =
+    Math.min(
+      schedule.length - 1,
+      estimate + 4
+    );
+
+
+  for (
+    let i = first;
+    i <= last;
+    i++
+  ) {
+
+    if (
+      used.has(i) ||
+      missed.has(i)
+    )
+      continue;
+
+
+    const distance =
+      Math.abs(
+        now -
+        schedule[i]
+      );
+
+
+    if (
+      distance <
+      bestDistance
+    ) {
+
+      bestDistance =
+        distance;
+
+      bestIndex =
+        i;
+    }
+  }
+
+
+  if (bestIndex < 0)
+    return;
+
+
+  used.add(
+    bestIndex
+  );
+
+  clickTargets.push(
+    bestIndex
+  );
+
+
+  const signedOffset =
+    now -
+    schedule[bestIndex];
+
+  const absoluteError =
+    Math.abs(
+      signedOffset
+    );
+
+
+  errors.push(
+    absoluteError
+  );
+
+
+  clickTimes.push(
+    now
+  );
+
+
+  /*
+     Compare the time between this click
+     and the previous click.
+
+     expected = stepMs
+
+     actual < expected:
+       rushing
+
+     actual > expected:
+       dragging
+  */
+
+  if (
+    clickTimes.length >= 2
+  ) {
+
+    const current =
+      clickTimes[
+        clickTimes.length - 1
+      ];
+
+    const previous =
+      clickTimes[
+        clickTimes.length - 2
+      ];
+
+    const actualInterval =
+      current -
+      previous;
+
+    const tempoError =
+      stepMs -
+      actualInterval;
+
+    tempoErrors.push(
+      tempoError
+    );
+  }
+
+
+  $("liveError").textContent =
+    "Offset: " +
+    absoluteError.toFixed(1) +
+    " ms " +
+    (
+      signedOffset < 0
+        ? "(early)"
+        : signedOffset > 0
+          ? "(late)"
+          : "(exact)"
+    );
+
+
+  updateAverage();
+
+  updateRushing();
+
+  drawGraph();
+}
+
+
+/* =========================================================
+   MISSED CLICKS
+   ========================================================= */
+
+function checkMissedBeats() {
+
+  if (!running)
+    return;
+
+  const now =
+    performance.now();
+
+
+  /*
+     Once a target is more than half a
+     subdivision behind us, it can no
+     longer be the closest target.
+  */
+
+  const latest =
+    Math.floor(
+      (
+        now -
+        startTime -
+        stepMs / 2
+      ) /
+      stepMs
+    );
+
+
+  for (
+    let i = 0;
+    i <= latest;
+    i++
+  ) {
+
+    if (
+      used.has(i) ||
+      missed.has(i)
+    )
+      continue;
+
+
+    if (
+      i >= schedule.length
+    )
+      continue;
+
+
+    if (
+      now >
+      schedule[i] +
+      stepMs / 2
+    ) {
+
+      missed.add(i);
+
+      updateAverage();
+
+      drawGraph();
+    }
+  }
+}
+
+
+/* =========================================================
+   AVERAGE
+   ========================================================= */
+
+function updateAverage() {
+
+  if (!errors.length) {
+
+    $("score").textContent =
+      "Average error: 0.0 ms";
+
+    return;
+  }
+
+
+  const average =
+    errors.reduce(
+      (sum, value) =>
+        sum + value,
+      0
+    ) /
+    errors.length;
+
+
+  $("score").textContent =
+    "Average error: " +
+    average.toFixed(1) +
+    " ms | Hits: " +
+    errors.length +
+    " | Missed: " +
+    missed.size;
+}
+
+
+/* =========================================================
+   RUSHING
+   ========================================================= */
+
+function updateRushing() {
+
+  if (!tempoErrors.length) {
+
+    $("rush").textContent =
+      "Tempo: 0.0 ms";
+
+    return;
+  }
+
+
+  const average =
+    tempoErrors.reduce(
+      (sum, value) =>
+        sum + value,
+      0
+    ) /
+    tempoErrors.length;
+
+
+  if (average > 0) {
+
+    $("rush").textContent =
+      "Rushing: +" +
+      average.toFixed(1) +
+      " ms";
+
+  } else if (average < 0) {
+
+    $("rush").textContent =
+      "Dragging: " +
+      average.toFixed(1) +
+      " ms";
+
+  } else {
+
+    $("rush").textContent =
+      "Tempo: 0.0 ms";
+  }
+}
+
+
+/* =========================================================
+   GRAPH
+   ========================================================= */
+
+function drawGraph() {
+
+  const canvas =
+    $("graph");
+
+  const ctx =
+    canvas.getContext("2d");
+
+
+  ctx.clearRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+
+  const width =
+    canvas.width;
+
+
+  /*
+     Graph is split into two sections.
+
+     TOP:
+       timing
+
+     BOTTOM:
+       tempo
+  */
+
+  const timingTop = 25;
+  const timingBottom = 145;
+
+  const tempoTop = 180;
+  const tempoBottom = 300;
+
+
+  const timingMid =
+    (
+      timingTop +
+      timingBottom
+    ) / 2;
+
+  const tempoMid =
+    (
+      tempoTop +
+      tempoBottom
+    ) / 2;
+
+
+  /*
+     Show exactly the last 10 beats.
+
+     The underlying target indices are
+     still absolute.
+  */
+
+  const firstVisibleIndex =
+    Math.max(
+      0,
+      nextBeat -
+      GRAPH_BEATS * sub
+    );
+
+
+  const lastVisibleIndex =
+    Math.max(
+      firstVisibleIndex,
+      nextBeat - 1
+    );
+
+
+  const visibleCount =
+    Math.max(
+      1,
+      lastVisibleIndex -
+      firstVisibleIndex +
+      1
+    );
+
+
+  function xForIndex(index) {
+
+    return (
+      (
+        index -
+        firstVisibleIndex
+      ) /
+      Math.max(
+        1,
+        visibleCount - 1
+      )
+    ) *
+    width;
+  }
+
+
+  /* ---------------- AXES ---------------- */
+
+  ctx.strokeStyle =
+    "#555";
+
+  ctx.lineWidth = 1;
+
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    0,
+    timingMid
+  );
+
+  ctx.lineTo(
+    width,
+    timingMid
+  );
+
+  ctx.stroke();
+
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    0,
+    tempoMid
+  );
+
+  ctx.lineTo(
+    width,
+    tempoMid
+  );
+
+  ctx.stroke();
+
+
+  ctx.fillStyle =
+    "#aaa";
+
+  ctx.font =
+    "13px Arial";
+
+
+  ctx.fillText(
+    "Timing offset",
+    10,
+    18
+  );
+
+  ctx.fillText(
+    "Tempo / rushing",
+    10,
+    174
+  );
+
+  ctx.fillText(
+    "early",
+    10,
+    timingTop + 15
+  );
+
+  ctx.fillText(
+    "late",
+    10,
+    timingBottom - 5
+  );
+
+  ctx.fillText(
+    "rushing",
+    10,
+    tempoTop + 15
+  );
+
+  ctx.fillText(
+    "dragging",
+    10,
+    tempoBottom - 5
+  );
+
+
+  /* ---------------- BEAT GRID ---------------- */
+
+  for (
+    let i =
+      firstVisibleIndex;
+    i <= lastVisibleIndex;
+    i++
+  ) {
+
+    if (
+      i % sub !== 0
+    )
+      continue;
+
+
+    const x =
+      xForIndex(i);
+
+
+    ctx.strokeStyle =
+      "#333";
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      x,
+      timingTop
+    );
+
+    ctx.lineTo(
+      x,
+      tempoBottom
+    );
+
+    ctx.stroke();
+  }
+
+
+  /* ---------------- MISSED ---------------- */
+
+  /*
+     Green line is at the exact target
+     position that was missed.
+  */
+
+  for (
+    const index of missed
+  ) {
+
+    if (
+      index <
+      firstVisibleIndex ||
+      index >
+      lastVisibleIndex
+    )
+      continue;
+
+
+    const x =
+      xForIndex(index);
+
+
+    ctx.strokeStyle =
+      "#4caf50";
+
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      x,
+      timingTop
+    );
+
+    ctx.lineTo(
+      x,
+      timingBottom
+    );
+
+    ctx.stroke();
+  }
+
+
+  /* ---------------- TIMING DOTS ---------------- */
+
+  const visibleErrors = [];
+
+
+  for (
+    let i = 0;
+    i < clickTimes.length;
+    i++
+  ) {
+
+    const targetIndex =
+      clickTargets[i];
+
+
+    if (
+      targetIndex <
+      firstVisibleIndex ||
+      targetIndex >
+      lastVisibleIndex
+    )
+      continue;
+
+
+    visibleErrors.push(
+      Math.abs(
+        clickTimes[i] -
+        schedule[targetIndex]
+      )
+    );
+  }
+
+
+  const maxOffset =
+    Math.max(
+      100,
+      ...visibleErrors
+    );
+
+
+  for (
+    let i = 0;
+    i < clickTimes.length;
+    i++
+  ) {
+
+    const targetIndex =
+      clickTargets[i];
+
+
+    if (
+      targetIndex <
+      firstVisibleIndex ||
+      targetIndex >
+      lastVisibleIndex
+    )
+      continue;
+
+
+    const signedOffset =
+      clickTimes[i] -
+      schedule[targetIndex];
+
+
+    const normalized =
+      Math.max(
+        -1,
+        Math.min(
+          1,
+          signedOffset /
+          maxOffset
+        )
+      );
+
+
+    const y =
+      timingMid +
+      normalized *
+      (
+        timingBottom -
+        timingMid -
+        10
+      );
+
+
+    const x =
+      xForIndex(
+        targetIndex
+      );
+
+
+    /*
+       Blue = early
+       Red = late
+    */
+
+    ctx.fillStyle =
+      signedOffset < 0
+        ? "#2196f3"
+        : "#f44336";
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+      x,
+      y,
+      5,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fill();
+  }
+
+
+  /* ---------------- TEMPO DOTS ---------------- */
+
+  const visibleTempo = [];
+
+
+  for (
+    let i = 0;
+    i < tempoErrors.length;
+    i++
+  ) {
+
+    const targetIndex =
+      clickTargets[i + 1];
+
+
+    if (
+      targetIndex <
+      firstVisibleIndex ||
+      targetIndex >
+      lastVisibleIndex
+    )
+      continue;
+
+
+    visibleTempo.push(
+      tempoErrors[i]
+    );
+  }
+
+
+  const maxTempo =
+    Math.max(
+      50,
+      ...visibleTempo.map(
+        value =>
+          Math.abs(value)
+      )
+    );
+
+
+  for (
+    let i = 0;
+    i < tempoErrors.length;
+    i++
+  ) {
+
+    const targetIndex =
+      clickTargets[i + 1];
+
+
+    if (
+      targetIndex <
+      firstVisibleIndex ||
+      targetIndex >
+      lastVisibleIndex
+    )
+      continue;
+
+
+    const value =
+      tempoErrors[i];
+
+
+    const normalized =
+      Math.max(
+        -1,
+        Math.min(
+          1,
+          value /
+          maxTempo
+        )
+      );
+
+
+    const y =
+      tempoMid -
+      normalized *
+      (
+        tempoBottom -
+        tempoMid -
+        10
+      );
+
+
+    const x =
+      xForIndex(
+        targetIndex
+      );
+
+
+    ctx.fillStyle =
+      "#ff69b4";
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+      x,
+      y,
+      5,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fill();
+  }
+
+
+  /* ---------------- LEGEND ---------------- */
+
+  ctx.fillStyle =
+    "#2196f3";
+
+  ctx.fillText(
+    "● early",
+    width - 220,
+    18
+  );
+
+  ctx.fillStyle =
+    "#f44336";
+
+  ctx.fillText(
+    "● late",
+    width - 160,
+    18
+  );
+
+  ctx.fillStyle =
+    "#4caf50";
+
+  ctx.fillText(
+    "│ missed",
+    width - 100,
+    18
+  );
+
+  ctx.fillStyle =
+    "#ff69b4";
+
+  ctx.fillText(
+    "● tempo",
+    width - 75,
+    174
+  );
+
+
+  ctx.fillStyle =
+    "#777";
+
+  ctx.fillText(
+    "last " +
+    GRAPH_BEATS +
+    " beats",
+    width - 95,
+    315
+  );
+}
+
+
+/* =========================================================
+   STOP
+   ========================================================= */
+
+function stop() {
+
+  running = false;
+
+  if (timer) {
+
+    clearTimeout(
+      timer
+    );
+
+    timer = null;
+  }
+}
+
+
+/* =========================================================
+   KEYBOARD
+   ========================================================= */
+
+document.addEventListener(
+  "keydown",
+  event => {
+
+    if (
+      event.code === "Space"
+    ) {
+
+      event.preventDefault();
+
+      registerHit();
+    }
+  }
+);
+
+
+/* =========================================================
+   CONTROLS
+   ========================================================= */
+
+$("build").addEventListener(
+  "click",
+  buildGrid
+);
+
+$("start").addEventListener(
+  "click",
+  start
+);
+
+$("stop").addEventListener(
+  "click",
+  stop
+);
+
+$("bpm").addEventListener(
+  "input",
+  updateRate
+);
+
+$("sub").addEventListener(
+  "input",
+  updateRate
+);
+
+
+/* =========================================================
+   MISSED CLICK CHECK
+   ========================================================= */
+
+setInterval(
+  checkMissedBeats,
+  20
+);
+
+
+/* =========================================================
+   INITIALIZE
+   ========================================================= */
+
+buildGrid();
+
+</script>
+
+</body>
+</html>

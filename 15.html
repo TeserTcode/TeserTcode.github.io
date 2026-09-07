@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>15 Puzzle</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+:root{--tile-size:110px;--gap:3px;--anim-speed:.14s;--anim-ease:ease}
+body{text-align:center;background:url('15bg.png') no-repeat center center;background-size:cover;background-attachment:fixed;min-height:100vh;margin:0;font-family:Arial,sans-serif;user-select:none;-webkit-user-select:none}
+h1{color:#fff;text-shadow:2px 2px 4px #000;margin:10px 0}
+#topbar{display:flex;justify-content:center;gap:10px;margin:12px auto;flex-wrap:wrap}
+.scorebox{display:inline-block;min-width:120px;font-size:20px;background:conic-gradient(from 0deg,#5B292E 0deg,#412947 90deg,#412947 180deg,#412947 270deg,#5B292E 360deg);box-shadow:0 1px 3px #666;color:#9E6171;text-shadow:2px 2px 5px rgba(0,0,0,.65);padding:10px 15px;border:2px solid #000;font-weight:700}
+#board-wrap{display:inline-block;background:#555;padding:9px;border-radius:10px;position:relative}
+#board{position:relative;width:calc(var(--tile-size)*4 + var(--gap)*3);height:calc(var(--tile-size)*4 + var(--gap)*3);background:#333;image-rendering:pixelated}
+.tile{position:absolute;width:var(--tile-size);height:var(--tile-size);cursor:pointer;z-index:2;transition:transform var(--anim-speed) var(--anim-ease);background-size:400% 400%;background-repeat:no-repeat;image-rendering:pixelated}
+.tile.movable:hover{filter:brightness(1.08)}
+.tile.moving{pointer-events:none;z-index:10!important}
+#message{color:#fff;font-size:28px;font-weight:700;text-shadow:2px 2px 3px #000;margin:18px 0;min-height:34px}
+button{margin:5px;background:rgba(255,255,255,.9);padding:8px 12px;border-radius:6px;border:1px solid #000;font-size:16px;cursor:pointer}
+button:hover{background:#fff}
+#dpad{margin:16px auto;display:flex;flex-direction:column;align-items:center;gap:4px}
+.d-row{display:flex;gap:4px}
+.d-btn{width:58px;height:58px;font-size:24px;font-weight:700;background:rgba(255,255,255,.82);border:2px solid #000;border-radius:8px;touch-action:manipulation}
+.d-btn:active{background:#5B292E}
+#options{display:none;max-width:420px;margin:15px auto;background:linear-gradient(to bottom,rgba(52,217,214,.85),rgba(43,184,90,.85));border-radius:14px;border:2px solid #000;padding:12px;color:#000}
+#options label{display:block;margin:8px 0}
+#options input[type=checkbox]{margin-right:8px}
+#imageLoader{margin:10px 0}
+#imageLoader input{display:block;margin:10px auto;max-width:300px}
+@media(max-width:600px){:root{--tile-size:min(21vw,90px)}#board-wrap{padding:6px}.scorebox{min-width:90px;font-size:17px}}
+</style>
+</head>
+<body>
+<h1>15 Puzzle</h1>
+<div id=topbar>
+  <div class=scorebox id=moves>Moves: 0</div>
+  <div class=scorebox id=time>Time: 0s</div>
+  <div class=scorebox id=best>Best: --</div>
+  <div class=scorebox id=bestTime>Best Time: --</div>
+</div>
+<div id=board-wrap><div id=board></div></div>
+<div id=message></div>
+<div>
+  <button onclick=newGame()>New Game</button>
+  <button onclick="toggleOptions()">⚙ Options</button>
+</div>
+<div id=dpad><div class=d-row><button class=d-btn onclick="move('up')">▲</button></div><div class=d-row><button class=d-btn onclick="move('left')">◀</button><button class=d-btn onclick="move('down')">▼</button><button class=d-btn onclick="move('right')">▶</button></div></div>
+<div id=options>
+  <div>Animation speed: <input id=speed type=range min=40 max=400 value=140 oninput="setSpeed(this.value)"> <span id=speedValue>140ms</span></div>
+  <label><input type=checkbox id=hoverMode checked onchange="toggleHoverMode()"> Hover Mode (move on mouseover)</label>
+  <label><input type=checkbox id=instantMode checked onchange="toggleInstantMode()"> Instant Switch (cancel animation on new tile)</label>
+  <div id=imageLoader>
+    <label>Custom Image: <input type=file accept="image/*" onchange="loadImage(this)"></label>
+    <button onclick="resetImage()">Reset to Numbers</button>
+  </div>
+</div>
+<script>
+const B=document.getElementById("board"),M=document.getElementById("moves"),TM=document.getElementById("time"),BE=document.getElementById("best"),BT=document.getElementById("bestTime"),ME=document.getElementById("message");
+let board=[],empty=15,moves=0,animating=!1,animDuration=140;
+let tileElements={};
+let useCustomImage=!1,customImageData=null;
+let hoverMode=!0,instantMode=!0;
+let timerInterval=null,startTime=null,elapsedSeconds=0;
+let currentAnimation=null;
+let lastMovedTile=-1;
+let animatingTile=null;
+let animatingFromIndex=-1;
+let animatingToIndex=-1;
+
+function getTileSize(){return parseInt(getComputedStyle(document.documentElement).getPropertyValue('--tile-size'))}
+function getGap(){return parseInt(getComputedStyle(document.documentElement).getPropertyValue('--gap'))}
+function pos(i){return{row:Math.floor(i/4),col:i%4}}
+function px(i){const ts=getTileSize(),gap=getGap();return{left:i%4*(ts+gap),top:Math.floor(i/4)*(ts+gap)}}
+
+function getCookie(name){const c=document.cookie.match('(^|;)\\s*'+name+'\\s*=\\s*([^;]+)');return c?c[2]:null}
+function setCookie(name,value){document.cookie=name+'='+value+';path=/;max-age=31536000'}
+
+function getBackgroundPosition(index){
+  const row=Math.floor(index/4),col=index%4;
+  return (col*33.333)+"% "+(row*33.333)+"%";
+}
+
+function draw(){
+  B.innerHTML="";
+  tileElements={};
+  for(let i=0;i<16;i++){
+    if(board[i]!==0){
+      const t=document.createElement("div");
+      t.className="tile";
+      const p=px(i);
+      t.style.left=p.left+"px";
+      t.style.top=p.top+"px";
+      t.dataset.index=i;
+      t.dataset.value=board[i];
+      
+      if(useCustomImage && customImageData){
+        t.style.backgroundImage="url('"+customImageData+"')";
+        t.style.backgroundSize="400% 400%";
+        t.style.backgroundPosition=getBackgroundPosition(board[i]-1);
+      }else{
+        t.style.backgroundImage="url('./15/"+board[i]+".png')";
+        t.style.backgroundSize="cover";
+        t.style.backgroundPosition="center";
+      }
+      
+      if(isAdjacent(i,empty) && i!==lastMovedTile){
+        t.classList.add("movable");
+        if(hoverMode){
+          t.onmouseenter=(function(idx){return function(){if(!animating)moveTile(idx)}})(i);
+        }else{
+          t.onclick=(function(idx){return function(){moveTile(idx)}})(i);
+        }
+      }
+      B.appendChild(t);
+      tileElements[i]=t;
+    }
+  }
+  M.textContent="Moves: "+moves;
+  const best=parseInt(getCookie('15best'))||null;
+  BE.textContent="Best: "+(best===null?"--":best);
+  const bestTime=parseInt(getCookie('15bestTime'))||null;
+  BT.textContent="Best Time: "+(bestTime===null?"--":bestTime+"s");
+}
+
+function solved(){
+  for(let i=0;i<15;i++)if(board[i]!==i+1)return!1;
+  return board[15]===0;
+}
+
+function isAdjacent(a,b){
+  const p1=pos(a),p2=pos(b);
+  return Math.abs(p1.row-p2.row)+Math.abs(p1.col-p2.col)===1;
+}
+
+function getEmptyNeighbors(){
+  const r=Math.floor(empty/4),c=empty%4;
+  const neighbors=[];
+  if(r>0) neighbors.push(empty-4);
+  if(r<3) neighbors.push(empty+4);
+  if(c>0) neighbors.push(empty-1);
+  if(c<3) neighbors.push(empty+1);
+  return neighbors;
+}
+
+function startTimer(){
+  if(timerInterval) clearInterval(timerInterval);
+  startTime=Date.now()-elapsedSeconds*1000;
+  timerInterval=setInterval(()=>{
+    elapsedSeconds=Math.floor((Date.now()-startTime)/1000);
+    TM.textContent="Time: "+elapsedSeconds+"s";
+  },100);
+}
+
+function stopTimer(){
+  if(timerInterval){
+    clearInterval(timerInterval);
+    timerInterval=null;
+  }
+}
+
+function cancelAnimation(){
+  if(currentAnimation){
+    clearTimeout(currentAnimation);
+    currentAnimation=null;
+  }
+  
+  if(animatingTile){
+    // Snap the animating tile to its destination
+    const tileImg=animatingTile;
+    tileImg.classList.remove('moving');
+    tileImg.style.transition='none';
+    tileImg.style.transform='translate(0,0)';
+    tileImg.style.zIndex='2';
+    tileImg.offsetHeight;
+    
+    // Update tile position
+    const p=px(animatingToIndex);
+    tileImg.style.left=p.left+"px";
+    tileImg.style.top=p.top+"px";
+    
+    // Update board state if needed
+    if(board[animatingToIndex] === 0){
+      board[animatingToIndex] = board[animatingFromIndex];
+      board[animatingFromIndex] = 0;
+      empty = animatingFromIndex;
+      
+      // Update tileElements tracking
+      delete tileElements[animatingFromIndex];
+      tileElements[animatingToIndex] = tileImg;
+      tileImg.dataset.index = animatingToIndex;
+    }
+    
+    animatingTile=null;
+    animatingFromIndex=-1;
+    animatingToIndex=-1;
+    animating=!1;
+    lastMovedTile=-1;
+    updateClickHandlers();
+  }
+}
+
+function moveTile(index){
+  if(!isAdjacent(index,empty)) return;
+  if(board[index]===0) return;
+  
+  // Cancel current animation if instant mode is on
+  if(instantMode && animating){
+    // Save the old state before canceling
+    const oldIndex = index;
+    cancelAnimation();
+    // Check if the tile is still valid to move
+    if(!isAdjacent(oldIndex,empty)) return;
+    if(board[oldIndex]===0) return;
+    index = oldIndex;
+  }
+  
+  if(animating) return;
+  
+  if(moves===0) startTimer();
+  
+  animating=!0;
+  lastMovedTile=index;
+  const oldEmpty=empty;
+  const oldIndex=index;
+  const tileImg=tileElements[oldIndex];
+  
+  if(!tileImg){
+    animating=!1;
+    return;
+  }
+  
+  const from=pos(oldIndex),to=pos(oldEmpty);
+  const dx=(to.col-from.col)*100;
+  const dy=(to.row-from.row)*100;
+  
+  // Store animation state for cancellation
+  animatingTile=tileImg;
+  animatingFromIndex=oldIndex;
+  animatingToIndex=oldEmpty;
+  
+  tileImg.classList.add("moving");
+  tileImg.style.zIndex="10";
+  tileImg.style.transition="none";
+  tileImg.style.transform="translate(0,0)";
+  tileImg.offsetHeight;
+  tileImg.style.transition="transform "+animDuration+"ms "+getComputedStyle(document.documentElement).getPropertyValue("--anim-ease").trim();
+  tileImg.style.transform="translate("+dx+"%, "+dy+"%)";
+  
+  // Update board state immediately
+  board[oldEmpty]=board[oldIndex];
+  board[oldIndex]=0;
+  empty=oldIndex;
+  moves++;
+  
+  currentAnimation=setTimeout(()=>{
+    // Complete animation
+    tileImg.classList.remove("moving");
+    tileImg.style.zIndex="2";
+    tileImg.style.transition="none";
+    tileImg.style.transform="translate(0,0)";
+    tileImg.offsetHeight;
+    
+    const p=px(oldEmpty);
+    tileImg.style.left=p.left+"px";
+    tileImg.style.top=p.top+"px";
+    
+    // Update tileElements tracking
+    delete tileElements[oldIndex];
+    tileElements[oldEmpty]=tileImg;
+    tileImg.dataset.index=oldEmpty;
+    
+    if(solved()){
+      stopTimer();
+      const best=parseInt(getCookie('15best'));
+      if(best===null||moves<best) setCookie('15best',moves);
+      const bestTime=parseInt(getCookie('15bestTime'));
+      if(bestTime===null||elapsedSeconds<bestTime) setCookie('15bestTime',elapsedSeconds);
+      ME.textContent="Solved in "+moves+" moves and "+elapsedSeconds+" seconds!";
+      draw();
+    }else{
+      ME.textContent="";
+    }
+    
+    animating=!1;
+    currentAnimation=null;
+    animatingTile=null;
+    animatingFromIndex=-1;
+    animatingToIndex=-1;
+    lastMovedTile=-1;
+    updateClickHandlers();
+  },animDuration);
+}
+
+function updateClickHandlers(){
+  const neighbors=getEmptyNeighbors();
+  for(let i=0;i<16;i++){
+    if(board[i]!==0){
+      const el=tileElements[i];
+      if(el){
+        if(neighbors.includes(i) && i!==lastMovedTile){
+          el.classList.add("movable");
+          if(hoverMode){
+            el.onmouseenter=(function(idx){return function(){if(!animating)moveTile(idx)}})(i);
+            el.onclick=null;
+          }else{
+            el.onclick=(function(idx){return function(){moveTile(idx)}})(i);
+            el.onmouseenter=null;
+          }
+        }else{
+          el.classList.remove("movable");
+          el.onclick=null;
+          el.onmouseenter=null;
+        }
+      }
+    }
+  }
+}
+
+function move(direction){
+  if(animating) return;
+  const r=Math.floor(empty/4),c=empty%4;
+  let target=-1;
+  if(direction==="up"&&r>0) target=empty-4;
+  else if(direction==="down"&&r<3) target=empty+4;
+  else if(direction==="left"&&c>0) target=empty-1;
+  else if(direction==="right"&&c<3) target=empty+1;
+  if(target!==-1) moveTile(target);
+}
+
+function shuffle(){
+  board=[];for(let i=1;i<=15;i++)board.push(i);board.push(0);
+  empty=15;let last=-1;
+  for(let i=0;i<250;i++){
+    const choices=getEmptyNeighbors();
+    const filtered=choices.filter(x=>x!==last);
+    if(filtered.length===0) break;
+    const target=filtered[Math.floor(Math.random()*filtered.length)];
+    const old=empty;
+    board[old]=board[target];
+    board[target]=0;
+    empty=target;
+    last=old;
+  }
+  if(solved()) shuffle();
+}
+
+function newGame(){
+  // Cancel any ongoing animation
+  if(animating){
+    cancelAnimation();
+  }
+  animating=!1;
+  stopTimer();
+  elapsedSeconds=0;
+  TM.textContent="Time: 0s";
+  moves=0;
+  empty=15;
+  lastMovedTile=-1;
+  animatingTile=null;
+  animatingFromIndex=-1;
+  animatingToIndex=-1;
+  ME.textContent="";
+  shuffle();
+  draw();
+}
+
+function toggleHoverMode(){
+  hoverMode=document.getElementById('hoverMode').checked;
+  updateClickHandlers();
+}
+
+function toggleInstantMode(){
+  instantMode=document.getElementById('instantMode').checked;
+}
+
+function toggleOptions(){
+  const o=document.getElementById("options");
+  o.style.display=o.style.display==="none"?"block":"none";
+}
+
+function setSpeed(ms){
+  animDuration=Number(ms);
+  document.documentElement.style.setProperty("--anim-speed",ms+"ms");
+  document.getElementById("speedValue").textContent=ms+"ms";
+}
+
+function loadImage(input){
+  const file=input.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const img=new Image();
+    img.onload=function(){
+      const canvas=document.createElement('canvas');
+      canvas.width=1600;
+      canvas.height=1600;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,1600,1600);
+      customImageData=canvas.toDataURL('image/jpeg',0.92);
+      useCustomImage=!0;
+      if(solved()){
+        newGame();
+      }else{
+        draw();
+      }
+      ME.textContent="Custom image loaded!";
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetImage(){
+  useCustomImage=!1;
+  customImageData=null;
+  if(solved()){
+    newGame();
+  }else{
+    draw();
+  }
+  ME.textContent="Using number tiles";
+  document.querySelector('#imageLoader input').value='';
+}
+
+document.addEventListener("keydown",e=>{
+  if(animating) return;
+  const k=e.key.toLowerCase();
+  if(["arrowup","w"].includes(k)){e.preventDefault();move("up")}
+  else if(["arrowdown","s"].includes(k)){e.preventDefault();move("down")}
+  else if(["arrowleft","a"].includes(k)){e.preventDefault();move("left")}
+  else if(["arrowright","d"].includes(k)){e.preventDefault();move("right")}
+});
+
+newGame();
+</script>
+</body>
+</html>

@@ -1,4 +1,19 @@
 //this is stupid
+function inv3(m) {
+ let a=m.map((r,i)=>[...r,...[0,0,0].map((_,j)=>i==j?1:0)]);
+ for(let i=0;i<3;i++){
+  let k=i;
+  for(let j=i+1;j<3;j++)if(Math.abs(a[j][i])>Math.abs(a[k][i]))k=j;
+  [a[i],a[k]]=[a[k],a[i]];
+  let q=a[i][i];
+  for(let j=0;j<6;j++)a[i][j]/=q;
+  for(let k=0;k<3;k++)if(k!=i){
+   q=a[k][i];
+   for(let j=0;j<6;j++)a[k][j]-=q*a[i][j];
+  }
+ }
+ return a.map(r=>r.slice(3));
+};
 function rgbToHex(r, g, b) {
   function toHex(x) {
     const hex = x.toString(16);
@@ -1475,10 +1490,4176 @@ function rgbToYrl(Rin, Gin, Bin) {
 }
 
 
+function cubehelixToRgb(h, s, l) {
+    const hNorm = h / 360;
+    const sNorm = s / 100;
+    const lNorm = l / 100;
+    
+    const angle = 2 * Math.PI * (hNorm / 3 + 1 + sNorm * lNorm);
+    const amp = sNorm * lNorm * (1 - lNorm) / 2;
+    
+    const r = lNorm + amp * (-0.14861 * Math.cos(angle) + 1.78277 * Math.sin(angle));
+    const g = lNorm + amp * (-0.29227 * Math.cos(angle) - 0.90649 * Math.sin(angle));
+    const b = lNorm + amp * (1.97294 * Math.cos(angle));
+    
+    return [
+        Math.round(Math.min(1, Math.max(0, r)) * 255),
+        Math.round(Math.min(1, Math.max(0, g)) * 255),
+        Math.round(Math.min(1, Math.max(0, b)) * 255)
+    ];
+}
+
+function rgbToCubehelix(r, g, b) {
+    let best = { error: Infinity, h: 0, s: 0, l: 0 };
+    for (let h = 0; h < 360; h += 2) {
+        for (let s = 0; s <= 100; s += 2) {
+            for (let l = 0; l <= 100; l += 2) {
+                const [r2, g2, b2] = cubehelixToRgb(h, s, l);
+                const e = Math.hypot(r - r2, g - g2, b - b2);
+                if (e < best.error) best = { error: e, h, s, l };
+            }
+        }
+    }
+    return [best.h, best.s, best.l];
+}
+
+function cubehelixlapToRgb(l, a, p) {
+    const lNorm = l / 100;
+    const aNorm = a / 100;
+    const pRad = p * Math.PI / 180;
+    
+    const angle = pRad;
+    const amp = aNorm;
+    
+    const r = lNorm + amp * (-0.14861 * Math.cos(angle) + 1.78277 * Math.sin(angle));
+    const g = lNorm + amp * (-0.29227 * Math.cos(angle) - 0.90649 * Math.sin(angle));
+    const b = lNorm + amp * (1.97294 * Math.cos(angle));
+    
+    return [
+        Math.round(Math.min(1, Math.max(0, r)) * 255),
+        Math.round(Math.min(1, Math.max(0, g)) * 255),
+        Math.round(Math.min(1, Math.max(0, b)) * 255)
+    ];
+}
+
+function rgbToCubehelixlap(r, g, b) {
+    let best = { error: Infinity, l: 0, a: 0, p: 0 };
+    for (let l = 0; l <= 100; l += 2) {
+        for (let a = 0; a <= 100; a += 2) {
+            for (let p = 0; p < 360; p += 2) {
+                const [r2, g2, b2] = cubehelixlapToRgb(l, a, p);
+                const e = Math.hypot(r - r2, g - g2, b - b2);
+                if (e < best.error) best = { error: e, l, a, p };
+            }
+        }
+    }
+    return [best.l, best.a, best.p];
+}
+
+
+
+// HPLuv: h=0-360, p=0-100, l=0-100
+// Uses CIELChuv with compressed chroma to fit sRGB gamut
+function hpluvToRgb(h, p, l) {
+    // CIELChuv uses L range 0-100, C range 0-~180
+    const luvL = Math.min(100, Math.max(0, l));
+    // HPLuv uses perceptually uniform chroma scaled to fit sRGB
+    const luvC = Math.min(180, Math.max(0, p * 1.8));
+    const luvH = ((h % 360) + 360) % 360;
+    
+    const rad = luvH * Math.PI / 180;
+    const u = luvC * Math.cos(rad);
+    const v = luvC * Math.sin(rad);
+    
+    const [r2, g2, b2] = luvToRgb(luvL, u, v);
+    return [
+        Math.round(Math.min(255, Math.max(0, r2))),
+        Math.round(Math.min(255, Math.max(0, g2))),
+        Math.round(Math.min(255, Math.max(0, b2)))
+    ];
+}
+
+function rgbToHpluv(r, g, b) {
+    const [L, u, v] = rgbToLuv(r, g, b);
+    const C = Math.sqrt(u * u + v * v);
+    let h = Math.atan2(v, u) * 180 / Math.PI;
+    if (h < 0) h += 360;
+    // Compress chroma back to HPLuv scale
+    const p = Math.min(100, C / 1.8);
+    return [h, p, Math.min(100, Math.max(0, L))];
+}
+
+// HPLuv entry: ['hpluv', 'h', 'p', 'l', 0, 0, 0, 255, 360, 100, 100, 0, 0, 100]
+
+// HSLuv: h=0-360, s=0-100, l=0-100
+// Uses CIELChuv with saturation as percentage of available chroma
+function hsluvToRgb(h, s, l) {
+    const luvL = Math.min(100, Math.max(0, l));
+    const sNorm = Math.min(1, Math.max(0, s / 100));
+    const luvH = ((h % 360) + 360) % 360;
+    
+    // Maximum chroma varies with lightness (largest around 50%)
+    const maxC = 180 * (1 - Math.abs(luvL / 100 - 0.5) * 1.5) * 0.8;
+    const luvC = sNorm * maxC;
+    
+    const rad = luvH * Math.PI / 180;
+    const u = luvC * Math.cos(rad);
+    const v = luvC * Math.sin(rad);
+    
+    const [r2, g2, b2] = luvToRgb(luvL, u, v);
+    return [
+        Math.round(Math.min(255, Math.max(0, r2))),
+        Math.round(Math.min(255, Math.max(0, g2))),
+        Math.round(Math.min(255, Math.max(0, b2)))
+    ];
+}
+
+function rgbToHsluv(r, g, b) {
+    const [L, u, v] = rgbToLuv(r, g, b);
+    const C = Math.sqrt(u * u + v * v);
+    let h = Math.atan2(v, u) * 180 / Math.PI;
+    if (h < 0) h += 360;
+    
+    const maxC = 180 * (1 - Math.abs(L / 100 - 0.5) * 1.5) * 0.8;
+    const s = maxC > 0 ? Math.min(100, (C / maxC) * 100) : 0;
+    return [h, s, Math.min(100, Math.max(0, L))];
+}
+
+// HSLuv entry: ['hsluv', 'h', 's', 'l', 0, 0, 0, 255, 360, 100, 100, 0, 0, 100]
+
+// Okhsv: h=0-360, s=0-100, v=0-100
+// Uses Oklab with HSV-like model
+function okhsvToRgb(h, s, v) {
+    h = ((h % 360) + 360) % 360;
+    const sNorm = Math.min(1, Math.max(0, s / 100));
+    const vNorm = Math.min(1, Math.max(0, v / 100));
+    const hRad = h * Math.PI / 180;
+    
+    // Oklab lightness: 0-1 (scaled to 0-255 in oklabToRgb)
+    const L = 0.2 + vNorm * 0.8;
+    let a = 0, b = 0;
+    
+    if (sNorm > 0) {
+        // Max chroma depends on lightness and hue
+        const maxC = vNorm * 0.4 * (1 - Math.abs(vNorm - 0.5) * 0.5);
+        const C = sNorm * maxC;
+        a = C * Math.cos(hRad);
+        b = C * Math.sin(hRad);
+    }
+    
+    const [r2, g2, b2] = oklabToRgb(L * 255, a * 255, b * 255);
+    return [
+        Math.round(Math.min(255, Math.max(0, r2))),
+        Math.round(Math.min(255, Math.max(0, g2))),
+        Math.round(Math.min(255, Math.max(0, b2)))
+    ];
+}
+
+function rgbToOkhsv(r, g, b) {
+    const [L, a, b_] = rgbToOklab(r, g, b);
+    const Lnorm = L / 255; // 0-1
+    const aNorm = a / 255;
+    const bNorm = b_ / 255;
+    
+    const C = Math.sqrt(aNorm * aNorm + bNorm * bNorm);
+    let h = Math.atan2(bNorm, aNorm) * 180 / Math.PI;
+    if (h < 0) h += 360;
+    
+    // Value: perceptual lightness scaled
+    const v = Math.min(100, Math.max(0, (Lnorm - 0.2) / 0.8 * 100));
+    
+    // Saturation: chroma relative to max possible
+    const maxC = (v / 100) * 0.4 * (1 - Math.abs(v / 100 - 0.5) * 0.5);
+    const s = maxC > 0 ? Math.min(100, (C / maxC) * 100) : 0;
+    
+    return [h, s, v];
+}
+
+// Okhsv entry: ['okhsv', 'h', 's', 'v', 0, 0, 0, 255, 360, 100, 100, 0, 0, 100]
+
+// Okhsl: h=0-360, s=0-100, l=0-100
+// Uses Oklab with HSL-like model
+function okhslToRgb(h, s, l) {
+    h = ((h % 360) + 360) % 360;
+    const sNorm = Math.min(1, Math.max(0, s / 100));
+    const lNorm = Math.min(1, Math.max(0, l / 100));
+    const hRad = h * Math.PI / 180;
+    
+    // Oklab lightness: 0-1
+    const L = 0.15 + lNorm * 0.85;
+    let a = 0, b = 0;
+    
+    if (sNorm > 0) {
+        // Max chroma depends on lightness (higher at mid lightness)
+        const maxC = (1 - Math.abs(lNorm - 0.5) * 2) * 0.45;
+        const C = sNorm * maxC;
+        a = C * Math.cos(hRad);
+        b = C * Math.sin(hRad);
+    }
+    
+    const [r2, g2, b2] = oklabToRgb(L * 255, a * 255, b * 255);
+    return [
+        Math.round(Math.min(255, Math.max(0, r2))),
+        Math.round(Math.min(255, Math.max(0, g2))),
+        Math.round(Math.min(255, Math.max(0, b2)))
+    ];
+}
+
+// HPLuv: h=0-360, p=0-100, l=0-100
+function hpluvToRgb(h, p, l) {
+    const luvL = Math.min(100, Math.max(0, l));
+    const luvC = Math.min(180, Math.max(0, p * 1.8));
+    const luvH = ((h % 360) + 360) % 360;
+    const rad = luvH * Math.PI / 180;
+    const u = luvC * Math.cos(rad);
+    const v = luvC * Math.sin(rad);
+    const [r2, g2, b2] = luvToRgb(luvL, u, v);
+    return [
+        Math.round(Math.min(255, Math.max(0, r2))),
+        Math.round(Math.min(255, Math.max(0, g2))),
+        Math.round(Math.min(255, Math.max(0, b2)))
+    ];
+}
+
+function rgbToHpluv(r, g, b) {
+    const [L, u, v] = rgbToLuv(r, g, b);
+    const C = Math.sqrt(u * u + v * v);
+    let h = Math.atan2(v, u) * 180 / Math.PI;
+    if (h < 0) h += 360;
+    const p = Math.min(100, C / 1.8);
+    return [h, p, Math.min(100, Math.max(0, L))];
+}
+
+// ['hpluv', 'h', 'p', 'l', 0, 0, 0, 255, 360, 100, 100, 0, 0, 100]
+
+// HSLuv: h=0-360, s=0-100, l=0-100
+function hsluvToRgb(h, s, l) {
+    const luvL = Math.min(100, Math.max(0, l));
+    const sNorm = Math.min(1, Math.max(0, s / 100));
+    const luvH = ((h % 360) + 360) % 360;
+    const maxC = 180 * (1 - Math.abs(luvL / 100 - 0.5) * 1.5) * 0.8;
+    const luvC = sNorm * maxC;
+    const rad = luvH * Math.PI / 180;
+    const u = luvC * Math.cos(rad);
+    const v = luvC * Math.sin(rad);
+    const [r2, g2, b2] = luvToRgb(luvL, u, v);
+    return [
+        Math.round(Math.min(255, Math.max(0, r2))),
+        Math.round(Math.min(255, Math.max(0, g2))),
+        Math.round(Math.min(255, Math.max(0, b2)))
+    ];
+}
+
+function rgbToHsluv(r, g, b) {
+    const [L, u, v] = rgbToLuv(r, g, b);
+    const C = Math.sqrt(u * u + v * v);
+    let h = Math.atan2(v, u) * 180 / Math.PI;
+    if (h < 0) h += 360;
+    const maxC = 180 * (1 - Math.abs(L / 100 - 0.5) * 1.5) * 0.8;
+    const s = maxC > 0 ? Math.min(100, (C / maxC) * 100) : 0;
+    return [h, s, Math.min(100, Math.max(0, L))];
+}
+
+// ['hsluv', 'h', 's', 'l', 0, 0, 0, 255, 360, 100, 100, 0, 0, 100]
+
+// Okhsv: h=0-360, s=0-100, v=0-100
+function okhsvToRgb(h, s, v) {
+    h = ((h % 360) + 360) % 360;
+    const sNorm = Math.min(1, Math.max(0, s / 100));
+    const vNorm = Math.min(1, Math.max(0, v / 100));
+    const hRad = h * Math.PI / 180;
+    const L = 0.2 + vNorm * 0.8;
+    let a = 0, b = 0;
+    if (sNorm > 0) {
+        const maxC = vNorm * 0.4 * (1 - Math.abs(vNorm - 0.5) * 0.5);
+        const C = sNorm * maxC;
+        a = C * Math.cos(hRad);
+        b = C * Math.sin(hRad);
+    }
+    const [r2, g2, b2] = oklabToRgb(L * 255, a * 255, b * 255);
+    return [
+        Math.round(Math.min(255, Math.max(0, r2))),
+        Math.round(Math.min(255, Math.max(0, g2))),
+        Math.round(Math.min(255, Math.max(0, b2)))
+    ];
+}
+
+function rgbToOkhsv(r, g, b) {
+    const [L, a, b_] = rgbToOklab(r, g, b);
+    const Lnorm = L / 255;
+    const aNorm = a / 255;
+    const bNorm = b_ / 255;
+    const C = Math.sqrt(aNorm * aNorm + bNorm * bNorm);
+    let h = Math.atan2(bNorm, aNorm) * 180 / Math.PI;
+    if (h < 0) h += 360;
+    const v = Math.min(100, Math.max(0, (Lnorm - 0.2) / 0.8 * 100));
+    const maxC = (v / 100) * 0.4 * (1 - Math.abs(v / 100 - 0.5) * 0.5);
+    const s = maxC > 0 ? Math.min(100, (C / maxC) * 100) : 0;
+    return [h, s, v];
+}
+
+// ['okhsv', 'h', 's', 'v', 0, 0, 0, 255, 360, 100, 100, 0, 0, 100]
+
+// Okhsl: h=0-360, s=0-100, l=0-100
+function okhslToRgb(h, s, l) {
+    h = ((h % 360) + 360) % 360;
+    const sNorm = Math.min(1, Math.max(0, s / 100));
+    const lNorm = Math.min(1, Math.max(0, l / 100));
+    const hRad = h * Math.PI / 180;
+    const L = 0.15 + lNorm * 0.85;
+    let a = 0, b = 0;
+    if (sNorm > 0) {
+        const maxC = (1 - Math.abs(lNorm - 0.5) * 2) * 0.45;
+        const C = sNorm * maxC;
+        a = C * Math.cos(hRad);
+        b = C * Math.sin(hRad);
+    }
+    const [r2, g2, b2] = oklabToRgb(L * 255, a * 255, b * 255);
+    return [
+        Math.round(Math.min(255, Math.max(0, r2))),
+        Math.round(Math.min(255, Math.max(0, g2))),
+        Math.round(Math.min(255, Math.max(0, b2)))
+    ];
+}
+
+function rgbToOkhsl(r, g, b) {
+    const [L, a, b_] = rgbToOklab(r, g, b);
+    const Lnorm = L / 255;
+    const aNorm = a / 255;
+    const bNorm = b_ / 255;
+    const C = Math.sqrt(aNorm * aNorm + bNorm * bNorm);
+    let h = Math.atan2(bNorm, aNorm) * 180 / Math.PI;
+    if (h < 0) h += 360;
+    const l = Math.min(100, Math.max(0, (Lnorm - 0.15) / 0.85 * 100));
+    const maxC = (1 - Math.abs(l / 100 - 0.5) * 2) * 0.45;
+    const s = maxC > 0 ? Math.min(100, (C / maxC) * 100) : 0;
+    return [h, s, l];
+}
 
 
 
 
+function din99ToRgb(L99, a99, b99) {
+    // Inverse DIN99 -> CIELAB -> RGB
+    const [L, a, b_] = din99ToLab(L99, a99, b99);
+    return labToRgb(L, a, b_);
+}
+
+function rgbToDin99(r, g, b) {
+    const [L, a, b_] = rgbToLab(r, g, b);
+    return labToDin99(L, a, b_);
+}
+
+// --- Core DIN99 Transformations (using DIN99o parameters) ---
+
+function labToDin99(L, a, b) {
+    // Parameters for DIN99o (from 2018 version)
+    const kE = 1;
+    const kCH = 1;
+
+    // 1. Lightness transformation
+    const L99 = (105.51 * Math.log(1 + 0.0158 * L)) / kE;
+
+    // 2. Chroma transformation - rotate by 16 degrees (DIN99o)
+    const angle = 16 * Math.PI / 180;
+    const e = a * Math.cos(angle) + b * Math.sin(angle);
+    const f = 0.7 * (-a * Math.sin(angle) + b * Math.cos(angle));
+
+    const G = Math.sqrt(e * e + f * f);
+    let a99 = 0, b99 = 0;
+    if (G > 0) {
+        const k = Math.log(1 + 0.045 * G) / 0.045;
+        a99 = k * (e / G);
+        b99 = k * (f / G);
+    }
+
+    return [L99, a99, b99];
+}
+
+function din99ToLab(L99, a99, b99) {
+    const kE = 1;
+    const kCH = 1;
+
+    // 1. Inverse Lightness
+    const L = (Math.exp(L99 * kE / 105.51) - 1) / 0.0158;
+
+    // 2. Inverse Chroma
+    const C99 = Math.sqrt(a99 * a99 + b99 * b99);
+    let a = 0, b = 0;
+    if (C99 > 0) {
+        const G = (Math.exp(0.045 * C99 * kCH * kE) - 1) / 0.045;
+        const e = G * (a99 / C99);
+        const f = G * (b99 / C99);
+
+        // Rotate back by 16 degrees
+        const angle = 16 * Math.PI / 180;
+        a = e * Math.cos(angle) - (f / 0.7) * Math.sin(angle);
+        b = e * Math.sin(angle) + (f / 0.7) * Math.cos(angle);
+    }
+
+    return [L, a, b];
+}
+function din99lchToRgb(L, C, H) {
+    const hRad = H * Math.PI / 180;
+    const a = C * Math.cos(hRad);
+    const b = C * Math.sin(hRad);
+    return din99ToRgb(L, a, b);
+}
+
+function rgbToDin99lch(r, g, b) {
+    const [L, a, b_] = rgbToDin99(r, g, b);
+    const C = Math.sqrt(a * a + b_ * b_);
+    let H = Math.atan2(b_, a) * 180 / Math.PI;
+    if (H < 0) H += 360;
+    return [L, C, H];
+}
+
+
+
+function a98rgbToRgb(r, g, b) {
+    
+    const lin = v => Math.pow(v / 255, 2.2);
+    const R = lin(r), G = lin(g), B = lin(b);
+    
+    
+    const mtx = [
+        [0.576669, 0.185558, 0.188228],
+        [0.297345, 0.627355, 0.075285],
+        [0.027031, 0.070687, 0.991109]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    
+    
+    const mtx2 = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    
+    
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [Math.round(srgb(R2)*255), Math.round(srgb(G2)*255), Math.round(srgb(B2)*255)];
+}
+
+function rgbToA98rgb(r, g, b) {
+    
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    
+    
+    const mtx = [
+        [0.4124, 0.3576, 0.1805],
+        [0.2126, 0.7152, 0.0722],
+        [0.0193, 0.1192, 0.9505]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    
+    
+    const mtx2 = [
+        [2.041369, -0.564946, -0.344694],
+        [-0.969266, 1.876010, 0.041556],
+        [0.013447, -0.118389, 1.015409]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    R2 = Math.min(1, Math.max(0, R2));
+    G2 = Math.min(1, Math.max(0, G2));
+    B2 = Math.min(1, Math.max(0, B2));
+    
+    
+    const a98 = v => Math.pow(v, 1/2.2) * 255;
+    return [Math.round(a98(R2)), Math.round(a98(G2)), Math.round(a98(B2))];
+}
+
+
+
+
+
+
+
+
+function displayp3ToRgb(r, g, b) {
+    const lin = v => Math.pow(v / 255, 2.4);
+    const R = lin(r), G = lin(g), B = lin(b);
+    
+    
+    const mtx = [
+        [0.486571, 0.265668, 0.198217],
+        [0.228975, 0.691739, 0.079287],
+        [0.000000, 0.045113, 1.043944]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    
+    
+    const mtx2 = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [Math.round(srgb(R2)*255), Math.round(srgb(G2)*255), Math.round(srgb(B2)*255)];
+}
+
+function rgbToDisplayp3(r, g, b) {
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.4124, 0.3576, 0.1805],
+        [0.2126, 0.7152, 0.0722],
+        [0.0193, 0.1192, 0.9505]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [2.493180, -0.931266, -0.402659],
+        [-0.829503, 1.762660, 0.023625],
+        [0.035854, -0.076189, 0.956714]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    R2 = Math.min(1, Math.max(0, R2));
+    G2 = Math.min(1, Math.max(0, G2));
+    B2 = Math.min(1, Math.max(0, B2));
+    const p3 = v => Math.pow(v, 1/2.4) * 255;
+    return [Math.round(p3(R2)), Math.round(p3(G2)), Math.round(p3(B2))];
+}
+
+
+
+
+
+function lrgbToRgb(r, g, b) {
+    const R = r / 255, G = g / 255, B = b / 255;
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [Math.round(srgb(R)*255), Math.round(srgb(G)*255), Math.round(srgb(B)*255)];
+}
+
+function rgbToLrgb(r, g, b) {
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    return [Math.round(lin(r)*255), Math.round(lin(g)*255), Math.round(lin(b)*255)];
+}
+
+
+
+
+
+
+
+
+function rec2020ToRgb(r, g, b) {
+    const lin = v => Math.pow(v / 255, 2.4);
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.636958, 0.144617, 0.168881],
+        [0.262700, 0.677998, 0.059302],
+        [0.000000, 0.028073, 1.060985]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [Math.round(srgb(R2)*255), Math.round(srgb(G2)*255), Math.round(srgb(B2)*255)];
+}
+
+function rgbToRec2020(r, g, b) {
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.4124, 0.3576, 0.1805],
+        [0.2126, 0.7152, 0.0722],
+        [0.0193, 0.1192, 0.9505]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [1.716651, -0.355671, -0.253366],
+        [-0.666684, 1.616481, 0.015769],
+        [0.017640, -0.042771, 0.942103]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    R2 = Math.min(1, Math.max(0, R2));
+    G2 = Math.min(1, Math.max(0, G2));
+    B2 = Math.min(1, Math.max(0, B2));
+    const rec = v => Math.pow(v, 1/2.4) * 255;
+    return [Math.round(rec(R2)), Math.round(rec(G2)), Math.round(rec(B2))];
+}
+
+
+
+
+
+
+
+
+function adobergbToRgb(r, g, b) {
+    const lin = v => Math.pow(v / 255, 2.2);
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.576669, 0.185558, 0.188228],
+        [0.297345, 0.627355, 0.075285],
+        [0.027031, 0.070687, 0.991109]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [Math.round(srgb(R2)*255), Math.round(srgb(G2)*255), Math.round(srgb(B2)*255)];
+}
+
+function rgbToAdobergb(r, g, b) {
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.4124, 0.3576, 0.1805],
+        [0.2126, 0.7152, 0.0722],
+        [0.0193, 0.1192, 0.9505]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [2.041369, -0.564946, -0.344694],
+        [-0.969266, 1.876010, 0.041556],
+        [0.013447, -0.118389, 1.015409]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    R2 = Math.min(1, Math.max(0, R2));
+    G2 = Math.min(1, Math.max(0, G2));
+    B2 = Math.min(1, Math.max(0, B2));
+    const adobe = v => Math.pow(v, 1/2.2) * 255;
+    return [Math.round(adobe(R2)), Math.round(adobe(G2)), Math.round(adobe(B2))];
+}
+function a98rgbhslToRgb(h, s, l) { const [r, g, b] = hslToRgb(h, s, l); return a98rgbToRgb(r, g, b); }
+function rgbToA98rgbhsl(r, g, b) { const [R, G, B] = rgbToA98rgb(r, g, b); return rgbToHsl(R, G, B); }
+function a98rgbhsvToRgb(h, s, v) { const [r, g, b] = hsvToRgb(h, s, v); return a98rgbToRgb(r, g, b); }
+function rgbToA98rgbhsv(r, g, b) { const [R, G, B] = rgbToA98rgb(r, g, b); return rgbToHsv(R, G, B); }
+
+function displayp3hslToRgb(h, s, l) { const [r, g, b] = hslToRgb(h, s, l); return displayp3ToRgb(r, g, b); }
+function rgbToDisplayp3hsl(r, g, b) { const [R, G, B] = rgbToDisplayp3(r, g, b); return rgbToHsl(R, G, B); }
+function displayp3hsvToRgb(h, s, v) { const [r, g, b] = hsvToRgb(h, s, v); return displayp3ToRgb(r, g, b); }
+function rgbToDisplayp3hsv(r, g, b) { const [R, G, B] = rgbToDisplayp3(r, g, b); return rgbToHsv(R, G, B); }
+
+function lrgbhslToRgb(h, s, l) { const [r, g, b] = hslToRgb(h, s, l); return lrgbToRgb(r, g, b); }
+function rgbToLrgbhsl(r, g, b) { const [R, G, B] = rgbToLrgb(r, g, b); return rgbToHsl(R, G, B); }
+function lrgbhsvToRgb(h, s, v) { const [r, g, b] = hsvToRgb(h, s, v); return lrgbToRgb(r, g, b); }
+function rgbToLrgbhsv(r, g, b) { const [R, G, B] = rgbToLrgb(r, g, b); return rgbToHsv(R, G, B); }
+
+function rec2020HslToRgb(h, s, l) { const [r, g, b] = hslToRgb(h, s, l); return rec2020ToRgb(r, g, b); }
+function rgbToRec2020hsl(r, g, b) { const [R, G, B] = rgbToRec2020(r, g, b); return rgbToHsl(R, G, B); }
+function rec2020hsvToRgb(h, s, v) { const [r, g, b] = hsvToRgb(h, s, v); return rec2020ToRgb(r, g, b); }
+function rgbToRec2020hsv(r, g, b) { const [R, G, B] = rgbToRec2020(r, g, b); return rgbToHsv(R, G, B); }
+
+function adobergbhslToRgb(h, s, l) { const [r, g, b] = hslToRgb(h, s, l); return adobergbToRgb(r, g, b); }
+function rgbToAdobergbhsl(r, g, b) { const [R, G, B] = rgbToAdobergb(r, g, b); return rgbToHsl(R, G, B); }
+function adobergbhsvToRgb(h, s, v) { const [r, g, b] = hsvToRgb(h, s, v); return adobergbToRgb(r, g, b); }
+function rgbToAdobergbhsv(r, g, b) { const [R, G, B] = rgbToAdobergb(r, g, b); return rgbToHsv(R, G, B); }
+
+function rec709hslToRgb(h, s, l) { const [r, g, b] = hslToRgb(h, s, l); return rec709ToRgb(r, g, b); }
+function rgbToRec709hsl(r, g, b) { const [R, G, B] = rgbToRec709(r, g, b); return rgbToHsl(R, G, B); }
+function rec709hsvToRgb(h, s, v) { const [r, g, b] = hsvToRgb(h, s, v); return rec709ToRgb(r, g, b); }
+function rgbToRec709hsv(r, g, b) { const [R, G, B] = rgbToRec709(r, g, b); return rgbToHsv(R, G, B); }
+
+
+function rec709ToRgb(r, g, b) {
+    
+    return srgbToRgb(r, g, b);
+}
+
+function rgbToRec709(r, g, b) {
+    
+    return rgbToSrgb(r, g, b);
+}
+
+
+function rgbToAgx(r, g, b) {
+
+    // sRGB -> linear RGB
+    const lin = v => {
+        const c = v / 255;
+
+        if (c <= 0.04045) {
+            return c / 12.92;
+        }
+
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+
+    const R = lin(r);
+    const G = lin(g);
+    const B = lin(b);
+
+
+    // Linear RGB -> AgX working space
+    const mtx = [
+        [0.842479062253094,  0.0423282422610123, 0.0423756549057051],
+        [0.0784336000000000, 0.8784686364697720, 0.0784336000000000],
+        [0.0792237451477643,  0.0791661274605434, 0.8791429737931040]
+    ];
+
+    let [R2, G2, B2] = matrixMult(R, G, B, mtx);
+
+
+    // Log2 exposure
+    const minEV = -12.47393;
+    const maxEV = 4.026069;
+
+    const logAgx = v => {
+        return Math.log2(Math.max(v, 1e-10));
+    };
+
+    R2 = logAgx(R2);
+    G2 = logAgx(G2);
+    B2 = logAgx(B2);
+
+
+    // Normalize AgX exposure range
+    const normalize = v => {
+        v = Math.min(maxEV, Math.max(minEV, v));
+        return (v - minEV) / (maxEV - minEV);
+    };
+
+    R2 = normalize(R2);
+    G2 = normalize(G2);
+    B2 = normalize(B2);
+
+
+    // AgX sigmoid / contrast approximation
+    const agxCurve = v => {
+        const x2 = v * v;
+        const x4 = x2 * x2;
+
+        return (
+            15.5   * x4 * x2
+          - 40.14  * x4 * v
+          + 31.96  * x4
+          - 6.868  * x2 * v
+          + 0.4298 * x2
+          + 0.1191 * v
+          - 0.00232
+        );
+    };
+
+    R2 = agxCurve(R2);
+    G2 = agxCurve(G2);
+    B2 = agxCurve(B2);
+
+
+    // AgX working space -> output RGB
+    const mtx2 = [
+        [ 1.19687900512017,  -0.0528968517574562, -0.0529716355144438],
+        [-0.0980208811401368,  1.15190312990417,  -0.0980434501171241],
+        [-0.0990297440797205, -0.0989611768448433,  1.15107367264116]
+    ];
+
+    [R2, G2, B2] = matrixMult(R2, G2, B2, mtx2);
+
+
+    // AgX output -> sRGB
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+
+        if (c <= 0.0031308) {
+            return c * 12.92;
+        }
+
+        return 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+    };
+
+
+    return [
+        Math.round(srgb(R2) * 255),
+        Math.round(srgb(G2) * 255),
+        Math.round(srgb(B2) * 255)
+    ];
+}
+
+function agxToRgb(r, g, b) {
+
+    // sRGB -> linear RGB
+    const lin = v => {
+        const c = v / 255;
+
+        if (c <= 0.04045) {
+            return c / 12.92;
+        }
+
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+
+    // Input is assumed to be 8-bit sRGB output from AgX
+    let R = lin(r);
+    let G = lin(g);
+    let B = lin(b);
+
+
+    // Output RGB -> AgX working space
+    const mtx = [
+        [ 1.19687900512017,  -0.0528968517574562, -0.0529716355144438],
+        [-0.0980208811401368,  1.15190312990417,  -0.0980434501171241],
+        [-0.0990297440797205, -0.0989611768448433,  1.15107367264116]
+    ];
+
+    [R, G, B] = matrixMult(R, G, B, mtx);
+
+
+    // AgX sigmoid / contrast approximation
+    const agxCurve = v => {
+        const x2 = v * v;
+        const x4 = x2 * x2;
+
+        return (
+            15.5   * x4 * x2
+          - 40.14  * x4 * v
+          + 31.96  * x4
+          - 6.868  * x2 * v
+          + 0.4298 * x2
+          + 0.1191 * v
+          - 0.00232
+        );
+    };
+
+
+    // Numerically invert the AgX curve
+    const inverseAgxCurve = value => {
+
+        let low = 0.0;
+        let high = 1.0;
+
+        for (let i = 0; i < 32; i++) {
+
+            const mid = (low + high) * 0.5;
+            const result = agxCurve(mid);
+
+            if (result < value) {
+                low = mid;
+            } else {
+                high = mid;
+            }
+        }
+
+        return (low + high) * 0.5;
+    };
+
+
+    R = inverseAgxCurve(R);
+    G = inverseAgxCurve(G);
+    B = inverseAgxCurve(B);
+
+
+    // Undo AgX exposure normalization
+    const minEV = -12.47393;
+    const maxEV = 4.026069;
+
+    const denormalize = v => {
+        return v * (maxEV - minEV) + minEV;
+    };
+
+    R = denormalize(R);
+    G = denormalize(G);
+    B = denormalize(B);
+
+
+    // Log2 exposure -> linear AgX RGB
+    R = Math.pow(2, R);
+    G = Math.pow(2, G);
+    B = Math.pow(2, B);
+
+
+    // AgX working space -> linear RGB
+    const mtx2 = [
+        [0.842479062253094,  0.0423282422610123, 0.0423756549057051],
+        [0.0784336000000000, 0.8784686364697720, 0.0784336000000000],
+        [0.0792237451477643,  0.0791661274605434, 0.8791429737931040]
+    ];
+
+    [R, G, B] = matrixMult(R, G, B, mtx2);
+
+
+    // Linear RGB -> sRGB
+    const srgb = v => {
+
+        const c = Math.max(0, Math.min(1, v));
+
+        if (c <= 0.0031308) {
+            return c * 12.92;
+        }
+
+        return 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+    };
+
+
+    return [
+        Math.round(srgb(R) * 255),
+        Math.round(srgb(G) * 255),
+        Math.round(srgb(B) * 255)
+    ];
+}
+
+
+function aces2065ToRgb(r, g, b) {
+    
+    const R = r / 255;
+    const G = g / 255;
+    const B = b / 255;
+    
+    
+    const mtx = [
+        [0.9525523959, 0.0000000000, 0.0000936786],
+        [0.3439664498, 0.7281660967, -0.0721325464],
+        [0.0000000000, 0.0000000000, 1.0088251844]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    
+    
+    const mtx2 = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    
+    
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [Math.round(srgb(R2)*255), Math.round(srgb(G2)*255), Math.round(srgb(B2)*255)];
+}
+
+function rgbToAces2065(r, g, b) {
+    
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    
+    
+    const mtx = [
+        [0.4124, 0.3576, 0.1805],
+        [0.2126, 0.7152, 0.0722],
+        [0.0193, 0.1192, 0.9505]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    
+    
+    const mtx2 = [
+        [1.0498110175, 0.0000000000, -0.0000974845],
+        [-0.4959030231, 1.3733130458, 0.0982400361],
+        [0.0000000000, 0.0000000000, 0.9912520182]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    
+    
+    return [
+        Math.round(Math.min(255, Math.max(0, R2 * 255))),
+        Math.round(Math.min(255, Math.max(0, G2 * 255))),
+        Math.round(Math.min(255, Math.max(0, B2 * 255)))
+    ];
+}
+
+
+
+
+
+
+function acescgToRgb(r, g, b) {
+    const R = r / 255, G = g / 255, B = b / 255;
+    
+    
+    const mtx = [
+        [0.6624541811, 0.1340042065, 0.1561876870],
+        [0.2722287168, 0.6740817658, 0.0536895174],
+        [-0.0055746495, 0.0040607335, 1.0103391003]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    
+    
+    const mtx2 = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [Math.round(srgb(R2)*255), Math.round(srgb(G2)*255), Math.round(srgb(B2)*255)];
+}
+
+function rgbToAcescg(r, g, b) {
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.4124, 0.3576, 0.1805],
+        [0.2126, 0.7152, 0.0722],
+        [0.0193, 0.1192, 0.9505]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    
+    
+    const mtx2 = [
+        [1.6410233797, -0.3248032942, -0.2364246952],
+        [-0.6636628587, 1.6153315917, 0.0167563477],
+        [0.0117218943, -0.0082844420, 0.9883948585]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    return [
+        Math.round(Math.min(255, Math.max(0, R2 * 255))),
+        Math.round(Math.min(255, Math.max(0, G2 * 255))),
+        Math.round(Math.min(255, Math.max(0, B2 * 255)))
+    ];
+}
+
+
+
+
+
+
+function acesccToRgb(r, g, b) {
+    const R = r / 255, G = g / 255, B = b / 255;
+    
+    const ccToLinear = (v) => {
+        if (v <= 0.155251141552511) {
+            return (v - 0.0729055341958355) / 10.5402377416545;
+        } else {
+            return Math.pow(2, v * 17.52 - 9.72);
+        }
+    };
+    const Rlin = ccToLinear(R);
+    const Glin = ccToLinear(G);
+    const Blin = ccToLinear(B);
+    
+    return acescgToRgb(Rlin * 255, Glin * 255, Blin * 255);
+}
+
+function rgbToAcescc(r, g, b) {
+    const [Rcg, Gcg, Bcg] = rgbToAcescg(r, g, b);
+    const R = Rcg / 255, G = Gcg / 255, B = Bcg / 255;
+    
+    const linearToCc = (v) => {
+        if (v <= 0.0078125) {
+            return 10.5402377416545 * v + 0.0729055341958355;
+        } else {
+            return (Math.log2(v) + 9.72) / 17.52;
+        }
+    };
+    return [
+        Math.round(Math.min(255, Math.max(0, linearToCc(R) * 255))),
+        Math.round(Math.min(255, Math.max(0, linearToCc(G) * 255))),
+        Math.round(Math.min(255, Math.max(0, linearToCc(B) * 255)))
+    ];
+}
+
+
+
+
+
+
+function acescctToRgb(r, g, b) {
+    const R = r / 255, G = g / 255, B = b / 255;
+    
+    const cctToLinear = (v) => {
+        const Ybreak = 0.155251141552511;
+        if (v <= Ybreak) {
+            return (v - 0.0729055341958355) / 10.5402377416545;
+        } else {
+            return Math.pow(2, v * 17.52 - 9.72);
+        }
+    };
+    const Rlin = cctToLinear(R);
+    const Glin = cctToLinear(G);
+    const Blin = cctToLinear(B);
+    
+    return acescgToRgb(Rlin * 255, Glin * 255, Blin * 255);
+}
+
+function rgbToAcescct(r, g, b) {
+    const [Rcg, Gcg, Bcg] = rgbToAcescg(r, g, b);
+    const R = Rcg / 255, G = Gcg / 255, B = Bcg / 255;
+    
+    const linearToCct = (v) => {
+        const Xbreak = 0.0078125;
+        if (v <= Xbreak) {
+            return 10.5402377416545 * v + 0.0729055341958355;
+        } else {
+            return (Math.log2(v) + 9.72) / 17.52;
+        }
+    };
+    return [
+        Math.round(Math.min(255, Math.max(0, linearToCct(R) * 255))),
+        Math.round(Math.min(255, Math.max(0, linearToCct(G) * 255))),
+        Math.round(Math.min(255, Math.max(0, linearToCct(B) * 255)))
+    ];
+}
+
+
+
+
+
+
+function acesproxyToRgb(r, g, b) {
+    const R = r / 255, G = g / 255, B = b / 255;
+    
+    const StepsPerStop = 50.0;
+    const MidCVoffset = 425.0;
+    const CVmin = 64, CVmax = 940;
+    
+    const proxyToLinear = (v) => {
+        const cv = v * 1023;
+        if (cv < CVmin) return 0;
+        if (cv > CVmax) return 65504;
+        return Math.pow(2, (cv - MidCVoffset) / StepsPerStop - 2.5);
+    };
+    const Rlin = proxyToLinear(R);
+    const Glin = proxyToLinear(G);
+    const Blin = proxyToLinear(B);
+    
+    
+    return acescgToRgb(Math.min(1, Rlin) * 255, Math.min(1, Glin) * 255, Math.min(1, Blin) * 255);
+}
+
+function rgbToAcesproxy(r, g, b) {
+    const [Rcg, Gcg, Bcg] = rgbToAcescg(r, g, b);
+    const R = Rcg / 255, G = Gcg / 255, B = Bcg / 255;
+    
+    const StepsPerStop = 50.0;
+    const MidCVoffset = 425.0;
+    const CVmin = 64, CVmax = 940;
+    
+    const linearToProxy = (v) => {
+        if (v <= Math.pow(2, -9.72)) return 0;
+        const cv = Math.round((Math.log2(v) + 2.5) * StepsPerStop + MidCVoffset);
+        const clamped = Math.max(CVmin, Math.min(CVmax, cv));
+        return clamped / 1023;
+    };
+    return [
+        Math.round(Math.min(255, Math.max(0, linearToProxy(R) * 255))),
+        Math.round(Math.min(255, Math.max(0, linearToProxy(G) * 255))),
+        Math.round(Math.min(255, Math.max(0, linearToProxy(B) * 255)))
+    ];
+}
+function aces2065FloatToRgb(r,g,b){
+    let [R,G,B]=matrixMult(r,g,b,[
+        [3.2406,-1.5372,-0.4986],
+        [-0.9689,1.8758,0.0415],
+        [0.0557,-0.2040,1.0570]
+    ]);
+
+    const srgb=v=>{
+        v=Math.max(0,Math.min(1,v));
+        return v<=0.0031308?v*12.92:1.055*Math.pow(v,1/2.4)-0.055;
+    };
+
+    return [
+        Math.round(srgb(R)*255),
+        Math.round(srgb(G)*255),
+        Math.round(srgb(B)*255)
+    ];
+}
+
+function rgbToAces2065Float(r,g,b){
+    const lin=v=>{
+        v/=255;
+        return v<=0.04045?v/12.92:Math.pow((v+0.055)/1.055,2.4);
+    };
+
+    let [X,Y,Z]=matrixMult(lin(r),lin(g),lin(b),[
+        [.4124,.3576,.1805],
+        [.2126,.7152,.0722],
+        [.0193,.1192,.9505]
+    ]);
+
+    return matrixMult(X,Y,Z,[
+        [1.0498110175,0,-.0000974845],
+        [-.4959030231,1.3733130458,.0982400361],
+        [0,0,.9912520182]
+    ]);
+}
+
+
+//ADD https://github.com/aces-aswf/aces-input-and-colorspaces/tree/2383d3759514dc7f4c6c3a573b089f417ad3a9f1/ACEScc
+
+function ntscjToRgb(r, g, b) {
+    const lin = v => Math.pow(v / 255, 2.2);
+    const R = lin(r), G = lin(g), B = lin(b);
+    
+    const mtx = [
+        [0.6069, 0.1735, 0.2003],
+        [0.2989, 0.5866, 0.1145],
+        [0.0000, 0.0661, 1.1162]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    
+    const mtx2 = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [Math.round(srgb(R2)*255), Math.round(srgb(G2)*255), Math.round(srgb(B2)*255)];
+}
+function rgbToNtscj(r, g, b) {
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.4124, 0.3576, 0.1805],
+        [0.2126, 0.7152, 0.0722],
+        [0.0193, 0.1192, 0.9505]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [1.7472, -0.4302, -0.2682],
+        [-0.9535, 1.7851, 0.0811],
+        [0.0159, -0.0643, 0.9429]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    return [
+        Math.round(Math.min(255, Math.max(0, Math.pow(R2, 1/2.2) * 255))),
+        Math.round(Math.min(255, Math.max(0, Math.pow(G2, 1/2.2) * 255))),
+        Math.round(Math.min(255, Math.max(0, Math.pow(B2, 1/2.2) * 255)))
+    ];
+}
+
+
+
+
+
+
+
+
+function museToRgb(r, g, b) {
+    const lin = v => Math.pow(v / 255, 1.67);
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.6076, 0.1942, 0.1511],
+        [0.2787, 0.6597, 0.0616],
+        [0.0000, 0.0587, 1.0522]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [Math.round(srgb(R2)*255), Math.round(srgb(G2)*255), Math.round(srgb(B2)*255)];
+}
+function rgbToMuse(r, g, b) {
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.4124, 0.3576, 0.1805],
+        [0.2126, 0.7152, 0.0722],
+        [0.0193, 0.1192, 0.9505]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [1.7323, -0.4356, -0.2272],
+        [-0.7345, 1.5954, 0.1391],
+        [0.0456, -0.0966, 0.9594]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    return [
+        Math.round(Math.min(255, Math.max(0, Math.pow(R2, 1/1.67) * 255))),
+        Math.round(Math.min(255, Math.max(0, Math.pow(G2, 1/1.67) * 255))),
+        Math.round(Math.min(255, Math.max(0, Math.pow(B2, 1/1.67) * 255)))
+    ];
+}
+
+
+
+
+
+
+
+
+function macToRgb(r, g, b) {
+    const lin = v => Math.pow(v / 255, 1.8);
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.4124, 0.3576, 0.1805],
+        [0.2126, 0.7152, 0.0722],
+        [0.0193, 0.1192, 0.9505]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [Math.round(srgb(R2)*255), Math.round(srgb(G2)*255), Math.round(srgb(B2)*255)];
+}
+function rgbToMac(r, g, b) {
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.4124, 0.3576, 0.1805],
+        [0.2126, 0.7152, 0.0722],
+        [0.0193, 0.1192, 0.9505]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    return [
+        Math.round(Math.min(255, Math.max(0, Math.pow(R2, 1/1.8) * 255))),
+        Math.round(Math.min(255, Math.max(0, Math.pow(G2, 1/1.8) * 255))),
+        Math.round(Math.min(255, Math.max(0, Math.pow(B2, 1/1.8) * 255)))
+    ];
+}
+
+
+
+
+
+function ictcppqToRgb(i, ct, cp) {
+    
+    
+    
+    
+    const mtx = [
+        [1.096, 0.062, 0.080],
+        [0.904, -0.062, -0.080],
+        [7.230, 4.045, -2.318]
+    ];
+    let [l, m, s] = matrixMult(i, ct, cp, mtx);
+    
+    
+    l = pqDecode(l);
+    m = pqDecode(m);
+    s = pqDecode(s);
+    
+    
+    const [r, g, b] = lmsToRgb(l, m, s);
+    
+    const pqEOTF = (v) => {
+        const m1 = 2610 / 16384;
+        const m2 = 2523 / 32;
+        const c1 = 3424 / 4096;
+        const c2 = 2413 / 128;
+        const c3 = 2392 / 128;
+        const vp = Math.pow(Math.max(v, 0), 1/m2);
+        const val = Math.pow((vp - c1) / (c2 - c3 * vp), 1/m1);
+        return Math.max(0, Math.min(1, val));
+    };
+    return [
+        Math.round(Math.min(255, Math.max(0, pqEOTF(r) * 255))),
+        Math.round(Math.min(255, Math.max(0, pqEOTF(g) * 255))),
+        Math.round(Math.min(255, Math.max(0, pqEOTF(b) * 255)))
+    ];
+}
+
+function rgbToIctcppq(r, g, b) {
+    
+    const pqEncode = (v) => {
+        const m1 = 2610 / 16384;
+        const m2 = 2523 / 32;
+        const c1 = 3424 / 4096;
+        const c2 = 2413 / 128;
+        const c3 = 2392 / 128;
+        const vp = Math.pow(v, m1);
+        return Math.pow((c1 + c2 * vp) / (1 + c3 * vp), m2);
+    };
+    const R = pqEncode(r / 255);
+    const G = pqEncode(g / 255);
+    const B = pqEncode(b / 255);
+    
+    
+    const [l, m, s] = rgbToLms(R * 65535, G * 65535, B * 65535);
+    
+    
+    const lPq = pqEncode(l / 65535);
+    const mPq = pqEncode(m / 65535);
+    const sPq = pqEncode(s / 65535);
+    
+    
+    const mtx = [
+        [0.5, 0.5, 0],
+        [1.614746, -3.325684, 0.170898],
+        [4.378174, -4.245117, -0.132568]
+    ];
+    const [i, ct, cp] = matrixMult(lPq * 255, mPq * 255, sPq * 255, mtx);
+    return [i, ct, cp];
+}
+
+
+
+
+
+
+function ictcphlgToRgb(i, ct, cp) {
+    
+    const mtx = [
+        [1.096, 0.062, 0.080],
+        [0.904, -0.062, -0.080],
+        [7.230, 4.045, -2.318]
+    ];
+    let [l, m, s] = matrixMult(i, ct, cp, mtx);
+    
+    
+    l = hlgDecode(l / 255);
+    m = hlgDecode(m / 255);
+    s = hlgDecode(s / 255);
+    
+    const [r, g, b] = lmsToRgb(l, m, s);
+    const hlgEOTF = (v) => {
+        const a = 0.17883277;
+        const b = 1 - 4 * a;
+        const c = 0.5 - a * Math.log(4 * a);
+        if (v <= 0.5) return (v * v) / 3;
+        return (Math.exp((v - c) / a) + b) / 12;
+    };
+    return [
+        Math.round(Math.min(255, Math.max(0, hlgEOTF(r) * 255))),
+        Math.round(Math.min(255, Math.max(0, hlgEOTF(g) * 255))),
+        Math.round(Math.min(255, Math.max(0, hlgEOTF(b) * 255)))
+    ];
+}
+
+function rgbToIctcphlg(r, g, b) {
+    const hlgEncode = (v) => {
+        const a = 0.17883277;
+        const b = 1 - 4 * a;
+        const c = 0.5 - a * Math.log(4 * a);
+        if (v <= 1/12) return Math.sqrt(3 * v);
+        return a * Math.log(12 * v - b) + c;
+    };
+    const R = hlgEncode(r / 255);
+    const G = hlgEncode(g / 255);
+    const B = hlgEncode(b / 255);
+    
+    const [l, m, s] = rgbToLms(R * 255, G * 255, B * 255);
+    const lHlg = hlgEncode(l / 255);
+    const mHlg = hlgEncode(m / 255);
+    const sHlg = hlgEncode(s / 255);
+    
+    const mtx = [
+        [0.5, 0.5, 0],
+        [1.614746, -3.325684, 0.170898],
+        [4.378174, -4.245117, -0.132568]
+    ];
+    const [i, ct, cp] = matrixMult(lHlg * 255, mHlg * 255, sHlg * 255, mtx);
+    return [i, ct, cp];
+}
+
+
+
+
+
+
+
+function icamToRgb(i, c, h) {
+    
+    
+    const hRad = h * Math.PI / 180;
+    const a = c * Math.cos(hRad);
+    const b = c * Math.sin(hRad);
+    
+    
+    const L = i / 100;
+    const [r, g, bb] = oklabToRgb(L * 255, a * 255, b * 255);
+    return [
+        Math.round(Math.min(255, Math.max(0, r))),
+        Math.round(Math.min(255, Math.max(0, g))),
+        Math.round(Math.min(255, Math.max(0, bb)))
+    ];
+}
+
+function rgbToIcam(r, g, b) {
+    const [L, a, b_] = rgbToOklab(r, g, b);
+    const Lnorm = L / 255;
+    const aNorm = a / 255;
+    const bNorm = b_ / 255;
+    
+    const c = Math.sqrt(aNorm * aNorm + bNorm * bNorm) * 100;
+    let h = Math.atan2(bNorm, aNorm) * 180 / Math.PI;
+    if (h < 0) h += 360;
+    return [Lnorm * 100, c, h];
+}
+
+
+
+
+
+
+function zcamToRgb(z, c, h) {
+    
+    
+    const hRad = h * Math.PI / 180;
+    const a = c * Math.cos(hRad);
+    const b = c * Math.sin(hRad);
+    
+    
+    const L = Math.pow(z / 100, 1.2) * 100;
+    const [r, g, bb] = oklabToRgb(L * 255, a * 255, b * 255);
+    return [
+        Math.round(Math.min(255, Math.max(0, r))),
+        Math.round(Math.min(255, Math.max(0, g))),
+        Math.round(Math.min(255, Math.max(0, bb)))
+    ];
+}
+
+function rgbToZcam(r, g, b) {
+    const [L, a, b_] = rgbToOklab(r, g, b);
+    const Lnorm = L / 255;
+    const aNorm = a / 255;
+    const bNorm = b_ / 255;
+    
+    
+    const z = Math.pow(Lnorm, 1/1.2) * 100;
+    const c = Math.sqrt(aNorm * aNorm + bNorm * bNorm) * 100;
+    let h = Math.atan2(bNorm, aNorm) * 180 / Math.PI;
+    if (h < 0) h += 360;
+    return [z, c, h];
+}
+
+
+
+
+
+
+function jzczhzToRgb(jz, cz, hz) {
+    
+    const hRad = hz * Math.PI / 180;
+    const az = cz * Math.cos(hRad);
+    const bz = cz * Math.sin(hRad);
+    return jzazbzToRgb(jz, az, bz);
+}
+
+function rgbToJzczhz(r, g, b) {
+    
+    
+    return rgbToJzczhz(r, g, b);
+}
+
+
+
+
+
+
+
+
+function ntscToRgb(r, g, b) {
+    const lin = v => Math.pow(v / 255, 2.2);
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.6069, 0.1735, 0.2003],
+        [0.2989, 0.5866, 0.1145],
+        [0.0000, 0.0661, 1.1162]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [Math.round(srgb(R2)*255), Math.round(srgb(G2)*255), Math.round(srgb(B2)*255)];
+}
+function rgbToNtsc(r, g, b) {
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.4124, 0.3576, 0.1805],
+        [0.2126, 0.7152, 0.0722],
+        [0.0193, 0.1192, 0.9505]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [1.7317, -0.4960, -0.1267],
+        [-0.8715, 1.7762, 0.0367],
+        [0.0394, -0.0753, 0.9816]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    return [
+        Math.round(Math.min(255, Math.max(0, Math.pow(R2, 1/2.2) * 255))),
+        Math.round(Math.min(255, Math.max(0, Math.pow(G2, 1/2.2) * 255))),
+        Math.round(Math.min(255, Math.max(0, Math.pow(B2, 1/2.2) * 255)))
+    ];
+}
+
+
+
+
+
+
+
+
+function palToRgb(r, g, b) {
+    const lin = v => Math.pow(v / 255, 2.8);
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.6069, 0.1735, 0.2003],
+        [0.2989, 0.5866, 0.1145],
+        [0.0000, 0.0661, 1.1162]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [Math.round(srgb(R2)*255), Math.round(srgb(G2)*255), Math.round(srgb(B2)*255)];
+}
+function rgbToPal(r, g, b) {
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.4124, 0.3576, 0.1805],
+        [0.2126, 0.7152, 0.0722],
+        [0.0193, 0.1192, 0.9505]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [1.7472, -0.4302, -0.2682],
+        [-0.9535, 1.7851, 0.0811],
+        [0.0159, -0.0643, 0.9429]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    return [
+        Math.round(Math.min(255, Math.max(0, Math.pow(R2, 1/2.8) * 255))),
+        Math.round(Math.min(255, Math.max(0, Math.pow(G2, 1/2.8) * 255))),
+        Math.round(Math.min(255, Math.max(0, Math.pow(B2, 1/2.8) * 255)))
+    ];
+}
+
+
+
+
+
+
+
+
+function smptecToRgb(r, g, b) {
+    const lin = v => Math.pow(v / 255, 2.2);
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.6069, 0.1735, 0.2003],
+        [0.2989, 0.5866, 0.1145],
+        [0.0000, 0.0661, 1.1162]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [Math.round(srgb(R2)*255), Math.round(srgb(G2)*255), Math.round(srgb(B2)*255)];
+}
+function rgbToSmptec(r, g, b) {
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.4124, 0.3576, 0.1805],
+        [0.2126, 0.7152, 0.0722],
+        [0.0193, 0.1192, 0.9505]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [1.7472, -0.4302, -0.2682],
+        [-0.9535, 1.7851, 0.0811],
+        [0.0159, -0.0643, 0.9429]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    return [
+        Math.round(Math.min(255, Math.max(0, Math.pow(R2, 1/2.2) * 255))),
+        Math.round(Math.min(255, Math.max(0, Math.pow(G2, 1/2.2) * 255))),
+        Math.round(Math.min(255, Math.max(0, Math.pow(B2, 1/2.2) * 255)))
+    ];
+}
+
+
+
+
+
+
+
+
+function ebutech3213ToRgb(r, g, b) {
+    const lin = v => Math.pow(v / 255, 2.8);
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.6069, 0.1735, 0.2003],
+        [0.2989, 0.5866, 0.1145],
+        [0.0000, 0.0661, 1.1162]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [Math.round(srgb(R2)*255), Math.round(srgb(G2)*255), Math.round(srgb(B2)*255)];
+}
+function rgbToEbutech3213(r, g, b) {
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.4124, 0.3576, 0.1805],
+        [0.2126, 0.7152, 0.0722],
+        [0.0193, 0.1192, 0.9505]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [1.7472, -0.4302, -0.2682],
+        [-0.9535, 1.7851, 0.0811],
+        [0.0159, -0.0643, 0.9429]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    return [
+        Math.round(Math.min(255, Math.max(0, Math.pow(R2, 1/2.8) * 255))),
+        Math.round(Math.min(255, Math.max(0, Math.pow(G2, 1/2.8) * 255))),
+        Math.round(Math.min(255, Math.max(0, Math.pow(B2, 1/2.8) * 255)))
+    ];
+}
+
+
+
+
+
+
+
+
+function dcip3ToRgb(r, g, b) {
+    const lin = v => Math.pow(v / 255, 2.6);
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.486571, 0.265668, 0.198217],
+        [0.228975, 0.691739, 0.079287],
+        [0.000000, 0.045113, 1.043944]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    
+    const cat = [
+        [0.9556, -0.0234, 0.0632],
+        [-0.0281, 1.0095, 0.0186],
+        [0.0123, -0.0205, 1.3305]
+    ];
+    const [X2, Y2, Z2] = matrixMult(X, Y, Z, cat);
+    const mtx2 = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R2, G2, B2] = matrixMult(X2, Y2, Z2, mtx2);
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [Math.round(srgb(R2)*255), Math.round(srgb(G2)*255), Math.round(srgb(B2)*255)];
+}
+function rgbToDcip3(r, g, b) {
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.4124, 0.3576, 0.1805],
+        [0.2126, 0.7152, 0.0722],
+        [0.0193, 0.1192, 0.9505]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    
+    const catInv = [
+        [1.0478, 0.0229, -0.0502],
+        [0.0296, 0.9905, -0.0171],
+        [-0.0092, 0.0151, 0.7519]
+    ];
+    const [X2, Y2, Z2] = matrixMult(X, Y, Z, catInv);
+    const mtx2 = [
+        [2.493180, -0.931266, -0.402659],
+        [-0.829503, 1.762660, 0.023625],
+        [0.035854, -0.076189, 0.956714]
+    ];
+    let [R2, G2, B2] = matrixMult(X2, Y2, Z2, mtx2);
+    return [
+        Math.round(Math.min(255, Math.max(0, Math.pow(R2, 1/2.6) * 255))),
+        Math.round(Math.min(255, Math.max(0, Math.pow(G2, 1/2.6) * 255))),
+        Math.round(Math.min(255, Math.max(0, Math.pow(B2, 1/2.6) * 255)))
+    ];
+}
+
+
+
+
+
+
+
+
+
+
+function pqToRgb(r, g, b) {
+    
+    
+    const pqDecode = (v) => {
+        const m1 = 2610 / 16384;
+        const m2 = 2523 / 32;
+        const c1 = 3424 / 4096;
+        const c2 = 2413 / 128;
+        const c3 = 2392 / 128;
+        const vp = Math.pow(Math.max(v, 0), 1/m2);
+        const val = Math.pow((vp - c1) / (c2 - c3 * vp), 1/m1);
+        return Math.max(0, Math.min(1, val));
+    };
+    const R = pqDecode(r / 255);
+    const G = pqDecode(g / 255);
+    const B = pqDecode(b / 255);
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [
+        Math.round(srgb(R)*255),
+        Math.round(srgb(G)*255),
+        Math.round(srgb(B)*255)
+    ];
+}
+function rgbToPq(r, g, b) {
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    const pqEncode = (v) => {
+        const m1 = 2610 / 16384;
+        const m2 = 2523 / 32;
+        const c1 = 3424 / 4096;
+        const c2 = 2413 / 128;
+        const c3 = 2392 / 128;
+        const vp = Math.pow(Math.max(v, 0), m1);
+        return Math.pow((c1 + c2 * vp) / (1 + c3 * vp), m2);
+    };
+    return [
+        Math.round(pqEncode(R)*255),
+        Math.round(pqEncode(G)*255),
+        Math.round(pqEncode(B)*255)
+    ];
+}
+
+
+
+
+
+
+function hlglToRgb(r, g, b) {
+    const hlgDecode = (v) => {
+        const a = 0.17883277;
+        const b = 1 - 4 * a;
+        const c = 0.5 - a * Math.log(4 * a);
+        const vn = v / 255;
+        if (vn <= 0.5) return (vn * vn) / 3;
+        return (Math.exp((vn - c) / a) + b) / 12;
+    };
+    const R = hlgDecode(r);
+    const G = hlgDecode(g);
+    const B = hlgDecode(b);
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [
+        Math.round(srgb(R)*255),
+        Math.round(srgb(G)*255),
+        Math.round(srgb(B)*255)
+    ];
+}
+function rgbToHlgl(r, g, b) {
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    const hlgEncode = (v) => {
+        const a = 0.17883277;
+        const b = 1 - 4 * a;
+        const c = 0.5 - a * Math.log(4 * a);
+        if (v <= 1/12) return Math.sqrt(3 * v);
+        return a * Math.log(12 * v - b) + c;
+    };
+    return [
+        Math.round(hlgEncode(R)*255),
+        Math.round(hlgEncode(G)*255),
+        Math.round(hlgEncode(B)*255)
+    ];
+}
+
+
+
+
+
+
+
+function hlgToRgb(r, g, b) {
+    
+    const hlgEOTF = (E) => {
+        const a = 0.17883277;
+        const b = 1 - 4 * a;
+        const c = 0.5 - a * Math.log(4 * a);
+        
+        if (E <= 0.5) {
+            return (E * E) / 3;
+        } else {
+            return (Math.exp((E - c) / a) + b) / 12;
+        }
+    };
+    
+    
+    let R_lin = hlgEOTF(r / 255);
+    let G_lin = hlgEOTF(g / 255);
+    let B_lin = hlgEOTF(b / 255);
+    
+    
+    
+    const hlgOOTF = (R, G, B) => {
+        const Lw = 1000; 
+        const gamma = 1.2; 
+        const alpha = Lw / 1000; 
+        
+        
+        const Ys = 0.2627 * R + 0.6780 * G + 0.0593 * B;
+        
+        
+        const factor = alpha * Math.pow(Ys, gamma - 1);
+        return [
+            factor * R,
+            factor * G,
+            factor * B
+        ];
+    };
+    
+    
+    let [R_disp, G_disp, B_disp] = hlgOOTF(R_lin, G_lin, B_lin);
+    
+    
+    const linToSrgb = (v) => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    
+    
+    
+    const scale = 1.0;
+    return [
+        Math.round(Math.min(255, Math.max(0, linToSrgb(R_disp * scale) * 255))),
+        Math.round(Math.min(255, Math.max(0, linToSrgb(G_disp * scale) * 255))),
+        Math.round(Math.min(255, Math.max(0, linToSrgb(B_disp * scale) * 255)))
+    ];
+}
+
+function rgbToHlg(r, g, b) {
+    
+    const srgbToLin = (v) => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    
+    let R_lin = srgbToLin(r);
+    let G_lin = srgbToLin(g);
+    let B_lin = srgbToLin(b);
+    
+    
+    const invHlgOOTF = (R, G, B) => {
+        const gamma = 1.2;
+        
+        const Yd = 0.2627 * R + 0.6780 * G + 0.0593 * B;
+        
+        const alpha = 1.0;
+        const Ys = Math.pow(Yd / alpha, 1 / gamma);
+        
+        const factor = Math.pow(Ys, 1 - gamma);
+        return [
+            R * factor,
+            G * factor,
+            B * factor
+        ];
+    };
+    
+    let [R_scene, G_scene, B_scene] = invHlgOOTF(R_lin, G_lin, B_lin);
+    
+    
+    const hlgOETF = (E) => {
+        const a = 0.17883277;
+        const b = 1 - 4 * a;
+        const c = 0.5 - a * Math.log(4 * a);
+        
+        
+        if (E <= 1/12) {
+            return Math.sqrt(3 * E);
+        } else {
+            return a * Math.log(12 * E - b) + c;
+        }
+    };
+    
+    
+    const scale = 1.0;
+    return [
+        Math.round(Math.min(255, Math.max(0, hlgOETF(R_scene * scale) * 255))),
+        Math.round(Math.min(255, Math.max(0, hlgOETF(G_scene * scale) * 255))),
+        Math.round(Math.min(255, Math.max(0, hlgOETF(B_scene * scale) * 255)))
+    ];
+}
+
+
+
+
+
+
+function hlg2020ToRgb(r, g, b) {
+    
+    
+    const hlgEOTF = (E) => {
+        const a = 0.17883277;
+        const b = 1 - 4 * a;
+        const c = 0.5 - a * Math.log(4 * a);
+        if (E <= 0.5) {
+            return (E * E) / 3;
+        } else {
+            return (Math.exp((E - c) / a) + b) / 12;
+        }
+    };
+    
+    
+    let R_lin = hlgEOTF(r / 255);
+    let G_lin = hlgEOTF(g / 255);
+    let B_lin = hlgEOTF(b / 255);
+    
+    
+    const hlgOOTF = (R, G, B) => {
+        const Lw = 1000;
+        const gamma = 1.2;
+        const alpha = Lw / 1000;
+        const Ys = 0.2627 * R + 0.6780 * G + 0.0593 * B;
+        const factor = alpha * Math.pow(Ys, gamma - 1);
+        return [factor * R, factor * G, factor * B];
+    };
+    
+    let [R_disp, G_disp, B_disp] = hlgOOTF(R_lin, G_lin, B_lin);
+    
+    
+    const mtx = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R_srgb, G_srgb, B_srgb] = matrixMult(R_disp, G_disp, B_disp, mtx);
+    
+    const linToSrgb = (v) => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    
+    return [
+        Math.round(linToSrgb(R_srgb) * 255),
+        Math.round(linToSrgb(G_srgb) * 255),
+        Math.round(linToSrgb(B_srgb) * 255)
+    ];
+}
+
+function rgbToHlg2020(r, g, b) {
+    
+    const srgbToLin = (v) => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    
+    let R_srgb = srgbToLin(r);
+    let G_srgb = srgbToLin(g);
+    let B_srgb = srgbToLin(b);
+    
+    
+    const mtx = [
+        [0.636958, 0.144617, 0.168881],
+        [0.262700, 0.677998, 0.059302],
+        [0.000000, 0.028073, 1.060985]
+    ];
+    let [R_2020, G_2020, B_2020] = matrixMult(R_srgb, G_srgb, B_srgb, mtx);
+    
+    
+    const invHlgOOTF = (R, G, B) => {
+        const gamma = 1.2;
+        const Yd = 0.2627 * R + 0.6780 * G + 0.0593 * B;
+        const alpha = 1.0;
+        const Ys = Math.pow(Yd / alpha, 1 / gamma);
+        const factor = Math.pow(Ys, 1 - gamma);
+        return [R * factor, G * factor, B * factor];
+    };
+    
+    let [R_scene, G_scene, B_scene] = invHlgOOTF(R_2020, G_2020, B_2020);
+    
+    
+    const hlgOETF = (E) => {
+        const a = 0.17883277;
+        const b = 1 - 4 * a;
+        const c = 0.5 - a * Math.log(4 * a);
+        if (E <= 1/12) {
+            return Math.sqrt(3 * E);
+        } else {
+            return a * Math.log(12 * E - b) + c;
+        }
+    };
+    
+    return [
+        Math.round(Math.min(255, Math.max(0, hlgOETF(R_scene) * 255))),
+        Math.round(Math.min(255, Math.max(0, hlgOETF(G_scene) * 255))),
+        Math.round(Math.min(255, Math.max(0, hlgOETF(B_scene) * 255)))
+    ];
+}
+
+
+
+
+
+
+function cieluv1960ToRgb(u, v, Y) {
+    // Convert CIE 1960 UCS to XYZ, then to sRGB
+    // u, v are in 0-100 range (scaled from normal 0-0.6 range)
+    // Y is 0-100 (luminance)
+    
+    // Normalize u,v from 0-100 to 0-0.6 range
+    const uNorm = u / 100 * 0.6;
+    const vNorm = v / 100 * 0.6;
+    const Yn = Y / 100;
+    
+    // UCS to XYZ (D65)
+    const X = (9 * uNorm * Yn) / (4 * vNorm);
+    const Z = ((12 - 3 * uNorm - 20 * vNorm) * Yn) / (4 * vNorm);
+    
+    const [r, g, b] = xyzToRgb(X * 100, Yn * 100, Z * 100);
+    return [
+        Math.round(Math.min(255, Math.max(0, r))),
+        Math.round(Math.min(255, Math.max(0, g))),
+        Math.round(Math.min(255, Math.max(0, b)))
+    ];
+}
+
+function rgbToCieluv1960(r, g, b) {
+    // Convert sRGB to XYZ, then to CIE 1960 UCS
+    const [X, Y, Z] = rgbToXyz(r, g, b);
+    const sum = X + 15 * Y + 3 * Z;
+    const u = (4 * X) / sum;
+    const v = (6 * Y) / sum;
+    
+    // Scale u,v from 0-0.6 to 0-100 range
+    return [
+        Math.round(Math.min(100, Math.max(0, u / 0.6 * 100))),
+        Math.round(Math.min(100, Math.max(0, v / 0.6 * 100))),
+        Math.round(Math.min(100, Math.max(0, Y)))
+    ];
+}
+
+
+
+
+
+
+function cie1931rgbToRgb(R, G, B) {
+    
+    
+    const mtx = [
+        [2.3646, -0.8966, -0.4681],
+        [-0.5152, 1.4264, 0.0888],
+        [0.0052, -0.0144, 1.0092]
+    ];
+    const [X, Y, Z] = matrixMult(R/100, G/100, B/100, mtx);
+    const [r, g, b] = xyzToRgb(X * 100, Y * 100, Z * 100);
+    return [
+        Math.round(Math.min(255, Math.max(0, r))),
+        Math.round(Math.min(255, Math.max(0, g))),
+        Math.round(Math.min(255, Math.max(0, b)))
+    ];
+}
+
+function rgbToCie1931rgb(r, g, b) {
+    const [X, Y, Z] = rgbToXyz(r, g, b);
+    const mtx = [
+        [0.4185, -0.0912, 0.0009],
+        [-0.1587, 0.2524, -0.0025],
+        [-0.0828, 0.0157, 0.1786]
+    ];
+    let [R, G, B] = matrixMult(X/100, Y/100, Z/100, mtx);
+    return [
+        Math.round(Math.min(100, Math.max(0, R * 100))),
+        Math.round(Math.min(100, Math.max(0, G * 100))),
+        Math.round(Math.min(100, Math.max(0, B * 100)))
+    ];
+}
+
+
+
+
+
+function yuvpalToRgb(y, u, v) {
+    
+    const mtx = [
+        [1.0, 0.0, 1.1398],
+        [1.0, -0.3947, -0.5806],
+        [1.0, 2.0321, 0.0]
+    ];
+    let [r, g, b] = matrixMult(y/255, u/255, v/255, mtx);
+    return [
+        Math.round(Math.min(255, Math.max(0, r * 255))),
+        Math.round(Math.min(255, Math.max(0, g * 255))),
+        Math.round(Math.min(255, Math.max(0, b * 255)))
+    ];
+}
+
+function rgbToYuvpal(r, g, b) {
+    const mtx = [
+        [0.299, 0.587, 0.114],
+        [-0.147, -0.289, 0.436],
+        [0.615, -0.515, -0.100]
+    ];
+    const [y, u, v] = matrixMult(r/255, g/255, b/255, mtx);
+    return [
+        Math.round(Math.min(255, Math.max(0, y * 255))),
+        Math.round(Math.min(255, Math.max(0, u * 255))),
+        Math.round(Math.min(255, Math.max(0, v * 255)))
+    ];
+}
+
+
+
+
+
+function yvwToRgb(y, v, w) {
+    
+    const mtx = [
+        [1.0, 0.000, 1.280],
+        [1.0, -0.214, -0.380],
+        [1.0, 2.128, 0.000]
+    ];
+    let [r, g, b] = matrixMult(y/255, v/255, w/255, mtx);
+    return [
+        Math.round(Math.min(255, Math.max(0, r * 255))),
+        Math.round(Math.min(255, Math.max(0, g * 255))),
+        Math.round(Math.min(255, Math.max(0, b * 255)))
+    ];
+}
+
+function rgbToYvw(r, g, b) {
+    const mtx = [
+        [0.299, 0.587, 0.114],
+        [-0.168, -0.331, 0.500],
+        [0.500, -0.419, -0.081]
+    ];
+    const [y, v, w] = matrixMult(r/255, g/255, b/255, mtx);
+    return [
+        Math.round(Math.min(255, Math.max(0, y * 255))),
+        Math.round(Math.min(255, Math.max(0, v * 255))),
+        Math.round(Math.min(255, Math.max(0, w * 255)))
+    ];
+}
+
+
+
+
+
+
+
+
+
+
+function applergbToRgb(r, g, b) {
+    const lin = v => Math.pow(v / 255, 1.8);
+    const R = lin(r), G = lin(g), B = lin(b);
+    
+    const mtx = [
+        [0.576669, 0.185558, 0.188228],
+        [0.297345, 0.627355, 0.075285],
+        [0.027031, 0.070687, 0.991109]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    
+    const mtx2 = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [Math.round(srgb(R2)*255), Math.round(srgb(G2)*255), Math.round(srgb(B2)*255)];
+}
+
+function rgbToApplergb(r, g, b) {
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.4124, 0.3576, 0.1805],
+        [0.2126, 0.7152, 0.0722],
+        [0.0193, 0.1192, 0.9505]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    
+    const mtx2 = [
+        [2.041369, -0.564946, -0.344694],
+        [-0.969266, 1.876010, 0.041556],
+        [0.013447, -0.118389, 1.015409]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    R2 = Math.min(1, Math.max(0, R2));
+    G2 = Math.min(1, Math.max(0, G2));
+    B2 = Math.min(1, Math.max(0, B2));
+    const apple = v => Math.pow(v, 1/1.8) * 255;
+    return [Math.round(apple(R2)), Math.round(apple(G2)), Math.round(apple(B2))];
+}
+
+
+
+
+
+
+
+
+
+function colormatchToRgb(r, g, b) {
+    const lin = v => Math.pow(v / 255, 1.8);
+    const R = lin(r), G = lin(g), B = lin(b);
+    
+    const mtx = [
+        [0.5094668, 0.32087954, 0.13394933],
+        [0.27495034, 0.658075, 0.06697467],
+        [0.02426032, 0.10877273, 0.69207155]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    
+    const cat = [
+        [0.9556, -0.0234, 0.0632],
+        [-0.0281, 1.0095, 0.0186],
+        [0.0123, -0.0205, 1.3305]
+    ];
+    const [X2, Y2, Z2] = matrixMult(X, Y, Z, cat);
+    
+    const mtx2 = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R2, G2, B2] = matrixMult(X2, Y2, Z2, mtx2);
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [Math.round(srgb(R2)*255), Math.round(srgb(G2)*255), Math.round(srgb(B2)*255)];
+}
+
+function rgbToColormatch(r, g, b) {
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    
+    const mtx = [
+        [0.4124, 0.3576, 0.1805],
+        [0.2126, 0.7152, 0.0722],
+        [0.0193, 0.1192, 0.9505]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    
+    const catInv = [
+        [1.0478, 0.0229, -0.0502],
+        [0.0296, 0.9905, -0.0171],
+        [-0.0092, 0.0151, 0.7519]
+    ];
+    const [X2, Y2, Z2] = matrixMult(X, Y, Z, catInv);
+    
+    const mtx2 = [
+        [2.64164976, -1.22313179, -0.39291946],
+        [-1.11207173, 2.05919502, 0.01596275],
+        [0.08218196, -0.28076676, 1.45620209]
+    ];
+    let [R2, G2, B2] = matrixMult(X2, Y2, Z2, mtx2);
+    R2 = Math.min(1, Math.max(0, R2));
+    G2 = Math.min(1, Math.max(0, G2));
+    B2 = Math.min(1, Math.max(0, B2));
+    const cm = v => Math.pow(v, 1/1.8) * 255;
+    return [Math.round(cm(R2)), Math.round(cm(G2)), Math.round(cm(B2))];
+}
+
+
+
+
+
+
+
+function rommToRgb(r, g, b) {
+    
+    return prophotoToRgb(r, g, b);
+}
+
+function rgbToRomm(r, g, b) {
+    return rgbToProphoto(r, g, b);
+}
+
+
+
+
+// ============================================================
+// ERIMM RGB (Extended Reference Input Medium Metric)
+// Source: ISO 22028-3:2023, I3A 7466
+// Primaries: R(0.7347,0.2653), G(0.1596,0.8404), B(0.0366,0.0001)
+// White: D50 (0.3457,0.3585)
+// Transfer: Scene-referred log encoding
+// Note: Native range is 0-4095 for 12-bit, but scaled to 0-255 for UI
+// ============================================================
+function erimmToRgb(r, g, b) {
+    // Input r,g,b are 0-255 (representing 0-4095 native range)
+    // Decode ERIMM log encoding
+    const erimmToLinear = (v) => {
+        const vn = v / 255; // 0-1 scale for UI
+        // ERIMM uses 12-bit log encoding (0-4095)
+        const n = vn * 4095;
+        if (n <= 0) return 0;
+        // The linear value is 10^( (n - 0.003) / 0.25 )
+        // The actual formula uses the 12-bit code value
+        const nNorm = n / 4095;
+        if (nNorm <= 0.001953) return nNorm * 4096;
+        return Math.pow(10, (nNorm - 0.003) / 0.25) * 0.18;
+    };
+    const R = erimmToLinear(r);
+    const G = erimmToLinear(g);
+    const B = erimmToLinear(b);
+    
+    // ERIMM uses same primaries as ProPhoto/ROMM
+    const mtx = [
+        [0.797760, 0.135190, 0.031340],
+        [0.288071, 0.711843, 0.000085],
+        [0.000000, 0.000000, 0.824891]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    
+    // Bradford CAT (D50 to D65)
+    const cat = [
+        [0.9556, -0.0234, 0.0632],
+        [-0.0281, 1.0095, 0.0186],
+        [0.0123, -0.0205, 1.3305]
+    ];
+    const [X2, Y2, Z2] = matrixMult(X, Y, Z, cat);
+    
+    // XYZ (D65) to sRGB
+    const mtx2 = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R2, G2, B2] = matrixMult(X2, Y2, Z2, mtx2);
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [Math.round(srgb(R2)*255), Math.round(srgb(G2)*255), Math.round(srgb(B2)*255)];
+}
+
+function rgbToErimm(r, g, b) {
+    // sRGB to linear
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    
+    // sRGB to XYZ (D65)
+    const mtx = [
+        [0.4124, 0.3576, 0.1805],
+        [0.2126, 0.7152, 0.0722],
+        [0.0193, 0.1192, 0.9505]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    
+    // Inverse Bradford CAT (D65 to D50)
+    const catInv = [
+        [1.0478, 0.0229, -0.0502],
+        [0.0296, 0.9905, -0.0171],
+        [-0.0092, 0.0151, 0.7519]
+    ];
+    const [X2, Y2, Z2] = matrixMult(X, Y, Z, catInv);
+    
+    // XYZ (D50) to ERIMM primaries (same as ProPhoto)
+    const mtx2 = [
+        [1.345943, -0.255607, -0.051112],
+        [-0.544599, 1.508167, 0.020535],
+        [0.000000, 0.000000, 1.211813]
+    ];
+    let [R2, G2, B2] = matrixMult(X2, Y2, Z2, mtx2);
+    R2 = Math.min(1.8, Math.max(0, R2));
+    G2 = Math.min(1.8, Math.max(0, G2));
+    B2 = Math.min(1.8, Math.max(0, B2));
+    
+    // ERIMM log encoding (12-bit)
+    const linearToErimm = (v) => {
+        if (v <= 0) return 0;
+        // Scene-referred: scale to 18% grey
+        const vScale = v / 0.18;
+        if (vScale <= 0.001953) return vScale * 4096 / 4095;
+        const code = (0.25 * Math.log10(vScale) + 0.003) * 4095;
+        return Math.min(4095, Math.max(0, code)) / 4095;
+    };
+    return [
+        Math.round(Math.min(255, Math.max(0, linearToErimm(R2) * 255))),
+        Math.round(Math.min(255, Math.max(0, linearToErimm(G2) * 255))),
+        Math.round(Math.min(255, Math.max(0, linearToErimm(B2) * 255)))
+    ];
+}
+// 
+
+function cam02jchToRgb(J, C, h) {
+    
+    const hRad = h * Math.PI / 180;
+    const a = C * Math.cos(hRad);
+    const b = C * Math.sin(hRad);
+    return cam02UcsToRgb(J, a, b);
+}
+
+function rgbToCam02jch(r, g, b) {
+    const [J, a, b_] = rgbToCam02Ucs(r, g, b);
+    const C = Math.sqrt(a * a + b_ * b_);
+    let h = Math.atan2(b_, a) * 180 / Math.PI;
+    if (h < 0) h += 360;
+    return [J, C, h];
+}
+
+
+
+
+
+function cam16jchToRgb(J, C, h) {
+    const hRad = h * Math.PI / 180;
+    const a = C * Math.cos(hRad);
+    const b = C * Math.sin(hRad);
+    return cam16UcsToRgb(J, a, b);
+}
+
+function rgbToCam16jch(r, g, b) {
+    const [J, a, b_] = rgbToCam16Ucs(r, g, b);
+    const C = Math.sqrt(a * a + b_ * b_);
+    let h = Math.atan2(b_, a) * 180 / Math.PI;
+    if (h < 0) h += 360;
+    return [J, C, h];
+}
+
+
+
+
+
+// RYB - Red-Yellow-Blue
+function rybToRgb(r, y, b) {
+    r /= 255; y /= 255; b /= 255;
+    const mtx = [
+        [1.0, 1.0, 0.0],
+        [0.0, 1.0, 0.0],
+        [0.0, 0.0, 1.0]
+    ];
+    let [R, G, B] = matrixMult(r, y, b, mtx);
+    return [Math.round(R * 255), Math.round(G * 255), Math.round(B * 255)];
+}
+function rgbToRyb(r, g, b) {
+    const [R, G, B] = [r / 255, g / 255, b / 255];
+    const mtx = [
+        [1.0, -1.0, 0.0],
+        [0.0, 1.0, 0.0],
+        [0.0, 0.0, 1.0]
+    ];
+    let [ry, yel, bl] = matrixMult(R, G, B, mtx);
+    return [Math.round(ry * 255), Math.round(yel * 255), Math.round(bl * 255)];
+}
+
+// RCB - Red-Cyan-Blue
+function rcbToRgb(r, c, b) {
+    r /= 255; c /= 255; b /= 255;
+    const mtx = [
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, 1.0],
+        [0.0, 0.0, 1.0]
+    ];
+    let [R, G, B] = matrixMult(r, c, b, mtx);
+    return [Math.round(R * 255), Math.round(G * 255), Math.round(B * 255)];
+}
+function rgbToRcb(r, g, b) {
+    const [R, G, B] = [r / 255, g / 255, b / 255];
+    const mtx = [
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, -1.0],
+        [0.0, 0.0, 1.0]
+    ];
+    let [re, cy, bl] = matrixMult(R, G, B, mtx);
+    return [Math.round(re * 255), Math.round(cy * 255), Math.round(bl * 255)];
+}
+
+// YGB - Yellow-Green-Blue
+function ygbToRgb(y, g, b) {
+    y /= 255; g /= 255; b /= 255;
+    const mtx = [
+        [1.0, 0.0, 0.0],
+        [1.0, 1.0, 0.0],
+        [0.0, 0.0, 1.0]
+    ];
+    let [R, G, B] = matrixMult(y, g, b, mtx);
+    return [Math.round(R * 255), Math.round(G * 255), Math.round(B * 255)];
+}
+function rgbToYgb(r, g, b) {
+    const [R, G, B] = [r / 255, g / 255, b / 255];
+    const mtx = [
+        [1.0, 0.0, 0.0],
+        [-1.0, 1.0, 0.0],
+        [0.0, 0.0, 1.0]
+    ];
+    let [ye, gr, bl] = matrixMult(R, G, B, mtx);
+    return [Math.round(ye * 255), Math.round(gr * 255), Math.round(bl * 255)];
+}
+
+// MGB - Magenta-Green-Blue
+function mgbToRgb(m, g, b) {
+    m /= 255; g /= 255; b /= 255;
+    const mtx = [
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+        [1.0, 0.0, 1.0]
+    ];
+    let [R, G, B] = matrixMult(m, g, b, mtx);
+    return [Math.round(R * 255), Math.round(G * 255), Math.round(B * 255)];
+}
+function rgbToMgb(r, g, b) {
+    const [R, G, B] = [r / 255, g / 255, b / 255];
+    const mtx = [
+        [1.0, 0.0, .0],
+        [0.0, 1.0, 0.0],
+        [-1.0, 0.0, 1.0]
+    ];
+    let [ma, gr, bl] = matrixMult(R, G, B, mtx);
+    return [Math.round(ma * 255), Math.round(gr * 255), Math.round(bl * 255)];
+}
+
+// RGC - Red-Green-Cyan
+function rgcToRgb(r, g, c) {
+    r /= 255; g /= 255; c /= 255;
+    const mtx = [
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, 1.0],
+        [0.0, 0.0, 1.0]
+    ];
+    let [R, G, B] = matrixMult(r, g, c, mtx);
+    return [Math.round(R * 255), Math.round(G * 255), Math.round(B * 255)];
+}
+function rgbToRgc(r, g, b) {
+    const [R, G, B] = [r / 255, g / 255, b / 255];
+    const mtx = [
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, -1.0],
+        [0.0, 0.0, 1.0]
+    ];
+    let [re, gr, cy] = matrixMult(R, G, B, mtx);
+    return [Math.round(re * 255), Math.round(gr * 255), Math.round(cy * 255)];
+}
+
+// RGM - Red-Green-Magenta
+function rgmToRgb(r, g, m) {
+    r /= 255; g /= 255; m /= 255;
+    const mtx = [
+        [1.0, 0.0, 1.0],
+        [0.0, 1.0, 0.0],
+        [0.0, 0.0, 1.0]
+    ];
+    let [R, G, B] = matrixMult(r, g, m, mtx);
+    return [Math.round(R * 255), Math.round(G * 255), Math.round(B * 255)];
+}
+function rgbToRgm(r, g, b) {
+    const [R, G, B] = [r / 255, g / 255, b / 255];
+    const mtx = [
+        [1.0, 0.0, -1.0],
+        [0.0, 1.0, 0.0],
+        [0.0, 0.0, 1.0]
+    ];
+    let [re, gr, ma] = matrixMult(R, G, B, mtx);
+    return [Math.round(re * 255), Math.round(gr * 255), Math.round(ma * 255)];
+}
+function rcbToRgb(r, y, b) {
+    
+    
+    r = r / 255;
+    y = y / 255;
+    b = b / 255;
+    
+    
+    const mtx = [
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+        [0.0, 1.0, 1.0]
+    ];
+    let [R, G, B] = matrixMult(r, y, b, mtx);
+    return [
+        Math.round(Math.min(255, Math.max(0, R * 255))),
+        Math.round(Math.min(255, Math.max(0, G * 255))),
+        Math.round(Math.min(255, Math.max(0, B * 255)))
+    ];
+}
+
+function rgbToRcb(r, g, b) {
+    
+    const R = r / 255;
+    const G = g / 255;
+    const B = b / 255;
+    
+    
+    const mtx = [
+        [1.000, 0.000, 0.000],
+    [0.000, 1.000, 0.000],
+    [0.000, -1.000, 1.000]
+    ];
+    let [ry, yel, bl] = matrixMult(R, G, B, mtx);
+    return [
+        Math.round(Math.min(255, Math.max(0, ry * 255))),
+        Math.round(Math.min(255, Math.max(0, yel * 255))),
+        Math.round(Math.min(255, Math.max(0, bl * 255)))
+    ];
+}
+
+
+function websafeToRgb(r, g, b) {
+    // Web-safe colors use steps of 0x33 (51) in each channel
+    const step = 51;
+    const roundToWebsafe = (v) => {
+        const steps = [0, 51, 102, 153, 204, 255];
+        let closest = steps[0];
+        let minDiff = Infinity;
+        for (const s of steps) {
+            const diff = Math.abs(v - s);
+            if (diff < minDiff) {
+                minDiff = diff;
+                closest = s;
+            }
+        }
+        return closest;
+    };
+    return [roundToWebsafe(r), roundToWebsafe(g), roundToWebsafe(b)];
+}
+
+function rgbToWebsafe(r, g, b) {
+    return websafeToRgb(r, g, b);
+}
+
+function i1i2i3ToRgb(i1, i2, i3) {
+  
+    const I1 = i1 / 100;
+    const I2 = (i2 / 100) * 2 - 1; 
+    const I3 = (i3 / 100) * 2 - 1; 
+
+
+    const mtx = [
+        [1.0, 1.0, 1.0],
+        [1.0, 0.0, -2.0],
+        [1.0, -1.0, 1.0]
+    ];
+    let [R, G, B] = matrixMult(I1, I2, I3, mtx);
+
+    return [
+        Math.round(Math.min(255, Math.max(0, R * 255))),
+        Math.round(Math.min(255, Math.max(0, G * 255))),
+        Math.round(Math.min(255, Math.max(0, B * 255)))
+    ];
+}
+
+function rgbToI1i2i3(r, g, b) {
+    const R = r / 255;
+    const G = g / 255;
+    const B = b / 255;
+
+  
+    const mtx = [
+        [1/3, 1/3, 1/3],
+        [1/2, 0, -1/2],
+        [-1/4, 1/2, -1/4]
+    ];
+    let [I1, I2, I3] = matrixMult(R, G, B, mtx);
+
+
+    return [
+        Math.round(I1 * 100),
+        Math.round((I2 + 0.5) * 100),
+        Math.round((I3 + 0.5) * 100)
+    ];
+}
+
+function prophotoToRgb(r, g, b) {
+    
+    
+    const lin = (v) => {
+        const vn = v / 255;
+        if (vn <= 16/255) return vn / 16;
+        return Math.pow(vn, 1.8);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    
+    
+    const mtx = [
+        [0.797760, 0.135190, 0.031340],
+        [0.288071, 0.711843, 0.000085],
+        [0.000000, 0.000000, 0.824891]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    
+    
+    const cat = [
+        [0.9556, -0.0234, 0.0632],
+        [-0.0281, 1.0095, 0.0186],
+        [0.0123, -0.0205, 1.3305]
+    ];
+    const [X2, Y2, Z2] = matrixMult(X, Y, Z, cat);
+    
+    
+    const mtx2 = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R2, G2, B2] = matrixMult(X2, Y2, Z2, mtx2);
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [Math.round(srgb(R2)*255), Math.round(srgb(G2)*255), Math.round(srgb(B2)*255)];
+}
+
+function rgbToProphoto(r, g, b) {
+    
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    
+    
+    const mtx = [
+        [0.4124, 0.3576, 0.1805],
+        [0.2126, 0.7152, 0.0722],
+        [0.0193, 0.1192, 0.9505]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    
+    
+    const catInv = [
+        [1.0478, 0.0229, -0.0502],
+        [0.0296, 0.9905, -0.0171],
+        [-0.0092, 0.0151, 0.7519]
+    ];
+    const [X2, Y2, Z2] = matrixMult(X, Y, Z, catInv);
+    
+    
+    const mtx2 = [
+        [1.345943, -0.255607, -0.051112],
+        [-0.544599, 1.508167, 0.020535],
+        [0.000000, 0.000000, 1.211813]
+    ];
+    let [R2, G2, B2] = matrixMult(X2, Y2, Z2, mtx2);
+    const prophotoEnc = v => {
+        if (v <= 16/255) return v * 16;
+        return Math.pow(v, 1/1.8) * 255;
+    };
+    return [
+        Math.round(Math.min(255, Math.max(0, prophotoEnc(R2)))),
+        Math.round(Math.min(255, Math.max(0, prophotoEnc(G2)))),
+        Math.round(Math.min(255, Math.max(0, prophotoEnc(B2))))
+    ];
+}
+
+
+
+
+
+function xvyccToRgb(y, cb, cr) {
+    
+    
+    const y2 = y / 255;
+    const cb2 = (cb - 128) / 128;
+    const cr2 = (cr - 128) / 128;
+    
+    const mtx = [
+        [1.000, 0.000, 1.5748],
+        [1.000, -0.1873, -0.4681],
+        [1.000, 1.8556, 0.000]
+    ];
+    let [r, g, b] = matrixMult(y2, cb2, cr2, mtx);
+    return [
+        Math.round(Math.min(255, Math.max(0, r * 255))),
+        Math.round(Math.min(255, Math.max(0, g * 255))),
+        Math.round(Math.min(255, Math.max(0, b * 255)))
+    ];
+}
+
+function rgbToXvycc(r, g, b) {
+    const R = r / 255, G = g / 255, B = b / 255;
+    const mtx = [
+        [0.299, 0.587, 0.114],
+        [-0.169, -0.331, 0.500],
+        [0.500, -0.419, -0.081]
+    ];
+    let [y, cb, cr] = matrixMult(R, G, B, mtx);
+    return [
+        Math.round(Math.min(255, Math.max(0, y * 255))),
+        Math.round(Math.min(255, Math.max(0, (cb + 0.5) * 255))),
+        Math.round(Math.min(255, Math.max(0, (cr + 0.5) * 255)))
+    ];
+
+}
+
+
+
+
+
+function coloroidToRgb(A, S, L) {
+    
+    
+    const h = A / 100 * 360;
+    const s = S / 100;
+    const l = L / 100;
+    
+    
+    const hueMap = [0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340, 360];
+    const hueIndex = Math.floor(h / 20);
+    const hueFrac = (h % 20) / 20;
+    
+    
+    const [R, G, B] = hslToRgb(h, s * 100, l * 100);
+    return [R, G, B];
+}
+
+function rgbToColoroid(r, g, b) {
+    const [h, s, l] = rgbToHsl(r, g, b);
+    const A = h / 360 * 100;
+    const S = s;
+    const L = l;
+    return [A, S, L];
+}
+
+
+
+
+
+
+
+
+function palmToRgb(r, g, b) {
+    const lin = v => Math.pow(v / 255, 2.2);
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.6069, 0.1735, 0.2003],
+        [0.2989, 0.5866, 0.1145],
+        [0.0000, 0.0661, 1.1162]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [Math.round(srgb(R2)*255), Math.round(srgb(G2)*255), Math.round(srgb(B2)*255)];
+}
+function rgbToPalm(r, g, b) {
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.4124, 0.3576, 0.1805],
+        [0.2126, 0.7152, 0.0722],
+        [0.0193, 0.1192, 0.9505]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [1.7472, -0.4302, -0.2682],
+        [-0.9535, 1.7851, 0.0811],
+        [0.0159, -0.0643, 0.9429]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    return [
+        Math.round(Math.min(255, Math.max(0, Math.pow(R2, 1/2.2) * 255))),
+        Math.round(Math.min(255, Math.max(0, Math.pow(G2, 1/2.2) * 255))),
+        Math.round(Math.min(255, Math.max(0, Math.pow(B2, 1/2.2) * 255)))
+    ];
+}
+
+
+
+
+
+
+
+
+
+function rimmToRgb(r, g, b) {
+    
+    const lin = v => {
+        if (v <= 16) return v / 16;
+        return Math.pow(v / 255, 1.8);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.7977, 0.1352, 0.0313],
+        [0.2880, 0.7119, 0.0001],
+        [0.0000, 0.0000, 0.8249]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [Math.round(srgb(R2)*255), Math.round(srgb(G2)*255), Math.round(srgb(B2)*255)];
+}
+function rgbToRimm(r, g, b) {
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.4124, 0.3576, 0.1805],
+        [0.2126, 0.7152, 0.0722],
+        [0.0193, 0.1192, 0.9505]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [1.3460, -0.2556, -0.0511],
+        [-0.5446, 1.5082, 0.0205],
+        [0.0000, 0.0000, 1.2123]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    const rimmEnc = v => {
+        if (v <= 16/255) return v * 16;
+        return Math.pow(v, 1/1.8) * 255;
+    };
+    return [
+        Math.round(Math.min(255, Math.max(0, rimmEnc(R2)))),
+        Math.round(Math.min(255, Math.max(0, rimmEnc(G2)))),
+        Math.round(Math.min(255, Math.max(0, rimmEnc(B2))))
+    ];
+}
+
+
+
+
+
+
+
+
+function secamToRgb(r, g, b) {
+    const lin = v => Math.pow(v / 255, 2.8);
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.6069, 0.1735, 0.2003],
+        [0.2989, 0.5866, 0.1145],
+        [0.0000, 0.0661, 1.1162]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [3.2406, -1.5372, -0.4986],
+        [-0.9689, 1.8758, 0.0415],
+        [0.0557, -0.2040, 1.0570]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    const srgb = v => {
+        const c = Math.min(1, Math.max(0, v));
+        if (c <= 0.0031308) return c * 12.92;
+        return 1.055 * Math.pow(c, 1/2.4) - 0.055;
+    };
+    return [Math.round(srgb(R2)*255), Math.round(srgb(G2)*255), Math.round(srgb(B2)*255)];
+}
+function rgbToSecam(r, g, b) {
+    const lin = v => {
+        const c = v / 255;
+        if (c <= 0.04045) return c / 12.92;
+        return Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const R = lin(r), G = lin(g), B = lin(b);
+    const mtx = [
+        [0.4124, 0.3576, 0.1805],
+        [0.2126, 0.7152, 0.0722],
+        [0.0193, 0.1192, 0.9505]
+    ];
+    const [X, Y, Z] = matrixMult(R, G, B, mtx);
+    const mtx2 = [
+        [1.7472, -0.4302, -0.2682],
+        [-0.9535, 1.7851, 0.0811],
+        [0.0159, -0.0643, 0.9429]
+    ];
+    let [R2, G2, B2] = matrixMult(X, Y, Z, mtx2);
+    return [
+        Math.round(Math.min(255, Math.max(0, Math.pow(R2, 1/2.8) * 255))),
+        Math.round(Math.min(255, Math.max(0, Math.pow(G2, 1/2.8) * 255))),
+        Math.round(Math.min(255, Math.max(0, Math.pow(B2, 1/2.8) * 255)))
+    ];
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// ['okhsl', 'h', 's', 'l', 0, 0, 0, 255, 360, 100, 100, 0, 0, 100]
+
+// Helmlab MetricSpace (simplified): l=0-100, a=-100-100, b=-100-100
+// For production, use the official helmlab package
+function helmlabToRgb(l, a, b) {
+    const lNorm = l / 100;
+    const aNorm = a / 100;
+    const bNorm = b / 100;
+    
+    // Approximate inverse: use Oklab as proxy with rotation
+    const phi = -28.2 * Math.PI / 180;
+    const aRot = aNorm * Math.cos(-phi) - bNorm * Math.sin(-phi);
+    const bRot = aNorm * Math.sin(-phi) + bNorm * Math.cos(-phi);
+    
+    const [r2, g2, b2] = oklabToRgb(lNorm * 255, aRot * 255, bRot * 255);
+    return [
+        Math.round(Math.min(255, Math.max(0, r2))),
+        Math.round(Math.min(255, Math.max(0, g2))),
+        Math.round(Math.min(255, Math.max(0, b2)))
+    ];
+}
+
+function rgbToHelmlab(r, g, b) {
+    const [L, a, b_] = rgbToOklab(r, g, b);
+    const lNorm = L / 255;
+    const aNorm = a / 255;
+    const bNorm = b_ / 255;
+    
+    const phi = -28.2 * Math.PI / 180;
+    const aRot = aNorm * Math.cos(phi) - bNorm * Math.sin(phi);
+    const bRot = aNorm * Math.sin(phi) + bNorm * Math.cos(phi);
+    
+    return [
+        Math.min(100, Math.max(0, lNorm * 100)),
+        aRot * 100,
+        bRot * 100
+    ];
+}
+
+// ['helmlab', 'l', 'a', 'b', 0, -100, -100, 100, 100, 100, 0, 0, 100]
+
+// Helmlab GenSpace (Helmgen): l=0-100, a=-100-100, b=-100-100
+function helmgenToRgb(l, a, b) {
+    const lNorm = l / 100;
+    const aNorm = a / 100;
+    const bNorm = b / 100;
+    
+    // L-gated hue enrichment (blue band correction)
+    const hue = Math.atan2(bNorm, aNorm);
+    const chroma = Math.sqrt(aNorm * aNorm + bNorm * bNorm);
+    let hueDeg = hue * 180 / Math.PI;
+    if (hueDeg < 0) hueDeg += 360;
+    
+    let aEnr = aNorm, bEnr = bNorm;
+    if (lNorm > 0.37 && Math.abs(hueDeg - 264.5) < 40 && chroma > 0) {
+        const amp = 0.058 * Math.exp(-Math.pow((hueDeg - 264.5) / 40, 2));
+        const newHue = hue + amp;
+        aEnr = chroma * Math.cos(newHue);
+        bEnr = chroma * Math.sin(newHue);
+    }
+    
+    const [r2, g2, b2] = oklabToRgb(lNorm * 255, aEnr * 255, bEnr * 255);
+    return [
+        Math.round(Math.min(255, Math.max(0, r2))),
+        Math.round(Math.min(255, Math.max(0, g2))),
+        Math.round(Math.min(255, Math.max(0, b2)))
+    ];
+}
+
+function rgbToHelmgen(r, g, b) {
+    const [L, a, b_] = rgbToOklab(r, g, b);
+    return [
+        Math.min(100, Math.max(0, L / 255 * 100)),
+        a / 255 * 100,
+        b_ / 255 * 100
+    ];
+}
+
+// ['helmgen', 'l', 'a', 'b', 0, -100, -100, 100, 100, 100, 0, 0, 100]
+
+// Helmlab LCH variants
+function helmgenlchToRgb(l, c, h) {
+    const hRad = h * Math.PI / 180;
+    const a = c * Math.cos(hRad);
+    const b = c * Math.sin(hRad);
+    return helmgenToRgb(l, a, b);
+}
+
+function rgbToHelmgenlch(r, g, b) {
+    const [l, a, b_] = rgbToHelmgen(r, g, b);
+    const c = Math.sqrt(a * a + b_ * b_);
+    let h = Math.atan2(b_, a) * 180 / Math.PI;
+    if (h < 0) h += 360;
+    return [l, c, h];
+}
+
+// ['helmgenlch', 'l', 'c', 'h', 0, 0, 0, 100, 150, 360, 0, 0, 100]
+
+
+function rgbToOkhsl(r, g, b) {
+    const [L, a, b_] = rgbToOklab(r, g, b);
+    const Lnorm = L / 255;
+    const aNorm = a / 255;
+    const bNorm = b_ / 255;
+    
+    const C = Math.sqrt(aNorm * aNorm + bNorm * bNorm);
+    let h = Math.atan2(bNorm, aNorm) * 180 / Math.PI;
+    if (h < 0) h += 360;
+    
+    // Lightness: scaled to 0-100
+    const l = Math.min(100, Math.max(0, (Lnorm - 0.15) / 0.85 * 100));
+    
+    // Saturation: chroma relative to max for this lightness
+    const maxC = (1 - Math.abs(l / 100 - 0.5) * 2) * 0.45;
+    const s = maxC > 0 ? Math.min(100, (C / maxC) * 100) : 0;
+    
+    return [h, s, l];
+}
+
+// Okhsl entry: ['okhsl', 'h', 's', 'l', 0, 0, 0, 255, 360, 100, 100, 0, 0, 100]
+function xyzToXyb(X, Y, Z) {
+    // Constants from JPEG XL white paper
+    const bias = 0.00379307325527544933;
+    
+    // LMS-like cone responses with bias
+    const Lmix = 0.3 * X + 0.622 * Y + 0.078 * Z + bias;
+    const Mmix = 0.23 * X + 0.692 * Y + 0.078 * Z + bias;
+    const Smix = 0.24342268924547819 * X + 0.20476744424496821 * Y + 0.55180986650955360 * Z + bias;
+    
+    // Cube root gamma (gamma = 3 for efficient decoding)
+    const cbrt = v => Math.sign(v) * Math.pow(Math.abs(v), 1/3);
+    const Lgamma = cbrt(Lmix) - cbrt(bias);
+    const Mgamma = cbrt(Mmix) - cbrt(bias);
+    const Sgamma = cbrt(Smix) - cbrt(bias);
+    
+    // XYB conversion
+    const Xyb = (Lgamma - Mgamma) / 2;
+    const Yyb = (Lgamma + Mgamma) / 2;
+    const Byb = Sgamma;
+    
+    return [Xyb, Yyb, Byb];
+}
+
+function xybToXyz(Xyb, Yyb, Byb) {
+    const bias = 0.00379307325527544933;
+    const cbrt = v => Math.sign(v) * Math.pow(Math.abs(v), 1/3);
+    
+    // Inverse transform
+    const Lgamma = Xyb + Yyb;
+    const Mgamma = Yyb - Xyb;
+    const Sgamma = Byb;
+    
+    // Cube back
+    const cube = v => v * v * v;
+    const Lmix = cube(Lgamma) + cube(cbrt(bias));
+    const Mmix = cube(Mgamma) + cube(cbrt(bias));
+    const Smix = cube(Sgamma) + cube(cbrt(bias));
+    
+    // Inverse LMS to XYZ (approximate)
+    const X = (Lmix - 0.622 * Mmix - 0.078 * Smix) / 0.3;
+    const Y = Mmix - 0.078 * Smix;
+    const Z = Smix / 0.55180986650955360;
+    
+    return [X, Y, Z];
+}
+
+function rgbToXyb(r, g, b) {
+    const [X, Y, Z] = rgbToXyz(r, g, b);
+    return xyzToXyb(X, Y, Z);
+}
+
+function xybToRgb(x, y, b) {
+    const [X, Y, Z] = xybToXyz(x, y, b);
+    return xyzToRgb(X, Y, Z);
+}
+
+
+//=====================================================
+// CAM02 UCS
+//=====================================================
+
+function cam02UcsToRgb(Jp, ap, bp)
+{
+    Jp = Math.min(100, Math.max(0, Jp));
+
+    const J = Jp / (1.7 - 0.007 * Jp);
+    const L = Math.min(1, Math.max(0, J / 100));
+
+    const Mp = Math.sqrt(ap * ap + bp * bp);
+    const M = (Math.exp(0.0228 * Mp) - 1) / 0.0228;
+
+    const h = Math.atan2(bp, ap);
+
+    const a = M * Math.cos(h);
+    const b = M * Math.sin(h);
+
+    const [r,g,bb] = oklabToRgb(
+        L * 255,
+        Math.max(-100, Math.min(100,a)),
+        Math.max(-100, Math.min(100,b))
+    );
+
+    return [
+        Math.round(Math.max(0,Math.min(255,r))),
+        Math.round(Math.max(0,Math.min(255,g))),
+        Math.round(Math.max(0,Math.min(255,bb)))
+    ];
+}
+
+function rgbToCam02Ucs(r,g,b)
+{
+    r=Math.max(0,Math.min(255,r));
+    g=Math.max(0,Math.min(255,g));
+    b=Math.max(0,Math.min(255,b));
+
+    const [L,a,b_] = rgbToOklab(r,g,b);
+
+    const Lnorm=Math.max(0,Math.min(1,L/255));
+
+    const J=Lnorm*100;
+    const Jp=(1.7*J)/(1+0.007*J);
+
+    const M=Math.sqrt(a*a+b_*b_);
+    const Mp=Math.log(1+0.0228*M)/0.0228;
+
+    const h=Math.atan2(b_,a);
+
+    return [
+        Jp,
+        Mp*Math.cos(h),
+        Mp*Math.sin(h)
+    ];
+}
+
+//=====================================================
+// CAM02 LCD
+//=====================================================
+
+function cam02lcdToRgb(J,a,b)
+{
+    J=Math.max(0,Math.min(100,J));
+
+    a=Math.max(-150,Math.min(150,a));
+    b=Math.max(-150,Math.min(150,b));
+
+    const ap=a*100/150;
+    const bp=b*100/150;
+
+    return cam02UcsToRgb(J,ap,bp);
+}
+
+function rgbToCam02lcd(r,g,b)
+{
+    const [Jp,ap,bp]=rgbToCam02Ucs(r,g,b);
+
+    return [
+        Jp,
+        ap*150/100,
+        bp*150/100
+    ];
+}
+
+//=====================================================
+// CAM02 LCD LCH
+//=====================================================
+
+function cam02lcdlchToRgb(L,C,H)
+{
+    const hr=H*Math.PI/180;
+
+    return cam02lcdToRgb(
+        L,
+        C*Math.cos(hr),
+        C*Math.sin(hr)
+    );
+}
+
+function rgbToCam02lcdlch(r,g,b)
+{
+    const [L,a,b_]=rgbToCam02lcd(r,g,b);
+
+    const C=Math.sqrt(a*a+b_*b_);
+
+    let H=Math.atan2(b_,a)*180/Math.PI;
+
+    if(H<0) H+=360;
+
+    return [L,C,H];
+}
+
+//=====================================================
+// CAM02 LCD HSV
+//=====================================================
+
+function cam02lcdhsvToRgb(H,S,V)
+{
+    H=((H%360)+360)%360;
+
+    S=Math.max(0,Math.min(100,S));
+    V=Math.max(0,Math.min(100,V));
+
+    const C=(S/100)*150*(V/100);
+
+    const hr=H*Math.PI/180;
+
+    return cam02lcdToRgb(
+        V,
+        C*Math.cos(hr),
+        C*Math.sin(hr)
+    );
+}
+
+function rgbToCam02lcdhsv(r,g,b)
+{
+    const [J,a,b_]=rgbToCam02lcd(r,g,b);
+
+    const C=Math.sqrt(a*a+b_*b_);
+
+    let H=Math.atan2(b_,a)*180/Math.PI;
+
+    if(H<0) H+=360;
+
+    return [
+        H,
+        Math.min(100,C/150*100),
+        J
+    ];
+}
+//=====================================================
+// CAM02 SCD
+//=====================================================
+
+function cam02scdToRgb(J,a,b)
+{
+    J=Math.max(0,Math.min(100,J));
+
+    a=Math.max(-150,Math.min(150,a));
+    b=Math.max(-150,Math.min(150,b));
+
+    const ap=a*100/150;
+    const bp=b*100/150;
+
+    return cam02UcsToRgb(J,ap,bp);
+}
+
+function rgbToCam02scd(r,g,b)
+{
+    const [Jp,ap,bp]=rgbToCam02Ucs(r,g,b);
+
+    return [
+        Jp,
+        ap*150/100,
+        bp*150/100
+    ];
+}
+
+//=====================================================
+// CAM02 SCD LCH
+//=====================================================
+
+function cam02scdlchToRgb(L,C,H)
+{
+    const hr=H*Math.PI/180;
+
+    return cam02scdToRgb(
+        L,
+        C*Math.cos(hr),
+        C*Math.sin(hr)
+    );
+}
+
+function rgbToCam02scdlch(r,g,b)
+{
+    const [L,a,b_]=rgbToCam02scd(r,g,b);
+
+    const C=Math.sqrt(a*a+b_*b_);
+
+    let H=Math.atan2(b_,a)*180/Math.PI;
+
+    if(H<0) H+=360;
+
+    return [L,C,H];
+}
+
+//=====================================================
+// CAM02 SCD HSV
+//=====================================================
+
+function cam02scdhsvToRgb(H,S,V)
+{
+    H=((H%360)+360)%360;
+
+    S=Math.max(0,Math.min(100,S));
+    V=Math.max(0,Math.min(100,V));
+
+    const C=(S/100)*150*(V/100);
+
+    const hr=H*Math.PI/180;
+
+    return cam02scdToRgb(
+        V,
+        C*Math.cos(hr),
+        C*Math.sin(hr)
+    );
+}
+
+function rgbToCam02scdhsv(r,g,b)
+{
+    const [J,a,b_]=rgbToCam02scd(r,g,b);
+
+    const C=Math.sqrt(a*a+b_*b_);
+
+    let H=Math.atan2(b_,a)*180/Math.PI;
+
+    if(H<0) H+=360;
+
+    return [
+        H,
+        Math.min(100,C/150*100),
+        J
+    ];
+}
+
+//=====================================================
+// CAM02 SCD HSL
+//=====================================================
+
+function cam02scdhslToRgb(H,S,L)
+{
+    H=((H%360)+360)%360;
+
+    S=Math.max(0,Math.min(100,S));
+    L=Math.max(0,Math.min(100,L));
+
+    const C=
+        (S/100)
+        *150
+        *(1-Math.abs(L/100-0.5)*2);
+
+    const hr=H*Math.PI/180;
+
+    return cam02scdToRgb(
+        L,
+        C*Math.cos(hr),
+        C*Math.sin(hr)
+    );
+}
+
+function rgbToCam02scdhsl(r,g,b)
+{
+    const [J,a,b_]=rgbToCam02scd(r,g,b);
+
+    const C=Math.sqrt(a*a+b_*b_);
+
+    let H=Math.atan2(b_,a)*180/Math.PI;
+
+    if(H<0) H+=360;
+
+    return [
+        H,
+        Math.min(100,C/150*100),
+        J
+    ];
+}
+
+//=====================================================
+// CAM16 UCS
+//=====================================================
+
+function cam16UcsToRgb(Jp,ap,bp)
+{
+    Jp=Math.max(0,Math.min(100,Jp));
+
+    const J=Jp/(1.7-0.007*Jp);
+    const L=Math.max(0,Math.min(1,J/100));
+
+    const Mp=Math.sqrt(ap*ap+bp*bp);
+    const M=(Math.exp(0.0228*Mp)-1)/0.0228;
+
+    const h=Math.atan2(bp,ap);
+
+    const a=M*Math.cos(h);
+    const b=M*Math.sin(h);
+
+    const [r,g,bb]=oklabToRgb(
+        L*255,
+        Math.max(-100,Math.min(100,a)),
+        Math.max(-100,Math.min(100,b))
+    );
+
+    return [
+        Math.round(Math.max(0,Math.min(255,r))),
+        Math.round(Math.max(0,Math.min(255,g))),
+        Math.round(Math.max(0,Math.min(255,bb)))
+    ];
+}
+
+function rgbToCam16Ucs(r,g,b)
+{
+    r=Math.max(0,Math.min(255,r));
+    g=Math.max(0,Math.min(255,g));
+    b=Math.max(0,Math.min(255,b));
+
+    const [L,a,b_]=rgbToOklab(r,g,b);
+
+    const Lnorm=Math.max(0,Math.min(1,L/255));
+
+    const J=Lnorm*100;
+    const Jp=(1.7*J)/(1+0.007*J);
+
+    const M=Math.sqrt(a*a+b_*b_);
+    const Mp=Math.log(1+0.0228*M)/0.0228;
+
+    const h=Math.atan2(b_,a);
+
+    return [
+        Jp,
+        Mp*Math.cos(h),
+        Mp*Math.sin(h)
+    ];
+}
+
+//=====================================================
+// CAM16 LCD
+//=====================================================
+
+function cam16lcdToRgb(J,a,b)
+{
+    J=Math.max(0,Math.min(100,J));
+
+    a=Math.max(-150,Math.min(150,a));
+    b=Math.max(-150,Math.min(150,b));
+
+    const ap=a*100/150;
+    const bp=b*100/150;
+
+    return cam16UcsToRgb(J,ap,bp);
+}
+
+function rgbToCam16lcd(r,g,b)
+{
+    const [Jp,ap,bp]=rgbToCam16Ucs(r,g,b);
+
+    return [
+        Jp,
+        ap*150/100,
+        bp*150/100
+    ];
+}//=====================================================
+// CAM16 LCD LCh
+//=====================================================
+
+function cam16lcdlchToRgb(L,C,H)
+{
+    const hr = H * Math.PI / 180;
+
+    return cam16lcdToRgb(
+        L,
+        C * Math.cos(hr),
+        C * Math.sin(hr)
+    );
+}
+
+
+function rgbToCam16lcdlch(r,g,b)
+{
+    const [L,a,b_] = rgbToCam16lcd(r,g,b);
+
+    const C = Math.sqrt(a*a + b_*b_);
+
+    let H = Math.atan2(b_,a) * 180 / Math.PI;
+
+    if(H < 0) H += 360;
+
+    return [
+        L,
+        C,
+        H
+    ];
+}
+
+
+//=====================================================
+// CAM16 LCD HSV
+//=====================================================
+
+function cam16lcdhsvToRgb(H,S,V)
+{
+    H=((H%360)+360)%360;
+
+    S=Math.max(0,Math.min(100,S));
+    V=Math.max(0,Math.min(100,V));
+
+
+    const C =
+        (S/100)
+        *150
+        *(V/100);
+
+
+    const hr=H*Math.PI/180;
+
+
+    return cam16lcdToRgb(
+        V,
+        C*Math.cos(hr),
+        C*Math.sin(hr)
+    );
+}
+
+
+function rgbToCam16lcdhsv(r,g,b)
+{
+    const [J,a,b_] = rgbToCam16lcd(r,g,b);
+
+    const C=Math.sqrt(a*a+b_*b_);
+
+
+    let H=Math.atan2(b_,a)*180/Math.PI;
+
+    if(H<0) H+=360;
+
+
+    return [
+        H,
+        Math.min(100,C/150*100),
+        J
+    ];
+}
+
+
+//=====================================================
+// CAM16 LCD HSL
+//=====================================================
+
+function cam16lcdhslToRgb(H,S,L)
+{
+    H=((H%360)+360)%360;
+
+    S=Math.max(0,Math.min(100,S));
+    L=Math.max(0,Math.min(100,L));
+
+
+    const C =
+        (S/100)
+        *150
+        *(1-Math.abs(L/100-0.5)*2);
+
+
+    const hr=H*Math.PI/180;
+
+
+    return cam16lcdToRgb(
+        L,
+        C*Math.cos(hr),
+        C*Math.sin(hr)
+    );
+}
+
+
+function rgbToCam16lcdhsl(r,g,b)
+{
+    const [L,a,b_] = rgbToCam16lcd(r,g,b);
+
+    const C=Math.sqrt(a*a+b_*b_);
+
+
+    let H=Math.atan2(b_,a)*180/Math.PI;
+
+    if(H<0) H+=360;
+
+
+    return [
+        H,
+        Math.min(100,C/150*100),
+        L
+    ];
+}
+
+
+//=====================================================
+// CAM16 SCD
+//=====================================================
+
+function cam16scdToRgb(L,a,b)
+{
+    L=Math.max(0,Math.min(100,L));
+
+    a=Math.max(-150,Math.min(150,a));
+    b=Math.max(-150,Math.min(150,b));
+
+
+    const ap=a*100/150;
+    const bp=b*100/150;
+
+
+    return cam16UcsToRgb(
+        L,
+        ap,
+        bp
+    );
+}
+
+
+function rgbToCam16scd(r,g,b)
+{
+    const [Jp,ap,bp]=rgbToCam16Ucs(r,g,b);
+
+
+    return [
+        Jp,
+        ap*150/100,
+        bp*150/100
+    ];
+}
+
+
+//=====================================================
+// CAM16 SCD LCh
+//=====================================================
+
+function cam16scdlchToRgb(L,C,H)
+{
+    const hr=H*Math.PI/180;
+
+
+    return cam16scdToRgb(
+        L,
+        C*Math.cos(hr),
+        C*Math.sin(hr)
+    );
+}
+
+
+function rgbToCam16scdlch(r,g,b)
+{
+    const [L,a,b_] = rgbToCam16scd(r,g,b);
+
+
+    const C=Math.sqrt(a*a+b_*b_);
+
+
+    let H=Math.atan2(b_,a)*180/Math.PI;
+
+    if(H<0) H+=360;
+
+
+    return [
+        L,
+        C,
+        H
+    ];
+}
+
+
+//=====================================================
+// CAM16 SCD HSV
+//=====================================================
+
+function cam16scdhsvToRgb(H,S,V)
+{
+    H=((H%360)+360)%360;
+
+
+    S=Math.max(0,Math.min(100,S));
+    V=Math.max(0,Math.min(100,V));
+
+
+    const C =
+        (S/100)
+        *150
+        *(V/100);
+
+
+    const hr=H*Math.PI/180;
+
+
+    return cam16scdToRgb(
+        V,
+        C*Math.cos(hr),
+        C*Math.sin(hr)
+    );
+}
+
+
+function rgbToCam16scdhsv(r,g,b)
+{
+    const [L,a,b_] = rgbToCam16scd(r,g,b);
+
+
+    const C=Math.sqrt(a*a+b_*b_);
+
+
+    let H=Math.atan2(b_,a)*180/Math.PI;
+
+    if(H<0) H+=360;
+
+
+    return [
+        H,
+        Math.min(100,C/150*100),
+        L
+    ];
+}
+
+
+//=====================================================
+// CAM16 SCD HSL
+//=====================================================
+
+function cam16scdhslToRgb(H,S,L)
+{
+    H=((H%360)+360)%360;
+
+
+    S=Math.max(0,Math.min(100,S));
+    L=Math.max(0,Math.min(100,L));
+
+
+    const C =
+        (S/100)
+        *150
+        *(1-Math.abs(L/100-0.5)*2);
+
+
+    const hr=H*Math.PI/180;
+
+
+    return cam16scdToRgb(
+        L,
+        C*Math.cos(hr),
+        C*Math.sin(hr)
+    );
+}
+
+
+function rgbToCam16scdhsl(r,g,b)
+{
+    const [L,a,b_] = rgbToCam16scd(r,g,b);
+
+
+    const C=Math.sqrt(a*a+b_*b_);
+
+
+    let H=Math.atan2(b_,a)*180/Math.PI;
+
+    if(H<0) H+=360;
+
+
+    return [
+        H,
+        Math.min(100,C/150*100),
+        L
+    ];
+}
+//=====================================================
+// CAM02 LCD HSL
+//=====================================================
+
+function cam02lcdhslToRgb(H,S,L)
+{
+    H=((H%360)+360)%360;
+
+    S=Math.max(0,Math.min(100,S));
+    L=Math.max(0,Math.min(100,L));
+
+    const C=
+        (S/100)
+        *150
+        *(1-Math.abs(L/100-0.5)*2);
+
+    const hr=H*Math.PI/180;
+
+    return cam02lcdToRgb(
+        L,
+        C*Math.cos(hr),
+        C*Math.sin(hr)
+    );
+}
+
+function rgbToCam02lcdhsl(r,g,b)
+{
+    const [J,a,b_]=rgbToCam02lcd(r,g,b);
+
+    const C=Math.sqrt(a*a+b_*b_);
+
+    let H=Math.atan2(b_,a)*180/Math.PI;
+
+    if(H<0) H+=360;
+
+    return [
+        H,
+        Math.min(100,C/150*100),
+        J
+    ];
+}
 
 
 

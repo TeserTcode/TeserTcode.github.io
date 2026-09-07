@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Shallow Water</title>
+    <style>
+        *{margin:0}
+        html,body{width:100%;height:100%;overflow:hidden;background:#000}
+        canvas{width:100%;height:100%;display:block;image-rendering:pixelated}
+        #u{position:fixed;left:10px;top:10px;background:rgba(15,15,15,.92);color:#ddd;padding:6px 8px;font:11px monospace;line-height:18px;border:1px solid #444;user-select:none}
+        select,input,button{background:#181818;color:#ddd;border:1px solid #555;font:11px monospace}
+        select{width:100px}
+        input[type=range]{width:60px}
+        input[type=text]{width:40px}
+        button{padding:1px 6px;cursor:pointer}
+        .r{display:flex;align-items:center;gap:3px;flex-wrap:wrap}
+    </style>
+</head>
+<body>
+    <canvas id=c></canvas>
+    <div id=u>
+        <div class=r><select id=b><option value=0>height</option><option value=1>velocity</option></select></div>
+        <div class=r><select id=d><option value=0>mouse</option><option value=1>right</option><option value=2>left</option><option value=3>up</option><option value=4>down</option></select></div>
+        <div class=r><select id=c0><option value=0>height</option><option value=1>speed</option><option value=2>velocity</option><option value=3>energy</option></select></div>
+        <div class=r><select id=r0><option value=128>128</option><option value=180 selected>180</option><option value=256>256</option></select></div>
+        <div class=r>spd <input id=s type=range min=1 max=6 value=2><span id=sv>2</span></div>
+        <div class=r>dt <input id=t type=text value=.002></div>
+        <div class=r>gravity <input id=g type=text value=2></div>
+        <div class=r>viscosity <input id=vi type=text value=.002></div>
+        <div class=r>str <input id=st type=text value=.8></div>
+        <div class=r>rad <input id=ra type=text value=8></div>
+        <div class=r><button id=rs>reset</button><button id=cl>clear</button></div>
+    </div>
+    <script>
+        "use strict";
+        const C = document.getElementById('c'),
+            ctx = C.getContext('2d');
+        let N = +document.getElementById('r0').value;
+        const S = N * N;
+        C.width = N;
+        C.height = N;
+
+        // Arrays: height, momentum x, momentum y
+        let h = new Float32Array(S),
+            hu = new Float32Array(S),
+            hv = new Float32Array(S);
+        let h2 = new Float32Array(S),
+            hu2 = new Float32Array(S),
+            hv2 = new Float32Array(S);
+
+        function id(x, y) { return x + y * N }
+
+        function clamp(x, a, b) { return x < a ? a : x > b ? b : x }
+
+        function sample(a, x, y) {
+            x = clamp(x, 0, N - 1);
+            y = clamp(y, 0, N - 1);
+            const x0 = x | 0,
+                y0 = y | 0;
+            const x1 = Math.min(x0 + 1, N - 1),
+                y1 = Math.min(y0 + 1, N - 1);
+            const tx = x - x0,
+                ty = y - y0;
+            return a[id(x0, y0)] * (1 - tx) * (1 - ty) +
+                a[id(x1, y0)] * tx * (1 - ty) +
+                a[id(x0, y1)] * (1 - tx) * ty +
+                a[id(x1, y1)] * tx * ty;
+        }
+
+        // Boundary conditions: reflective walls (zero normal flux)
+        function applyBC() {
+            for (let x = 0; x < N; x++) {
+                hu[id(x, 0)] = 0;
+                hv[id(x, 0)] = 0;
+                hu[id(x, N - 1)] = 0;
+                hv[id(x, N - 1)] = 0;
+                h[id(x, 0)] = h[id(x, 1)];
+                h[id(x, N - 1)] = h[id(x, N - 2)];
+            }
+            for (let y = 0; y < N; y++) {
+                hu[id(0, y)] = 0;
+                hv[id(0, y)] = 0;
+                hu[id(N - 1, y)] = 0;
+                hv[id(N - 1, y)] = 0;
+                h[id(0, y)] = h[id(1, y)];
+                h[id(N - 1, y)] = h[id(N - 2, y)];
+            }
+            // Corners
+            h[id(0, 0)] = h[id(1, 1)];
+            h[id(N - 1, 0)] = h[id(N - 2, 1)];
+            h[id(0, N - 1)] = h[id(1, N - 2)];
+            h[id(N - 1, N - 1)] = h[id(N - 2, N - 2)];
+        }
+
+        // Mouse
+        let md = !1,
+            mx = .5,
+            my = .5,
+            dx = 0,
+            dy = 0;
+
+        function mpos(e) {
+            const r = C.getBoundingClientRect();
+            const x = clamp((e.clientX - r.left) / r.width, 0, 1);
+            const y = clamp((e.clientY - r.top) / r.height, 0, 1);
+            dx = x - mx;
+            dy = y - my;
+            mx = x;
+            my = y;
+        }
+        C.onpointerdown = e => { md = !0;
+            C.setPointerCapture(e.pointerId);
+            mpos(e) };
+        C.onpointermove = mpos;
+        C.onpointerup = () => md = !1;
+        C.onpointercancel = () => md = !1;
+
+        function dir() {
+            const d = +document.getElementById('d').value;
+            if (d === 1) return [1, 0];
+            if (d === 2) return [-1, 0];
+            if (d === 3) return [0, -1];
+            if (d === 4) return [0, 1];
+            const m = Math.hypot(dx, dy);
+            if (m < 1e-8) return [0, 0];
+            return [dx / m, dy / m];
+        }
+
+        function brush() {
+            if (!md) return;
+            const type = +document.getElementById('b').value;
+            const str = +document.getElementById('st').value || .8;
+            const rad = Math.min(+document.getElementById('ra').value || 8, N * .15);
+            const cx = clamp(mx * N, rad, N - rad);
+            const cy = clamp(my * N, rad, N - rad);
+            const d = dir();
+            for (let j = -rad; j <= rad; j++)
+                for (let i = -rad; i <= rad; i++) {
+                    const rr = i * i + j * j;
+                    if (rr > rad * rad) continue;
+                    const x = Math.floor(cx + i),
+                        y = Math.floor(cy + j);
+                    if (x < 2 || x >= N - 2 || y < 2 || y >= N - 2) continue;
+                    const k = id(x, y);
+                    const w = Math.exp(-rr / (rad * rad * .5));
+                    if (type === 0) {
+                        h[k] = clamp(h[k] + str * .015 * w, .005, 5);
+                    } else {
+                        const H = Math.max(h[k], .02);
+                        hu[k] = clamp(hu[k] + H * d[0] * str * .08 * w, -5, 5);
+                        hv[k] = clamp(hv[k] + H * d[1] * str * .08 * w, -5, 5);
+                    }
+                }
+            applyBC();
+        }
+
+        function solve() {
+            const dt = Math.min(+document.getElementById('t').value || .002, .005);
+            const g = Math.max(0, +document.getElementById('g').value || 2);
+            const nu = Math.max(0, +document.getElementById('vi').value || .002);
+            const substeps = 2;
+            const d = dt / substeps;
+            for (let sub = 0; sub < substeps; sub++) {
+                for (let y = 2; y < N - 2; y++)
+                    for (let x = 2; x < N - 2; x++) {
+                        const k = id(x, y);
+                        const H = Math.max(h[k], .02);
+                        const U = hu[k] / H,
+                            V = hv[k] / H;
+                        const hx = .5 * (h[id(x + 1, y)] - h[id(x - 1, y)]);
+                        const hy = .5 * (h[id(x, y + 1)] - h[id(x, y - 1)]);
+                        const ux = .5 * (hu[id(x + 1, y)] - hu[id(x - 1, y)]);
+                        const uy = .5 * (hu[id(x, y + 1)] - hu[id(x, y - 1)]);
+                        const vx = .5 * (hv[id(x + 1, y)] - hv[id(x - 1, y)]);
+                        const vy = .5 * (hv[id(x, y + 1)] - hv[id(x, y - 1)]);
+                        let dh = -(U * hx + V * hy + ux + vy);
+                        let dhu = -(U * ux + V * uy + g * H * hx);
+                        let dhv = -(U * vx + V * vy + g * H * hy);
+                        if (nu > 0) {
+                            const lapu = hu[id(x + 1, y)] + hu[id(x - 1, y)] + hu[id(x, y + 1)] + hu[id(x, y - 1)] - 4 * hu[
+                            k];
+                            const lapv = hv[id(x + 1, y)] + hv[id(x - 1, y)] + hv[id(x, y + 1)] + hv[id(x, y - 1)] - 4 * hv[
+                            k];
+                            dhu += nu * lapu;
+                            dhv += nu * lapv;
+                        }
+                        // Damping to prevent explosion
+                        dhu *= 0.999;
+                        dhv *= 0.999;
+                        h2[k] = clamp(H + d * dh, .005, 5);
+                        hu2[k] = clamp(hu[k] + d * dhu, -5, 5);
+                        hv2[k] = clamp(hv[k] + d * dhv, -5, 5);
+                    }
+                [h, h2] = [h2, h];
+                [hu, hu2] = [hu2, hu];
+                [hv, hv2] = [hv2, hv];
+                applyBC();
+            }
+        }
+
+        function render() {
+            const mode = +document.getElementById('c0').value;
+            const img = ctx.createImageData(N, N);
+            let mn = Infinity,
+                mx = -Infinity;
+            const tmp = new Float32Array(S);
+            if (mode === 0) { for (let k = 0; k < S; k++) tmp[k] = h[k] }
+            if (mode === 1) { for (let k = 0; k < S; k++) { const H = Math.max(h[k], .01);
+                    tmp[k] = Math.hypot(hu[k] / H, hv[k] / H) } }
+            if (mode === 2) { for (let k = 0; k < S; k++) { const H = Math.max(h[k], .01);
+                    tmp[k] = Math.hypot(hu[k] / H, hv[k] / H) * 1.5 } }
+            if (mode === 3) { const G = +document.getElementById('g').value || 2; for (let k = 0; k < S; k++) { const H =
+                        Math.max(h[k], .01);
+                    const U = hu[k] / H,
+                        V = hv[k] / H;
+                    tmp[k] = .5 * H * (U * U + V * V) + .5 * G * H * H } }
+            for (let k = 0; k < S; k++) { const v = tmp[k]; if (v < mn) mn = v; if (v > mx) mx = v }
+            if (mx - mn < 1e-10) { mn = 0;
+                mx = 1 }
+            const range = mx - mn;
+            for (let k = 0; k < S; k++) {
+                const q = clamp(255 * (tmp[k] - mn) / range, 0, 255);
+                img.data[4 * k] = q;
+                img.data[4 * k + 1] = q;
+                img.data[4 * k + 2] = q;
+                img.data[4 * k + 3] = 255;
+            }
+            ctx.putImageData(img, 0, 0);
+        }
+
+        function clearAll() {
+            h.fill(1);
+            hu.fill(0);
+            hv.fill(0);
+            h2.fill(1);
+            hu2.fill(0);
+            hv2.fill(0);
+            applyBC();
+        }
+
+        function reset() {
+            clearAll();
+            // Two gentle mounds away from edges
+            for (let y = 4; y < N - 4; y++)
+                for (let x = 4; x < N - 4; x++) {
+                    const X = (x - N * .45) / (N * .12),
+                        Y = (y - N * .5) / (N * .12);
+                    const r = Math.exp(-(X * X + Y * Y));
+                    h[id(x, y)] = 1 + .3 * r;
+                    const X2 = (x - N * .55) / (N * .12),
+                        Y2 = (y - N * .5) / (N * .12);
+                    const r2 = Math.exp(-(X2 * X2 + Y2 * Y2));
+                    h[id(x, y)] += .2 * r2;
+                }
+            applyBC();
+        }
+
+        // UI
+        const R0 = document.getElementById('r0');
+        R0.onchange = () => {
+            N = +R0.value;
+            C.width = N;
+            C.height = N;
+            h = new Float32Array(N * N);
+            hu = new Float32Array(N * N);
+            hv = new Float32Array(N * N);
+            h2 = new Float32Array(N * N);
+            hu2 = new Float32Array(N * N);
+            hv2 = new Float32Array(N * N);
+            reset();
+        };
+        document.getElementById('cl').onclick = clearAll;
+        document.getElementById('rs').onclick = reset;
+        const S0 = document.getElementById('s'),
+            SV = document.getElementById('sv');
+        S0.oninput = () => SV.textContent = S0.value;
+
+        reset();
+
+        function frame() {
+            const sp = +S0.value || 1;
+            for (let i = 0; i < sp; i++) {
+                brush();
+                solve();
+            }
+            render();
+            requestAnimationFrame(frame);
+        }
+        frame();
+    </script>
+</body>
+</html>

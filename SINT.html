@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Superintegrable Functions</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+<script src="clrspc.js"></script>
+<script src="polyhedra.js"></script>
+<script src="mthfnc.js"></script>
+
+<style>
+body{font-family:Arial,sans-serif;margin:20px}
+select,input,button{margin:3px;padding:3px}
+#params{margin-top:10px}
+.param{display:inline-block;margin-right:8px}
+.param label{display:block}
+#formula{margin-top:15px;white-space:pre-wrap;font-family:monospace;border:1px solid #999;padding:10px}
+#result{margin-top:10px;white-space:pre-wrap;font-family:monospace}
+#value{margin-top:10px;font-family:monospace}
+</style>
+</head>
+
+<body>
+
+<h3>Superintegrable functions</h3>
+
+<select id="function"></select>
+
+<div id="params"></div>
+
+<button onclick="evaluatefunction()">evaluate</button>
+
+<div id="formula"></div>
+
+<div id="result"></div>
+
+<div id="value"></div>
+
+<script>
+
+const names=[
+
+"superintegrablee1x",
+"superintegrablee1y",
+
+"superintegrablee2x",
+"superintegrablee2y",
+
+"superintegrablee3px",
+"superintegrablee3py",
+"superintegrablee3x",
+"superintegrablee3y",
+
+"superintegrablee4",
+"superintegrablee5",
+"superintegrablee6",
+"superintegrablee7",
+"superintegrablee8",
+
+"superintegrablee12",
+"superintegrablee13",
+"superintegrablee14",
+
+"superintegrablee16radial",
+"superintegrablee16angular",
+
+"superintegrablee17",
+
+"superintegrablee18radial",
+"superintegrablee18angular",
+
+"superintegrablee19",
+"superintegrablee20",
+
+"superintegrables1",
+"superintegrables2",
+
+"superintegrables3theta",
+"superintegrables3phi",
+
+"superintegrables4",
+"superintegrables5",
+"superintegrables6",
+"superintegrables7",
+"superintegrables8",
+"superintegrables9",
+
+"superintegrablefreeplane",
+"superintegrablefreesphere",
+
+"superintegrablesingularlaguerre",
+
+"superintegrableoscillator",
+"superintegrableoscillatorradial",
+
+"superintegrablelaplacee1x",
+"superintegrablelaplacee1y"
+
+];
+
+const defaults={
+
+x:1,
+E:0,
+
+alpha:1,
+beta:1,
+gamma:1,
+delta:0,
+
+k:1,
+c0:1,
+
+a:1,
+b:1,
+c:1,
+d:1,
+
+aa:2,
+q:1,
+
+l:1,
+m:0,
+n:0,
+
+c1:1,
+c2:0,
+c3:1,
+c4:0,
+
+nu:1
+
+};
+
+const available=[];
+
+for(const name of names){
+    if(typeof window[name]==="function"){
+        available.push(name);
+    }
+}
+
+const select=document.getElementById("function");
+
+for(const name of available){
+
+    const option=document.createElement("option");
+
+    option.value=name;
+    option.textContent=name;
+
+    select.appendChild(option);
+}
+
+select.addEventListener("change",showfunction);
+
+showfunction();
+
+
+
+function getsource(name){
+    return window[name].toString();
+}
+
+
+function getparameters(name){
+
+    const source=getsource(name);
+
+    const match=source.match(
+        /function\s+[^(]+\(([^)]*)\)/
+    );
+
+    if(!match){
+        return [];
+    }
+
+    if(!match[1].trim()){
+        return [];
+    }
+
+    return match[1]
+        .split(",")
+        .map(function(x){
+            return x.trim();
+        })
+        .map(function(x){
+            return x.split("=")[0].trim();
+        })
+        .filter(function(x){
+            return x.length>0;
+        });
+}
+
+
+function makeparams(){
+
+    const box=document.getElementById("params");
+
+    box.innerHTML="";
+
+    const name=select.value;
+
+    const params=getparameters(name);
+
+    for(const parameter of params){
+
+        const div=document.createElement("div");
+
+        div.className="param";
+
+        const label=document.createElement("label");
+
+        label.textContent=parameter;
+
+        const input=document.createElement("input");
+
+        input.type="number";
+        input.step="any";
+        input.id="parameter_"+parameter;
+
+        if(defaults[parameter]!==undefined){
+            input.value=defaults[parameter];
+        }else{
+            input.value=1;
+        }
+
+        div.appendChild(label);
+        div.appendChild(input);
+
+        box.appendChild(div);
+    }
+}
+
+
+function showfunction(){
+
+    makeparams();
+
+    const name=select.value;
+
+    document.getElementById("formula").textContent=
+        getsource(name);
+
+    document.getElementById("result").textContent="";
+    document.getElementById("value").textContent="";
+}
+
+
+function readparameters(){
+
+    const name=select.value;
+
+    const params=getparameters(name);
+
+    const args=[];
+
+    for(const parameter of params){
+
+        const input=document.getElementById(
+            "parameter_"+parameter
+        );
+
+        if(input){
+
+            args.push(Number(input.value));
+
+        }else{
+
+            if(defaults[parameter]!==undefined){
+                args.push(defaults[parameter]);
+            }else{
+                args.push(1);
+            }
+
+        }
+    }
+
+    return args;
+}
+
+
+function formatvalue(value){
+
+    if(value===undefined){
+        return "undefined";
+    }
+
+    if(value===null){
+        return "null";
+    }
+
+    if(typeof value==="number"){
+
+        if(!Number.isFinite(value)){
+            return String(value);
+        }
+
+        return String(value);
+    }
+
+    if(typeof value==="object"){
+
+        if(
+            typeof value.re==="number" &&
+            typeof value.im==="number"
+        ){
+
+            if(value.im===0){
+                return String(value.re);
+            }
+
+            return String(value.re)+" + "+
+                   String(value.im)+"i";
+        }
+
+        if(
+            typeof value.valueOf==="function"
+        ){
+
+            try{
+
+                const v=value.valueOf();
+
+                if(
+                    typeof v==="number" &&
+                    Number.isFinite(v)
+                ){
+                    return String(v);
+                }
+
+            }catch(e){}
+
+        }
+    }
+
+    return String(value);
+}
+
+
+function evaluatefunction(){
+
+    const name=select.value;
+
+    const fn=window[name];
+
+    const params=getparameters(name);
+
+    const args=readparameters();
+
+    let result;
+
+    try{
+
+        result=fn.apply(null,args);
+
+    }catch(error){
+
+        document.getElementById("result").textContent=
+            "evaluation failed";
+
+        document.getElementById("value").textContent="";
+
+        return;
+    }
+
+    let call=name+"(";
+
+    for(let i=0;i<params.length;i++){
+
+        if(i>0){
+            call+=",";
+        }
+
+        call+=params[i]+"="+args[i];
+    }
+
+    call+=")";
+
+    document.getElementById("result").textContent=
+        call;
+
+    document.getElementById("value").textContent=
+        formatvalue(result);
+}
+
+
+/*
+Allow Enter to evaluate when editing parameters.
+*/
+
+document.addEventListener(
+    "keydown",
+    function(e){
+
+        if(e.key==="Enter"){
+
+            if(
+                document.activeElement.tagName==="INPUT"
+            ){
+                evaluatefunction();
+            }
+
+        }
+
+    }
+);
+
+</script>
+
+</body>
+</html>

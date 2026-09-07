@@ -1,0 +1,4057 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Semiconductor Physics Graph Calculator</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+input, select, button {
+    margin: 3px;
+}
+
+canvas {
+    border: 1px solid black;
+    margin-top: 15px;
+}
+
+table {
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    border: 1px solid black;
+    padding: 4px 8px;
+    text-align: right;
+}
+
+#numbers {
+    max-height: 500px;
+    overflow: auto;
+}
+
+.section {
+    margin-top: 12px;
+    margin-bottom: 8px;
+}
+
+label {
+    display: inline-block;
+    min-width: 180px;
+}
+
+.formula {
+    font-family: "Times New Roman", serif;
+    font-size: 17px;
+    margin: 8px 0;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Semiconductor Physics Graph Calculator</h2>
+
+<div class="section">
+<label>Material</label>
+
+<select id="material">
+
+<option value="Si">Silicon (Si)</option>
+<option value="Ge">Germanium (Ge)</option>
+<option value="GaAs">Gallium Arsenide (GaAs)</option>
+<option value="InP">Indium Phosphide (InP)</option>
+<option value="InAs">Indium Arsenide (InAs)</option>
+<option value="InSb">Indium Antimonide (InSb)</option>
+<option value="GaN">Gallium Nitride (GaN)</option>
+<option value="SiC4H">4H-Silicon Carbide (4H-SiC)</option>
+<option value="SiC6H">6H-Silicon Carbide (6H-SiC)</option>
+<option value="CdTe">Cadmium Telluride (CdTe)</option>
+<option value="ZnO">Zinc Oxide (ZnO)</option>
+<option value="Diamond">Diamond (C)</option>
+<option value="AlAs">Aluminium Arsenide (AlAs)</option>
+<option value="AlP">Aluminium Phosphide (AlP)</option>
+<option value="GaP">Gallium Phosphide (GaP)</option>
+<option value="InGaAs">Indium Gallium Arsenide (InGaAs)</option>
+<option value="AlGaAs">Aluminium Gallium Arsenide (AlGaAs)</option>
+<option value="HgCdTe">Mercury Cadmium Telluride (HgCdTe)</option>
+
+</select>
+</div>
+
+
+<div class="section">
+<label>Alloy composition x</label>
+<input id="composition" type="number" value="0.53" min="0" max="1" step="0.01">
+</div>
+
+
+<div class="section">
+
+<label>Temperature T</label>
+<input id="temperature" type="number" value="300">
+
+K
+
+</div>
+
+
+<div class="section">
+
+<label>Donor concentration Nd</label>
+<input id="Nd" type="number" value="0">
+
+cm⁻³
+
+</div>
+
+
+<div class="section">
+
+<label>Acceptor concentration Na</label>
+<input id="Na" type="number" value="0">
+
+cm⁻³
+
+</div>
+
+
+<div class="section">
+
+<label>Magnetic field B</label>
+<input id="B" type="number" value="1">
+
+T
+
+</div>
+
+
+<div class="section">
+
+<label>Electric field E</label>
+<input id="E" type="number" value="100">
+
+V/cm
+
+</div>
+
+
+<div class="section">
+
+<label>Current I</label>
+<input id="current" type="number" value="0.01">
+
+A
+
+</div>
+
+
+<div class="section">
+
+<label>Sample thickness d</label>
+<input id="thickness" type="number" value="0.1">
+
+cm
+
+</div>
+
+
+<div class="section">
+
+<label>Sample length L</label>
+<input id="length" type="number" value="1">
+
+cm
+
+</div>
+
+
+<div class="section">
+
+<label>Carrier for transport</label>
+
+<select id="carrier">
+
+<option value="n">Electrons</option>
+<option value="p">Holes</option>
+
+</select>
+
+</div>
+
+
+<hr>
+
+
+<div class="section">
+
+<label>Graph</label>
+
+<select id="graph">
+
+<optgroup label="Carrier statistics">
+
+<option value="ni">Intrinsic concentration vs T</option>
+<option value="carrierN">Electron concentration vs T</option>
+<option value="carrierP">Hole concentration vs T</option>
+<option value="fermi">Fermi level vs T</option>
+<option value="dos">Density of states vs energy</option>
+<option value="fermiDistribution">Fermi-Dirac distribution</option>
+<option value="ionization">Impurity ionization vs T</option>
+
+</optgroup>
+
+
+<optgroup label="Electrical transport">
+
+<option value="conductivity">Conductivity vs T</option>
+<option value="resistivity">Resistivity vs T</option>
+<option value="mobility">Mobility vs T</option>
+<option value="relaxation">Relaxation time vs T</option>
+<option value="meanFreePath">Mean free path vs T</option>
+<option value="conductivityDoping">Conductivity vs doping</option>
+<option value="mobilityDoping">Mobility vs doping</option>
+<option value="drift">Drift velocity vs E</option>
+<option value="joule">Joule heating vs E</option>
+
+</optgroup>
+
+
+<optgroup label="Diffusion">
+
+<option value="diffusion">Diffusion coefficient vs T</option>
+<option value="einstein">Einstein relation vs T</option>
+<option value="debye">Debye length vs T</option>
+<option value="diffusionLength">Diffusion length vs T</option>
+<option value="diffusingCarrier">Diffusing carrier distribution</option>
+
+</optgroup>
+
+
+<optgroup label="Hall effect">
+
+<option value="hall">Hall coefficient vs T</option>
+<option value="hallVoltage">Hall voltage vs B</option>
+<option value="hallField">Hall field vs B</option>
+<option value="magnetoresistance">Magnetoresistance vs B</option>
+<option value="magnetoconductivity">Conductivity vs B</option>
+
+</optgroup>
+
+
+<optgroup label="Magnetic effects">
+
+<option value="cyclotron">Cyclotron frequency vs B</option>
+<option value="cyclotronRadius">Cyclotron radius vs B</option>
+<option value="landau">Landau level spacing vs B</option>
+
+</optgroup>
+
+
+<optgroup label="Thermal and thermoelectric">
+
+<option value="thermal">Thermal conductivity vs T</option>
+<option value="seebeck">Seebeck coefficient vs T</option>
+<option value="thermovoltage">Thermoelectric voltage vs T</option>
+<option value="peltier">Peltier coefficient vs T</option>
+<option value="lorenz">Lorenz number</option>
+<option value="zT">Thermoelectric figure of merit</option>
+
+</optgroup>
+
+
+<optgroup label="Band structure">
+
+<option value="bandgap">Band gap vs T</option>
+<option value="conductionBand">Conduction band</option>
+<option value="valenceBand">Valence band</option>
+
+</optgroup>
+
+
+<optgroup label="Optical">
+
+<option value="absorptionEnergy">Absorption vs photon energy</option>
+<option value="absorptionWavelength">Absorption vs wavelength</option>
+<option value="photonEnergy">Photon energy vs wavelength</option>
+
+</optgroup>
+
+
+<optgroup label="Recombination">
+
+<option value="recombination">Carrier recombination</option>
+<option value="diffusionLength">Diffusion length</option>
+<option value="diffusingCarrier">Diffusing carrier distribution</option>
+
+</optgroup>
+
+
+<optgroup label="Mechanical">
+
+<option value="piezoresistance">Piezoresistance vs strain</option>
+
+</optgroup>
+
+</select>
+
+</div>
+
+
+<div class="section">
+
+<label>X minimum</label>
+<input id="xmin" type="number" value="100">
+
+<label>X maximum</label>
+<input id="xmax" type="number" value="600">
+
+<label>Points</label>
+<input id="points" type="number" value="200">
+
+</div>
+
+
+<button onclick="draw()">Draw</button>
+<button onclick="exportCSV()">Export CSV</button>
+
+
+<canvas id="canvas" width="1000" height="550"></canvas>
+
+
+<h3>Formula</h3>
+
+<div id="formula"></div>
+
+
+<h3>Current values</h3>
+
+<div id="current"></div>
+
+
+<h3>Numbers</h3>
+
+<div id="numbers"></div>
+
+
+<script>
+
+/* =========================================================
+   CONSTANTS
+========================================================= */
+
+const q =
+    1.602176634e-19;
+
+const kB =
+    8.617333262145e-5;
+
+const hbar =
+    6.582119569e-16;
+
+const eps0 =
+    8.8541878128e-14;
+
+const me =
+    9.1093837e-28;
+
+
+/* =========================================================
+   MATERIAL DATABASE
+
+   Values are approximate room-temperature parameters.
+========================================================= */
+
+const materials = {
+
+Si: {
+    name:"Silicon",
+    Eg0:1.17,
+    alpha:4.73e-4,
+    beta:636,
+    Nc300:2.8e19,
+    Nv300:1.04e19,
+    muN:1350,
+    muP:480,
+    eps:11.7,
+    mN:0.26,
+    mP:0.39,
+    kappa:168,
+    S_n:-200e-6,
+    S_p:200e-6
+},
+
+Ge: {
+    name:"Germanium",
+    Eg0:0.743,
+    alpha:4.77e-4,
+    beta:235,
+    Nc300:1.04e19,
+    Nv300:6.0e18,
+    muN:3900,
+    muP:1900,
+    eps:16.0,
+    mN:0.12,
+    mP:0.30,
+    kappa:60,
+    S_n:-250e-6,
+    S_p:250e-6
+},
+
+GaAs: {
+    name:"Gallium Arsenide",
+    Eg0:1.519,
+    alpha:5.41e-4,
+    beta:204,
+    Nc300:4.7e17,
+    Nv300:7.0e18,
+    muN:8500,
+    muP:400,
+    eps:12.9,
+    mN:0.067,
+    mP:0.50,
+    kappa:55,
+    S_n:-100e-6,
+    S_p:200e-6
+},
+
+InP: {
+    name:"Indium Phosphide",
+    Eg0:1.42,
+    alpha:4.9e-4,
+    beta:327,
+    Nc300:5.7e17,
+    Nv300:1.1e19,
+    muN:5400,
+    muP:150,
+    eps:12.5,
+    mN:0.08,
+    mP:0.60,
+    kappa:68,
+    S_n:-150e-6,
+    S_p:250e-6
+},
+
+InAs: {
+    name:"Indium Arsenide",
+    Eg0:0.417,
+    alpha:2.76e-4,
+    beta:93,
+    Nc300:8.6e16,
+    Nv300:1.04e19,
+    muN:30000,
+    muP:450,
+    eps:15.15,
+    mN:0.023,
+    mP:0.41,
+    kappa:27,
+    S_n:-150e-6,
+    S_p:250e-6
+},
+
+InSb: {
+    name:"Indium Antimonide",
+    Eg0:0.235,
+    alpha:2.76e-4,
+    beta:93,
+    Nc300:6.0e16,
+    Nv300:6.0e18,
+    muN:77000,
+    muP:850,
+    eps:16.8,
+    mN:0.014,
+    mP:0.43,
+    kappa:18,
+    S_n:-200e-6,
+    S_p:300e-6
+},
+
+GaN: {
+    name:"Gallium Nitride",
+    Eg0:3.51,
+    alpha:9.09e-4,
+    beta:830,
+    Nc300:2.3e18,
+    Nv300:4.6e19,
+    muN:1200,
+    muP:20,
+    eps:9.5,
+    mN:0.20,
+    mP:0.80,
+    kappa:130,
+    S_n:-100e-6,
+    S_p:250e-6
+},
+
+SiC4H: {
+    name:"4H-SiC",
+    Eg0:3.26,
+    alpha:6.5e-4,
+    beta:1573,
+    Nc300:1.7e19,
+    Nv300:2.5e19,
+    muN:900,
+    muP:120,
+    eps:9.7,
+    mN:0.42,
+    mP:0.66,
+    kappa:370,
+    S_n:-150e-6,
+    S_p:250e-6
+},
+
+SiC6H: {
+    name:"6H-SiC",
+    Eg0:3.03,
+    alpha:6.5e-4,
+    beta:1573,
+    Nc300:1.6e19,
+    Nv300:2.4e19,
+    muN:400,
+    muP:50,
+    eps:9.7,
+    mN:0.50,
+    mP:0.70,
+    kappa:250,
+    S_n:-150e-6,
+    S_p:250e-6
+},
+
+CdTe: {
+    name:"Cadmium Telluride",
+    Eg0:1.606,
+    alpha:4.2e-4,
+    beta:235,
+    Nc300:8e17,
+    Nv300:1.8e19,
+    muN:1100,
+    muP:100,
+    eps:10.2,
+    mN:0.11,
+    mP:0.35,
+    kappa:8,
+    S_n:-200e-6,
+    S_p:300e-6
+},
+
+ZnO: {
+    name:"Zinc Oxide",
+    Eg0:3.44,
+    alpha:5e-4,
+    beta:300,
+    Nc300:3e18,
+    Nv300:1.8e19,
+    muN:200,
+    muP:5,
+    eps:8.5,
+    mN:0.28,
+    mP:0.59,
+    kappa:50,
+    S_n:-100e-6,
+    S_p:300e-6
+},
+
+Diamond: {
+    name:"Diamond",
+    Eg0:5.47,
+    alpha:1e-3,
+    beta:700,
+    Nc300:1e20,
+    Nv300:1.8e19,
+    muN:2200,
+    muP:1600,
+    eps:5.7,
+    mN:0.57,
+    mP:0.80,
+    kappa:2200,
+    S_n:-200e-6,
+    S_p:200e-6
+},
+
+AlAs: {
+    name:"Aluminium Arsenide",
+    Eg0:3.13,
+    alpha:5.4e-4,
+    beta:204,
+    Nc300:2e18,
+    Nv300:1e19,
+    muN:200,
+    muP:100,
+    eps:10.1,
+    mN:0.15,
+    mP:0.60,
+    kappa:90,
+    S_n:-150e-6,
+    S_p:250e-6
+},
+
+AlP: {
+    name:"Aluminium Phosphide",
+    Eg0:2.45,
+    alpha:5e-4,
+    beta:400,
+    Nc300:2e18,
+    Nv300:8e18,
+    muN:150,
+    muP:50,
+    eps:9.0,
+    mN:0.30,
+    mP:0.70,
+    kappa:120,
+    S_n:-150e-6,
+    S_p:250e-6
+},
+
+GaP: {
+    name:"Gallium Phosphide",
+    Eg0:2.35,
+    alpha:5.8e-4,
+    beta:460,
+    Nc300:1.1e19,
+    Nv300:1.2e19,
+    muN:200,
+    muP:100,
+    eps:11.1,
+    mN:0.30,
+    mP:0.80,
+    kappa:110,
+    S_n:-150e-6,
+    S_p:250e-6
+},
+
+InGaAs: {
+    name:"InGaAs",
+    Eg0:0.36,
+    alpha:3e-4,
+    beta:200,
+    Nc300:1e17,
+    Nv300:1e19,
+    muN:10000,
+    muP:300,
+    eps:13.5,
+    mN:0.045,
+    mP:0.45,
+    kappa:8,
+    S_n:-150e-6,
+    S_p:250e-6,
+    alloy:true
+},
+
+AlGaAs: {
+    name:"AlGaAs",
+    Eg0:1.42,
+    alpha:5.5e-4,
+    beta:300,
+    Nc300:5e17,
+    Nv300:1e19,
+    muN:4000,
+    muP:300,
+    eps:12,
+    mN:0.10,
+    mP:0.50,
+    kappa:10,
+    S_n:-150e-6,
+    S_p:250e-6,
+    alloy:true
+},
+
+HgCdTe: {
+    name:"HgCdTe",
+    Eg0:0.1,
+    alpha:2e-4,
+    beta:100,
+    Nc300:1e17,
+    Nv300:5e18,
+    muN:20000,
+    muP:500,
+    eps:20,
+    mN:0.02,
+    mP:0.40,
+    kappa:2,
+    S_n:-200e-6,
+    S_p:300e-6,
+    alloy:true
+}
+
+};
+
+
+/* =========================================================
+   INPUTS
+========================================================= */
+
+function mat() {
+
+    return materials[
+        document.getElementById(
+            "material"
+        ).value
+    ];
+}
+
+
+function Tinput() {
+
+    return Math.max(
+        1,
+        parseFloat(
+            document.getElementById(
+                "temperature"
+            ).value
+        )
+    );
+}
+
+
+function Nd() {
+
+    return Math.max(
+        0,
+        parseFloat(
+            document.getElementById(
+                "Nd"
+            ).value
+        )
+    );
+}
+
+
+function Na() {
+
+    return Math.max(
+        0,
+        parseFloat(
+            document.getElementById(
+                "Na"
+            ).value
+        )
+    );
+}
+
+
+function Binput() {
+
+    return parseFloat(
+        document.getElementById(
+            "B"
+        ).value
+    );
+}
+
+
+function Einput() {
+
+    return parseFloat(
+        document.getElementById(
+            "E"
+        ).value
+    );
+}
+
+
+function carrierType() {
+
+    return document.getElementById(
+        "carrier"
+    ).value;
+}
+
+
+/* =========================================================
+   BAND GAP
+========================================================= */
+
+function bandgap(T) {
+
+    const m = mat();
+
+    const name =
+        document.getElementById(
+            "material"
+        ).value;
+
+
+    if(name === "InGaAs") {
+
+        const x =
+            parseFloat(
+                document.getElementById(
+                    "composition"
+                ).value
+            );
+
+        return Math.max(
+            0.01,
+            x*0.417 +
+            (1-x)*1.519 -
+            0.477*x*(1-x)
+        );
+    }
+
+
+    if(name === "AlGaAs") {
+
+        const x =
+            parseFloat(
+                document.getElementById(
+                    "composition"
+                ).value
+            );
+
+        return Math.max(
+            0.01,
+            x*3.13 +
+            (1-x)*1.519 -
+            0.7*x*(1-x)
+        );
+    }
+
+
+    if(name === "HgCdTe") {
+
+        const x =
+            parseFloat(
+                document.getElementById(
+                    "composition"
+                ).value
+            );
+
+        return Math.max(
+            0.01,
+            1.5*x -
+            0.3 +
+            0.3*x*x
+        );
+    }
+
+
+    return m.Eg0 -
+        m.alpha*T*T /
+        (T+m.beta);
+}
+
+
+/* =========================================================
+   DENSITY OF STATES
+========================================================= */
+
+function Nc(T) {
+
+    return mat().Nc300 *
+        Math.pow(
+            T/300,
+            1.5
+        );
+}
+
+
+function Nv(T) {
+
+    return mat().Nv300 *
+        Math.pow(
+            T/300,
+            1.5
+        );
+}
+
+
+/* =========================================================
+   INTRINSIC CONCENTRATION
+========================================================= */
+
+function ni(T) {
+
+    return Math.sqrt(
+        Nc(T)*Nv(T)
+    ) *
+    Math.exp(
+        -bandgap(T) /
+        (2*kB*T)
+    );
+}
+
+
+/* =========================================================
+   CARRIER CONCENTRATIONS
+
+   n - p = Nd - Na
+
+   np = ni^2
+
+   n =
+   [(Nd-Na) +
+    sqrt((Nd-Na)^2+4ni^2)]/2
+
+   p = ni^2/n
+========================================================= */
+
+function carriers(T) {
+
+    const intrinsic =
+        ni(T);
+
+    const difference =
+        Nd()-Na();
+
+
+    const n =
+        (
+            difference +
+            Math.sqrt(
+                difference*difference +
+                4*intrinsic*intrinsic
+            )
+        ) / 2;
+
+
+    const p =
+        intrinsic*intrinsic /
+        Math.max(
+            n,
+            1e-300
+        );
+
+
+    return {
+        n:n,
+        p:p
+    };
+}
+
+
+/* =========================================================
+   FERMI LEVEL
+
+   nondegenerate approximation
+
+   Ef - Ei = kT ln(n/ni)
+========================================================= */
+
+function fermiLevel(T) {
+
+    const c =
+        carriers(T);
+
+    return -
+        bandgap(T)/2 +
+        kB*T *
+        Math.log(
+            Math.max(
+                c.n /
+                ni(T),
+                1e-300
+            )
+        );
+}
+
+
+/* =========================================================
+   MOBILITY
+========================================================= */
+
+function mobility(T, type) {
+
+    const m =
+        mat();
+
+    const mu300 =
+        type === "n"
+        ? m.muN
+        : m.muP;
+
+
+    const N =
+        Math.max(
+            Nd()+Na(),
+            1
+        );
+
+
+    /*
+        Phonon contribution
+    */
+
+    const muPh =
+        mu300 *
+        Math.pow(
+            T/300,
+            -1.5
+        );
+
+
+    /*
+        Ionized impurity contribution
+    */
+
+    const muImp =
+        mu300 *
+        Math.pow(
+            T/300,
+            1.5
+        ) *
+        (
+            1e16 /
+            N
+        );
+
+
+    /*
+        Matthiessen rule
+    */
+
+    return 1 /
+        (
+            1/muPh +
+            1/muImp
+        );
+}
+
+
+/* =========================================================
+   CONDUCTIVITY
+========================================================= */
+
+function conductivity(T) {
+
+    const c =
+        carriers(T);
+
+
+    return q *
+        (
+            c.n *
+            mobility(T,"n") +
+
+            c.p *
+            mobility(T,"p")
+        );
+}
+
+
+/* =========================================================
+   RESISTIVITY
+========================================================= */
+
+function resistivity(T) {
+
+    return 1 /
+        conductivity(T);
+}
+
+
+/* =========================================================
+   RELAXATION TIME
+========================================================= */
+
+function relaxation(T,type) {
+
+    const m =
+        mat();
+
+    const mass =
+        type === "n"
+        ? m.mN
+        : m.mP;
+
+
+    return mobility(
+        T,
+        type
+    ) *
+    mass *
+    me /
+    q;
+}
+
+
+/* =========================================================
+   THERMAL VELOCITY
+========================================================= */
+
+function thermalVelocity(T,type) {
+
+    const m =
+        mat();
+
+    const mass =
+        type === "n"
+        ? m.mN
+        : m.mP;
+
+
+    return Math.sqrt(
+        3*kB*T*q /
+        (mass*me)
+    ) * 100;
+}
+
+
+/* =========================================================
+   MEAN FREE PATH
+========================================================= */
+
+function meanFreePath(T,type) {
+
+    return thermalVelocity(
+        T,
+        type
+    ) *
+    relaxation(
+        T,
+        type
+    );
+}
+
+
+/* =========================================================
+   DIFFUSION
+========================================================= */
+
+function diffusion(T,type) {
+
+    return mobility(
+        T,
+        type
+    ) *
+    kB*T;
+}
+
+
+/* =========================================================
+   DEBYE LENGTH
+========================================================= */
+
+function debye(T) {
+
+    const m =
+        mat();
+
+    const c =
+        carriers(T);
+
+
+    const concentration =
+        Math.max(
+            c.n+c.p,
+            1
+        );
+
+
+    return Math.sqrt(
+        m.eps *
+        eps0 *
+        kB *
+        T /
+        (
+            q*q*
+            concentration
+        )
+    );
+}
+
+
+/* =========================================================
+   HALL COEFFICIENT
+
+   Two-carrier form
+
+   RH =
+   (p mu_p^2 - n mu_n^2)
+   /
+   [q(n mu_n+p mu_p)^2]
+========================================================= */
+
+function hall(T) {
+
+    const c =
+        carriers(T);
+
+
+    const mun =
+        mobility(
+            T,
+            "n"
+        );
+
+    const mup =
+        mobility(
+            T,
+            "p"
+        );
+
+
+    return (
+        c.p*mup*mup -
+        c.n*mun*mun
+    ) /
+    (
+        q *
+        Math.pow(
+            c.n*mun +
+            c.p*mup,
+            2
+        )
+    );
+}
+
+
+/* =========================================================
+   HALL VOLTAGE
+========================================================= */
+
+function hallVoltage(B,T) {
+
+    const I =
+        parseFloat(
+            document.getElementById(
+                "current"
+            ).value
+        );
+
+
+    const d =
+        parseFloat(
+            document.getElementById(
+                "thickness"
+            ).value
+        );
+
+
+    return hall(T) *
+        I *
+        B /
+        d;
+}
+
+
+/* =========================================================
+   HALL FIELD
+========================================================= */
+
+function hallField(B,T) {
+
+    const I =
+        parseFloat(
+            document.getElementById(
+                "current"
+            ).value
+        );
+
+
+    const d =
+        parseFloat(
+            document.getElementById(
+                "thickness"
+            ).value
+        );
+
+
+    const w =
+        parseFloat(
+            document.getElementById(
+                "width"
+            )?.value || 1
+        );
+
+
+    const area =
+        w*d;
+
+
+    const J =
+        I /
+        area;
+
+
+    return hall(T) *
+        J *
+        B;
+}
+
+
+/* =========================================================
+   MAGNETORESISTANCE
+========================================================= */
+
+function magnetoresistance(B,T) {
+
+    const type =
+        carrierType();
+
+
+    const mu =
+        mobility(
+            T,
+            type
+        );
+
+
+    return Math.pow(
+        mu*B,
+        2
+    );
+}
+
+
+/* =========================================================
+   MAGNETIC CONDUCTIVITY
+========================================================= */
+
+function magnetoconductivity(B,T) {
+
+    return conductivity(T) /
+        (
+            1 +
+            magnetoresistance(
+                B,
+                T
+            )
+        );
+}
+
+
+/* =========================================================
+   DRIFT
+========================================================= */
+
+function driftVelocity(E,T) {
+
+    return mobility(
+        T,
+        carrierType()
+    ) * E;
+}
+
+
+/* =========================================================
+   JOULE HEATING
+========================================================= */
+
+function joule(E,T) {
+
+    return conductivity(T) *
+        E*E;
+}
+
+
+/* =========================================================
+   CYCLOTRON
+========================================================= */
+
+function cyclotron(B) {
+
+    const m =
+        mat();
+
+    const mass =
+        carrierType() === "n"
+        ? m.mN
+        : m.mP;
+
+
+    return q*B /
+        (mass*me);
+}
+
+
+/* =========================================================
+   CYCLOTRON RADIUS
+========================================================= */
+
+function cyclotronRadius(B,T) {
+
+    const m =
+        mat();
+
+    const mass =
+        carrierType() === "n"
+        ? m.mN
+        : m.mP;
+
+
+    const v =
+        Math.sqrt(
+            2*kB*T*q /
+            (mass*me)
+        ) * 100;
+
+
+    return v /
+        cyclotron(B);
+}
+
+
+/* =========================================================
+   LANDAU LEVEL
+========================================================= */
+
+function landau(B) {
+
+    return hbar *
+        cyclotron(B) /
+        q;
+}
+
+
+/* =========================================================
+   THERMAL
+========================================================= */
+
+function thermal(T) {
+
+    const m =
+        mat();
+
+    return m.kappa *
+        300/T;
+}
+
+
+/* =========================================================
+   SEEBECK
+========================================================= */
+
+function seebeck(T) {
+
+    const m =
+        mat();
+
+
+    if(
+        carrierType() === "n"
+    )
+        return m.S_n;
+
+
+    return m.S_p;
+}
+
+
+/* =========================================================
+   THERMOELECTRIC
+========================================================= */
+
+function thermoVoltage(T) {
+
+    return seebeck(T) *
+        (T-300);
+}
+
+
+function peltier(T) {
+
+    return seebeck(T)*T;
+}
+
+
+function lorenz() {
+
+    return Math.PI*Math.PI*
+        kB*kB /
+        (3*q*q);
+}
+
+
+function zT(T) {
+
+    return (
+        seebeck(T)*
+        seebeck(T)*
+        conductivity(T)*
+        T
+    ) /
+    thermal(T);
+}
+
+
+/* =========================================================
+   DENSITY OF STATES
+========================================================= */
+
+function densityOfStates(E,T) {
+
+    const m =
+        mat();
+
+    const Eg =
+        bandgap(T);
+
+
+    const Ec = 0;
+    const Ev = -Eg;
+
+
+    if(E > Ec) {
+
+        return Math.sqrt(
+            E-Ec
+        );
+    }
+
+
+    if(E < Ev) {
+
+        return Math.sqrt(
+            Ev-E
+        );
+    }
+
+
+    return 0;
+}
+
+
+/* =========================================================
+   FERMI-DIRAC
+========================================================= */
+
+function fermiDistribution(E,T) {
+
+    const Ef =
+        fermiLevel(T);
+
+
+    const x =
+        (E-Ef) /
+        (kB*T);
+
+
+    if(x > 700)
+        return 0;
+
+    if(x < -700)
+        return 1;
+
+
+    return 1 /
+        (
+            1+
+            Math.exp(x)
+        );
+}
+
+
+/* =========================================================
+   IMPURITY IONIZATION
+
+   Simplified shallow donor/acceptor model
+========================================================= */
+
+function ionization(T) {
+
+    const N =
+        Nd()+Na();
+
+
+    if(N <= 0)
+        return 0;
+
+
+    const Ei =
+        0.045;
+
+
+    return 1 /
+        (
+            1 +
+            2 *
+            Math.exp(
+                Ei /
+                (kB*T)
+            )
+        );
+}
+
+
+/* =========================================================
+   OPTICAL
+========================================================= */
+
+function photonEnergy(lambda) {
+
+    return 1239.841984 /
+        lambda;
+}
+
+
+function absorption(E,T) {
+
+    const Eg =
+        bandgap(T);
+
+
+    if(E <= Eg)
+        return 0;
+
+
+    return 1e4 *
+        Math.sqrt(
+            E-Eg
+        );
+}
+
+
+/* =========================================================
+   RECOMBINATION
+========================================================= */
+
+function recombination(t) {
+
+    const deltaN0 =
+        Math.max(
+            Nd()+Na(),
+            1e15
+        );
+
+
+    const tau =
+        1e-6;
+
+
+    return deltaN0 *
+        Math.exp(
+            -t/tau
+        );
+}
+
+
+/* =========================================================
+   DIFFUSION LENGTH
+========================================================= */
+
+function diffusionLength(T) {
+
+    return Math.sqrt(
+        diffusion(
+            T,
+            carrierType()
+        ) *
+        1e-6
+    );
+}
+
+
+/* =========================================================
+   DIFFUSING CARRIER
+========================================================= */
+
+function diffusingCarrier(x) {
+
+    const T =
+        Tinput();
+
+    const D =
+        diffusion(
+            T,
+            carrierType()
+        );
+
+
+    const t =
+        1e-6;
+
+
+    const N0 =
+        Math.max(
+            Nd()+Na(),
+            1e15
+        );
+
+
+    return N0 /
+        Math.sqrt(
+            4*Math.PI*D*t
+        ) *
+        Math.exp(
+            -x*x /
+            (4*D*t)
+        );
+}
+
+
+/* =========================================================
+   PIEZORESISTANCE
+========================================================= */
+
+function piezoresistance(strain) {
+
+    const gaugeFactor =
+        100;
+
+
+    return gaugeFactor *
+        strain;
+}
+
+
+/* =========================================================
+   GRAPH INFORMATION
+========================================================= */
+
+const graphInfo = {
+
+ni:{
+title:"Intrinsic carrier concentration",
+xlabel:"Temperature (K)",
+ylabel:"ni (cm^-3)",
+formula:"ni = sqrt(Nc Nv) exp[-Eg/(2 kB T)]",
+log:true
+},
+
+carrierN:{
+title:"Electron concentration",
+xlabel:"Temperature (K)",
+ylabel:"n (cm^-3)",
+formula:"n = [(Nd-Na) + sqrt((Nd-Na)^2 + 4ni^2)] / 2",
+log:true
+},
+
+carrierP:{
+title:"Hole concentration",
+xlabel:"Temperature (K)",
+ylabel:"p (cm^-3)",
+formula:"p = ni^2 / n",
+log:true
+},
+
+fermi:{
+title:"Fermi level",
+xlabel:"Temperature (K)",
+ylabel:"Ef (eV)",
+formula:"Ef = -Eg/2 + kB T ln(n/ni)",
+log:false
+},
+
+dos:{
+title:"Density of states",
+xlabel:"Energy (eV)",
+ylabel:"DOS",
+formula:"g(E) proportional to sqrt(E-Ec) or sqrt(Ev-E)",
+log:true
+},
+
+fermiDistribution:{
+title:"Fermi-Dirac distribution",
+xlabel:"Energy (eV)",
+ylabel:"f(E)",
+formula:"f(E) = 1/[1+exp((E-Ef)/(kB T))]",
+log:false
+},
+
+ionization:{
+title:"Impurity ionization",
+xlabel:"Temperature (K)",
+ylabel:"Ionized fraction",
+formula:"Nion/N = 1/[1+2 exp(Eion/(kB T))]",
+log:false
+},
+
+conductivity:{
+title:"Electrical conductivity",
+xlabel:"Temperature (K)",
+ylabel:"sigma (S/cm)",
+formula:"sigma = q(n mu_n + p mu_p)",
+log:true
+},
+
+resistivity:{
+title:"Electrical resistivity",
+xlabel:"Temperature (K)",
+ylabel:"rho (ohm cm)",
+formula:"rho = 1/sigma",
+log:true
+},
+
+mobility:{
+title:"Carrier mobility",
+xlabel:"Temperature (K)",
+ylabel:"mu (cm^2/Vs)",
+formula:"1/mu = 1/mu_ph + 1/mu_imp",
+log:true
+},
+
+relaxation:{
+title:"Relaxation time",
+xlabel:"Temperature (K)",
+ylabel:"tau (s)",
+formula:"tau = mu m*/q",
+log:true
+},
+
+meanFreePath:{
+title:"Mean free path",
+xlabel:"Temperature (K)",
+ylabel:"lambda (cm)",
+formula:"lambda = v_th tau",
+log:true
+},
+
+diffusion:{
+title:"Diffusion coefficient",
+xlabel:"Temperature (K)",
+ylabel:"D (cm^2/s)",
+formula:"D = mu kB T",
+log:true
+},
+
+einstein:{
+title:"Einstein relation",
+xlabel:"Temperature (K)",
+ylabel:"D/mu",
+formula:"D/mu = kB T",
+log:false
+},
+
+debye:{
+title:"Debye length",
+xlabel:"Temperature (K)",
+ylabel:"LD (cm)",
+formula:"LD = sqrt(eps eps0 kB T/[q^2(n+p)])",
+log:true
+},
+
+hall:{
+title:"Hall coefficient",
+xlabel:"Temperature (K)",
+ylabel:"RH (cm^3/C)",
+formula:"RH = (p mu_p^2 - n mu_n^2)/[q(n mu_n+p mu_p)^2]",
+log:false
+},
+
+hallVoltage:{
+title:"Hall voltage",
+xlabel:"Magnetic field (T)",
+ylabel:"VH (V)",
+formula:"VH = RH I B/d",
+log:false
+},
+
+hallField:{
+title:"Hall field",
+xlabel:"Magnetic field (T)",
+ylabel:"EH",
+formula:"EH = RH J B",
+log:false
+},
+
+magnetoresistance:{
+title:"Magnetoresistance",
+xlabel:"Magnetic field (T)",
+ylabel:"Delta rho/rho",
+formula:"Delta rho/rho = (mu B)^2",
+log:false
+},
+
+magnetoconductivity:{
+title:"Magnetic-field conductivity",
+xlabel:"Magnetic field (T)",
+ylabel:"sigma(B)",
+formula:"sigma(B) = sigma0/[1+(mu B)^2]",
+log:true
+},
+
+cyclotron:{
+title:"Cyclotron frequency",
+xlabel:"Magnetic field (T)",
+ylabel:"omega_c (rad/s)",
+formula:"omega_c = qB/m*",
+log:true
+},
+
+cyclotronRadius:{
+title:"Cyclotron radius",
+xlabel:"Magnetic field (T)",
+ylabel:"r_c (cm)",
+formula:"r_c = v_perp/omega_c",
+log:true
+},
+
+landau:{
+title:"Landau level spacing",
+xlabel:"Magnetic field (T)",
+ylabel:"Delta E (eV)",
+formula:"Delta E = hbar qB/m*",
+log:false
+},
+
+thermal:{
+title:"Thermal conductivity",
+xlabel:"Temperature (K)",
+ylabel:"kappa",
+formula:"kappa approximately kappa_300(300/T)",
+log:true
+},
+
+seebeck:{
+title:"Seebeck coefficient",
+xlabel:"Temperature (K)",
+ylabel:"S (V/K)",
+formula:"S = material/carrier Seebeck parameter",
+log:false
+},
+
+thermovoltage:{
+title:"Thermoelectric voltage",
+xlabel:"Temperature (K)",
+ylabel:"V (V)",
+formula:"V = S(T-300)",
+log:false
+},
+
+peltier:{
+title:"Peltier coefficient",
+xlabel:"Temperature (K)",
+ylabel:"Pi",
+formula:"Pi = ST",
+log:false
+},
+
+lorenz:{
+title:"Lorenz number",
+xlabel:"Temperature (K)",
+ylabel:"L",
+formula:"L = pi^2 kB^2/(3q^2)",
+log:false
+},
+
+zT:{
+title:"Thermoelectric figure of merit",
+xlabel:"Temperature (K)",
+ylabel:"ZT",
+formula:"ZT = S^2 sigma T/kappa",
+log:false
+},
+
+bandgap:{
+title:"Band gap",
+xlabel:"Temperature (K)",
+ylabel:"Eg (eV)",
+formula:"Eg = Eg0-alpha T^2/(T+beta)",
+log:false
+},
+
+absorptionEnergy:{
+title:"Optical absorption",
+xlabel:"Photon energy (eV)",
+ylabel:"alpha",
+formula:"alpha = A sqrt(Eph-Eg)",
+log:true
+},
+
+absorptionWavelength:{
+title:"Optical absorption vs wavelength",
+xlabel:"Wavelength (nm)",
+ylabel:"alpha",
+formula:"Eph = 1239.84/lambda ; alpha = A sqrt(Eph-Eg)",
+log:true
+},
+
+photonEnergy:{
+title:"Photon energy",
+xlabel:"Wavelength (nm)",
+ylabel:"Eph (eV)",
+formula:"Eph = 1239.84/lambda",
+log:false
+},
+
+recombination:{
+title:"Carrier recombination",
+xlabel:"Time (s)",
+ylabel:"Delta n",
+formula:"Delta n = Delta n0 exp(-t/tau)",
+log:true
+},
+
+diffusionLength:{
+title:"Diffusion length",
+xlabel:"Temperature (K)",
+ylabel:"L (cm)",
+formula:"L = sqrt(D tau)",
+log:true
+},
+
+diffusingCarrier:{
+title:"Diffusing carrier distribution",
+xlabel:"Distance (cm)",
+ylabel:"Delta n",
+formula:"Delta n = Delta n0/sqrt(4 pi D t) exp[-x^2/(4Dt)]",
+log:true
+},
+
+piezoresistance:{
+title:"Piezoresistance",
+xlabel:"Strain",
+ylabel:"Delta R/R",
+formula:"Delta R/R = GF epsilon",
+log:false
+},
+
+conductivityDoping:{
+title:"Conductivity vs doping",
+xlabel:"log10(N) (cm^-3)",
+ylabel:"sigma (S/cm)",
+formula:"sigma = q(n mu_n+p mu_p)",
+log:true
+},
+
+mobilityDoping:{
+title:"Mobility vs doping",
+xlabel:"log10(N) (cm^-3)",
+ylabel:"mu (cm^2/Vs)",
+formula:"1/mu = 1/mu_ph + 1/mu_imp",
+log:true
+}
+
+};
+
+
+/* =========================================================
+   GRAPH VALUE
+========================================================= */
+
+function graphValue(type,x) {
+
+    const T =
+        Tinput();
+
+
+    if(type === "ni")
+        return ni(x);
+
+
+    if(type === "carrierN")
+        return carriers(x).n;
+
+
+    if(type === "carrierP")
+        return carriers(x).p;
+
+
+    if(type === "fermi")
+        return fermiLevel(x);
+
+
+    if(type === "dos")
+        return densityOfStates(
+            x,
+            T
+        );
+
+
+    if(type === "fermiDistribution")
+        return fermiDistribution(
+            x,
+            T
+        );
+
+
+    if(type === "ionization")
+        return ionization(x);
+
+
+    if(type === "conductivity")
+        return conductivity(x);
+
+
+    if(type === "resistivity")
+        return resistivity(x);
+
+
+    if(type === "mobility")
+        return mobility(
+            x,
+            carrierType()
+        );
+
+
+    if(type === "relaxation")
+        return relaxation(
+            x,
+            carrierType()
+        );
+
+
+    if(type === "meanFreePath")
+        return meanFreePath(
+            x,
+            carrierType()
+        );
+
+
+    if(type === "diffusion")
+        return diffusion(
+            x,
+            carrierType()
+        );
+
+
+    if(type === "einstein")
+        return kB*x;
+
+
+    if(type === "debye")
+        return debye(x);
+
+
+    if(type === "hall")
+        return hall(x);
+
+
+    if(type === "hallVoltage")
+        return hallVoltage(
+            x,
+            T
+        );
+
+
+    if(type === "hallField")
+        return hallField(
+            x,
+            T
+        );
+
+
+    if(type === "magnetoresistance")
+        return magnetoresistance(
+            x,
+            T
+        );
+
+
+    if(type === "magnetoconductivity")
+        return magnetoconductivity(
+            x,
+            T
+        );
+
+
+    if(type === "cyclotron")
+        return cyclotron(x);
+
+
+    if(type === "cyclotronRadius")
+        return cyclotronRadius(
+            x,
+            T
+        );
+
+
+    if(type === "landau")
+        return landau(x);
+
+
+    if(type === "thermal")
+        return thermal(x);
+
+
+    if(type === "seebeck")
+        return seebeck(x);
+
+
+    if(type === "thermovoltage")
+        return thermoVoltage(x);
+
+
+    if(type === "peltier")
+        return peltier(x);
+
+
+    if(type === "lorenz")
+        return lorenz();
+
+
+    if(type === "zT")
+        return zT(x);
+
+
+    if(type === "bandgap")
+        return bandgap(x);
+
+
+    if(type === "absorptionEnergy")
+        return absorption(
+            x,
+            T
+        );
+
+
+    if(type === "absorptionWavelength")
+        return absorption(
+            photonEnergy(x),
+            T
+        );
+
+
+    if(type === "photonEnergy")
+        return photonEnergy(x);
+
+
+    if(type === "recombination")
+        return recombination(x);
+
+
+    if(type === "diffusionLength")
+        return diffusionLength(x);
+
+
+    if(type === "diffusingCarrier")
+        return diffusingCarrier(x);
+
+
+    if(type === "piezoresistance")
+        return piezoresistance(x);
+
+
+    if(type === "conductivityDoping") {
+
+        const oldNd =
+            document.getElementById(
+                "Nd"
+            ).value;
+
+        const oldNa =
+            document.getElementById(
+                "Na"
+            ).value;
+
+
+        document.getElementById(
+            "Nd"
+        ).value =
+            Math.pow(
+                10,
+                x
+            );
+
+        document.getElementById(
+            "Na"
+        ).value = 0;
+
+
+        const y =
+            conductivity(T);
+
+
+        document.getElementById(
+            "Nd"
+        ).value =
+            oldNd;
+
+        document.getElementById(
+            "Na"
+        ).value =
+            oldNa;
+
+
+        return y;
+    }
+
+
+    if(type === "mobilityDoping") {
+
+        const oldNd =
+            document.getElementById(
+                "Nd"
+            ).value;
+
+        const oldNa =
+            document.getElementById(
+                "Na"
+            ).value;
+
+
+        document.getElementById(
+            "Nd"
+        ).value =
+            Math.pow(
+                10,
+                x
+            );
+
+        document.getElementById(
+            "Na"
+        ).value = 0;
+
+
+        const y =
+            mobility(
+                T,
+                carrierType()
+            );
+
+
+        document.getElementById(
+            "Nd"
+        ).value =
+            oldNd;
+
+        document.getElementById(
+            "Na"
+        ).value =
+            oldNa;
+
+
+        return y;
+    }
+
+
+    if(type === "drift")
+        return driftVelocity(
+            x,
+            T
+        );
+
+
+    if(type === "joule")
+        return joule(
+            x,
+            T
+        );
+
+
+    return NaN;
+}
+
+
+/* =========================================================
+   FORMULA DISPLAY
+========================================================= */
+
+function formulaText(type) {
+
+    const m =
+        mat();
+
+
+    const T =
+        Tinput();
+
+
+    const typeCarrier =
+        carrierType();
+
+
+    const mass =
+        typeCarrier === "n"
+        ? m.mN
+        : m.mP;
+
+
+    const carrier =
+        typeCarrier === "n"
+        ? "n"
+        : "p";
+
+
+    const common =
+        `
+        Material = ${m.name}<br>
+        T = ${format(T)} K<br>
+        Nd = ${format(Nd())} cm⁻³<br>
+        Na = ${format(Na())} cm⁻³
+        `;
+
+
+    let f =
+        graphInfo[type]?.formula || "";
+
+
+    if(type === "ni") {
+
+        f =
+        `
+        ni =
+        sqrt[
+        (${format(Nc(T))})
+        (${format(Nv(T))})
+        ]
+        exp[
+        -(${format(bandgap(T))})
+        /
+        (2(${format(kB)})T)
+        ]
+        `;
+    }
+
+
+    if(type === "carrierN") {
+
+        f =
+        `
+        n =
+        [
+        (Nd-Na)
+        +
+        sqrt(
+        (Nd-Na)²
+        +
+        4(${format(ni(T))})²
+        )
+        ]
+        /2
+        `;
+    }
+
+
+    if(type === "carrierP") {
+
+        f =
+        `
+        p =
+        (${format(ni(T))})²/n
+        `;
+    }
+
+
+    if(type === "fermi") {
+
+        f =
+        `
+        Ef =
+        -(${format(bandgap(T))})/2
+        +
+        (${format(kB)})T
+        ln(n/ni)
+        `;
+    }
+
+
+    if(type === "conductivity") {
+
+        f =
+        `
+        sigma =
+        (${format(q)})
+        [
+        n mu_n
+        +
+        p mu_p
+        ]
+        <br><br>
+
+        mu_${carrier} =
+        ${format(
+            mobility(
+                T,
+                carrier
+            )
+        )}
+        cm²/(V s)
+        `;
+    }
+
+
+    if(type === "resistivity") {
+
+        f =
+        `
+        rho =
+        1 /
+        [
+        (${format(q)})
+        (
+        n mu_n +
+        p mu_p
+        )
+        ]
+        `;
+    }
+
+
+    if(type === "mobility") {
+
+        f =
+        `
+        1/mu =
+        1/
+        [
+        (${format(m.muN)})
+        (T/300)^(-3/2)
+        ]
+        +
+        1/
+        [
+        (${format(m.muN)})
+        (T/300)^(3/2)
+        (10^16/(Nd+Na))
+        ]
+        `;
+    }
+
+
+    if(type === "relaxation") {
+
+        f =
+        `
+        tau =
+        mu m* / q
+        <br><br>
+        m* =
+        ${format(mass)} m_e
+        `;
+    }
+
+
+    if(type === "meanFreePath") {
+
+        f =
+        `
+        lambda =
+        tau
+        sqrt[
+        3 kB T q / m*
+        ]
+        <br><br>
+
+        tau =
+        ${format(
+            relaxation(
+                T,
+                carrier
+            )
+        )} s
+        `;
+    }
+
+
+    if(type === "diffusion") {
+
+        f =
+        `
+        D =
+        mu (${format(kB)}) T
+        <br><br>
+
+        mu =
+        ${format(
+            mobility(
+                T,
+                carrier
+            )
+        )}
+        cm²/(V s)
+        `;
+    }
+
+
+    if(type === "einstein") {
+
+        f =
+        `
+        D/mu =
+        (${format(kB)})T
+        `;
+    }
+
+
+    if(type === "debye") {
+
+        f =
+        `
+        LD =
+        sqrt[
+        (${format(m.eps)})
+        (${format(eps0)})
+        (${format(kB)})T
+        /
+        (
+        (${format(q)})²(n+p)
+        )
+        ]
+        `;
+    }
+
+
+    if(type === "hall") {
+
+        f =
+        `
+        RH =
+        (p mu_p² - n mu_n²)
+        /
+        [
+        (${format(q)})
+        (n mu_n+p mu_p)²
+        ]
+        `;
+    }
+
+
+    if(type === "hallVoltage") {
+
+        const I =
+            parseFloat(
+                document.getElementById(
+                    "current"
+                ).value
+            );
+
+        const d =
+            parseFloat(
+                document.getElementById(
+                    "thickness"
+                ).value
+            );
+
+
+        f =
+        `
+        VH =
+        RH
+        (${format(I)})
+        B
+        /
+        (${format(d)})
+        `;
+    }
+
+
+    if(type === "magnetoresistance") {
+
+        f =
+        `
+        Δrho/rho =
+        (
+        ${format(
+            mobility(
+                T,
+                carrier
+            )
+        )}
+        B
+        )²
+        `;
+    }
+
+
+    if(type === "magnetoconductivity") {
+
+        f =
+        `
+        sigma(B) =
+        sigma₀
+        /
+        [
+        1+
+        (
+        ${format(
+            mobility(
+                T,
+                carrier
+            )
+        )}
+        B
+        )²
+        ]
+        `;
+    }
+
+
+    if(type === "cyclotron") {
+
+        f =
+        `
+        omega_c =
+        (${format(q)})B
+        /
+        [
+        (${format(mass)})
+        m_e
+        ]
+        `;
+    }
+
+
+    if(type === "cyclotronRadius") {
+
+        f =
+        `
+        r_c =
+        sqrt[
+        2(${format(kB)})Tq/
+        (${format(mass)})m_e
+        ]
+        /
+        omega_c
+        `;
+    }
+
+
+    if(type === "landau") {
+
+        f =
+        `
+        ΔE =
+        hbar q B/
+        (${format(mass)})m_e
+        `;
+    }
+
+
+    if(type === "thermal") {
+
+        f =
+        `
+        kappa(T) =
+        (${format(m.kappa)})
+        (300/T)
+        `;
+    }
+
+
+    if(type === "seebeck") {
+
+        f =
+        `
+        S =
+        ${
+            typeCarrier === "n"
+            ? format(m.S_n)
+            : format(m.S_p)
+        }
+        V/K
+        `;
+    }
+
+
+    if(type === "thermovoltage") {
+
+        f =
+        `
+        V =
+        (${format(
+            seebeck(T)
+        )})
+        (T-300)
+        `;
+    }
+
+
+    if(type === "peltier") {
+
+        f =
+        `
+        Pi =
+        (${format(
+            seebeck(T)
+        )})T
+        `;
+    }
+
+
+    if(type === "lorenz") {
+
+        f =
+        `
+        L =
+        pi²(${format(kB)})²
+        /
+        [
+        3(${format(q)})²
+        ]
+        =
+        ${format(
+            lorenz()
+        )}
+        `;
+    }
+
+
+    if(type === "zT") {
+
+        f =
+        `
+        ZT =
+        S² sigma T/kappa
+        `;
+    }
+
+
+    if(type === "bandgap") {
+
+        f =
+        `
+        Eg =
+        ${format(m.Eg0)}
+        -
+        (${format(m.alpha)})T²
+        /
+        (T+${format(m.beta)})
+        `;
+    }
+
+
+    if(type === "photonEnergy") {
+
+        f =
+        `
+        Eph =
+        1239.841984/lambda
+        `;
+    }
+
+
+    if(type === "absorptionEnergy") {
+
+        f =
+        `
+        alpha =
+        A sqrt(Eph-Eg)
+        <br><br>
+        Eg =
+        ${format(
+            bandgap(T)
+        )}
+        eV
+        `;
+    }
+
+
+    if(type === "absorptionWavelength") {
+
+        f =
+        `
+        Eph =
+        1239.841984/lambda
+        <br><br>
+        alpha =
+        A sqrt(Eph-Eg)
+        `;
+    }
+
+
+    if(type === "recombination") {
+
+        f =
+        `
+        Δn(t) =
+        Δn₀ exp(-t/tau)
+        <br><br>
+        Δn₀ =
+        ${format(
+            Math.max(
+                Nd()+Na(),
+                1e15
+            )
+        )}
+        <br>
+        tau = 10⁻⁶ s
+        `;
+    }
+
+
+    if(type === "diffusionLength") {
+
+        f =
+        `
+        L =
+        sqrt(D tau)
+        <br><br>
+        D =
+        ${format(
+            diffusion(
+                T,
+                carrier
+            )
+        )}
+        cm²/s
+        <br>
+        tau = 10⁻⁶ s
+        `;
+    }
+
+
+    if(type === "diffusingCarrier") {
+
+        f =
+        `
+        Δn(x,t) =
+        Δn₀
+        /
+        sqrt(4 pi D t)
+        exp[
+        -x²/(4Dt)
+        ]
+        `;
+    }
+
+
+    if(type === "piezoresistance") {
+
+        f =
+        `
+        ΔR/R =
+        100 ε
+        `;
+    }
+
+
+    if(type === "conductivityDoping") {
+
+        f =
+        `
+        N =
+        10^x
+        <br><br>
+
+        sigma =
+        q(n mu_n+p mu_p)
+        `;
+    }
+
+
+    if(type === "mobilityDoping") {
+
+        f =
+        `
+        N =
+        10^x
+        <br><br>
+
+        1/mu =
+        1/mu_ph+
+        1/mu_imp
+        `;
+    }
+
+
+    if(type === "drift") {
+
+        f =
+        `
+        v_d =
+        ${format(
+            mobility(
+                T,
+                carrier
+            )
+        )}
+        E
+        `;
+    }
+
+
+    if(type === "joule") {
+
+        f =
+        `
+        P =
+        sigma E²
+        `;
+    }
+
+
+    return `
+    <div class="formula">
+    ${f}
+    </div>
+
+    <div>
+    ${common}
+    </div>
+    `;
+}
+
+
+/* =========================================================
+   DRAW
+========================================================= */
+
+let lastData = [];
+
+
+function draw() {
+
+    const type =
+        document.getElementById(
+            "graph"
+        ).value;
+
+
+    const info =
+        graphInfo[type];
+
+
+    const xmin =
+        parseFloat(
+            document.getElementById(
+                "xmin"
+            ).value
+        );
+
+
+    const xmax =
+        parseFloat(
+            document.getElementById(
+                "xmax"
+            ).value
+        );
+
+
+    const count =
+        Math.max(
+            2,
+            parseInt(
+                document.getElementById(
+                    "points"
+                ).value
+            )
+        );
+
+
+    const data = [];
+
+
+    for(
+        let i=0;
+        i<count;
+        i++
+    ) {
+
+        const x =
+            xmin +
+            (
+                xmax-xmin
+            ) *
+            i /
+            (count-1);
+
+
+        const y =
+            graphValue(
+                type,
+                x
+            );
+
+
+        data.push({
+            x:x,
+            y:y
+        });
+    }
+
+
+    lastData =
+        data;
+
+
+    drawCanvas(
+        data,
+        info
+    );
+
+
+    document.getElementById(
+        "formula"
+    ).innerHTML =
+        formulaText(
+            type
+        );
+
+
+    showCurrent();
+
+    showNumbers(
+        data
+    );
+}
+
+
+/* =========================================================
+   DRAW CANVAS
+========================================================= */
+
+function drawCanvas(
+    data,
+    info
+) {
+
+    const canvas =
+        document.getElementById(
+            "canvas"
+        );
+
+
+    const ctx =
+        canvas.getContext(
+            "2d"
+        );
+
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    const left = 90;
+    const right = 30;
+    const top = 45;
+    const bottom = 70;
+
+
+    const width =
+        canvas.width-left-right;
+
+    const height =
+        canvas.height-top-bottom;
+
+
+    let valid =
+        data.filter(
+            p =>
+                Number.isFinite(
+                    p.y
+                )
+        );
+
+
+    if(info.log) {
+
+        valid =
+            valid.filter(
+                p =>
+                    p.y > 0
+            );
+    }
+
+
+    if(valid.length === 0)
+        return;
+
+
+    let xmin =
+        data[0].x;
+
+    let xmax =
+        data[
+            data.length-1
+        ].x;
+
+
+    let values =
+        valid.map(
+            p =>
+                info.log
+                ? Math.log10(p.y)
+                : p.y
+        );
+
+
+    let ymin =
+        Math.min(
+            ...values
+        );
+
+
+    let ymax =
+        Math.max(
+            ...values
+        );
+
+
+    if(ymin === ymax) {
+
+        ymin -= 1;
+        ymax += 1;
+    }
+
+
+    const dx =
+        (xmax-xmin)*0.03;
+
+    const dy =
+        (ymax-ymin)*0.08;
+
+
+    xmin -= dx;
+    xmax += dx;
+
+    ymin -= dy;
+    ymax += dy;
+
+
+    function px(x) {
+
+        return left +
+            (
+                x-xmin
+            ) /
+            (
+                xmax-xmin
+            ) *
+            width;
+    }
+
+
+    function py(y) {
+
+        if(info.log)
+            y = Math.log10(y);
+
+
+        return top+height -
+            (
+                y-ymin
+            ) /
+            (
+                ymax-ymin
+            ) *
+            height;
+    }
+
+
+    /* grid */
+
+    ctx.strokeStyle =
+        "#dddddd";
+
+    ctx.lineWidth = 1;
+
+
+    for(
+        let i=0;
+        i<=10;
+        i++
+    ) {
+
+        const x =
+            left+
+            width*i/10;
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            x,
+            top
+        );
+
+        ctx.lineTo(
+            x,
+            top+height
+        );
+
+        ctx.stroke();
+    }
+
+
+    for(
+        let i=0;
+        i<=10;
+        i++
+    ) {
+
+        const y =
+            top+
+            height*i/10;
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            left,
+            y
+        );
+
+        ctx.lineTo(
+            left+width,
+            y
+        );
+
+        ctx.stroke();
+    }
+
+
+    /* axes */
+
+    ctx.strokeStyle =
+        "black";
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        left,
+        top
+    );
+
+    ctx.lineTo(
+        left,
+        top+height
+    );
+
+    ctx.lineTo(
+        left+width,
+        top+height
+    );
+
+    ctx.stroke();
+
+
+    /* curve */
+
+    ctx.strokeStyle =
+        "blue";
+
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+
+
+    let started =
+        false;
+
+
+    for(
+        const p of data
+    ) {
+
+        if(
+            !Number.isFinite(
+                p.y
+            )
+        )
+            continue;
+
+
+        if(
+            info.log &&
+            p.y<=0
+        )
+            continue;
+
+
+        const x =
+            px(p.x);
+
+        const y =
+            py(p.y);
+
+
+        if(!started) {
+
+            ctx.moveTo(
+                x,
+                y
+            );
+
+            started = true;
+
+        } else {
+
+            ctx.lineTo(
+                x,
+                y
+            );
+        }
+    }
+
+
+    ctx.stroke();
+
+
+    /* x labels */
+
+    ctx.fillStyle =
+        "black";
+
+    ctx.font =
+        "12px Arial";
+
+    ctx.textAlign =
+        "center";
+
+
+    for(
+        let i=0;
+        i<=10;
+        i++
+    ) {
+
+        const x =
+            xmin+
+            (
+                xmax-xmin
+            ) *
+            i/10;
+
+
+        ctx.fillText(
+            format(x),
+            px(x),
+            top+height+20
+        );
+    }
+
+
+    /* y labels */
+
+    ctx.textAlign =
+        "right";
+
+
+    for(
+        let i=0;
+        i<=10;
+        i++
+    ) {
+
+        const y =
+            ymin+
+            (
+                ymax-ymin
+            ) *
+            i/10;
+
+
+        const actual =
+            info.log
+            ? Math.pow(10,y)
+            : y;
+
+
+        ctx.fillText(
+            format(actual),
+            left-8,
+            top+height-
+            i*height/10+
+            4
+        );
+    }
+
+
+    /* title */
+
+    ctx.textAlign =
+        "center";
+
+    ctx.font =
+        "16px Arial";
+
+
+    ctx.fillText(
+        info.title,
+        canvas.width/2,
+        20
+    );
+
+
+    /* x label */
+
+    ctx.font =
+        "13px Arial";
+
+
+    ctx.fillText(
+        info.xlabel,
+        left+width/2,
+        canvas.height-15
+    );
+
+
+    /* y label */
+
+    ctx.save();
+
+
+    ctx.translate(
+        15,
+        top+height/2
+    );
+
+
+    ctx.rotate(
+        -Math.PI/2
+    );
+
+
+    ctx.fillText(
+        info.ylabel,
+        0,
+        0
+    );
+
+
+    ctx.restore();
+}
+
+
+/* =========================================================
+   CURRENT VALUES
+========================================================= */
+
+function showCurrent() {
+
+    const T =
+        Tinput();
+
+
+    const c =
+        carriers(T);
+
+
+    const m =
+        mat();
+
+
+    let html = "";
+
+
+    html +=
+        "Material = " +
+        m.name +
+        "<br>";
+
+
+    html +=
+        "T = " +
+        format(T) +
+        " K<br>";
+
+
+    html +=
+        "Eg = " +
+        format(
+            bandgap(T)
+        ) +
+        " eV<br>";
+
+
+    html +=
+        "Nc = " +
+        format(
+            Nc(T)
+        ) +
+        " cm^-3<br>";
+
+
+    html +=
+        "Nv = " +
+        format(
+            Nv(T)
+        ) +
+        " cm^-3<br>";
+
+
+    html +=
+        "ni = " +
+        format(
+            ni(T)
+        ) +
+        " cm^-3<br>";
+
+
+    html +=
+        "n = " +
+        format(
+            c.n
+        ) +
+        " cm^-3<br>";
+
+
+    html +=
+        "p = " +
+        format(
+            c.p
+        ) +
+        " cm^-3<br>";
+
+
+    html +=
+        "Ef = " +
+        format(
+            fermiLevel(T)
+        ) +
+        " eV<br>";
+
+
+    html +=
+        "mu_n = " +
+        format(
+            mobility(
+                T,
+                "n"
+            )
+        ) +
+        " cm²/(V s)<br>";
+
+
+    html +=
+        "mu_p = " +
+        format(
+            mobility(
+                T,
+                "p"
+            )
+        ) +
+        " cm²/(V s)<br>";
+
+
+    html +=
+        "sigma = " +
+        format(
+            conductivity(T)
+        ) +
+        " S/cm<br>";
+
+
+    html +=
+        "rho = " +
+        format(
+            resistivity(T)
+        ) +
+        " ohm cm<br>";
+
+
+    html +=
+        "RH = " +
+        format(
+            hall(T)
+        ) +
+        " cm³/C<br>";
+
+
+    html +=
+        "D_n = " +
+        format(
+            diffusion(
+                T,
+                "n"
+            )
+        ) +
+        " cm²/s<br>";
+
+
+    html +=
+        "D_p = " +
+        format(
+            diffusion(
+                T,
+                "p"
+            )
+        ) +
+        " cm²/s<br>";
+
+
+    html +=
+        "LD = " +
+        format(
+            debye(T)
+        ) +
+        " cm<br>";
+
+
+    html +=
+        "omega_c = " +
+        format(
+            cyclotron(
+                Binput()
+            )
+        ) +
+        " rad/s<br>";
+
+
+    document.getElementById(
+        "current"
+    ).innerHTML =
+        html;
+}
+
+
+/* =========================================================
+   NUMBERS
+========================================================= */
+
+function showNumbers(data) {
+
+    let html =
+        "<table>" +
+        "<tr>" +
+        "<th>x</th>" +
+        "<th>y</th>" +
+        "</tr>";
+
+
+    for(
+        const p of data
+    ) {
+
+        html +=
+            "<tr>" +
+            "<td>" +
+            format(p.x) +
+            "</td>" +
+            "<td>" +
+            format(p.y) +
+            "</td>" +
+            "</tr>";
+    }
+
+
+    html +=
+        "</table>";
+
+
+    document.getElementById(
+        "numbers"
+    ).innerHTML =
+        html;
+}
+
+
+/* =========================================================
+   CSV EXPORT
+========================================================= */
+
+function exportCSV() {
+
+    if(
+        lastData.length === 0
+    )
+        return;
+
+
+    let csv =
+        "x,y\n";
+
+
+    for(
+        const p of lastData
+    ) {
+
+        csv +=
+            p.x +
+            "," +
+            p.y +
+            "\n";
+    }
+
+
+    const blob =
+        new Blob(
+            [csv],
+            {
+                type:"text/csv"
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+
+    const a =
+        document.createElement(
+            "a"
+        );
+
+
+    a.href = url;
+
+    a.download =
+        "semiconductor_graph.csv";
+
+
+    a.click();
+
+
+    URL.revokeObjectURL(
+        url
+    );
+}
+
+
+/* =========================================================
+   FORMAT
+========================================================= */
+
+function format(x) {
+
+    if(
+        !Number.isFinite(x)
+    )
+        return "NaN";
+
+
+    const a =
+        Math.abs(x);
+
+
+    if(
+        a !== 0 &&
+        (
+            a < 1e-3 ||
+            a >= 1e5
+        )
+    )
+        return x.toExponential(6);
+
+
+    return x.toFixed(6);
+}
+
+
+/* =========================================================
+   RANGE
+========================================================= */
+
+function setRange() {
+
+    const type =
+        document.getElementById(
+            "graph"
+        ).value;
+
+
+    if(
+        type ===
+        "conductivityDoping" ||
+        type ===
+        "mobilityDoping"
+    ) {
+
+        document.getElementById(
+            "xmin"
+        ).value = 12;
+
+        document.getElementById(
+            "xmax"
+        ).value = 20;
+
+        return;
+    }
+
+
+    if(
+        type === "hallVoltage" ||
+        type === "hallField" ||
+        type === "magnetoresistance" ||
+        type === "magnetoconductivity" ||
+        type === "cyclotron" ||
+        type === "cyclotronRadius" ||
+        type === "landau"
+    ) {
+
+        document.getElementById(
+            "xmin"
+        ).value = 0;
+
+        document.getElementById(
+            "xmax"
+        ).value = 5;
+
+        return;
+    }
+
+
+    if(
+        type === "drift" ||
+        type === "joule"
+    ) {
+
+        document.getElementById(
+            "xmin"
+        ).value = 0;
+
+        document.getElementById(
+            "xmax"
+        ).value = 1000;
+
+        return;
+    }
+
+
+    if(
+        type === "absorptionEnergy"
+    ) {
+
+        document.getElementById(
+            "xmin"
+        ).value = 0.1;
+
+        document.getElementById(
+            "xmax"
+        ).value = 5;
+
+        return;
+    }
+
+
+    if(
+        type === "absorptionWavelength" ||
+        type === "photonEnergy"
+    ) {
+
+        document.getElementById(
+            "xmin"
+        ).value = 200;
+
+        document.getElementById(
+            "xmax"
+        ).value = 3000;
+
+        return;
+    }
+
+
+    if(
+        type === "recombination"
+    ) {
+
+        document.getElementById(
+            "xmin"
+        ).value = 0;
+
+        document.getElementById(
+            "xmax"
+        ).value = 5e-6;
+
+        return;
+    }
+
+
+    if(
+        type === "diffusingCarrier"
+    ) {
+
+        document.getElementById(
+            "xmin"
+        ).value = -0.01;
+
+        document.getElementById(
+            "xmax"
+        ).value = 0.01;
+
+        return;
+    }
+
+
+    if(
+        type === "piezoresistance"
+    ) {
+
+        document.getElementById(
+            "xmin"
+        ).value = -0.01;
+
+        document.getElementById(
+            "xmax"
+        ).value = 0.01;
+
+        return;
+    }
+
+
+    if(
+        type === "dos" ||
+        type === "fermiDistribution"
+    ) {
+
+        document.getElementById(
+            "xmin"
+        ).value = -2;
+
+        document.getElementById(
+            "xmax"
+        ).value = 2;
+
+        return;
+    }
+
+
+    document.getElementById(
+        "xmin"
+    ).value = 100;
+
+    document.getElementById(
+        "xmax"
+    ).value = 600;
+}
+
+
+/* =========================================================
+   EVENTS
+========================================================= */
+
+document.getElementById(
+    "graph"
+).addEventListener(
+    "change",
+    function() {
+
+        setRange();
+
+        draw();
+    }
+);
+
+
+document.getElementById(
+    "material"
+).addEventListener(
+    "change",
+    draw
+);
+
+
+document.getElementById(
+    "temperature"
+).addEventListener(
+    "input",
+    draw
+);
+
+
+document.getElementById(
+    "Nd"
+).addEventListener(
+    "input",
+    draw
+);
+
+
+document.getElementById(
+    "Na"
+).addEventListener(
+    "input",
+    draw
+);
+
+
+document.getElementById(
+    "carrier"
+).addEventListener(
+    "change",
+    draw
+);
+
+
+document.getElementById(
+    "composition"
+).addEventListener(
+    "input",
+    draw
+);
+
+
+/* =========================================================
+   START
+========================================================= */
+
+setRange();
+
+draw();
+
+</script>
+
+</body>
+</html>

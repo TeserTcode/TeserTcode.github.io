@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<textarea id="input" rows="15" cols="80" placeholder="Paste code here"></textarea>
+<br><br>
+
+<label><input type="checkbox" id="slashslash" checked> // comments</label><br>
+<label><input type="checkbox" id="hash" checked> # comments</label><br>
+<label><input type="checkbox" id="cmulti" checked> /* */ comments</label><br>
+<label><input type="checkbox" id="pythonmulti" checked> ''' ''' comments</label><br>
+<label><input type="checkbox" id="pythonmulti2" checked> """ """ comments</label><br>
+<label><input type="checkbox" id="html" checked> &lt;!-- --&gt; comments</label><br>
+
+<br>
+<button onclick="uncommentify()">Remove Comments</button>
+
+<br><br>
+
+<textarea id="output" rows="15" cols="80" placeholder="Result"></textarea>
+
+<script>
+function uncommentify() {
+    let text = document.getElementById("input").value;
+
+    if (document.getElementById("cmulti").checked)
+        text = text.replace(/\/\*[\s\S]*?\*\//g, "");
+
+    if (document.getElementById("pythonmulti").checked)
+        text = text.replace(/'''[\s\S]*?'''/g, "");
+
+    if (document.getElementById("pythonmulti2").checked)
+        text = text.replace(/"""[\s\S]*?"""/g, "");
+
+    if (document.getElementById("html").checked)
+        text = text.replace(/<!--[\s\S]*?-->/g, "");
+
+    let lines = text.split("\n");
+
+    if (document.getElementById("slashslash").checked)
+        lines = lines.map(line => line.replace(/\/\/.*$/, ""));
+
+    if (document.getElementById("hash").checked)
+        lines = lines.map(line => line.replace(/#.*$/, ""));
+
+    document.getElementById("output").value = lines.join("\n");
+}
+</script>
+
+</body>
+</html>
