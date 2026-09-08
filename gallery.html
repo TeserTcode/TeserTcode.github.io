@@ -1,218 +1,329 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Gallery</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 20px;
-        }
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 10px;
-            max-width: 1200px;
-        }
-        .gallery img {
-            width: 100%;
-            height: auto;
-            border-radius: 5px;
-            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            cursor: pointer;
-        }
-        .gallery img:hover {
-            transform: scale(1.05);
-            box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.3);
-        }
-        .fullscreen-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .fullscreen-overlay img {
-            max-width: 90%;
-            max-height: 80%;
-            border-radius: 5px;
-            box-shadow: 4px 4px 20px rgba(0, 0, 0, 0.5);
-            animation: zoomIn 0.5s ease;
-        }
-        .filename {
-            color: #fff;
-            margin-top: 10px;
-            font-size: 1.2em;
-            animation: fadeIn 0.5s ease;
-        }
-        @keyframes zoomIn {
-            from {
-                transform: scale(0.8);
-                opacity: 0;
-            }
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-        .loading {
-            text-align: center;
-            padding: 20px;
-            font-size: 1.2em;
-            color: #666;
-        }
-        .folder-label {
-            grid-column: 1 / -1;
-            font-weight: bold;
-            color: #444;
-            padding: 8px 0 4px 4px;
-            border-bottom: 2px solid #ddd;
-            margin-bottom: 4px;
-            font-size: 1.1em;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Gallery</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: #f4f4f4;
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    font-size: 1.2em;
+    color: #666;
+}
+
+.gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.gallery img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 5px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,.2);
+    transition: transform .2s, box-shadow .2s;
+    cursor: pointer;
+}
+
+.gallery img:hover {
+    transform: scale(1.05);
+    box-shadow: 4px 4px 15px rgba(0,0,0,.3);
+}
+
+.folder-label {
+    grid-column: 1 / -1;
+    font-weight: bold;
+    color: #444;
+    padding: 8px 4px 4px;
+    border-bottom: 2px solid #ddd;
+    margin-top: 10px;
+    font-size: 1.1em;
+}
+
+.fullscreen-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.85);
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 1000;
+    padding: 20px;
+    cursor: pointer;
+}
+
+.fullscreen-overlay img {
+    max-width: 90vw;
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: 5px;
+    box-shadow: 4px 4px 20px rgba(0,0,0,.5);
+}
+
+.filename {
+    color: white;
+    margin-top: 12px;
+    font-size: 1.1em;
+    text-align: center;
+    word-break: break-all;
+}
+
+.error {
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 20px;
+    background: #fff;
+    color: #900;
+    border: 1px solid #c99;
+    border-radius: 5px;
+}
+</style>
+
 </head>
+
 <body>
-    <div class="loading" id="loading">Loading images...</div>
-    <div class="gallery" id="gallery"></div>
-    <div class="fullscreen-overlay" id="fullscreenOverlay">
-        <img id="fullscreenImage" src="" alt="">
-        <div class="filename" id="filename"></div>
-    </div>
-    <script>
-        const galleryDiv = document.getElementById("gallery");
-        const loadingDiv = document.getElementById("loading");
-        const fullscreenOverlay = document.getElementById("fullscreenOverlay");
-        const fullscreenImage = document.getElementById("fullscreenImage");
-        const filenameDiv = document.getElementById("filename");
 
-        // Function to check if an image exists
-        async function checkImage(url) {
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.onload = () => resolve(true);
-                img.onerror = () => resolve(false);
-                img.src = url;
+<div class="loading" id="loading">
+    Loading images...
+</div>
+
+<div class="gallery" id="gallery"></div>
+
+<div class="fullscreen-overlay" id="fullscreenOverlay">
+    <img id="fullscreenImage" src="" alt="">
+    <div class="filename" id="filename"></div>
+</div>
+
+<script>
+const galleryDiv = document.getElementById("gallery");
+const loadingDiv = document.getElementById("loading");
+const fullscreenOverlay = document.getElementById("fullscreenOverlay");
+const fullscreenImage = document.getElementById("fullscreenImage");
+const filenameDiv = document.getElementById("filename");
+
+const owner = "TeserTcode";
+const repo = "TeserTcode.github.io";
+const branch = "gh-pages";
+
+const imageExtensions = [
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".webp",
+    ".bmp",
+    ".svg"
+];
+
+function isImage(path) {
+    const lower = path.toLowerCase();
+    return imageExtensions.some(ext => lower.endsWith(ext));
+}
+
+function getImageUrl(path) {
+    /*
+     * GitHub Pages URL.
+     *
+     * For TeserTcode.github.io this becomes:
+     * https://tesertcode.github.io/path/to/image.png
+     */
+    return "https://tesertcode.github.io/" +
+        path.split("/")
+            .map(encodeURIComponent)
+            .join("/");
+}
+
+async function getRepositoryFiles() {
+
+    const url =
+        `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+        throw new Error(
+            `GitHub API returned ${response.status}: ${response.statusText}`
+        );
+    }
+
+    const data = await response.json();
+
+    if (!data.tree) {
+        throw new Error("GitHub returned no file tree.");
+    }
+
+    return data.tree
+        .filter(file =>
+            file.type === "blob" &&
+            isImage(file.path)
+        )
+        .map(file => ({
+            path: file.path,
+            name: file.path.split("/").pop(),
+            folder: file.path.includes("/")
+                ? file.path.split("/").slice(0, -1).join("/")
+                : "(root)",
+            url: getImageUrl(file.path)
+        }));
+}
+
+function showImage(image) {
+
+    fullscreenImage.src = image.url;
+    fullscreenImage.alt = image.name;
+
+    filenameDiv.textContent =
+        `${image.name}  (${image.folder})`;
+
+    fullscreenOverlay.style.display = "flex";
+}
+
+function closeFullscreen() {
+    fullscreenOverlay.style.display = "none";
+    fullscreenImage.src = "";
+}
+
+function displayGallery(images) {
+
+    galleryDiv.innerHTML = "";
+
+    if (images.length === 0) {
+        loadingDiv.textContent = "No images found.";
+        return;
+    }
+
+    /*
+     * Group images by folder.
+     */
+    const folders = {};
+
+    for (const image of images) {
+        if (!folders[image.folder]) {
+            folders[image.folder] = [];
+        }
+
+        folders[image.folder].push(image);
+    }
+
+    /*
+     * Sort folders alphabetically.
+     */
+    const folderNames = Object.keys(folders).sort();
+
+    for (const folderName of folderNames) {
+
+        const folderImages = folders[folderName];
+
+        const label = document.createElement("div");
+        label.className = "folder-label";
+
+        label.textContent =
+            `📁 ${folderName} (${folderImages.length})`;
+
+        galleryDiv.appendChild(label);
+
+        /*
+         * Sort files alphabetically.
+         */
+        folderImages.sort((a, b) =>
+            a.name.localeCompare(
+                b.name,
+                undefined,
+                { numeric: true }
+            )
+        );
+
+        for (const image of folderImages) {
+
+            const img = document.createElement("img");
+
+            img.src = image.url;
+            img.alt = image.name;
+            img.loading = "lazy";
+
+            img.addEventListener("click", () => {
+                showImage(image);
             });
+
+            /*
+             * If a particular image fails, remove it
+             * instead of leaving a broken-image icon.
+             */
+            img.addEventListener("error", () => {
+                img.remove();
+            });
+
+            galleryDiv.appendChild(img);
         }
+    }
 
-        // Scan a folder for images with given extensions and base names
-        async function scanFolder(folderPath, extensions, baseNames) {
-            const found = [];
-            for (const name of baseNames) {
-                for (const ext of extensions) {
-                    const url = `${folderPath}/${name}${ext}`;
-                    if (await checkImage(url)) {
-                        found.push({ name: name, url: url, folder: folderPath });
-                        break;
-                    }
-                }
-            }
-            return found;
-        }
+    loadingDiv.style.display = "none";
+}
 
-        // Get images from specific subfolders list
-        async function getSubfolders() {
-            // EXACT list of subfolder names from user
-            const folderList = [
-                "corz", "unhappy", "coxeter", "doomd", "electricfish",
-                "img", "mine", "motor", "othercal", "perpcaln",
-                "polygraph", "polygraphold", "shark", "2048tiles"
-            ];
+async function loadGallery() {
 
-            const existing = [];
-            const extensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
-            
-            // Base names to check in each folder (includes the original named ones plus numbered)
-            const baseNames = [
-                'sudbg', 'resistbg1', 'logo', 'inductorbg', 'epic1', 
-                'diodebg', 'capacitorbg', 'bgssad', 'basee', 'ABREbg', 
-                '7048bg', '7024bg', '2048bg', 'plantelligence', 'flowers',
-                // numbered names 0-30
-                ...Array.from({length: 31}, (_, i) => String(i)),
-                // common names
-                'photo', 'img', 'image', 'pic', 'snapshot', 'DSC', 'PICT', 'gallery', 'bg', 'hero', 'thumb'
-            ];
+    loadingDiv.textContent =
+        "Loading images from GitHub...";
 
-            for (const folder of folderList) {
-                const path = `./${folder}`;
-                const images = await scanFolder(path, extensions, baseNames);
-                if (images.length > 0) {
-                    existing.push({ folder: folder, path: path, images: images });
-                }
-            }
-            return existing;
-        }
+    try {
 
-        // Load and display all available images from subfolders, ordered by count (least first)
-        async function loadGallery() {
-            loadingDiv.textContent = "Scanning for images in subfolders...";
-            
-            const folderData = await getSubfolders();
-            
-            if (folderData.length === 0) {
-                loadingDiv.textContent = "No images found in any subfolder.";
-                return;
-            }
+        const images = await getRepositoryFiles();
 
-            // Sort folders by image count (least first)
-            folderData.sort((a, b) => a.images.length - b.images.length);
+        displayGallery(images);
 
-            loadingDiv.style.display = "none";
+    } catch (error) {
 
-            // For each dfolder, add a label and its images
-            for (const folder of folderData) {
-                // Folder label
-                const label = document.createElement("div");
-                label.className = "folder-label";
-                label.textContent = `📁 ${folder.folder} (${folder.images.length} image${folder.images.length > 1 ? 's' : ''})`;
-                galleryDiv.appendChild(label);
+        console.error(error);
 
-                // Images in this folder
-                for (const imgData of folder.images) {
-                    const img = document.createElement("img");
-                    img.src = imgData.url;
-                    img.alt = imgData.name;
-                    // Store folder info for fullscreen display
-                    img.dataset.folder = folder.folder;
-                    img.dataset.filename = imgData.name;
-                    img.addEventListener('click', () => {
-                        fullscreenImage.src = img.src;
-                        // Show filename + folder info
-                        filenameDiv.textContent = `${imgData.name}  (from: ${folder.folder})`;
-                        fullscreenOverlay.style.display = 'flex';
-                    });
-                    galleryDiv.appendChild(img);
-                }
-            }
-        }
+        loadingDiv.style.display = "none";
 
-        fullscreenOverlay.addEventListener('click', () => {
-            fullscreenOverlay.style.display = 'none';
-        });
+        const errorDiv = document.createElement("div");
 
-        // Start loading the gallery
-        loadGallery();
-    </script>
+        errorDiv.className = "error";
+
+        errorDiv.textContent =
+            "Could not load the GitHub repository: " +
+            error.message;
+
+        document.body.appendChild(errorDiv);
+    }
+}
+
+fullscreenOverlay.addEventListener("click", closeFullscreen);
+
+fullscreenImage.addEventListener("click", event => {
+    event.stopPropagation();
+});
+
+document.addEventListener("keydown", event => {
+
+    if (event.key === "Escape") {
+        closeFullscreen();
+    }
+
+});
+
+loadGallery();
+</script>
+
 </body>
 </html>

@@ -44288,150 +44288,6 @@ function lameeigenb(v,mm,kk){
 */
 
 
-function incepoly(p,m,e,x,o){
-    if(p<0||m<0||m>p||(p-m)%2)return NaN
-    if(re(e)==0)return o?sin(mul(m,x)):(m?cos(mul(m,x)):div(1,sqrt(2)))
-
-    let k0,n,diag=[],lo=[],up=[],ks=[]
-
-    if(!o){
-        k0=p%2?1:0
-        for(let k=k0;k<=p;k+=2)ks.push(k)
-        n=ks.length
-
-        for(let i=0;i<n;i++){
-            let k=ks[i]
-            if(p%2==0){
-                if(i==0){
-                    diag[i]=0
-                    up[i]=mul(div(add(p,2),2),e)
-                }else{
-                    let l=k/2
-                    diag[i]=sqr(k)
-                    lo[i]=mul(add(sub(div(p,2),l),1),e)
-                    if(i<n-1)up[i]=mul(add(add(div(p,2),l),1),e)
-                }
-            }else{
-                if(i==0){
-                    diag[i]=add(1,mul(add(div(p,2),0.5),e))
-                    if(i<n-1)up[i]=mul(add(div(p,2),1.5),e)
-                }else{
-                    let l=(k-1)/2
-                    diag[i]=sqr(k)
-                    lo[i]=mul(add(sub(div(p,2),l),0.5),e)
-                    if(i<n-1)up[i]=mul(add(add(div(p,2),l),1.5),e)
-                }
-            }
-        }
-    }else{
-        k0=p%2?1:2
-        for(let k=k0;k<=p;k+=2)ks.push(k)
-        n=ks.length
-
-        for(let i=0;i<n;i++){
-            let k=ks[i]
-            if(p%2){
-                if(i==0){
-                    diag[i]=sub(1,mul(add(div(p,2),0.5),e))
-                    if(i<n-1)up[i]=mul(add(div(p,2),1.5),e)
-                }else{
-                    let l=(k-1)/2
-                    diag[i]=sqr(k)
-                    lo[i]=mul(add(sub(div(p,2),l),0.5),e)
-                    if(i<n-1)up[i]=mul(add(add(div(p,2),l),1.5),e)
-                }
-            }else{
-                if(i==0){
-                    diag[i]=4
-                    if(i<n-1)up[i]=mul(add(div(p,2),2),e)
-                }else{
-                    let l=k/2
-                    diag[i]=sqr(k)
-                    lo[i]=mul(add(sub(div(p,2),l),1),e)
-                    if(i<n-1)up[i]=mul(add(add(div(p,2),l),1),e)
-                }
-            }
-        }
-    }
-
-    function det(q){
-        let a=sub(diag[0],q),b=1
-        for(let i=1;i<n;i++){
-            let z=sub(mul(sub(diag[i],q),a),mul(lo[i],up[i-1],b))
-            b=a
-            a=z
-        }
-        return a
-    }
-
-    let roots=[]
-    let loq=-Math.max(10,(p+2)*(p+2))
-    let hiq=(p+2)*(p+2)+Math.abs(re(e))*(p+4)
-
-    let N=2000,px=loq,py=re(det(px))
-
-    for(let j=1;j<=N;j++){
-        let q=loq+(hiq-loq)*j/N,y=re(det(q))
-
-        if(py==0||y==0||py*y<0){
-            let a=px,b=q,fa=py
-            for(let k=0;k<70;k++){
-                let c=(a+b)/2,fc=re(det(c))
-                if(fa*fc<=0)b=c
-                else{a=c;fa=fc}
-            }
-            roots.push((a+b)/2)
-        }
-
-        px=q
-        py=y
-    }
-
-    let target=m*m
-    let eta=roots.reduce((a,b)=>
-        Math.abs(a-target)<Math.abs(b-target)?a:b
-    )
-
-    let c=Array(n).fill(0)
-    c[0]=1
-
-    if(n>1)c[1]=div(
-        mul(sub(eta,diag[0]),c[0]),
-        up[0]
-    )
-
-    for(let i=1;i<n-1;i++)
-        c[i+1]=div(
-            sub(mul(sub(eta,diag[i]),c[i]),mul(lo[i],c[i-1])),
-            up[i]
-        )
-
-    let norm=0
-    for(let i=0;i<n;i++)
-        norm=add(norm,sqr(c[i]))
-
-    let q=div(1,sqrt(norm))
-
-    if(!o&&ks[0]==0)q=div(q,sqrt(2))
-
-    let y=0
-    for(let i=0;i<n;i++)
-        y=add(y,mul(c[i],o?sin(mul(ks[i],x)):cos(mul(ks[i],x))))
-
-    if(o){
-        let h=1e-7
-        let d=div(sub(
-            add(0,y),
-            0
-        ),h)
-        if(re(d)<0)q=neg(q)
-    }else if(re(y)<0&&x==0)q=neg(q)
-
-    return mul(q,y)
-}
-
-function incepolyc(p,m,e,x){return incepoly(p,m,e,x,0)}
-function incepolys(p,m,e,x){return incepoly(p,m,e,x,1)}
 function tridiageig(A){
     let n=A.length
     let V=A.map((r,i)=>r.slice())
@@ -44458,8 +44314,88 @@ function tridiageig(A){
 }
 
 
+function incepolydata(p,m,e,o){
+    if(p<0||m<0||m>p||(p-m)%2)return null
+    let even=p%2==0,nn=12,ks=[]
+    if(o){for(let k=even?2:1;k<=2*nn;k+=2)ks.push(k)}else{for(let k=even?0:1;k<=2*nn;k+=2)ks.push(k)}
+    let n=ks.length,d=[],l=[],u=[]
 
+    if(!o&&even){
+        d[0]=0
+        if(n>1)u[0]=mul(div(add(p,2),2),e)
+        for(let i=1;i<n;i++){let k=ks[i],j=i;d[i]=sqr(k);l[i]=mul(add(sub(div(p,2),j),1),e);if(i<n-1)u[i]=mul(add(add(div(p,2),j),1),e)}
+    }else if(!o){
+        for(let i=0;i<n;i++){let k=ks[i],j=i;d[i]=sqr(k);if(i>0)l[i]=mul(add(sub(div(p,2),j),0.5),e);if(i<n-1)u[i]=mul(add(add(div(p,2),j),1.5),e)}
+    }else if(even){
+        for(let i=0;i<n;i++){let k=ks[i],j=i+1;d[i]=sqr(k);if(i>0)l[i]=mul(add(sub(div(p,2),j),1),e);if(i<n-1)u[i]=mul(add(add(div(p,2),j),1),e)}
+    }else{
+        for(let i=0;i<n;i++){let k=ks[i],j=i;d[i]=sqr(k);if(i>0)l[i]=mul(add(sub(div(p,2),j),0.5),e);if(i<n-1)u[i]=mul(add(add(div(p,2),j),1.5),e)}
+    }
 
+    function det(z){
+        let a=sub(d[0],z),b=1
+        for(let i=1;i<n;i++){let q=sub(mul(sub(d[i],z),a),mul(l[i],u[i-1],b));b=a;a=q}
+        return a
+    }
+
+    function eig(z){
+        for(let j=0;j<60;j++){let h=1e-7,dz=div(sub(det(add(z,h)),det(sub(z,h))),mul(2,h));if(mag(dz)<1e-30)break;let nz=sub(z,div(det(z),dz));if(mag(sub(nz,z))<1e-13){z=nz;break}z=nz}
+        return z
+    }
+
+    let vals=[]
+    for(let i=0;i<n;i++){let z=eig(sqr(ks[i]));let dup=0;for(let j=0;j<vals.length;j++)if(mag(sub(z,vals[j]))<1e-8)dup=1;if(!dup)vals.push(z)}
+    vals.sort((a,b)=>re(a)-re(b))
+
+    let idx=even?m/2:m
+    if(idx>=vals.length)return null
+    let eta=vals[idx],a=Array(n).fill(0)
+    a[0]=1
+    if(n>1)a[1]=div(mul(sub(eta,d[0]),a[0]),u[0])
+    for(let i=1;i<n-1;i++)a[i+1]=div(sub(mul(sub(eta,d[i]),a[i]),mul(l[i],a[i-1])),u[i])
+
+    let norm=0
+    for(let i=0;i<n;i++)norm=add(norm,sqr(a[i]))
+    let q=div(1,sqrt(norm))
+    if(!o&&even)q=div(q,sqrt(2))
+    for(let i=0;i<n;i++)a[i]=mul(a[i],q)
+
+    let test=0
+    if(o){for(let i=0;i<n;i++)test=add(test,mul(a[i],ks[i]))}else{for(let i=0;i<n;i++)test=add(test,a[i])}
+    if(re(test)<0)for(let i=0;i<n;i++)a[i]=neg(a[i])
+
+    return {eta:eta,ks:ks,a:a}
+}
+
+function incepolyeta(p,m,e,o){let z=incepolydata(p,m,e,o);return z?z.eta:NaN}
+
+function incepoly(p,m,e,x,o){
+    if(p<0||m<0||m>p||(p-m)%2)return NaN
+    if(re(e)==0&&im(e)==0)return o?sin(mul(m,x)):(m?cos(mul(m,x)):div(1,sqrt(2)))
+    let z=incepolydata(p,m,e,o)
+    if(!z)return NaN
+    let y=0
+    for(let i=0;i<z.a.length;i++)y=add(y,mul(z.a[i],o?sin(mul(z.ks[i],x)):cos(mul(z.ks[i],x))))
+    return y
+}
+
+function incepolyc(p,m,e,x){return incepoly(p,m,e,x,0)}
+function incepolys(p,m,e,x){return incepoly(p,m,e,x,1)}
+
+function incepolyic(p,m,e,x){
+    let z=incepolydata(p,m,e,0)
+    if(!z)return NaN
+    let h=1e-6,y=z.a.reduce((s,a,i)=>add(s,mul(a,cos(mul(z.ks[i],0)))),0),yp=0
+    return ode2rk4((x,y,yp,eta)=>neg(add(mul(e,mul(sin(mul(2,x)),yp)),mul(sub(eta,mul(p,mul(e,cos(mul(2,x))))),y))),x,y,yp,z.eta,0,bign)
+}
+
+function incepolyis(p,m,e,x){
+    let z=incepolydata(p,m,e,1)
+    if(!z)return NaN
+    let y=0,yp=0
+    for(let i=0;i<z.a.length;i++)yp=add(yp,mul(z.a[i],z.ks[i]))
+    return ode2rk4((x,y,yp,eta)=>neg(add(mul(e,mul(sin(mul(2,x)),yp)),mul(sub(eta,mul(p,mul(e,cos(mul(2,x))))),y))),x,0,yp,z.eta,0,bign)
+}
 
 
 
