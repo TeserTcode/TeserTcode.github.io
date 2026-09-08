@@ -40234,6 +40234,173 @@ function husimiq(n,q,p){return div(mul(pow(add(sqr(x),sqr(p)),n),exp(sub(0,sqr(x
 function harmonicoscillator(n,x,m=1,w=1,h=1){
     return mul(sqrt(div(1,mul(pow(2,n),factorial(n)))),pow(div(mul(m,w),pi(),h),0.25),exp(div(mul(-1,m,w,x,x),2,h)),hermitepoly(n,mul(sqrt(div(mul(m,w),h)),x)))
 }
+
+
+//https://en.wikipedia.org/wiki/Multilinear_polynomial
+
+
+function multilinearpolynomial(M,X){
+	let G=M;
+	let fi=0;
+	for(let i=0;i<pow(2,leng(X));i++)
+	{	
+let ii=i;
+let co=1;
+		G=M
+		for(let j=0;j<leng(X);j++)
+		{G=g(G,ii%2);co=mul(co,pow(g(X,j),ii%2));ii=floor(ii/2);}
+		let fi=add(fi,mul(G,co))
+	}
+	return fi;
+}
+function multilinearrectangular(M,A,B,X){
+    let n=leng(X),f=0
+
+    for(let k=0;k<pow(2,n);k++){
+        let ii=k,w=1,v=g(M,k)
+
+        for(let j=0;j<n;j++){
+            let bit=ii%2,a=g(A,j),b=g(B,j),x=g(X,j)
+            w=mul(w,bit?div(sub(x,a),sub(b,a)):div(sub(b,x),sub(b,a)))
+            ii=floor(ii/2)
+        }
+
+        f=add(f,mul(v,w))
+    }
+
+    return f
+}
+function multilinearrectangularvertices(M,A,B,X){
+    let n=leng(X),f=0,V=1
+
+    for(let j=0;j<n;j++)V=mul(V,sub(g(B,j),g(A,j)))
+
+    for(let k=0;k<pow(2,n);k++){
+        let ii=k,w=1,v=g(M,k)
+
+        for(let j=0;j<n;j++){
+            let bit=ii%2,a=g(A,j),b=g(B,j),x=g(X,j)
+            w=mul(w,bit?sub(x,a):sub(b,x))
+            ii=floor(ii/2)
+        }
+
+        f=add(f,mul(v,w))
+    }
+
+    return div(f,V)
+}
+
+//https://en.wikipedia.org/wiki/Harmonic_polynomial
+
+function harmonicbivariatepolynomialr(x,y,d){
+	let z=add(x,mul(I,y))
+	return div(add(pow(z,d),conj(pow(conj(z),d))),2)
+}
+function harmonicbivariatepolynomiali(x,y,d){
+	let z=add(x,mul(I,y))
+	return div(sub(pow(z,d),conj(pow(conj(z),d))),2,I)
+}
+
+//ADDFIX
+
+function harmonicpolynomial(X,d,n){
+    let m=X.length, A=[], E=[]
+
+    function gen(k,r,a){
+        if(k==m-1){
+            E.push(a.concat([r]))
+            return
+        }
+        for(let j=0;j<=r;j++)gen(k+1,sub(r,j),a.concat([j]))
+    }
+
+    gen(0,d,[])
+
+    if(d<2){
+        let v=E[n]
+        return v.reduce((s,e,i)=>mul(s,pow(X[i],e)),1)
+    }
+
+    let T=[]
+    function gen2(k,r,a){
+        if(k==m-1){
+            T.push(a.concat([r]))
+            return
+        }
+        for(let j=0;j<=r;j++)gen2(k+1,sub(r,j),a.concat([j]))
+    }
+    gen2(0,sub(d,2),[])
+
+    for(let t of T){
+        let row=Array(E.length).fill(0)
+        for(let j=0;j<E.length;j++){
+            let e=E[j]
+            for(let i=0;i<m;i++){
+                if(e[i]>=2){
+                    let b=e.slice()
+                    b[i]=sub(b[i],2)
+                    let ok=true
+                    for(let k=0;k<m;k++)if(b[k]!=t[k])ok=false
+                    if(ok)row[j]=add(row[j],mul(e[i],sub(e[i],1)))
+                }
+            }
+        }
+        A.push(row)
+    }
+
+    let M=A.map(r=>r.slice()), rows=M.length,cols=E.length,piv=[],r=0
+
+    for(let c=0;c<cols&&r<rows;c++){
+        let p=r
+        while(p<rows&&Math.abs(re(M[p][c]))<1e-12)p++
+        if(p==rows)continue
+
+        let q=M[r]
+        M[r]=M[p]
+        M[p]=q
+
+        let z=M[r][c]
+        for(let j=c;j<cols;j++)M[r][j]=div(M[r][j],z)
+
+        for(let i=0;i<rows;i++)if(i!=r){
+            let z2=M[i][c]
+            if(Math.abs(re(z2))>1e-12)
+                for(let j=c;j<cols;j++)
+                    M[i][j]=sub(M[i][j],mul(z2,M[r][j]))
+        }
+
+        piv.push(c)
+        r++
+    }
+
+    let free=[]
+    for(let j=0;j<cols;j++)if(!piv.includes(j))free.push(j)
+
+    let B=[]
+
+    for(let f of free){
+        let v=Array(cols).fill(0)
+        v[f]=1
+
+        for(let i=0;i<piv.length;i++)
+            v[piv[i]]=sub(0,M[i][f])
+
+        B.push(v)
+    }
+
+    let v=B[n]
+    if(!v)return NaN
+
+    let out=0
+    for(let i=0;i<E.length;i++){
+        let mon=v[i]
+        for(let j=0;j<m;j++)mon=mul(mon,pow(X[j],E[i][j]))
+        out=add(out,mon)
+    }
+
+    return out
+}
+
 //sphericalharmonicoscillator(3,2,1,1,x.re,x.im)
 function sphericalharmonicoscillator(n,l,m,r,t,p,a0=1)//idk bohr raidus, wavefunction 
 {
@@ -44119,6 +44286,187 @@ function lameeigenb(v,mm,kk){
 }
 
 */
+
+
+function incepoly(p,m,e,x,o){
+    if(p<0||m<0||m>p||(p-m)%2)return NaN
+    if(re(e)==0)return o?sin(mul(m,x)):(m?cos(mul(m,x)):div(1,sqrt(2)))
+
+    let k0,n,diag=[],lo=[],up=[],ks=[]
+
+    if(!o){
+        k0=p%2?1:0
+        for(let k=k0;k<=p;k+=2)ks.push(k)
+        n=ks.length
+
+        for(let i=0;i<n;i++){
+            let k=ks[i]
+            if(p%2==0){
+                if(i==0){
+                    diag[i]=0
+                    up[i]=mul(div(add(p,2),2),e)
+                }else{
+                    let l=k/2
+                    diag[i]=sqr(k)
+                    lo[i]=mul(add(sub(div(p,2),l),1),e)
+                    if(i<n-1)up[i]=mul(add(add(div(p,2),l),1),e)
+                }
+            }else{
+                if(i==0){
+                    diag[i]=add(1,mul(add(div(p,2),0.5),e))
+                    if(i<n-1)up[i]=mul(add(div(p,2),1.5),e)
+                }else{
+                    let l=(k-1)/2
+                    diag[i]=sqr(k)
+                    lo[i]=mul(add(sub(div(p,2),l),0.5),e)
+                    if(i<n-1)up[i]=mul(add(add(div(p,2),l),1.5),e)
+                }
+            }
+        }
+    }else{
+        k0=p%2?1:2
+        for(let k=k0;k<=p;k+=2)ks.push(k)
+        n=ks.length
+
+        for(let i=0;i<n;i++){
+            let k=ks[i]
+            if(p%2){
+                if(i==0){
+                    diag[i]=sub(1,mul(add(div(p,2),0.5),e))
+                    if(i<n-1)up[i]=mul(add(div(p,2),1.5),e)
+                }else{
+                    let l=(k-1)/2
+                    diag[i]=sqr(k)
+                    lo[i]=mul(add(sub(div(p,2),l),0.5),e)
+                    if(i<n-1)up[i]=mul(add(add(div(p,2),l),1.5),e)
+                }
+            }else{
+                if(i==0){
+                    diag[i]=4
+                    if(i<n-1)up[i]=mul(add(div(p,2),2),e)
+                }else{
+                    let l=k/2
+                    diag[i]=sqr(k)
+                    lo[i]=mul(add(sub(div(p,2),l),1),e)
+                    if(i<n-1)up[i]=mul(add(add(div(p,2),l),1),e)
+                }
+            }
+        }
+    }
+
+    function det(q){
+        let a=sub(diag[0],q),b=1
+        for(let i=1;i<n;i++){
+            let z=sub(mul(sub(diag[i],q),a),mul(lo[i],up[i-1],b))
+            b=a
+            a=z
+        }
+        return a
+    }
+
+    let roots=[]
+    let loq=-Math.max(10,(p+2)*(p+2))
+    let hiq=(p+2)*(p+2)+Math.abs(re(e))*(p+4)
+
+    let N=2000,px=loq,py=re(det(px))
+
+    for(let j=1;j<=N;j++){
+        let q=loq+(hiq-loq)*j/N,y=re(det(q))
+
+        if(py==0||y==0||py*y<0){
+            let a=px,b=q,fa=py
+            for(let k=0;k<70;k++){
+                let c=(a+b)/2,fc=re(det(c))
+                if(fa*fc<=0)b=c
+                else{a=c;fa=fc}
+            }
+            roots.push((a+b)/2)
+        }
+
+        px=q
+        py=y
+    }
+
+    let target=m*m
+    let eta=roots.reduce((a,b)=>
+        Math.abs(a-target)<Math.abs(b-target)?a:b
+    )
+
+    let c=Array(n).fill(0)
+    c[0]=1
+
+    if(n>1)c[1]=div(
+        mul(sub(eta,diag[0]),c[0]),
+        up[0]
+    )
+
+    for(let i=1;i<n-1;i++)
+        c[i+1]=div(
+            sub(mul(sub(eta,diag[i]),c[i]),mul(lo[i],c[i-1])),
+            up[i]
+        )
+
+    let norm=0
+    for(let i=0;i<n;i++)
+        norm=add(norm,sqr(c[i]))
+
+    let q=div(1,sqrt(norm))
+
+    if(!o&&ks[0]==0)q=div(q,sqrt(2))
+
+    let y=0
+    for(let i=0;i<n;i++)
+        y=add(y,mul(c[i],o?sin(mul(ks[i],x)):cos(mul(ks[i],x))))
+
+    if(o){
+        let h=1e-7
+        let d=div(sub(
+            add(0,y),
+            0
+        ),h)
+        if(re(d)<0)q=neg(q)
+    }else if(re(y)<0&&x==0)q=neg(q)
+
+    return mul(q,y)
+}
+
+function incepolyc(p,m,e,x){return incepoly(p,m,e,x,0)}
+function incepolys(p,m,e,x){return incepoly(p,m,e,x,1)}
+function tridiageig(A){
+    let n=A.length
+    let V=A.map((r,i)=>r.slice())
+    for(let z=0;z<100*n*n;z++){
+        let p=0,q=1,m=0
+        for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)
+            if(Math.abs(V[i][j])>m){m=Math.abs(V[i][j]);p=i;q=j}
+        if(m<1e-14)break
+        let t=div(mul(2,V[p][q]),sub(V[p][p],V[q][q]))
+        let c=div(1,sqrt(add(1,sqr(t)))),s=mul(c,t)
+        for(let i=0;i<n;i++){
+            if(i!=p&&i!=q){
+                let x=V[i][p],y=V[i][q]
+                V[i][p]=V[p][i]=sub(mul(c,x),mul(s,y))
+                V[i][q]=V[q][i]=add(mul(s,x),mul(c,y))
+            }
+        }
+        let app=V[p][p],aqq=V[q][q],apq=V[p][q]
+        V[p][p]=sub(add(mul(c,c,app),mul(s,s,aqq)),mul(2,c,s,apq))
+        V[q][q]=add(add(mul(s,s,app),mul(c,c,aqq)),mul(2,c,s,apq))
+        V[p][q]=V[q][p]=0
+    }
+    return V.map((r,i)=>r[i]).sort((a,b)=>re(sub(a,b)))
+}
+
+
+
+
+
+
+
+
+
+
+
 
 function cosdiff(x,y,yp){return sub(0,(y))}
 
@@ -55376,6 +55724,1209 @@ quasigeostrophic(
 )
 */
 
+//https://en.wikipedia.org/wiki/Euler_equations_(fluid_dynamics)
+function eulerfluid(xmin,xmax,ymin,ymax,nx,ny,rho0,u0,v0,p0,gamma,dt,it,x,y){
+    let dx=div(sub(xmax,xmin),sub(nx,1)),dy=div(sub(ymax,ymin),sub(ny,1))
+
+    let U=Array.from({length:nx},(_,i)=>Array.from({length:ny},(_,j)=>{
+        let xx=add(xmin,mul(i,dx)),yy=add(ymin,mul(j,dy))
+        let r=re(evale(rho0,{x:xx,y:yy}))
+        let u=re(evale(u0,{x:xx,y:yy}))
+        let v=re(evale(v0,{x:xx,y:yy}))
+        let p=re(evale(p0,{x:xx,y:yy}))
+        return [r,mul(r,u),mul(r,v),add(div(p,sub(gamma,1)),mul(0.5,mul(r,add(sqr(u),sqr(v)))))]
+    }))
+
+    for(let n=0;n<it;n++){
+        let V=U.map(a=>a.map(q=>q.slice()))
+
+        for(let i=1;i<nx-1;i++)for(let j=1;j<ny-1;j++){
+            let a=U[i][j]
+            let r=a[0],u=div(a[1],r),v=div(a[2],r)
+            let p=mul(sub(gamma,1),sub(a[3],mul(0.5,mul(r,add(sqr(u),sqr(v))))))
+
+            let rx=div(sub(U[i+1][j][0],U[i-1][j][0]),mul(2,dx))
+            let ry=div(sub(U[i][j+1][0],U[i][j-1][0]),mul(2,dy))
+
+            let ux=div(sub(div(U[i+1][j][1],U[i+1][j][0]),div(U[i-1][j][1],U[i-1][j][0])),mul(2,dx))
+            let uy=div(sub(div(U[i][j+1][1],U[i][j+1][0]),div(U[i][j-1][1],U[i][j-1][0])),mul(2,dy))
+
+            let vx=div(sub(div(U[i+1][j][2],U[i+1][j][0]),div(U[i-1][j][2],U[i-1][j][0])),mul(2,dx))
+            let vy=div(sub(div(U[i][j+1][2],U[i][j+1][0]),div(U[i][j-1][2],U[i][j-1][0])),mul(2,dy))
+
+            let px=div(sub(
+                mul(sub(gamma,1),sub(
+                    U[i+1][j][3],
+                    mul(0.5,mul(U[i+1][j][0],add(
+                        sqr(div(U[i+1][j][1],U[i+1][j][0])),
+                        sqr(div(U[i+1][j][2],U[i+1][j][0]))
+                    )))
+                )),
+                mul(sub(gamma,1),sub(
+                    U[i-1][j][3],
+                    mul(0.5,mul(U[i-1][j][0],add(
+                        sqr(div(U[i-1][j][1],U[i-1][j][0])),
+                        sqr(div(U[i-1][j][2],U[i-1][j][0]))
+                    )))
+                ))
+            ),mul(2,dx))
+
+            let py=div(sub(
+                mul(sub(gamma,1),sub(
+                    U[i][j+1][3],
+                    mul(0.5,mul(U[i][j+1][0],add(
+                        sqr(div(U[i][j+1][1],U[i][j+1][0])),
+                        sqr(div(U[i][j+1][2],U[i][j+1][0]))
+                    )))
+                )),
+                mul(sub(gamma,1),sub(
+                    U[i][j-1][3],
+                    mul(0.5,mul(U[i][j-1][0],add(
+                        sqr(div(U[i][j-1][1],U[i][j-1][0])),
+                        sqr(div(U[i][j-1][2],U[i][j-1][0]))
+                    )))
+                ))
+            ),mul(2,dy))
+
+            V[i][j][0]=sub(r,mul(dt,add(add(mul(u,rx),mul(r,add(ux,vy))),add(mul(v,ry),0))))
+            V[i][j][1]=sub(a[1],mul(dt,add(
+                add(mul(u,ux),mul(v,uy)),
+                div(px,r)
+            )))
+            V[i][j][2]=sub(a[2],mul(dt,add(
+                add(mul(u,vx),mul(v,vy)),
+                div(py,r)
+            )))
+            V[i][j][3]=sub(a[3],mul(dt,add(
+                mul(u,div(px,sub(gamma,1))),
+                mul(v,div(py,sub(gamma,1)))
+            )))
+        }
+
+        U=V
+    }
+
+    let ix=Math.round(re(div(sub(x,xmin),dx)))
+    let iy=Math.round(re(div(sub(y,ymin),dy)))
+
+    if(ix<0||iy<0||ix>=nx||iy>=ny)return NaN
+
+    let a=U[ix][iy],r=a[0]
+    let u=div(a[1],r),v=div(a[2],r)
+    let p=mul(sub(gamma,1),sub(a[3],mul(0.5,mul(r,add(sqr(u),sqr(v))))))
+
+    return [r,u,v,p]
+}
+
+//https://en.wikipedia.org/wiki/Hagen%E2%80%93Poiseuille_equation
+function hagenpoiseuille(R,mu,dp,L,r){
+    let u=div(mul(dp,sub(sqr(R),sqr(r))),mul(4,mul(mu,L)))
+    let Q=div(mul(Math.PI,mul(pow(R,4),dp)),mul(8,mul(mu,L)))
+    let tau=div(mul(dp,r),mul(2,L))
+    return [u,Q,tau]
+}
+
+function hagenpoiseuillefstartupofflowinpipe(G,mu,R,rho,nu,t,r){
+    let s=0
+    let n=1
+
+    for(let k=0;k<bign;k++){
+        let lam=j0zero(n)
+        let a=div(
+            mul(2,mul(G,sqr(R))),
+            mul(mu,mul(pow(lam,3),j1(lam)))
+        )
+        let e=exp(
+            neg(div(mul(sqr(lam),mul(nu,t)),sqr(R)))
+        )
+        let b=j0(div(mul(lam,r),R))
+        s=add(s,mul(div(a,b),e))
+        n=add(n,1)
+    }
+
+    return sub(
+        div(mul(G,sub(sqr(R),sqr(r))),mul(4,mu)),
+        s
+    )
+}
+
+function hagenpoiseuillefstartupofflowinpipe(G,mu,R,rho,nu,t,r){
+    let s=0
+    let x=2.4048255577
+
+    for(let n=1;n<=bign;n++){
+        for(let k=0;k<bign/2;k++){
+            let f=j0(x)
+            let h=1e-7
+            let fp=div(sub(j0(add(x,h)),j0(sub(x,h))),mul(2,h))
+            x=sub(x,div(f,fp))
+        }
+
+        let lam=x
+        let a=div(
+            mul(2,mul(G,sqr(R))),
+            mul(mu,mul(pow(lam,3),j1(lam)))
+        )
+
+        let e=exp(
+            neg(div(mul(sqr(lam),mul(nu,t)),sqr(R)))
+        )
+
+        let b=j0(div(mul(lam,r),R))
+
+        s=add(s,mul(mul(a,b),e))
+
+        x=add(x,3.141592653589793)
+    }
+
+    return sub(
+        div(mul(G,sub(sqr(R),sqr(r))),mul(4,mu)),
+        s
+    )
+}
+function hagenpoiseuillefstartupofflowinpipe(G,mu,R,nu,t,r){
+    let s=0
+    let x=2.404825557695773
+    let last=0
+
+    for(let n=1;n<=bign;n++){
+        for(let k=0;k<bign/2;k++){
+            let h=1e-7
+            let f=j0(x)
+            let d=div(sub(j0(add(x,h)),j0(sub(x,h))),mul(2,h))
+            x=sub(x,div(f,d))
+        }
+
+        let lam=x
+        let a=div(
+            mul(
+                mul(2,mul(G,sqr(R))),
+                j0(div(mul(lam,r),R))
+            ),
+            mul(
+                mu,
+                mul(
+                    pow(lam,3),
+                    j1(lam)
+                )
+            )
+        )
+
+        let e=exp(
+            neg(
+                div(
+                    mul(sqr(lam),mul(nu,t)),
+                    sqr(R)
+                )
+            )
+        )
+
+        s=add(s,mul(a,e))
+
+        last=add(x,3.831705970)
+        x=last
+    }
+
+    return sub(
+        div(mul(G,sub(sqr(R),sqr(r))),mul(4,mu)),
+        s
+    )
+}
+
+function hagenpoiseuillefannularflow(G,mu,R1,R2,r){
+    return add(
+        div(mul(G,sub(sqr(R1),sqr(r))),mul(4,mu)),
+        mul(
+            div(mul(G,sub(sqr(R2),sqr(R1))),mul(4,mu)),
+            div(log(div(r,R1)),log(div(R2,R1)))
+        )
+    )
+}
+
+function hagenpoiseuillefannularflowrate(G,mu,R1,R2){
+    return div(
+        mul(
+            G,
+            mul(
+                Math.PI,
+                sub(
+                    sub(pow(R2,4),pow(R1,4)),
+                    div(sqr(sub(sqr(R2),sqr(R1))),log(div(R2,R1)))
+                )
+            )
+        ),
+        mul(8,mu)
+    )
+}
+
+function hagenpoiseuillefoscillatingflowinpipe(G,alpha,beta,rho,omega,mu,R,r,t){
+    let k=sqrt(div(mul(omega,rho),mu))
+    let br=ber(mul(k,r))
+    let bR=ber(mul(k,R))
+    let ir=bei(mul(k,r))
+    let iR=bei(mul(k,R))
+
+    let d=add(sqr(bR),sqr(iR))
+
+    let F1=div(add(mul(br,bR),mul(ir,iR)),d)
+    let F2=div(sub(mul(br,iR),mul(ir,bR)),d)
+
+    let steady=div(
+        mul(G,sub(sqr(R),sqr(r))),
+        mul(4,mu)
+    )
+
+    let c=cos(mul(omega,t))
+    let s=sin(mul(omega,t))
+
+    let a=mul(
+        add(
+            mul(alpha,F2),
+            mul(beta,sub(F1,1))
+        ),
+        div(c,mul(rho,omega))
+    )
+
+    let b=mul(
+        add(
+            mul(beta,F2),
+            mul(-alpha,sub(F1,1))
+        ),
+        div(s,mul(rho,omega))
+    )
+
+    return add(steady,add(a,b))
+}
+
+function hagenpoiseuillefplaneflow(G,mu,h,y){
+    return div(
+        mul(G,mul(y,sub(h,y))),
+        mul(2,mu)
+    )
+}
+
+function hagenpoiseuillefplaneflowrate(G,mu,h){
+    return div(mul(G,pow(h,3)),mul(12,mu))
+}
+
+function hagenpoiseuillefellipticalflow(G,mu,a,b,y,z){
+    let d=add(div(1,sqr(a)),div(1,sqr(b)))
+    return div(
+        mul(
+            G,
+            sub(
+                1,
+                add(
+                    div(sqr(y),sqr(a)),
+                    div(sqr(z),sqr(b))
+                )
+            )
+        ),
+        mul(2,mul(mu,d))
+    )
+}
+
+function hagenpoiseuillefellipticalflowrate(G,mu,a,b){
+    return div(
+        mul(Math.PI,mul(G,mul(pow(a,3),pow(b,3)))),
+        mul(4,mul(mu,add(sqr(a),sqr(b))))
+    )
+}
+
+function hagenpoiseuillefequilateraltriangle(G,mu,h,y,z){
+    return div(
+        neg(
+            mul(
+                G,
+                mul(
+                    sub(y,h),
+                    sub(sqr(y),mul(3,sqr(z)))
+                )
+            )
+        ),
+        mul(4,mul(mu,h))
+    )
+}
+
+function hagenpoiseuillefequilateraltrianglerate(G,mu,h){
+    return div(
+        mul(G,pow(h,4)),
+        mul(60,mul(sqrt(3),mu))
+    )
+}
+
+function hagenpoiseuillefrightangledisoscelestriangle(G,mu,y,z){
+    let s=0
+
+    for(let n=1;n<=bign;n++){
+        let bn=add(n,0.5)
+
+        let a=div(
+            1,
+            mul(
+                pow(bn,3),
+                sinh(mul(2,Math.PI,bn))
+            )
+        )
+
+        let A=sinh(
+            mul(
+                bn,
+                sub(
+                    mul(2,Math.PI),
+                    sub(y,z)
+                )
+            )
+
+        )
+
+        let B=sin(mul(bn,add(y,z)))
+
+        let C=sinh(mul(bn,add(y,z)))
+        let D=sin(mul(bn,sub(y,z)))
+
+        s=add(
+            s,
+            mul(
+                a,
+                sub(mul(A,B),mul(C,D))
+            )
+        )
+    }
+
+    return sub(
+        div(
+            mul(G,mul(add(y,z),sub(Math.PI,y))),
+            mul(2,mu)
+        ),
+        div(mul(G,s),mul(Math.PI,mu))
+    )
+}
+
+function hagenpoiseuillefrightangledisocelestrianglerate(G,mu){
+    let s=0
+
+    for(let n=1;n<=bign;n++){
+        let b=add(n,0.5)
+
+        s=add(
+            s,
+            div(
+                add(
+                    coth(mul(2,Math.PI,b)),
+                    csc(mul(2,Math.PI,b))
+                ),
+                pow(b,5)
+            )
+        )
+    }
+
+    return sub(
+        div(mul(G,pow(Math.PI,4)),mul(12,mu)),
+        div(mul(G,s),mul(2,mul(Math.PI,mu)))
+    )
+}
+
+function hagenpoiseuillefrectangularchannel(G,mu,h,l,y,z){
+    let s=0
+
+    for(let n=1;n<=bign;n++){
+        let q=sub(mul(2,n),1)
+        let bn=div(mul(q,Math.PI),h)
+
+        let a=div(1,pow(q,3))
+
+        let b=div(
+            add(
+                sinh(mul(bn,z)),
+                sinh(mul(bn,sub(l,z)))
+            ),
+            sinh(mul(bn,l))
+        )
+
+        s=add(
+            s,
+            mul(
+                mul(a,b),
+                sin(mul(bn,y))
+            )
+        )
+    }
+
+    return sub(
+        div(
+            mul(G,mul(y,sub(h,y))),
+            mul(2,mu)
+        ),
+        div(
+            mul(4,mul(G,mul(sqr(h),s))),
+            mul(mu,pow(Math.PI,3))
+        )
+    )
+}
+
+function hagenpoiseuillefrectangularchannelrate(G,mu,h,l){
+    let s=0
+
+    for(let n=1;n<=bign;n++){
+        let q=sub(mul(2,n),1)
+        let bn=div(mul(q,Math.PI),h)
+
+        s=add(s,mul(
+            div(1,pow(q,5)),
+            div(
+                sub(cosh(mul(bn,l)),1),
+                sinh(mul(bn,l))
+            )
+        ))
+    }
+
+    return sub(
+        div(mul(G,mul(pow(h,3),l)),mul(12,mu)),
+        mul(
+            div(mul(16,mul(G,pow(h,4))),mul(pow(Math.PI,5),mu)),
+            s
+        )
+    )
+}
+
+
+
+
+
+//https://en.wikipedia.org/wiki/Erdogan%E2%80%93Chatwin_equation
+function erdoganchatwin(xmin,xmax,ymin,ymax,nx,ny,c0,D,g,h,alpha,nu,gamma,dt,it,x,y){
+    let dx=div(sub(xmax,xmin),sub(nx,1))
+
+    let c=Array.from({length:nx},(_,i)=>{
+        let xx=add(xmin,mul(i,dx))
+        return evale(c0,{x:xx,y:ymin})
+    })
+
+    let A=div(
+        mul(
+            gamma,
+            mul(
+                sqr(g),
+                mul(
+                    pow(h,8),
+                    sqr(alpha)
+                )
+            )
+        ),
+        mul(
+            sqr(nu),
+            sqr(D)
+        )
+    )
+
+    for(let n=0;n<it;n++){
+        let q=c.slice()
+
+        for(let i=1;i<nx-1;i++){
+            let cx1=div(sub(c[i],c[i-1]),dx)
+            let cx2=div(sub(c[i+1],c[i]),dx)
+
+            let f1=mul(
+                D,
+                mul(
+                    add(1,mul(A,sqr(cx1))),
+                    cx1
+                )
+            )
+
+            let f2=mul(
+                D,
+                mul(
+                    add(1,mul(A,sqr(cx2))),
+                    cx2
+                )
+            )
+
+            q[i]=add(
+                c[i],
+                mul(
+                    dt,
+                    div(sub(f2,f1),dx)
+                )
+            )
+        }
+
+        c=q
+    }
+
+    let ix=Math.round(re(div(sub(x,xmin),dx)))
+
+    if(ix<0||ix>=nx)return NaN
+
+    return c[ix]
+}
+
+//https://en.wikipedia.org/wiki/Couette_flow
+
+function couettefstartup(U,h,nu,t,y){
+    let s=0
+
+    for(let n=1;n<=bign;n++){
+        let a=div(
+            exp(neg(div(mul(sqr(mul(n,Math.PI)),mul(nu,t)),sqr(h)))),
+            n
+        )
+
+        s=add(
+            s,
+            mul(
+                a,
+                sin(mul(mul(n,Math.PI),sub(1,div(y,h))))
+            )
+        )
+    }
+
+    return sub(
+        mul(U,div(y,h)),
+        mul(div(mul(2,U),Math.PI),s)
+    )
+}
+
+function couettefplanarflowpressure(G,mu,U,h,y){
+    return add(
+        div(mul(G,mul(y,sub(h,y))),mul(2,mu)),
+        mul(U,div(y,h))
+    )
+}
+
+function couettefrectangularchannel(U,h,l,y,z){
+    let s=0
+
+    for(let n=1;n<=bign;n++){
+        let q=sub(mul(2,n),1)
+        let beta=div(mul(q,Math.PI),l)
+
+        s=add(
+            s,
+            div(
+                mul(
+                    sinh(mul(beta,y)),
+                    sin(mul(beta,z))
+                ),
+                mul(
+                    q,
+                    sinh(mul(beta,h))
+                )
+            )
+        )
+    }
+
+    return mul(div(mul(4,U),Math.PI),s)
+}
+
+function couettefcoaxialcylinders(U,R1,R2,Omega1,l,r,z){
+    let s=0
+
+    for(let n=1;n<=bign;n++){
+        let q=sub(mul(2,n),1)
+        let beta=div(mul(q,Math.PI),l)
+
+        let a=sub(
+            mul(
+                besseli(1,mul(beta,R2)),
+                besselk(1,mul(beta,r))
+            ),
+            mul(
+                besselk(1,mul(beta,R2)),
+                besseli(1,mul(beta,r))
+            )
+        )
+
+        let b=sub(
+            mul(
+                besseli(1,mul(beta,R2)),
+                besselk(1,mul(beta,R1))
+            ),
+            mul(
+                besselk(1,mul(beta,R2)),
+                besseli(1,mul(beta,R1))
+            )
+        )
+
+        s=add(
+            s,
+            div(
+                mul(div(a,b),sin(mul(beta,z))),
+                q
+            )
+        )
+    }
+
+    return mul(
+        div(mul(4,mul(R1,Omega1)),Math.PI),
+        s
+    )
+}
+//https://en.wikipedia.org/wiki/Taylor%E2%80%93Couette_flow
+function taylorcouette(R1,R2,Omega1,Omega2,r){
+    let mu=div(Omega2,Omega1)
+    let eta=div(R1,R2)
+    let A=mul(Omega1,div(sub(mu,sqr(eta)),sub(1,sqr(eta))))
+    let B=mul(Omega1,mul(sqr(R1),div(sub(1,mu),sub(1,sqr(eta)))))
+    return add(mul(A,r),div(B,r))
+}
+
+//https://en.wikipedia.org/wiki/Ostroumov_flow
+function ostroumovfx(g,mu,rho_x,h,z){
+    return div(mul(g,mul(rho_x,mul(z,sub(sqr(h),sqr(z))))),mu)
+}
+
+function ostroumovfy(g,mu,rho_y,h,z){
+    return div(mul(g,mul(rho_y,mul(z,sub(sqr(h),sqr(z))))),mu)
+}
+function ostroumovfz(g,rho,mu,rho_x,rho_y,rho_mx,rho_my,h,z){
+    let a=mul(div(rho,mu),rho_x)
+    let b=mul(div(rho,mu),rho_y)
+    return div(mul(g,add(rho_mx,rho_my)),mul(24,rho))
+}
+function ostroumovfbuoyancyvelocity(drho,g,h,mu,l){
+    return div(mul(drho,mul(g,pow(h,3))),mul(mu,l))
+}
+
+function ostroumovfgrashof(rho,drho,g,h,mu,l){
+    return div(mul(rho,mul(drho,mul(g,pow(h,4)))),mul(sqr(mu),l))
+}
+// https://en.wikipedia.org/wiki/Erdogan%E2%80%93Chatwin_equation
+function erdoganchatwin(xmin,xmax,ymin,ymax,nx,ny,c0,D,g,h,alpha,nu,gamma,dt,it,x,y){
+    let dx=div(sub(xmax,xmin),sub(nx,1))
+    let A=div(mul(gamma,mul(sqr(g),mul(pow(h,8),sqr(alpha)))),mul(sqr(nu),sqr(D)))
+
+    let c=Array.from({length:nx},(_,i)=>{
+        let xx=add(xmin,mul(i,dx))
+        return evale(c0,{x:xx,y:ymin})
+    })
+
+    for(let k=0;k<it;k++){
+        let q=c.slice()
+
+        for(let i=1;i<nx-1;i++){
+            let cm=div(sub(c[i],c[i-1]),dx)
+            let cp=div(sub(c[i+1],c[i]),dx)
+
+            let fm=mul(D,mul(add(1,mul(A,sqr(cm))),cm))
+            let fp=mul(D,mul(add(1,mul(A,sqr(cp))),cp))
+
+            q[i]=add(c[i],mul(dt,div(sub(fp,fm),dx)))
+        }
+
+        c=q
+    }
+
+    let ix=Math.round(re(div(sub(x,xmin),dx)))
+    if(ix<0||ix>=nx)return NaN
+    return c[ix]
+}
+
+//https://en.wikipedia.org/wiki/Compartmental_models_(epidemiology)
+function sir(S,I,R,beta,gamma,dt,it,x){
+    let N=add(add(S,I),R)
+    for(let k=0;k<it;k++){
+        let f=div(mul(beta,mul(S,I)),N)
+        S=sub(S,mul(dt,f))
+        I=add(I,mul(dt,sub(f,mul(gamma,I))))
+        R=add(R,mul(dt,mul(gamma,I)))
+    }
+    return x==0?S:x==1?I:R
+}
+function sis(S,I,beta,gamma,N,dt,it,x){
+    for(let k=0;k<it;k++){
+        let f=div(mul(beta,mul(S,I)),N)
+        let q=mul(gamma,I)
+        S=add(S,mul(dt,sub(q,f)))
+        I=add(I,mul(dt,sub(f,q)))
+    }
+    return x==0?S:I
+}
+function sird(S,I,R,D,beta,gamma,mu,N,dt,it,x){
+    for(let k=0;k<it;k++){
+        let f=div(mul(beta,mul(S,I)),N)
+        let r=mul(gamma,I),d=mul(mu,I)
+        S=sub(S,mul(dt,f))
+        I=add(I,mul(dt,sub(f,add(r,d))))
+        R=add(R,mul(dt,r))
+        D=add(D,mul(dt,d))
+    }
+    return x==0?S:x==1?I:x==2?R:D
+}
+function seir(S,E,I,R,beta,sigma,gamma,N,dt,it,x){
+    for(let k=0;k<it;k++){
+        let f=div(mul(beta,mul(S,I)),N)
+        let e=mul(sigma,E),r=mul(gamma,I)
+        S=sub(S,mul(dt,f))
+        E=add(E,mul(dt,sub(f,e)))
+        I=add(I,mul(dt,sub(e,r)))
+        R=add(R,mul(dt,r))
+    }
+    return x==0?S:x==1?E:x==2?I:R
+}
+function seis(S,E,I,beta,sigma,gamma,N,dt,it,x){
+    for(let k=0;k<it;k++){
+        let f=div(mul(beta,mul(S,I)),N)
+        let e=mul(sigma,E),r=mul(gamma,I)
+        S=add(S,mul(dt,sub(r,f)))
+        E=add(E,mul(dt,sub(f,e)))
+        I=add(I,mul(dt,sub(e,r)))
+    }
+    return x==0?S:x==1?E:I
+}
+function sirv(S,I,R,V,beta,gamma,v,N,dt,it,x){
+    for(let k=0;k<it;k++){
+        let f=div(mul(beta,mul(S,I)),N)
+        let r=mul(gamma,I)
+        let q=mul(v,S)
+        S=sub(S,mul(dt,add(f,q)))
+        I=add(I,mul(dt,sub(f,r)))
+        R=add(R,mul(dt,r))
+        V=add(V,mul(dt,q))
+    }
+    return x==0?S:x==1?I:x==2?R:V
+}
+function sirvital(S,I,R,beta,gamma,mu,N,dt,it,x){
+    for(let k=0;k<it;k++){
+        let f=div(mul(beta,mul(S,I)),N)
+        S=add(S,mul(dt,sub(sub(mu,N),add(f,mul(mu,S)))))
+        I=add(I,mul(dt,sub(f,mul(add(gamma,mu),I))))
+        R=add(R,mul(dt,sub(mul(gamma,I),mul(mu,R))))
+    }
+    return x==0?S:x==1?I:R
+}
+function sirfinalsusceptible(R0,s0,r0){
+    return neg(div(lambertw(neg(mul(mul(s0,R0),exp(neg(mul(R0,sub(1,r0)))))),0),R0))
+}
+//https://en.wikipedia.org/wiki/Hodgkin%E2%80%93Huxley_model
+function hodgkinhuxley(V,n,m,h,I,Cm,gK,gNa,gL,EK,ENa,EL,dt,it,x){
+    for(let k=0;k<it;k++){
+        let an=div(mul(0.01,sub(10,V)),sub(exp(div(sub(10,V),10)),1))
+        let bn=mul(0.125,exp(neg(div(V,80))))
+        let am=div(mul(0.1,sub(25,V)),sub(exp(div(sub(25,V),10)),1))
+        let bm=mul(4,exp(neg(div(V,18))))
+        let ah=mul(0.07,exp(neg(div(V,20))))
+        let bh=div(1,add(exp(div(sub(30,V),10)),1))
+
+        let IK=mul(gK,mul(pow(n,4),sub(V,EK)))
+        let INa=mul(gNa,mul(mul(pow(m,3),h),sub(V,ENa)))
+        let IL=mul(gL,sub(V,EL))
+
+        let dV=div(sub(I,add(add(IK,INa),IL)),Cm)
+        let dn=sub(mul(an,sub(1,n)),mul(bn,n))
+        let dm=sub(mul(am,sub(1,m)),mul(bm,m))
+        let dh=sub(mul(ah,sub(1,h)),mul(bh,h))
+
+        V=add(V,mul(dt,dV))
+        n=add(n,mul(dt,dn))
+        m=add(m,mul(dt,dm))
+        h=add(h,mul(dt,dh))
+    }
+
+    return x==0?V:x==1?n:x==2?m:h
+}
+
+//https://en.wikipedia.org/wiki/Kermack%E2%80%93McKendrick_theory
+function kermackmckendrick(S,i,beta,gamma,da,dt,it,x){
+    let N=i.length
+
+    for(let k=0;k<it;k++){
+        let lambda=0
+
+        for(let j=0;j<N;j++){
+            let a=mul(j,da)
+            lambda=add(lambda,mul(beta(a),mul(i[j],da)))
+        }
+
+        let q=i.slice()
+
+        for(let j=1;j<N;j++){
+            let a=mul(j,da)
+            let g=gamma(a)
+            q[j]=add(i[j],mul(dt,sub(
+                neg(div(sub(i[j],i[j-1]),da)),
+                mul(g,i[j])
+            )))
+        }
+
+        q[0]=mul(lambda,S)
+
+        let inf=mul(lambda,S)
+        S=sub(S,mul(dt,inf))
+
+        i=q
+    }
+
+    let ix=Math.round(re(div(x,da)))
+    if(ix<0||ix>=N)return NaN
+    return i[ix]
+}
+
+//https://en.wikipedia.org/wiki/Kuramoto_model
+function kuramoto(theta,omega,K,dt,it,x){
+    let n=theta.length
+
+    for(let k=0;k<it;k++){
+        let q=new Array(n)
+
+        for(let i=0;i<n;i++){
+            let s=0
+
+            for(let j=0;j<n;j++)
+                s=add(s,mul(K,sin(sub(theta[j],theta[i]))))
+
+            q[i]=add(theta[i],mul(dt,add(omega[i],div(s,n))))
+        }
+
+        theta=q
+    }
+
+    if(x<0||x>=n)return NaN
+    return theta[x]
+}
+function kuramotonetwork(theta,omega,A,dt,it,x){
+    let n=theta.length
+
+    for(let k=0;k<it;k++){
+        let q=new Array(n)
+
+        for(let i=0;i<n;i++){
+            let s=0
+
+            for(let j=0;j<n;j++)
+                s=add(s,mul(A[i][j],sin(sub(theta[j],theta[i]))))
+
+            q[i]=add(theta[i],mul(dt,add(omega[i],s)))
+        }
+
+        theta=q
+    }
+
+    if(x<0||x>=n)return NaN
+    return theta[x]
+}
+function kuramotor(theta){
+    let x=0,y=0,n=theta.length
+
+    for(let i=0;i<n;i++){
+        x=add(x,cos(theta[i]))
+        y=add(y,sin(theta[i]))
+    }
+
+    return div(sqrt(add(sqr(x),sqr(y))),n)
+}
+
+//https://en.wikipedia.org/wiki/Mackey%E2%80%93Glass_equations
+function mackeyglass(beta0,theta,n,tau,gamma,p0,dt,it,t){
+    let N=Math.ceil(tau/dt)
+    let p=Array(N+1).fill(p0)
+
+    for(let k=0;k<it;k++){
+        let d=Math.round(tau/dt)
+        let pk=p[p.length-1]
+        let pd=p[Math.max(0,p.length-1-d)]
+
+        let f=sub(
+            div(
+                mul(beta0,mul(pow(theta,n),pd)),
+                add(pow(theta,n),pow(pd,n))
+            ),
+            mul(gamma,pk)
+        )
+
+        p.push(add(pk,mul(dt,f)))
+        if(p.length>N+1)p.shift()
+    }
+
+    return p[p.length-1]
+}
+function mackeyglassnormalized(beta0,n,tau,gamma,q0,dt,it){
+    let N=Math.ceil(tau/dt)
+    let q=Array(N+1).fill(q0)
+
+    for(let k=0;k<it;k++){
+        let d=Math.round(tau/dt)
+        let qt=q[q.length-1]
+        let qd=q[Math.max(0,q.length-1-d)]
+
+        let f=sub(
+            div(mul(beta0,qd),add(1,pow(qd,n))),
+            mul(gamma,qt)
+        )
+
+        q.push(add(qt,mul(dt,f)))
+        if(q.length>N+1)q.shift()
+    }
+
+    return q[q.length-1]
+}
+//https://en.wikipedia.org/wiki/Von_Foerster_equation
+function vonfoerster(xmin,xmax,ymin,ymax,nx,ny,f,m,b,dt,it,x,y){
+    let da=div(sub(xmax,xmin),sub(nx,1))
+    let n=Array.from({length:nx},(_,i)=>{
+        let a=add(xmin,mul(i,da))
+        return evale(f,{x:a,y:ymin})
+    })
+
+    for(let k=0;k<it;k++){
+        let q=n.slice()
+        let birth=0
+
+        for(let i=0;i<nx;i++){
+            let a=add(xmin,mul(i,da))
+            birth=add(birth,mul(evale(b,{x:a,y:ymin}),n[i]))
+        }
+
+        birth=mul(da,birth)
+        q[0]=birth
+
+        for(let i=1;i<nx;i++){
+            let a=add(xmin,mul(i,da))
+            let death=mul(evale(m,{x:a,y:ymin}),n[i])
+            q[i]=sub(n[i],mul(dt,add(div(sub(n[i],n[i-1]),da),death)))
+        }
+
+        n=q
+    }
+
+    let ia=Math.round(re(div(sub(x,xmin),da)))
+    if(ia<0||ia>=nx)return NaN
+    return n[ia]
+}
+
+//https://en.wikipedia.org/wiki/Price_equation#Derivation_of_the_continuous-time_Price_equation
+
+function pricecontinuous(f,r,z,zd){
+    let er=0,ez=0,erz=0,ezd=0
+
+    for(let i=0;i<f.length;i++){
+        er=add(er,mul(f[i],r[i]))
+        ez=add(ez,mul(f[i],z[i]))
+        erz=add(erz,mul(f[i],mul(r[i],z[i])))
+        ezd=add(ezd,mul(f[i],zd[i]))
+    }
+
+    return add(sub(erz,mul(er,ez)),ezd)
+}
+function pricefrequencies(f,r,dt){
+    let er=0
+
+    for(let i=0;i<f.length;i++)er=add(er,mul(f[i],r[i]))
+
+    return f.map((fi,i)=>add(fi,mul(dt,mul(fi,sub(r[i],er)))))
+}
+//https://en.wikipedia.org/wiki/FitzHugh%E2%80%93Nagumo_model
+function fitzhughnagumo(v0,w0,a,b,tau,R,I,dt,it){
+    let v=v0,w=w0
+
+    for(let k=0;k<it;k++){
+        let dv=add(sub(sub(v,div(pow(v,3),3)),w),mul(R,I))
+        let dw=div(sub(add(v,a),mul(b,w)),tau)
+
+        v=add(v,mul(dt,dv))
+        w=add(w,mul(dt,dw))
+    }
+
+    return [v,w]
+}
+
+//https://en.wikipedia.org/wiki/Swift%E2%80%93Hohenberg_equation
+function swifthohenberg(xmin,xmax,ymin,ymax,nx,ny,f,r,dt,it,x,y){
+    let dx=div(sub(xmax,xmin),sub(nx,1)),dy=div(sub(ymax,ymin),sub(ny,1))
+    let u=Array.from({length:nx},(_,i)=>Array.from({length:ny},(_,j)=>evale(f,{x:add(xmin,mul(i,dx)),y:add(ymin,mul(j,dy))})))
+
+    for(let k=0;k<it;k++){
+        let l=u.map(a=>a.slice()),q=u.map(a=>a.slice())
+        for(let i=1;i<nx-1;i++)for(let j=1;j<ny-1;j++)
+            l[i][j]=add(div(sub(add(u[i+1][j],u[i-1][j]),mul(2,u[i][j])),sqr(dx)),div(sub(add(u[i][j+1],u[i][j-1]),mul(2,u[i][j])),sqr(dy)))
+
+        for(let i=1;i<nx-1;i++)for(let j=1;j<ny-1;j++){
+            let ll=add(div(sub(add(l[i+1][j],l[i-1][j]),mul(2,l[i][j])),sqr(dx)),div(sub(add(l[i][j+1],l[i][j-1]),mul(2,l[i][j])),sqr(dy)))
+            q[i][j]=add(u[i][j],mul(dt,sub(sub(mul(r,u[i][j]),u[i][j]),add(mul(2,l[i][j]),add(ll,pow(u[i][j],3))))))
+        }
+        u=q
+    }
+
+    let ix=Math.round(re(div(sub(x,xmin),dx))),iy=Math.round(re(div(sub(y,ymin),dy)))
+    return ix<0||iy<0||ix>=nx||iy>=ny?NaN:u[ix][iy]
+}
+
+//https://en.wikipedia.org/wiki/Benjamin%E2%80%93Bona%E2%80%93Mahony_equation
+function benjaminbonamahony(xmin,xmax,nx,f,dt,it,x){
+    let dx=div(sub(xmax,xmin),sub(nx,1))
+    let u=Array.from({length:nx},(_,i)=>evale(f,{x:add(xmin,mul(i,dx))}))
+
+    for(let k=0;k<it;k++){
+        let b=u.map((v,i)=>{
+            if(i==0||i==nx-1)return 0
+            let ux=div(sub(u[i+1],u[i-1]),mul(2,dx))
+            return mul(-1,add(ux,mul(u[i],ux)))
+        })
+
+        let a=Array(nx).fill(0),c=a.slice(),d=b.slice()
+        for(let i=1;i<nx-1;i++)a[i]=div(-1,sqr(dx)),c[i]=a[i]
+
+        for(let i=1;i<nx-1;i++){
+            let w=div(a[i],d[i-1])
+            d[i]=sub(d[i],mul(w,c[i-1]))
+            b[i]=sub(b[i],mul(w,b[i-1]))
+        }
+
+        let v=Array(nx).fill(0)
+        for(let i=nx-2;i>0;i--)
+            v[i]=div(sub(b[i],mul(c[i],v[i+1])),d[i])
+
+        for(let i=1;i<nx-1;i++)u[i]=add(u[i],mul(dt,v[i]))
+    }
+
+    let ix=Math.round(re(div(sub(x,xmin),dx)))
+    return ix<0||ix>=nx?NaN:u[ix]
+}
+
+//https://en.wikipedia.org/wiki/Biharmonic_equation
+function biharmonic(xmin,xmax,ymin,ymax,nx,ny,f,it,x,y){
+    let dx=div(sub(xmax,xmin),sub(nx,1)),dy=div(sub(ymax,ymin),sub(ny,1))
+    let u=Array.from({length:nx},(_,i)=>Array.from({length:ny},(_,j)=>evale(f,{x:add(xmin,mul(i,dx)),y:add(ymin,mul(j,dy))})))
+
+    for(let k=0;k<it;k++){
+        let l=u.map(a=>a.slice()),q=u.map(a=>a.slice())
+        for(let i=1;i<nx-1;i++)for(let j=1;j<ny-1;j++)
+            l[i][j]=add(
+                div(sub(add(u[i+1][j],u[i-1][j]),mul(2,u[i][j])),sqr(dx)),
+                div(sub(add(u[i][j+1],u[i][j-1]),mul(2,u[i][j])),sqr(dy))
+            )
+        for(let i=1;i<nx-1;i++)for(let j=1;j<ny-1;j++)
+            q[i][j]=sub(u[i][j],mul(0.1,add(
+                div(sub(add(l[i+1][j],l[i-1][j]),mul(2,l[i][j])),sqr(dx)),
+                div(sub(add(l[i][j+1],l[i][j-1]),mul(2,l[i][j])),sqr(dy))
+            )))
+        u=q
+    }
+
+    let ix=Math.round(re(div(sub(x,xmin),dx))),iy=Math.round(re(div(sub(y,ymin),dy)))
+    if(ix<0||iy<0||ix>=nx||iy>=ny)return NaN
+    return u[ix][iy]
+}
+
+//https://en.wikipedia.org/wiki/Dym_equation
+function dymequation(xmin,xmax,nx,f,dt,it,x){
+    let dx=div(sub(xmax,xmin),sub(nx,1))
+    let u=Array.from({length:nx},(_,i)=>evale(f,{x:add(xmin,mul(i,dx))}))
+
+    for(let k=0;k<it;k++){
+        let q=u.slice()
+        for(let i=2;i<nx-2;i++){
+            let uxxx=div(
+                add(
+                    sub(u[i+2],mul(2,u[i+1])),
+                    sub(mul(2,u[i-1]),u[i-2])
+                ),
+                mul(2,pow(dx,3))
+            )
+            q[i]=add(u[i],mul(dt,mul(pow(u[i],3),uxxx)))
+        }
+        u=q
+    }
+
+    let ix=Math.round(re(div(sub(x,xmin),dx)))
+    return ix<0||ix>=nx?NaN:u[ix]
+}
+//https://en.wikipedia.org/wiki/Gaussian_beam
+function gaussianbeamw(w0,lambda,z){
+    let zR=div(mul(Math.PI,sqr(w0)),lambda)
+    return mul(w0,sqrt(add(1,sqr(div(z,zR)))))
+}
+
+function gaussianbeamr(w0,lambda,z){
+    let zR=div(mul(Math.PI,sqr(w0)),lambda)
+    if(re(z)==0)return Infinity
+    return mul(z,add(1,div(sqr(zR),sqr(z))))
+}
+
+function gaussianbeamgouy(w0,lambda,z){
+    let zR=div(mul(Math.PI,sqr(w0)),lambda)
+    return atan(div(z,zR))
+}
+
+function gaussianbeamfield(w0,lambda,z,r){
+    let k=div(mul(2,Math.PI),lambda)
+    let zR=div(mul(Math.PI,sqr(w0)),lambda)
+    let w=gaussianbeamw(w0,lambda,z)
+    let R=gaussianbeamr(w0,lambda,z)
+    let psi=gaussianbeamgouy(w0,lambda,z)
+
+    return div(w0,w)
+}
+function gaussianbeam(w0,lambda,E0,z,r){
+    let k=div(mul(2,Math.PI),lambda)
+    let zR=div(mul(Math.PI,sqr(w0)),lambda)
+    let w=mul(w0,sqrt(add(1,sqr(div(z,zR)))))
+    let psi=atan(div(z,zR))
+    let R
+    if(re(z)==0)R=Infinity
+    else R=mul(z,add(1,div(sqr(zR),sqr(z))))
+
+    let amp=mul(E0,mul(div(w0,w),exp(neg(div(sqr(r),sqr(w))))))
+    let ph=add(sub(mul(k,z),psi),div(mul(k,sqr(r)),mul(2,R)))
+
+    return mul(amp,exp(mul(i,ph)))
+}
+
+function hermitegaussian(l,m,w0,lambda,E0,x,y,z){
+    let k=div(mul(2,Math.PI),lambda),zr=div(mul(Math.PI,sqr(w0)),lambda)
+    let w=mul(w0,sqrt(add(1,sqr(div(z,zr)))))
+    let psi=atan(div(z,zr)),R
+    if(re(z)==0)R=Infinity
+    else R=div(mul(z,add(sqr(z),sqr(zr))),sqr(z))
+    let X=div(mul(Math.sqrt(2),x),w),Y=div(mul(Math.sqrt(2),y),w)
+    let g=exp(neg(div(add(sqr(x),sqr(y)),sqr(w))))
+    let ph=sub(sub(mul(k,z),div(mul(k,add(sqr(x),sqr(y))),mul(2,R))),psi)
+    return mul(E0,mul(div(w0,w),mul(hermite(l,X),mul(hermite(m,Y),mul(g,exp(mul(i,ph)))))))
+}
+function hypergeometricgaussian(p,m,rho,phi,Z){
+    let am=Math.abs(m)
+    let A=sqrt(div(pow(2,add(p,am,1)),mul(Math.PI,gamma(add(p,am,1)))))
+    let B=div(gamma(add(div(p,2),am,1)),gamma(add(am,1)))
+    let C=mul(pow(i,add(am,1)),mul(pow(Z,div(p,2)),pow(add(Z,i),neg(add(div(p,2),am,1)))))
+    let D=mul(pow(rho,am),exp(neg(div(mul(i,sqr(rho)),add(Z,i)))))
+    let H=exp(mul(i,mul(m,phi)))
+    let F=hypg11(neg(div(p,2)),add(am,1),div(sqr(rho),mul(Z,add(Z,i))))
+    return mul(A,mul(B,mul(C,mul(D,mul(H,F)))))
+}
+// CONT
+//
+
+
+//
+
+
+//
+
+
+//
+
+
+//
+
+
+//
+
+
+//
+
+//
+
+
+//
+
+
+//
+
+
+//
+
+
 //
 
 
@@ -55386,18 +56937,6 @@ quasigeostrophic(
 
 //
 
-
-//
-
-
-//
-
-
-//
-
-
-//
-
 //
 
 
@@ -55414,7 +56953,6 @@ quasigeostrophic(
 
 
 //
-
 
 //https://en.wikipedia.org/wiki/Heat_equation
 function heatequation(x,t,u0,alpha=1,N=bign,h=0.01,M=201){
