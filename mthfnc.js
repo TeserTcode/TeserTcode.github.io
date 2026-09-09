@@ -56831,11 +56831,44 @@ function hypergeometricgaussian(p,m,rho,phi,Z){
     return mul(A,mul(B,mul(C,mul(D,mul(H,F)))))
 }
 // CONT
-//
+function orderedexponential(a,t){
+    let n=bign*16,h=div(t,n),y=1
+    for(let i=0;i<n;i++){
+        let x=mul(add(i,0.5),h)
+        y=mul(y,exp(mul(evale(a,x),h)))
+    }
+    return y
+}
 
+function orderedexponentialdif(a,t){
+    let n=bign*16,h=div(t,n),y=1,x=0
+    for(let i=0;i<n;i++){
+        let k1=mul(evale(a,x),y)
+        let x2=add(x,div(h,2)),y2=add(y,mul(div(h,2),k1))
+        let k2=mul(evale(a,x2),y2)
+        y2=add(y,mul(div(h,2),k2))
+        let k3=mul(evale(a,x2),y2)
+        let x4=add(x,h),y4=add(y,mul(h,k3))
+        let k4=mul(evale(a,x4),y4)
+        y=add(y,mul(div(h,6),add(add(k1,mul(2,k2)),add(mul(2,k3),k4))))
+        x=add(x,h)
+    }
+    return y
+}
 
-//
+//https://en.wikipedia.org/wiki/Path-ordering#Time_ordering
+function timeorder(a,t,mulop){
+    let z=Array.from({length:a.length},(_,i)=>i)
 
+    z.sort((i,j)=>re(sub(t[j],t[i])))
+
+    let y=a[z[0]]
+
+    for(let i=1;i<z.length;i++)
+        y=mulop(y,a[z[i]])
+
+    return y
+}
 
 //
 
