@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Thin Film Equation</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+    margin:0;
+    background:#181818;
+    color:#ddd;
+    font-family:Arial,sans-serif;
+}
+#main{
+    display:flex;
+    gap:18px;
+    padding:18px;
+    height:100vh;
+}
+#left{
+    flex:1;
+    min-width:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+canvas{
+    width:min(80vh,900px);
+    height:min(80vh,900px);
+    image-rendering:auto;
+    background:#000;
+    border:1px solid #444;
+}
+#panel{
+    width:270px;
+    padding:15px;
+    background:#222;
+    border:1px solid #444;
+    overflow-y:auto;
+}
+h2{
+    margin:0 0 15px;
+    font-size:19px;
+    font-weight:normal;
+}
+.group{
+    margin-bottom:14px;
+}
+label{
+    display:block;
+    font-size:13px;
+    margin-bottom:4px;
+}
+input[type=range]{
+    width:100%;
+}
+.value{
+    float:right;
+    color:#aaa;
+}
+button{
+    width:100%;
+    padding:9px;
+    margin-top:6px;
+    background:#333;
+    color:#ddd;
+    border:1px solid #555;
+    cursor:pointer;
+}
+button:hover{background:#3d3d3d}
+select{
+    width:100%;
+    padding:7px;
+    background:#333;
+    color:#ddd;
+    border:1px solid #555;
+}
+#info{
+    margin-top:14px;
+    padding-top:10px;
+    border-top:1px solid #444;
+    font-size:12px;
+    line-height:1.6;
+    color:#aaa;
+}
+</style>
+</head>
+
+<body>
+
+<div id="main">
+
+<div id="left">
+<canvas id="canvas" width="700" height="700"></canvas>
+</div>
+
+<div id="panel">
+
+<h2>Thin-film equation</h2>
+
+<div class="group">
+<label>
+Grid
+<span class="value" id="gridv"></span>
+</label>
+<select id="grid">
+<option value="80">80 × 80</option>
+<option value="120" selected>120 × 120</option>
+<option value="160">160 × 160</option>
+<option value="200">200 × 200</option>
+</select>
+</div>
+
+<div class="group">
+<label>
+Initial film thickness
+<span class="value" id="h0v"></span>
+</label>
+<input id="h0" type="range" min=".01" max="3" step=".01" value="1">
+</div>
+
+<div class="group">
+<label>
+Perturbation
+<span class="value" id="pertv"></span>
+</label>
+<input id="pert" type="range" min="0" max="1" step=".01" value=".35">
+</div>
+
+<div class="group">
+<label>
+Viscosity μ
+<span class="value" id="muv"></span>
+</label>
+<input id="mu" type="range" min=".05" max="10" step=".05" value="1">
+</div>
+
+<div class="group">
+<label>
+Surface tension γ
+<span class="value" id="gammav"></span>
+</label>
+<input id="gamma" type="range" min=".01" max="5" step=".01" value="1">
+</div>
+
+<div class="group">
+<label>
+Density ρ
+<span class="value" id="rhov"></span>
+</label>
+<input id="rho" type="range" min=".1" max="5" step=".1" value="1">
+</div>
+
+<div class="group">
+<label>
+Gravity
+<span class="value" id="gv"></span>
+</label>
+<input id="grav" type="range" min="-20" max="20" step=".1" value="0">
+</div>
+
+<div class="group">
+<label>
+x acceleration
+<span class="value" id="axv"></span>
+</label>
+<input id="ax" type="range" min="-10" max="10" step=".1" value="0">
+</div>
+
+<div class="group">
+<label>
+y acceleration
+<span class="value" id="ayv"></span>
+</label>
+<input id="ay" type="range" min="-10" max="10" step=".1" value="0">
+</div>
+
+<div class="group">
+<label>
+Time step
+<span class="value" id="dtv"></span>
+</label>
+<input id="dt" type="range" min=".000001" max=".01" step=".000001" value=".00005">
+</div>
+
+<div class="group">
+<label>
+Simulation speed
+<span class="value" id="speedv"></span>
+</label>
+<input id="speed" type="range" min="1" max="20" step="1" value="4">
+</div>
+
+<div class="group">
+<label>Coloring</label>
+<select id="color">
+<option value="height">Height</option>
+<option value="spectrum">Spectrum</option>
+<option value="gray">Grayscale</option>
+</select>
+</div>
+
+<button id="pause">Pause</button>
+<button id="reset">Reset</button>
+
+<div id="info">
+t = <span id="time">0</span><br>
+min h = <span id="minh">0</span><br>
+max h = <span id="maxh">0</span>
+</div>
+
+</div>
+</div>
+
+<script>
+
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+
+let n=120;
+let h=[];
+let t=0;
+let running=true;
+
+let dx=1;
+let dy=1;
+
+let params={
+    h0:1,
+    pert:.35,
+    mu:1,
+    gamma:1,
+    rho:1,
+    g:0,
+    ax:0,
+    ay:0,
+    dt:.00005,
+    speed:4
+};
+
+function createGrid(){
+
+    n=+document.getElementById("grid").value;
+
+    h=new Float64Array(n*n);
+
+    for(let i=0;i<n;i++){
+        for(let j=0;j<n;j++){
+
+            const x=(i-n/2)/(n/2);
+            const y=(j-n/2)/(n/2);
+
+            const r2=x*x+y*y;
+
+            h[i*n+j]=
+                params.h0+
+                params.pert*
+                Math.exp(-8*r2);
+
+        }
+    }
+
+    t=0;
+}
+
+function id(i,j){
+
+    i=(i+n)%n;
+    j=(j+n)%n;
+
+    return i*n+j;
+}
+
+function laplacian(a,i,j){
+
+    const c=a[id(i,j)];
+
+    return (
+        a[id(i+1,j)]-
+        2*c+
+        a[id(i-1,j)]
+    )/(dx*dx)
+    +
+    (
+        a[id(i,j+1)]-
+        2*c+
+        a[id(i,j-1)]
+    )/(dy*dy);
+}
+
+function gradientLaplacian(a,i,j){
+
+    const lx1=laplacian(a,i+1,j);
+    const lx0=laplacian(a,i-1,j);
+
+    const ly1=laplacian(a,i,j+1);
+    const ly0=laplacian(a,i,j-1);
+
+    return [
+        (lx1-lx0)/(2*dx),
+        (ly1-ly0)/(2*dy)
+    ];
+}
+
+function derivative(a){
+
+    const qx=new Float64Array(n*n);
+    const qy=new Float64Array(n*n);
+
+    const out=new Float64Array(n*n);
+
+    const mu=params.mu;
+    const gamma=params.gamma;
+    const rho=params.rho;
+    const g=params.g;
+    const ax=params.ax;
+    const ay=params.ay;
+
+    for(let i=0;i<n;i++){
+        for(let j=0;j<n;j++){
+
+            const k=id(i,j);
+
+            const hi=Math.max(a[k],1e-8);
+
+            const h2=hi*hi;
+            const h3=h2*hi;
+
+            const gl=gradientLaplacian(a,i,j);
+
+            qx[k]=
+                h3/(3*mu)*
+                (
+                    gamma*gl[0]+
+                    rho*g
+                )
+                +
+                h2/(2*mu)*ax;
+
+            qy[k]=
+                h3/(3*mu)*
+                (
+                    gamma*gl[1]
+                )
+                +
+                h2/(2*mu)*ay;
+        }
+    }
+
+    for(let i=0;i<n;i++){
+        for(let j=0;j<n;j++){
+
+            const k=id(i,j);
+
+            const dqdx=
+                (qx[id(i+1,j)]-
+                 qx[id(i-1,j)])/(2*dx);
+
+            const dqdy=
+                (qy[id(i,j+1)]-
+                 qy[id(i,j-1)])/(2*dy);
+
+            out[k]=-(dqdx+dqdy);
+        }
+    }
+
+    return out;
+}
+
+function rk4(){
+
+    const dt=params.dt;
+
+    const k1=derivative(h);
+
+    const a=new Float64Array(n*n);
+
+    for(let k=0;k<h.length;k++)
+        a[k]=h[k]+dt*.5*k1[k];
+
+    const k2=derivative(a);
+
+    for(let k=0;k<h.length;k++)
+        a[k]=h[k]+dt*.5*k2[k];
+
+    const k3=derivative(a);
+
+    for(let k=0;k<h.length;k++)
+        a[k]=h[k]+dt*k3[k];
+
+    const k4=derivative(a);
+
+    for(let k=0;k<h.length;k++){
+
+        h[k]+=dt/6*
+        (
+            k1[k]+
+            2*k2[k]+
+            2*k3[k]+
+            k4[k]
+        );
+
+        if(h[k]<0)
+            h[k]=0;
+    }
+
+    t+=dt;
+}
+
+function hsv(h,s,v){
+
+    const i=Math.floor(h*6);
+    const f=h*6-i;
+
+    const p=v*(1-s);
+    const q=v*(1-f*s);
+    const u=v*(1-(1-f)*s);
+
+    switch(i%6){
+        case 0:return [v,u,p];
+        case 1:return [q,v,p];
+        case 2:return [p,v,u];
+        case 3:return [p,q,v];
+        case 4:return [u,p,v];
+        default:return [v,p,q];
+    }
+}
+
+function render(){
+
+    const image=ctx.createImageData(canvas.width,canvas.height);
+    const data=image.data;
+
+    let mn=Infinity;
+    let mx=-Infinity;
+
+    for(let k=0;k<h.length;k++){
+        if(h[k]<mn)mn=h[k];
+        if(h[k]>mx)mx=h[k];
+    }
+
+    const range=mx-mn||1;
+
+    const mode=document.getElementById("color").value;
+
+    for(let py=0;py<canvas.height;py++){
+
+        const j=Math.floor(py/canvas.height*n);
+
+        for(let px=0;px<canvas.width;px++){
+
+            const i=Math.floor(px/canvas.width*n);
+
+            const v=(h[id(i,j)]-mn)/range;
+
+            let r,g,b;
+
+            if(mode==="gray"){
+
+                r=g=b=Math.floor(v*255);
+
+            }else if(mode==="spectrum"){
+
+                const c=hsv(.7*(1-v),1,1);
+
+                r=Math.floor(c[0]*255);
+                g=Math.floor(c[1]*255);
+                b=Math.floor(c[2]*255);
+
+            }else{
+
+                const c=hsv(.67-.67*v,.9,.15+.85*v);
+
+                r=Math.floor(c[0]*255);
+                g=Math.floor(c[1]*255);
+                b=Math.floor(c[2]*255);
+            }
+
+            const p=(py*canvas.width+px)*4;
+
+            data[p]=r;
+            data[p+1]=g;
+            data[p+2]=b;
+            data[p+3]=255;
+        }
+    }
+
+    ctx.putImageData(image,0,0);
+
+    document.getElementById("time").textContent=t.toExponential(4);
+    document.getElementById("minh").textContent=mn.toFixed(5);
+    document.getElementById("maxh").textContent=mx.toFixed(5);
+}
+
+function updateParams(){
+
+    params.h0=+document.getElementById("h0").value;
+    params.pert=+document.getElementById("pert").value;
+    params.mu=+document.getElementById("mu").value;
+    params.gamma=+document.getElementById("gamma").value;
+    params.rho=+document.getElementById("rho").value;
+    params.g=+document.getElementById("grav").value;
+    params.ax=+document.getElementById("ax").value;
+    params.ay=+document.getElementById("ay").value;
+    params.dt=+document.getElementById("dt").value;
+    params.speed=+document.getElementById("speed").value;
+
+    document.getElementById("gridv").textContent=n;
+    document.getElementById("h0v").textContent=params.h0;
+    document.getElementById("pertv").textContent=params.pert;
+    document.getElementById("muv").textContent=params.mu;
+    document.getElementById("gammav").textContent=params.gamma;
+    document.getElementById("rhov").textContent=params.rho;
+    document.getElementById("gv").textContent=params.g;
+    document.getElementById("axv").textContent=params.ax;
+    document.getElementById("ayv").textContent=params.ay;
+    document.getElementById("dtv").textContent=params.dt;
+    document.getElementById("speedv").textContent=params.speed;
+}
+
+document.querySelectorAll("input").forEach(e=>{
+    e.oninput=updateParams;
+});
+
+document.getElementById("grid").onchange=()=>{
+    updateParams();
+    createGrid();
+};
+
+document.getElementById("pause").onclick=()=>{
+    running=!running;
+    document.getElementById("pause").textContent=
+        running?"Pause":"Resume";
+};
+
+document.getElementById("reset").onclick=()=>{
+    updateParams();
+    createGrid();
+};
+
+createGrid();
+updateParams();
+
+let last=0;
+
+function animate(now){
+
+    if(!last)last=now;
+
+    if(running){
+
+        for(let s=0;s<params.speed;s++)
+            rk4();
+    }
+
+    render();
+
+    requestAnimationFrame(animate);
+}
+
+requestAnimationFrame(animate);
+
+</script>
+
+</body>
+</html>

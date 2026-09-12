@@ -10624,7 +10624,11 @@ function reclog(b) {
     return div(1.0, math.log(b));
 }
 
+function ln(x){return log(x)}
 
+function lb(x){return log2(x)}
+
+function ld(x){return log10(x)}
 
 // Function for 'log10'
 function log10( b) {
@@ -44312,7 +44316,7 @@ function tridiageig(A){
     }
     return V.map((r,i)=>r[i]).sort((a,b)=>re(sub(a,b)))
 }
-
+/*
 
 function incepolydata(p,m,e,o){
     if(p<0||m<0||m>p||(p-m)%2)return null
@@ -44398,11 +44402,225 @@ function incepolyis(p,m,e,x){
 }
 
 
+*/
+
+function incecoeff(p,m,e,o,eta){
+    let a=[1]
+
+    for(let j=0;j<bign;j++){
+        let k=add(m,mul(2,j))
+        let c1,c2
+
+        if(o){
+            c1=mul(
+                add(
+                    div(p,2),
+                    sub(1,div(k,2))
+                ),
+                e
+            )
+            c2=mul(
+                add(
+                    div(p,2),
+                    add(1,div(k,2))
+                ),
+                e
+            )
+        }else{
+            c1=mul(
+                add(
+                    div(p,2),
+                    sub(1,div(k,2))
+                ),
+                e
+            )
+            c2=mul(
+                add(
+                    div(p,2),
+                    add(1,div(k,2))
+                ),
+                e
+            )
+        }
+
+        if(mag(c2)<1e-30){
+            a.push(0)
+            continue
+        }
+
+        a.push(
+            div(
+                sub(
+                    mul(sub(sqr(k),eta),g(a,j)),
+                    j?mul(c1,g(a,j-1)):0
+                ),
+                c2
+            )
+        )
+    }
+
+    return a
+}
+
+
+function inceetaf(eta,A){
+    let p=g(A,0)
+    let m=g(A,1)
+    let e=g(A,2)
+    let o=g(A,3)
+
+    let a=incecoeff(p,m,e,o,eta)
+
+    let n=sub(leng(a),1)
+    let k=add(m,mul(2,n))
+
+    let c1=mul(
+        add(
+            div(p,2),
+            sub(1,div(k,2))
+        ),
+        e
+    )
+
+    return sub(
+        mul(sub(sqr(k),eta),g(a,n)),
+        mul(c1,g(a,sub(n,1)))
+    )
+}
+
+
+function inceeta(p,m,e,o){
+    if(re(e)==0&&im(e)==0)
+        return sqr(m)
+
+    let guess=sqr(m)
+
+    return newtoninvfp(
+        inceetaf,
+        0,
+        guess,
+        [p,m,e,o]
+    )
+}
+
+
+function incec(p,m,e,x){
+    if(re(e)==0&&im(e)==0)
+        return cos(mul(m,x))
+
+    let eta=inceeta(p,m,e,0)
+
+    if(isNaN(eta))
+        return NaN
+
+    let a=incecoeff(p,m,e,0,eta)
+    let y=0
+
+    for(let i=0;i<leng(a);i++){
+        let k=add(m,mul(2,i))
+
+        y=add(
+            y,
+            mul(
+                g(a,i),
+                cos(mul(k,x))
+            )
+        )
+    }
+
+    return y
+}
+
+
+function inces(p,m,e,x){
+    if(re(e)==0&&im(e)==0)
+        return sin(mul(m,x))
+
+    let eta=inceeta(p,m,e,1)
+
+    if(isNaN(eta))
+        return NaN
+
+    let a=incecoeff(p,m,e,1,eta)
+    let y=0
+
+    for(let i=0;i<leng(a);i++){
+        let k=add(m,mul(2,i))
+
+        y=add(
+            y,
+            mul(
+                g(a,i),
+                sin(mul(k,x))
+            )
+        )
+    }
+
+    return y
+}
+
+
+function inceic(p,m,e,x){
+    let eta=inceeta(p,m,e,0)
+
+    if(isNaN(eta))
+        return NaN
+
+    let y=incec(p,m,e,0)
+    let yp=0
+
+    let a=incecoeff(p,m,e,0,eta)
+
+    for(let i=0;i<leng(a);i++){
+        let k=add(m,mul(2,i))
+
+        yp=add(
+            yp,
+            mul(g(a,i),k)
+        )
+    }
+
+    return ode2rk4(
+        (x,y,yp,eta)=>inceeq(x,y,yp,p,e,eta),
+        x,y,yp,eta,0,bign
+    )
+}
+
+
+function inceis(p,m,e,x){
+    let eta=inceeta(p,m,e,1)
+
+    if(isNaN(eta))
+        return NaN
+
+    let a=incecoeff(p,m,e,1,eta)
+
+    let yp=0
+
+    for(let i=0;i<leng(a);i++){
+        let k=add(m,mul(2,i))
+
+        yp=add(
+            yp,
+            mul(g(a,i),k)
+        )
+    }
+
+    return ode2rk4(
+        (x,y,yp,eta)=>inceeq(x,y,yp,p,e,eta),
+        x,0,yp,eta,0,bign
+    )
+}
 
 
 
 
 
+
+
+
+
+//incepolyc(5.2,1,1.5,x)+acc(10)
 
 function cosdiff(x,y,yp){return sub(0,(y))}
 
@@ -56870,6 +57088,2849 @@ function timeorder(a,t,mulop){
     return y
 }
 
+//https://en.wikipedia.org/wiki/Dyson_series FIX
+function dysonseries(a,t){
+    let n=bign*16,h=div(t,n),y=1,term=1
+
+    for(let k=1;k<=bign;k++){
+        let s=0
+
+        for(let i=k-1;i<n;i++){
+            let ts=Array.from({length:k},(_,j)=>
+                mul(add(i-j,0.5),h)
+            )
+
+            let aa=ts.map(x=>evale(a,x))
+            let q=timeorder(aa,ts,mul)
+
+            s=add(s,mul(q,pow(h,k)))
+        }
+
+        term=div(s,factorial(k))
+        y=add(y,term)
+
+        if(Math.abs(re(term))<1e-15)break
+    }
+
+    return y
+}
+
+https://en.wikipedia.org/wiki/Wilson%E2%80%93Cowan_model
+
+
+//https://en.wikipedia.org/wiki/State-transition_matrix#Peano%E2%80%93Baker_series
+function peanobaker(A,t0,t1,n){
+    let h=div(sub(t1,t0),n)
+    let d=1e-8
+    let M=evale(A,{t:t0})
+    let N=M.length
+    let P=Array.from({length:N},(_,i)=>Array.from({length:N},(_,j)=>i==j?1:0))
+    let S=P.map(a=>a.slice())
+
+    for(let k=1;k<=n;k++){
+        let Q=P.map(a=>a.slice())
+
+        for(let s=0;s<n;s++){
+            let t=add(t0,mul(s,h))
+            let B=evale(A,{t:t})
+            Q=matmul(B,Q)
+            for(let i=0;i<N;i++)for(let j=0;j<N;j++)
+                P[i][j]=add(P[i][j],mul(h,Q[i][j]))
+        }
+
+        for(let i=0;i<N;i++)for(let j=0;j<N;j++)
+            S[i][j]=add(S[i][j],P[i][j])
+    }
+
+    return S
+}
+
+//https://en.wikipedia.org/wiki/Nernst%E2%80%93Planck_equation
+function nernstplanckd(c,D,z,e,T,v,phi,x,h=1e-6){
+    const cp=evale(c,add(x,h)),cm=evale(c,sub(x,h));
+    const pp=evale(phi,add(x,h)),pm=evale(phi,sub(x,h));
+    const cx=div(sub(cp,cm),mul(2,h));
+    const phix=div(sub(pp,pm),mul(2,h));
+    const J=add(mul(-1,D,cx),mul(c,v),mul(div(mul(D,z,e),mul(kb,T)),c,phix));
+    const Jp=evale(nernstplanckflux,c,D,z,e,T,v,phi,add(x,h),h);
+    const Jm=evale(nernstplanckflux,c,D,z,e,T,v,phi,sub(x,h),h);
+    return mul(-1,div(sub(Jp,Jm),mul(2,h)));
+}
+function nernstplanckflux(c,D,z,e,T,v,phi,x,h=1e-6){
+    const cx=div(sub(evale(c,add(x,h)),evale(c,sub(x,h))),mul(2,h));
+    const phix=div(sub(evale(phi,add(x,h)),evale(phi,sub(x,h))),mul(2,h));
+    return add(mul(-1,D,cx),mul(evale(c,x),v),mul(div(mul(D,z,e),mul(kb,T)),evale(c,x),phix));
+}
+function nernstplanckintegrator(c,D,z,e,T,v,phi,xmin,xmax,ymin,ymax,nx,ny,dt,steps){
+    const hx=div(sub(xmax,xmin),sub(nx,1)),hy=div(sub(ymax,ymin),sub(ny,1)),q=[];
+    for(let i=0;i<nx;i++){q[i]=[];for(let j=0;j<ny;j++){const x=add(xmin,mul(i,hx)),y=add(ymin,mul(j,hy));q[i][j]=evale(c,x,y)}}
+    for(let s=0;s<steps;s++){
+        const nq=[];
+        for(let i=0;i<nx;i++){nq[i]=[];for(let j=0;j<ny;j++){
+            const im=i==0?i:sub(i,1),ip=i==sub(nx,1)?i:add(i,1),jm=j==0?j:sub(j,1),jp=j==sub(ny,1)?j:add(j,1);
+            const x=add(xmin,mul(i,hx)),y=add(ymin,mul(j,hy));
+            const cx=div(sub(q[ip][j],q[im][j]),mul(2,hx)),cy=div(sub(q[i][jp],q[i][jm]),mul(2,hy));
+            const px=div(sub(evale(phi,add(x,hx),y),evale(phi,sub(x,hx))),mul(2,hx)),py=div(sub(evale(phi,x,add(y,hy)),evale(phi,x,sub(y,hy))),mul(2,hy));
+            const Jx=add(mul(-1,D,cx),mul(div(mul(D,z,e),mul(kb,T)),q[i][j],px),mul(q[i][j],evale(v,x,y)[0]));
+            const Jy=add(mul(-1,D,cy),mul(div(mul(D,z,e),mul(kb,T)),q[i][j],py),mul(q[i][j],evale(v,x,y)[1]));
+            const Jxp=add(mul(-1,D,div(sub(q[ip][j],q[i][j]),hx)),mul(div(mul(D,z,e),mul(kb,T)),q[ip][j],div(sub(evale(phi,add(x,hx),y),evale(phi,x,y)),hx)),mul(q[ip][j],evale(v,add(x,hx),y)[0]));
+            const Jxm=add(mul(-1,D,div(sub(q[i][j],q[im][j]),hx)),mul(div(mul(D,z,e),mul(kb,T)),q[im][j],div(sub(evale(phi,x,y),evale(phi,sub(x,hx),y)),hx)),mul(q[im][j],evale(v,sub(x,hx),y)[0]));
+            const Jyp=add(mul(-1,D,div(sub(q[i][jp],q[i][j]),hy)),mul(div(mul(D,z,e),mul(kb,T)),q[i][jp],div(sub(evale(phi,x,add(y,hy)),evale(phi,x,y)),hy)),mul(q[i][jp],evale(v,x,add(y,hy))[1]));
+            const Jym=add(mul(-1,D,div(sub(q[i][j],q[i][jm]),hy)),mul(div(mul(D,z,e),mul(kb,T)),q[i][jm],div(sub(evale(phi,x,y),evale(phi,x,sub(y,hy))),hy)),mul(q[i][jm],evale(v,x,sub(y,hy))[1]));
+            nq[i][j]=sub(q[i][j],mul(dt,add(div(sub(Jxp,Jxm),mul(2,hx)),div(sub(Jyp,Jym),mul(2,hy)))));
+        }}
+        q.splice(0,q.length,...nq);
+    }
+    return q;
+}
+//https://en.wikipedia.org/wiki/Reaction%E2%80%93diffusion_system
+
+function reactiondiffusion(f,D,R,x,y,h=1e-5){
+    const c=evale(f,x,y);
+    const xp=evale(f,add(x,h),y),xm=evale(f,sub(x,h),y),yp=evale(f,x,add(y,h)),ym=evale(f,x,sub(y,h));
+    const lap=div(sub(add(xp,xm,yp,ym),mul(4,c)),mul(h,h));
+    return add(mul(D,lap),evale(R,c));
+}
+function reactiondiffusion3(f,D,R,x,y,z,h=1e-5){
+    const c=evale(f,x,y,z);
+    const xp=evale(f,add(x,h),y,z),xm=evale(f,sub(x,h),y,z),yp=evale(f,x,add(y,h),z),ym=evale(f,x,sub(y,h),z),zp=evale(f,x,y,add(z,h)),zm=evale(f,x,y,sub(z,h));
+    const lap=div(sub(add(xp,xm,yp,ym,zp,zm),mul(6,c)),mul(h,h));
+    return add(mul(D,lap),evale(R,c));
+}
+function reactiondiffusion2(f,g,Du,Dv,F,G,x,y,h=1e-5){
+    const u=evale(f,x,y),v=evale(g,x,y);
+    const up=evale(f,add(x,h),y),um=evale(f,sub(x,h),y),uy=evale(f,x,add(y,h)),un=evale(f,x,sub(y,h));
+    const vp=evale(g,add(x,h),y),vm=evale(g,sub(x,h),y),vy=evale(g,x,add(y,h)),vn=evale(g,x,sub(y,h));
+    const lu=div(sub(add(up,um,uy,un),mul(4,u)),mul(h,h)),lv=div(sub(add(vp,vm,vy,vn),mul(4,v)),mul(h,h));
+    return [add(mul(Du,lu),evale(F,u,v)),add(mul(Dv,lv),evale(G,u,v))];
+}
+function reactiondiffusionintegrator(f,D,R,xmin,xmax,ymin,ymax,nx,ny,dt,steps){
+    const hx=div(sub(xmax,xmin),sub(nx,1)),hy=div(sub(ymax,ymin),sub(ny,1)),u=[];
+    for(let i=0;i<nx;i++){u[i]=[];for(let j=0;j<ny;j++){const x=add(xmin,mul(i,hx)),y=add(ymin,mul(j,hy));u[i][j]=evale(f,x,y)}}
+    for(let s=0;s<steps;s++){
+        const v=[];
+        for(let i=0;i<nx;i++){v[i]=[];for(let j=0;j<ny;j++){
+            const im=i==0?i:sub(i,1),ip=i==sub(nx,1)?i:add(i,1),jm=j==0?j:sub(j,1),jp=j==sub(ny,1)?j:add(j,1);
+            const lap=add(div(sub(sub(u[ip][j],mul(2,u[i][j])),u[im][j]),mul(hx,hx)),div(sub(sub(u[i][jp],mul(2,u[i][j])),u[i][jm]),mul(hy,hy)));
+            v[i][j]=add(u[i][j],mul(dt,add(mul(D,lap),evale(R,u[i][j]))));
+        }}
+        u.splice(0,u.length,...v);
+    }
+    return u;
+}
+function reactiondiffusionintegrator2(f,g,Du,Dv,F,G,xmin,xmax,ymin,ymax,nx,ny,dt,steps){
+    const hx=div(sub(xmax,xmin),sub(nx,1)),hy=div(sub(ymax,ymin),sub(ny,1)),u=[],v=[];
+    for(let i=0;i<nx;i++){u[i]=[];v[i]=[];for(let j=0;j<ny;j++){const x=add(xmin,mul(i,hx)),y=add(ymin,mul(j,hy));u[i][j]=evale(f,x,y);v[i][j]=evale(g,x,y)}}
+    for(let s=0;s<steps;s++){
+        const un=[],vn=[];
+        for(let i=0;i<nx;i++){un[i]=[];vn[i]=[];for(let j=0;j<ny;j++){
+            const im=i==0?i:sub(i,1),ip=i==sub(nx,1)?i:add(i,1),jm=j==0?j:sub(j,1),jp=j==sub(ny,1)?j:add(j,1);
+            const lu=add(div(sub(sub(u[ip][j],mul(2,u[i][j])),u[im][j]),mul(hx,hx)),div(sub(sub(u[i][jp],mul(2,u[i][j])),u[i][jm]),mul(hy,hy)));
+            const lv=add(div(sub(sub(v[ip][j],mul(2,v[i][j])),v[im][j]),mul(hx,hx)),div(sub(sub(v[i][jp],mul(2,v[i][j])),v[i][jm]),mul(hy,hy)));
+            un[i][j]=add(u[i][j],mul(dt,add(mul(Du,lu),evale(F,u[i][j],v[i][j]))));
+            vn[i][j]=add(v[i][j],mul(dt,add(mul(Dv,lv),evale(G,u[i][j],v[i][j]))));
+        }}
+        u.splice(0,u.length,...un);v.splice(0,v.length,...vn);
+    }
+    return [u,v];
+}
+//https://en.wikipedia.org/wiki/Wilson%E2%80%93Cowan_model
+function wilsoncowan(E,I,tau,taup,r,rp,k,kp,c1,c2,c3,c4,P,Q,Se,Si){
+    const e=add(mul(-1,E),mul(sub(1,mul(r,E)),evale(Se,add(mul(k,c1,E),mul(-1,k,c2,I),mul(k,P)))));
+    const i=add(mul(-1,I),mul(sub(1,mul(rp,I)),evale(Si,add(mul(kp,c3,E),mul(-1,kp,c4,I),mul(kp,Q)))));
+    return [div(e,tau),div(i,taup)];
+}
+function wilsoncowanintegrator(E,I,tau,taup,r,rp,k,kp,c1,c2,c3,c4,P,Q,Se,Si,t0,t1,dt){
+    const n=ceil(div(sub(t1,t0),dt)),Eout=[E],Iout=[I];
+    let t=t0;
+    for(let j=0;j<n;j++){
+        const d=wilsoncowan(E,I,tau,taup,r,rp,k,kp,c1,c2,c3,c4,evale(P,t),evale(Q,t),Se,Si);
+        E=add(E,mul(dt,d[0]));I=add(I,mul(dt,d[1]));t=add(t,dt);Eout.push(E);Iout.push(I);
+    }
+    return [Eout,Iout];
+}
+//https://en.wikipedia.org/wiki/Chialvo_map FIX
+function chialvo(x,y,a,b,c,k){return [add(mul(sqr(x),exp(sub(y,x))),k),add(mul(a,y),mul(-1,b,x),c)]}
+function chialvointegrator(x,y,a,b,c,k,n){
+    const X=[x],Y=[y];
+    for(let i=0;i<n;i++){const q=chialvo(x,y,a,b,c,evale(k,i));x=q[0];y=q[1];X.push(x);Y.push(y)}
+    return [X,Y];
+}
+function chialvolattice(x,y,a,b,c,k,d,n){
+    const X=x.map(q=>q.slice()),Y=y.map(q=>q.slice()),nx=x.length,ny=x[0].length;
+    for(let s=0;s<n;s++){
+        const U=X.map(q=>q.slice()),V=Y.map(q=>q.slice());
+        for(let i=0;i<nx;i++)for(let j=0;j<ny;j++){
+            const im=i?sub(i,1):sub(nx,1),ip=i==sub(nx,1)?0:add(i,1),jm=j?sub(j,1):sub(ny,1),jp=j==sub(ny,1)?0:add(j,1);
+            const f=mul(sqr(U[i][j]),exp(sub(V[i][j],U[i][j])));
+            const fm=mul(sqr(U[im][j]),exp(sub(V[im][j],U[im][j])));
+            const fp=mul(sqr(U[ip][j]),exp(sub(V[ip][j],U[ip][j])));
+            const fy1=mul(sqr(U[i][jm]),exp(sub(V[i][jm],U[i][jm])));
+            const fy2=mul(sqr(U[i][jp]),exp(sub(V[i][jp],U[i][jp])));
+            X[i][j]=add(mul(sub(1,d),f),mul(div(d,4),add(fm,fp,fy1,fy2,k)));
+            V[i][j]=add(mul(a,V[i][j]),mul(-1,b,U[i][j]),c);
+        }
+        for(let i=0;i<nx;i++)for(let j=0;j<ny;j++){x[i][j]=X[i][j];y[i][j]=V[i][j]}
+    }
+    return [X,Y];
+}
+//https://en.wikipedia.org/wiki/Tophat_beam
+function tophat(x,y,R=1,I0=1,w=0){const r=sqrt(add(sqr(x),sqr(y)));return w==0?(mag(r)<=mag(R)?I0:0):mul(I0,div(sub(1,tanh(div(sub(r,R),w))),2))}
+
+//https://en.wikipedia.org/wiki/Bessel_beam
+function besselbeam(r,k=1,n=0){return besselj(n,mul(k,r))}
+function besselbeam2(x,y,k=1,n=0){return besselj(n,mul(k,sqrt(add(sqr(x),sqr(y)))))}
+function besselbeam3(x,y,z,kr,kz,n=0){return mul(besselj(n,mul(kr,sqrt(add(sqr(x),sqr(y))))),exp(mul(I,kz,z)))}
+function besselvortex(x,y,z,kr,kz,n=1){const r=sqrt(add(sqr(x),sqr(y))),th=atan2(y,x);return mul(besselj(n,mul(kr,r)),exp(mul(I,add(mul(kz,z),mul(n,th)))))}
+
+//https://en.wikipedia.org/wiki/Poisson's_equation
+function poisson(f,xmin,xmax,ymin,ymax,nx,ny,iterations){
+    const hx=div(sub(xmax,xmin),sub(nx,1)),hy=div(sub(ymax,ymin),sub(ny,1)),u=[];
+    for(let i=0;i<nx;i++){u[i]=[];for(let j=0;j<ny;j++)u[i][j]=0}
+    for(let s=0;s<iterations;s++){
+        const v=[];
+        for(let i=0;i<nx;i++){v[i]=[];for(let j=0;j<ny;j++){
+            if(i==0||j==0||i==sub(nx,1)||j==sub(ny,1)){v[i][j]=u[i][j];continue}
+            const x=add(xmin,mul(i,hx)),y=add(ymin,mul(j,hy)),q=evale(f,x,y);
+            v[i][j]=div(sub(add(div(add(u[i-1][j],u[i+1][j]),sqr(hx)),div(add(u[i][j-1],u[i][j+1]),sqr(hy))),q),add(div(2,sqr(hx)),div(2,sqr(hy))));
+        }}
+        u.splice(0,u.length,...v);
+    }
+    return u;
+}
+
+//https://en.wikipedia.org/wiki/Euler%E2%80%93Lagrange_equation
+function eulerlagrange(L,t,q,v,h=1e-6){
+    const lv=(tt,qq,vv)=>div(sub(evale(L,tt,qq,add(vv,h)),evale(L,tt,qq,sub(vv,h))),mul(2,h));
+    const lq=div(sub(evale(L,t,add(q,h),v),evale(L,t,sub(q,h),v)),mul(2,h));
+    const lvt=div(sub(lv(add(t,h),q,v),lv(sub(t,h),q,v)),mul(2,h));
+    const lvq=div(sub(lv(t,add(q,h),v),lv(t,sub(q,h),v)),mul(2,h));
+    const lvv=div(sub(lv(t,q,add(v,h)),lv(t,q,sub(v,h))),mul(2,h));
+    return div(sub(lq,lvt,mul(lvq,v)),lvv);
+}
+function eulerlagrangeintegrator(L,q,v,t0,t1,dt,h=1e-6){
+    const n=ceil(div(sub(t1,t0),dt));
+    let t=t0;
+    for(let i=0;i<n;i++){const a=eulerlagrange(L,t,q,v,h);q=add(q,mul(v,dt));v=add(v,mul(a,dt));t=add(t,dt)}
+    return [t,q,v];
+}
+//https://en.wikipedia.org/wiki/Chandrasekhar%E2%80%93Page_equations
+
+
+function chandrasekharpageradial(r,Rm,Rp,M,a,mu,lambda,sigma,m){
+    const D=sub(add(sqr(r),sqr(a)),mul(2,M,r)),K=add(mul(add(sqr(r),sqr(a)),sigma),mul(a,m)),s=sqrt(D);
+    const dm=add(mul(div(mul(-I,K),D),Rm),mul(div(add(lambda,mul(I,mu,r)),s),Rp));
+    const dp=add(mul(div(mul(I,K),D),Rp),mul(div(mul(-1,sub(r,M)),D),Rp),mul(div(sub(mul(-1,lambda),mul(I,mu,r)),s),Rm));
+    return [dm,dp];
+}
+
+function chandrasekharpagel(s,n,m,a,w,t){return n==.5?add(s,mul(m,csc(t)),mul(-1,a,w,sin(t)),mul(n,cot(t))):add(s,mul(-1,m,csc(t)),mul(a,w,sin(t)),mul(n,cot(t)))}
+function chandrasekharpageangular(t,Sp,Sm,a,w,mu,m,lambda){
+    const A=add(mul(m,csc(t)),mul(-1,a,w,sin(t))),c=cos(t);
+    return [sub(mul(-1,sub(lambda,mul(a,mu,c)),Sm),mul(add(A,mul(.5,cot(t))),Sp)),add(mul(add(lambda,mul(a,mu,c)),Sp),mul(sub(mul(-1,A),mul(-.5,cot(t))),Sm))];
+}
+function chandrasekharpagell(f,t,m,a,w,n=.5,h=1e-6){return add(div(sub(evale(f,add(t,h)),evale(f,sub(t,h))),mul(2,h)),mul(add(mul(m,csc(t)),mul(-1,a,w,sin(t)),mul(n,cot(t))),evale(f,t)))}
+function chandrasekharpagelld(f,t,m,a,w,n=.5,h=1e-6){return add(div(sub(evale(f,add(t,h)),evale(f,sub(t,h))),mul(2,h)),mul(add(mul(-1,m,csc(t)),mul(a,w,sin(t)),mul(n,cot(t))),evale(f,t)))}
+
+function chandrasekharpageintegrator(Sp,Sm,t0,t1,dt,a,w,mu,m,lambda){
+    const n=ceil(div(sub(t1,t0),dt));let t=t0;
+    for(let i=0;i<n;i++){
+        const k1=chandrasekharpageangular(t,Sp,Sm,a,w,mu,m,lambda);
+        const k2=chandrasekharpageangular(add(t,div(dt,2)),add(Sp,mul(div(dt,2),k1[0])),add(Sm,mul(div(dt,2),k1[1])),a,w,mu,m,lambda);
+        const k3=chandrasekharpageangular(add(t,div(dt,2)),add(Sp,mul(div(dt,2),k2[0])),add(Sm,mul(div(dt,2),k2[1])),a,w,mu,m,lambda);
+        const k4=chandrasekharpageangular(add(t,dt),add(Sp,mul(dt,k3[0])),add(Sm,mul(dt,k3[1])),a,w,mu,m,lambda);
+        Sp=add(Sp,mul(div(dt,6),add(k1[0],mul(2,k2[0]),mul(2,k3[0]),k4[0])));
+        Sm=add(Sm,mul(div(dt,6),add(k1[1],mul(2,k2[1]),mul(2,k3[1]),k4[1])));
+        t=add(t,dt);
+    }
+    return [t,Sp,Sm];
+}
+function chandrasekharpagelambda(j,m,P,a,w,mu,dt=1e-3,tol=1e-8){
+    if(re(a)==0&&im(a)==0&&re(w)==0&&im(w)==0&&re(mu)==0&&im(mu)==0)return mul(P,add(j,.5));
+    const g=mul(P,add(j,.5)),h=.001;
+    let l=sub(g,h),r=add(g,h),fl=chandrasekharpageresidual(l,j,m,P,a,w,mu,dt),fr=chandrasekharpageresidual(r,j,m,P,a,w,mu,dt);
+    for(let i=0;i<50;i++){
+        const d=sub(fr,fl);
+        if(mag(d)==0)break;
+        const x=sub(r,mul(fr,div(sub(r,l),d))),fx=chandrasekharpageresidual(x,j,m,P,a,w,mu,dt);
+        if(mag(fx)<tol)return x;
+        l=r;fl=fr;r=x;fr=fx;
+    }
+    return r;
+}
+//https://en.wikipedia.org/wiki/Novikov%E2%80%93Veselov_equation FIX maybe idk iiiiiiiissssssss
+function novikovveselovfouriertransform(a,inv){
+    const nx=a.length,ny=a[0].length,r=[];
+    for(let k=0;k<nx;k++){r[k]=[];for(let l=0;l<ny;l++){let s=complex(0,0);for(let x=0;x<nx;x++)for(let y=0;y<ny;y++){const p=mul(2,pi(1),add(div(mul(k,x),nx),div(mul(l,y),ny)));s=add(s,mul(a[x][y],exp(mul(I,mul(inv?p:mul(-1,p))))))}r[k][l]=inv?div(s,mul(nx,ny)):s}}
+    return r;
+}
+
+function novikovveselovfourierfrequency(k,n,len){
+    const j=k<=div(n,2)?k:sub(k,n);
+    return div(mul(2,pi(1),j),len);
+}
+
+function novikovveselovfourierderivative(a,xmin,xmax,ymin,ymax,z){
+    const nx=a.length,ny=a[0].length,lx=sub(xmax,xmin),ly=sub(ymax,ymin),h=novikovveselovfouriertransform(a,false),r=[];
+    for(let k=0;k<nx;k++){r[k]=[];for(let l=0;l<ny;l++){const kx=novikovveselovfourierfrequency(k,nx,lx),ky=novikovveselovfourierfrequency(l,ny,ly),d=z?div(add(mul(I,kx),mul(-1,ky)),2):div(add(mul(I,kx),ky),2);r[k][l]=mul(d,h[k][l])}}
+    return novikovveselovfouriertransform(r,true);
+}
+
+function novikovveselovfourierreconstructv(q,xmin,xmax,ymin,ymax){
+    const nx=q.length,ny=q[0].length,lx=sub(xmax,xmin),ly=sub(ymax,ymin),h=novikovveselovfouriertransform(q,false),v=[];
+    for(let k=0;k<nx;k++){v[k]=[];for(let l=0;l<ny;l++){const kx=novikovveselovfourierfrequency(k,nx,lx),ky=novikovveselovfourierfrequency(l,ny,ly),dz=div(add(mul(I,kx),ky),2),db=div(add(mul(I,kx),mul(-1,ky)),2);v[k][l]=mag(db)<1e-14?complex(0,0):div(mul(dz,h[k][l]),db)}}
+    return novikovveselovfouriertransform(v,true);
+}
+
+function novikovveselovfourierconjugate(a){
+    const r=[];
+    for(let x=0;x<a.length;x++){r[x]=[];for(let y=0;y<a[0].length;y++)r[x][y]=complex(re(a[x][y]),mul(-1,im(a[x][y])))}
+    return r;
+}
+
+function novikovveselovfourierfieldmultiply(a,b){
+    const r=[];
+    for(let x=0;x<a.length;x++){r[x]=[];for(let y=0;y<a[0].length;y++)r[x][y]=mul(a[x][y],b[x][y])}
+    return r;
+}
+
+function novikovveselovfourierfieldevaluate(f,xmin,xmax,ymin,ymax,nx,ny,t){
+    const hx=div(sub(xmax,xmin),nx),hy=div(sub(ymax,ymin),ny),r=[];
+    for(let x=0;x<nx;x++){r[x]=[];for(let y=0;y<ny;y++){const xx=add(xmin,mul(x,hx)),yy=add(ymin,mul(y,hy));r[x][y]=evale(f,xx,yy,t)}}
+    return r;
+}
+
+function novikovveselovfourieradd(a,b,s){
+    const r=[];
+    for(let x=0;x<a.length;x++){r[x]=[];for(let y=0;y<a[0].length;y++)r[x][y]=add(a[x][y],mul(s,b[x][y]))}
+    return r;
+}
+
+function novikovveselovfourierrhs(q,xmin,xmax,ymin,ymax){
+    const dzq=novikovveselovfourierderivative(q,xmin,xmax,ymin,ymax,true),dbq=novikovveselovfourierderivative(q,xmin,xmax,ymin,ymax,false),v=novikovveselovfourierreconstructv(q,xmin,xmax,ymin,ymax),vc=novikovveselovfourierconjugate(v),qv=novikovveselovfourierfieldmultiply(q,v),qvc=novikovveselovfourierfieldmultiply(q,vc),dz3=novikovveselovfourierderivative(novikovveselovfourierderivative(dzq,xmin,xmax,ymin,ymax,true),xmin,xmax,ymin,ymax,true),db3=novikovveselovfourierderivative(novikovveselovfourierderivative(dbq,xmin,xmax,ymin,ymax,false),xmin,xmax,ymin,ymax,false),dzqv=novikovveselovfourierderivative(qv,xmin,xmax,ymin,ymax,true),dbqvc=novikovveselovfourierderivative(qvc,xmin,xmax,ymin,ymax,false),r=[];
+    for(let x=0;x<q.length;x++){r[x]=[];for(let y=0;y<q[0].length;y++)r[x][y]=add(mul(-1,dz3[x][y]),mul(-1,db3[x][y]),mul(div(3,4),dzqv[x][y]),mul(div(3,4),dbqvc[x][y]))}
+    return r;
+}
+
+function novikovveselovfourierintegrator(f,xmin,xmax,ymin,ymax,nx,ny,t0,t1,dt){
+    let q=novikovveselovfourierfieldevaluate(f,xmin,xmax,ymin,ymax,nx,ny,t0),t=t0;
+    while(lt(t,t1)){
+        const h=lt(add(t,dt),t1)?dt:sub(t1,t),k1=novikovveselovfourierrhs(q,xmin,xmax,ymin,ymax),k2=novikovveselovfourierrhs(novikovveselovfourieradd(q,k1,div(h,2)),xmin,xmax,ymin,ymax),k3=novikovveselovfourierrhs(novikovveselovfourieradd(q,k2,div(h,2)),xmin,xmax,ymin,ymax),k4=novikovveselovfourierrhs(novikovveselovfourieradd(q,k3,h),xmin,xmax,ymin,ymax);
+        for(let x=0;x<nx;x++)for(let y=0;y<ny;y++)q[x][y]=add(q[x][y],mul(div(h,6),add(k1[x][y],mul(2,k2[x][y]),mul(2,k3[x][y]),k4[x][y])));
+        t=add(t,h);
+    }
+    return [t,q];
+}
+/*
+const vtest=(x,y,t)=>add(sqr(x),sqr(y));
+const wtest=(x,y,t)=>mul(-1.5,sqr(sub(x,mul(I,y))));
+
+console.log(novikovveselovxderivative(wtest,.7,.4,0,1e-5));
+console.log(novikovveselovyderivative(wtest,.7,.4,0,1e-5));
+console.log(novikovveselovzderivative(vtest,.7,.4,0,1e-5));
+console.log(novikovveselovzbarderivative(wtest,.7,.4,0,1e-5));
+console.log(novikovveselovconstraint(vtest,wtest,.7,.4,0,1e-5));
+*/
+//https://en.wikipedia.org/wiki/Stream_thrust_averaging
+function streamthrustaveraging(m,F,H,A,cp,R){
+    const a=sub(1,div(R,mul(2,cp))),b=mul(-1,div(F,m)),c=div(mul(H,R),cp),d=sub(sqr(b),mul(4,a,c)),u1=div(add(mul(-1,b),sqrt(d)),mul(2,a)),u2=div(sub(mul(-1,b),sqrt(d)),mul(2,a)),rho1=div(m,mul(u1,A)),rho2=div(m,mul(u2,A)),p1=sub(div(F,A),mul(rho1,sqr(u1))),p2=sub(div(F,A),mul(rho2,sqr(u2))),h1=div(mul(p1,cp),mul(rho1,R)),h2=div(mul(p2,cp),mul(rho2,R));return [[u1,rho1,p1,h1],[u2,rho2,p2,h2]]}
+
+//https://en.wikipedia.org/wiki/Barotropic_vorticity_equation
+function barotropicvorticityfouriertransform(a,inv){
+    const nx=a.length,ny=a[0].length,r=[];
+    for(let k=0;k<nx;k++){r[k]=[];for(let l=0;l<ny;l++){let s=complex(0,0);for(let x=0;x<nx;x++)for(let y=0;y<ny;y++){const p=mul(2,pi(1),add(div(mul(k,x),nx),div(mul(l,y),ny)));s=add(s,mul(a[x][y],exp(mul(I,inv?p:mul(-1,p)))))}r[k][l]=inv?div(s,mul(nx,ny)):s}}
+    return r;
+}
+function barotropicvorticityfrequency(k,n,len){
+    const j=k<=div(n,2)?k:sub(k,n);
+    return div(mul(2,pi(1),j),len);
+}
+function barotropicvorticityfourierderivative(a,xmin,xmax,ymin,ymax,z){
+    const nx=a.length,ny=a[0].length,lx=sub(xmax,xmin),ly=sub(ymax,ymin),h=barotropicvorticityfouriertransform(a,false),r=[];
+    for(let k=0;k<nx;k++){r[k]=[];for(let l=0;l<ny;l++){const kx=barotropicvorticityfrequency(k,nx,lx),ky=barotropicvorticityfrequency(l,ny,ly),d=z?mul(I,kx):mul(I,ky);r[k][l]=mul(d,h[k][l])}}
+    return barotropicvorticityfouriertransform(r,true);
+}
+function barotropicvorticityfourierstreamfunction(z,xmin,xmax,ymin,ymax){
+    const nx=z.length,ny=z[0].length,lx=sub(xmax,xmin),ly=sub(ymax,ymin),h=barotropicvorticityfouriertransform(z,false),p=[];
+    for(let k=0;k<nx;k++){p[k]=[];for(let l=0;l<ny;l++){const kx=barotropicvorticityfrequency(k,nx,lx),ky=barotropicvorticityfrequency(l,ny,ly),d=add(sqr(kx),sqr(ky));p[k][l]=mag(d)<1e-14?complex(0,0):mul(-1,div(h[k][l],d))}}
+    return barotropicvorticityfouriertransform(p,true);
+}
+function barotropicvorticityfourieradd(a,b,s){
+    const r=[];
+    for(let x=0;x<a.length;x++){r[x]=[];for(let y=0;y<a[0].length;y++)r[x][y]=add(a[x][y],mul(s,b[x][y]))}
+    return r;
+}
+function barotropicvorticityfourierrhs(z,xmin,xmax,ymin,ymax,beta){
+    const p=barotropicvorticityfourierstreamfunction(z,xmin,xmax,ymin,ymax),px=barotropicvorticityfourierderivative(p,xmin,xmax,ymin,ymax,true),py=barotropicvorticityfourierderivative(p,xmin,xmax,ymin,ymax,false),zx=barotropicvorticityfourierderivative(z,xmin,xmax,ymin,ymax,true),zy=barotropicvorticityfourierderivative(z,xmin,xmax,ymin,ymax,false),r=[];
+    for(let x=0;x<z.length;x++){r[x]=[];for(let y=0;y<z[0].length;y++)r[x][y]=add(mul(py[x][y],zx[x][y]),mul(-1,px[x][y],zy[x][y]),mul(-1,beta,px[x][y]))}
+    return r;
+}
+function barotropicvorticityfourierintegrator(z,xmin,xmax,ymin,ymax,nx,ny,beta,t0,t1,dt){
+    const hx=div(sub(xmax,xmin),nx),hy=div(sub(ymax,ymin),ny),u=[];let t=t0;
+    for(let x=0;x<nx;x++){u[x]=[];for(let y=0;y<ny;y++){const xx=add(xmin,mul(x,hx)),yy=add(ymin,mul(y,hy));u[x][y]=evale(z,xx,yy,t)}}
+    while(lt(t,t1)){
+        const h=lt(add(t,dt),t1)?dt:sub(t1,t),k1=barotropicvorticityfourierrhs(u,xmin,xmax,ymin,ymax,beta),k2=barotropicvorticityfourierrhs(barotropicvorticityfourieradd(u,k1,div(h,2)),xmin,xmax,ymin,ymax,beta),k3=barotropicvorticityfourierrhs(barotropicvorticityfourieradd(u,k2,div(h,2)),xmin,xmax,ymin,ymax,beta),k4=barotropicvorticityfourierrhs(barotropicvorticityfourieradd(u,k3,h),xmin,xmax,ymin,ymax,beta);
+        for(let x=0;x<nx;x++)for(let y=0;y<ny;y++)u[x][y]=add(u[x][y],mul(div(h,6),add(k1[x][y],mul(2,k2[x][y]),mul(2,k3[x][y]),k4[x][y])));
+        t=add(t,h);
+    }
+    return [t,u];
+}
+
+//https://en.wikipedia.org/wiki/Batchelor%E2%80%93Chandrasekhar_equation
+function batchelorchandrasekhardr(f,r,mu,t,h){return div(sub(div(sub(evale(f,add(r,h),mu,t),evale(f,sub(r,h),mu,t)),mul(2,h)),mul(mu,div(sub(evale(f,r,add(mu,h),t),evale(f,r,sub(mu,h),t)),mul(2,h)),r)),r)}
+function batchelorchandrasekhardmu(f,r,mu,t,h){return div(sub(evale(f,r,add(mu,h),t),evale(f,r,sub(mu,h),t)),mul(2,h),r)}
+function batchelorchandrasekhardmumu(f,r,mu,t,h){return div(sub(evale(f,r,add(mu,h),t),mul(2,evale(f,r,mu,t)),evale(f,r,sub(mu,h),t)),mul(sqr(h),sqr(r)))}
+function batchelorchandrasekharlaplace(f,r,mu,t,h){return add(div(sub(evale(f,add(r,h),mu,t),mul(2,evale(f,r,mu,t)),evale(f,sub(r,h),mu,t)),sqr(h)),mul(4,div(batchelorchandrasekhardr(f,r,mu,t,h),r)),mul(div(sub(1,sqr(mu)),sqr(r)),batchelorchandrasekhardmumu(f,r,mu,t,h)),mul(-4,div(mu,sqr(r)),sub(div(evale(f,r,add(mu,h),t),mul(2,h)),div(evale(f,r,sub(mu,h),t),mul(2,h)))))}
+function batchelorchandrasekhardr2(f,r,mu,t,h){return div(sub(evale(f,add(r,h),mu,t),mul(2,evale(f,r,mu,t)),evale(f,sub(r,h),mu,t)),sqr(h))}
+function batchelorchandrasekharq1(f,n,r,mu,t){return mul(f(n,r,t),gegenbauerpoly(mul(2,n),div(3,2),mu))}
+function batchelorchandrasekharq2(f,n,r,mu,t){return mul(f(n,r,t),gegenbauerpoly(mul(2,n),div(3,2),mu))}
+function batchelorchandrasekharq1sum(f,nmax,r,mu,t){let s=0;for(let n=0;n<=nmax;n++)s=add(s,batchelorchandrasekharq1(f,n,r,mu,t));return s}
+function batchelorchandrasekharq2sum(f,nmax,r,mu,t){let s=0;for(let n=0;n<=nmax;n++)s=add(s,batchelorchandrasekharq2(f,n,r,mu,t));return s}
+function batchelorchandrasekharlambda1(q,nmax,r0,r1,t,h){let s=0;for(let r=r0;lt(r,r1);r=add(r,h))s=add(s,mul(-1,evale(q,r,t)));return s}
+function batchelorchandrasekharlambda2(q,nmax,r0,r1,t,h){let s=0;for(let r=r0;lt(r,r1);r=add(r,h))s=add(s,mul(-1,evale(q,r,t)));return s}
+function batchelorchandrasekharab(q1,q2,r,mu,t,h){return [add(sub(batchelorchandrasekhardr(q1,r,mu,t,h),batchelorchandrasekhardmumu(q1,r,mu,t,h)),batchelorchandrasekhardr(q2,r,mu,t,h)),sub(mul(-1,add(add(add(mul(sqr(r),batchelorchandrasekhardr(q1,r,mu,t,h)),mul(r,mu,batchelorchandrasekhardmu(q1,r,mu,t,h))),2),mul(-1,sqr(r),sub(1,sqr(mu)),batchelorchandrasekhardmumu(q1,r,mu,t,h)),mul(-1,r,mu,batchelorchandrasekhardmu(q1,r,mu,t,h)))),add(mul(sqr(r),sub(1,sqr(mu)),batchelorchandrasekhardr(q2,r,mu,t,h)),1))]}
+function batchelorchandrasekharcd(q1,q2,r,mu,t,h){return [add(mul(-1,sqr(r),batchelorchandrasekhardmumu(q1,r,mu,t,h)),mul(add(mul(sqr(r),batchelorchandrasekhardr(q2,r,mu,t,h)),1))),sub(mul(add(mul(r,mu,batchelorchandrasekhardmu(q1,r,mu,t,h)),1),batchelorchandrasekhardmu(q1,r,mu,t,h)),mul(r,mu,batchelorchandrasekhardr(q2,r,mu,t,h)))]}
+function batchelorchandrasekhars1(q1,q2,r,mu,t){return 0}
+function batchelorchandrasekhars2(q1,q2,r,mu,t){return 0}
+function batchelorchandrasekharrhs(q1,q2,r,mu,t,nu,h){const s1=batchelorchandrasekhars1(q1,q2,r,mu,t),s2=batchelorchandrasekhars2(q1,q2,r,mu,t),l1=batchelorchandrasekharlaplace(q1,r,mu,t,h),l2=batchelorchandrasekharlaplace(q2,r,mu,t,h),mm=batchelorchandrasekhardmumu(q1,r,mu,t,h);return [add(mul(2,nu,l1),s1),add(mul(2,nu,add(l2,mul(2,mm))),s2)]}
+
+//https://en.wikipedia.org/wiki/Benedict%E2%80%93Webb%E2%80%93Rubin_equation
+function bwr(rho,R,T,B0,A0,C0,b,a,alpha,c,gamma){return add(add(add(add(mul(rho,R,T),mul(sub(sub(mul(B0,R,T),A0),div(C0,sqr(T))),sqr(rho))),mul(sub(mul(b,R,T),a),pow(rho,3))),mul(alpha,a,pow(rho,6))),mul(div(mul(c,pow(rho,3)),sqr(T)),add(1,mul(gamma,sqr(rho))),exp(mul(-1,gamma,sqr(rho)))));}
+function bwrs(rho,R,T,B0,A0,C0,D0,E0,b,a,d,alpha,c,gamma){ return add(add(add(add(mul(rho,R,T),mul(add(sub(add(sub(mul(B0,R,T),A0),div(C0,sqr(T))),div(D0,pow(T,3))),div(E0,pow(T,4))),sqr(rho))),mul(sub(sub(mul(b,R,T),a),div(d,T)),pow(rho,3))),mul(alpha,add(a,div(d,T)),pow(rho,6))),mul(div(mul(c,pow(rho,3)),sqr(T)),mul(add(1,mul(gamma,sqr(rho))),exp(mul(-1,gamma,sqr(rho))))));}
+function bwrsmixa0(x,a0,k){let s=0;for(let i=0;i<x.length;i++)for(let j=0;j<x.length;j++)s=add(s,mul(mul(mul(x[i],x[j]),sqrt(mul(a0[i],a0[j]))),sub(1,k[i][j])));return s}
+function bwrsmixb0(x,b0){let s=0;for(let i=0;i<x.length;i++)s=add(s,mul(x[i],b0[i]));return s}
+function bwrsmixc0(x,c0,k){let s=0;for(let i=0;i<x.length;i++)for(let j=0;j<x.length;j++)s=add(s,mul(mul(mul(x[i],x[j]),sqrt(mul(c0[i],c0[j]))),pow(sub(1,k[i][j]),3)));return s}
+function bwrsmixd0(x,d0,k){let s=0;for(let i=0;i<x.length;i++)for(let j=0;j<x.length;j++)s=add(s,mul(mul(mul(x[i],x[j]),sqrt(mul(d0[i],d0[j]))),pow(sub(1,k[i][j]),4)));return s}
+function bwrsmixe0(x,e0,k){let s=0;for(let i=0;i<x.length;i++)for(let j=0;j<x.length;j++)s=add(s,mul(mul(mul(x[i],x[j]),sqrt(mul(e0[i],e0[j]))),pow(sub(1,k[i][j]),5)));return s}
+function bwrsmixalpha(x,a){let s=0;for(let i=0;i<x.length;i++)s=add(s,mul(x[i],pow(a[i],div(1,3))));return pow(s,3)}
+function bwrsmixgamma(x,gamma){let s=0;for(let i=0;i<x.length;i++)s=add(s,mul(x[i],sqrt(gamma[i])));return sqr(s)}
+function bwrsmixa(x,a){let s=0;for(let i=0;i<x.length;i++)s=add(s,mul(x[i],pow(a[i],div(1,3))));return pow(s,3)}
+function bwrsmixb(x,b){let s=0;for(let i=0;i<x.length;i++)s=add(s,mul(x[i],pow(b[i],div(1,3))));return pow(s,3)}
+function bwrsmixc(x,c){let s=0;for(let i=0;i<x.length;i++)s=add(s,mul(x[i],pow(c[i],div(1,3))));return pow(s,3)}
+function bwrsmixd(x,d){let s=0;for(let i=0;i<x.length;i++)s=add(s,mul(x[i],pow(d[i],div(1,3))));return pow(s,3)}
+//https://en.wikipedia.org/wiki/Borda%E2%80%93Carnot_equation
+function bordacarnotenergy(v1,v2,rho,xi=1){if(re(v1)<=re(v2))return 0;return mul(xi,div(rho,2),sqr(sub(v1,v2)))}
+function bordacarnottotalhead(v1,v2,g=9.81,xi=1){return div(mul(xi,sqr(sub(v1,v2))),mul(2,g))}
+function bordacarnotpressure(p1,v1,v2,rho,xi=1){return sub(p1,bordacarnotenergy(v1,v2,rho,xi))}
+function bordacarnotexpansionvelocity(v1,a1,a2){return mul(div(a1,a2),v1)}
+function bordacarnotexpansionenergy(v1,a1,a2,rho,xi=1){return mul(xi,div(rho,2),sqr(mul(sub(1,div(a1,a2)),v1)))}
+function bordacarnotcontractioncoefficient(a1,a2){return add(.63,mul(.37,pow(div(a2,a1),3)))}
+function bordacarnotcontractionenergy(v1,a1,a2,rho,mu){const v2=mul(div(a1,a2),v1),v3=div(v2,mu);return div(mul(rho,sqr(sub(v3,v2))),2)}
+function bordacarnotdifferential(E,t,xi,rho,v1,v2){
+    const de=mul(xi,div(rho,2),sqr(sub(evale(v1,t),evale(v2,t))));
+    return de;
+}
+
+function bordacarnotintegrator(E0,t0,t1,dt,xi,rho,v1,v2){
+    let t=t0;
+    let E=E0;
+    const n=ceil(div(sub(t1,t0),dt));
+    for(let k=0;k<n;k++){
+        const k1=bordacarnotdifferential(E,t,xi,rho,v1,v2);
+        const k2=bordacarnotdifferential(add(E,mul(div(dt,2),k1)),add(t,div(dt,2)),xi,rho,v1,v2);
+        const k3=bordacarnotdifferential(add(E,mul(div(dt,2),k2)),add(t,div(dt,2)),xi,rho,v1,v2);
+        const k4=bordacarnotdifferential(add(E,mul(dt,k3)),add(t,dt),xi,rho,v1,v2);
+        E=add(E,mul(div(dt,6),add(k1,mul(2,k2),mul(2,k3),k4)));
+        t=add(t,dt);
+    }
+    return [t,E];
+}
+
+function suddenpipeextensiondifferential(E,t,rho,A1,A2,v1){
+    const v=evale(v1,t);
+    const de=mul(div(rho,2),sqr(sub(1,div(A1,A2))),sqr(v));
+    return de;
+}
+
+function suddenpipeextensionintegrator(E0,t0,t1,dt,rho,A1,A2,v1){
+    let t=t0;
+    let E=E0;
+    const n=ceil(div(sub(t1,t0),dt));
+    for(let k=0;k<n;k++){
+        const k1=suddenpipeextensiondifferential(E,t,rho,A1,A2,v1);
+        const k2=suddenpipeextensiondifferential(add(E,mul(div(dt,2),k1)),add(t,div(dt,2)),rho,A1,A2,v1);
+        const k3=suddenpipeextensiondifferential(add(E,mul(div(dt,2),k2)),add(t,div(dt,2)),rho,A1,A2,v1);
+        const k4=suddenpipeextensiondifferential(add(E,mul(dt,k3)),add(t,dt),rho,A1,A2,v1);
+        E=add(E,mul(div(dt,6),add(k1,mul(2,k2),mul(2,k3),k4)));
+        t=add(t,dt);
+    }
+    return [t,E];
+}
+
+function suddenpipecontractiondifferential(E,t,rho,mu,A1,A2,v1){
+    const v=evale(v1,t);
+    const de=mul(div(rho,2),sqr(sub(div(1,mu),1)),sqr(mul(div(A1,A2),v)));
+    return de;
+}
+
+function suddenpipecontractionintegrator(E0,t0,t1,dt,rho,mu,A1,A2,v1){
+    let t=t0;
+    let E=E0;
+    const n=ceil(div(sub(t1,t0),dt));
+    for(let k=0;k<n;k++){
+        const k1=suddenpipecontractiondifferential(E,t,rho,mu,A1,A2,v1);
+        const k2=suddenpipecontractiondifferential(add(E,mul(div(dt,2),k1)),add(t,div(dt,2)),rho,mu,A1,A2,v1);
+        const k3=suddenpipecontractiondifferential(add(E,mul(div(dt,2),k2)),add(t,div(dt,2)),rho,mu,A1,A2,v1);
+        const k4=suddenpipecontractiondifferential(add(E,mul(dt,k3)),add(t,dt),rho,mu,A1,A2,v1);
+        E=add(E,mul(div(dt,6),add(k1,mul(2,k2),mul(2,k3),k4)));
+        t=add(t,dt);
+    }
+    return [t,E];
+}
+//https://en.wikipedia.org/wiki/Bosanquet_equation
+function bosanquetdifferential(x,v,r,rho,eta,gamma,theta){
+    const dx=v;
+    const dv=sub(div(mul(2,gamma,cos(theta)),mul(rho,r,x)),div(sqr(v),x),div(mul(8,eta,v),mul(rho,sqr(r))));
+    return [dx,dv];
+}
+
+function bosanquetintegrator(x0,v0,t0,t1,dt,r,rho,eta,gamma,theta){
+    let x=x0;
+    let v=v0;
+    let t=t0;
+    const n=ceil(div(sub(t1,t0),dt));
+    for(let k=0;k<n;k++){
+        const k1=bosanquetdifferential(x,v,r,rho,eta,gamma,theta);
+        const k2=bosanquetdifferential(add(x,mul(div(dt,2),k1[0])),add(v,mul(div(dt,2),k1[1])),r,rho,eta,gamma,theta);
+        const k3=bosanquetdifferential(add(x,mul(div(dt,2),k2[0])),add(v,mul(div(dt,2),k2[1])),r,rho,eta,gamma,theta);
+        const k4=bosanquetdifferential(add(x,mul(dt,k3[0])),add(v,mul(dt,k3[1])),r,rho,eta,gamma,theta);
+        x=add(x,mul(div(dt,6),add(k1[0],mul(2,k2[0]),mul(2,k3[0]),k4[0])));
+        v=add(v,mul(div(dt,6),add(k1[1],mul(2,k2[1]),mul(2,k3[1]),k4[1])));
+        t=add(t,dt);
+    }
+    return [t,x,v];
+}
+
+//https://en.wikipedia.org/wiki/Washburn's_equation
+function washburndifferential(l,t,pa,g,rho,h,r,gamma,phi,psi,eta,epsilon){
+    const p=add(pa,mul(g,rho,sub(h,mul(l,sin(psi)))),mul(div(2,gamma,r),cos(phi)));
+    const dl=div(mul(p,add(sqr(r),mul(4,epsilon,r))),mul(8,eta,l));
+    return dl;
+}
+
+function washburnintegrator(l0,t0,t1,dt,pa,g,rho,h,r,gamma,phi,psi,eta,epsilon){
+    let l=l0;
+    let t=t0;
+    const n=ceil(div(sub(t1,t0),dt));
+    for(let k=0;k<n;k++){
+        const k1=washburndifferential(l,t,pa,g,rho,h,r,gamma,phi,psi,eta,epsilon);
+        const k2=washburndifferential(add(l,mul(div(dt,2),k1)),add(t,div(dt,2)),pa,g,rho,h,r,gamma,phi,psi,eta,epsilon);
+        const k3=washburndifferential(add(l,mul(div(dt,2),k2)),add(t,div(dt,2)),pa,g,rho,h,r,gamma,phi,psi,eta,epsilon);
+        const k4=washburndifferential(add(l,mul(dt,k3)),add(t,dt),pa,g,rho,h,r,gamma,phi,psi,eta,epsilon);
+        l=add(l,mul(div(dt,6),add(k1,mul(2,k2),mul(2,k3),k4)));
+        t=add(t,dt);
+    }
+    return [t,l];
+}
+
+function simplifiedwashburndifferential(l,t,r,gamma,phi,eta){
+    const dl=div(mul(gamma,r,cos(phi)),mul(4,eta,l));
+    return dl;
+}
+
+function simplifiedwashburnintegrator(l0,t0,t1,dt,r,gamma,phi,eta){
+    let l=l0;
+    let t=t0;
+    const n=ceil(div(sub(t1,t0),dt));
+    for(let k=0;k<n;k++){
+        const k1=simplifiedwashburndifferential(l,t,r,gamma,phi,eta);
+        const k2=simplifiedwashburndifferential(add(l,mul(div(dt,2),k1)),add(t,div(dt,2)),r,gamma,phi,eta);
+        const k3=simplifiedwashburndifferential(add(l,mul(div(dt,2),k2)),add(t,div(dt,2)),r,gamma,phi,eta);
+        const k4=simplifiedwashburndifferential(add(l,mul(dt,k3)),add(t,dt),r,gamma,phi,eta);
+        l=add(l,mul(div(dt,6),add(k1,mul(2,k2),mul(2,k3),k4)));
+        t=add(t,dt);
+    }
+    return [t,l];
+}
+
+//https://en.wikipedia.org/wiki/Buckmaster_equation
+function buckmasterdifferential(u,i,dx,lambda){
+    const um=u[i-1];
+    const u0=u[i];
+    const up=u[i+1];
+    const ux4=sub(add(pow(up,4),pow(um,4)),mul(2,pow(u0,4)));
+    const ux3=sub(pow(up,3),pow(um,3));
+    return add(div(ux4,sqr(dx)),mul(lambda,div(ux3,mul(2,dx))));
+}
+
+function buckmasterintegrator(f,xmin,xmax,n,t0,t1,dt,lambda){
+    const dx=div(sub(xmax,xmin),sub(n,1));
+    let u=[];
+    for(let i=0;i<n;i++){
+        const x=add(xmin,mul(i,dx));
+        u[i]=evale(f,x,t0);
+    }
+
+    let t=t0;
+    const steps=ceil(div(sub(t1,t0),dt));
+
+    for(let s=0;s<steps;s++){
+        const k1=[];
+        const k2=[];
+        const k3=[];
+        const k4=[];
+
+        for(let i=1;i<sub(n,1);i++)k1[i]=buckmasterdifferential(u,i,dx,lambda);
+
+        const u2=u.slice();
+        for(let i=1;i<sub(n,1);i++)u2[i]=add(u[i],mul(div(dt,2),k1[i]));
+        for(let i=1;i<sub(n,1);i++)k2[i]=buckmasterdifferential(u2,i,dx,lambda);
+
+        const u3=u.slice();
+        for(let i=1;i<sub(n,1);i++)u3[i]=add(u[i],mul(div(dt,2),k2[i]));
+        for(let i=1;i<sub(n,1);i++)k3[i]=buckmasterdifferential(u3,i,dx,lambda);
+
+        const u4=u.slice();
+        for(let i=1;i<sub(n,1);i++)u4[i]=add(u[i],mul(dt,k3[i]));
+        for(let i=1;i<sub(n,1);i++)k4[i]=buckmasterdifferential(u4,i,dx,lambda);
+
+        for(let i=1;i<sub(n,1);i++){
+            u[i]=add(u[i],mul(div(dt,6),add(k1[i],mul(2,k2[i]),mul(2,k3[i]),k4[i])));
+        }
+
+        t=add(t,dt);
+    }
+
+    return [t,u];
+}
+
+//https://en.wikipedia.org/wiki/Chaplygin%27s_equation
+function chaplygindifferential(phi,q,v,dv,c){
+    const n=phi.length;
+    const dp=new Array(n);
+    const dq=new Array(n);
+    for(let j=1;j<sub(n,1);j++){
+        const vm=add(v,mul(sub(j,1),dv));
+        const vp=add(v,mul(add(j,1),dv));
+        const vv=add(v,mul(j,dv));
+        const phiv=div(sub(phi[j+1],phi[j-1]),mul(2,dv));
+        const phivv=div(sub(add(phi[j+1],phi[j-1]),mul(2,phi[j])),sqr(dv));
+        const cv=evale(c,vv);
+        const a=div(sqr(vv),sub(1,div(sqr(vv),sqr(cv))));
+        dp[j]=q[j];
+        dq[j]=sub(mul(-1,a,phivv),mul(vv,phiv));
+    }
+    dp[0]=q[0];
+    dp[sub(n,1)]=q[sub(n,1)];
+    dq[0]=dq[1];
+    dq[sub(n,1)]=dq[sub(n,2)];
+    return [dp,dq];
+}
+
+function chaplyginintegrator(f,qf,vmin,vmax,n,th0,th1,dth,c){
+    const dv=div(sub(vmax,vmin),sub(n,1));
+    let phi=[];
+    let q=[];
+    for(let j=0;j<n;j++){
+        const v=add(vmin,mul(j,dv));
+        phi[j]=evale(f,v);
+        q[j]=evale(qf,v);
+    }
+    let th=th0;
+    const steps=ceil(div(sub(th1,th0),dth));
+    for(let s=0;s<steps;s++){
+        const k1=chaplygindifferential(phi,q,vmin,dv,c);
+        const p2=phi.slice();
+        const q2=q.slice();
+        for(let j=0;j<n;j++){
+            p2[j]=add(phi[j],mul(div(dth,2),k1[0][j]));
+            q2[j]=add(q[j],mul(div(dth,2),k1[1][j]));
+        }
+        const k2=chaplygindifferential(p2,q2,vmin,dv,c);
+        const p3=phi.slice();
+        const q3=q.slice();
+        for(let j=0;j<n;j++){
+            p3[j]=add(phi[j],mul(div(dth,2),k2[0][j]));
+            q3[j]=add(q[j],mul(div(dth,2),k2[1][j]));
+        }
+        const k3=chaplygindifferential(p3,q3,vmin,dv,c);
+        const p4=phi.slice();
+        const q4=q.slice();
+        for(let j=0;j<n;j++){
+            p4[j]=add(phi[j],mul(dth,k3[0][j]));
+            q4[j]=add(q[j],mul(dth,k3[1][j]));
+        }
+        const k4=chaplygindifferential(p4,q4,vmin,dv,c);
+        for(let j=0;j<n;j++){
+            phi[j]=add(phi[j],mul(div(dth,6),add(k1[0][j],mul(2,k2[0][j]),mul(2,k3[0][j]),k4[0][j])));
+            q[j]=add(q[j],mul(div(dth,6),add(k1[1][j],mul(2,k2[1][j]),mul(2,k3[1][j]),k4[1][j])));
+        }
+        th=add(th,dth);
+    }
+    return [th,phi,q];
+}
+
+//https://en.wikipedia.org/wiki/Clavin%E2%80%93Garcia_equation
+function clavingarciadispersion(k,r,Mt,Ra,Pr,L,J,H){
+    const a=add(div(add(r,1),r),mul(div(sub(r,1),r),k,sub(Mt,mul(div(r,sub(r,1)),J))));
+    const b=add(mul(2,k),mul(2,r,sqr(k),sub(Mt,J)));
+    const c=add(mul(-1,div(sub(r,1),r),Ra,k),mul((-1),sub(r,1),sqr(k),sub(1,mul(div(Ra,r),sub(Mt,mul(div(r,sub(r,1)),J))))),mul(sub(r,1),pow(k,3),add(L,mul(div(sub(mul(3,r),1),sub(r,1)),Mt),mul(-1,div(mul(2,r),sub(r,1)),J),mul(sub(mul(2,Pr),1),H))));
+    const d=sub(sqr(b),mul(4,a,c));
+    const s1=div(add(mul(-1,b),sqrt(d)),mul(2,a));
+    const s2=div(sub(mul(-1,b),sqrt(d)),mul(2,a));
+    return [s1,s2,a,b,c];
+}
+
+function clavingarciaj(lambda,r){
+    return integrator(x=>div(evale(lambda,x),x),1,r);
+}
+
+function clavingarciah(lambda,r,L){
+    return div(integrator(x=>sub(L,evale(lambda,x)),1,r),sub(r,1));
+}
+
+function clavingarciamlambda(k,r,Mt,Ra,Pr,lambda){
+    const L=evale(lambda,r);
+    const J=clavingarciaj(lambda,r);
+    const H=clavingarciah(lambda,r,L);
+    return clavingarciadispersion(k,r,Mt,Ra,Pr,L,J,H);
+}
+function clavingarciapowerlaw(k,r,Mt,Ra,Pr,m){
+    const L=pow(r,m);
+    const J=div(sub(L,1),m);
+    const H=sub(L,div(sub(pow(r,add(1,m)),1),mul(add(1,m),sub(r,1))));
+    return clavingarciadispersion(k,r,Mt,Ra,Pr,L,J,H);
+}
+function clavingarciaconstant(k,r,Mt,Ra,Pr){
+    const L=1;
+    const J=ln(r);
+    const H=0;
+    return clavingarciadispersion(k,r,Mt,Ra,Pr,L,J,H);
+}
+//https://en.wikipedia.org/wiki/Markstein_number#Clavin%E2%80%93Williams_formula
+function clavinwilliamsj(lambda,r){
+    const f=theta=>div(evale(lambda,theta),theta);
+    return integrator(f,1,r);
+}
+
+function clavinwilliamsi(lambda,r){
+    const f=theta=>mul(div(evale(lambda,theta),theta),ln(div(sub(r,1),sub(theta,1))));
+    return integrator(f,1,r);
+}
+
+function clavinwilliamsmarkstein(lambda,r,beta,leeff){
+    const j=clavinwilliamsj(lambda,r);
+    const i=clavinwilliamsi(lambda,r);
+    const m1=mul(div(r,sub(r,1)),j);
+    const m2=mul(div(mul(beta,sub(leeff,1)),mul(2,sub(r,1))),i);
+    return add(m1,m2);
+}
+
+function clavinwilliamsintegrator(lambda,r,beta,leeff){
+    const j=clavinwilliamsj(lambda,r);
+    const i=clavinwilliamsi(lambda,r);
+    const m=add(mul(div(r,sub(r,1)),j),mul(div(mul(beta,sub(leeff,1)),mul(2,sub(r,1))),i));
+    return [m,j,i];
+}
+
+//https://en.wikipedia.org/wiki/Hadamard%E2%80%93Rybczynski_equation
+function hadamardrybczynski(R,g,rhob,rho0,mub,mu0){
+    const Wb=mul(div(2,3),div(mul(sqr(R),g,sub(rhob,rho0)),mu0),div(add(mu0,mub),add(mul(2,mu0),mul(3,mub))));
+    return Wb;
+}
+//https://en.wikipedia.org/wiki/Hadamard%E2%80%93Rybczynski_equation
+function hazenwilliamsvelocity(C,R,S){
+    const v=mul(C,sqrt(mul(R,S)));
+    return v;
+}
+
+function hazenwilliamsdischarge(C,R,S,A){
+    const v=hazenwilliamsvelocity(C,R,S);
+    const Q=mul(A,v);
+    return Q;
+}
+
+function hazenwilliamsheadloss(C,Q,L,D){
+    const hf=mul(4.52,L,div(pow(Q,1.85),mul(pow(C,1.85),pow(D,4.87))));
+    return hf;
+}
+
+function hazenwilliamsgradient(C,Q,D){
+    const j=mul(4.52,div(pow(Q,1.85),mul(pow(C,1.85),pow(D,4.87))));
+    return j;
+}
+
+function hazenwilliamsroughnessvelocity(C,R,S){
+    return hazenwilliamsvelocity(C,R,S);
+}
+
+function hazenwilliamsasC(V,R,S){
+    const C=div(V,sqrt(mul(R,S)));
+    return C;
+}
+function hazenwilliamsasbestoscementvelocity(R,S){
+    return hazenwilliamsvelocity(140,R,S);
+}
+
+function hazenwilliamscastironnewvelocity(R,S){
+    return hazenwilliamsvelocity(130,R,S);
+}
+
+function hazenwilliamscastiron10yearsvelocity(R,S){
+    return hazenwilliamsvelocity(113,R,S);
+}
+
+function hazenwilliamscastiron20yearsvelocity(R,S){
+    return hazenwilliamsvelocity(100,R,S);
+}
+
+function hazenwilliamscementmortarlinedductileironvelocity(R,S){
+    return hazenwilliamsvelocity(140,R,S);
+}
+
+function hazenwilliamsconcretevelocity(R,S){
+    return hazenwilliamsvelocity(120,R,S);
+}
+
+function hazenwilliamscoppervelocity(R,S){
+    return hazenwilliamsvelocity(140,R,S);
+}
+
+function hazenwilliamssteelvelocity(R,S){
+    return hazenwilliamsvelocity(120,R,S);
+}
+
+function hazenwilliamsgalvanizedironvelocity(R,S){
+    return hazenwilliamsvelocity(120,R,S);
+}
+
+function hazenwilliampolyethylenevelocity(R,S){
+    return hazenwilliamsvelocity(140,R,S);
+}
+
+function hazenwilliampolyvinylchloridevelocity(R,S){
+    return hazenwilliamsvelocity(150,R,S);
+}
+
+function hazenwilliamsfibregreinforcedplasticvelocity(R,S){
+    return hazenwilliamsvelocity(150,R,S);
+}
+function hazenwilliamsgenericvelocity(C,R,S){
+    return hazenwilliamsvelocity(C,R,S);
+}
+
+function hazenwilliamsgenericdischarge(C,R,S,A){
+    return hazenwilliamsdischarge(C,R,S,A);
+}
+
+function hazenwilliamsgenericheadloss(C,Q,L,D){
+    return hazenwilliamsheadloss(C,Q,L,D);
+}
+
+function hazenwilliamscircularvelocity(C,D,S){
+    const R=div(D,4);
+    return hazenwilliamsvelocity(C,R,S);
+}
+
+//https://en.wikipedia.org/wiki/Minor_losses_in_pipe_flow
+function minorlossfrictiondifferential(h,x,v,g,Rh,f){
+    const dh=div(mul(f,sqr(v)),mul(g,Rh));
+    return dh;
+}
+
+function minorlossfrictionintegrator(h0,x0,x1,dx,v,g,Rh,f){
+    let h=h0;
+    let x=x0;
+    const n=ceil(div(sub(x1,x0),dx));
+    for(let k=0;k<n;k++){
+        const k1=minorlossfrictiondifferential(h,x,v,g,Rh,f);
+        const k2=minorlossfrictiondifferential(add(h,mul(div(dx,2),k1)),add(x,div(dx,2)),v,g,Rh,f);
+        const k3=minorlossfrictiondifferential(add(h,mul(div(dx,2),k2)),add(x,div(dx,2)),v,g,Rh,f);
+        const k4=minorlossfrictiondifferential(add(h,mul(dx,k3)),add(x,dx),v,g,Rh,f);
+        h=add(h,mul(div(dx,6),add(k1,mul(2,k2),mul(2,k3),k4)));
+        x=add(x,dx);
+    }
+    return [x,h];
+}
+
+function minorlossdifferential(h,x,v,g,Rh,f){
+    const dh=div(mul(f,sqr(v)),mul(g,Rh));
+    return dh;
+}
+
+function minorlossintegrator(h0,x0,x1,dx,v,g,Rh,f,ev){
+    let h=h0;
+    let x=x0;
+    const n=ceil(div(sub(x1,x0),dx));
+    for(let k=0;k<n;k++){
+        const k1=minorlossdifferential(h,x,v,g,Rh,f);
+        const k2=minorlossdifferential(add(h,mul(div(dx,2),k1)),add(x,div(dx,2)),v,g,Rh,f);
+        const k3=minorlossdifferential(add(h,mul(div(dx,2),k2)),add(x,div(dx,2)),v,g,Rh,f);
+        const k4=minorlossdifferential(add(h,mul(dx,k3)),add(x,dx),v,g,Rh,f);
+        h=add(h,mul(div(dx,6),add(k1,mul(2,k2),mul(2,k3),k4)));
+        x=add(x,dx);
+    }
+    const hm=mul(div(sqr(v),mul(2,g)),ev);
+    return [x,add(h,hm)];
+}
+
+
+//https://en.wikipedia.org/wiki/K%C3%A1rm%C3%A1n%E2%80%93Howarth_equation
+function karmanhowarthdifferential(f,h,r,dr,up,nu){
+    const n=f.length;
+    const df=new Array(n);
+
+    for(let i=1;i<sub(n,1);i++){
+        const ri=add(r,mul(i,dr));
+        const rm=add(r,mul(sub(i,1),dr));
+        const rp=add(r,mul(add(i,1),dr));
+
+        const fr=div(sub(f[i+1],f[i-1]),mul(2,dr));
+        const frr=div(sub(add(f[i+1],f[i-1]),mul(2,f[i])),sqr(dr));
+
+        const hr=div(sub(mul(pow(rp,4),h[i+1]),mul(pow(rm,4),h[i-1])),mul(2,dr));
+        const frterm=add(mul(pow(ri,4),frr),mul(4,pow(ri,3),fr));
+
+        df[i]=add(div(mul(up,hr),pow(ri,4)),div(mul(2,nu,frterm),pow(ri,4)));
+    }
+
+    df[0]=0;
+    df[sub(n,1)]=0;
+
+    return df;
+}
+
+function karmanhowarthintegrator(f,h,rmin,rmax,n,t0,t1,dt,up,nu){
+    const dr=div(sub(rmax,rmin),sub(n,1));
+    let a=[];
+
+    for(let i=0;i<n;i++){
+        const r=add(rmin,mul(i,dr));
+        a[i]=evale(f,r,t0);
+    }
+
+    let t=t0;
+    const steps=ceil(div(sub(t1,t0),dt));
+
+    for(let s=0;s<steps;s++){
+        const k1=karmanhowarthdifferential(a,h,rmin,dr,up,nu);
+
+        const a2=a.slice();
+        for(let i=1;i<sub(n,1);i++)a2[i]=add(a[i],mul(div(dt,2),k1[i]));
+        const k2=karmanhowarthdifferential(a2,h,rmin,dr,up,nu);
+
+        const a3=a.slice();
+        for(let i=1;i<sub(n,1);i++)a3[i]=add(a[i],mul(div(dt,2),k2[i]));
+        const k3=karmanhowarthdifferential(a3,h,rmin,dr,up,nu);
+
+        const a4=a.slice();
+        for(let i=1;i<sub(n,1);i++)a4[i]=add(a[i],mul(dt,k3[i]));
+        const k4=karmanhowarthdifferential(a4,h,rmin,dr,up,nu);
+
+        for(let i=1;i<sub(n,1);i++){
+            a[i]=add(a[i],mul(div(dt,6),add(k1[i],mul(2,k2[i]),mul(2,k3[i]),k4[i])));
+        }
+
+        t=add(t,dt);
+    }
+
+    return [t,a];
+}
+
+//https://en.wikipedia.org/wiki/Exner_function
+function exnerfunction(p,p0,Rd,cp){
+    const pi=mul(cp,pow(div(p,p0),div(Rd,cp)));
+    return pi;
+}
+
+function dimensionlessexnerfunction(p,p0,Rd,cp){
+    const pi=pow(div(p,p0),div(Rd,cp));
+    return pi;
+}
+
+function exnerfromtemperature(T,theta,cp){
+    const pi=mul(cp,div(T,theta));
+    return pi;
+}
+
+function dimensionlessexnerfromtemperature(T,theta){
+    const pi=div(T,theta);
+    return pi;
+}
+
+function potentialtemperaturefromexner(T,pi){
+    return div(T,pi);
+}
+
+function temperaturefromexner(theta,pi){
+    return mul(theta,pi);
+}
+
+//https://en.wikipedia.org/wiki/Kozeny%E2%80%93Carman_equation
+function kozenycarmank(eta,Sv,K){
+    const k=div(pow(eta,3),mul(K,sqr(Sv),sqr(sub(1,eta))));
+    return k;
+}
+
+function kozenycarmanpermeability(eta,Sv){
+    const k=kozenycarmank(eta,Sv,5);
+    return k;
+}
+
+function kozenycarmanvelocity(dp,L,mu,eta,Sv,K){
+    const k=kozenycarmank(eta,Sv,K);
+    const v=mul(-1,div(mul(k,dp),mul(mu,L)));
+    return v;
+}
+
+function kozenycarmandifferential(p,x,mu,eta,Sv,K){
+    const k=kozenycarmank(eta,Sv,K);
+    const dp=evale(p,x);
+    const v=mul(-1,div(mul(k,dp),mu));
+    return v;
+}
+
+function kozenycarmanintegrator(p,x0,x1,dx,p0,mu,eta,Sv,K){
+    let pA=p0;
+    let x=x0;
+    const n=ceil(div(sub(x1,x0),dx));
+
+    for(let i=0;i<n;i++){
+        const k1=kozenycarmandifferential(p,x,mu,eta,Sv,K);
+        const k2=kozenycarmandifferential(p,add(x,mul(div(dx,2),k1)),mu,eta,Sv,K);
+        const k3=kozenycarmandifferential(p,add(x,mul(div(dx,2),k2)),mu,eta,Sv,K);
+        const k4=kozenycarmandifferential(p,add(x,mul(dx,k3)),mu,eta,Sv,K);
+        pA=add(pA,mul(div(dx,6),add(k1,mul(2,k2),mul(2,k3),k4)));
+        x=add(x,dx);
+    }
+
+    return [x,pA];
+}
+
+function kozenycarmandpressuregradient(v,mu,eta,Sv,K){
+    const k=kozenycarmank(eta,Sv,K);
+    const dpdx=mul(-1,div(mul(mu,v),k));
+    return dpdx;
+}
+
+function kozenycarmanpressureintegrator(p0,x0,x1,dx,v,mu,eta,Sv,K){
+    let p=p0;
+    let x=x0;
+    const n=ceil(div(sub(x1,x0),dx));
+
+    for(let i=0;i<n;i++){
+        const k1=kozenycarmandpressuregradient(evale(v,x),mu,eta,Sv,K);
+        const k2=kozenycarmandpressuregradient(evale(v,add(x,div(dx,2))),mu,eta,Sv,K);
+        const k3=kozenycarmandpressuregradient(evale(v,add(x,div(dx,2))),mu,eta,Sv,K);
+        const k4=kozenycarmandpressuregradient(evale(v,add(x,dx)),mu,eta,Sv,K);
+        p=add(p,mul(div(dx,6),add(k1,mul(2,k2),mul(2,k3),k4)));
+        x=add(x,dx);
+    }
+
+    return [x,p];
+}
+
+//https://en.wikipedia.org/wiki/Knudsen_equation
+function knudsenequation(P1,P2,r,T,L,d){
+    const Q=mul(div(pi(),128),div(pow(d,3),mul(L,sqrt(mul(2,r,T)))),sub(sqrt(P1),sqrt(P2)));
+    return Q;
+}
+
+function knudsengasflow(P1,P2,r,T,L,d){
+    return knudsenequation(P1,P2,r,T,L,d);
+}
+
+//https://en.wikipedia.org/wiki/Ergun_equation
+function ergundifferential(p,x,v,mu,rho,Dp,epsilon){
+    const a=mul(div(150,1),div(mu,sqr(Dp)),div(sqr(sub(1,epsilon)),pow(epsilon,3)),evale(v,x));
+    const b=mul(div(1.75,Dp),rho,div(sub(1,epsilon),pow(epsilon,3)),evale(v,x),mag(evale(v,x)));
+    return mul(-1,add(a,b));
+}
+
+function ergunintegrator(p0,x0,x1,dx,v,mu,rho,Dp,epsilon){
+    let p=p0;
+    let x=x0;
+    const n=ceil(div(sub(x1,x0),dx));
+
+    for(let i=0;i<n;i++){
+        const k1=ergundifferential(p,x,v,mu,rho,Dp,epsilon);
+        const k2=ergundifferential(p,add(x,div(dx,2)),v,mu,rho,Dp,epsilon);
+        const k3=ergundifferential(p,add(x,div(dx,2)),v,mu,rho,Dp,epsilon);
+        const k4=ergundifferential(p,add(x,dx),v,mu,rho,Dp,epsilon);
+        p=add(p,mul(div(dx,6),add(k1,mul(2,k2),mul(2,k3),k4)));
+        x=add(x,dx);
+    }
+
+    return [x,p];
+}
+function ergunpressuredrop(L,v,mu,rho,Dp,epsilon){
+    const a=mul(div(150,1),div(mul(mu,L),sqr(Dp)),div(sqr(sub(1,epsilon)),pow(epsilon,3)),v);
+    const b=mul(div(1.75,Dp),mul(L,rho),div(sub(1,epsilon),pow(epsilon,3)),v,mag(v));
+    return add(a,b);
+}
+function ergunmodifiedreynolds(v,rho,Dp,mu,epsilon){
+    return div(mul(rho,v,Dp),mul(sub(1,epsilon),mu));
+}
+
+function ergunfrictionfactor(v,rho,Dp,mu,epsilon){
+    const gr=ergunmodifiedreynolds(v,rho,Dp,mu,epsilon);
+    return add(div(150,gr),1.75);
+}
+
+function ergunpermeability(Dp,epsilon){
+    return mul(div(sqr(Dp),150),div(pow(epsilon,3),sqr(sub(1,epsilon))));
+}
+
+function erguninertialpermeability(Dp,epsilon){
+    return mul(div(Dp,1.75),div(pow(epsilon,3),sub(1,epsilon)));
+}
+//https://en.wikipedia.org/wiki/Clarke%27s_equation
+function clarkesequationdifferential(theta,theta_t,u,x,y,dx,dy,gamma,delta,omega){
+    const nx=theta.length;
+    const ny=theta[0].length;
+    const dtheta=new Array(nx);
+    const dthetat=new Array(nx);
+    const du=new Array(nx);
+
+    for(let i=0;i<nx;i++){
+        dtheta[i]=new Array(ny);
+        dthetat[i]=new Array(ny);
+        du[i]=new Array(ny);
+
+        for(let j=0;j<ny;j++){
+            const th=theta[i][j];
+            const reaction=mul(delta,evale(omega,th));
+
+            dtheta[i][j]=theta_t[i][j];
+            dthetat[i][j]=u[i][j];
+            du[i][j]=reaction;
+        }
+    }
+
+    for(let i=1;i<sub(nx,1);i++){
+        for(let j=1;j<sub(ny,1);j++){
+            const lap=add(
+                div(sub(theta[i+1][j],mul(2,theta[i][j]),theta[i-1][j]),sqr(dx)),
+                div(sub(theta[i][j+1],mul(2,theta[i][j]),theta[i][j-1]),sqr(dy))
+            );
+
+            const lapreaction=add(
+                div(
+                    sub(
+                        mul(delta,evale(omega,theta[i+1][j])),
+                        mul(2,delta,evale(omega,theta[i][j])),
+                        mul(delta,evale(omega,theta[i-1][j]))
+                    ),
+                    sqr(dx)
+                ),
+                div(
+                    sub(
+                        mul(delta,evale(omega,theta[i][j+1])),
+                        mul(2,delta,evale(omega,theta[i][j])),
+                        mul(delta,evale(omega,theta[i][j-1]))
+                    ),
+                    sqr(dy)
+                )
+            );
+
+            dthetat[i][j]=add(
+                u[i][j],
+                mul(gamma,lapreaction)
+            );
+
+            du[i][j]=add(
+                lap,
+                mul(-1,lapreaction)
+            );
+        }
+    }
+
+    return [dtheta,dthetat,du];
+}
+
+function clarkesequationintegrator(theta0,thetat0,u0,xmin,xmax,ymin,ymax,nx,ny,t0,t1,dt,gamma,delta,omega){
+    const dx=div(sub(xmax,xmin),sub(nx,1));
+    const dy=div(sub(ymax,ymin),sub(ny,1));
+
+    let theta=theta0;
+    let thetat=thetat0;
+    let u=u0;
+    let t=t0;
+
+    const steps=ceil(div(sub(t1,t0),dt));
+
+    for(let s=0;s<steps;s++){
+        const k1=clarkesequationdifferential(theta,thetat,u,xmin,ymin,dx,dy,gamma,delta,omega);
+
+        const a1=clarkescopy(theta);
+        const a2=clarkescopy(thetat);
+        const a3=clarkescopy(u);
+        clarkescalefield(a1,k1[0],div(dt,2));
+        clarkescalefield(a2,k1[1],div(dt,2));
+        clarkescalefield(a3,k1[2],div(dt,2));
+
+        const k2=clarkesequationdifferential(a1,a2,a3,xmin,ymin,dx,dy,gamma,delta,omega);
+
+        const b1=clarkescopy(theta);
+        const b2=clarkescopy(thetat);
+        const b3=clarkescopy(u);
+        clarkescalefield(b1,k2[0],div(dt,2));
+        clarkescalefield(b2,k2[1],div(dt,2));
+        clarkescalefield(b3,k2[2],div(dt,2));
+
+        const k3=clarkesequationdifferential(b1,b2,b3,xmin,ymin,dx,dy,gamma,delta,omega);
+
+        const c1=clarkescopy(theta);
+        const c2=clarkescopy(thetat);
+        const c3=clarkescopy(u);
+        clarkescalefield(c1,k3[0],dt);
+        clarkescalefield(c2,k3[1],dt);
+        clarkescalefield(c3,k3[2],dt);
+
+        const k4=clarkesequationdifferential(c1,c2,c3,xmin,ymin,dx,dy,gamma,delta,omega);
+
+        clarkecombinefield(theta,k1[0],k2[0],k3[0],k4[0],dt);
+        clarkecombinefield(thetat,k1[1],k2[1],k3[1],k4[1],dt);
+        clarkecombinefield(u,k1[2],k2[2],k3[2],k4[2],dt);
+
+        t=add(t,dt);
+    }
+
+    return [t,theta,thetat,u];
+}
+
+function clarkescopy(a){
+    const b=new Array(a.length);
+    for(let i=0;i<a.length;i++)b[i]=a[i].slice();
+    return b;
+}
+
+function clarkescalefield(a,b,s){
+    for(let i=0;i<a.length;i++){
+        for(let j=0;j<a[i].length;j++){
+            a[i][j]=add(a[i][j],mul(s,b[i][j]));
+        }
+    }
+}
+
+function clarkecombinefield(a,k1,k2,k3,k4,dt){
+    for(let i=0;i<a.length;i++){
+        for(let j=0;j<a[i].length;j++){
+            a[i][j]=add(
+                a[i][j],
+                mul(
+                    div(dt,6),
+                    add(k1[i][j],mul(2,k2[i][j]),mul(2,k3[i][j]),k4[i][j])
+                )
+            );
+        }
+    }
+}
+
+//https://en.wikipedia.org/wiki/Darcy%E2%80%93Weisbach_equation
+
+function darcyweisbachreynolds(rho,v,D,mu){
+    return div(mul(rho,v,D),mu);
+}
+
+function darcyweisbachfrictionfactorlaminar(re){
+    return div(64,re);
+}
+
+function darcyweisbachfrictionfactorsmooth(re){
+    const w=lambertw(mul(.629,re));
+    const a=mul(.838,w);
+    return div(1,sqr(a));
+}
+
+function darcyweisbachheadloss(f,L,D,v,g){
+    return mul(f,div(L,D),div(sqr(v),mul(2,g)));
+}
+
+function darcyweisbachpressuredrop(f,L,D,v,rho){
+    return mul(f,div(L,D),mul(rho,div(sqr(v),2)));
+}
+
+function darcyweisbachpressuregradient(f,D,v,rho){
+    return mul(f,div(1,D),mul(rho,div(sqr(v),2)));
+}
+
+function darcyweisbachheadgradient(f,D,v,g){
+    return mul(f,div(1,D),div(sqr(v),mul(2,g)));
+}
+
+function darcyweisbachshearstress(f,rho,v){
+    return mul(div(1,8),f,rho,sqr(v));
+}
+
+function darcyweisbachflowrate(D,v){
+    return mul(div(pi(1),4),sqr(D),v);
+}
+
+function darcyweisbachvelocity(D,Q){
+    return div(mul(4,Q),mul(pi(1),sqr(D)));
+}
+function darcyweisbachfrictionfactor(re){
+    if(re(re)<2000)return darcyweisbachfrictionfactorlaminar(re);
+    return darcyweisbachfrictionfactorsmooth(re);
+}
+function darcyweisbachfrictionfactor(reynolds){
+    if(re(reynolds)<2000)return darcyweisbachfrictionfactorlaminar(reynolds);
+    return darcyweisbachfrictionfactorsmooth(reynolds);
+}
+
+function darcyweisbachflowheadgradient(f,Q,D,g){
+    return mul(f,div(8,mul(sqr(pi(1)),g)),div(sqr(Q),pow(D,5)));
+}
+
+
+//https://en.wikipedia.org/wiki/Oseen_equations#Two-dimensional
+function oseenderivative(f,x,h){
+    return div(sub(evale(f,add(x,h)),evale(f,sub(x,h))),mul(2,h));
+}
+
+function oseen2dA(x,y,U,nu){
+    const lambda=div(U,mul(2,nu));
+    const r=sqrt(add(sqr(x),sqr(y)));
+    return mul(-1,div(1,mul(2,pi(1),U)),add(ln(r),mul(exp(mul(lambda,x)),besselk(0,mul(lambda,r)))));
+}
+
+function oseen2dgamma(x,y,U,nu,h){
+    const A=(xx,yy)=>oseen2dA(xx,yy,U,nu);
+    const Ax=div(sub(A(add(x,h),y),A(sub(x,h),y)),mul(2,h));
+    const Ay=div(sub(A(x,add(y,h)),A(x,sub(y,h))),mul(2,h));
+    return [[Ax,Ay],[Ay,mul(-1,Ax)]];
+}
+
+function oseen2dpi(x,y,rho,h){
+    const r=sqrt(add(sqr(x),sqr(y)));
+    const px=mul(div(rho,mul(2,pi(1))),div(x,sqr(r)));
+    const py=mul(div(rho,mul(2,pi(1))),div(y,sqr(r)));
+    return [px,py];
+}
+
+function oseen2dsolution(x,y,U,nu,rho,h){
+    const A=(xx,yy)=>oseen2dA(xx,yy,U,nu);
+    const gamma=oseen2dgamma(x,y,U,nu,h);
+    const pi2=oseen2dpi(x,y,rho,h);
+    return [gamma,pi2,A(x,y)];
+}
+
+function oseen3dA(x,y,z,U,nu){
+    const lambda=div(U,mul(2,nu));
+    const r=sqrt(add(sqr(x),sqr(y),sqr(z)));
+    return div(mul(div(1,mul(4,pi(1),U)),sub(1,exp(mul(-1,lambda,sub(r,x))))),r);
+}
+
+function oseen3dB(x,y,z,U,nu){
+    const lambda=div(U,mul(2,nu));
+    const r=sqrt(add(sqr(x),sqr(y),sqr(z)));
+    const q=sub(r,x);
+    return mul(-1,div(mul(div(1,mul(4,pi(1),U)),sub(1,exp(mul(-1,lambda,q))),y),mul(r,q)));
+}
+
+function oseen3dC(x,y,z,U,nu){
+    const lambda=div(U,mul(2,nu));
+    const r=sqrt(add(sqr(x),sqr(y),sqr(z)));
+    const q=sub(r,x);
+    return mul(-1,div(mul(div(1,mul(4,pi(1),U)),sub(1,exp(mul(-1,lambda,q))),z),mul(r,q)));
+}
+
+function oseen3dgamma(x,y,z,U,nu,h){
+    const A=(xx,yy,zz)=>oseen3dA(xx,yy,zz,U,nu);
+    const B=(xx,yy,zz)=>oseen3dB(xx,yy,zz,U,nu);
+    const C=(xx,yy,zz)=>oseen3dC(xx,yy,zz,U,nu);
+
+    const Ax=div(sub(A(add(x,h),y,z),A(sub(x,h),y,z)),mul(2,h));
+    const Ay=div(sub(A(x,add(y,h),z),A(x,sub(y,h),z)),mul(2,h));
+    const Az=div(sub(A(x,y,add(z,h)),A(x,y,sub(z,h))),mul(2,h));
+
+    const Bx=div(sub(B(add(x,h),y,z),B(sub(x,h),y,z)),mul(2,h));
+    const By=div(sub(B(x,add(y,h),z),B(x,sub(y,h),z)),mul(2,h));
+    const Bz=div(sub(B(x,y,add(z,h)),B(x,y,sub(z,h))),mul(2,h));
+
+    const Cx=div(sub(C(add(x,h),y,z),C(sub(x,h),y,z)),mul(2,h));
+    const Cy=div(sub(C(x,add(y,h),z),C(x,sub(y,h),z)),mul(2,h));
+    const Cz=div(sub(C(x,y,add(z,h)),C(x,y,sub(z,h))),mul(2,h));
+
+    const r=sqrt(add(sqr(x),sqr(y),sqr(z)));
+    const k=mul(div(1,mul(4,pi(1),nu)),div(exp(mul(-1,div(U,mul(2,nu)),sub(r,x))),r));
+
+    return [[add(Ax,k),Bx,Cx],[Ay,add(By,k),Cy],[Az,Bz,add(Cz,k)]];
+}
+
+function oseen3dpi(x,y,z,rho){
+    const r=sqrt(add(sqr(x),sqr(y),sqr(z)));
+    const k=div(rho,mul(4,pi(1),pow(r,3)));
+    return [mul(k,x),mul(k,y),mul(k,z)];
+}
+
+function oseen3dsolution(x,y,z,U,nu,rho,h){
+    const gamma=oseen3dgamma(x,y,z,U,nu,h);
+    const pi3=oseen3dpi(x,y,z,rho);
+    const A=oseen3dA(x,y,z,U,nu);
+    const B=oseen3dB(x,y,z,U,nu);
+    const C=oseen3dC(x,y,z,U,nu);
+    return [gamma,pi3,[A,B,C]];
+}
+
+function oseenmovingspherepsi(r,theta,U,a,R){
+    const k=div(R,mul(4,a));
+    const q=add(1,cos(theta));
+    const e=sub(1,exp(mul(-1,k,r,q)));
+    const t1=mul(-1,div(a,mul(4,sqr(r))),sin(theta));
+    const t2=mul(3,div(sub(1,cos(theta)),mul(r,sin(theta))),div(e,R));
+    return mul(U,sqr(a),add(t1,t2));
+}
+
+function oseenmovingspherevelocity(r,theta,U,a,R,h){
+    const psi=(rr,tt)=>oseenmovingspherepsi(rr,tt,U,a,R);
+
+    const psir=div(sub(mul(add(r,h),psi(add(r,h),theta)),mul(sub(r,h),psi(sub(r,h),theta))),mul(2,h));
+
+    const psitheta=div(sub(mul(sin(add(theta,h)),psi(r,add(theta,h))),mul(sin(sub(theta,h)),psi(r,sub(theta,h)))),mul(2,h));
+
+    const ur=div(psitheta,mul(r,sin(theta)));
+    const utheta=mul(-1,div(add(psi(r,theta),mul(r,psir)),r));
+
+    return [ur,utheta];
+}
+
+
+//https://en.wikipedia.org/wiki/Hirota%E2%80%93Satsuma_equation
+function hirotasatsumadifferential(u,v,w,dx){
+    const n=u.length;
+    const ut=new Array(n);
+    const vt=new Array(n);
+    const wt=new Array(n);
+
+    for(let i=0;i<n;i++){
+        const im2=(i-2+n)%n;
+        const im1=(i-1+n)%n;
+        const ip1=(i+1)%n;
+        const ip2=(i+2)%n;
+
+        const uxxx=div(
+            sub(u[im2],mul(2,u[im1]),mul(-2,u[ip1]),u[ip2]),
+            mul(2,pow(dx,3))
+        );
+
+        const vxxx=div(
+            sub(v[im2],mul(2,v[im1]),mul(-2,v[ip1]),v[ip2]),
+            mul(2,pow(dx,3))
+        );
+
+        const wxxx=div(
+            sub(w[im2],mul(2,w[im1]),mul(-2,w[ip1]),w[ip2]),
+            mul(2,pow(dx,3))
+        );
+
+        const ux=div(sub(u[ip1],u[im1]),mul(2,dx));
+        const vx=div(sub(v[ip1],v[im1]),mul(2,dx));
+        const wx=div(sub(w[ip1],w[im1]),mul(2,dx));
+
+        const vwplus=mul(v[ip1],w[ip1]);
+        const vwminus=mul(v[im1],w[im1]);
+        const vwx=div(sub(vwplus,vwminus),mul(2,dx));
+
+        ut[i]=add(
+            div(uxxx,2),
+            mul(-3,u[i],ux),
+            mul(3,vwx)
+        );
+
+        vt[i]=add(
+            mul(-1,vxxx),
+            mul(3,u[i],vx)
+        );
+
+        wt[i]=add(
+            mul(-1,wxxx),
+            mul(3,u[i],wx)
+        );
+    }
+
+    return [ut,vt,wt];
+}
+
+function hirotasatsumacopy(a){
+    const b=new Array(a.length);
+    for(let i=0;i<a.length;i++)b[i]=a[i];
+    return b;
+}
+
+function hirotasatsumascalefield(a,b,s){
+    const c=new Array(a.length);
+    for(let i=0;i<a.length;i++)c[i]=add(a[i],mul(s,b[i]));
+    return c;
+}
+
+function hirotasatsumacombine(a,k1,k2,k3,k4,dt){
+    const c=new Array(a.length);
+    for(let i=0;i<a.length;i++){
+        c[i]=add(
+            a[i],
+            mul(
+                div(dt,6),
+                add(k1[i],mul(2,k2[i]),mul(2,k3[i]),k4[i])
+            )
+        );
+    }
+    return c;
+}
+
+function hirotasatsumaintegrator(u0,v0,w0,x0,x1,n,t0,t1,dt){
+    const dx=div(sub(x1,x0),n);
+    let u=hirotasatsumacopy(u0);
+    let v=hirotasatsumacopy(v0);
+    let w=hirotasatsumacopy(w0);
+    let t=t0;
+
+    const us=[hirotasatsumacopy(u)];
+    const vs=[hirotasatsumacopy(v)];
+    const ws=[hirotasatsumacopy(w)];
+    const ts=[t];
+
+    const steps=ceil(div(sub(t1,t0),dt));
+
+    for(let s=0;s<steps;s++){
+        const k1=hirotasatsumadifferential(u,v,w,dx);
+
+        const u2=hirotasatsumascalefield(u,k1[0],div(dt,2));
+        const v2=hirotasatsumascalefield(v,k1[1],div(dt,2));
+        const w2=hirotasatsumascalefield(w,k1[2],div(dt,2));
+        const k2=hirotasatsumadifferential(u2,v2,w2,dx);
+
+        const u3=hirotasatsumascalefield(u,k2[0],div(dt,2));
+        const v3=hirotasatsumascalefield(v,k2[1],div(dt,2));
+        const w3=hirotasatsumascalefield(w,k2[2],div(dt,2));
+        const k3=hirotasatsumadifferential(u3,v3,w3,dx);
+
+        const u4=hirotasatsumascalefield(u,k3[0],dt);
+        const v4=hirotasatsumascalefield(v,k3[1],dt);
+        const w4=hirotasatsumascalefield(w,k3[2],dt);
+        const k4=hirotasatsumadifferential(u4,v4,w4,dx);
+
+        u=hirotasatsumacombine(u,k1[0],k2[0],k3[0],k4[0],dt);
+        v=hirotasatsumacombine(v,k1[1],k2[1],k3[1],k4[1],dt);
+        w=hirotasatsumacombine(w,k1[2],k2[2],k3[2],k4[2],dt);
+
+        t=add(t,dt);
+
+        us.push(hirotasatsumacopy(u));
+        vs.push(hirotasatsumacopy(v));
+        ws.push(hirotasatsumacopy(w));
+        ts.push(t);
+    }
+
+    return [ts,us,vs,ws];
+}
+
+//https://en.wikipedia.org/wiki/Euler%27s_pump_and_turbine_equation
+function eulerpumpturbinespecificenergy(c2u,u2,c1u,u1){
+    return sub(mul(c2u,u2),mul(c1u,u1));
+}
+
+function eulerpumpturbinehead(c2u,u2,c1u,u1,g){
+    return div(eulerpumpturbinespecificenergy(c2u,u2,c1u,u1),g);
+}
+
+function eulerpumpturbinevelocityenergy(u2,u1,w1,w2,c2,c1){
+    return mul(div(1,2),add(
+        sqr(u2),
+        mul(-1,sqr(u1)),
+        sqr(w1),
+        mul(-1,sqr(w2)),
+        sqr(c2),
+        mul(-1,sqr(c1))
+    ));
+}
+
+function eulerpumpturbinevelocityhead(u2,u1,w1,w2,c2,c1,g){
+    return div(eulerpumpturbinevelocityenergy(u2,u1,w1,w2,c2,c1),g);
+}
+
+function eulerpumpturbinepeltonhead(v1,v2,g){
+    return div(sub(sqr(v1),sqr(v2)),mul(2,g));
+}
+
+function eulerpumpturbineangularmomentum(rho,Q,c2u,r2,c1u,r1){
+    return mul(rho,Q,sub(mul(c2u,r2),mul(c1u,r1)));
+}
+
+function eulerpumpturbinetorque(rho,Q,c2u,r2,c1u,r1){
+    return eulerpumpturbineangularmomentum(rho,Q,c2u,r2,c1u,r1);
+}
+
+function eulerpumpturbinepower(torque,omega){
+    return mul(torque,omega);
+}
+
+function eulerpumpturbinerothalpy(h0,u,cu){
+    return sub(h0,mul(u,cu));
+}
+//https://en.wikipedia.org/wiki/Drag_equation
+function dragequationforce(rho,u,cd,A){
+    return mul(div(1,2),rho,sqr(u),cd,A);
+}
+
+function dragequationdynamicpressure(rho,u){
+    return mul(div(1,2),rho,sqr(u));
+}
+
+function dragequationcoefficient(F,rho,u,A){
+    return div(F,mul(div(1,2),rho,sqr(u),A));
+}
+
+function dragequationdifferential(v,t,m,Fext,rho,cd,A){
+    const vv=evale(v,t);
+    const fe=evale(Fext,t);
+    const rr=evale(rho,t);
+    const cc=evale(cd,t);
+    const aa=evale(A,t);
+    return div(sub(fe,mul(div(1,2),rr,vv,mag(vv),cc,aa)),m);
+}
+
+function dragequationintegrator(v0,t0,t1,dt,m,Fext,rho,cd,A){
+    let v=v0;
+    let t=t0;
+    const n=ceil(div(sub(t1,t0),dt));
+
+    for(let i=0;i<n;i++){
+        const k1=dragequationdifferential(v,t,m,Fext,rho,cd,A);
+        const k2=dragequationdifferential(add(v,mul(div(dt,2),k1)),add(t,div(dt,2)),m,Fext,rho,cd,A);
+        const k3=dragequationdifferential(add(v,mul(div(dt,2),k2)),add(t,div(dt,2)),m,Fext,rho,cd,A);
+        const k4=dragequationdifferential(add(v,mul(dt,k3)),add(t,dt),m,Fext,rho,cd,A);
+        v=add(v,mul(div(dt,6),add(k1,mul(2,k2),mul(2,k3),k4)));
+        t=add(t,dt);
+    }
+
+    return [t,v];
+}function dragequationfallingdifferential(v,t,m,g,rho,cd,A){
+    const vv=evale(v,t);
+    return sub(g,div(mul(div(1,2),rho,vv,mag(vv),cd,A),m));
+}
+
+function dragequationfallingintegrator(v0,t0,t1,dt,m,g,rho,cd,A){
+    let v=v0;
+    let t=t0;
+    const n=ceil(div(sub(t1,t0),dt));
+
+    for(let i=0;i<n;i++){
+        const k1=dragequationfallingdifferential(v,t,m,g,rho,cd,A);
+        const k2=dragequationfallingdifferential(add(v,mul(div(dt,2),k1)),add(t,div(dt,2)),m,g,rho,cd,A);
+        const k3=dragequationfallingdifferential(add(v,mul(div(dt,2),k2)),add(t,div(dt,2)),m,g,rho,cd,A);
+        const k4=dragequationfallingdifferential(add(v,mul(dt,k3)),add(t,dt),m,g,rho,cd,A);
+        v=add(v,mul(div(dt,6),add(k1,mul(2,k2),mul(2,k3),k4)));
+        t=add(t,dt);
+    }
+
+    return [t,v];
+}
+function dragequationterminalvelocity(m,g,rho,cd,A){
+    return sqrt(div(mul(2,m,g),mul(rho,cd,A)));
+}
+
+//https://en.wikipedia.org/wiki/Morison_equation
+function morisonforce(u,udot,rho,Cm,Cd,V,A){
+    return add(
+        mul(rho,Cm,V,udot),
+        mul(div(1,2),rho,Cd,A,u,mag(u))
+    );
+}
+
+function morisonmovingforce(u,v,udot,vdot,rho,Ca,Cd,V,A){
+    return add(
+        mul(rho,V,udot),
+        mul(rho,Ca,V,sub(udot,vdot)),
+        mul(div(1,2),rho,Cd,A,sub(u,v),mag(sub(u,v)))
+    );
+}
+
+function morisondifferential(v,t,m,u,udot,rho,Ca,Cd,V,A,Fext){
+    const vv=evale(v,t);
+    const uu=evale(u,t);
+    const aa=evale(udot,t);
+    const rr=evale(rho,t);
+    const fe=evale(Fext,t);
+    const f=add(
+        mul(rr,V,aa),
+        mul(rr,Ca,V,sub(aa,0)),
+        mul(div(1,2),rr,Cd,A,sub(uu,vv),mag(sub(uu,vv)))
+    );
+    return div(add(fe,f),m);
+}
+
+function morisonintegrator(v0,t0,t1,dt,m,u,udot,rho,Ca,Cd,V,A,Fext){
+    let v=v0;
+    let t=t0;
+    const n=ceil(div(sub(t1,t0),dt));
+
+    for(let i=0;i<n;i++){
+        const k1=morisondifferential(v,t,m,u,udot,rho,Ca,Cd,V,A,Fext);
+        const k2=morisondifferential(add(v,mul(div(dt,2),k1)),add(t,div(dt,2)),m,u,udot,rho,Ca,Cd,V,A,Fext);
+        const k3=morisondifferential(add(v,mul(div(dt,2),k2)),add(t,div(dt,2)),m,u,udot,rho,Ca,Cd,V,A,Fext);
+        const k4=morisondifferential(add(v,mul(dt,k3)),add(t,dt),m,u,udot,rho,Ca,Cd,V,A,Fext);
+        v=add(v,mul(div(dt,6),add(k1,mul(2,k2),mul(2,k3),k4)));
+        t=add(t,dt);
+    }
+
+    return [t,v];
+}
+
+//https://en.wikipedia.org/wiki/Barometric_formula
+function barometricdifferential(p,h,g,M,R,T){
+    const pp=evale(p,h);
+    const tt=evale(T,h);
+    return mul(-1,div(mul(M,g),mul(R,tt)),pp);
+}
+
+function barometricintegrator(p0,h0,h1,dh,g,M,R,T){
+    let p=p0;
+    let h=h0;
+    const n=ceil(div(sub(h1,h0),dh));
+
+    for(let i=0;i<n;i++){
+        const k1=barometricdifferential(p,h,g,M,R,T);
+        const k2=barometricdifferential(add(p,mul(div(dh,2),k1)),add(h,div(dh,2)),g,M,R,T);
+        const k3=barometricdifferential(add(p,mul(div(dh,2),k2)),add(h,div(dh,2)),g,M,R,T);
+        const k4=barometricdifferential(add(p,mul(dh,k3)),add(h,dh),g,M,R,T);
+        p=add(p,mul(div(dh,6),add(k1,mul(2,k2),mul(2,k3),k4)));
+        h=add(h,dh);
+    }
+
+    return [h,p];
+}
+
+//https://en.wikipedia.org/wiki/Hypsometric_equation
+
+function hypsometricdifferential(p,z,g,R,T){
+    const pp=evale(p,z);
+    const tt=evale(T,z);
+    return mul(-1,div(mul(g,pp),mul(R,tt)));
+}
+
+function hypsometricintegrator(p0,z0,z1,dz,g,R,T){
+    let p=p0;
+    let z=z0;
+    const n=ceil(div(sub(z1,z0),dz));
+
+    for(let i=0;i<n;i++){
+        const k1=hypsometricdifferential(p,z,g,R,T);
+        const k2=hypsometricdifferential(add(p,mul(div(dz,2),k1)),add(z,div(dz,2)),g,R,T);
+        const k3=hypsometricdifferential(add(p,mul(div(dz,2),k2)),add(z,div(dz,2)),g,R,T);
+        const k4=hypsometricdifferential(add(p,mul(dz,k3)),add(z,dz),g,R,T);
+        p=add(p,mul(div(dz,6),add(k1,mul(2,k2),mul(2,k3),k4)));
+        z=add(z,dz);
+    }
+
+    return [z,p];
+}
+
+function hypsometricformula(p1,z1,Tv,g,R,z2){
+    return mul(
+        p1,
+        exp(
+            mul(
+                -1,
+                div(g,mul(R,Tv)),
+                sub(z2,z1)
+            )
+        )
+    );
+}
+
+function hypsometricheight(p1,p2,Tv,g,R){
+    return div(
+        mul(R,Tv,ln(div(p1,p2))),
+        g
+    );
+}
+//https://en.wikipedia.org/wiki/Prony_equation
+
+function pronyequation(L,D,a,b,V){
+    return mul(
+        div(L,D),
+        add(
+            mul(a,V),
+            mul(b,sqr(V))
+        )
+    );
+}
+
+function pronyfrictiongradient(x,a,b,V,D){
+    const aa=evale(a,x);
+    const bb=evale(b,x);
+    const vv=evale(V,x);
+    const dd=evale(D,x);
+    return mul(
+        div(1,dd),
+        add(
+            mul(aa,vv),
+            mul(bb,sqr(vv))
+        )
+    );
+}
+
+function pronyintegrator(h0,x0,x1,dx,a,b,V,D){
+    let h=h0;
+    let x=x0;
+    const n=ceil(div(sub(x1,x0),dx));
+
+    for(let i=0;i<n;i++){
+        const k1=pronyfrictiongradient(x,a,b,V,D);
+        const k2=pronyfrictiongradient(add(x,div(dx,2)),a,b,V,D);
+        const k3=pronyfrictiongradient(add(x,div(dx,2)),a,b,V,D);
+        const k4=pronyfrictiongradient(add(x,dx),a,b,V,D);
+        h=add(h,mul(div(dx,6),add(k1,mul(2,k2),mul(2,k3),k4)));
+        x=add(x,dx);
+    }
+
+    return [x,h];
+}
+//https://en.wikipedia.org/wiki/Rankine_vortex
+function rankinevortexvelocity(x,y,gamma,R){
+    const r=sqrt(add(sqr(x),sqr(y)));
+    if(re(r)<re(R)){
+        return mul(div(gamma,mul(2,pi(1),sqr(R))),r);
+    }
+    return div(gamma,mul(2,pi(1),r));
+}
+
+function rankinevortexvelocityxy(x,y,gamma,R){
+    const r=sqrt(add(sqr(x),sqr(y)));
+    const vt=rankinevortexvelocity(x,y,gamma,R);
+    if(mag(r)==0)return [0,0];
+    return [mul(-1,vt,div(y,r)),mul(vt,div(x,r))];
+}
+
+function rankinevortexdifferential(x,y,t,gamma,R){
+    const v=rankinevortexvelocityxy(x,y,gamma,R);
+    return [v[0],v[1]];
+}
+
+function rankinevortexintegrator(x0,y0,t0,t1,dt,gamma,R){
+    let x=x0;
+    let y=y0;
+    let t=t0;
+    const n=ceil(div(sub(t1,t0),dt));
+    const xs=[x];
+    const ys=[y];
+    const ts=[t];
+
+    for(let i=0;i<n;i++){
+        const k1=rankinevortexdifferential(x,y,t,gamma,R);
+
+        const k2=rankinevortexdifferential(
+            add(x,mul(div(dt,2),k1[0])),
+            add(y,mul(div(dt,2),k1[1])),
+            add(t,div(dt,2)),
+            gamma,R
+        );
+
+        const k3=rankinevortexdifferential(
+            add(x,mul(div(dt,2),k2[0])),
+            add(y,mul(div(dt,2),k2[1])),
+            add(t,div(dt,2)),
+            gamma,R
+        );
+
+        const k4=rankinevortexdifferential(
+            add(x,mul(dt,k3[0])),
+            add(y,mul(dt,k3[1])),
+            add(t,dt),
+            gamma,R
+        );
+
+        x=add(x,mul(div(dt,6),add(k1[0],mul(2,k2[0]),mul(2,k3[0]),k4[0])));
+        y=add(y,mul(div(dt,6),add(k1[1],mul(2,k2[1]),mul(2,k3[1]),k4[1])));
+        t=add(t,dt);
+
+        xs.push(x);
+        ys.push(y);
+        ts.push(t);
+    }
+
+    return [ts,xs,ys];
+}
+
+//https://en.wikipedia.org/wiki/Lamb%E2%80%93Oseen_vortex
+
+function lamboesenvortexvelocity(x,y,gamma,nu,t){
+    const r=sqrt(add(sqr(x),sqr(y)));
+    if(re(t)<=0)return 0;
+    if(mag(r)==0)return 0;
+    return mul(
+        div(gamma,mul(2,pi(1),r)),
+        sub(1,exp(div(mul(-1,sqr(r)),mul(4,nu,t))))
+    );
+}
+
+function lamboesenvortexvelocityxy(x,y,gamma,nu,t){
+    const r=sqrt(add(sqr(x),sqr(y)));
+    const vt=lamboesenvortexvelocity(x,y,gamma,nu,t);
+    if(mag(r)==0)return [0,0];
+    return [mul(-1,vt,div(y,r)),mul(vt,div(x,r))];
+}
+
+function lamboesenvortexdifferential(x,y,t,gamma,nu){
+    const v=lamboesenvortexvelocityxy(x,y,gamma,nu,t);
+    return [v[0],v[1]];
+}
+
+function lamboesenvortexintegrator(x0,y0,t0,t1,dt,gamma,nu){
+    let x=x0;
+    let y=y0;
+    let t=t0;
+    const n=ceil(div(sub(t1,t0),dt));
+    const xs=[x];
+    const ys=[y];
+    const ts=[t];
+
+    for(let i=0;i<n;i++){
+        const k1=lamboesenvortexdifferential(x,y,t,gamma,nu);
+
+        const k2=lamboesenvortexdifferential(
+            add(x,mul(div(dt,2),k1[0])),
+            add(y,mul(div(dt,2),k1[1])),
+            add(t,div(dt,2)),
+            gamma,nu
+        );
+
+        const k3=lamboesenvortexdifferential(
+            add(x,mul(div(dt,2),k2[0])),
+            add(y,mul(div(dt,2),k2[1])),
+            add(t,div(dt,2)),
+            gamma,nu
+        );
+
+        const k4=lamboesenvortexdifferential(
+            add(x,mul(dt,k3[0])),
+            add(y,mul(dt,k3[1])),
+            add(t,dt),
+            gamma,nu
+        );
+
+        x=add(x,mul(div(dt,6),add(k1[0],mul(2,k2[0]),mul(2,k3[0]),k4[0])));
+        y=add(y,mul(div(dt,6),add(k1[1],mul(2,k2[1]),mul(2,k3[1]),k4[1])));
+        t=add(t,dt);
+
+        xs.push(x);
+        ys.push(y);
+        ts.push(t);
+    }
+
+    return [ts,xs,ys];
+}
+
+//https://en.wikipedia.org/wiki/Mild-slope_equation
+function mildslopeequationresidual(eta,k,p,dx,dy,i,j){
+    const pxp=mul(.5,add(p[i+1][j],p[i][j]));
+    const pxm=mul(.5,add(p[i-1][j],p[i][j]));
+    const pyp=mul(.5,add(p[i][j+1],p[i][j]));
+    const pym=mul(.5,add(p[i][j-1],p[i][j]));
+
+    const xflux=div(
+        sub(
+            mul(pxp,sub(eta[i+1][j],eta[i][j])),
+            mul(pxm,sub(eta[i][j],eta[i-1][j]))
+        ),
+        sqr(dx)
+    );
+
+    const yflux=div(
+        sub(
+            mul(pyp,sub(eta[i][j+1],eta[i][j])),
+            mul(pym,sub(eta[i][j],eta[i][j-1]))
+        ),
+        sqr(dy)
+    );
+
+    return add(
+        xflux,
+        yflux,
+        mul(sqr(k[i][j]),p[i][j],eta[i][j])
+    );
+}
+
+function mildslopeequationintegrator(eta0,k,p,xmin,xmax,ymin,ymax,nx,ny,iterations,relaxation,boundary){
+    const dx=div(sub(xmax,xmin),sub(nx,1));
+    const dy=div(sub(ymax,ymin),sub(ny,1));
+
+    let eta=new Array(nx);
+
+    for(let i=0;i<nx;i++){
+        eta[i]=new Array(ny);
+        for(let j=0;j<ny;j++)eta[i][j]=evale(eta0,i,j);
+    }
+
+    for(let q=0;q<iterations;q++){
+        for(let i=1;i<sub(nx,1);i++){
+            for(let j=1;j<sub(ny,1);j++){
+                const pxp=mul(.5,add(p[i+1][j],p[i][j]));
+                const pxm=mul(.5,add(p[i-1][j],p[i][j]));
+                const pyp=mul(.5,add(p[i][j+1],p[i][j]));
+                const pym=mul(.5,add(p[i][j-1],p[i][j]));
+
+                const ax=div(add(pxp,pxm),sqr(dx));
+                const ay=div(add(pyp,pym),sqr(dy));
+                const aq=mul(sqr(k[i][j]),p[i][j]);
+
+                const b=add(
+                    div(
+                        add(
+                            mul(pxp,eta[i+1][j]),
+                            mul(pxm,eta[i-1][j])
+                        ),
+                        sqr(dx)
+                    ),
+                    div(
+                        add(
+                            mul(pyp,eta[i][j+1]),
+                            mul(pym,eta[i][j-1])
+                        ),
+                        sqr(dy)
+                    )
+                );
+
+                const value=div(b,sub(add(ax,ay),mul(-1,aq)));
+
+                eta[i][j]=add(
+                    eta[i][j],
+                    mul(relaxation,sub(value,eta[i][j]))
+                );
+            }
+        }
+
+        for(let i=0;i<nx;i++){
+            eta[i][0]=evale(boundary,xmin,add(ymin,mul(i,dx)));
+            eta[i][sub(ny,1)]=evale(boundary,xmax,add(ymin,mul(i,dx)));
+        }
+
+        for(let j=0;j<ny;j++){
+            eta[0][j]=evale(boundary,xmin,add(ymin,mul(j,dy)));
+            eta[sub(nx,1)][j]=evale(boundary,xmax,add(ymin,mul(j,dy)));
+        }
+    }
+
+    return eta;
+}
+//https://en.wikipedia.org/wiki/Bjerknes%27_equation
+function bjerknespressure(rho,rhou,rhov,rhow,E,gamma){
+    const q=div(add(sqr(rhou),sqr(rhov),sqr(rhow)),mul(2,rho));
+    return mul(sub(gamma,1),sub(E,q));
+}
+
+function bjerknesdifferential(state,dx,dy,dz,gamma){
+    const rho=state[0],rhou=state[1],rhov=state[2],rhow=state[3],E=state[4];
+    const nx=rho.length,ny=rho[0].length,nz=rho[0][0].length;
+    const dr=new Array(nx),du=new Array(nx),dv=new Array(nx),dw=new Array(nx),dE=new Array(nx);
+    const p=new Array(nx);
+
+    for(let i=0;i<nx;i++){
+        dr[i]=new Array(ny);du[i]=new Array(ny);dv[i]=new Array(ny);dw[i]=new Array(ny);dE[i]=new Array(ny);p[i]=new Array(ny);
+        for(let j=0;j<ny;j++){
+            dr[i][j]=new Array(nz);du[i][j]=new Array(nz);dv[i][j]=new Array(nz);dw[i][j]=new Array(nz);dE[i][j]=new Array(nz);p[i][j]=new Array(nz);
+            for(let k=0;k<nz;k++){
+                dr[i][j][k]=0;du[i][j][k]=0;dv[i][j][k]=0;dw[i][j][k]=0;
+                dE[i][j][k]=0;
+                p[i][j][k]=bjerknespressure(rho[i][j][k],rhou[i][j][k],rhov[i][j][k],rhow[i][j][k],E[i][j][k],gamma);
+            }
+        }
+    }
+
+    for(let i=1;i<nx-1;i++){
+        for(let j=1;j<ny-1;j++){
+            for(let k=1;k<nz-1;k++){
+                const r=rho[i][j][k];
+                const ux=div(rhou[i][j][k],r);
+                const uy=div(rhov[i][j][k],r);
+                const uz=div(rhow[i][j][k],r);
+
+                dr[i][j][k]=mul(-1,add(
+                    div(sub(rhou[i+1][j][k],rhou[i-1][j][k]),mul(2,dx)),
+                    div(sub(rhov[i][j+1][k],rhov[i][j-1][k]),mul(2,dy)),
+                    div(sub(rhow[i][j][k+1],rhow[i][j][k-1]),mul(2,dz))
+                ));
+
+                const px=div(sub(p[i+1][j][k],p[i-1][j][k]),mul(2,dx));
+                const py=div(sub(p[i][j+1][k],p[i][j-1][k]),mul(2,dy));
+                const pz=div(sub(p[i][j][k+1],p[i][j][k-1]),mul(2,dz));
+
+                du[i][j][k]=mul(-1,add(
+                    mul(ux,div(sub(rhou[i+1][j][k],rhou[i-1][j][k]),mul(2,dx))),
+                    mul(uy,div(sub(rhou[i][j+1][k],rhou[i][j-1][k]),mul(2,dy))),
+                    mul(uz,div(sub(rhou[i][j][k+1],rhou[i][j][k-1]),mul(2,dz))),
+                    px
+                ));
+
+                dv[i][j][k]=mul(-1,add(
+                    mul(ux,div(sub(rhov[i+1][j][k],rhov[i-1][j][k]),mul(2,dx))),
+                    mul(uy,div(sub(rhov[i][j+1][k],rhov[i][j-1][k]),mul(2,dy))),
+                    mul(uz,div(sub(rhov[i][j][k+1],rhov[i][j][k-1]),mul(2,dz))),
+                    py
+                ));
+
+                dw[i][j][k]=mul(-1,add(
+                    mul(ux,div(sub(rhow[i+1][j][k],rhow[i-1][j][k]),mul(2,dx))),
+                    mul(uy,div(sub(rhow[i][j+1][k],rhow[i][j-1][k]),mul(2,dy))),
+                    mul(uz,div(sub(rhow[i][j][k+1],rhow[i][j][k-1]),mul(2,dz))),
+                    pz
+                ));
+
+                dE[i][j][k]=mul(-1,add(
+                    div(sub(
+                        mul(add(E[i+1][j][k],p[i+1][j][k]),div(rhou[i+1][j][k],rho[i+1][j][k])),
+                        mul(add(E[i-1][j][k],p[i-1][j][k]),div(rhou[i-1][j][k],rho[i-1][j][k]))
+                    ),mul(2,dx)),
+                    div(sub(
+                        mul(add(E[i][j+1][k],p[i][j+1][k]),div(rhov[i][j+1][k],rho[i][j+1][k])),
+                        mul(add(E[i][j-1][k],p[i][j-1][k]),div(rhov[i][j-1][k],rho[i][j-1][k]))
+                    ),mul(2,dy)),
+                    div(sub(
+                        mul(add(E[i][j][k+1],p[i][j][k+1]),div(rhow[i][j][k+1],rho[i][j][k+1])),
+                        mul(add(E[i][j][k-1],p[i][j][k-1]),div(rhow[i][j][k-1],rho[i][j][k-1]))
+                    ),mul(2,dz))
+                ));
+            }
+        }
+    }
+
+    return [dr,du,dv,dw,dE];
+}
+
+function bjerknesaddfield(a,b,s){
+    const r=new Array(a.length);
+    for(let i=0;i<a.length;i++){
+        r[i]=new Array(a[i].length);
+        for(let j=0;j<a[i].length;j++){
+            r[i][j]=new Array(a[i][j].length);
+            for(let k=0;k<a[i][j].length;k++)r[i][j][k]=add(a[i][j][k],mul(s,b[i][j][k]));
+        }
+    }
+    return r;
+}
+
+function bjerknesaddstate(a,b,s){
+    const r=new Array(5);
+    for(let n=0;n<5;n++)r[n]=bjerknesaddfield(a[n],b[n],s);
+    return r;
+}
+
+function bjerknesintegrator(state,xmin,xmax,ymin,ymax,zmin,zmax,nx,ny,nz,dt,steps,params){
+    const gamma=params.gamma;
+    const dx=div(sub(xmax,xmin),sub(nx,1));
+    const dy=div(sub(ymax,ymin),sub(ny,1));
+    const dz=div(sub(zmax,zmin),sub(nz,1));
+    let q=state;
+
+    for(let s=0;s<steps;s++){
+        const k1=bjerknesdifferential(q,dx,dy,dz,gamma);
+        const k2=bjerknesdifferential(bjerknesaddstate(q,k1,div(dt,2)),dx,dy,dz,gamma);
+        const k3=bjerknesdifferential(bjerknesaddstate(q,k2,div(dt,2)),dx,dy,dz,gamma);
+        const k4=bjerknesdifferential(bjerknesaddstate(q,k3,dt),dx,dy,dz,gamma);
+
+        q=bjerknesaddstate(q,k1,div(dt,6));
+        q=bjerknesaddstate(q,k2,div(dt,3));
+        q=bjerknesaddstate(q,k3,div(dt,3));
+        q=bjerknesaddstate(q,k4,div(dt,6));
+    }
+
+    return q;
+}
+
+//https://en.wikipedia.org/wiki/Starling_equation
+function starlingdifferential(V,t,Kf,Pc,Pi,sigma,pic,pii){
+    const k=evale(Kf,t);
+    const pc=evale(Pc,t);
+    const p_i=evale(Pi,t);
+    const s=evale(sigma,t);
+    const picc=evale(pic,t);
+    const pii_c=evale(pii,t);
+
+    return mul(k,sub(sub(pc,p_i),mul(s,sub(picc,pii_c))));
+}
+
+function starlingspatialintegrator(V0,x0,x1,dx,Kf,Pc,Pi,sigma,pic,pii){
+    let V=V0;
+    let x=x0;
+    const n=ceil(div(sub(x1,x0),dx));
+
+    for(let i=0;i<n;i++){
+        const k1=starlingdifferential(V,x,Kf,Pc,Pi,sigma,pic,pii);
+        const k2=starlingdifferential(V,add(x,div(dx,2)),Kf,Pc,Pi,sigma,pic,pii);
+        const k3=starlingdifferential(V,add(x,div(dx,2)),Kf,Pc,Pi,sigma,pic,pii);
+        const k4=starlingdifferential(V,add(x,dx),Kf,Pc,Pi,sigma,pic,pii);
+
+        V=add(V,mul(div(dx,6),add(k1,mul(2,k2),mul(2,k3),k4)));
+        x=add(x,dx);
+    }
+
+    return [x,V];
+}
+function starlingfiltrationrate(Kf,Pc,Pi,sigma,pic,pii){
+    return mul(Kf,sub(sub(Pc,Pi),mul(sigma,sub(pic,pii))));
+}
+
+function starlingfiltrationratealt(Kf,Pc,Pi,sigmaPic,sigmaPig){
+    return mul(Kf,sub(sub(Pc,Pi),sub(sigmaPic,sigmaPig)));
+}
+
+function starlingdifferentiallt(V,t,Kf,Pc,Pi,sigmaPic,sigmaPig){
+    return starlingfiltrationrate(
+        evale(Kf,t),
+        evale(Pc,t),
+        evale(Pi,t),
+        evale(sigmaPic,t),
+        evale(sigmaPig,t)
+    );
+}
+
+function starlingintegratoralt(V0,t0,t1,dt,Kf,Pc,Pi,sigmaPic,sigmaPig){
+    let V=V0;
+    let t=t0;
+    const n=ceil(div(sub(t1,t0),dt));
+    const ts=[t];
+    const Vs=[V];
+
+    for(let i=0;i<n;i++){
+        const k1=starlingdifferential(V,t,Kf,Pc,Pi,sigmaPic,sigmaPig);
+        const k2=starlingdifferential(add(V,mul(div(dt,2),k1)),add(t,div(dt,2)),Kf,Pc,Pi,sigmaPic,sigmaPig);
+        const k3=starlingdifferential(add(V,mul(div(dt,2),k2)),add(t,div(dt,2)),Kf,Pc,Pi,sigmaPic,sigmaPig);
+        const k4=starlingdifferential(add(V,mul(dt,k3)),add(t,dt),Kf,Pc,Pi,sigmaPic,sigmaPig);
+
+        V=add(V,mul(div(dt,6),add(k1,mul(2,k2),mul(2,k3),k4)));
+        t=add(t,dt);
+
+        ts.push(t);
+        Vs.push(V);
+    }
+
+    return [ts,Vs];
+}
+
+function starlingarteriolar(Kf,sigmaPig){
+    return starlingfiltrationratealt(Kf,35,-2,28,sigmaPig);
+}
+
+function starlingvenular(Kf,sigmaPig){
+    return starlingfiltrationratealt(Kf,15,-2,28,sigmaPig);
+}
+
+function starlingkidney(Kf,Pc,Pi,sigmaPic,sigmaPig){
+    return starlingfiltrationratealt(Kf,Pc,Pi,sigmaPic,sigmaPig);
+}
+
+//https://en.wikipedia.org/wiki/Vogel%E2%80%93Fulcher%E2%80%93Tammann_equation
+function vogelfulchertammann(T,eta0,B,Tvf){
+    return mul(eta0,exp(div(B,sub(T,Tvf))));
+}
+
+function vogelfulchertammannrelaxation(T,tau0,B,Tvf){
+    return mul(tau0,exp(div(B,sub(T,Tvf))));
+}
+
+function vogelfulchertammannlog(T,eta0,B,Tvf){
+    return add(log(eta0),div(B,sub(T,Tvf)));
+}
+
+function vogelfulchertammanntemperature(eta,eta0,B,Tvf){
+    return add(Tvf,div(B,log(div(eta,eta0))));
+}
+
+function vogelfulchertammannactivation(T,eta,eta0,Tvf){
+    return mul(sub(T,Tvf),log(div(eta,eta0)));
+}
+function williamslandelferry(T,T0,C1,C2){
+    return pow(10,div(mul(-1,C1,sub(T,T0)),add(C2,sub(T,T0))));
+}
+
+function vogelfulchertammannfromwlf(T,T0,C1,C2,eta0){
+    return mul(
+        eta0,
+        exp(
+            div(
+                mul(C1,C2,ln(10)),
+                sub(T,sub(T0,C2))
+            )
+        )
+    );
+}
+//https://en.wikipedia.org/wiki/Washburn%27s_equation
+function washburndifferential(l,t,r,gamma,theta,eta){
+    return div(mul(r,gamma,cos(theta)),mul(4,eta,l));
+}
+
+function washburnintegrator(l0,t0,t1,dt,r,gamma,theta,eta){
+    let l=l0;
+    let t=t0;
+    const n=ceil(div(sub(t1,t0),dt));
+    const ts=[t];
+    const ls=[l];
+
+    for(let i=0;i<n;i++){
+        const k1=washburndifferential(l,t,r,gamma,theta,eta);
+        const k2=washburndifferential(add(l,mul(div(dt,2),k1)),add(t,div(dt,2)),r,gamma,theta,eta);
+        const k3=washburndifferential(add(l,mul(div(dt,2),k2)),add(t,div(dt,2)),r,gamma,theta,eta);
+        const k4=washburndifferential(add(l,mul(dt,k3)),add(t,dt),r,gamma,theta,eta);
+
+        l=add(l,mul(div(dt,6),add(k1,mul(2,k2),mul(2,k3),k4)));
+        t=add(t,dt);
+
+        ts.push(t);
+        ls.push(l);
+    }
+
+    return [ts,ls];
+}
+
+function washburn(r,gamma,theta,eta,t){
+    return mul(
+        sqrt(div(mul(r,cos(theta)),2)),
+        sqrt(div(gamma,eta)),
+        sqrt(t)
+    );
+}
+
+function washburninkjet(r,gamma,theta,eta,t){
+    return mul(
+        sqrt(div(mul(r,cos(theta)),2)),
+        sqrt(div(gamma,eta)),
+        sqrt(t)
+    );
+}
+
+//https://en.wikipedia.org/wiki/Fanning_friction_factor
+function fanninglaminar(re){
+    return div(16,re);
+}
+
+function fanningturbulentsmooth(re){
+    return div(.0791,pow(re,.25));
+}
+
+function fanningturbulentkoo(re){
+    return add(.0014,div(.125,pow(re,.32)));
+}
+
+function fanninggeneralroughness(re,e,D){
+    return div(1,sqr(mul(-3.6,log10(add(div(6.9,re),pow(div(div(e,D),3.7),div(10,9)))))));
+}
+
+function fanningswameejain(re,e,D){
+    return div(.0625,sqr(log10(add(div(div(e,D),3.7),div(5.74,pow(re,.9))))));
+}
+
+function fanningfullyrough(k,D){
+    return div(1,sqr(sub(2.28,mul(4,log10(div(k,D))))));
+}
+
+function fanningcolebrook(re,e,D,f0){
+    let f=f0;
+    for(let i=0;i<50;i++){
+        const z=sub(div(1,sqrt(f)),mul(-4,log10(add(div(div(e,D),3.7),div(1.255,mul(re,sqrt(f)))))));
+        const dz=div(
+            sub(
+                sub(
+                    div(-1,mul(2,pow(f,1.5))),
+                    mul(-4,div(1,add(div(div(e,D),3.7),div(1.255,mul(re,sqrt(f))))),div(-1.255,mul(2,re,pow(f,1.5))))
+                ),
+                0
+            ),
+            1
+        );
+        f=sub(f,div(z,dz));
+    }
+    return f;
+}
+
+function fanningchurchill(re,e,D){
+    const A=pow(mul(2.457,log(pow(add(pow(div(7,re),.9),mul(.27,div(e,D))),-1))),16);
+    const B=pow(div(37530,re),16);
+    return mul(2,pow(add(pow(div(8,re),12),pow(add(A,B),-1.5)),div(1,12)));
+}
+
+function fanningfrictionfactor(re,e,D){
+    if(re(re)<2100)return fanninglaminar(re);
+    return fanningchurchill(re,e,D);
+}
+
+function fanningheadloss(f,u,L,g,R){
+    return mul(f,div(mul(sqr(u),L),mul(g,R)));
+}
+
+function fanningheadlossdiameter(f,u,L,g,D){
+    return mul(2,f,div(mul(sqr(u),L),mul(g,D)));
+}
+
+function fanningfrictionintegrator(f,u,L,g,R,dx){
+    let h=0;
+    let x=0;
+    const n=ceil(div(L,dx));
+
+    for(let i=0;i<n;i++){
+        const k1=mul(evale(f,x),div(sqr(evale(u,x)),mul(g,evale(R,x))));
+        const k2=mul(evale(f,add(x,div(dx,2))),div(sqr(evale(u,add(x,div(dx,2)))),mul(g,evale(R,add(x,div(dx,2))))));
+        const k3=mul(evale(f,add(x,div(dx,2))),div(sqr(evale(u,add(x,div(dx,2)))),mul(g,evale(R,add(x,div(dx,2))))));
+        const k4=mul(evale(f,add(x,dx)),div(sqr(evale(u,add(x,dx))),mul(g,evale(R,add(x,dx)))));
+
+        h=add(h,mul(div(dx,6),add(k1,mul(2,k2),mul(2,k3),k4)));
+        x=add(x,dx);
+    }
+
+    return h;
+}
+function fanninggeneralroughness(re,e,D){
+    return div(
+        1,
+        sqr(
+            mul(
+                -3.6,
+                log10(
+                    add(
+                        div(6.9,re),
+                        pow(div(div(e,D),3.7),div(10,9))
+                    )
+                )
+            )
+        )
+    );
+}
+//https://en.wikipedia.org/wiki/Darcy_friction_factor_formulae
+function darcyfrictionfactorlaminar(reynoldsnumber){
+    return div(64,reynoldsnumber);
+}
+
+function darcyfrictionfactorblasius(reynoldsnumber){
+    return mul(.3164,pow(reynoldsnumber,-.25));
+}
+
+function darcyfrictionfactorcolebrook(reynoldsnumber,roughness,diameter){
+    let f=.02;
+    for(let i=0;i<30;i++){
+        const q=add(div(roughness,mul(3.7,diameter)),div(2.51,mul(reynoldsnumber,sqrt(f))));
+        const z=add(mul(2,log10(q)),div(1,sqrt(f)));
+        const dz=add(div(-1,mul(2,pow(f,1.5))),div(2.51,div(mul(1.7,ln(10),reynoldsnumber),mul(sqr(f),sqrt(f)),1)));
+        f=sub(f,div(z,dz));
+        if(re(f)<=0)f=.02;
+    }
+    return f;
+}
+
+function darcyfrictionfactorcolebrooklambertw(reynoldsnumber,roughness,diameter){
+    const a=div(2.51,reynoldsnumber);
+    const b=div(roughness,mul(3.7,diameter));
+    const z=div(mul(ln(10),10,pow(10,div(b,mul(2,a)))),mul(2,a));
+    const x=sub(div(mul(2,lambertw(z)),ln(10)),div(b,a));
+    return div(1,sqr(x));
+}
+
+function darcyfrictionfactorhaaland(reynoldsnumber,roughness,diameter){
+    return div(1,sqr(mul(-1.8,log10(add(pow(div(div(roughness,diameter),3.7),1.11),div(6.9,reynoldsnumber))))));
+}
+
+function darcyfrictionfactorswameejain(reynoldsnumber,roughness,diameter){
+    return div(.25,sqr(log10(add(div(div(roughness,diameter),3.7),div(5.74,pow(reynoldsnumber,.9))))));
+}
+
+function darcyfrictionfactorserghides(reynoldsnumber,roughness,diameter){
+    const a=mul(-2,log10(add(div(div(roughness,diameter),3.7),div(12,reynoldsnumber))));
+    const b=mul(-2,log10(add(div(div(roughness,diameter),3.7),div(mul(2.51,a),reynoldsnumber))));
+    const c=mul(-2,log10(add(div(div(roughness,diameter),3.7),div(mul(2.51,b),reynoldsnumber))));
+    const x=sub(a,div(sqr(sub(b,a)),sub(c,mul(2,b),a)));
+    return div(1,sqr(x));
+}
+
+function darcyfrictionfactorgoudarsonnad(reynoldsnumber,roughness,diameter){
+    const a=div(2,ln(10));
+    const b=div(div(roughness,diameter),3.7);
+    const d=div(mul(ln(10),reynoldsnumber),5.02);
+    const s=add(mul(b,d),ln(d));
+    const q=pow(s,div(s,add(s,1)));
+    const g=add(mul(b,d),ln(div(d,q)));
+    const z=ln(div(q,g));
+    const dla=mul(z,div(g,add(g,1)));
+    const dcfa=mul(dla,add(1,div(div(z,2),add(sqr(add(g,1)),div(mul(z,sub(mul(2,g),1)),3)))));
+    return div(1,sqr(mul(a,add(ln(div(d,q)),dcfa))));
+}
+
+function darcyfrictionfactorbrkic(reynoldsnumber,roughness,diameter){
+    const s=ln(div(reynoldsnumber,mul(1.816,ln(div(mul(1.1,reynoldsnumber),ln(add(1,mul(1.1,reynoldsnumber))))))));
+    return div(1,sqr(mul(-2,log10(add(div(div(roughness,diameter),3.71),div(mul(2.18,s),reynoldsnumber))))));
+}
+
+function darcyfrictionfactorbrkicpraks(reynoldsnumber,roughness,diameter){
+    const a=div(mul(reynoldsnumber,div(roughness,diameter)),8.0884);
+    const b=sub(ln(reynoldsnumber),.7794);
+    const x=add(a,b);
+    const c=ln(x);
+    const z=mul(.8686,sub(sub(b,c),div(mul(1.038,c),add(.332,x))));
+    return div(1,sqr(z));
+}
+
+function darcyfrictionfactorpraksbrkic(reynoldsnumber,roughness,diameter){
+    const a=div(mul(reynoldsnumber,div(roughness,diameter)),8.0884);
+    const b=sub(ln(reynoldsnumber),.7794);
+    const x=add(a,b);
+    const c=ln(x);
+    const z=mul(.8686,sub(sub(b,c),div(mul(1.038,c),add(.332,x))));
+    return div(1,sqr(z));
+}
+
+function darcyfrictionfactorswamee(reynoldsnumber){
+    return mul(.25,pow(reynoldsnumber,-.2));
+}
+
+function darcyfrictionfactor(reynoldsnumber,roughness,diameter){
+    if(re(reynoldsnumber)<2300)return darcyfrictionfactorlaminar(reynoldsnumber);
+    if(re(reynoldsnumber)>4000)return darcyfrictionfactorcolebrooklambertw(reynoldsnumber,roughness,diameter);
+    return darcyfrictionfactorhaaland(reynoldsnumber,roughness,diameter);
+}
+
+function darcyfrictionfactorheadloss(frictionfactor,velocity,length,gravity,diameter){
+    return mul(frictionfactor,div(mul(sqr(velocity),length),mul(2,gravity,diameter)));
+}
+
+function darcyfrictionfactorheadlossradius(frictionfactor,velocity,length,gravity,radius){
+    return mul(frictionfactor,div(mul(sqr(velocity),length),mul(4,gravity,radius)));
+}
+
+function darcyfrictionfactorheadlossintegrator(frictionfactor,velocity,length,gravity,diameter,dx){
+    let h=0;
+    let x=0;
+    const n=ceil(div(length,dx));
+
+    for(let i=0;i<n;i++){
+        const k1=mul(evale(frictionfactor,x),div(sqr(evale(velocity,x)),mul(2,gravity,evale(diameter,x))));
+        const k2=mul(evale(frictionfactor,add(x,div(dx,2))),div(sqr(evale(velocity,add(x,div(dx,2)))),mul(2,gravity,evale(diameter,add(x,div(dx,2))))));
+        const k3=mul(evale(frictionfactor,add(x,div(dx,2))),div(sqr(evale(velocity,add(x,div(dx,2)))),mul(2,gravity,evale(diameter,add(x,div(dx,2))))));
+        const k4=mul(evale(frictionfactor,add(x,dx)),div(sqr(evale(velocity,add(x,dx))),mul(2,gravity,evale(diameter,add(x,dx)))));
+        h=add(h,mul(div(dx,6),add(k1,mul(2,k2),mul(2,k3),k4)));
+        x=add(x,dx);
+    }
+
+    return h;
+}
+function colebrookapproximationmoody(re,er){
+    return mul(.0055,pow(add(1,pow(add(mul(20000,er),div(1000000,re)),div(1,3))),1));
+}
+
+function colebrookapproximationwood(re,er){
+    const psi=mul(1.62,pow(er,.134));
+    return add(mul(.094,pow(er,.225)),mul(.53,er),mul(88,pow(er,.44),pow(re,sub(0,psi))));
+}
+
+function colebrookapproximationeck(re,er){
+    return div(1,sqr(mul(-2,log10(add(div(er,3.715),div(15,re))))));
+}
+
+function colebrookapproximationswameejain(re,er){
+    return div(.25,sqr(log10(add(div(er,3.7),div(5.74,pow(re,.9))))));
+}
+
+function colebrookapproximationchurchill(re,er){
+    return div(1,sqr(mul(-2,log10(add(div(er,3.71),pow(div(7,re),.9))))));
+}
+
+function colebrookapproximationjain(re,er){
+    return div(1,sqr(mul(-2,log10(add(div(er,3.715),pow(div(6.943,re),-.9))))));
+}
+
+function colebrookapproximationchurchill2(re,er){
+    const t1=pow(mul(-2.457,ln(add(pow(div(7,re),.9),mul(.27,er)))),16);
+    const t2=pow(div(37530,re),16);
+    return mul(8,pow(add(pow(div(8,re),12),pow(add(t1,t2),-1.5)),div(1,12)));
+}
+
+function colebrookapproximationchen(re,er){
+    return div(1,sqr(mul(-2,log10(sub(div(er,3.7065),mul(div(5.0452,re),log10(add(div(pow(er,1.1098),2.8257),div(5.8506,pow(re,.8981))))))))));
+}
+
+function colebrookapproximationround(re,er){
+    return div(1,sqr(mul(1.8,log10(div(re,add(mul(.135,re,er),6.5))))));
+}
+
+function colebrookapproximationbarr(re,er){
+    return div(1,sqr(mul(-2,log10(add(div(er,3.7),div(mul(4.518,log10(div(re,7))),mul(re,add(1,div(mul(pow(re,.52),pow(er,.7)),29)))))))));
+}
+
+function colebrookapproximationzigrangandsylvester(re,er){
+    return div(1,sqr(mul(-2,log10(sub(div(er,3.7),mul(div(5.02,re),log10(sub(div(er,3.7),mul(div(5.02,re),log10(add(div(er,3.7),div(13,re))))))))))));
+}
+
+function colebrookapproximationzigrangandsylvester2(re,er){
+    return div(1,sqr(mul(-2,log10(sub(div(er,3.7),mul(div(5.02,re),log10(add(div(er,3.7),div(13,re)))))))));
+}
+
+function colebrookapproximationhaaland(re,er){
+    return div(1,sqr(mul(-1.8,log10(add(pow(div(er,3.7),1.11),div(6.9,re))))));
+}
+
+function colebrookapproximationserghides(re,er){
+    const a=mul(-2,log10(add(div(er,3.7),div(12,re))));
+    const b=mul(-2,log10(add(div(er,3.7),div(mul(2.51,a),re))));
+    const c=mul(-2,log10(add(div(er,3.7),div(mul(2.51,b),re))));
+    return div(1,sqr(sub(a,div(sqr(sub(b,a)),add(sub(c,mul(2,b)),a)))));
+}
+
+function colebrookapproximationtsal(re,er){
+    const a=mul(.11,pow(add(div(68,re),er),.25));
+    if(re(a)>=.018)return a;
+    return add(.0028,mul(.85,a));
+}
+
+function colebrookapproximationmanadilli(re,er){
+    return div(1,sqr(mul(-2,log10(add(div(er,3.7),sub(div(95,pow(re,.983)),div(96.82,re)))))));
+}
+
+function colebrookapproximationromeoroyomonzon(re,er){
+    return div(1,sqr(mul(-2,log10(add(div(er,3.7065),sub(mul(div(5.0272,re),log10(sub(div(er,3.827),mul(div(4.657,re),log10(add(pow(div(er,7.7918),.9924),pow(div(5.3326,add(208.815,re)),.9345))))))),0))))));
+}
+
+function colebrookapproximationgoudarsonnad(re,er){
+    const s=add(mul(.124,re,er),ln(mul(.4587,re)));
+    return div(1,sqr(mul(.8686,ln(div(mul(.4587,re),pow(sub(s,.31),div(s,add(s,1))))))));
+}
+
+function colebrookapproximationvatankhahkouchakzadeh(re,er){
+    const s=add(mul(.124,re,er),ln(mul(.4587,re)));
+    return div(1,sqr(mul(.8686,ln(div(mul(.4587,re),pow(sub(s,.31),div(s,add(s,.9633))))))));
+}
+
+function colebrookapproximationbuzzelli(re,er){
+    const a=div(sub(mul(.744,ln(re)),1.41),add(1,mul(1.32,sqrt(er))));
+    const b=add(mul(div(er,3.7),re),mul(2.51,a));
+    return div(1,sqr(sub(a,div(add(a,mul(2,log10(div(b,re)))),add(1,div(2.18,b))))));
+}
+
+function colebrookapproximationcheng(re,er){
+    const a=div(1,add(1,pow(div(re,2720),9)));
+    const b=div(1,add(1,pow(div(re,mul(160,div(1,er))),2)));
+    return div(1,pow(mul(pow(div(re,64),a),pow(mul(1.8,log10(div(re,6.8))),mul(2,sub(1,a),b)),pow(mul(2,log10(div(mul(3.7,1),er))),mul(2,sub(1,a),sub(1,b)))),1));
+}
+
+function colebrookapproximationavcikargoz(re,er){
+    return div(6.4,pow(sub(ln(re),ln(add(1,mul(.01,re,er,add(1,mul(10,sqrt(er))))))),2.4));
+}
+
+function colebrookapproximationevangelidespapaevangeloutzimopoulos(re,er){
+    return div(sub(.2479,mul(.0000947,pow(sub(7,log10(re)),4))),sqr(log10(add(div(er,3.615),div(7.366,pow(re,.9142))))));
+}
+
+function colebrookapproximationfang(re,er){
+    return mul(1.613,pow(ln(add(mul(.234,pow(er,1.1007)),sub(div(56.291,pow(re,1.0712)),div(60.525,pow(re,1.1105))))),-2));
+}
+
+function colebrookapproximationbrkic(re,er){
+    const beta=ln(div(re,mul(1.816,ln(div(mul(1.1,re),ln(add(1,mul(1.1,re))))))));
+    return div(1,sqr(mul(-2,log10(add(div(mul(2.18,beta),re),div(er,3.71))))));
+}
+
+function colebrookapproximationsalashkar(re,er){
+    const a=div(er,3.7065);
+    const b=div(2.5226,re);
+    return pow(div(add(8.128943,a),sub(mul(8.128943,a),mul(.86859209,b,ln(div(b,mul(3.7099535,re)))))),-2);
+}
+
+function colebrookapproximationbellosnalbantistsakiris(re,er){
+    const a=div(1,add(1,pow(div(re,2712),8.4)));
+    const b=div(1,add(1,pow(div(re,mul(150,div(1,er))),1.8)));
+    return mul(pow(div(64,re),a),pow(mul(.75,ln(div(re,5.37))),mul(2,sub(a,1),b)),pow(mul(.88,ln(div(3.41,er))),mul(2,sub(a,1),sub(1,b))));
+}
+
+function colebrookapproximationniazkar(re,er){
+    const a=mul(-2,log10(add(div(er,3.7),div(4.5547,pow(re,.8784)))));
+    const b=mul(-2,log10(add(div(er,3.7),div(mul(2.51,a),re))));
+    const c=mul(-2,log10(add(div(er,3.7),div(mul(2.51,b),re))));
+    return div(1,sqr(sub(a,div(sqr(sub(b,a)),add(sub(c,mul(2,b)),a)))));
+}
+
+function colebrookapproximationtkachenkomileikovskyi(re,er){
+    return div(1,sqr(mul(.8284,ln(add(div(er,4.913),div(10.31,re))))));
+}
+
+function colebrookapproximationtkachenkomileikovskyi2(re,er){
+    const a0=mul(-.79638,ln(add(div(er,8.208),div(7.3357,re))));
+    const a1=add(mul(re,er),mul(9.3120665,a0));
+    return sqr(div(add(8.128943,a1),sub(mul(8.128943,a0),mul(.86859209,a1,ln(div(a1,mul(3.7099535,re)))))));
+}
+
+function colebrookapproximation(re,er){
+    return colebrookapproximationserghides(re,er);
+}
+//https://en.wikipedia.org/wiki/Thin-film_equation
+function lapx(h,i,j,dx){
+    const nx=h.length;
+    const ip=(i+1)%nx,im=(i-1+nx)%nx;
+    return div(sub(h[ip][j],mul(2,h[i][j]),h[im][j]),sqr(dx));
+}
+
+function lapy(h,i,j,dy){
+    const ny=h[0].length;
+    const jp=(j+1)%ny,jm=(j-1+ny)%ny;
+    return div(sub(h[i][jp],mul(2,h[i][j]),h[i][jm]),sqr(dy));
+}
+
+function thinfilmflux(h,i,j,dx,dy,mu,gamma,rho,g,enx,eny,eix,eiy,ax,ay){
+    const nx=h.length,ny=h[0].length;
+    const ip=(i+1)%nx,im=(i-1+nx)%nx,jp=(j+1)%ny,jm=(j-1+ny)%ny;
+
+    const hi=maxc(h[i][j],0);
+    const h2=pow(hi,2);
+    const h3=pow(hi,3);
+
+    const phix=mul(
+        gamma,
+        div(
+            sub(
+                lapx(h,ip,j,dx),
+                lapx(h,im,j,dx)
+            ),
+            mul(2,dx)
+        )
+    );
+
+    const phiy=mul(
+        gamma,
+        div(
+            sub(
+                lapy(h,i,jp,dy),
+                lapy(h,i,jm,dy)
+            ),
+            mul(2,dy)
+        )
+    );
+
+    const qx=add(
+        mul(
+            div(h3,mul(3,mu)),
+            add(phix,mul(rho,g,eix))
+        ),
+        mul(div(h2,mul(2,mu)),ax)
+    );
+
+    const qy=add(
+        mul(
+            div(h3,mul(3,mu)),
+            add(phiy,mul(rho,g,eiy))
+        ),
+        mul(div(h2,mul(2,mu)),ay)
+    );
+
+    return [qx,qy];
+}
+
+function thinfilmdifferential(h,dx,dy,mu,gamma,rho,g,enx,eny,eix,eiy,ax,ay){
+    const nx=h.length,ny=h[0].length;
+    const q=Array.from({length:nx},()=>Array(ny));
+    const out=Array.from({length:nx},()=>Array(ny));
+
+    for(let i=0;i<nx;i++){
+        for(let j=0;j<ny;j++){
+            q[i][j]=thinfilmflux(
+                h,i,j,dx,dy,mu,gamma,rho,g,
+                enx,eny,eix,eiy,ax,ay
+            );
+        }
+    }
+
+    for(let i=0;i<nx;i++){
+        const ip=(i+1)%nx;
+        const im=(i-1+nx)%nx;
+
+        for(let j=0;j<ny;j++){
+            const jp=(j+1)%ny;
+            const jm=(j-1+ny)%ny;
+
+            const dqdx=div(
+                sub(q[ip][j][0],q[im][j][0]),
+                mul(2,dx)
+            );
+
+            const dqdy=div(
+                sub(q[i][jp][1],q[i][jm][1]),
+                mul(2,dy)
+            );
+
+            out[i][j]=mul(-1,add(dqdx,dqdy));
+        }
+    }
+
+    return out;
+}
+
+function thinfilmadd(h,k,a){
+    return h.map((row,i)=>row.map((v,j)=>add(v,mul(a,k[i][j]))));
+}
+
+function thinfilmintegrator(h,t0,t1,dt,dx,dy,mu,gamma,rho,g,enx,eny,eix,eiy,ax,ay){
+    let t=t0;
+
+    while(re(t)<re(t1)){
+        const k1=thinfilmdifferential(h,dx,dy,mu,gamma,rho,g,enx,eny,eix,eiy,ax,ay);
+
+        const h2=thinfilmadd(h,k1,div(dt,2));
+        const k2=thinfilmdifferential(h2,dx,dy,mu,gamma,rho,g,enx,eny,eix,eiy,ax,ay);
+
+        const h3=thinfilmadd(h,k2,div(dt,2));
+        const k3=thinfilmdifferential(h3,dx,dy,mu,gamma,rho,g,enx,eny,eix,eiy,ax,ay);
+
+        const h4=thinfilmadd(h,k3,dt);
+        const k4=thinfilmdifferential(h4,dx,dy,mu,gamma,rho,g,enx,eny,eix,eiy,ax,ay);
+
+        for(let i=0;i<h.length;i++){
+            for(let j=0;j<h[0].length;j++){
+                h[i][j]=add(
+                    h[i][j],
+                    mul(
+                        div(dt,6),
+                        add(
+                            k1[i][j],
+                            mul(2,k2[i][j]),
+                            mul(2,k3[i][j]),
+                            k4[i][j]
+                        )
+                    )
+                );
+            }
+        }
+
+        t=add(t,dt);
+    }
+
+    return h;
+}
+
+/*
+const htest=(x,y)=>add(1,mul(.01,exp(sub(0,add(sqr(x),sqr(y))))));
+
+const nx=10,ny=10;
+const dx=.1,dy=.1;
+const h=Array.from({length:nx},(_,i)=>
+    Array.from({length:ny},(_,j)=>
+        htest(mul(sub(i,4.5),dx),mul(sub(j,4.5),dy))
+    )
+);
+
+const result=thinfilmintegrator(
+    h,
+    nx,ny,
+    dx,dy,
+    .001,
+    30,
+    1,
+    1,
+    1,
+    9.81,
+    0,0,0
+);
+console.log(result);
+*/
+
+//
+
+
+
+//
+
+
+//
+
+//
+
+
+//
+
 //
 
 
@@ -56884,18 +59945,8 @@ function timeorder(a,t,mulop){
 
 //
 
-//
-
 
 //
-
-
-//
-
-
-//
-
-
 //
 
 
@@ -56922,7 +59973,6 @@ function timeorder(a,t,mulop){
 
 
 //
-
 //https://en.wikipedia.org/wiki/Heat_equation
 function heatequation(x,t,u0,alpha=1,N=bign,h=0.01,M=201){
     let mid=floor(div(M,2)),dx=h,limit=div(mul(0.5,sqr(dx)),alpha),steps=maxc(N,ceil(div(t,limit))),dt=div(t,steps)

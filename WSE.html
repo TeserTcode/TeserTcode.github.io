@@ -1,0 +1,733 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Williams Spray Equation</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    background:#181818;
+    color:#ddd;
+    font-family:Arial,sans-serif;
+}
+
+#app{
+    display:flex;
+    gap:16px;
+    padding:16px;
+    max-width:1100px;
+    margin:auto;
+}
+
+#view{
+    flex:1;
+    min-width:0;
+}
+
+canvas{
+    display:block;
+    width:100%;
+    aspect-ratio:1.35;
+    background:#080808;
+    border:1px solid #444;
+}
+
+#panel{
+    width:260px;
+    flex:none;
+    background:#222;
+    border:1px solid #444;
+    padding:14px;
+}
+
+h2{
+    margin:0 0 14px;
+    font-size:19px;
+    font-weight:normal;
+}
+
+h3{
+    margin:15px 0 8px;
+    font-size:13px;
+    font-weight:normal;
+    color:#aaa;
+}
+
+label{
+    display:block;
+    font-size:12px;
+    margin:9px 0 4px;
+}
+
+.val{
+    float:right;
+    color:#aaa;
+}
+
+input[type=range]{
+    width:100%;
+}
+
+select,button{
+    width:100%;
+    height:36px;
+    margin-top:7px;
+    background:#303030;
+    border:1px solid #555;
+    color:#ddd;
+    padding:0 8px;
+}
+
+button{
+    cursor:pointer;
+}
+
+button:hover{
+    background:#3a3a3a;
+}
+
+#stats{
+    border-top:1px solid #444;
+    margin-top:14px;
+    padding-top:10px;
+    font-size:12px;
+    line-height:1.7;
+    color:#aaa;
+}
+
+.legend{
+    margin-top:8px;
+    font-size:11px;
+    color:#999;
+}
+
+@media(max-width:750px){
+    #app{
+        flex-direction:column;
+    }
+
+    #panel{
+        width:100%;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="app">
+
+<div id="view">
+    <canvas id="canvas" width="900" height="650"></canvas>
+    <div class="legend">
+        Horizontal axis: position x &nbsp; | &nbsp;
+        Vertical axis: droplet radius r &nbsp; | &nbsp;
+        Brightness: droplet number density G
+    </div>
+</div>
+
+<div id="panel">
+
+<h2>Williams spray</h2>
+
+<h3>Physical parameters</h3>
+
+<label>
+    Droplet velocity u
+    <span class="val" id="uv"></span>
+</label>
+<input id="u" type="range" min="0.1" max="10" step="0.1" value="2">
+
+<label>
+    Evaporation χ
+    <span class="val" id="chiv"></span>
+</label>
+<input id="chi" type="range" min="0" max="5" step="0.01" value="0.8">
+
+<label>
+    Evaporation exponent k
+    <span class="val" id="kv"></span>
+</label>
+<input id="k" type="range" min="0" max="3" step="0.01" value="2">
+
+<h3>Initial distribution</h3>
+
+<label>
+    Mean radius
+    <span class="val" id="r0v"></span>
+</label>
+<input id="r0" type="range" min="0.1" max="8" step="0.1" value="3">
+
+<label>
+    Radius width
+    <span class="val" id="sigv"></span>
+</label>
+<input id="sig" type="range" min="0.05" max="3" step="0.05" value="0.7">
+
+<label>
+    Injection amplitude
+    <span class="val" id="ampv"></span>
+</label>
+<input id="amp" type="range" min="0.1" max="5" step="0.1" value="1">
+
+<h3>Numerics</h3>
+
+<label>
+    Grid
+    <span class="val" id="gridv"></span>
+</label>
+<select id="grid">
+    <option value="100">100 × 70</option>
+    <option value="140" selected>140 × 90</option>
+    <option value="180">180 × 110</option>
+</select>
+
+<label>
+    Simulation speed
+    <span class="val" id="speedv"></span>
+</label>
+<input id="speed" type="range" min="1" max="10" step="1" value="4">
+
+<label>
+    Color scale
+</label>
+<select id="scale">
+    <option value="linear">Linear</option>
+    <option value="log" selected>Logarithmic</option>
+</select>
+
+<button id="pause">Pause</button>
+<button id="reset">Reset</button>
+
+<div id="stats">
+    t = <span id="time">0</span><br>
+    mean radius = <span id="mean">0</span><br>
+    total density = <span id="total">0</span><br>
+    evaporated fraction = <span id="evap">0</span>
+</div>
+
+</div>
+</div>
+
+<script>
+
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+
+let nx=140;
+let nr=90;
+
+let xmin=0;
+let xmax=20;
+
+let rmin=.05;
+let rmax=8;
+
+let dx;
+let dr;
+
+let G;
+let Gnew;
+
+let time=0;
+let running=true;
+
+let initialMass=0;
+
+const p={
+    u:2,
+    chi:.8,
+    k:2,
+    r0:3,
+    sig:.7,
+    amp:1,
+    speed:4
+};
+
+function idx(i,j){
+    return j*nx+i;
+}
+
+function clamp(x,a,b){
+    return Math.max(a,Math.min(b,x));
+}
+
+function makeGrid(){
+
+    nx=+document.getElementById("grid").value;
+
+    if(nx===100)nr=70;
+    if(nx===140)nr=90;
+    if(nx===180)nr=110;
+
+    dx=(xmax-xmin)/nx;
+    dr=(rmax-rmin)/nr;
+
+    G=new Float64Array(nx*nr);
+    Gnew=new Float64Array(nx*nr);
+
+    time=0;
+
+    initialize();
+}
+
+function radius(j){
+    return rmin+(j+.5)*dr;
+}
+
+function initialize(){
+
+    G.fill(0);
+
+    /*
+       Initial spray is injected at x=0.
+       A Gaussian distribution in radius
+       represents the initial droplet population.
+    */
+
+    for(let j=0;j<nr;j++){
+
+        const r=radius(j);
+
+        const z=(r-p.r0)/p.sig;
+
+        G[idx(0,j)]=
+            p.amp*
+            Math.exp(-.5*z*z);
+    }
+
+    /*
+       Seed several cells downstream so
+       the visualization is immediately useful.
+    */
+
+    for(let i=1;i<Math.min(5,nx);i++){
+
+        const x=i*dx;
+
+        for(let j=0;j<nr;j++){
+
+            const r=radius(j);
+            const z=(r-p.r0)/p.sig;
+
+            G[idx(i,j)]=
+                p.amp*
+                Math.exp(-.5*z*z)*
+                Math.exp(-x/.5);
+        }
+    }
+
+    initialMass=mass();
+}
+
+function evaporationRate(r){
+
+    /*
+       R = dr/dt = -chi / r^k
+    */
+
+    return -p.chi/Math.pow(Math.max(r,.02),p.k);
+}
+
+function timestep(){
+
+    /*
+       CFL restriction for both directions.
+
+       x velocity is u.
+       Radius velocity is R(r).
+    */
+
+    let maxR=0;
+
+    for(let j=0;j<nr;j++){
+
+        const r=radius(j);
+        const R=Math.abs(evaporationRate(r));
+
+        if(R>maxR)maxR=R;
+    }
+
+    const cflX=dx/Math.max(p.u,.000001);
+    const cflR=dr/Math.max(maxR,.000001);
+
+    return .35*Math.min(cflX,cflR);
+}
+
+function step(){
+
+    const dt=timestep();
+
+    /*
+       Conservative finite-volume update.
+
+       G_t = -(F_x(i+1/2)-F_x(i-1/2))/dx
+             -(F_r(j+1/2)-F_r(j-1/2))/dr
+    */
+
+    Gnew.fill(0);
+
+    for(let j=0;j<nr;j++){
+
+        const r=radius(j);
+        const R=evaporationRate(r);
+
+        for(let i=0;i<nx;i++){
+
+            const id=idx(i,j);
+            const value=G[id];
+
+            /*
+               x-direction.
+               u > 0, therefore use upwind value.
+            */
+
+            const left=i>0 ? G[idx(i-1,j)] : 0;
+            const right=i<nx-1 ? G[idx(i+1,j)] : 0;
+
+            const fluxInX=p.u*left;
+            const fluxOutX=p.u*value;
+
+            /*
+               r-direction.
+
+               R < 0, so droplets move downward
+               toward smaller radius.
+
+               For negative velocity the upwind
+               state is the cell above.
+            */
+
+            const lower=
+                j>0 ? G[idx(i,j-1)] : 0;
+
+            const upper=
+                j<nr-1 ? G[idx(i,j+1)] : 0;
+
+            let fluxLower;
+            let fluxUpper;
+
+            if(R<0){
+
+                fluxLower=R*value;
+                fluxUpper=R*upper;
+
+            }else{
+
+                fluxLower=R*lower;
+                fluxUpper=R*value;
+            }
+
+            /*
+               Boundary at r=rmin:
+               droplets leaving the radius domain
+               disappear from the distribution.
+            */
+
+            const dxterm=
+                (fluxOutX-fluxInX)/dx;
+
+            const drterm=
+                (fluxUpper-fluxLower)/dr;
+
+            Gnew[id]=
+                Math.max(
+                    0,
+                    value-dt*(dxterm+drterm)
+                );
+        }
+    }
+
+    /*
+       Inlet boundary.
+
+       Continuous spray injection at x=0.
+       The boundary value is imposed as a
+       Gaussian radius distribution.
+    */
+
+    for(let j=0;j<nr;j++){
+
+        const r=radius(j);
+        const z=(r-p.r0)/p.sig;
+
+        Gnew[idx(0,j)]=
+            p.amp*
+            Math.exp(-.5*z*z);
+    }
+
+    const temp=G;
+    G=Gnew;
+    Gnew=temp;
+
+    time+=dt;
+}
+
+function mass(){
+
+    let s=0;
+
+    for(let i=0;i<nx;i++)
+        for(let j=0;j<nr;j++)
+            s+=G[idx(i,j)];
+
+    return s*dx*dr;
+}
+
+function meanRadius(){
+
+    let m=0;
+    let s=0;
+
+    for(let i=0;i<nx;i++){
+
+        for(let j=0;j<nr;j++){
+
+            const v=G[idx(i,j)];
+            const r=radius(j);
+
+            m+=r*v;
+            s+=v;
+        }
+    }
+
+    return s>0?m/s:0;
+}
+
+function color(v){
+
+    /*
+       Dark blue -> cyan -> yellow -> white.
+       No external color libraries required.
+    */
+
+    v=clamp(v,0,1);
+
+    const stops=[
+        [0,0,0],
+        [20,35,100],
+        [20,130,190],
+        [80,210,170],
+        [240,220,80],
+        [255,255,255]
+    ];
+
+    const x=v*(stops.length-1);
+    const a=Math.floor(x);
+    const f=x-a;
+
+    if(a>=stops.length-1)
+        return stops[stops.length-1];
+
+    return [
+        stops[a][0]*(1-f)+stops[a+1][0]*f,
+        stops[a][1]*(1-f)+stops[a+1][1]*f,
+        stops[a][2]*(1-f)+stops[a+1][2]*f
+    ];
+}
+
+function render(){
+
+    const w=canvas.width;
+    const hh=canvas.height;
+
+    const image=ctx.createImageData(w,hh);
+    const data=image.data;
+
+    let max=0;
+
+    for(let k=0;k<G.length;k++)
+        if(G[k]>max)max=G[k];
+
+    if(max<=0)max=1;
+
+    const mode=document.getElementById("scale").value;
+
+    for(let py=0;py<hh;py++){
+
+        /*
+           Canvas y is inverted relative to radius.
+           Large radius appears at the top.
+        */
+
+        const j=
+            nr-1-
+            Math.floor(py/hh*nr);
+
+        for(let px=0;px<w;px++){
+
+            const i=
+                Math.floor(px/w*nx);
+
+            let v=G[idx(i,j)]/max;
+
+            if(mode==="log")
+                v=Math.log1p(100*v)/Math.log(101);
+
+            const c=color(v);
+
+            const q=(py*w+px)*4;
+
+            data[q]=c[0];
+            data[q+1]=c[1];
+            data[q+2]=c[2];
+            data[q+3]=255;
+        }
+    }
+
+    ctx.putImageData(image,0,0);
+
+    /*
+       Axis labels.
+    */
+
+    ctx.fillStyle="rgba(255,255,255,.7)";
+    ctx.font="12px Arial";
+
+    ctx.fillText(
+        "x = 0",
+        8,
+        hh-8
+    );
+
+    ctx.fillText(
+        "x = "+xmax.toFixed(1),
+        w-65,
+        hh-8
+    );
+
+    ctx.fillText(
+        "r = "+rmax.toFixed(1),
+        8,
+        14
+    );
+
+    ctx.fillText(
+        "r = "+rmin.toFixed(2),
+        8,
+        hh-25
+    );
+
+    /*
+       Initial mean-radius guide.
+    */
+
+    const y=
+        hh-
+        (p.r0-rmin)/(rmax-rmin)*hh;
+
+    ctx.strokeStyle="rgba(255,255,255,.35)";
+    ctx.setLineDash([5,5]);
+    ctx.beginPath();
+    ctx.moveTo(0,y);
+    ctx.lineTo(w,y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    const m=mass();
+
+    document.getElementById("time").textContent=
+        time.toFixed(3);
+
+    document.getElementById("mean").textContent=
+        meanRadius().toFixed(4);
+
+    document.getElementById("total").textContent=
+        m.toExponential(4);
+
+    const lost=
+        initialMass>0?
+        clamp(1-m/initialMass,0,1):
+        0;
+
+    document.getElementById("evap").textContent=
+        (lost*100).toFixed(2)+"%";
+}
+
+function updateValues(){
+
+    p.u=+document.getElementById("u").value;
+    p.chi=+document.getElementById("chi").value;
+    p.k=+document.getElementById("k").value;
+    p.r0=+document.getElementById("r0").value;
+    p.sig=+document.getElementById("sig").value;
+    p.amp=+document.getElementById("amp").value;
+    p.speed=+document.getElementById("speed").value;
+
+    document.getElementById("uv").textContent=p.u;
+    document.getElementById("chiv").textContent=p.chi;
+    document.getElementById("kv").textContent=p.k;
+    document.getElementById("r0v").textContent=p.r0;
+    document.getElementById("sigv").textContent=p.sig;
+    document.getElementById("ampv").textContent=p.amp;
+    document.getElementById("gridv").textContent=nx+" × "+nr;
+    document.getElementById("speedv").textContent=p.speed;
+}
+
+document.querySelectorAll("input").forEach(el=>{
+
+    el.addEventListener("input",()=>{
+
+        updateValues();
+
+        /*
+           Changing the physical parameters should
+           not destroy the current spray.
+        */
+    });
+});
+
+document.getElementById("grid").addEventListener(
+    "change",
+    ()=>{
+        makeGrid();
+        updateValues();
+    }
+);
+
+document.getElementById("reset").addEventListener(
+    "click",
+    ()=>{
+        updateValues();
+        initialize();
+    }
+);
+
+document.getElementById("pause").addEventListener(
+    "click",
+    ()=>{
+        running=!running;
+
+        document.getElementById("pause").textContent=
+            running?"Pause":"Resume";
+    }
+);
+
+updateValues();
+makeGrid();
+
+function animate(){
+
+    if(running){
+
+        for(let s=0;s<p.speed;s++)
+            step();
+    }
+
+    render();
+
+    requestAnimationFrame(animate);
+}
+
+animate();
+
+</script>
+
+</body>
+</html>
+```
