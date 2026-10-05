@@ -1,0 +1,986 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Primitive Equations</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    background:#181818;
+    color:#ddd;
+    font-family:Arial,sans-serif;
+}
+
+#app{
+    display:flex;
+    gap:16px;
+    padding:16px;
+    max-width:1200px;
+    margin:auto;
+}
+
+#main{
+    flex:1;
+    min-width:0;
+}
+
+canvas{
+    display:block;
+    width:100%;
+    aspect-ratio:1.45;
+    background:#080808;
+    border:1px solid #444;
+}
+
+#panel{
+    width:270px;
+    flex:none;
+    background:#222;
+    border:1px solid #444;
+    padding:14px;
+}
+
+h2{
+    margin:0 0 15px;
+    font-size:19px;
+    font-weight:normal;
+}
+
+h3{
+    margin:16px 0 8px;
+    font-size:13px;
+    color:#aaa;
+    font-weight:normal;
+}
+
+label{
+    display:block;
+    font-size:12px;
+    margin:9px 0 4px;
+}
+
+.val{
+    float:right;
+    color:#aaa;
+}
+
+input[type=range]{
+    width:100%;
+}
+
+select,button{
+    width:100%;
+    height:36px;
+    margin-top:7px;
+    padding:0 8px;
+    background:#303030;
+    border:1px solid #555;
+    color:#ddd;
+}
+
+button{
+    cursor:pointer;
+}
+
+button:hover{
+    background:#3a3a3a;
+}
+
+#stats{
+    border-top:1px solid #444;
+    margin-top:14px;
+    padding-top:10px;
+    font-size:12px;
+    line-height:1.7;
+    color:#aaa;
+}
+
+#eq{
+    margin-top:12px;
+    color:#888;
+    font-size:11px;
+    line-height:1.55;
+}
+
+@media(max-width:760px){
+    #app{
+        flex-direction:column;
+    }
+
+    #panel{
+        width:100%;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="app">
+
+<div id="main">
+    <canvas id="canvas" width="900" height="620"></canvas>
+
+    <div id="eq">
+        u,v: horizontal momentum · T: temperature · W: water vapor ·
+        Δp: pressure thickness
+    </div>
+</div>
+
+<div id="panel">
+
+<h2>Primitive equations</h2>
+
+<h3>Displayed field</h3>
+
+<select id="field">
+    <option value="u">Zonal wind u</option>
+    <option value="v">Meridional wind v</option>
+    <option value="speed">Wind speed</option>
+    <option value="temp" selected>Temperature T</option>
+    <option value="water">Precipitable water W</option>
+    <option value="dp">Pressure thickness Δp</option>
+    <option value="vort">Relative vorticity</option>
+</select>
+
+<h3>Atmosphere</h3>
+
+<label>
+    Coriolis f₀
+    <span class="val" id="f0v"></span>
+</label>
+<input id="f0" type="range" min="0" max="2" step=".01" value=".6">
+
+<label>
+    Beta
+    <span class="val" id="betav"></span>
+</label>
+<input id="beta" type="range" min="0" max=".3" step=".001" value=".04">
+
+<label>
+    Pressure coupling
+    <span class="val" id="pv"></span>
+</label>
+<input id="pc" type="range" min="0" max="3" step=".01" value=".8">
+
+<label>
+    Temperature coupling
+    <span class="val" id="tv"></span>
+</label>
+<input id="tc" type="range" min="0" max="2" step=".01" value=".5">
+
+<h3>Thermodynamics</h3>
+
+<label>
+    Heating
+    <span class="val" id="heatv"></span>
+</label>
+<input id="heat" type="range" min="-1" max="1" step=".01" value=".15">
+
+<label>
+    Water source
+    <span class="val" id="wv"></span>
+</label>
+<input id="waterSource" type="range" min="0" max=".5" step=".01" value=".05">
+
+<label>
+    Diffusion
+    <span class="val" id="diffv"></span>
+</label>
+<input id="diff" type="range" min="0" max=".1" step=".001" value=".015">
+
+<h3>Numerics</h3>
+
+<label>
+    Grid
+    <span class="val" id="gridv"></span>
+</label>
+<select id="grid">
+    <option value="70">70 × 50</option>
+    <option value="100" selected>100 × 70</option>
+    <option value="140">140 × 90</option>
+</select>
+
+<label>
+    Simulation speed
+    <span class="val" id="speedv"></span>
+</label>
+<input id="speed" type="range" min="1" max="8" value="3">
+
+<label>
+    Color scale
+</label>
+<select id="scale">
+    <option value="auto">Auto</option>
+    <option value="fixed">Fixed</option>
+</select>
+
+<button id="pause">Pause</button>
+<button id="reset">Reset</button>
+
+<div id="stats">
+    t = <span id="time">0</span><br>
+    max |u| = <span id="umax">0</span><br>
+    max |v| = <span id="vmax">0</span><br>
+    mean T = <span id="tmean">0</span><br>
+    mean W = <span id="wmean">0</span>
+</div>
+
+</div>
+</div>
+
+<script>
+
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+
+let nx=100;
+let ny=70;
+
+let dx=1;
+let dy=1;
+
+let u,v,T,W,dp;
+let un,vn,Tn,Wn,dpn;
+
+let time=0;
+let running=true;
+
+const p={
+    f0:.6,
+    beta:.04,
+    pc:.8,
+    tc:.5,
+    heat:.15,
+    waterSource:.05,
+    diff:.015,
+    speed:3
+};
+
+function id(i,j){
+    i=(i+nx)%nx;
+    j=Math.max(0,Math.min(ny-1,j));
+    return j*nx+i;
+}
+
+function makeArray(){
+    return new Float64Array(nx*ny);
+}
+
+function setup(){
+
+    nx=+document.getElementById("grid").value;
+
+    if(nx===70)ny=50;
+    if(nx===100)ny=70;
+    if(nx===140)ny=90;
+
+    dx=2*Math.PI/nx;
+    dy=2/ny;
+
+    u=makeArray();
+    v=makeArray();
+    T=makeArray();
+    W=makeArray();
+    dp=makeArray();
+
+    un=makeArray();
+    vn=makeArray();
+    Tn=makeArray();
+    Wn=makeArray();
+    dpn=makeArray();
+
+    initialize();
+}
+
+function initialize(){
+
+    time=0;
+
+    for(let j=0;j<ny;j++){
+
+        const y=-1+(j+.5)*dy;
+
+        for(let i=0;i<nx;i++){
+
+            const x=i*dx;
+
+            /*
+               A warm equatorial region plus
+               longitudinal perturbations.
+            */
+
+            const equator=
+                Math.exp(-4*y*y);
+
+            const wave=
+                Math.sin(3*x)*
+                Math.cos(Math.PI*y/2);
+
+            const cyclone=
+                Math.exp(
+                    -8*(
+                        Math.pow(
+                            Math.atan2(
+                                Math.sin(x),
+                                Math.cos(x)
+                            ),2
+                        )
+                        +
+                        3*Math.pow(y-.15,2)
+                    )
+                );
+
+            const k=id(i,j);
+
+            u[k]=.25*wave;
+            v[k]=-.25*wave;
+
+            T[k]=
+                1.0+
+                .45*equator+
+                .08*wave;
+
+            W[k]=
+                .5+
+                .35*equator+
+                .1*wave;
+
+            dp[k]=
+                1+
+                .12*equator+
+                .12*cyclone;
+        }
+    }
+}
+
+function coriolis(j){
+
+    const y=-1+(j+.5)*dy;
+
+    return p.f0+p.beta*y;
+}
+
+function ddx(a,i,j){
+
+    return (
+        a[id(i+1,j)]-
+        a[id(i-1,j)]
+    )/(2*dx);
+}
+
+function ddy(a,i,j){
+
+    /*
+       Zero-normal-gradient condition.
+    */
+
+    if(j===0)
+        return (
+            a[id(i,1)]-
+            a[id(i,0)]
+        )/dy;
+
+    if(j===ny-1)
+        return (
+            a[id(i,ny-1)]-
+            a[id(i,ny-2)]
+        )/dy;
+
+    return (
+        a[id(i,j+1)]-
+        a[id(i,j-1)]
+    )/(2*dy);
+}
+
+function lap(a,i,j){
+
+    let ym,yp;
+
+    if(j===0){
+        ym=a[id(i,0)];
+        yp=a[id(i,1)];
+    }else if(j===ny-1){
+        ym=a[id(i,ny-2)];
+        yp=a[id(i,ny-1)];
+    }else{
+        ym=a[id(i,j-1)];
+        yp=a[id(i,j+1)];
+    }
+
+    return (
+        a[id(i+1,j)]-
+        2*a[id(i,j)] +
+        a[id(i-1,j)]
+    )/(dx*dx)
+    +
+    (
+        yp-
+        2*a[id(i,j)]+
+        ym
+    )/(dy*dy);
+}
+
+function step(){
+
+    /*
+       We use a small explicit timestep.
+       The equations are deliberately nondimensionalized.
+    */
+
+    const dt=.015;
+
+    for(let j=0;j<ny;j++){
+
+        const f=coriolis(j);
+
+        for(let i=0;i<nx;i++){
+
+            const k=id(i,j);
+
+            const ux=ddx(u,i,j);
+            const uy=ddy(u,i,j);
+
+            const vx=ddx(v,i,j);
+            const vy=ddy(v,i,j);
+
+            const Tx=ddx(T,i,j);
+            const Ty=ddy(T,i,j);
+
+            const Wx=ddx(W,i,j);
+            const Wy=ddy(W,i,j);
+
+            const Px=ddx(dp,i,j);
+            const Py=ddy(dp,i,j);
+
+            /*
+               Horizontal momentum equations.
+
+               Du/Dt - f v = -pressure gradient
+               Dv/Dt + f u = -pressure gradient
+            */
+
+            const advu=
+                u[k]*ux+
+                v[k]*uy;
+
+            const advv=
+                u[k]*vx+
+                v[k]*vy;
+
+            /*
+               Temperature modifies geopotential
+               / pressure coupling.
+            */
+
+            const pressureU=
+                p.pc*Px+
+                p.tc*Tx;
+
+            const pressureV=
+                p.pc*Py+
+                p.tc*Ty;
+
+            un[k]=
+                u[k]+dt*(
+                    -advu+
+                    f*v[k]-
+                    pressureU+
+                    p.diff*lap(u,i,j)
+                );
+
+            vn[k]=
+                v[k]+dt*(
+                    -advv-
+                    f*u[k]-
+                    pressureV+
+                    p.diff*lap(v,i,j)
+                );
+
+            /*
+               Thermodynamic equation.
+
+               DT/Dt = heating + diffusion.
+            */
+
+            const advT=
+                u[k]*Tx+
+                v[k]*Ty;
+
+            /*
+               Heating is concentrated near the
+               equator, representing differential
+               radiative forcing.
+            */
+
+            const y=-1+(j+.5)*dy;
+
+            const heating=
+                p.heat*
+                Math.exp(-5*y*y);
+
+            Tn[k]=
+                T[k]+dt*(
+                    -advT+
+                    heating+
+                    p.diff*lap(T,i,j)
+                );
+
+            /*
+               Moisture is approximately a passive
+               advected scalar in this reduced model.
+            */
+
+            const advW=
+                u[k]*Wx+
+                v[k]*Wy;
+
+            const moistureSource=
+                p.waterSource*
+                Math.exp(-6*y*y)*
+                Math.max(0,1-W[k]);
+
+            Wn[k]=
+                W[k]+dt*(
+                    -advW+
+                    moistureSource+
+                    p.diff*lap(W,i,j)
+                );
+
+            /*
+               Pressure thickness is transported
+               approximately as a scalar here.
+
+               A weak divergence coupling keeps the
+               thickness dynamically coupled to the
+               horizontal flow.
+            */
+
+            const divergence=
+                ux+vy;
+
+            dpn[k]=
+                dp[k]+dt*(
+                    -u[k]*Px-
+                    v[k]*Py-
+                    .25*divergence+
+                    p.diff*lap(dp,i,j)
+                );
+        }
+    }
+
+    /*
+       Prevent numerical negative values in scalar
+       quantities.
+    */
+
+    for(let k=0;k<nx*ny;k++){
+
+        if(!Number.isFinite(un[k]))un[k]=0;
+        if(!Number.isFinite(vn[k]))vn[k]=0;
+        if(!Number.isFinite(Tn[k]))Tn[k]=1;
+        if(!Number.isFinite(Wn[k]))Wn[k]=0;
+        if(!Number.isFinite(dpn[k]))dpn[k]=1;
+
+        Wn[k]=Math.max(0,Wn[k]);
+        dpn[k]=Math.max(.05,dpn[k]);
+    }
+
+    [u,un]=[un,u];
+    [v,vn]=[vn,v];
+    [T,Tn]=[Tn,T];
+    [W,Wn]=[Wn,W];
+    [dp,dpn]=[dpn,dp];
+
+    time+=dt;
+}
+
+function vorticity(i,j){
+
+    return ddy(u,i,j)-ddx(v,i,j);
+}
+
+function getField(i,j){
+
+    const field=document.getElementById("field").value;
+    const k=id(i,j);
+
+    if(field==="u")return u[k];
+    if(field==="v")return v[k];
+
+    if(field==="speed")
+        return Math.sqrt(
+            u[k]*u[k]+
+            v[k]*v[k]
+        );
+
+    if(field==="temp")
+        return T[k];
+
+    if(field==="water")
+        return W[k];
+
+    if(field==="dp")
+        return dp[k];
+
+    return vorticity(i,j);
+}
+
+function fieldRange(){
+
+    const field=document.getElementById("field").value;
+
+    if(field==="u"||field==="v"||field==="vort")
+        return 1;
+
+    if(field==="speed")
+        return 1;
+
+    if(field==="temp")
+        return 1.6;
+
+    if(field==="water")
+        return 1.2;
+
+    return 1.4;
+}
+
+function color(v){
+
+    v=Math.max(0,Math.min(1,v));
+
+    /*
+       Diverging fields use blue-white-red.
+       Positive-only fields use dark-blue -> yellow.
+    */
+
+    const field=document.getElementById("field").value;
+
+    if(field==="u"||field==="v"||field==="vort"){
+
+        const x=v*2-1;
+
+        if(x<0){
+
+            const q=1+x;
+
+            return [
+                40*q,
+                100*q,
+                255
+            ];
+
+        }else{
+
+            const q=1-x;
+
+            return [
+                255,
+                100*q,
+                40*q
+            ];
+        }
+    }
+
+    const stops=[
+        [5,10,35],
+        [15,65,140],
+        [20,150,190],
+        [90,210,150],
+        [245,220,80],
+        [255,255,255]
+    ];
+
+    const x=v*(stops.length-1);
+    const a=Math.floor(x);
+    const f=x-a;
+
+    if(a>=stops.length-1)
+        return stops[stops.length-1];
+
+    return [
+        stops[a][0]*(1-f)+stops[a+1][0]*f,
+        stops[a][1]*(1-f)+stops[a+1][1]*f,
+        stops[a][2]*(1-f)+stops[a+1][2]*f
+    ];
+}
+
+function render(){
+
+    const w=canvas.width;
+    const h=canvas.height;
+
+    const image=ctx.createImageData(w,h);
+    const data=image.data;
+
+    const field=document.getElementById("field").value;
+
+    let mn=Infinity;
+    let mx=-Infinity;
+
+    for(let j=0;j<ny;j++){
+
+        for(let i=0;i<nx;i++){
+
+            const z=getField(i,j);
+
+            if(z<mn)mn=z;
+            if(z>mx)mx=z;
+        }
+    }
+
+    /*
+       For velocity and vorticity use a symmetric
+       range around zero.
+    */
+
+    if(field==="u"||field==="v"||field==="vort"){
+
+        const m=Math.max(
+            Math.abs(mn),
+            Math.abs(mx),
+            .001
+        );
+
+        mn=-m;
+        mx=m;
+    }
+
+    if(document.getElementById("scale").value==="fixed"){
+
+        const r=fieldRange();
+
+        if(field==="u"||
+           field==="v"||
+           field==="vort"){
+
+            mn=-r;
+            mx=r;
+
+        }else{
+
+            mn=0;
+            mx=r;
+        }
+    }
+
+    const range=Math.max(mx-mn,1e-9);
+
+    for(let py=0;py<h;py++){
+
+        const j=
+            ny-1-
+            Math.floor(py/h*ny);
+
+        for(let px=0;px<w;px++){
+
+            const i=
+                Math.floor(px/w*nx);
+
+            const z=getField(i,j);
+
+            let q=(z-mn)/range;
+
+            q=Math.max(0,Math.min(1,q));
+
+            const c=color(q);
+
+            const k=(py*w+px)*4;
+
+            data[k]=c[0];
+            data[k+1]=c[1];
+            data[k+2]=c[2];
+            data[k+3]=255;
+        }
+    }
+
+    ctx.putImageData(image,0,0);
+
+    /*
+       Draw a sparse wind-vector field.
+    */
+
+    if(field!=="u"&&field!=="v"){
+
+        ctx.strokeStyle="rgba(255,255,255,.3)";
+        ctx.lineWidth=1;
+
+        const sx=Math.max(1,Math.floor(nx/18));
+        const sy=Math.max(1,Math.floor(ny/12));
+
+        for(let j=sy/2;j<ny;j+=sy){
+
+            for(let i=0;i<nx;i+=sx){
+
+                const k=id(i,j);
+
+                let vx=u[k];
+                let vy=v[k];
+
+                const mag=Math.sqrt(vx*vx+vy*vy);
+
+                if(mag<.01)continue;
+
+                const px=(i+.5)/nx*w;
+                const py=
+                    h-
+                    (j+.5)/ny*h;
+
+                const scale=22;
+
+                vx*=scale;
+                vy*=scale;
+
+                ctx.beginPath();
+                ctx.moveTo(px,py);
+                ctx.lineTo(px+vx,py-vy);
+                ctx.stroke();
+
+                const a=Math.atan2(-vy,vx);
+
+                ctx.beginPath();
+                ctx.moveTo(
+                    px+vx,
+                    py-vy
+                );
+
+                ctx.lineTo(
+                    px+vx-5*Math.cos(a-.5),
+                    py-vy-5*Math.sin(a-.5)
+                );
+
+                ctx.lineTo(
+                    px+vx-5*Math.cos(a+.5),
+                    py-vy-5*Math.sin(a+.5)
+                );
+
+                ctx.stroke();
+            }
+        }
+    }
+
+    updateStats();
+}
+
+function updateStats(){
+
+    let umax=0;
+    let vmax=0;
+    let tsum=0;
+    let wsum=0;
+
+    for(let k=0;k<nx*ny;k++){
+
+        umax=Math.max(umax,Math.abs(u[k]));
+        vmax=Math.max(vmax,Math.abs(v[k]));
+
+        tsum+=T[k];
+        wsum+=W[k];
+    }
+
+    document.getElementById("time").textContent=
+        time.toFixed(2);
+
+    document.getElementById("umax").textContent=
+        umax.toFixed(3);
+
+    document.getElementById("vmax").textContent=
+        vmax.toFixed(3);
+
+    document.getElementById("tmean").textContent=
+        (tsum/(nx*ny)).toFixed(3);
+
+    document.getElementById("wmean").textContent=
+        (wsum/(nx*ny)).toFixed(3);
+}
+
+function updateUI(){
+
+    p.f0=+document.getElementById("f0").value;
+    p.beta=+document.getElementById("beta").value;
+    p.pc=+document.getElementById("pc").value;
+    p.tc=+document.getElementById("tc").value;
+    p.heat=+document.getElementById("heat").value;
+    p.waterSource=+document.getElementById("waterSource").value;
+    p.diff=+document.getElementById("diff").value;
+    p.speed=+document.getElementById("speed").value;
+
+    document.getElementById("f0v").textContent=p.f0;
+    document.getElementById("betav").textContent=p.beta;
+    document.getElementById("pv").textContent=p.pc;
+    document.getElementById("tv").textContent=p.tc;
+    document.getElementById("heatv").textContent=p.heat;
+    document.getElementById("wv").textContent=p.waterSource;
+    document.getElementById("diffv").textContent=p.diff;
+    document.getElementById("gridv").textContent=
+        nx+" × "+ny;
+    document.getElementById("speedv").textContent=
+        p.speed;
+}
+
+document.querySelectorAll("input").forEach(el=>{
+
+    el.addEventListener("input",updateUI);
+});
+
+document.getElementById("field").addEventListener(
+    "change",
+    render
+);
+
+document.getElementById("scale").addEventListener(
+    "change",
+    render
+);
+
+document.getElementById("grid").addEventListener(
+    "change",
+    ()=>{
+        setup();
+        updateUI();
+    }
+);
+
+document.getElementById("pause").addEventListener(
+    "click",
+    ()=>{
+        running=!running;
+
+        document.getElementById("pause").textContent=
+            running?"Pause":"Resume";
+    }
+);
+
+document.getElementById("reset").addEventListener(
+    "click",
+    ()=>{
+        initialize();
+    }
+);
+
+setup();
+updateUI();
+
+function animate(){
+
+    if(running){
+
+        for(let s=0;s<p.speed;s++)
+            step();
+    }
+
+    render();
+
+    requestAnimationFrame(animate);
+}
+
+animate();
+
+</script>
+</body>
+</html>

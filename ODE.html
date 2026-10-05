@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2nd Order ODE Map</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial,Helvetica,sans-serif;background:#f7f7f7}
+#map{width:100%;height:100%;display:block;background:#fafafa;cursor:grab}#map.dragging{cursor:grabbing}
+#toolbar{position:fixed;z-index:10;left:12px;top:12px;display:flex;gap:6px;align-items:center;background:#fff;border:1px solid #999;padding:7px}
+#search{width:190px;padding:6px;border:1px solid #aaa}button{padding:6px 9px;border:1px solid #999;background:#fff;cursor:pointer}
+#popup{position:fixed;z-index:20;display:none;width:350px;max-width:calc(100vw - 20px);max-height:calc(100vh - 20px);overflow:auto;background:#fff;border:1px solid #888;box-shadow:0 7px 24px #0004;padding:12px;border-radius:8px}
+#popup h2{margin:0 34px 8px 0;font-size:18px}#close{position:absolute;right:7px;top:4px;border:0;background:none;font-size:20px}
+#info{width:100%;border-collapse:collapse;margin-top:12px}#info td,#info th{border:1px solid #ccc;padding:8px;text-align:left;vertical-align:top}
+.plotrow{margin:8px 0;padding:8px;border:1px solid #ddd;background:#fafafa}.plothead{display:flex;justify-content:space-between;gap:8px;align-items:center}.plotcanvas{display:block;width:100%;height:150px;border:1px solid #ddd;background:#fff;margin-top:6px}.plotstatus{font:11px Consolas,monospace;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#info th{width:170px;background:#f2f2f2}.modtag{border:1px solid #777;padding:2px 5px;font-size:10px}.node.non-equation circle{stroke:#c22;stroke-width:3}.node.non-equation text{font-weight:600}
+.formula{font-family:Georgia,serif;font-size:18px;line-height:1.6}.code{font-family:Consolas,monospace;font-size:12px;background:#f5f5f5;padding:3px 5px;border:1px solid #ddd;display:inline-block}
+.connection{margin:4px 0;font-size:13px}.tag{border:1px solid #bbb;padding:2px 5px;margin-right:5px;font-size:10px;background:#f6f6f6}
+#legend{position:fixed;right:12px;bottom:12px;z-index:10;background:#fff;border:1px solid #999;padding:9px;font-size:12px}.lr{margin:4px 0}.ln{display:inline-block;width:28px;height:0;border-top:2px solid #777;margin-right:6px}.dash{border-top-style:dashed}.dot{border-top-style:dotted}
+.node circle{stroke:#222;stroke-width:1.7;cursor:pointer}.node:hover circle{stroke-width:3}.node text{pointer-events:none;text-anchor:middle;dominant-baseline:middle;user-select:none}
+.edge{fill:none;stroke:#888;stroke-width:1.7;opacity:.75}.edge.limit{stroke-dasharray:8 5}.edge.transform{stroke-dasharray:2 5}.edge.embed{stroke:#aaa;stroke-dasharray:3 5}.edge.modification{stroke:#555;stroke-width:2.5}.edge.relation{stroke:#999;stroke-dasharray:4 4}
+.level{text-anchor:end;font-size:15px;fill:#666;pointer-events:none}
+.node{cursor:pointer!important;user-select:none}.node *{pointer-events:none}\n</style>
+
+<style>
+.slider{display:block;margin:8px 0}.slider span{display:block;font:12px Consolas,monospace;margin-bottom:3px}.slider input{width:100%}
+.codeblock{margin:0;white-space:pre-wrap;font:11px Consolas,monospace;background:#f5f5f5;border:1px solid #ddd;padding:8px;overflow:auto}
+</style>
+
+<style>
+.slider{display:block;margin:7px 0}.slider span{display:block;font:12px Consolas,monospace;margin-bottom:2px}.slider input{width:100%}
+.plotrow{margin:7px 0;padding:7px;border:1px solid #ddd;background:#fafafa}.plothead{display:flex;justify-content:space-between;gap:6px;align-items:center}
+.plotcanvas{display:block;width:100%;height:260px;border:1px solid #ddd;background:#fff;margin-top:5px}.plotstatus{font:11px Consolas,monospace;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plottools{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:5px 0}.plottools label{font:10px Consolas,monospace}.plottools input{width:70px;font:10px Consolas,monospace}.plotbtn{font:11px Consolas,monospace;padding:3px 6px}.codeblock{margin:0;white-space:pre-wrap;font:11px Consolas,monospace;background:#f5f5f5;border:1px solid #ddd;padding:7px;overflow:auto}.source{margin:3px 0}.source a{word-break:break-all}
+.node.non-equation circle{stroke:#c22;stroke-width:3}.node.non-equation text{font-weight:600}
+.edge.modification{stroke:#555;stroke-width:2.5}.edge.relation{stroke:#999;stroke-dasharray:4 4}
+</style>
+</head>
+<body>
+<div id="toolbar"><input id="search" placeholder="search..." oninput="searchNodes()"><button onclick="resetView()">reset</button><button onclick="reheat()">reheat</button><button onclick="closePopup()">close</button></div>
+<div id="legend"><div class="lr"><span style="display:inline-block;width:14px;height:14px;border:3px solid #c22;margin-right:6px;vertical-align:-2px"></span>missing equation or mthfnc code</div><div class="lr"><span class="ln"></span>special case / reduction</div><div class="lr"><span class="ln dash"></span>limit / degeneration</div><div class="lr"><span class="ln dot"></span>transformation</div><div class="lr"><span class="ln" style="border-top-width:3px"></span>modification (no direction)</div><div class="lr"><span class="ln dot" style="border-color:#aaa"></span>embedding / framework</div></div>
+<svg id="map"><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#777"/></marker></defs><g id="world"><g id="levels"></g><g id="edges"></g><g id="nodes"></g></g></svg>
+<div id="popup"><button id="close" onclick="closePopup()">×</button><h2 id="ptitle"></h2><table id="info"></table></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+<script src="clrspc.js"></script>
+<script src="polyhedra.js"></script>
+<script src="mthfnc.js"></script>
+<script src="https://unpkg.com/elkjs/lib/elk.bundled.js"></script>
+<script>
+/*
+ADD A BUBBLE:
+["name","equation","description","text2",generality,category,solutions,params]
+
+solutions:
+["usual name","notation","mthfnc code","example call"]
+
+params:
+[["parameter",min,max,step,default],...]
+
+GENERALITY:
+0 = most general / framework
+1 = general explicit
+2 = functional / family
+3 = multiparameter
+4 = one-parameter
+5 = canonical / elementary
+*/
+
+const equations=[["general implicit","F(x,y,y')=0","General implicit second-order relation.","Top-level scalar relation.",0,"general",[],[]]
+["general explicit","y''=f(x,y,y')","General explicit second-order ODE.","Standard initial-value form.",1,"general",[],[]]
+["floquet","-y''+V(x)y=Ey,\quad V(x+T)=V(x)","Schrödinger equation with periodic potential.","Floquet theory for periodic coefficients.",2,"periodic",[
+["Floquet-Bloch form","y=e^{ikx}u(x),\ u(x+T)=u(x)","floquet(...)",""]
+],[]]
+["hill","y''+f(x)y=0,\quad f(x+T)=f(x)","Hill equation.","Second-order linear equation with periodic coefficient.",2,"periodic",[
+["general solution","y(x)","ode2rk4(...)",""]
+],[]]
+["lame","y''+(A+B\\wp(x))y=0","Lamé equation.","Elliptic-coefficient equation.",3,"elliptic",[
+["Lamé solution","y(x)","lame(...)","lame(1,1,x)"],
+["Weierstrass function","\\wp(x)","weierstrassp(x)","weierstrassp(x)"]
+],[["A",0,3,.1,1],["B",0,3,.1,1]],["https://dlmf.nist.gov/29.2"]]
+["mathieu","y''+(a-2qcos(2x))y=0","Mathieu equation.","Two-parameter periodic equation.",3,"periodic",[
+["even solution","ce_\\nu(x,q)","mathieuc(a,q,z)","mathieuc(1,0.5,x)"],
+["even discrete solution","ce_n(x,q)","mathieuce(q,z,n)","mathieuce(0.5,x,1)"],
+["odd solution","se_\\nu(x,q)","mathieus(a,q,z)","mathieus(1,0.5,x)"],
+["odd discrete solution","se_n(x,q)","mathieuse(q,z,n)","mathieuse(0.5,x,1)"],
+["eigenvalue","a_n(q), b_n(q)","mathieul(q,n)","mathieul(0.5,1)"],
+["Floquet solution","Me_\\nu(x,q)","mathieumc(nu,z,q)","mathieumc(1,x,0.5)"]
+],[["a",-3,3,.05,1],["q",-3,3,.05,.5],["n",0,10,1,1]],["https://dlmf.nist.gov/28.2"]]
+["modified mathieu","y''-(a-2qcosh(2x))y=0","Modified Mathieu equation.","Hyperbolic Mathieu form.",3,"periodic",[
+["solution","Mc_\\nu(x,q), Ms_\\nu(x,q)","mathieumc(...)",""]
+],[["a",-3,3,.05,1],["q",-3,3,.05,.5]],["https://dlmf.nist.gov/28.20"]]
+["bessel","x^2y''+xy'+(x^2-\\nu^2)y=0","Bessel equation.","Canonical cylindrical equation.",4,"special",[
+["first kind","J_\\nu(x)","besselj(nu,x)","besselj(0.5,x)"],
+["second kind","Y_\\nu(x)","bessely(nu,x)","bessely(0.5,x)"],
+["Hankel first kind","H_\\nu^{(1)}(x)","hankel1(nu,x)","hankel1(0.5,x)"],
+["Hankel second kind","H_\\nu^{(2)}(x)","hankel2(nu,x)","hankel2(0.5,x)"]
+],[["nu",-3,3,.05,.5]],["https://dlmf.nist.gov/10.2"]]
+["modified bessel","x^2y''+xy'-(x^2+\\nu^2)y=0","Modified Bessel equation.","Modified cylindrical equation.",4,"special",[
+["I solution","I_\\nu(x)","besseli(nu,x)","besseli(0.5,x)"],
+["K solution","K_\\nu(x)","besselk(nu,x)","besselk(0.5,x)"]
+],[["nu",-3,3,.05,.5]],["https://dlmf.nist.gov/10.25"]]
+["sine","y''+y=0","Canonical trigonometric equation.","Parameter-free oscillator.",5,"elementary",[
+["even solution","cos(x)","cos(x)","cos(x)"],["odd solution","sin(x)","sin(x)","sin(x)"]
+],[]]
+["hyperbolic","y''-y=0","Canonical hyperbolic equation.","Parameter-free hyperbolic equation.",5,"elementary",[
+["even solution","cosh(x)","cosh(x)","cosh(x)"],["odd solution","sinh(x)","sinh(x)","sinh(x)"]
+],[]]
+["spherical bessel","x^2y''+2xy'+(x^2-n(n+1))y=0","Spherical Bessel equation.","Spherical reduction of the ordinary Bessel equation.",4,"special",[
+["spherical first kind","j_n(x)","sphbesselj(n,x)","sphbesselj(1,x)"],
+["spherical second kind","y_n(x)","sphbessely(n,x)","sphbessely(1,x)"],
+["spherical Hankel first","h_n^(1)(x)","sphhankel1(n,x)","sphhankel1(1,x)"],
+["spherical Hankel second","h_n^(2)(x)","sphhankel2(n,x)","sphhankel2(1,x)"]
+],[["n",0,10,1,1]],["https://dlmf.nist.gov/10.47"]]
+["modified spherical bessel","x^2y''+2xy'-(x^2+n(n+1))y=0","Modified spherical Bessel equation.","Modified spherical reduction.",4,"special",[
+["modified spherical first","i_n(x)","sphbesseli(n,x)","sphbesseli(1,x)"],
+["modified spherical second","k_n(x)","sphbesselk(n,x)","sphbesselk(1,x)"]
+],[["n",0,10,1,1]],["https://dlmf.nist.gov/10.47"]]
+["heun g","y''+(gamma/x)+delta/x-1)+epsilon/x-a))y'+alphabeta x-q/x(x-1)(x-a))y=0","General Heun family.","Most general Heun member used here.",2,"heun",[
+["HeunG","HeunG","heung(q,a,b,c,d,e,x)","heung(0.2,1,1,1,1,1,x)"]
+],[["q",-2,2,.05,.2],["a",-2,2,.05,1],["b",-2,2,.05,1],["c",-2,2,.05,1],["d",-2,2,.05,1],["e",-2,2,.05,1]],["https://dlmf.nist.gov/31.2", "https://dlmf.nist.gov/31.12"]]
+["heun c","y''+(gamma/x)+delta/x-1)+epsilon)y'+alpha x-q/x(x-1))y=0","Confluent Heun family.","Confluence of the general Heun equation.",3,"heun",[
+["HeunC","HeunC","heunc(q,b,g,d,e,z)","heunc(0.2,0.5,0.3,0.1,0,x)"]
+],[["q",-2,2,.05,.2],["b",-2,2,.05,.5],["g",-2,2,.05,.3],["d",-2,2,.05,.1],["e",-2,2,.05,0]],["https://dlmf.nist.gov/31.12"]]
+["heun d","y''+(delta/x^2)+gamma/x)+1)y'+alpha x-q/x^2)y=0","HeunD","Doubly-confluent family.",3,"heun",[
+["HeunD","HeunD","heund(q,beta,gamma,delta,eps,z)","heund(0.2,0.5,0,0,0.3,x)"]
+],[["q",-2,2,.05,.2],["beta",-2,2,.05,.5],["gamma",-2,2,.05,0],["delta",-2,2,.05,0],["eps",-2,2,.05,.3]],["https://dlmf.nist.gov/31.12"]]
+["heun b","y''-(gamma/x)+delta+x)y'+alpha x-q/x)y=0","HeunB","Biconfluent family.",3,"heun",[
+["HeunB","HeunB","heunb(q,a,g,d,e,z)","heunb(0.2,0.5,0.3,0.1,0,x)"]
+],[["q",-2,2,.05,.2],["a",-2,2,.05,.5],["g",-2,2,.05,.3],["d",-2,2,.05,.1],["e",-2,2,.05,0]],["https://dlmf.nist.gov/31.12"]]
+["heun t","y''+(gamma+x)x y'+(alpha x-q)y=0","HeunT","Triconfluent family.",3,"heun",[
+["HeunT","HeunT","heunt(q,a,g,d,e,z)","heunt(0.2,0.5,0.3,0.1,0,x)"]
+],[["q",-2,2,.05,.2],["a",-2,2,.05,.5],["g",-2,2,.05,.3],["d",-2,2,.05,.1],["e",-2,2,.05,0]],["https://dlmf.nist.gov/31.12"]]
+["heun rc","y''+(gamma/x)+delta/x-1))y'+alpha x-q/x(x-1))y=0","HeunC radial","Wrapper from mthfnc: heunrc(q,b,g,d,z)=heunc(q,b,g,d,0,z).",4,"heun",[
+["HeunC radial","HeunC(q,b,g,d,0,z)","heunrc(q,b,g,d,z)","heunrc(0.2,0.5,0.3,0.1,x)"],
+["derivative","d/dz","heunrcp(q,b,g,d,z)","heunrcp(0.2,0.5,0.3,0.1,x)"]
+],[["q",-2,2,.05,.2],["b",-2,2,.05,.5],["g",-2,2,.05,.3],["d",-2,2,.05,.1]]]
+["heun rb","y''-(gamma/x)+delta+x)y'+alpha x-q/x)y=0","HeunB radial","Radial biconfluent wrapper.",4,"heun",[
+["HeunB radial","HeunB(q,a,g,d,0,z)","heunrb(q,a,g,d,z)","heunrb(0.2,0.5,0.3,0.1,x)"],
+["derivative","d/dz","heunrbp(q,a,g,d,z)","heunrbp(0.2,0.5,0.3,0.1,x)"]
+],[["q",-2,2,.05,.2],["a",-2,2,.05,.5],["g",-2,2,.05,.3],["d",-2,2,.05,.1]]]
+["heun rt","y''+(gamma+x)x y'+(alpha x-q)y=0","HeunT radial","Radial triconfluent wrapper.",4,"heun",[
+["HeunT radial","HeunT(q,a,g,d,0,z)","heunrt(q,a,g,d,z)","heunrt(0.2,0.5,0.3,0.1,x)"],
+["derivative","d/dz","heunrtp(q,a,g,d,z)","heunrtp(0.2,0.5,0.3,0.1,x)"]
+],[["q",-2,2,.05,.2],["a",-2,2,.05,.5],["g",-2,2,.05,.3],["d",-2,2,.05,.1]]]
+["heun tb","Triconfluent-basis branch","HeunT branch","Basis/continuation branch; no direct plotted wrapper mapped.",4,"heun",[],[]]
+["heun rd","y''+(delta/x^2)+gamma/x)+1)y'+alpha x-q/x^2)y=0","HeunD radial","Radial doubly-confluent wrapper.",4,"heun",[
+["HeunD radial","HeunD(q,beta,0,-1,z)","heunrd(q,beta,eps,z)","heunrd(0.2,0.5,0.3,x)"],
+["derivative","d/dz","heunrdp(q,beta,eps,z)","heunrdp(0.2,0.5,0.3,x)"]
+],[["q",-2,2,.05,.2],["beta",-2,2,.05,.5],["eps",-2,2,.05,.3]]]
+["heun dd","y''+(1/x^2)+1/x)+1)y'+x-q/x^2)y=0","HeunD derived","Derived branch from rd.",5,"heun",[],[]]
+];
+
+const edges=[["general implicit","general explicit","special","solve for y''"]
+["general explicit","hill","special","linear periodic coefficient"]
+["general explicit","floquet","embed","periodic Schrödinger form"]
+["general explicit","lame","special","elliptic coefficient"]
+["general explicit","bessel","special","specific radial coefficients"]
+["general explicit","sine","special","canonical constant coefficient"]
+["general explicit","hyperbolic","special","canonical constant coefficient"]
+["hill","floquet","embed","periodic solution theory"]
+["hill","mathieu","special","f(x)=a-2q cos(2x)"]
+["hill","lame","special","elliptic periodic coefficient"]
+["mathieu","modified mathieu","transform","x -> i x"]
+["mathieu","sine","limit","q -> 0, a -> n²"]
+["bessel","modified bessel","transform","x -> i x"]
+["lame","mathieu","limit","elliptic degeneration"]
+["hyperbolic","sine","transform","x -> i x"]
+["sine","hyperbolic","modification","sin ↔ sinh"]
+["mathieu","modified mathieu","modification","Mathieu ↔ modified Mathieu"]
+["bessel","modified bessel","modification","Bessel ↔ modified Bessel"]
+["spherical bessel","modified spherical bessel","modification","spherical Bessel ↔ modified spherical Bessel"]
+["bessel","spherical bessel","special","half-integer spherical reduction"]
+["modified bessel","modified spherical bessel","special","half-integer spherical reduction"]
+["spherical bessel","bessel","special","spherical reduction"]
+["spherical bessel","bessel","modification","spherical ↔ ordinary Bessel family"]
+["spherical bessel","modified spherical bessel","modification","ordinary spherical ↔ modified spherical"]
+["modified spherical bessel","modified bessel","modification","modified spherical ↔ modified ordinary Bessel"]
+["heun g","heun c","special","confluence"]
+["heun c","heun d","special","further confluence"]
+["heun c","heun b","special","confluent branch"]
+["heun b","heun t","special","further confluence"]
+["heun c","heun rc","special","radial specialization"]
+["heun b","heun rb","special","radial specialization"]
+["heun t","heun tb","special","continuation / basis branch"]
+["heun d","heun rd","special","radial specialization"]
+["heun rc","heun rd","special","radial relation"]
+["heun rc","heun rb","special","radial relation"]
+["heun rb","heun rt","special","radial branch"]
+["heun rd","heun dd","special","derived doubly-confluent branch"]
+["s3","sphere","embed","spherical geometry"]
+["sphere","oscillator","limit","spherical-to-oscillator limit"]
+["s3","e3","special","flat oscillator branch"]
+["e3","plane","embed","flat Euclidean endpoint"]
+["sphere","plane","limit","curvature -> 0"]
+["e1","e3'","limit","parameter degeneration"]
+["e3'","e3","limit","canonical oscillator limit"]
+["e1","e6","special","inverse-square degeneration"]
+["e6","plane","embed","flat Euclidean singular branch"]
+["e6","oscillator","special","oscillator + singular term branch"]
+["e6","singular laguerre","special","radial singular branch"]
+["e1","e2","special","coordinate/parameter branch"]
+["e2","e5","special","special linear degeneration"]
+["e1","e5","special","special linear degeneration"]
+["e1","e8","special","degenerate E-family branch"]
+["e8","e14","special","further degeneration"]
+["e10","e4","special","linear-potential degeneration"]
+["e7","e8","limit","c -> 0"]
+["e7","e12","special","special case"]
+["e8","e13","special","special case"]
+["e8","e14","special","special case"]
+["e11","e12","special","special case"]
+["e11","e13","special","special case"]
+["e11","e14","special","special case"]
+["e1","e3","limit","α -> 0, β -> 0"]
+["e1","e6","limit","retain only inverse-square x branch"]
+["e1","e5","special","special case of E1"]
+["e2","e5","special","special case of E2"]
+["e2","e3","limit","linear/singular parameters removed"]
+["e18","plane","embed","Coulomb system on the plane"]
+["e1 family","e1","embed","E1–E20 family"]
+["e1 family","e20","embed","E1–E20 family"]
+["general explicit","predator-prey prey","embed","second-order elimination"]
+["general explicit","predator-prey predator","embed","second-order elimination"]
+["predator-prey prey","predator-prey predator","relation","same Lotka-Volterra system"]
+["general explicit","generalized lotka-volterra","embed","second-order elimination"]
+["general explicit","sir susceptible","embed","second-order epidemic reduction"]
+["general explicit","sir infected","embed","second-order epidemic reduction"]
+["sir susceptible","sir infected","relation","same SIR system"]
+["general explicit","host-parasitoid host","embed","second-order elimination"]
+["general explicit","host-parasitoid parasitoid","embed","second-order elimination"]
+["host-parasitoid host","host-parasitoid parasitoid","relation","same pair"]
+["general explicit","arditi-ginzburg","embed","ratio-dependent reduction"]
+["general explicit","heun g","special","general explicit ODE to general Heun"]
+["general explicit","michaelis-menten","embed","kinetic family"]
+];
+
+const data=Object.fromEntries(equations.map(e=>[e[0],e]));
+const svg=document.getElementById('map'),world=document.getElementById('world'),edgeLayer=document.getElementById('edges'),nodeLayer=document.getElementById('nodes'),levelLayer=document.getElementById('levels');
+const nodes=new Map(),edgeEls=[];
+let view={x:0,y:0,scale:.48},pan=false,px=0,py=0,vx=0,vy=0;
+const levelNames=['framework / master','general explicit','functional / geometry','multiparameter','one-parameter','canonical'];
+const paramState={};
+function noequation(e){return !String(e?.[1]??'').trim()}
+function nocode(e){
+  let q=e?.[6]||[];
+  return !q.some(r=>{
+    let c=String(r?.[2]??'').trim();
+    return c&& !c.includes('...') && c!=='ode2rk4(...)';
+  });
+}
+function nonEquation(e){return noequation(e)||nocode(e)}
+
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function degree(name){return edges.reduce((n,e)=>n+(e[0]===name||e[1]===name?1:0),0)}
+function col(n){let l=data[n]?.[4];return ['#dddddd','#d5d9e8','#cbe1d1','#cfdbec','#eadfc9','#dfdbca'][Math.max(0,Math.min(5,l))]}
+async function seed(){
+  const elk=new ELK();
+  const ns=[...new Set(equations.map(e=>e[0]))];
+  const ids=new Map(ns.map((x,i)=>[x,"n"+i]));
+  const kg={
+    id:"root",
+    layoutOptions:{
+      "elk.algorithm":"layered",
+      "elk.direction":"DOWN",
+      "elk.edgeRouting":"ORTHOGONAL",
+      "elk.layered.nodePlacement.strategy":"BRANDES_KOEPF",
+      "elk.layered.crossingMinimization.strategy":"LAYER_SWEEP",
+      "elk.layered.considerModelOrder.strategy":"NODES_AND_EDGES",
+      "elk.layered.spacing.nodeNodeBetweenLayers":"220",
+      "elk.spacing.nodeNode":"110",
+      "elk.layered.spacing.edgeNode":"55",
+      "elk.layered.spacing.edgeEdge":"35",
+      "elk.layered.unnecessaryBendpoints":"true",
+      "elk.layered.compaction.postCompaction.strategy":"LEFT_RIGHT_CONSTRAINT_LOCKING",
+      "elk.hierarchyHandling":"INCLUDE_CHILDREN"
+    },
+    children:ns.map((name)=>{
+      const e=data[name]||[];
+      return {
+        id:ids.get(name),
+        width:110,
+        height:84,
+        ports:[
+          {id:ids.get(name)+"_n",properties:{"org.eclipse.elk.port.side":"NORTH"}},
+          {id:ids.get(name)+"_s",properties:{"org.eclipse.elk.port.side":"SOUTH"}},
+          {id:ids.get(name)+"_e",properties:{"org.eclipse.elk.port.side":"EAST"}},
+          {id:ids.get(name)+"_w",properties:{"org.eclipse.elk.port.side":"WEST"}}
+        ],
+        layoutOptions:{
+          "org.eclipse.elk.layered.layerConstraint":String(Math.max(0,Math.min(5,Number(e[4])||0)))
+        }
+      }
+    }),
+    edges:edges.filter(e=>ids.has(e[0])&&ids.has(e[1])).map((e,i)=>({
+      id:"e"+i,
+      sources:[ids.get(e[0])+"_s"],
+      targets:[ids.get(e[1])+"_n"]
+    }))
+  };
+
+  const r=await elk.layout(kg);
+  const scale=1.65,ox=250,oy=150;
+  nodes.clear();
+
+  (r.children||[]).forEach(c=>{
+    const name=ns.find(x=>ids.get(x)===c.id);
+    if(!name)return;
+    const level=Math.max(0,Math.min(5,Number((data[name]||[])[4])||0));
+    nodes.set(name,{
+      name,level,
+      x:ox+(c.x||0)*scale,
+      y:oy+(c.y||0)*scale,
+      tx:ox+(c.x||0)*scale,
+      ty:oy+(c.y||0)*scale,
+      w:(c.width||110)*scale,
+      h:(c.height||84)*scale,
+      r:58,
+      pinned:false,
+      ax:ox+(c.x||0)*scale,
+      ay:oy+(c.y||0)*scale
+    });
+  });
+
+  annealedElkResult=r;
+  update();
+}
+
+let annealedElkResult=null;
+
+function layout(){
+  return seed();
+}
+
+
+function makeLevels(){
+  levelLayer.replaceChildren();
+  levelNames.forEach((s,i)=>{
+    let t=document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.classList.add('level');
+    t.textContent=s;
+    t.setAttribute('x',100);
+    t.setAttribute('y',150+i*460);
+    levelLayer.appendChild(t)
+  })
+}
+
+function makeEdges(){
+  edgeLayer.replaceChildren();
+  edgeEls.length=0;
+  edges.forEach(e=>{
+    if(!nodes.has(e[0])||!nodes.has(e[1]))return;
+    let l=document.createElementNS('http://www.w3.org/2000/svg','path');
+    l.classList.add('edge',e[2]);
+    l.dataset.a=e[0];
+    l.dataset.b=e[1];
+    if(e[2]!=='modification'&&e[2]!=='relation')l.setAttribute('marker-end','url(#arrow)');
+    l.setAttribute('fill','none');
+    edgeLayer.appendChild(l);
+    edgeEls.push(l)
+  })
+}
+
+function routeEdge(a,b){
+  const ygap=Math.max(18,Math.abs(b.y-a.y));
+  if(Math.abs(a.y-b.y)<3){
+    let s=b.x>=a.x?1:-1;
+    return `M ${a.x+s*(a.r+6)} ${a.y} H ${b.x-s*(b.r+14)}`;
+  }
+
+  /* ELK is orthogonal; this fallback keeps every segment horizontal/vertical
+     and forces normal hierarchy edges to travel downward. */
+  const sy=b.y>=a.y?1:-1;
+  const x1=a.x,x2=b.x;
+  const y1=a.y+sy*(a.r+7),y2=b.y-sy*(b.r+15);
+  const mid=(y1+y2)/2;
+  if(sy>0)return `M ${x1} ${y1} V ${mid} H ${x2} V ${y2}`;
+  return `M ${x1} ${a.y-(a.r+7)} H ${x2} V ${y2}`;
+}
+
+function worldPoint(x,y){
+  const r=svg.getBoundingClientRect();
+  return {
+    x:(x-r.left-view.x)/view.scale,
+    y:(y-r.top-view.y)/view.scale
+  }
+}
+
+function update(){
+  nodes.forEach(n=>{
+    if(n.el)n.el.setAttribute('transform',`translate(${n.x},${n.y})`);
+  });
+  edgeEls.forEach(l=>{
+    const a=nodes.get(l.dataset.a),b=nodes.get(l.dataset.b);
+    if(!a||!b)return;
+    l.setAttribute('d',routeEdge(a,b))
+  });
+  world.setAttribute('transform',`translate(${view.x},${view.y}) scale(${view.scale})`)
+}
+
+async function reheat(){
+  /* Re-run ELK instead of manually perturbing node positions. */
+  await seed()
+}
+function makeNodes(){
+  nodeLayer.replaceChildren();
+  nodes.forEach(n=>{
+    let g=document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.classList.add('node');
+    if(nonEquation(data[n.name]))g.classList.add('non-equation');
+    let c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('r',n.r);c.setAttribute('fill',col(n.name));
+    let t=document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.textContent=n.name;t.setAttribute('font-size',n.name.length>24?10:n.name.length>16?11:13);
+    g.append(c,t);n.el=g;
+    g.addEventListener('click',e=>{
+      e.stopPropagation();
+      showPopup(n.name)
+    });
+    nodeLayer.appendChild(g)
+  })
+}
+
+function worldPoint(x,y){
+  const r=svg.getBoundingClientRect();
+  return {
+    x:(x-r.left-view.x)/view.scale,
+    y:(y-r.top-view.y)/view.scale
+  }
+}
+
+function update(){
+  nodes.forEach(n=>{
+    if(n.el)n.el.setAttribute('transform',`translate(${n.x},${n.y})`);
+  });
+  edgeEls.forEach(l=>{
+    let a=nodes.get(l.dataset.a),b=nodes.get(l.dataset.b);if(!a||!b)return;
+    let dx=b.x-a.x,dy=b.y-a.y,gapA=a.r+7,gapB=b.r+15;
+    if(Math.abs(dy)<3){
+      let sg=dx>=0?1:-1,x1=a.x+sg*gapA,x2=b.x-sg*gapB;
+      l.setAttribute('d',`M ${x1} ${a.y} H ${x2}`);
+      return
+    }
+    /* ELK gives the route. Convert every segment to horizontal/vertical SVG commands. */
+    let p=l._points||[];
+    if(p.length<2){
+      let y=Math.min(b.y,a.y)+Math.abs(b.y-a.y)/2;
+      l.setAttribute('d',`M ${a.x} ${a.y+(b.y>a.y?gapA:-gapA)} V ${y} H ${b.x} V ${b.y-(b.y>a.y?gapB:-gapB)}`);
+      return
+    }
+    let d=`M ${p[0].x} ${p[0].y}`;
+    for(let i=1;i<p.length;i++)d+=` ${p[i].x===p[i-1].x?'V':'H'} ${p[i].x===p[i-1].x?p[i].y:p[i].x}`;
+    l.setAttribute('d',d)
+  });
+  world.setAttribute('transform',`translate(${view.x},${view.y}) scale(${view.scale})`)
+}
+function reheat(){
+  layout()
+}
+
+let plotToken=0;
+function callFunction(code,x){
+  let p=parseCall(code);
+  if(!p)return {ok:false,error:"invalid function call: "+code};
+  let fn=window[p.name];
+  if(typeof fn!=="function"&&typeof math[p.name]==="function")fn=math[p.name];
+  if(typeof fn!=="function")return {ok:false,error:"function not found: "+p.name};
+  try{
+    let args=p.args.map(a=>{
+      a=a.trim();
+      if(a==="x"||a==="z"||a==="t")return x;
+      if(paramState[a]!==undefined)return paramState[a];
+      if(a==="pi")return Math.PI;
+      if(a==="e")return Math.E;
+      if(a==="I")return math.complex(0,1);
+      let v=Number(a);
+      return Number.isFinite(v)?v:a
+    });
+    return {ok:true,value:fn(...args)}
+  }catch(err){return {ok:false,error:String(err.message||err)}}
+}
+function realValue(v){
+  if(typeof v==="number"&&Number.isFinite(v))return v;
+  if(v&&typeof v.re==="number"&&typeof v.im==="number"&&Math.abs(v.im)<1e-8&&Number.isFinite(v.re))return v.re;
+  if(v&&typeof v.toNumber==="function"){try{let z=v.toNumber();if(Number.isFinite(z))return z}catch{}}
+  return NaN
+}
+function plotOne(canvas,call,opt={}){
+  let token=++plotToken,ctx=canvas.getContext("2d");
+  if(!ctx){return}
+  let dpr=devicePixelRatio||1,w=Math.max(320,canvas.clientWidth||640),h=Math.max(190,canvas.clientHeight||260);
+  canvas.width=Math.floor(w*dpr);canvas.height=Math.floor(h*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+
+  let row=canvas.parentElement,status=row.querySelector(".plotstatus");
+  let xmin=Number.isFinite(opt.xmin)?opt.xmin:-5;
+  let xmax=Number.isFinite(opt.xmax)?opt.xmax:5;
+  let samples=Math.max(80,Math.min(1600,Number(opt.samples)||420));
+  let pts=[],bad=0;
+
+  status.textContent="calculating "+samples+" samples...";
+
+  for(let i=0;i<=samples;i++){
+    if(token!==plotToken){status.textContent="cancelled";return}
+    let x=xmin+(xmax-xmin)*i/samples,r=callFunction(call,x);
+    if(!r.ok){status.textContent=r.error;return}
+    let y=realValue(r.value);
+    if(Number.isFinite(y)&&Math.abs(y)<1e12)pts.push([x,y]);
+    else{pts.push([x,NaN]);bad++}
+  }
+
+  let finite=pts.filter(p=>Number.isFinite(p[1]));
+  if(!finite.length){status.textContent="no finite values";return}
+
+  let ymin=opt.ymin,ymax=opt.ymax;
+  if(!Number.isFinite(ymin)||!Number.isFinite(ymax)){
+    let ys=finite.map(p=>p[1]).sort((a,b)=>a-b);
+    let lo=ys[Math.floor(ys.length*.02)],hi=ys[Math.floor(ys.length*.98)];
+    if(lo===hi){lo=Math.min(...ys);hi=Math.max(...ys)}
+    let span=hi-lo||1;
+    ymin=lo-.08*span;ymax=hi+.08*span;
+  }
+  if(!(ymax>ymin)){ymin-=1;ymax+=1}
+
+  let L=58,R=18,T=22,B=34,pw=w-L-R,ph=h-T-B;
+  let X=x=>L+(x-xmin)/(xmax-xmin)*pw;
+  let Y=y=>T+(ymax-y)/(ymax-ymin)*ph;
+
+  ctx.font="11px Consolas,monospace";
+  ctx.lineWidth=1;
+  ctx.strokeStyle="#ddd";
+  ctx.fillStyle="#555";
+
+  // grid and ticks
+  let xt=8,yt=6;
+  for(let i=0;i<=xt;i++){
+    let x=xmin+(xmax-xmin)*i/xt,px=X(x);
+    ctx.beginPath();ctx.moveTo(px,T);ctx.lineTo(px,T+ph);ctx.stroke();
+    ctx.fillText(fmtChart(x),px-16,T+ph+18);
+  }
+  for(let i=0;i<=yt;i++){
+    let y=ymin+(ymax-ymin)*i/yt,py=Y(y);
+    ctx.beginPath();ctx.moveTo(L,py);ctx.lineTo(L+pw,py);ctx.stroke();
+    ctx.fillText(fmtChart(y),4,py+4);
+  }
+
+  // axes
+  ctx.strokeStyle="#888";
+  if(xmin<=0&&xmax>=0){let px=X(0);ctx.beginPath();ctx.moveTo(px,T);ctx.lineTo(px,T+ph);ctx.stroke()}
+  if(ymin<=0&&ymax>=0){let py=Y(0);ctx.beginPath();ctx.moveTo(L,py);ctx.lineTo(L+pw,py);ctx.stroke()}
+
+  // frame
+  ctx.strokeStyle="#aaa";ctx.strokeRect(L,T,pw,ph);
+
+  // adaptive-looking discontinuity protection: do not connect jumps.
+  ctx.strokeStyle="#111";ctx.lineWidth=1.7;ctx.beginPath();
+  let drawing=false,lastX=NaN,lastY=NaN;
+  pts.forEach(p=>{
+    if(!Number.isFinite(p[1])){drawing=false;return}
+    let px=X(p[0]),py=Y(p[1]);
+    let jump=Number.isFinite(lastY)&&Math.abs(py-lastY)>ph*.65;
+    if(!drawing||jump){ctx.moveTo(px,py);drawing=true}
+    else ctx.lineTo(px,py);
+    lastX=px;lastY=py;
+  });
+  ctx.stroke();
+
+  ctx.fillStyle="#333";
+  ctx.font="bold 11px Consolas,monospace";
+  ctx.fillText(call,L,T-7);
+  ctx.font="10px Consolas,monospace";
+  ctx.fillText("x",L+pw-5,T+ph+27);
+  ctx.save();ctx.translate(13,T+8);ctx.rotate(-Math.PI/2);ctx.fillText("y",0,0);ctx.restore();
+
+  status.textContent=`${call}    x=[${fmtChart(xmin)}, ${fmtChart(xmax)}]    finite ${finite.length}/${pts.length}`;
+}
+
+function fmtChart(x){
+  if(!Number.isFinite(x))return "nan";
+  let a=Math.abs(x);
+  if(a!==0&&(a>=1e4||a<1e-3))return x.toExponential(2);
+  return Number(x.toPrecision(4)).toString();
+}
+function initParams(e){(e[7]||[]).forEach(q=>{if(paramState[q[0]]===undefined)paramState[q[0]]=q[4]})}
+function sliderHtml(name,q){
+  let [p,min,max,step,def]=q;if(paramState[p]===undefined)paramState[p]=def;
+  return `<label class="slider"><span>${esc(p)}=<b data-val="${esc(name)}:${esc(p)}">${paramState[p]}</b></span><input type="range" min="${min}" max="${max}" step="${step}" value="${paramState[p]}" data-node="${esc(name)}" data-param="${esc(p)}"></label>`
+}
+function bindPopupControls(name){
+  document.querySelectorAll('#popup input[type=range]').forEach(inp=>inp.oninput=()=>{
+    paramState[inp.dataset.param]=Number(inp.value);
+    let b=document.querySelector(`[data-val="${CSS.escape(name)}:${CSS.escape(inp.dataset.param)}"]`);if(b)b.textContent=inp.value;
+  });
+  document.querySelectorAll('#popup .plotbtn').forEach(btn=>btn.onclick=()=>{
+    let box=btn.parentElement.parentElement;
+    let c=box.querySelector('canvas[data-call]');
+    if(!c)return;
+    let xmin=Number(box.querySelector('.plotxmin')?.value),xmax=Number(box.querySelector('.plotxmax')?.value);
+    let samples=Number(box.querySelector('.plotsamples')?.value);
+    if(!Number.isFinite(xmin)||!Number.isFinite(xmax)||xmax<=xmin){
+      let st=box.querySelector('.plotstatus');if(st)st.textContent="invalid x range";return
+    }
+    plotOne(c,c.dataset.call,{xmin,xmax,samples})
+  })
+}
+function parseCall(str){
+  str=String(str||"").trim();
+  let m=str.match(/^([A-Za-z_$][\w$]*)\s*\(([\s\S]*)\)$/);
+  if(!m)return {name:str,args:[]};
+  let args=[],buf="",d=0,quote="";
+  for(let i=0;i<m[2].length;i++){
+    let c=m[2][i];
+    if(quote){
+      buf+=c;
+      if(c===quote&&m[2][i-1]!=="\\")quote="";
+      continue
+    }
+    if(c==="'"||c==='"'){quote=c;buf+=c;continue}
+    if(c==="("||c==="["||c==="{"){d++;buf+=c;continue}
+    if(c===")"||c==="]"||c==="}"){d--;buf+=c;continue}
+    if(c===","&&d===0){args.push(buf.trim());buf="";continue}
+    buf+=c
+  }
+  if(buf.trim())args.push(buf.trim());
+  return {name:m[1],args}
+}
+
+function parsePlotArg(a,x){
+  a=String(a??"").trim();
+  if(a==="x"||a==="z"||a==="t")return x;
+  if(paramState[a]!==undefined)return paramState[a];
+  if(a==="pi")return Math.PI;
+  if(a==="e")return Math.E;
+  if(a==="I")return math.complex(0,1);
+
+  /* allow direct numeric expressions in function arguments */
+  if(/^[0-9eE+*/().\-\s]+$/.test(a)){
+    try{
+      let v=Function('"use strict";return ('+a+')')();
+      if(Number.isFinite(v))return v
+    }catch{}
+  }
+
+  let v=Number(a);
+  return Number.isFinite(v)?v:a
+}
+
+function callFunction(code,x){
+  let p=parseCall(code);
+  if(!p||!p.name)return {ok:false,error:"invalid function call: "+code};
+
+  /* mthfnc functions are loaded globally, so call them directly. */
+  let fn=typeof window[p.name]==="function"?window[p.name]:null;
+  if(!fn)return {ok:false,error:"function not found: "+p.name};
+
+  try{
+    let args=p.args.map(a=>parsePlotArg(a,x));
+    return {ok:true,value:fn(...args)}
+  }catch(err){
+    return {ok:false,error:String(err?.message||err)}
+  }
+}
+function showPopup(name){
+  let e=data[name],rows='';initParams(e);
+  rows+=`<tr><th>equation</th><td class="formula">${esc(e[1])}</td></tr>`;
+  rows+=`<tr><th>description</th><td>${esc(e[2])}</td></tr>`;
+  rows+=`<tr><th>extra</th><td>${esc(e[3])}</td></tr>`;
+  rows+=`<tr><th>generality</th><td>${esc(e[4])} — ${esc(levelNames[Math.max(0,Math.min(5,Number(e[4])||0))])}</td></tr>`;
+  rows+=`<tr><th>status</th><td>${noequation(e)?'no equation':'equation present'}; ${nocode(e)?'no mthfnc code':'mthfnc code present'}</td></tr>`;
+  let params=e[7]||[];if(params.length)rows+=`<tr><th>inputs</th><td>${params.map(q=>sliderHtml(name,q)).join('')}</td></tr>`;
+
+  let sols=e[6]||[];
+  if(sols.length){
+    let block=sols.map((q,i)=>{
+      let call=q[3]||"";
+      let safe=!!call&&parseCall(call);
+      return `<div class="plotrow"><div class="plothead"><b>${esc(q[0])}</b><span class="code">${esc(q[2]||"")}</span></div><div class="formula">${esc(q[1]||"")}</div>${call?`<div class="plottools"><label>xmin <input class="plotxmin" type="number" value="-5" step="any"></label><label>xmax <input class="plotxmax" type="number" value="5" step="any"></label><label>samples <input class="plotsamples" type="number" value="420" min="80" max="1600" step="20"></label><button class="plotbtn" data-i="${i}">plot</button></div><div class="plotstatus">${esc(call)}</div><canvas class="plotcanvas" data-call="${esc(call)}"></canvas>`:"<div class=\"plotstatus\">no example call supplied</div>"}</div>`
+    }).join('');
+    rows+=`<tr><th>functions</th><td>${block}</td></tr>`;
+  }
+  let con=edges.filter(e0=>e0[0]===name||e0[1]===name).map(e0=>{
+    let dir=e0[0]===name?'→':'←',other=e0[0]===name?e0[1]:e0[0];
+    return `<div class="connection"><span class="tag">${esc(e0[2])}</span>${dir} <b>${esc(other)}</b>${e0[3]?` — ${esc(e0[3])}`:''}</div>`
+  }).join('');
+  rows+=`<tr><th>connections</th><td>${con||'none'}</td></tr>`;
+
+  let codes=sols.map(q=>q[2]).filter(Boolean);
+  if(name==="heun rc")codes.push("heunrc(q,b,g,d,z){ return heunc(q,b,g,d,0,z); }");
+  if(name==="heun rb")codes.push("heunrb(q,a,g,d,z){ return heunb(q,a,g,d,0,z); }");
+  if(name==="heun rt")codes.push("heunrt(q,a,g,d,z){ return heunt(q,a,g,d,0,z); }");
+  if(name==="heun rd")codes.push("heunrd(q,beta,eps,z){ return heund(q,beta,eps,0,-1,z); }");
+  if(name==="heun dd")codes.push("heundd(eps,z){ return heund(q=1,beta=1,gamma=0,delta=0,eps,z); }");
+  rows+=`<tr><th>code</th><td><pre class="codeblock">${esc(codes.join("\n"))||"no mthfnc function mapped"}</pre></td></tr>`;
+  let src=e[8]||[];if(src.length)rows+=`<tr><th>sources</th><td>${src.map(u=>`<div class="source"><a href="${esc(u)}" target="_blank" rel="noopener">${esc(u)}</a></div>`).join("")}</td></tr>`;
+
+  document.getElementById('ptitle').textContent=e[0];document.getElementById('info').innerHTML=rows;
+  let pop=document.getElementById('popup');pop.style.display='block';
+  let n=nodes.get(name),r=svg.getBoundingClientRect(),pw=Math.min(510,window.innerWidth-20);
+  pop.style.width=pw+"px";
+  requestAnimationFrame(()=>{
+    let ph=pop.offsetHeight,left=r.left+view.x+n.x*view.scale+18,top=r.top+view.y+n.y*view.scale+18;
+    left=Math.max(10,Math.min(left,window.innerWidth-pw-10));top=Math.max(10,Math.min(top,window.innerHeight-ph-10));
+    pop.style.left=left+"px";pop.style.top=top+"px";bindPopupControls(name)
+  })
+}
+function closePopup(){document.getElementById('popup').style.display='none'}
+function searchNodes(){
+  let q=document.getElementById('search').value.toLowerCase().trim();
+  nodes.forEach(n=>n.el.style.opacity=!q||n.name.toLowerCase().includes(q)?'1':'.1')
+}
+svg.addEventListener('mousedown',e=>{
+  if(e.button!==0||e.target.closest('.node'))return;
+  pan=true;px=e.clientX;py=e.clientY;vx=view.x;vy=view.y;svg.classList.add('dragging')
+});
+window.addEventListener('mousemove',e=>{
+  if(pan){view.x=vx+e.clientX-px;view.y=vy+e.clientY-py;update()}
+});
+window.addEventListener('mouseup',()=>{
+  pan=false;svg.classList.remove('dragging')
+});
+svg.addEventListener('wheel',e=>{
+  e.preventDefault();let r=svg.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top,old=view.scale,ns=Math.max(.10,Math.min(3.5,old*(e.deltaY<0?1.12:.89)));
+  view.x=mx-(mx-view.x)*(ns/old);view.y=my-(my-view.y)*(ns/old);view.scale=ns;update()
+},{passive:false});
+svg.addEventListener('click',e=>{if(!e.target.closest('.node'))closePopup()});
+layout().then(()=>{makeLevels();makeNodes();makeEdges();update()}).catch(e=>console.error('elk layout failed',e));
+</script>
+
+</body></html>

@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Black-Oil Reservoir Simulator</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#181818;color:#ddd;font-family:Arial,sans-serif}
+#app{display:flex;gap:16px;padding:16px;max-width:1200px;margin:auto}
+#main{flex:1;min-width:0}
+canvas{display:block;width:100%;aspect-ratio:1.4;background:#050505;border:1px solid #444}
+#panel{width:275px;flex:none;background:#222;border:1px solid #444;padding:14px}
+h2{margin:0 0 14px;font-size:19px;font-weight:normal}
+h3{margin:15px 0 8px;font-size:13px;color:#aaa;font-weight:normal}
+label{display:block;font-size:12px;margin:9px 0 4px}
+.val{float:right;color:#aaa}
+input[type=range]{width:100%}
+select,button{width:100%;height:36px;margin-top:7px;padding:0 8px;background:#303030;border:1px solid #555;color:#ddd}
+button{cursor:pointer}
+button:hover{background:#3a3a3a}
+#stats{border-top:1px solid #444;margin-top:14px;padding-top:10px;font-size:12px;line-height:1.7;color:#aaa}
+#eq{font-size:11px;color:#888;margin-top:10px;line-height:1.5}
+</style>
+</head>
+
+<body>
+
+<div id="app">
+
+<div id="main">
+<canvas id="canvas" width="900" height="640"></canvas>
+<div id="eq">
+Black-oil model: oil, water and gas phases with Darcy velocities and
+saturation-dependent relative permeability.
+</div>
+</div>
+
+<div id="panel">
+
+<h2>Black-oil simulator</h2>
+
+<h3>Displayed field</h3>
+
+<select id="field">
+<option value="p" selected>Pressure</option>
+<option value="sw">Water saturation</option>
+<option value="so">Oil saturation</option>
+<option value="sg">Gas saturation</option>
+<option value="po">Oil mobility</option>
+<option value="pw">Water mobility</option>
+<option value="pg">Gas mobility</option>
+<option value="velocity">Total velocity</option>
+</select>
+
+<h3>Rock</h3>
+
+<label>
+Permeability
+<span class="val" id="kv"></span>
+</label>
+<input id="perm" type="range" min=".1" max="10" step=".1" value="2">
+
+<label>
+Porosity
+<span class="val" id="phiv"></span>
+</label>
+<input id="phi" type="range" min=".05" max=".4" step=".01" value=".2">
+
+<h3>Fluids</h3>
+
+<label>
+Oil viscosity
+<span class="val" id="mouv"></span>
+</label>
+<input id="muo" type="range" min=".2" max="10" step=".1" value="2">
+
+<label>
+Water viscosity
+<span class="val" id="muwv"></span>
+</label>
+<input id="muw" type="range" min=".2" max="5" step=".1" value="1">
+
+<label>
+Gas viscosity
+<span class="val" id="mugv"></span>
+</label>
+<input id="mug" type="range" min=".01" max="1" step=".01" value=".05">
+
+<label>
+Bubble-point pressure
+<span class="val" id="pbv"></span>
+</label>
+<input id="pb" type="range" min=".2" max="2" step=".01" value=".9">
+
+<h3>Injection</h3>
+
+<label>
+Water injection
+<span class="val" id="injv"></span>
+</label>
+<input id="inj" type="range" min="0" max="5" step=".05" value=".8">
+
+<label>
+Gas injection
+<span class="val" id="ginjv"></span>
+</label>
+<input id="ginj" type="range" min="0" max="5" step=".05" value=".15">
+
+<label>
+Production
+<span class="val" id="prodv"></span>
+</label>
+<input id="prod" type="range" min="0" max="5" step=".05" value="1">
+
+<h3>Numerics</h3>
+
+<label>
+Grid
+<span class="val" id="gridv"></span>
+</label>
+
+<select id="grid">
+<option value="70">70 × 50</option>
+<option value="100" selected>100 × 70</option>
+<option value="140">140 × 90</option>
+</select>
+
+<label>
+Simulation speed
+<span class="val" id="speedv"></span>
+</label>
+<input id="speed" type="range" min="1" max="8" value="3">
+
+<button id="pause">Pause</button>
+<button id="reset">Reset</button>
+
+<div id="stats">
+t = <span id="time">0</span><br>
+mean pressure = <span id="meanp">0</span><br>
+water = <span id="water">0</span><br>
+oil = <span id="oil">0</span><br>
+gas = <span id="gas">0</span>
+</div>
+
+</div>
+</div>
+
+<script>
+
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+
+let nx=100,ny=70;
+let dx=1,dy=1;
+
+let p,sw,so,sg;
+let pn,swn,son,sgn;
+
+let time=0;
+let running=true;
+
+const par={
+    perm:2,
+    phi:.2,
+    muo:2,
+    muw:1,
+    mug:.05,
+    pb:.9,
+    inj:.8,
+    ginj:.15,
+    prod:1,
+    speed:3
+};
+
+function id(i,j){
+    i=(i+nx)%nx;
+    j=Math.max(0,Math.min(ny-1,j));
+    return j*nx+i;
+}
+
+function arr(){
+    return new Float64Array(nx*ny);
+}
+
+function setup(){
+
+    nx=+document.getElementById("grid").value;
+
+    if(nx===70)ny=50;
+    if(nx===100)ny=70;
+    if(nx===140)ny=90;
+
+    dx=1;
+    dy=1;
+
+    p=arr();
+    sw=arr();
+    so=arr();
+    sg=arr();
+
+    pn=arr();
+    swn=arr();
+    son=arr();
+    sgn=arr();
+
+    initialize();
+}
+
+function initialize(){
+
+    time=0;
+
+    for(let j=0;j<ny;j++){
+
+        const y=j/(ny-1);
+
+        for(let i=0;i<nx;i++){
+
+            const x=i/(nx-1);
+
+            const k=id(i,j);
+
+            /*
+               Initial reservoir pressure.
+            */
+
+            p[k]=1.15-.25*x;
+
+            /*
+               Oil-dominated reservoir with a
+               water leg near the bottom.
+            */
+
+            sw[k]=.18+.22*Math.exp(-20*(1-y)*(1-y));
+
+            /*
+               Initial gas saturation appears only
+               in the low-pressure production region.
+            */
+
+            sg[k]=
+                x>.8?
+                .08*(x-.8)/.2:
+                0;
+
+            so[k]=Math.max(
+                0,
+                1-sw[k]-sg[k]
+            );
+        }
+    }
+}
+
+function krw(s){
+    return s*s;
+}
+
+function kro(s){
+    return (1-s)*(1-s);
+}
+
+function krg(s){
+    return s*s;
+}
+
+function gradx(a,i,j){
+    return (
+        a[id(i+1,j)]-
+        a[id(i-1,j)]
+    )/(2*dx);
+}
+
+function grady(a,i,j){
+
+    if(j===0)
+        return (
+            a[id(i,1)]-
+            a[id(i,0)]
+        )/dy;
+
+    if(j===ny-1)
+        return (
+            a[id(i,ny-1)]-
+            a[id(i,ny-2)]
+        )/dy;
+
+    return (
+        a[id(i,j+1)]-
+        a[id(i,j-1)]
+    )/(2*dy);
+}
+
+function lap(a,i,j){
+
+    const xm=a[id(i-1,j)];
+    const xp=a[id(i+1,j)];
+    const c=a[id(i,j)];
+
+    const ym=j>0?a[id(i,j-1)]:c;
+    const yp=j<ny-1?a[id(i,j+1)]:c;
+
+    return (
+        xp-2*c+xm+
+        yp-2*c+ym
+    );
+}
+
+function darcy(a,mu,i,j){
+
+    /*
+       Darcy velocity:
+
+       u = -K kr/mu grad(p)
+
+       Gravity is represented by the vertical
+       pressure gradient in this reduced model.
+    */
+
+    const lx=gradx(p,i,j);
+    const ly=grady(p,i,j);
+
+    const mobility=
+        par.perm*a/mu;
+
+    return [
+        -mobility*lx,
+        -mobility*ly
+    ];
+}
+
+function step(){
+
+    const dt=.002;
+
+    /*
+       We calculate phase velocities first.
+    */
+
+    const uo=arr(),vo=arr();
+    const uw=arr(),vw=arr();
+    const ug=arr(),vg=arr();
+
+    for(let j=0;j<ny;j++){
+
+        for(let i=0;i<nx;i++){
+
+            const k=id(i,j);
+
+            const kro0=kro(sw[k]);
+            const krw0=krw(sw[k]);
+            const krg0=krg(sg[k]);
+
+            const qo=darcy(
+                kro0,
+                par.muo,
+                i,j
+            );
+
+            const qw=darcy(
+                krw0,
+                par.muw,
+                i,j
+            );
+
+            const qg=darcy(
+                krg0,
+                par.mug,
+                i,j
+            );
+
+            uo[k]=qo[0];
+            vo[k]=qo[1];
+
+            uw[k]=qw[0];
+            vw[k]=qw[1];
+
+            ug[k]=qg[0];
+            vg[k]=qg[1];
+        }
+    }
+
+    /*
+       Explicit saturation transport.
+       This is a simplified IMPES-like step:
+       pressure is evolved diffusively and
+       phase saturations are transported
+       using the Darcy velocities.
+    */
+
+    for(let j=0;j<ny;j++){
+
+        for(let i=0;i<nx;i++){
+
+            const k=id(i,j);
+
+            /*
+               Upwind transport helper.
+            */
+
+            function adv(a,ux,uy){
+
+                const ax=ux[k]>=0?
+                    (a[k]-a[id(i-1,j)])/dx:
+                    (a[id(i+1,j)]-a[k])/dx;
+
+                let ay;
+
+                if(j===0)
+                    ay=(a[id(i,1)]-a[k])/dy;
+                else if(j===ny-1)
+                    ay=(a[k]-a[id(i,j-1)])/dy;
+                else
+                    ay=uy[k]>=0?
+                        (a[k]-a[id(i,j-1)])/dy:
+                        (a[id(i,j+1)]-a[k])/dy;
+
+                return ux[k]*ax+uy[k]*ay;
+            }
+
+            const aw=adv(sw,uw,vw);
+            const ao=adv(so,uo,vo);
+            const ag=adv(sg,ug,vg);
+
+            swn[k]=sw[k]-dt*aw;
+            son[k]=so[k]-dt*ao;
+            sgn[k]=sg[k]-dt*ag;
+
+            /*
+               Pressure diffusion/compressibility
+               approximation.
+            */
+
+            const totalMob=
+                par.perm*(
+                    kro(sw[k])/par.muo+
+                    krw(sw[k])/par.muw+
+                    krg(sg[k])/par.mug
+                );
+
+            const source=
+                injection(i,j);
+
+            pn[k]=
+                p[k]+
+                dt*(
+                    .04*totalMob*lap(p,i,j)+
+                    source
+                );
+        }
+    }
+
+    /*
+       Wells.
+    */
+
+    for(let j=0;j<ny;j++){
+
+        for(let i=0;i<nx;i++){
+
+            const k=id(i,j);
+
+            /*
+               Injection wells on the left.
+            */
+
+            if(i<3){
+
+                swn[k]+=dt*par.inj*.03;
+
+                sgn[k]+=dt*par.ginj*.01;
+
+                son[k]-=
+                    dt*(par.inj*.03+
+                        par.ginj*.01);
+            }
+
+            /*
+               Production well on the right.
+            */
+
+            if(i>nx-3){
+
+                const q=dt*par.prod*.02;
+
+                sw[k]-=q*sw[k];
+                so[k]-=q*so[k];
+                sg[k]-=q*sg[k];
+
+                pn[k]-=dt*par.prod*.03;
+            }
+        }
+    }
+
+    /*
+       Bubble-point gas liberation.
+
+       When p < pb, dissolved gas is released
+       from the oil phase into the gas phase.
+    */
+
+    for(let k=0;k<p.length;k++){
+
+        if(pn[k]<par.pb){
+
+            const release=
+                Math.min(
+                    son[k],
+                    .3*(par.pb-pn[k])*dt
+                );
+
+            son[k]-=release;
+            sgn[k]+=release;
+        }
+
+        /*
+           Keep the saturation constraint.
+        */
+
+        swn[k]=Math.max(0,swn[k]);
+        son[k]=Math.max(0,son[k]);
+        sgn[k]=Math.max(0,sgn[k]);
+
+        const sum=
+            swn[k]+son[k]+sgn[k];
+
+        if(sum>0){
+
+            swn[k]/=sum;
+            son[k]/=sum;
+            sgn[k]/=sum;
+        }
+
+        if(!Number.isFinite(pn[k]))
+            pn[k]=p[k];
+
+        pn[k]=Math.max(.02,pn[k]);
+    }
+
+    [p,pn]=[pn,p];
+    [sw,swn]=[swn,sw];
+    [so,son]=[son,so];
+    [sg,sgn]=[sgn,sg];
+
+    time+=dt;
+}
+
+function injection(i,j){
+
+    /*
+       Pressure source from injection/production.
+    */
+
+    if(i<3)
+        return .025*(par.inj+par.ginj);
+
+    if(i>nx-3)
+        return -.04*par.prod;
+
+    return 0;
+}
+
+function field(i,j){
+
+    const k=id(i,j);
+    const f=document.getElementById("field").value;
+
+    if(f==="p")
+        return p[k];
+
+    if(f==="sw")
+        return sw[k];
+
+    if(f==="so")
+        return so[k];
+
+    if(f==="sg")
+        return sg[k];
+
+    if(f==="po")
+        return par.perm*kro(sw[k])/par.muo;
+
+    if(f==="pw")
+        return par.perm*krw(sw[k])/par.muw;
+
+    if(f==="pg")
+        return par.perm*krg(sg[k])/par.mug;
+
+    const ox=gradx(p,i,j);
+    const oy=grady(p,i,j);
+
+    const mob=
+        par.perm*(
+            kro(so[k])/par.muo+
+            krw(sw[k])/par.muw+
+            krg(sg[k])/par.mug
+        );
+
+    return mob*Math.sqrt(ox*ox+oy*oy);
+}
+
+function color(v){
+
+    v=Math.max(0,Math.min(1,v));
+
+    const c=[
+        [5,10,35],
+        [15,55,130],
+        [20,150,190],
+        [80,210,150],
+        [240,220,70],
+        [255,255,255]
+    ];
+
+    const x=v*(c.length-1);
+    const a=Math.floor(x);
+    const f=x-a;
+
+    if(a>=c.length-1)
+        return c[c.length-1];
+
+    return [
+        c[a][0]*(1-f)+c[a+1][0]*f,
+        c[a][1]*(1-f)+c[a+1][1]*f,
+        c[a][2]*(1-f)+c[a+1][2]*f
+    ];
+}
+
+function render(){
+
+    const w=canvas.width;
+    const h=canvas.height;
+
+    const image=ctx.createImageData(w,h);
+    const data=image.data;
+
+    let mn=Infinity;
+    let mx=-Infinity;
+
+    for(let j=0;j<ny;j++){
+
+        for(let i=0;i<nx;i++){
+
+            const z=field(i,j);
+
+            mn=Math.min(mn,z);
+            mx=Math.max(mx,z);
+        }
+    }
+
+    const range=Math.max(mx-mn,1e-9);
+
+    for(let py=0;py<h;py++){
+
+        const j=
+            ny-1-
+            Math.floor(py/h*ny);
+
+        for(let px=0;px<w;px++){
+
+            const i=
+                Math.floor(px/w*nx);
+
+            const z=field(i,j);
+
+            const c=color(
+                (z-mn)/range
+            );
+
+            const q=(py*w+px)*4;
+
+            data[q]=c[0];
+            data[q+1]=c[1];
+            data[q+2]=c[2];
+            data[q+3]=255;
+        }
+    }
+
+    ctx.putImageData(image,0,0);
+
+    /*
+       Well markers.
+    */
+
+    ctx.strokeStyle="rgba(255,255,255,.8)";
+    ctx.lineWidth=2;
+
+    ctx.beginPath();
+    ctx.moveTo(5,0);
+    ctx.lineTo(5,h);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(w-5,0);
+    ctx.lineTo(w-5,h);
+    ctx.stroke();
+
+    ctx.fillStyle="white";
+    ctx.font="12px Arial";
+
+    ctx.fillText(
+        "INJ",
+        9,
+        15
+    );
+
+    ctx.fillText(
+        "PROD",
+        w-38,
+        15
+    );
+
+    updateStats();
+}
+
+function updateStats(){
+
+    let mp=0;
+    let mw=0;
+    let mo=0;
+    let mg=0;
+
+    const N=nx*ny;
+
+    for(let k=0;k<N;k++){
+
+        mp+=p[k];
+        mw+=sw[k];
+        mo+=so[k];
+        mg+=sg[k];
+    }
+
+    document.getElementById("time").textContent=
+        time.toFixed(3);
+
+    document.getElementById("meanp").textContent=
+        (mp/N).toFixed(4);
+
+    document.getElementById("water").textContent=
+        (mw/N).toFixed(4);
+
+    document.getElementById("oil").textContent=
+        (mo/N).toFixed(4);
+
+    document.getElementById("gas").textContent=
+        (mg/N).toFixed(4);
+}
+
+function updateUI(){
+
+    par.perm=+document.getElementById("perm").value;
+    par.phi=+document.getElementById("phi").value;
+    par.muo=+document.getElementById("muo").value;
+    par.muw=+document.getElementById("muw").value;
+    par.mug=+document.getElementById("mug").value;
+    par.pb=+document.getElementById("pb").value;
+    par.inj=+document.getElementById("inj").value;
+    par.ginj=+document.getElementById("ginj").value;
+    par.prod=+document.getElementById("prod").value;
+    par.speed=+document.getElementById("speed").value;
+
+    document.getElementById("kv").textContent=par.perm;
+    document.getElementById("phiv").textContent=par.phi;
+    document.getElementById("mouv").textContent=par.muo;
+    document.getElementById("muwv").textContent=par.muw;
+    document.getElementById("mugv").textContent=par.mug;
+    document.getElementById("pbv").textContent=par.pb;
+    document.getElementById("injv").textContent=par.inj;
+    document.getElementById("ginjv").textContent=par.ginj;
+    document.getElementById("prodv").textContent=par.prod;
+    document.getElementById("speedv").textContent=par.speed;
+    document.getElementById("gridv").textContent=
+        nx+" × "+ny;
+}
+
+document.querySelectorAll("input").forEach(e=>{
+    e.addEventListener("input",updateUI);
+});
+
+document.getElementById("field").addEventListener(
+    "change",
+    render
+);
+
+document.getElementById("grid").addEventListener(
+    "change",
+    ()=>{
+        setup();
+        updateUI();
+    }
+);
+
+document.getElementById("pause").addEventListener(
+    "click",
+    ()=>{
+        running=!running;
+        document.getElementById("pause").textContent=
+            running?"Pause":"Resume";
+    }
+);
+
+document.getElementById("reset").addEventListener(
+    "click",
+    initialize
+);
+
+setup();
+updateUI();
+
+function animate(){
+
+    if(running){
+
+        for(let n=0;n<par.speed;n++)
+            step();
+    }
+
+    render();
+    requestAnimationFrame(animate);
+}
+
+animate();
+
+</script>
+</body>
+</html>

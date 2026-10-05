@@ -1,1383 +1,1169 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>MinerGunBuilderPathFinder</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Miner Gun Builder Pathfinder</title>
   <style>
-    /* For demonstration, we use a fixed-width preformatted output area */
-    #output {
-      white-space: pre;
-      background: #eee;
-      padding: 1em;
-      border: 1px solid #ccc;
-      font-family: monospace;
-    }
+    #appColumns { display:grid; grid-template-columns:minmax(18rem, 1fr) minmax(28rem, 1.35fr); gap:1rem; align-items:start; }
+    #outputColumn { position:sticky; top:.5rem; max-height:calc(100vh - 1rem); overflow:auto; }
+    #resultBoard { max-width:100%; overflow:auto; white-space:pre; }
+    #routeCanvas { display:block; width:min(100%, 480px); height:auto; }
+    #routeCanvas[hidden], #resultBoard[hidden] { display:none; }
+    @media (max-width:850px) { #appColumns { grid-template-columns:1fr; } #outputColumn { position:static; max-height:none; overflow:visible; } }
   </style>
 </head>
 <body>
-  <h1>MinerGunBuilderPathFinder (JS version)</h1>
-  <div id="output"></div>
+  <header>
+    <a href="index.html">← TeserT</a>
+    <div aria-hidden="true">MGB</div>
+    <div>
+      <p>Miner Gun Builder Pathfinder</p>
+      <p>Longest route search and ship experiments</p>
+    </div>
+  </header>
 
+  <main>
+    <section>
+      <p>Pathfinder · Browser edition</p>
+      <h1>Search the longest route</h1>
+      <p>Choose a ship and maximize its route. Modes 11–13 search routes ending at a core; earlier modes keep the randomized ship searches.</p>
+    </section>
+
+    <div id="appColumns">
+      <div id="optionsColumn">
+        <section aria-labelledby="search-title">
+          <div><h2 id="search-title">Search options</h2></div>
+          <div>
+            <div>
+              <label for="searchMode">Search mode</label>
+              <select id="searchMode">
+                <option value="fixed">One randomized route · mode 0/1</option>
+                <option value="best-fixed">Retry randomized routes</option>
+                <option value="random-6">Recommended random tiles · mode 6</option>
+                <option value="random-7">Extreme random tiles · mode 7</option>
+                <option value="pool-8">Perfect tile-pool search · mode 8</option>
+                <option value="wave-9">Wave tile-pool search · mode 9</option>
+                <option value="optimized-10">Optimized random · mode 10</option>
+                <option value="11" selected>Most vertical straights · mode 11</option>
+                <option value="12">Most route steps · mode 12</option>
+                <option value="13">Combined straights + route length · mode 13</option>
+              </select>
+            </div>
+            <p id="modeDescription">Searches the selected layout once. Choose a custom board, a named design, or a classic ship below.</p>
+            <section id="longSearchOptions">
+              <p><label for="longScope">Ships <select id="longScope"><option value="selected">Selected layout</option><option value="all">All bundled ships</option></select></label></p>
+              <p><label for="longStateLimit">States per ship <input id="longStateLimit" type="number" min="100" max="1000000" step="1000" value="10000"></label></p>
+              <p>Every accepted route ends at <code>@</code>. Mode 11 maximizes interior vertical <code>|</code> cells; 12 maximizes grid steps; 13 prioritizes <code>|</code> cells, then steps. Portal jumps do not count as steps.</p>
+            </section>
+
+            <p><label><input id="usePortals" type="checkbox" checked> Use one portal pair · key 9</label></p>
+            <details id="routeSearchOptions"><summary>Randomized C++ search settings · modes 0–10</summary>
+            <div>
+              <div>
+                <label for="iterations">Route attempts / candidates</label>
+                <input id="iterations" type="number" min="1" max="20000" step="1" value="250">
+                <span>Used by route variations and generated searches.</span>
+              </div>
+              <div>
+                <label for="seed">Random seed</label>
+                <input id="seed" type="number" min="0" step="1" value="0">
+                <span>0 picks a new seed each run.</span>
+              </div>
+            </div>
+
+            <div></div>
+            <p>Tile pool · config key 4</p>
+            <div id="tilePool"></div>
+            <p>The original config selected tiles 5, 6 and 7.</p>
+
+            <div></div>
+            <div>
+              <div>
+                <label for="raytrace">Ray lookahead · key 0</label>
+                <select id="raytrace">
+                  <option value="1">1 cell</option>
+                  <option value="2" selected>2 cells · config default</option>
+                  <option value="3">3 cells</option>
+                </select>
+              </div>
+              <div>
+                <label for="tolerance">Show near-best tolerance · key 1</label>
+                <input id="tolerance" type="number" min="0" max="100" step="1" value="1">
+              </div>
+            </div>
+            <div>
+              <div>
+                <label for="maxExpanded">Path steps per route · key 7</label>
+                <input id="maxExpanded" type="number" min="100" max="50000" step="100" value="5000">
+              </div>
+              <div><label for="tileWeights">Tile weights · key y <input id="tileWeights" type="text" value="05 -1" placeholder="05 -1 07 0.5"></label></div>
+            </div>
+
+            <details>
+              <summary>More source config2.txt settings</summary>
+              <p><label for="strength">Extra tile-search quality · key 2 <input id="strength" type="number" min="1" max="100000" value="512"></label></p>
+              <p><label for="minEmpty">Required tile 6 count · key 3 (-1 disables) <input id="minEmpty" type="number" min="-1" max="16" value="-1"></label></p>
+              <p><label for="failRetries">Key 5 walker control / failed-route retry cap <input id="failRetries" type="number" min="0" max="5000" value="500"></label></p>
+              <p><label for="wrongTurn">Random-turn setting · key 8 <input id="wrongTurn" type="number" min="1" max="100000" value="1000"></label></p>
+            </details>
+            </details>
+            <p><label><input id="outputEnabled" type="checkbox" checked> Enable output report · key 10</label></p>
+
+            <div>
+              <button id="runButton">Run search</button>
+              <button id="stopButton" hidden>Stop</button>
+              <button id="resetButton">Reset board</button>
+            </div>
+            <div role="status" aria-live="polite">
+              <span id="statusDot"></span>
+              <span id="statusText">Ready. Choose a layout and run a search.</span>
+            </div>
+          </div>
+        </section>
+
+        <section aria-labelledby="layout-title">
+          <div><h2 id="layout-title">Ship layout</h2></div>
+          <div>
+            <div>
+              <label for="boardSource">Layout source</label>
+              <select id="boardSource">
+                <option value="custom">Custom 4×4 tiles</option>
+                <option value="preset">Named design from the C++ source</option>
+                <option value="classic">Classic ship from class.txt</option>
+              </select>
+            </div>
+            <div id="presetField" hidden>
+              <label for="presetSelect">Named design</label>
+              <select id="presetSelect"></select>
+            </div>
+            <div id="classicField" hidden>
+              <label for="classicSelect">Classic ship</label>
+              <select id="classicSelect"></select>
+            </div>
+
+            <div id="editorFields">
+              <p>Select a cell, then pick a tile. Tile patterns follow the original 3×3 definitions.</p>
+              <div id="tileEditor" aria-label="Editable four by four tile layout"></div>
+              <p>Tile palette</p>
+              <div id="tilePalette"></div>
+            </div>
+            <div></div>
+            <p>12×12 layout preview</p>
+            <div>
+              <pre id="layoutPreview" aria-label="Current ship layout preview"></pre>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div id="outputColumn">
+        <section aria-labelledby="drawing-title">
+          <div>
+            <h2 id="drawing-title">Console drawing</h2>
+            <span id="bestCandidateLabel">No search yet</span>
+          </div>
+          <p><label for="drawingMode">Drawing <select id="drawingMode"><option value="ascii">ASCII console</option><option value="unicode">Unicode corners</option><option value="canvas">Procedural canvas · red on gray</option></select></label></p>
+          <div>
+            <pre id="resultBoard" aria-label="Path drawing output"></pre>
+            <canvas id="routeCanvas" width="480" height="480" hidden aria-label="Procedural route drawing"></canvas>
+          </div>
+          <div aria-label="Drawing legend">
+            <span><span>#</span> blocked</span>
+            <span><span>S</span> start</span>
+            <span><span>@</span> target</span>
+            <span><span>|</span> route</span>
+            <span><span>+</span> turn / special</span>
+          </div>
+        </section>
+
+        <section aria-labelledby="result-title">
+          <div><h2 id="result-title">Best result</h2></div>
+          <div>
+            <div><span>Path length</span><strong id="pathLength">—</strong></div>
+            <div><span>Turns</span><strong id="turnCount">—</strong></div>
+            <div><span>Search score</span><strong id="searchScore">—</strong></div>
+            <div><span>Vertical <code>|</code> cells</span><strong id="straightCount">—</strong></div>
+            <div><span>Routes / states checked</span><strong id="checkedCount">0</strong></div>
+          </div>
+          <section id="legacyMetrics">
+            <div>
+              <div><span>Estimated base damage</span><strong id="baseDamage">—</strong></div>
+              <div><span>Estimated DPS</span><strong id="dps">—</strong></div>
+              <div><span>Tile 5 count</span><strong id="tile5Count">—</strong></div>
+              <div><span>Close matches</span><strong id="closeMatches">—</strong></div>
+            </div>
+            <div>
+              <div>
+                <h3>Tier rank</h3>
+                <span id="tierGrade">—</span>
+                <span id="tierDetails">Legacy source ranking</span>
+              </div>
+              <div>
+                <h3>Wave rank</h3>
+                <span id="waveGrade">—</span>
+                <span id="waveDetails">Legacy source ranking</span>
+              </div>
+            </div>
+            <p>Damage and rank estimates apply only to the randomized route modes.</p>
+          </section>
+          <div>
+            <button id="copyButton" type="button">Download output.txt</button>
+          </div>
+        </section>
+
+        <section>
+          <div><h2>Search log</h2><span id="elapsedLabel"></span></div>
+          <div id="logText">Pick a layout or search mode. The best board and its rank details will appear here.</div>
+          <pre id="consoleOutput" aria-live="polite">Ready.</pre>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script src="mgbpathfinder-data.js"></script>
   <script>
-  function cts(indx, indy) {
-  let op;
-  let arr = [];
+    "use strict";
 
-  switch (indx) {
-    case 0:
-      arr = [
-        [1, 1, 1],
-        [1, 1, 1],
-        [1, 1, 1]
-      ];
-      break;
-    case 1:
-      arr = [
-        [1, 1, 1],
-        [1, 9, 1],
-        [1, 0, 0]
-      ];
-      break;
-    case 2:
-      arr = [
-        [1, 0, 0],
-        [1, 1, 0],
-        [1, 0, 0]
-      ];
-      break;
-    case 3:
-      arr = [
-        [1, 0, 0],
-        [1, 0, 1],
-        [0, 0, 1]
-      ];
-      break;
-    case 4:
-      arr = [
-        [1, 0, 1],
-        [0, 0, 0],
-        [1, 0, 1]
-      ];
-      break;
-    case 5:
-      arr = [
-        [0, 0, 0],
-        [0, 0, 0],
-        [0, 0, 0]
-      ];
-      break;
-    case 6:
-      arr = [
-        [0, 0, 1],
-        [0, 0, 1],
-        [0, 0, 1]
-      ];
-      break;
-    case 7:
-      arr = [
-        [0, 0, 0],
-        [0, 0, 0],
-        [1, 1, 1]
-      ];
-      break;
-    case 8:
-      arr = [
-        [0, 1, 1],
-        [0, 0, 0],
-        [1, 1, 0]
-      ];
-      break;
-    case 9:
-      arr = [
-        [1, 1, 0],
-        [1, 0, 0],
-        [0, 0, 0]
-      ];
-      break;
-    case 10:
-      arr = [
-        [1, 0, 0],
-        [0, 1, 0],
-        [0, 0, 1]
-      ];
-      break;
-    case 11:
-      arr = [
-        [1, 1, 1],
-        [0, 9, 0],
-        [1, 1, 1]
-      ];
-      break;
-    case 12:
-      arr = [
-        [1, 0, 1],
-        [1, 0, 1],
-        [0, 0, 0]
-      ];
-      break;
-    case 13:
-      arr = [
-        [1, 0, 1],
-        [0, 0, 0],
-        [1, 0, 0]
-      ];
-      break;
-    case 14:
-      arr = [
-        [1, 0, 0],
-        [1, 0, 0],
-        [1, 0, 0]
-      ];
-      break;
-    case 15:
-      arr = [
-        [1, 1, 1],
-        [0, 0, 0],
-        [0, 0, 0]
-      ];
-      break;
-    case 16:
-      arr = [
-        [0, 0, 1],
-        [0, 0, 0],
-        [1, 0, 0]
-      ];
-      break;
-    case 17:
-      arr = [
-        [1, 0, 0],
-        [0, 0, 1],
-        [1, 0, 0]
-      ];
-      break;
-    case 18:
-      arr = [
-        [9, 9, 9],
-        [9, 1, 9],
-        [9, 9, 9]
-      ];
-      break;
-    case 19:
-      arr = [
-        [1, 9, 1],
-        [9, 1, 9],
-        [1, 9, 1]
-      ];
-      break;
-    case 20:
-      arr = [
-        [0, 0, 0],
-        [0, 0, 0],
-        [0, 0, 1]
-      ];
-      break;
-    case 21:
-      arr = [
-        [0, 0, 0],
-        [0, 1, 0],
-        [0, 0, 0]
-      ];
-      break;
-    // Optionally, add a default case if needed.
-  }
+    const { TILE_PATTERNS, TILE_LABELS, PRESETS, CLASSIC_SHIPS } = window.MGB_DATA;
+    const $ = function (id) { return document.getElementById(id); };
+    const state = {
+      tiles: PRESETS[0].tiles.slice(),
+      selectedCell: 0,
+      selectedTile: 5,
+      best: null,
+      checked: 0,
+      closeMatches: 0,
+      running: false,
+      stoppedByUser: false,
+      runToken: 0,
+      startedAt: 0,
+      bestScore: -Infinity,
+      longestResult: null,
+      consoleLines: []
+    };
 
-  // Select the element from the 3x3 grid based on indy (1-indexed)
-  switch (indy) {
-    case 1: op = arr[0][0]; break;
-    case 2: op = arr[0][1]; break;
-    case 3: op = arr[0][2]; break;
-    case 4: op = arr[1][0]; break;
-    case 5: op = arr[1][1]; break;
-    case 6: op = arr[1][2]; break;
-    case 7: op = arr[2][0]; break;
-    case 8: op = arr[2][1]; break;
-    case 9: op = arr[2][2]; break;
-    // Optionally, add a default case if needed.
-  }
-
-  return op;
-}
-// Function: ogdircng
-function ogdircng(ogdir, dir, x, y) {
-  if (ogdir === 1) {
-    switch (dir) {
-      case 1:
-        dir = 4;
-        break;
-      case 4:
-        dir = 2;
-        break;
-      case 2:
-        y--;
-        break;
-    }
-  }
-  if (ogdir === 2) {
-    switch (dir) {
-      case 2:
-        dir = 1;
-        break;
-      case 1:
-        dir = 3;
-        break;
-      case 3:
-        x--;
-        break;
-    }
-  }
-  if (ogdir === 3) {
-    switch (dir) {
-      case 3:
-        dir = 2;
-        break;
-      case 2:
-        dir = 4;
-        break;
-      case 4:
-        y++;
-        break;
-    }
-  }
-  if (ogdir === 4) {
-    switch (dir) {
-      case 4:
-        dir = 3;
-        break;
-      case 3:
-        dir = 1;
-        break;
-      case 1:
-        x++;
-        break;
-    }
-  }
-  return { dir, x, y };
-}
-
-// Function: ogdircngl
-function ogdircngl(ogdir, dir, x, y) {
-  if (ogdir === 3) {
-    switch (dir) {
-      case 3:
-        dir = 4;
-        break;
-      case 4:
-        dir = 2;
-        break;
-      case 2:
-        y++;
-        break;
-    }
-  }
-  if (ogdir === 4) {
-    switch (dir) {
-      case 4:
-        dir = 1;
-        break;
-      case 1:
-        dir = 3;
-        break;
-      case 3:
-        x++;
-        break;
-    }
-  }
-  if (ogdir === 1) {
-    switch (dir) {
-      case 1:
-        dir = 2;
-        break;
-      case 2:
-        dir = 4;
-        break;
-      case 4:
-        y--;
-        break;
-    }
-  }
-  if (ogdir === 2) {
-    switch (dir) {
-      case 2:
-        dir = 3;
-        break;
-      case 3:
-        dir = 1;
-        break;
-      case 1:
-        x--;
-        break;
-    }
-  }
-  return { dir, x, y };
-}
-
-// Function: turnaa
-function turnaa(ogdir, dir, x, y) {
-  switch (ogdir) {
-    case 1:
-      switch (dir) {
-        case 1:
-          dir = 4;
-          break;
-        case 4:
-          dir = 2;
-          break;
-        case 2:
-          y--;
-          break;
-      }
-      break;
-    case 2:
-      switch (dir) {
-        case 2:
-          dir = 1;
-          break;
-        case 1:
-          dir = 3;
-          break;
-        case 3:
-          x--;
-          break;
-      }
-      break;
-    case 3:
-      switch (dir) {
-        case 3:
-          dir = 2;
-          break;
-        case 2:
-          dir = 4;
-          break;
-        case 4:
-          y++;
-          break;
-      }
-      break;
-    case 4:
-      switch (dir) {
-        case 4:
-          dir = 3;
-          break;
-        case 3:
-          dir = 1;
-          break;
-        case 1:
-          x++;
-          break;
-      }
-      break;
-  }
-  return { dir, x, y };
-}
-
-    // === Global Strings (converted from C++ const std::string) ===
-    const introi = "";  // originally: "\n           Welcome to the MinerGunBuilderPathFinder MGBpf \n\n"
-    const intro = " 0-custom ship input  \n 1-named custom ship / bruteforce   \n 4-lite bruteforce  \n 5-ultra lite bruteforce \n 6-hefty bruteforce \n 7-classic ships (mayhaps be broken)\n";
-    const intro1 = " \n 0 -sanil  \n 1 -beast  \n 2 -fat trident  \n 3 -thunder  \n 4 -staricase \n 5 -piano  \n-1 -ultrabeast  \n-2 -one of captivates ship  \n-3 -stealth bomber  \n-4 -hyperbeast  \n  \n 6-random(reccomend)  \n 7-extreme random(no reccomend) \n 8-perfect bruteforce(long time)  \n 9-wave bruteforce  \n 10-optimised random (reccomend)\n";
-
-    const mania = 1;
-    // Using a Set to mimic the unordered_set<long long>
-    const idset = new Set();
-
-    // Add an id into the set.
-    function appindx(x) {
-      idset.add(x);
-    }
-    // Check if an id is already present.
-    function isapp(x) {
-      return idset.has(x);
-    }
-    function isapp2(x) {
-      return idset.has(x);
-    }
-    // A simple max function.
-    function max(a, b) {
-      return (a < b) ? b : a;
+    function clampInt(value, min, max, fallback) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return fallback;
+      return Math.min(max, Math.max(min, Math.trunc(number)));
     }
 
-    // === Example conversion of the "cts" function ===
-    function cts(indx, indy) {
-      let arr;
-      switch (indx) {
-        case 0:
-          arr = [
-            [1, 1, 1],
-            [1, 1, 1],
-            [1, 1, 1]
-          ];
-          break;
-        case 1:
-          arr = [
-            [1, 1, 1],
-            [1, 9, 1],
-            [1, 0, 0]
-          ];
-          break;
-        case 2:
-          arr = [
-            [1, 0, 0],
-            [1, 1, 0],
-            [1, 0, 0]
-          ];
-          break;
-        case 3:
-          arr = [
-            [1, 0, 0],
-            [1, 0, 1],
-            [0, 0, 1]
-          ];
-          break;
-        case 4:
-          arr = [
-            [1, 0, 1],
-            [0, 0, 0],
-            [1, 0, 1]
-          ];
-          break;
-        case 5:
-          arr = [
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
-          ];
-          break;
-        case 6:
-          arr = [
-            [0, 0, 1],
-            [0, 0, 1],
-            [0, 0, 1]
-          ];
-          break;
-        case 7:
-          arr = [
-            [0, 0, 0],
-            [0, 0, 0],
-            [1, 1, 1]
-          ];
-          break;
-        case 8:
-          arr = [
-            [0, 1, 1],
-            [0, 0, 0],
-            [1, 1, 0]
-          ];
-          break;
-        case 9:
-          arr = [
-            [1, 1, 0],
-            [1, 0, 0],
-            [0, 0, 0]
-          ];
-          break;
-        case 10:
-          arr = [
-            [1, 0, 0],
-            [0, 1, 0],
-            [0, 0, 1]
-          ];
-          break;
-        case 11:
-          arr = [
-            [1, 1, 1],
-            [0, 9, 0],
-            [1, 1, 1]
-          ];
-          break;
-        case 12:
-          arr = [
-            [1, 0, 1],
-            [1, 0, 1],
-            [0, 0, 0]
-          ];
-          break;
-        case 13:
-          arr = [
-            [1, 0, 1],
-            [0, 0, 0],
-            [1, 0, 0]
-          ];
-          break;
-        case 14:
-          arr = [
-            [1, 0, 0],
-            [1, 0, 0],
-            [1, 0, 0]
-          ];
-          break;
-        case 15:
-          arr = [
-            [1, 1, 1],
-            [0, 0, 0],
-            [0, 0, 0]
-          ];
-          break;
-        case 16:
-          arr = [
-            [0, 0, 1],
-            [0, 0, 0],
-            [1, 0, 0]
-          ];
-          break;
-        case 17:
-          arr = [
-            [1, 0, 0],
-            [0, 0, 1],
-            [1, 0, 0]
-          ];
-          break;
-        case 18:
-          arr = [
-            [9, 9, 9],
-            [9, 1, 9],
-            [9, 9, 9]
-          ];
-          break;
-        case 19:
-          arr = [
-            [1, 9, 1],
-            [9, 1, 9],
-            [1, 9, 1]
-          ];
-          break;
-        case 20:
-          arr = [
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 1]
-          ];
-          break;
-        case 21:
-          arr = [
-            [0, 0, 0],
-            [0, 1, 0],
-            [0, 0, 0]
-          ];
-          break;
-        default:
-          arr = [
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
-          ];
-          break;
-      }
-      let op;
-      switch (indy) {
-        case 1: op = arr[0][0]; break;
-        case 2: op = arr[0][1]; break;
-        case 3: op = arr[0][2]; break;
-        case 4: op = arr[1][0]; break;
-        case 5: op = arr[1][1]; break;
-        case 6: op = arr[1][2]; break;
-        case 7: op = arr[2][0]; break;
-        case 8: op = arr[2][1]; break;
-        case 9: op = arr[2][2]; break;
-        default: op = 0; break;
-      }
-      return op;
+    function makeRng(seed) {
+      let value = seed >>> 0;
+      if (value === 0) value = (Math.random() * 0xffffffff) >>> 0 || 1;
+      return function () {
+        value = (value * 1664525 + 1013904223) >>> 0;
+        return value / 4294967296;
+      };
     }
 
-    // === The "main" function (conversion of main() in C++) ===
-    function main() {
-      const outputElem = document.getElementById("output");
-      function println(str) {
-        outputElem.textContent += str + "\n";
-      }
+    function patternToGrid(tileId) {
+      const rows = TILE_PATTERNS[tileId].split("/");
+      return rows.map(function (row) {
+        return row.split("").map(function (cell) {
+          if (cell === "1") return 1;
+          if (cell === "9") return 9;
+          return 0;
+        });
+      });
+    }
 
-      // Print introduction messages
-      println(introi);
-      
-      // settings and defaults (many values are taken directly from the C++ code)
-      let raytr = 3;         // ray tracing (1-3; 3 should be good)
-      let telo = 5;          // tolerance for showing the best (1=show same performance, 0=dont show until better)
-      let strr = 1;          // extra quality for tile bruteforce
-      let minemp = -1;       // number of empty tiles (-1 means “not set”)
-      let klma = 500;        // retry count for fail
-      let wem = [0,0,0,0,-3,0,0,0,0,0,0,0,0];  // weights of tiles
-      let maxit = 50000;     // maximum iterations for pathfinding
-      let rndrta = 30;       // random turn adjustment factor
-      let rndrt = 30;
-      let isprt = 1;         // use portals (1 = yes)
-      let isoutput = true;
-
-      // Create 12x12 arrays (boll, arr, sarr, farr)
-      let boll = Array.from({length: 12}, () => Array(12).fill(0));
-      let arr = Array.from({length: 12}, () => Array(12).fill(0));
-      let sarr = Array.from({length: 12}, () => Array(12).fill(0));
-      let farr = Array.from({length: 12}, () => Array(12).fill(0));
-
-      let doneport = 0;
-      let code = 0;
-      let ptile = Array(20).fill(0);
-      let brtf = 1;
-      let srtf = 1;
-      let lite = 0;
-      let site = 0;
-      let prtin = [-5, -5];
-      let prtot = [-5, -5];
-      // 12x12 array "arr" was already defined above.
-      let kilo = 0;
-      let shipid = 0;
-      // "inp" is a 4x4 ship design array.
-      let inp = [
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0]
-      ];
-      let mod = 0;
-
-      // (Skipping config file reading. In a browser you might use fetch/File APIs if desired.)
-
-      // Print the main menu and get the mode from the user (using prompt)
-      println("\n" + intro);
-      mod = parseInt(prompt("Enter mode (mod):"), 10);
-      if (mod === 4 || mod === 5) {
-        println("\nHow long?");
-        brtf = parseInt(document.getElementById("brtf").value, 10);
-                mod = parseInt(document.getElementById("mod4or5").value, 10)
-        if (mod === 5) {
-          lite = 1;
-        }
-      }
-      if (mod === 6) {
-        println("\nHow long?");
-        srtf = parseInt(prompt("Enter a value for 'srtf':"), 10);
-        println("\nChoose mod: 0-custom or 1-named custom");
-        mod = parseInt(prompt("Enter mod (0 or 1):"), 10);
-        site = 1;
-      }
-
-      let modd = 0;
-      if (mod === 0) {
-        println("\nGive 16 tiles (numbers 1–12) in order (left to right, top to bottom)");
-        let inputStr = prompt("Enter 16 numbers separated by spaces:");
-        let numbers = inputStr.split(/\s+/).map(Number);
-        if (numbers.length >= 16) {
-          inp = [
-            numbers.slice(0, 4),
-            numbers.slice(4, 8),
-            numbers.slice(8, 12),
-            numbers.slice(12, 16)
-          ];
-        }
-      }
-      if (mod === 1) {
-        println("\n" + intro1);
-        modd = parseInt(prompt("Enter ship design (modd):"), 10);
-        // Set up the ship design based on modd:
-        switch (modd) {
-          case 0:
-            inp = [
-              [5, 7, 7, 6],
-              [6, 7, 6, 6],
-              [6, 1, 6, 6],
-              [7, 7, 7, 6]
-            ];
-            break;
-          case 1:
-            inp = [
-              [5, 5, 5, 6],
-              [5, 7, 5, 6],
-              [5, 1, 5, 6],
-              [5, 5, 5, 6]
-            ];
-            break;
-          case 2:
-            inp = [
-              [6, 6, 1, 6],
-              [6, 6, 5, 6],
-              [6, 6, 5, 6],
-              [7, 7, 7, 6]
-            ];
-            break;
-          case 3:
-            inp = [
-              [1, 6, 6, 6],
-              [12, 6, 6, 6],
-              [6, 12, 6, 6],
-              [6, 6, 12, 6]
-            ];
-            break;
-          case 4:
-            inp = [
-              [1, 5, 5, 6],
-              [5, 5, 5, 6],
-              [5, 5, 5, 6],
-              [5, 5, 5, 6]
-            ];
-            break;
-          case 5:
-            inp = [
-              [6, 6, 6, 1],
-              [6, 6, 6, 6],
-              [6, 6, 6, 6],
-              [7, 7, 7, 6]
-            ];
-            break;
-          case -1:
-            inp = [
-              [5, 5, 5, 5],
-              [5, 5, 5, 5],
-              [5, 1, 5, 5],
-              [5, 5, 5, 5]
-            ];
-            break;
-          case -2:
-            inp = [
-              [9, 6, 6, 6],
-              [6, 6, 6, 6],
-              [6, 6, 6, 6],
-              [1, 5, 6, 6]
-            ];
-            break;
-          case -3:
-            inp = [
-              [1, 9, 6, 6],
-              [9, 6, 6, 6],
-              [6, 6, 6, 6],
-              [6, 6, 6, 6]
-            ];
-            break;
-          case -4:
-            inp = [
-              [5, 5, 5, 5],
-              [5, 7, 5, 5],
-              [5, 1, 5, 5],
-              [5, 5, 5, 5]
-            ];
-            break;
-          case 6:
-            brtf = 2147483645;
-            break;
-          case 7:
-            brtf = 2147483645;
-            break;
-          case 8:
-            brtf = 2147483645;
-            break;
-          case 9:
-            brtf = 177147 * 8 * 8 * 8;
-            break;
-          // (Additional modd cases can be added as needed)
-        }
-        println("\n");
-      }
-      if (mod === 7) {
-        let shipi = parseInt(prompt("Enter ship id (0 for rider used, 1 for rider, etc.):"), 10);
-        shipid = shipi;
-      }
-
-      // Reset the 12x12 "boll" array
-      for (let gf = 0; gf < 144; gf++) {
-        boll[Math.floor(gf / 12)][gf % 12] = 0;
-      }
-
-      // Begin the main simulation loop.
-      // (In this demo we perform only one iteration.)
-      for (let bst = 0; bst < brtf; bst++) {
-        // Adjust rndrt as in the C++ code (using JavaScript arithmetic)
-        rndrt = rndrta * ((strr + 0.1) / ((bst % strr) + 0.1)) / 5.0 - 2;
-
-        // (Key-checks such as GetKeyState are not available in JS,
-        // so we omit those parts.)
-
-        // If mod is 1 (named custom ship) then update inp based on modd.
-        // (Only a sample branch is shown; you can add the other cases.)
-        if (mod === 1 && modd === 6 && bst % 5 === 0) {
-          inp = [
-            [5 + Math.floor(Math.random() * 3), 5 + Math.floor(Math.random() * 3), 5 + Math.floor(Math.random() * 3), 6],
-            [5 + Math.floor(Math.random() * 3), 5 + Math.floor(Math.random() * 3), 5 + Math.floor(Math.random() * 3), 6],
-            [5 + Math.floor(Math.random() * 3), 5 + Math.floor(Math.random() * 3), 5 + Math.floor(Math.random() * 3), 6],
-            [5 + Math.floor(Math.random() * 3), 5 + Math.floor(Math.random() * 3), 5 + Math.floor(Math.random() * 3), 6]
-          ];
-          inp[2][1] = mania;
-          brtf = 2147483645;
-        }
-        // (Other modd cases such as modd==7, 8, 9 etc. can be added similarly.)
-
-        // Build the final "arr" (a 12x12 grid) from the 4x4 ship design "inp" using cts()
-        // Also build a numeric id by concatenating the 4-bit values.
-        let id = 0n;  // using BigInt for a large integer
-        for (let intar = 0; intar < 4; intar++) {
-          for (let intak = 0; intak < 4; intak++) {
-            let inpw = inp[intar][intak];
-            arr[intar * 3][intak * 3]       = cts(inpw, 1);
-            arr[intar * 3][intak * 3 + 1]   = cts(inpw, 2);
-            arr[intar * 3][intak * 3 + 2]   = cts(inpw, 3);
-            arr[intar * 3 + 1][intak * 3]   = cts(inpw, 4);
-            arr[intar * 3 + 1][intak * 3 + 1] = cts(inpw, 5);
-            arr[intar * 3 + 1][intak * 3 + 2] = cts(inpw, 6);
-            arr[intar * 3 + 2][intak * 3]   = cts(inpw, 7);
-            arr[intar * 3 + 2][intak * 3 + 1] = cts(inpw, 8);
-            arr[intar * 3 + 2][intak * 3 + 2] = cts(inpw, 9);
-            // Concatenate the value into id (shift left 4 bits, then add)
-            id = (id << 4n) + BigInt(inpw);
-          }
-        }
-        if (!isapp(id)) {
-          appindx(id);
-        }
-        // (For this demo we break out of the loop after one iteration.)
-        break;
-      }
-
-            let xt = 10, yt = 11; // starting coordinates
-      let x = xt, y = yt;
-      let dir = 1, ogdir = 1;
-      let it = 0, dx = 0, dy = 0;
-      let prt = 0, pth = 0, trn = 0, prtdir = 2;
-      
-      // (Some conditions may set portals or modify the grid.)
-      if (inp[3][2] === 7) { arr[11][9] = 1; }
-      // For example, if a particular tile count is not met:
-      // (Assuming buff is an array tracking tile counts – not fully shown here.)
-      // if (buff[6] !== minemp && minemp !== -1) { it = maxit; }
-      
-      let strtcrs = false;
-      
-      // Main simulation loop – continue until a target is reached (arr[y][x]===9)
-      // or the iteration count reaches maxit.
-      while (arr[y][x] !== 9 && it < maxit) {
-        it++;
-        let rnd;
-        if (/* modd !== 8 */ true) {  // if not using one branch, use:
-          rnd = Math.floor(Math.random() * brtf);
-        } else {
-          rnd = Math.floor(Math.random() * srtf);
-        }
-        if (brtf - it < 10 || brtf < 10) { rnd = -69; }
-        
-        // If the current cell is “open” (0, 9, or 6) and within bounds…
-        if (((arr[y][x] === 0 || arr[y][x] === 9 || arr[y][x] === 6) &&
-             (x < 12 && x > -1 && y < 12 && y > -1))) {
-          // Reset any portal–related tiles from the ship design.
-          for (let cros = 0; cros < 4; cros++) {
-            for (let croc = 0; croc < 4; croc++) {
-              if (inp[cros][croc] === 9) {
-                sarr[3*cros+2][3*croc+1] = arr[3*cros+2][3*croc+1];
-                arr[3*cros+2][3*croc+1] = 0;
-                sarr[3*cros+1][3*croc+2] = arr[3*cros+1][3*croc+2];
-                arr[3*cros+1][3*croc+2] = 0;
-              }
-              if (inp[cros][croc] === 12) {
-                if (arr[3*cros+2][3*croc+1] !== 0) {
-                  sarr[3*cros+2][3*croc+1] = arr[3*cros+2][3*croc+1];
-                  arr[3*cros+2][3*croc+1] = 0;
-                }
-              }
+    function layoutFromTiles(tiles) {
+      const grid = Array.from({ length: 12 }, function () { return Array(12).fill(0); });
+      for (let tileY = 0; tileY < 4; tileY++) {
+        for (let tileX = 0; tileX < 4; tileX++) {
+          const pattern = patternToGrid(tiles[tileY * 4 + tileX]);
+          for (let localY = 0; localY < 3; localY++) {
+            for (let localX = 0; localX < 3; localX++) {
+              grid[tileY * 3 + localY][tileX * 3 + localX] = pattern[localY][localX];
             }
           }
-          // (Additional adjustments may be done here as in the original.)
-          // Example: if a neighbor tile meets a condition, mark it.
-          if (arr[yt-1][xt] < 6 && arr[yt-1][xt] > 1) {
-            if (sarr[yt-1][xt] !== 0) { strtcrs = true; }
-            sarr[yt-1][xt] = arr[yt-1][xt];
-            arr[yt-1][xt] = 0;
-          }
-          
-          // Check “front” of movement in the current direction:
-          let nofront = 0;
-		  console.log(y);
-		  console.log(arr);
-          switch (dir) {
-  case 1:
-    if (y + 1 < arr.length && arr[y+1][x] !== 0) { 
-      nofront = 1; 
+        }
+      }
+      if (tiles[14] === 7) grid[11][9] = 1;
+      return {
+        grid: grid,
+        start: { x: 10, y: 11 },
+        tiles: tiles.slice(),
+        name: "4×4 tile layout"
+      };
     }
-    break;
-  case 2:
-    if (x + 1 < arr[y].length && arr[y][x+1] !== 0) { 
-      nofront = 1; 
-    }
-    break;
-  case 3:
-    if (y - 1 >= 0 && arr[y-1][x] !== 0) { 
-      nofront = 1; 
-    }
-    break;
-  case 4:
-    if (x - 1 >= 0 && arr[y][x-1] !== 0) { 
-      nofront = 1; 
-    }
-    break;
-}
-          nofront = 0; // (Resetting as in the original code.)
-          
-          // Decide whether to change direction based on various conditions.
-          if ((/* (modd != 9 and modd != 8) and */ (rnd > it || (mod === 4 && nofront)) ||
-               (mod === 7 && rnd*2 > it) ||
-               (/* modd === 8 and */ strr !== 1 && (1 + Math.floor(Math.random()*strr) > strr/2)) ||
-               (inp[Math.floor(y/3)][Math.floor(x/3-1)] === 9 && rnd > it))) {
-            // Use different turning strategies based on the raytr setting.
-            switch (raytr) {
-              case 3:
-                switch (dir) {
-                  case 1:
-                    if (x > 2 && arr[y][x-1]===0 && arr[y][x-2]===0 && arr[y][x-3]===0) { dir = 4; trn++; }
-                    if (x < 9 && arr[y][x+1]===0 && arr[y][x+2]===0 && arr[y][x+3]===0) { dir = 2; trn++; }
-                    break;
-                  case 2:
-                    if (y > 2 && arr[y-1][x]===0 && arr[y-2][x]===0 && arr[y-3][x]===0) { dir = 1; trn++; }
-                    if (y < 9 && arr[y+1][x]===0 && arr[y+2][x]===0 && arr[y+3][x]===0) { dir = 3; trn++; }
-                    break;
-                  case 3:
-                    if (x > 2 && arr[y][x-1]===0 && arr[y][x-2]===0 && arr[y][x-3]===0) { dir = 2; trn++; }
-                    if (x < 9 && arr[y][x+1]===0 && arr[y][x+2]===0 && arr[y][x+3]===0) { dir = 4; trn++; }
-                    break;
-                  case 4:
-                    if (y > 2 && arr[y-1][x]===0 && arr[y-2][x]===0 && arr[y-3][x]===0) { dir = 3; trn++; }
-                    if (y < 9 && arr[y+1][x]===0 && arr[y+2][x]===0 && arr[y+3][x]===0) { dir = 1; trn++; }
-                    break;
-                }
-                break;
-              case 2:
-                switch (dir) {
-                  case 1:
-                    if (x > 2 && arr[y][x-1]===0 && arr[y][x-2]===0) { dir = 4; trn++; }
-                    if (x < 9 && arr[y][x+1]===0 && arr[y][x+2]===0) { dir = 2; trn++; }
-                    break;
-                  case 2:
-                    if (y > 2 && arr[y-1][x]===0 && arr[y-2][x]===0) { dir = 1; trn++; }
-                    if (y < 9 && arr[y+1][x]===0 && arr[y+2][x]===0) { dir = 3; trn++; }
-                    break;
-                  case 3:
-                    if (x > 2 && arr[y][x-1]===0 && arr[y][x-2]===0) { dir = 2; trn++; }
-                    if (x < 9 && arr[y][x+1]===0 && arr[y][x+2]===0) { dir = 4; trn++; }
-                    break;
-                  case 4:
-                    if (y > 2 && arr[y-1][x]===0 && arr[y-2][x]===0) { dir = 3; trn++; }
-                    if (y < 9 && arr[y+1][x]===0 && arr[y+2][x]===0) { dir = 1; trn++; }
-                    break;
-                }
-                break;
-              case 1:
-                switch (dir) {
-                  case 1:
-                    if (x > 2 && arr[y][x-1]===0) { dir = 4; trn++; }
-                    if (x < 9 && arr[y][x+1]===0) { dir = 2; trn++; }
-                    break;
-                  case 2:
-                    if (y > 2 && arr[y-1][x]===0) { dir = 1; trn++; }
-                    if (y < 9 && arr[y+1][x]===0) { dir = 3; trn++; }
-                    break;
-                  case 3:
-                    if (x > 2 && arr[y][x-1]===0) { dir = 2; trn++; }
-                    if (x < 9 && arr[y][x+1]===0) { dir = 4; trn++; }
-                    break;
-                  case 4:
-                    if (y > 2 && arr[y-1][x]===0) { dir = 3; trn++; }
-                    if (y < 9 && arr[y+1][x]===0) { dir = 1; trn++; }
-                    break;
-                }
-                break;
-            } // end of turning switch
-            
-            // Move in the chosen direction
-            switch (dir) {
-              case 1: arr[y][x] = 2; y--; break;
-              case 2: arr[y][x] = 3; x++; break;
-              case 3: arr[y][x] = 4; y++; break;
-              case 4: arr[y][x] = 5; x--; break;
-            }
-            // If the new cell isn’t “open” (for example, not 0, 9, 6, etc.)
-            if (!((arr[y][x] === 0 || arr[y][x] === 9 || arr[y][x] === 12345 || arr[y][x] === 6) &&
-                  (x < 12 && x > -1 && y < 12 && y > -1))) {
-              if (mod === 7 && (arr[y][x] !== 1) &&
-                  (arr[y][x] === dir-2 || arr[y][x] === dir+2 || arr[y][x] === dir) &&
-                  ((dir === 1 && arr[y-1][x] === 0) ||
-                   (dir === 2 && arr[y][x+1] === 0) ||
-                   (dir === 3 && arr[y+1][x] === 0) ||
-                   (dir === 4 && arr[y][x-1] === 0))) {
-                switch (dir) {
-                  case 1: sarr[y][x] = 6; arr[y][x] = 6; y--; break;
-                  case 2: sarr[y][x] = 6; arr[y][x] = 6; x++; break;
-                  case 3: sarr[y][x] = 6; arr[y][x] = 6; y++; break;
-                  case 4: sarr[y][x] = 6; arr[y][x] = 6; x--; break;
-                }
-              } else {
-                switch (dir) {
-                  case 1: y++; break;
-                  case 2: x--; break;
-                  case 3: y--; break;
-                  case 4: x++; break;
-                }
-              }
-            } else {
-              if (dir !== ogdir) { trn++; }
-              ogdir = dir;
-              pth--;
-              dx = x; dy = y;
-            }
-          } 
-          // Else if the current cell is a portal indicator (11) or matches prtin:
-          else if (arr[y][x] === 11 || (x === prtin[1] && y === prtin[0])) {
-            isprt = 1;
+
+    function layoutFromClassic(ship) {
+      const grid = [];
+      let start = { x: 10, y: 11 };
+      ship.rows.forEach(function (row, y) {
+        const values = [];
+        for (let x = 0; x < 12; x++) {
+          const char = row[x] || "1";
+          if (char === "s") {
+            start = { x: x, y: y };
+            values.push(0);
           } else {
-            let nofront = 0;
-            switch (dir) {
+            values.push(Number(char) || 0);
+          }
+        }
+        grid.push(values);
+      });
+      return {
+        grid: grid,
+        start: start,
+        tiles: null,
+        name: "Classic ship · " + ship.name
+      };
+    }
 
-  case 1:
-    if (y + 1 < arr.length && arr[y+1][x] !== 0) { 
-      nofront = 1; 
+    function currentLayout() {
+      const source = $("boardSource").value;
+      if (source === "classic") {
+        const ship = CLASSIC_SHIPS[clampInt($("classicSelect").value, 0, CLASSIC_SHIPS.length - 1, 0)];
+        return layoutFromClassic(ship);
+      }
+      if (source === "preset") {
+        const preset = PRESETS[clampInt($("presetSelect").value, 0, PRESETS.length - 1, 0)];
+        const layout = layoutFromTiles(preset.tiles);
+        layout.name = preset.name;
+        return layout;
+      }
+      return layoutFromTiles(state.tiles);
     }
-    break;
-  case 2:
-    if (x + 1 < arr[y].length && arr[y][x+1] !== 0) { 
-      nofront = 1; 
-    }
-    break;
-  case 3:
-    if (y - 1 >= 0 && arr[y-1][x] !== 0) { 
-      nofront = 1; 
-    }
-    break;
-  case 4:
-    if (x - 1 >= 0 && arr[y][x-1] !== 0) { 
-      nofront = 1; 
-    }
-    break;
-			
-            }
-            isprt = 1;
-            if (/* modd===1 */ false) isprt = 0;
-            if (((it % 5 !== 0 && arr[y][x] !== 1 && (doneport === 1 || isprt === 0 && (Math.floor(Math.random()*(rndrt*20)) > 20)) || it < 5)
-                || (y === 0 && Math.floor(Math.random()*2) === 0 && Math.floor(Math.random()*100) > 50)) ) {
-              arr[y][x] = 0;
-            } else {
-              let prtit = 0;
-              if (doneport === 0 && isprt === 1) {
-                doneport = 1;
-                if (arr[y][x] === 1) { it = maxit; }
-                prtin[0] = y; prtin[1] = x;
-                if (strr === 1024) {
-                  x = (Math.floor(it/2)) % 12;
-                  y = (Math.floor(it/12/2)) % 12;
-                  if (arr[y][x] === 0) {
-                    prtot[0] = y; prtot[1] = x;
-                  } else {
-                    prtin[0] = -1; prtin[1] = -1;
-                  }
-                  prtdir = (Math.floor(it/144/2)) % 4 + 1;
-                  if (prtot[0] === 0 && prtdir === 4) { prtdir = 2; }
-                  if (prtot[0] === 1 && prtdir === 2) { prtdir = 4; }
-                  if (prtot[1] === 0 && prtdir === 1) { prtdir = 3; }
-                  if (prtot[1] === 1 && prtdir === 3) { prtdir = 1; }
-                  dir = prtdir; ogdir = dir;
-                  switch (dir) {
-                    case 1: y--; break;
-                    case 2: x++; break;
-                    case 3: y++; break;
-                    case 4: x--; break;
-                  }
-                } else {
-                  while (arr[y][x] !== 0 && prtit < 144) {
-                    prtit++;
-                    if (mod === 7) {
-                      x = Math.floor(Math.random()*11);
-                      y = 1 + Math.floor(Math.random()*11);
-                    } else {
-                      // Attempt to pick a new cell
-                      while (boll[x][y] !== 0 && Math.floor(Math.random()*5) !== 1) {
-                        x = Math.floor(Math.random()*12);
-                        y = Math.floor(Math.random()*12);
-                        if (boll[x][y] === 1 && x > 1) { x--; }
-                        if (it < 144*144*4) {
-                          x = it % 12;
-                          y = Math.floor(it/12) % 12;
-                        }
-                      }
-                    }
-                    if (arr[y][x] !== 0) {
-                      prtot[0] = y; prtot[1] = x;
-                      boll[x][y] = 1;
-                    }
-                  }
-                  if (prtit === 144) {
-                    it = maxit; doneport = 0;
-                    for (let gf = 0; gf < 144; gf++) {
-                      boll[Math.floor(gf/12)][gf % 12] = 0;
-                    }
-                  } else {
-                    prtot[0] = y; prtot[1] = x;
-                    prtdir = 1 + Math.floor(Math.random()*4);
-                    if (prtot[0] === 0 && prtdir === 4) { prtdir = 2; }
-                    if (prtot[0] === 1 && prtdir === 2) { prtdir = 4; }
-                    if (prtot[1] === 0 && prtdir === 1) { prtdir = 3; }
-                    if (prtot[1] === 1 && prtdir === 3) { prtdir = 1; }
-                    dir = prtdir; ogdir = dir;
-                    switch (dir) {
-                      case 1: y--; break;
-                      case 2: x++; break;
-                      case 3: y++; break;
-                      case 4: x--; break;
-                    }
-                  }
-                }
-              } else {
-                it = maxit;
-              }
-            }
-          }
-        }
-        if (doneport) { arr[prtot[0]][prtot[1]] = 1; }
-        
-        // If turning conditions are met (simulate: if (dir - ogdir == 1 or -3) and prt==0)
-        if (((dir - ogdir === 1) || (dir - ogdir === -3)) && prt === 0) {
-          prt = 1;
-          if (arr[y][x] !== 1) { arr[y][x] = 0; }
-          x = dx; y = dy;
-          switch (ogdir) {
-            case 1:
-              if (arr[y][x] === 5) { arr[y][x] = 6; }
-              y++;
-              if (arr[y][x] === 5) { arr[y][x] = 6; }
-              break;
-            case 2: x--; break;
-            case 3: y--; break;
-            case 4: x++; break;
-          }
-          dir = ((dir + 2) % 4) || 4; // add 2 (wraparound)
-          ogdir = dir;
-          if (arr[y][x] !== 1) { arr[y][x] = 0; }
-        } else {
-          let dirch = kilo;
-          if (xt < 6 || inp[Math.floor(y/4)][Math.floor(x/4)] === 9) {
-            dirch = klma - kilo;
-          }
-          if ( (Math.floor(Math.random() * klma) > dirch) || (Math.floor(Math.random() * rndrt) === 2) ) {
-            // Change direction according to one switch (using ogdir)
-            switch (ogdir) {
-              case 1:
-                switch (dir) {
-                  case 1: dir = 4; break;
-                  case 4: dir = 2; break;
-                  case 2: y--; break;
-                }
-                break;
-              case 2:
-                switch (dir) {
-                  case 2: dir = 1; break;
-                  case 1: dir = 3; break;
-                  case 3: x--; break;
-                }
-                break;
-              case 3:
-                switch (dir) {
-                  case 3: dir = 2; break;
-                  case 2: dir = 4; break;
-                  case 4: y++; break;
-                }
-                break;
-              case 4:
-                switch (dir) {
-                  case 4: dir = 3; break;
-                  case 3: dir = 1; break;
-                  case 1: x++; break;
-                }
-                break;
-            }
-          } else {
-            switch (ogdir) {
-              case 1:
-                switch (dir) {
-                  case 1: dir = 2; break;
-                  case 2: dir = 4; break;
-                  case 4: y--; break;
-                }
-                break;
-              case 2:
-                switch (dir) {
-                  case 2: dir = 3; break;
-                  case 3: dir = 1; break;
-                  case 1: x--; break;
-                }
-                break;
-              case 3:
-                switch (dir) {
-                  case 3: dir = 4; break;
-                  case 4: dir = 2; break;
-                  case 2: y++; break;
-                }
-                break;
-              case 4:
-                switch (dir) {
-                  case 4: dir = 1; break;
-                  case 1: dir = 3; break;
-                  case 3: x++; break;
-                }
-                break;
-            }
-          }
-        } // end else
-        
-        // (Further code to update the grid based on movement:)
-        if (doneport) { arr[prtot[0]][prtot[1]] = 1; }
-        
-        // For the “secondary” part:
-        let sit = 1, sdir = 1;
-        // (The commented section regarding following a path is omitted.)
-        if (doneport === 0) {
-          // Do nothing.
-        } else {
-          // In your code you set portal cells to 0:
-          arr[prtot[0]][prtot[1]] = 0;
-          arr[prtin[0]][prtin[1]] = 0;
-        }
-        
-        // Process a 1–cell border of the grid:
-        for (let cros = 1; cros < 11; cros++) {
-          for (let croc = 1; croc < 11; croc++) {
-            if (inp[Math.floor(cros/3)][Math.floor(croc/3)] === 12 ||
-                inp[Math.floor(cros/3)][Math.floor(croc/3)] === 9) {
-              let ea = arr[cros][croc-1],
-                  es = arr[cros-1][croc],
-                  ed = arr[cros][croc+1],
-                  ew = arr[cros+1][croc];
-              if ((ea > 1 && ea < 6 && es > 1 && es < 6 &&
-                   ew > 1 && ew < 6 && ed > 1 && ed < 6) &&
-                  (ea === 3 || es === 2 || ed === 5 || ew === 4)) {
-                arr[cros][croc] = 6;
-              }
-            }
-          }
-        }
-        if (/*strtcrs*/ false) { sarr[yt-1][xt] = 6; }
-        if (inp[3][3] === 6 && arr[11][9] === 1) { arr[11][9] = 0; }
-        
-        // Reset for the second “path” simulation:
 
-        let ptrn = 0;
-        for (let hj = 0; hj < 12; hj++) {
-          for (let hjs = 0; hjs < 12; hjs++) {
-            farr[hj][hjs] = sarr[hj][hjs];
-            if (((arr[hj][hjs-1] === 3 && (arr[hj-1][hjs] === 4 || arr[hj+1][hjs] === 2)) ||
-                 (arr[hj][hjs+1] === 5 && (arr[hj-1][hjs] === 4 || arr[hj+1][hjs] === 2)))) {
-              arr[hj][hjs] = 6;
-              farr[hj][hjs] = 6;
-            }
-          }
-        }
-        while (farr[y][x] !== 9 && it < maxit) {
-          it++;
-          let movedir = dir;
-          if (movedir !== farr[y][x] - 1) { ptrn++; }
-          if (farr[y][x] === 0) { farr[y][x] = dir + 1; }
-          switch (dir) {
-            case 1: y--; break;
-            case 2: x++; break;
-            case 3: y++; break;
-            case 4: x--; break;
-          }
+    function renderEditor() {
+      const editor = $("tileEditor");
+      editor.replaceChildren();
+      state.tiles.forEach(function (tileId, index) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.setAttribute("aria-label", "Cell " + (index + 1) + ", tile " + tileId + " " + TILE_LABELS[tileId]);
+        button.title = "Select cell " + (index + 1);
+        const strong = document.createElement("strong");
+        strong.textContent = (index === state.selectedCell ? ">" : "") + String(tileId).padStart(2, "0");
+        const small = document.createElement("small");
+        small.textContent = TILE_LABELS[tileId];
+        button.append(strong, small);
+        button.addEventListener("click", function () {
+          state.selectedCell = index;
+          renderEditor();
+        });
+        editor.append(button);
+      });
 
-          if (sarr[y][x] !== 0 && arr[y][x] !== 6) { arr[y][x] = sarr[y][x]; }
-          if (sarr[x] && sarr[x][y] === 6) { farr[x][y] = 6; arr[x][y] = 6; }
-          switch (arr[y][x]) {
-            case 0: break;
-            case 1: it = maxit; farr[y][x] = 9; break;
-            case 2: if (dir !== 1) { dir = 1; farr[y][x] = 100 + dir + movedir * 10; } break;
-            case 3: if (dir !== 2) { dir = 2; farr[y][x] = 100 + dir + movedir * 10; } break;
-            case 4: if (dir !== 3) { dir = 3; farr[y][x] = 100 + dir + movedir * 10; } break;
-            case 5: if (dir !== 4) { dir = 4; farr[y][x] = 100 + dir + movedir * 10; } break;
-            case 6: farr[y][x] = 6; break;
-            case 8: it = maxit; farr[y][x] = 9; break;
-          }
-          if ((x === prtin[1] && y === prtin[0] && prtin[0] > -1)) {
-            x = prtot[1]; y = prtot[0]; dir = prtdir;
-          }
-          if (x < 0 || x > 11 || y < 0 || y > 11) { it = maxit; }
-        }
-        // End of secondary simulation
-        
-        // If portals are active, restore portal markers:
-        if (doneport) {
-          sarr[prtin[0]][prtin[1]] = 11;
-          sarr[prtot[0]][prtot[1]] = 12;
-          arr[prtin[0]][prtin[1]] = 11;
-          arr[prtot[0]][prtot[1]] = 12;
-          farr[prtin[0]][prtin[1]] = 11;
-          farr[prtot[0]][prtot[1]] = 12;
-        }
-       // console.log(arr)
-        // Now loop through each cell to output using our simulated console routines.
-        // (Here we simply build an HTML string.)
-        let best = 0, bst = 0; // Assume best and bst are set as in your code.
-        // For each cell, call our (simulated) color and draw functions:
-        for (let ggar = 0; ggar < 12; ggar++) {
-          for (let ggak = 0; ggak < 12; ggak++) {
-            // In your code, search = arr[ggar][ggak] (or sarr if available)
-            let search = arr[ggar][ggak];
-            if (sarr[ggar][ggak] !== 0 && search !== 6) {
-              search = sarr[ggar][ggak];
-              arr[ggar][ggak] = sarr[ggar][ggak];
-            }
-            // Call a simulated color function (you must define your own mapping)
-            // Here we simply use the search value as our color code.
-            let colCode = search;  // In your code, color(mod,ggar,ggak,inp,search) returns a number.
-            // Simulate drawing by appending a character (here we simply output search)
-         //   printHTML(setTextWithColor(search, colCode));
-          }
-          println("");
-        }
-        
-        // Finally, compute and print rankings.
-        // (We compute some dummy rank values based on your code.)
-        let pth3 = 0;  // path length from counted moves
-        for (let ggar = 0; ggar < 12; ggar++) {
-          for (let ggak = 0; ggak < 12; ggak++) {
-            if ([2,3,4,5].includes(arr[ggar][ggak])) { pth3++; }
-          }
-        }
-        let trn_val = trn;
-        let pth4 = pth3 - trn_val;
-        if (it === maxit) { pth4 -= 100; }
-        // (Add weighted contributions from buff array if defined; here we assume buff is an array.)
-        let buff = Array(20).fill(0);  // dummy buff values
-        for (let buffc = 0; buffc < 12; buffc++) {
-          pth4 += (buff[buffc] || 0) * (wem[buffc - 1] || 0);
-        }
-        if (pth4 > 254) { pth4 = 0; }
-        if (pth4 > best - telo || brtf < 10) {
-          if (pth4 > best) { best = pth4; }
-        }
-        println("\nPath length: " + (pth3 - trn_val));
-        println("Turns: " + trn_val);
-        // Compute dummy damage, dps, and rank values:
-        let bsdmg = (500 * 1.3 * 6 * 5) * (1 + ptrn / 10.0 + ptrn / 10.0 + 0.6);
-        let dps = bsdmg * (Math.pow(1.4, (pth3 - 12))) * (3.2 - (0.2 * (buff[5] || 0))) * (Math.pow(0.333, (buff[5] || 0)));
-        println("Base damage: " + bsdmg.toFixed(2));
-        println("DPS (not so accurate): " + dps.toFixed(2));
-        // Compute rank values (dummy values based on your switches)
-        let ranka = Math.floor(Math.log10(dps));
-        let rankb = max(0, ((pth3 - (buff[5] || 0) * 3) / 2.5) - 19);
-        let rankc = max(0, (((pth3 - (buff[5] || 0) * 2.5)) / 75 * 5) * 2 - 6);
-        let rankd = Math.floor(2.0 * best / 37.0);
-        let ranke = ((best) * (pth3 - (buff[5] || 0) * 2.5) / 300);
-        let rankf = ranke + rankd - 30 + 19;
-        // Output rank using our simulated color output:
-        println("TIER RANK - " + ranka + " - " + rankb + " - " + rankc + " - " + rankd + " - " + ranke.toFixed(2) + " - " + rankf);
-        // (Similarly, compute wave rank and output.)
-        
-        // (Optionally, if isoutput is true, call a function outfileput() to further output data.)
-        if (isoutput) {
-          // outfileput(farr, inp, sarr, [ranka, rankb, rankc, rankd, ranke, rankf]);
-          println("\n[Data output function called]");
-        }
-        
-        // For demonstration, break out of the simulation loop:
-        break;
-      } // end main simulation loop
-      
-      // Add the final id to the idset.
-      // (Assuming id is computed earlier; here we simulate with a dummy id.)
-      let id = "dummyID";
-      appindx(id);
-      
-      println("\nSimulation complete.");
+      const palette = $("tilePalette");
+      palette.replaceChildren();
+      TILE_PATTERNS.forEach(function (_pattern, tileId) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = (tileId === state.selectedTile ? ">" : "") + String(tileId).padStart(2, "0");
+        button.title = "Tile " + tileId + " · " + TILE_LABELS[tileId];
+        button.setAttribute("aria-label", "Choose tile " + tileId + ", " + TILE_LABELS[tileId]);
+        button.addEventListener("click", function () {
+          state.selectedTile = tileId;
+          state.tiles[state.selectedCell] = tileId;
+          renderEditor();
+          renderSourcePreview();
+          clearPreviousResults("Layout changed. Run a search to see its route.");
+        });
+        palette.append(button);
+      });
     }
-    
-    // Run main() when the window loads.
-    window.onload = main;
+
+    function renderSourcePreview() {
+      const layout = currentLayout();
+      renderBoard($("layoutPreview"), layout, null);
+      const custom = $("boardSource").value === "custom";
+      $("editorFields").hidden = !custom;
+      $("presetField").hidden = $("boardSource").value !== "preset";
+      $("classicField").hidden = $("boardSource").value !== "classic";
+      $("presetSelect").disabled = $("boardSource").value !== "preset";
+      $("classicSelect").disabled = $("boardSource").value !== "classic";
+      if ($("boardSource").value === "classic" && ["random-6", "random-7", "pool-8", "wave-9", "optimized-10"].includes($("searchMode").value)) {
+        $("searchMode").value = "fixed";
+      }
+      updateModeDescription();
+    }
+
+    function routeStats(path) {
+      let straight=0,turns=0,steps=0,lastDirection=null;
+      function direction(a,b) {
+        if(Math.abs(a.x-b.x)+Math.abs(a.y-b.y)!==1)return null;
+        return b.x<a.x?"L":b.x>a.x?"R":b.y<a.y?"U":"D";
+      }
+      for(let i=1;i<path.length;i++){
+        if(path[i].viaPortal){lastDirection=null;continue;}
+        const d=direction(path[i-1],path[i]);
+        if(!d)continue;
+        steps++;
+        if(lastDirection&&lastDirection!==d)turns++;
+        lastDirection=d;
+      }
+      for(let i=1;i<path.length-1;i++){
+        if(path[i].portal)continue;
+        const before=direction(path[i],path[i-1]),after=direction(path[i],path[i+1]);
+        if((before==="U"&&after==="D")||(before==="D"&&after==="U"))straight++;
+      }
+      return {straight:straight,turns:turns,steps:steps};
+    }
+
+    function formatBoard(layout, path, working, renderer) {
+      const routes = new Map();
+      if (path) path.forEach(function (current, i) {
+        const previous = path[i - 1], next = path[i + 1];
+        let char = i===0&&i===path.length-1?"@":i === 0 ? "S" : i === path.length - 1 ? (working ? ">" : "@") : "+";
+        if (current.portal) char = "O";
+        else if (i > 0 && i < path.length - 1) {
+          const toNeighbor=function(a,b){if(!a||!b||Math.abs(a.x-b.x)+Math.abs(a.y-b.y)!==1)return "";return b.x<a.x?"L":b.x>a.x?"R":b.y<a.y?"U":"D";};
+          const a=toNeighbor(current,previous),b=toNeighbor(current,next);
+          if ((a==="U"&&b==="D")||(a==="D"&&b==="U")) char="|";
+          else if ((a==="L"&&b==="R")||(a==="R"&&b==="L")) char="-";
+          else if(renderer==="unicode"){
+            const key=[a,b].sort().join("");
+            char=({"RU":"└","LU":"┘","DR":"┌","DL":"┐"})[key]||"+";
+          }
+        }
+        routes.set(current.y * 12 + current.x, char);
+      });
+      const lines = [];
+      for (let y = 0; y < 12; y++) {
+        let line = "";
+        for (let x = 0; x < 12; x++) {
+          const value = layout.grid[y][x], key = y * 12 + x;
+          line += routes.get(key) || (value === 1 ? "#" : value === 9 ? "@" : value === 6 ? "X" : value === 11 || value === 12 ? "O" : " ");
+        }
+        lines.push(line);
+      }
+      return lines.join("\n");
+    }
+
+    function renderBoard(element, layout, path, working, renderer) {
+      element.textContent=formatBoard(layout,path,working,renderer||"ascii");
+      return element.textContent;
+    }
+
+    function renderCanvas(layout,path,working) {
+      const canvas=$("routeCanvas"),ctx=canvas.getContext("2d"),cell=40;
+      ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle="#888";ctx.fillRect(0,0,canvas.width,canvas.height);
+      for(let y=0;y<12;y++)for(let x=0;x<12;x++){
+        const v=layout.grid[y][x];ctx.fillStyle=v===1?"#555":"#999";ctx.fillRect(x*cell,y*cell,cell,cell);
+        ctx.strokeStyle="#777";ctx.lineWidth=1;ctx.strokeRect(x*cell+.5,y*cell+.5,cell,cell);
+      }
+      if(path&&path.length){
+        ctx.strokeStyle="#f00";ctx.fillStyle="#f00";ctx.lineWidth=5;ctx.lineCap="round";ctx.lineJoin="round";
+        for(let i=1;i<path.length;i++){
+          const a=path[i-1],b=path[i];ctx.beginPath();ctx.setLineDash(b.viaPortal?[5,5]:[]);ctx.moveTo(a.x*cell+cell/2,a.y*cell+cell/2);ctx.lineTo(b.x*cell+cell/2,b.y*cell+cell/2);ctx.stroke();
+        }
+        ctx.setLineDash([]);ctx.font="bold 16px monospace";ctx.textAlign="center";ctx.textBaseline="middle";
+        path.forEach(function(p,i){if(p.portal){ctx.beginPath();ctx.arc(p.x*cell+20,p.y*cell+20,10,0,Math.PI*2);ctx.stroke();}else if(i===0||i===path.length-1){ctx.fillText(i===0&&i===path.length-1?"@":i===0?"S":working?">":"@",p.x*cell+20,p.y*cell+20);}});
+      }else{
+        for(let y=0;y<12;y++)for(let x=0;x<12;x++)if(layout.grid[y][x]===9){ctx.fillStyle="#f00";ctx.font="bold 16px monospace";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("@",x*cell+20,y*cell+20);}
+        ctx.fillStyle="#f00";ctx.fillText("S",layout.start.x*cell+20,layout.start.y*cell+20);
+      }
+    }
+
+    function renderOutput(layout,path,working) {
+      const renderer=$("drawingMode").value,pre=$("resultBoard"),canvas=$("routeCanvas");
+      pre.hidden=renderer==="canvas";canvas.hidden=renderer!=="canvas";
+      if(renderer==="canvas")renderCanvas(layout,path,working);
+      else renderBoard(pre,layout,path,working,renderer);
+    }
+
+    function writeConsole(line) {
+      state.consoleLines.push("> "+line);
+      if(state.consoleLines.length>40)state.consoleLines.shift();
+      $("consoleOutput").textContent=state.consoleLines.join("\n");
+    }
+    function showCurrentLayout() {
+      const layout = currentLayout();
+      renderOutput(layout, state.longestResult?state.longestResult.path:state.best?state.best.path:null, false);
+      $("bestCandidateLabel").textContent = "Layout preview";
+    }
+
+    function clearPreviousResults(message) {
+      if (state.running) return;
+      state.best = null;
+      state.longestResult = null;
+      state.bestScore = -Infinity;
+      state.checked = 0;
+      state.closeMatches = 0;
+      ["pathLength", "turnCount", "searchScore", "straightCount", "baseDamage", "dps", "tile5Count", "closeMatches"].forEach(function (id) {
+        $(id).textContent = "—";
+      });
+      $("checkedCount").textContent = "0";
+      $("tierGrade").textContent = "—";
+      $("waveGrade").textContent = "—";
+      $("tierDetails").textContent = "Legacy source ranking";
+      $("waveDetails").textContent = "Legacy source ranking";
+      $("elapsedLabel").textContent = "";
+      $("statusText").textContent = "Ready. Choose a layout and run a search.";
+      $("logText").textContent = message;
+      state.consoleLines=[];$("consoleOutput").textContent="Ready.";
+      showCurrentLayout();
+    }
+
+    function setSearchControlsBusy(busy) {
+      document.querySelectorAll("input, select, button").forEach(function (control) {
+        control.disabled = control.id === "stopButton" ? !busy : busy;
+      });
+    }
+    function updateModeDescription() {
+      const descriptions = {
+        "fixed": "Runs the C++-style randomized walker once on the selected layout.",
+        "best-fixed": "Retries the same ship and keeps the highest path-minus-turns score.",
+        "random-6": "Randomizes tiles 5–7 in the first three columns, fixes the right column, and puts the core at tile 9.",
+        "random-7": "Randomizes tiles 1–7 and places one core in the first three columns.",
+        "pool-8": "Enumerates tile-pool boards in mixed-radix order; extra quality repeats each board.",
+        "wave-9": "Enumerates the original two-column wave layout from the tile pool.",
+        "optimized-10": "Builds random unique boards from the selected pool and keeps the original right-side frame.",
+        "11": "Brute-force simple routes to a core; maximize vertical straight-through cells shown as |.",
+        "12": "Brute-force simple routes to a core; maximize normal grid steps.",
+        "13": "Maximize vertical | cells first, then prefer the route with more steps."
+      };
+      $("modeDescription").textContent = descriptions[$("searchMode").value] || descriptions.fixed;
+      const longest=["11","12","13"].includes($("searchMode").value);
+      $("longSearchOptions").hidden=!longest;
+      $("routeSearchOptions").open=!longest;
+      $("legacyMetrics").hidden=longest;
+    }
+
+    function selectedTilePool() {
+      return Array.from(document.querySelectorAll("#tilePool input:checked")).map(function (input) {
+        return Number(input.value);
+      });
+    }
+
+    function readTileWeights() {
+      const weights=Array(22).fill(0),text=$("tileWeights").value;
+      const pair=/\b(\d{1,2})\s*(?:[:=,]|\s)\s*(-?\d+(?:\.\d+)?)/g;
+      let match;
+      while((match=pair.exec(text))){const tile=Number(match[1]);if(tile>=1&&tile<=12)weights[tile]=Number(match[2]);}
+      return weights;
+    }
+
+    function readSettings() {
+      const mode = $("searchMode").value;
+      return {
+        mode: mode,
+        iterations: clampInt($("iterations").value, 1, 20000, 250),
+        seed: clampInt($("seed").value, 0, 2147483647, 0),
+        raytrace: clampInt($("raytrace").value, 1, 3, 2),
+        tolerance: Number($("tolerance").value) || 0,
+        maxExpanded: clampInt($("maxExpanded").value, 100, 50000, 5000),
+        strength: clampInt($("strength").value, 1, 100000, 512),
+        minEmpty: clampInt($("minEmpty").value, -1, 16, -1),
+        failRetries: clampInt($("failRetries").value, 0, 5000, 500),
+        wrongTurn: clampInt($("wrongTurn").value, 1, 100000, 1000),
+        tileWeights: readTileWeights(),
+        usePortals: $("usePortals").checked,
+        outputEnabled: $("outputEnabled").checked,
+        tilePool: selectedTilePool()
+      };
+    }
+
+    function choose(array, rng) {
+      return array[Math.floor(rng() * array.length)];
+    }
+
+    function makeGeneratedTiles(mode, pool, rng, index, settings) {
+      const tiles = Array(16).fill(6);
+      if (mode === "random-6") {
+        for (let row = 0; row < 4; row++) {
+          for (let col = 0; col < 3; col++) tiles[row * 4 + col] = 5 + Math.floor(rng() * 3);
+          tiles[row * 4 + 3] = 6;
+        }
+        tiles[9] = 1;
+      } else if (mode === "random-7") {
+        for (let cell = 0; cell < 16; cell++) tiles[cell] = 1 + Math.floor(rng() * 7);
+        tiles[15] = 6;
+        tiles[(Math.floor(rng() * 4) * 4) + Math.floor(rng() * 3)] = 1;
+      } else if (mode === "pool-8") {
+        let code = Math.floor(index / settings.strength), divisor = settings.strength;
+        const forceCore = pool[pool.length - 1] !== 1;
+        let coreX = 1, coreY = 2;
+        if (forceCore) { coreX = Math.floor(code / divisor) % 2; divisor *= 2; coreY = Math.floor(code / divisor) % 3; divisor *= 3; }
+        for (let cell = 0; cell < 12; cell++) {
+          tiles[Math.floor(cell / 3) * 4 + (cell % 3)] = pool[Math.floor(code / divisor) % pool.length];
+          divisor *= pool.length;
+        }
+        for (let row = 0; row < 4; row++) tiles[row * 4 + 3] = 6;
+        if (forceCore) { tiles[14] = tiles[coreY * 4 + coreX]; tiles[coreY * 4 + coreX] = 1; }
+      } else if (mode === "wave-9") {
+        let code = Math.floor(index / settings.strength), divisor = settings.strength;
+        const forceCore = pool[pool.length - 1] !== 1;
+        let coreX = 1, coreY = 2;
+        if (forceCore) { coreX = Math.floor(code / divisor) % 2; divisor *= 2; coreY = Math.floor(code / divisor) % 4; divisor *= 4; }
+        for (let row = 0; row < 4; row++) {
+          for (let col = 0; col < 2; col++) { tiles[row * 4 + col] = pool[Math.floor(code / divisor) % pool.length]; divisor *= pool.length; }
+        }
+        if (forceCore) { tiles[13] = tiles[coreY * 4 + coreX]; tiles[coreY * 4 + coreX] = 1; }
+      } else if (mode === "optimized-10") {
+        for (let row = 0; row < 4; row++) {
+          for (let col = 0; col < 3; col++) tiles[row * 4 + col] = choose(pool, rng);
+          tiles[row * 4 + 3] = 6;
+        }
+        tiles[14] = 5 + Math.floor(rng() * 3);
+        tiles[(Math.floor(rng() * 4) * 4) + Math.floor(rng() * 3)] = 1;
+      }
+      return tiles;
+    }
+
+    const WALK_DIRECTIONS = [{dx:0,dy:-1},{dx:1,dy:0},{dx:0,dy:1},{dx:-1,dy:0}];
+
+    function findRoute(layout, settings, rng, attempt) {
+      const grid=layout.grid,start=layout.start,goals=[];
+      for(let y=0;y<12;y++)for(let x=0;x<12;x++)if(grid[y][x]===9)goals.push({x:x,y:y});
+      if(!goals.length)return {path:null,expanded:0,reason:"No core target on this layout."};
+      if(start.x<0||start.x>=12||start.y<0||start.y>=12)return {path:null,expanded:0,reason:"No valid ship start."};
+      const tileCounts=Array(22).fill(0);
+      if(layout.tiles)layout.tiles.forEach(function(tile){tileCounts[tile]++;});
+      if(settings.minEmpty!==-1&&layout.tiles&&tileCounts[6]!==settings.minEmpty)return {path:null,expanded:0,reason:"Tile 6 count does not match config key 3."};
+      function open(x,y){return x>=0&&x<12&&y>=0&&y<12&&(grid[y][x]===0||grid[y][x]===6||grid[y][x]===9);}
+      if(!open(start.x,start.y))return {path:null,expanded:0,reason:"The ship start is blocked."};
+      if(!settings.usePortals){
+        const seen=new Uint8Array(144),queue=[start.y*12+start.x];seen[queue[0]]=1;let reachable=false;
+        for(let q=0;q<queue.length&&!reachable;q++){const cell=queue[q],x=cell%12,y=Math.floor(cell/12);if(grid[y][x]===9){reachable=true;break;}
+          for(const d of WALK_DIRECTIONS){const nx=x+d.dx,ny=y+d.dy,id=ny*12+nx;if(open(nx,ny)&&!seen[id]){seen[id]=1;queue.push(id);}}
+        }
+        if(!reachable)return {path:null,expanded:queue.length,reason:"No route connects the start to a core."};
+      }
+      const phase=attempt%settings.strength;
+      const randomizer=Math.max(1,settings.wrongTurn*((settings.strength+0.1)/(phase+0.1))/5-2);
+      const noiseChance=Math.min(0.25,1/randomizer);
+      const visited=new Uint8Array(144),path=[];
+      let x=start.x,y=start.y,dir=0,lastDir=0,moves=0,turns=0,expanded=0,portalUsed=false,landedPortal=false;
+      function teleport(){
+        if(!settings.usePortals||portalUsed||path.length<2)return false;
+        const exits=[];
+        for(let yy=0;yy<12;yy++)for(let xx=0;xx<12;xx++)if(open(xx,yy)&&grid[yy][xx]!==9&&!visited[yy*12+xx])exits.push({x:xx,y:yy});
+        if(!exits.length)return false;
+        const entry=path[path.length-1];entry.portal=true;
+        const exit=exits[Math.floor(rng()*exits.length)];
+        exit.portal=true;exit.viaPortal=true;path.push(exit);visited[exit.y*12+exit.x]=1;
+        x=exit.x;y=exit.y;dir=Math.floor(rng()*4);lastDir=dir;portalUsed=true;landedPortal=true;
+        return true;
+      }
+      for(;expanded<settings.maxExpanded;expanded++){
+        const id=y*12+x;
+        if(grid[y][x]===9){path.push({x:x,y:y});return {path:path,moves:moves,turns:turns,expanded:expanded,reason:""};}
+        if(!open(x,y)||visited[id]&&!landedPortal)break;
+        if(landedPortal)landedPortal=false;else{path.push({x:x,y:y});visited[id]=1;}
+        const candidates=[];
+        for(let d=0;d<4;d++){
+          const nx=x+WALK_DIRECTIONS[d].dx,ny=y+WALK_DIRECTIONS[d].dy,nid=ny*12+nx;
+          if(!open(nx,ny)||visited[nid])continue;
+          let clear=0,cx=nx,cy=ny;
+          for(let look=0;look<settings.raytrace&&open(cx,cy)&&!visited[cy*12+cx];look++){clear++;cx+=WALK_DIRECTIONS[d].dx;cy+=WALK_DIRECTIONS[d].dy;}
+          const forward=d===dir,reverse=d===(dir+2)%4;
+          let weight=forward?2:reverse?0.01:1;
+          weight*=1+clear*0.2;candidates.push({dir:d,x:nx,y:ny,weight:weight});
+        }
+        if(settings.usePortals&&!portalUsed&&path.length>3&&rng()<noiseChance&&teleport()){expanded++;continue;}
+        if(!candidates.length){if(teleport()){expanded++;continue;}break;}
+        let next;
+        if(rng()<noiseChance)next=candidates[Math.floor(rng()*candidates.length)];
+        else{
+          const total=candidates.reduce(function(sum,item){return sum+item.weight;},0);let pick=rng()*total;
+          next=candidates[candidates.length-1];for(const item of candidates){pick-=item.weight;if(pick<=0){next=item;break;}}
+        }
+        if(lastDir!==null&&next.dir!==lastDir)turns++;
+        lastDir=next.dir;dir=next.dir;x=next.x;y=next.y;moves++;
+      }
+      return {path:null,preview:path,moves:moves,turns:turns,expanded:expanded,reason:expanded>=settings.maxExpanded?"Path step limit reached.":"Route attempt ended before reaching a core."};
+    }
+
+    function countTurns(path) {
+      let turns = 0;
+      let last = null;
+      for (let i = 1; i < path.length; i++) {
+        if (path[i].viaPortal) { last = null; continue; }
+        const direction = {
+          dx: path[i].x - path[i - 1].x,
+          dy: path[i].y - path[i - 1].y
+        };
+        if (last && (direction.dx !== last.dx || direction.dy !== last.dy)) turns++;
+        last = direction;
+      }
+      return turns;
+    }
+
+    function gradeFor(rank) {
+      const grades = {
+        "-11": "Congrats", "-10": "Very low", "-9": "??", "-8": "??",
+        "-7": "?", "-6": "F---", "-5": "F---", "-4": "F--", "-3": "F--",
+        "-2": "F-", "-1": "F-", "0": "F", "1": "F+", "2": "D", "3": "D+",
+        "4": "C", "5": "C+", "6": "B", "7": "B+", "8": "A", "9": "A+",
+        "10": "S", "11": "S+", "12": "SS", "13": "SS+", "14": "SSS",
+        "15": "SSS+", "16": "L", "17": "L+", "18": "L++", "19": "L+++"
+      };
+      if (rank === -10) return "Can't get worse";
+      return grades[String(rank)] || "G";
+    }
+
+    function calculateMetrics(layout, route, bestScore, settings) {
+      const path = route.path;
+      const pathLength = path ? (route.moves === undefined ? Math.max(0, path.length - 1) : route.moves) : 0;
+      const turns = path ? (route.turns === undefined ? countTurns(path) : route.turns) : 0;
+      const tileCounts = Array(22).fill(0);
+      if (layout.tiles) layout.tiles.forEach(function (tile) { tileCounts[tile]++; });
+      const weightedTiles = layout.tiles ? tileCounts.reduce(function (sum,count,tile) { return sum + count * settings.tileWeights[tile]; },0) : 0;
+      let score = path ? pathLength - turns + weightedTiles : -100 + weightedTiles;
+      if (score > 254) score = 0;
+      const best = path ? Math.max(bestScore, score) : Math.max(0, bestScore);
+      const turnCount = turns;
+      const buff5 = tileCounts[5] || 0;
+      const buff6 = tileCounts[6] || 0;
+      const buff7 = tileCounts[7] || 0;
+      const buff12 = tileCounts[12] || 0;
+      const baseDamage = 3900 * (1 + turnCount / 10 + turnCount / 10 + 0.6);
+      const dps = baseDamage * Math.pow(1.4, pathLength - 12) * (3.2 - 0.2 * buff5) * Math.pow(0.333, buff5);
+      const rankA = Math.floor(Math.log10(Math.max(dps, Number.MIN_VALUE)));
+      const rankB = Math.trunc(Math.max(0, ((pathLength - buff5 * 3) / 2.5) - 19));
+      const rankC = Math.trunc(Math.max(0, (((pathLength - buff5 * 2.5) / 75 * 5) * 2) - 6));
+      const rankD = Math.floor(2 * best / 37);
+      const rankE = Math.trunc((best * (pathLength - buff5 * 2.5)) / 300);
+      const rankF = rankE + rankD - 11;
+      const waveB = Math.trunc(Math.max(0, ((pathLength - buff5 * 3 + buff6 * 2 + buff7 + buff12) / 2.5) - 19));
+      const waveC = Math.trunc(Math.max(0, (((pathLength - buff5 * 2.5 + buff6 * 2 + buff7) / 75 * 5) * 2) - 6));
+      const waveD = Math.floor(2 * (best + buff6 * buff6 + buff7) / 37);
+      const waveE = Math.trunc((best * (pathLength - buff5 * 6 + buff6 * 4 + buff7)) / 300);
+      const waveF = waveB + waveD - 20;
+      return {
+        path: path,
+        pathLength: pathLength,
+        turns: turns,
+        score: score,
+        bestScore: best,
+        tile5Count: buff5,
+        baseDamage: baseDamage,
+        dps: dps,
+        rank: [rankA, rankB, rankC, rankD, rankE, rankF],
+        waveRank: [rankA, waveB, waveC, waveD, waveE, waveF],
+        reason: route.reason,
+        expanded: route.expanded,
+        layout: layout
+      };
+    }
+
+    function formatNumber(value, decimals) {
+      if (!Number.isFinite(value)) return "—";
+      return value.toLocaleString(undefined, { maximumFractionDigits: decimals === undefined ? 0 : decimals });
+    }
+
+    function renderMetricResult(result) {
+      $("legacyMetrics").hidden=false;
+      $("pathLength").textContent = result.path ? String(result.pathLength) : "—";
+      $("turnCount").textContent = result.path ? String(result.turns) : "—";
+      $("searchScore").textContent = result.path ? formatNumber(result.score, 1) : "—";
+      $("straightCount").textContent = result.path ? String(routeStats(result.path).straight) : "—";
+      $("baseDamage").textContent = result.path ? formatNumber(result.baseDamage, 0) : "—";
+      $("dps").textContent = result.path ? formatNumber(result.dps, 2) : "—";
+      $("tile5Count").textContent = result.path ? String(result.tile5Count) : "—";
+      $("checkedCount").textContent = String(state.checked);
+      $("closeMatches").textContent = result.path ? String(state.closeMatches) : "—";
+      $("tierGrade").textContent = result.path ? gradeFor(result.rank[5]) : "—";
+      $("waveGrade").textContent = result.path ? gradeFor(result.waveRank[5]) : "—";
+      $("tierDetails").textContent = result.path ? result.rank.join(" · ") : "Legacy source ranking";
+      $("waveDetails").textContent = result.path ? result.waveRank.join(" · ") : "Legacy source ranking";
+      $("bestCandidateLabel").textContent = result.layout.name;
+      renderOutput(result.layout, result.path, false);
+      const reason = result.path
+        ? "Best route: " + result.pathLength + " steps, " + result.turns + " turns; " + result.expanded + " walker steps."
+        : result.reason;
+      $("logText").textContent = reason;
+    }
+
+    function makeCandidate(mode, baseLayout, pool, rng, index, settings, generatedIndex, seenLayouts) {
+      if (mode === "fixed" || mode === "best-fixed") {
+        return {
+          grid: baseLayout.grid.map(function (row) { return row.slice(); }),
+          start: { x: baseLayout.start.x, y: baseLayout.start.y },
+          tiles: baseLayout.tiles ? baseLayout.tiles.slice() : null,
+          name: baseLayout.name
+        };
+      }
+      let tiles=makeGeneratedTiles(mode,pool,rng,mode==="pool-8"||mode==="wave-9"?index:generatedIndex,settings);
+      if(mode==="optimized-10"){
+        let key=tiles.join(","),tries=0;
+        while(seenLayouts.has(key)&&tries++<64){tiles=makeGeneratedTiles(mode,pool,rng,generatedIndex+tries*settings.strength,settings);key=tiles.join(",");}
+        seenLayouts.add(key);
+      }
+      const layout = layoutFromTiles(tiles);
+      layout.name = "Candidate " + (index + 1);
+      return layout;
+    }
+
+    function yieldToBrowser() {
+      return new Promise(function (resolve) {
+        requestAnimationFrame(function () { setTimeout(resolve, 0); });
+      });
+    }
+
+    function pathEndsAtCore(layout,path) {
+      if(!path||!path.length)return false;
+      const end=path[path.length-1];
+      return Number.isInteger(end.x)&&Number.isInteger(end.y)&&layout.grid[end.y]&&layout.grid[end.y][end.x]===9;
+    }
+
+    function longestScore(stats,mode) {
+      return mode==="12"?stats.steps:mode==="13"?stats.straight*145+stats.steps:stats.straight;
+    }
+
+    function isBetterLongest(candidate,current,mode) {
+      if(!current)return true;
+      if(candidate.score!==current.score)return candidate.score>current.score;
+      if(mode==="11")return candidate.stats.steps>current.stats.steps;
+      if(mode==="12")return candidate.stats.straight>current.stats.straight;
+      return candidate.stats.turns<current.stats.turns;
+    }
+
+    function renderLongestResult(result,mode) {
+      if(!pathEndsAtCore(result.layout,result.path))return false;
+      result.objective=mode;
+      $("legacyMetrics").hidden=true;
+      state.longestResult=result;state.bestScore=result.score;
+      $("pathLength").textContent=String(result.stats.steps);
+      $("turnCount").textContent=String(result.stats.turns);
+      $("searchScore").textContent=String(result.score);
+      $("straightCount").textContent=String(result.stats.straight);
+      $("baseDamage").textContent=$("dps").textContent=$("tile5Count").textContent=$("closeMatches").textContent="—";
+      $("tierGrade").textContent=$("waveGrade").textContent="—";
+      $("tierDetails").textContent=$("waveDetails").textContent="Not used in longest-route modes";
+      $("bestCandidateLabel").textContent=result.layout.name;
+      renderOutput(result.layout,result.path,false);
+      $("logText").textContent="Mode "+mode+" · "+result.stats.straight+" vertical | cells · "+result.stats.steps+" route steps · endpoint verified at @";
+      return true;
+    }
+
+    function builtInLayouts() {
+      return PRESETS.map(function(p){const l=layoutFromTiles(p.tiles);l.name=p.name;return l;})
+        .concat(CLASSIC_SHIPS.map(layoutFromClassic));
+    }
+
+    async function searchLongest(layout,limit,portals,mode,token) {
+      const start=layout.start.x+layout.start.y*12,goals=new Set(),walk=new Uint8Array(144);let walkCount=0;
+      for(let i=0;i<144;i++){
+        const value=layout.grid[Math.floor(i/12)][i%12];
+        if(value===9)goals.add(i);
+        if(value===0||value===6||value===9){walk[i]=1;walkCount++;}
+      }
+      if(start<0||start>=144||!walk[start]||!goals.size)return {states:0,limited:false,path:null,reason:"Missing or blocked start/@."};
+      const visited=new Uint8Array(144),path=[{x:start%12,y:Math.floor(start/12),portal:false}],stack=[],portalDestinations=[];
+      visited[start]=1;
+      for(let i=0;i<144;i++)if(walk[i]&&!goals.has(i)&&i!==start)portalDestinations.push(i);
+      stack.push({cell:start,in:-1,portalUsed:false,straight:0,steps:0,enteredPortal:false,options:null,next:0,portalNext:0});
+      let states=0,top=null,limited=false;
+      function pop(){const f=stack.pop(),node=path.pop();visited[f.cell]=0;if(f.enteredPortal&&path.length)path[path.length-1].portal=false;}
+      while(stack.length&&states<limit&&state.running&&token===state.runToken){
+        const f=stack[stack.length-1];states++;
+        if(goals.has(f.cell)){
+          if(pathEndsAtCore(layout,path)){
+            const stats=routeStats(path),candidate={layout:layout,path:path.map(p=>({...p})),stats:stats,score:longestScore(stats,mode)};
+            if(isBetterLongest(candidate,top,mode)){
+              top=candidate;
+              if(isBetterLongest(candidate,state.longestResult,mode)&&renderLongestResult(candidate,mode))writeConsole("best · "+stats.straight+" | · "+stats.steps+" steps · ends at @ · "+layout.name);
+            }
+          }
+          pop();
+        }else{
+          if(f.options===null){
+            const remaining=walkCount-path.length,currentCanScore=f.in>=0&&!path[path.length-1].portal&&f.cell!==start?1:0;
+            const bound=mode==="12"?f.steps+remaining:mode==="13"?(f.straight+remaining+currentCanScore)*145+f.steps+remaining:f.straight+remaining+currentCanScore;
+            if(top&&bound<top.score){pop();continue;}
+            const options=[],order=f.in<0?[0,2,1,3]:[f.in,0,2,1,3].filter((v,i,a)=>a.indexOf(v)===i);
+            for(const direction of order){
+              const dx=[0,1,0,-1][direction],dy=[-1,0,1,0][direction],x=f.cell%12+dx,y=Math.floor(f.cell/12)+dy,to=y*12+x;
+              if(x>=0&&x<12&&y>=0&&y<12&&walk[to]&&!visited[to])options.push({to:to,direction:direction,portal:false});
+            }
+            f.options=options;f.portalNext=0;
+          }
+          let option=null;
+          if(f.next<f.options.length)option=f.options[f.next++];
+          else if(portals&&!f.portalUsed&&f.cell!==start&&!goals.has(f.cell)){
+            while(f.portalNext<portalDestinations.length){const to=portalDestinations[f.portalNext++];if(!visited[to]){option={to:to,portal:true};break;}}
+          }
+          if(!option)pop();
+          else if(option.portal){
+            const entry=path[path.length-1];entry.portal=true;visited[option.to]=1;
+            path.push({x:option.to%12,y:Math.floor(option.to/12),portal:true,viaPortal:true});
+            stack.push({cell:option.to,in:-1,portalUsed:true,straight:f.straight,steps:f.steps,enteredPortal:true,options:null,next:0});
+          }else{
+            const gain=f.in===option.direction&&(option.direction===0||option.direction===2)&&f.cell!==start&&!path[path.length-1].portal?1:0;
+            visited[option.to]=1;path.push({x:option.to%12,y:Math.floor(option.to/12),portal:false});
+            stack.push({cell:option.to,in:option.direction,portalUsed:f.portalUsed,straight:f.straight+gain,steps:f.steps+1,enteredPortal:false,options:null,next:0});
+          }
+        }
+        if(states%1000===0){
+          $("checkedCount").textContent=(state.checked+states).toLocaleString();
+          $("statusText").textContent="Searching "+layout.name+" · "+states.toLocaleString()+" states · best "+(top?top.score:"—");
+          if(states%10000===0)writeConsole(layout.name+" · "+states.toLocaleString()+" states · best "+(top?top.score:"—"));
+          await yieldToBrowser();
+        }
+      }
+      if(stack.length&&states>=limit)limited=true;
+      return {states:states,limited:limited,path:top?top.path:null,score:top?top.score:-1,reason:top?"":"No route reached a core."};
+    }
+
+    async function startLongestSearch(settings) {
+      const token=++state.runToken,mode=settings.mode;
+      let layouts;
+      try{layouts=$("longScope").value==="all"?builtInLayouts():[currentLayout()];}
+      catch(error){$("statusText").textContent=error.message;return;}
+      state.running=true;state.best=null;state.longestResult=null;state.bestScore=-Infinity;state.checked=0;state.closeMatches=0;state.stoppedByUser=false;state.startedAt=performance.now();state.consoleLines=[];
+      setSearchControlsBusy(true);$("stopButton").hidden=false;$("consoleOutput").textContent="";
+      $("statusText").textContent="Starting longest-route search…";$("logText").textContent="Search routes end only at a verified core.";writeConsole("mode "+mode+" · "+layouts.length+" ship(s) · "+(settings.usePortals?"portals on":"portals off"));
+      const limit=clampInt($("longStateLimit").value,100,1000000,10000);let done=0,usedLimit=false,failure="";
+      try{
+        if(layouts.length){renderOutput(layouts[0],null,false);$("bestCandidateLabel").textContent="Searching · "+layouts[0].name;}
+        for(const layout of layouts){
+          if(!state.running||token!==state.runToken)break;
+          writeConsole("ship · "+layout.name);$("bestCandidateLabel").textContent=layout.name;
+          const result=await searchLongest(layout,limit,settings.usePortals,mode,token);done++;state.checked+=result.states;if(result.limited)usedLimit=true;
+          const candidate=result.path&&pathEndsAtCore(layout,result.path)?{layout:layout,path:result.path,stats:routeStats(result.path),score:result.score}:null;
+          if(candidate&&isBetterLongest(candidate,state.longestResult,mode)){
+            if(renderLongestResult(candidate,mode))writeConsole("best · "+candidate.stats.straight+" | · "+candidate.stats.steps+" steps · ends at @ · "+layout.name);
+          }else if(result.reason)writeConsole(layout.name+" · "+result.reason);
+          writeConsole(layout.name+" · "+result.states.toLocaleString()+" states"+(result.limited?" · state cap":""));
+          await yieldToBrowser();
+        }
+      }catch(error){failure=error&&error.message?error.message:String(error);writeConsole("error · "+failure);}
+      const stopped=!state.running&&!failure;state.running=false;$("stopButton").hidden=true;setSearchControlsBusy(false);
+      $("elapsedLabel").textContent=((performance.now()-state.startedAt)/1000).toFixed(2)+" s";
+      $("checkedCount").textContent=state.checked.toLocaleString();
+      if(failure)$("statusText").textContent="Search error · "+failure;
+      else if(state.longestResult)$("statusText").textContent=(stopped?"Stopped":"Finished")+" · "+done+"/"+layouts.length+" ships · "+(stopped?"incomplete":usedLimit?"state cap reached; maximum not proven":"maximum proven");
+      else $("statusText").textContent=stopped?"Stopped · incomplete; no core route found yet.":"No valid route to a core found.";
+      writeConsole((stopped?"stopped":"finished")+" · "+done+"/"+layouts.length+" ships"+(usedLimit?" · some state caps reached":""));
+    }
+
+    async function startSearch() {
+      if (state.running) return;
+      const settings = readSettings();
+      if(["11","12","13"].includes(settings.mode)){await startLongestSearch(settings);return;}
+      if (["pool-8", "wave-9", "optimized-10"].includes(settings.mode) && !settings.tilePool.length) {
+        $("statusText").textContent = "Select at least one tile for this search mode.";
+        return;
+      }
+      const token = ++state.runToken;
+      state.running = true;
+      state.best = null;
+      state.longestResult = null;
+      state.bestScore = -Infinity;
+      state.checked = 0;
+      state.closeMatches = 0;
+      state.stoppedByUser = false;
+      state.startedAt = performance.now();
+      state.consoleLines=[];$("consoleOutput").textContent="";
+      setSearchControlsBusy(true);
+      $("stopButton").hidden = false;
+      $("statusText").textContent = "Starting route search…";
+      $("logText").textContent = "Searching candidates. You can stop the run at any time.";
+      writeConsole("randomized route search · mode "+settings.mode);
+      const baseLayout = currentLayout();
+      const target = settings.mode === "fixed" ? 1 : settings.iterations;
+      const seedBase = settings.seed || ((Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0);
+      const seenLayouts=new Set();
+
+      try {
+        for (let index = 0; index < target; index++) {
+          if (!state.running || token !== state.runToken) break;
+          const batch=settings.mode==="random-6"?5:settings.mode==="optimized-10"?Math.max(1,settings.tilePool.length):1;
+          const generatedIndex=Math.floor(index/batch);
+          const layoutRng=makeRng((seedBase+Math.imul(generatedIndex+1,2654435761))>>>0);
+          const layout=makeCandidate(settings.mode,baseLayout,settings.tilePool,layoutRng,index,settings,generatedIndex,seenLayouts);
+          let attempts=0,route=null,result=null;
+          do{
+            if(!state.running||token!==state.runToken)break;
+            const rng=makeRng((seedBase+Math.imul(state.checked+1,2246822519))>>>0);
+            route=findRoute(layout,settings,rng,state.checked);
+            if(route.path&&!pathEndsAtCore(layout,route.path))route={path:null,expanded:route.expanded,reason:"Rejected route that did not end at a core."};
+            result=calculateMetrics(layout,route,state.bestScore,settings);
+            state.checked++;attempts++;
+            if(result.path&&result.score>=state.bestScore-settings.tolerance)state.closeMatches++;
+            if(result.path&&(state.best===null||result.score>state.bestScore)){
+              state.bestScore=result.score;result.bestScore=state.bestScore;state.best=result;renderMetricResult(result);
+              writeConsole("best · "+result.pathLength+" steps · "+result.turns+" turns · ends at @ · "+layout.name);
+            }
+            if(!route.path&&attempts<=settings.failRetries&&["Route attempt ended before reaching a core.","Path step limit reached."].includes(route.reason)&&state.running&&token===state.runToken){
+              if(attempts%3===0)await yieldToBrowser();
+              continue;
+            }
+            break;
+          }while(true);
+          if (state.checked % 4 === 0 || index + 1 === target) {
+            const elapsed = (performance.now() - state.startedAt) / 1000;
+            $("checkedCount").textContent = String(state.checked);
+            $("elapsedLabel").textContent = elapsed.toFixed(1) + " s";
+            $("statusText").textContent = (state.running ? "Searching" : "Stopping") + " · " + state.checked.toLocaleString() + " routes · " + (index+1).toLocaleString() + " / " + target.toLocaleString() + " candidates";
+            await yieldToBrowser();
+          }
+        }
+      } catch (error) {
+        $("logText").textContent = "Search stopped after an error: " + (error && error.message ? error.message : String(error));
+        writeConsole("error · "+(error&&error.message?error.message:String(error)));
+      }
+
+      state.running = false;
+      $("stopButton").hidden = true;
+      setSearchControlsBusy(false);
+      const elapsed = (performance.now() - state.startedAt) / 1000;
+      $("elapsedLabel").textContent = elapsed.toFixed(2) + " s";
+      $("checkedCount").textContent = String(state.checked);
+      if (state.best) {
+        $("statusText").textContent = (state.stoppedByUser ? "Stopped" : "Finished") + " · " + state.checked.toLocaleString() + " routes checked.";
+        writeConsole((state.stoppedByUser?"stopped":"finished")+" · "+state.checked.toLocaleString()+" routes · best ends at @");
+      } else if (!$("logText").textContent.startsWith("Search stopped after an error:")) {
+        const layout = currentLayout();
+        const fallback = calculateMetrics(layout, { path: null, expanded: 0, reason: "No route reached a core in the checked attempts." }, 0, settings);
+        renderMetricResult(fallback);
+        $("statusText").textContent = "Finished · no reachable core found.";
+        writeConsole("finished · no route to @ found");
+      }
+    }
+
+    function stopSearch() {
+      if (!state.running) return;
+      state.running = false;
+      state.stoppedByUser = true;
+      state.runToken++;
+      $("statusText").textContent = "Stopping after the current route search…";
+    }
+
+    function resetBoard() {
+      state.tiles = PRESETS[0].tiles.slice();
+      state.selectedCell = 0;
+      state.selectedTile = 5;
+      state.best = null;
+      state.longestResult = null;
+      state.bestScore = -Infinity;
+      state.checked = 0;
+      state.closeMatches = 0;
+      state.stoppedByUser = false;
+      $("boardSource").value = "custom";
+      $("searchMode").value = "11";
+      $("longScope").value = "selected";
+      $("longStateLimit").value = "10000";
+      $("drawingMode").value = "ascii";
+      $("iterations").value = "250";
+      $("seed").value = "0";
+      $("raytrace").value = "2";
+      $("tolerance").value = "1";
+      $("maxExpanded").value = "5000";
+      $("tileWeights").value = "05 -1";
+      $("strength").value = "512";
+      $("minEmpty").value = "-1";
+      $("failRetries").value = "500";
+      $("wrongTurn").value = "1000";
+      $("usePortals").checked = true;
+      $("outputEnabled").checked = true;
+      $("copyButton").hidden = false;
+      renderEditor();
+      renderSourcePreview();
+      showCurrentLayout();
+      ["pathLength","turnCount","searchScore","straightCount","baseDamage","dps","tile5Count","closeMatches"].forEach(function (id) { $(id).textContent = "—"; });
+      $("checkedCount").textContent = "0";
+      $("tierGrade").textContent = "—";
+      $("waveGrade").textContent = "—";
+      $("tierDetails").textContent = "Legacy source ranking";
+      $("waveDetails").textContent = "Legacy source ranking";
+      $("logText").textContent = "Board reset to the Sanil layout.";
+      state.consoleLines=[];$("consoleOutput").textContent="Ready.";
+      $("statusText").textContent = "Ready. Choose a layout and run a search.";
+      $("elapsedLabel").textContent = "";
+      updateModeDescription();
+    }
+
+    function reportText() {
+      const lines = [];
+      lines.push("Miner Gun Builder Pathfinder");
+      const result=state.longestResult||state.best,layout=result?result.layout:currentLayout(),path=result?result.path:null;
+      lines.push("Layout: " + layout.name);
+      if(state.longestResult){
+        lines.push("Mode: "+state.longestResult.objective);
+        lines.push("Path ends at core: "+pathEndsAtCore(layout,path));
+        lines.push("Vertical straight cells: "+state.longestResult.stats.straight);
+        lines.push("Path steps: "+state.longestResult.stats.steps);
+        lines.push("Turns: "+state.longestResult.stats.turns);
+        lines.push("Objective score: "+state.longestResult.score);
+      }else if (state.best) {
+        lines.push("Path length: " + state.best.pathLength);
+        lines.push("Turns: " + state.best.turns);
+        lines.push("Search score: " + state.best.score);
+        lines.push("Tier rank: " + gradeFor(state.best.rank[5]) + " (" + state.best.rank.join(", ") + ")");
+        lines.push("Wave rank: " + gradeFor(state.best.waveRank[5]) + " (" + state.best.waveRank.join(", ") + ")");
+      } else {
+        lines.push("No completed route result.");
+      }
+      lines.push("Routes checked: " + state.checked);
+      lines.push("");
+      lines.push(formatBoard(layout,path,false,"ascii"));
+      return lines.join("\n");
+    }
+
+    function copyReport() {
+      const url=URL.createObjectURL(new Blob([reportText()],{type:"text/plain"}));
+      const link=document.createElement("a");link.href=url;link.download="output.txt";link.click();
+      setTimeout(function(){URL.revokeObjectURL(url);},1000);
+      $("statusText").textContent="Downloaded output.txt.";
+    }
+
+    function initializeSelects() {
+      PRESETS.forEach(function (preset, index) {
+        const option = document.createElement("option");
+        option.value = String(index);
+        option.textContent = preset.name;
+        $("presetSelect").append(option);
+      });
+      CLASSIC_SHIPS.forEach(function (ship, index) {
+        const option = document.createElement("option");
+        option.value = String(index);
+        option.textContent = ship.name;
+        $("classicSelect").append(option);
+      });
+      for (let tile = 2; tile <= 21; tile++) {
+        const label = document.createElement("label");
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.value = String(tile);
+        input.checked = [5,6,7].includes(tile);
+        input.setAttribute("aria-label", "Include tile " + tile);
+        const span = document.createElement("span");
+        span.textContent = String(tile);
+        label.append(input, span);
+        $("tilePool").append(label);
+      }
+    }
+
+    $("boardSource").addEventListener("change", function () {
+      renderSourcePreview();
+      renderEditor();
+      clearPreviousResults("Layout source changed. Run a search to see its route.");
+    });
+    $("presetSelect").addEventListener("change", function () {
+      renderSourcePreview();
+      clearPreviousResults("Named design changed. Run a search to see its route.");
+    });
+    $("classicSelect").addEventListener("change", function () {
+      renderSourcePreview();
+      clearPreviousResults("Classic ship changed. Run a search to see its route.");
+    });
+    $("searchMode").addEventListener("change", function () {
+      updateModeDescription();
+      clearPreviousResults("Search mode changed. Ready to run.");
+    });
+    $("drawingMode").addEventListener("change",function(){
+      if(state.longestResult)renderOutput(state.longestResult.layout,state.longestResult.path,false);
+      else if(state.best)renderOutput(state.best.layout,state.best.path,false);
+      else renderOutput(currentLayout(),null,false);
+    });
+    $("runButton").addEventListener("click", startSearch);
+    $("stopButton").addEventListener("click", stopSearch);
+    $("resetButton").addEventListener("click", resetBoard);
+    $("copyButton").addEventListener("click", copyReport);
+    $("outputEnabled").addEventListener("change", function () { $("copyButton").hidden=!this.checked; });
+
+    initializeSelects();
+    renderEditor();
+    renderSourcePreview();
+    showCurrentLayout();
   </script>
 </body>
 </html>
